@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserState
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.task.MCEFProgressForwarder
@@ -158,51 +159,40 @@ class CefBrowserBackend : BrowserBackend, EventListener {
             MCEF.INSTANCE.initialize()
 
             MCEF.INSTANCE.client.handle.addLifeSpanHandler(object : CefLifeSpanHandlerAdapter() {
-                override fun onAfterCreated(createdBrowserApi: org.cef.browser.CefBrowser) {
-                    try {
-                        val browser = browsers.find { cefBrowser -> cefBrowser.browserApi == createdBrowserApi }
-                        if (browser != null) {
-                            if (!browser.isInitialized) {
-                                browser.isInitialized = true
-                            }
-                        } else {
-                            logger.warn("[CefBrowser-${createdBrowserApi.hashCode()}] Browser Instance not present in BrowserManager")
-                        }
-                    } catch (e: Exception) {
-                        logger.error(
-                            "[CefBrowser-${createdBrowserApi.hashCode()}] Failed to mark browser as initialized",
-                            e
-                        )
-                    }
-
-                    super.onAfterCreated(createdBrowserApi)
+                override fun onAfterCreated(cefBrowser: org.cef.browser.CefBrowser) {
+                    markInitialized(cefBrowser)
+                    super.onAfterCreated(cefBrowser)
                 }
             })
 
             MCEF.INSTANCE.client.addLoadHandler(object : CefLoadHandlerAdapter() {
 
                 override fun onLoadStart(
-                    browser: org.cef.browser.CefBrowser, frame: CefFrame?,
+                    cefBrowser: org.cef.browser.CefBrowser, frame: CefFrame?,
                     transitionType: CefRequest.TransitionType?
                 ) {
-                    logger.info("[CefBrowser-${browser.hashCode()}] Started loading (url='${browser.url}')")
-                    super.onLoadStart(browser, frame, transitionType)
+                    updateStateForBrowser(cefBrowser, BrowserState.Loading)
+                    super.onLoadStart(cefBrowser, frame, transitionType)
                 }
 
-                override fun onLoadEnd(browser: org.cef.browser.CefBrowser, frame: CefFrame?, httpStatusCode: Int) {
-                    logger.info("[CefBrowser-${browser.hashCode()}] Finished loading (status=$httpStatusCode)")
-                    super.onLoadEnd(browser, frame, httpStatusCode)
+                override fun onLoadEnd(cefBrowser: org.cef.browser.CefBrowser, frame: CefFrame?, httpStatusCode: Int) {
+                    updateStateForBrowser(cefBrowser, BrowserState.Success(httpStatusCode))
+                    super.onLoadEnd(cefBrowser, frame, httpStatusCode)
                 }
 
                 override fun onLoadError(
-                    browser: org.cef.browser.CefBrowser, frame: CefFrame?,
+                    cefBrowser: org.cef.browser.CefBrowser, frame: CefFrame?,
                     errorCode: CefLoadHandler.ErrorCode?, errorText: String?, failedUrl: String?
                 ) {
-                    logger.error(
-                        "[CefBrowser-${browser.hashCode()}] Failed to load " +
-                            "(url='$failedUrl', error='$errorText', code='$errorCode')"
+                    updateStateForBrowser(
+                        cefBrowser,
+                        BrowserState.Failure(
+                            errorCode?.code ?: -1,
+                            errorText ?: "Unknown Error",
+                            failedUrl ?: "Unknown URL"
+                        )
                     )
-                    super.onLoadError(browser, frame, errorCode, errorText, failedUrl)
+                    super.onLoadError(cefBrowser, frame, errorCode, errorText, failedUrl)
                 }
 
             })
@@ -246,6 +236,28 @@ class CefBrowserBackend : BrowserBackend, EventListener {
 
     internal fun removeBrowser(browser: CefBrowser) {
         browsers.remove(browser)
+    }
+
+    fun getBrowserByApi(apiInstance: org.cef.browser.CefBrowser) = browsers.find { it.browserApi == apiInstance }
+
+    private fun markInitialized(apiInstance: org.cef.browser.CefBrowser) {
+        val browser = getBrowserByApi(apiInstance)
+        if (browser != null) {
+            if (!browser.isInitialized) {
+                browser.isInitialized = true
+            }
+        } else {
+            logger.warn("[CefBrowser-${apiInstance.hashCode()}] Browser Instance not present in BrowserManager")
+        }
+    }
+
+    private fun updateStateForBrowser(apiInstance: org.cef.browser.CefBrowser, state: BrowserState) {
+        val browser = getBrowserByApi(apiInstance)
+        if (browser != null) {
+            browser.state = state
+        } else {
+            logger.warn("[CefBrowser-${apiInstance.hashCode()}] Browser Instance not present in BrowserManager")
+        }
     }
 
 }

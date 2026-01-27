@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserState
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
@@ -93,21 +94,39 @@ object ScreenManager : EventListener {
     private val handleBrowserReady = suspendHandler<BrowserReadyEvent>(
         priority = EventPriorityConvention.FIRST_PRIORITY
     ) {
-        runCatching {
-            logger.info("Browser backend is ready. Initializing browser...")
-            val browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
+        logger.info("Browser backend is ready. Initializing browser...")
+        val browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
 
-            logger.info("Waiting for browser to be initialized...")
-            // We currently proceed to go to the Minecraft Title Screen
-            //   until this times out. [ErrorHandler.fatal] will kill the game anyway.
-            waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) {
-                browser.isInitialized && browser.isWorking
+        logger.info("Waiting for browser to be initialized...")
+        // We currently proceed to go to the Minecraft Title Screen
+        //   until this times out. [ErrorHandler.fatal] will kill the game anyway.
+        if (waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) {
+            browser.isInitialized && browser.state.isCompleted
+        } == null) {
+            ErrorHandler.fatal(
+                error = IllegalStateException("Timed out waiting for integration browser to initialize."),
+                quickFix = QuickFix.BROWSER_IS_NOT_RESPONDING
+            )
+        }
+
+        // Validate browser state past wait.
+        when (val state = browser.state) {
+            is BrowserState.Success -> {
+                this@ScreenManager.mainBrowser = browser
+                logger.info("Integration Browser $browser is ready.")
             }
-            this@ScreenManager.mainBrowser = browser
-
-            logger.info("Integration Browser $browser is ready.")
-        }.onFailure {
-            ErrorHandler.fatal(it, QuickFix.BROWSER_IS_NOT_RESPONDING)
+            is BrowserState.Failure -> ErrorHandler.fatal(
+                error = IllegalStateException(
+                    "Failed to initialize integration browser. " +
+                        "Error code: ${state.errorCode}, " +
+                        "Error text: ${state.errorText}, " +
+                        "Failed URL: ${state.failedUrl}"
+                ),
+            )
+            else -> ErrorHandler.fatal(
+                error = IllegalStateException("Invalid browser state past wait"),
+                quickFix = QuickFix.BROWSER_IS_NOT_RESPONDING
+            )
         }
     }
 

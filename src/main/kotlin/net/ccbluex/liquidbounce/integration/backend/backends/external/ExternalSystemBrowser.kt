@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserState
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 
@@ -35,7 +36,7 @@ class ExternalSystemBrowser(
 ) : Browser, MinecraftShortcuts {
 
     override val isInitialized = true
-    override var isWorking = true
+    override val state: BrowserState = BrowserState.Stateless
     override var viewport: BrowserViewport = viewport
     override var visible = true
 
