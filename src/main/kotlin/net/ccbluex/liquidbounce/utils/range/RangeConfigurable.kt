@@ -42,7 +42,8 @@ open class RangeConfigurable(
      * @see net.minecraft.world.entity.player.Player.entityInteractionRange
      */
     internal val interactionRange: Float
-        get() = (player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE) + maxRangeIncrease).toFloat()
+        get() = (mc.player?.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE)?.toFloat()
+            ?: 3.0F) + maxRangeIncrease
 
     internal val interactionThroughWallsRange
         get() = throughWallsRange
