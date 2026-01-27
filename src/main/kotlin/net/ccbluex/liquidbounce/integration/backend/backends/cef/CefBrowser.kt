@@ -59,7 +59,7 @@ class CefBrowser(
             browserApi.zoomLevel = viewport.getZoomLevel(quality)
             field = true
 
-            logger.info("[CefBrowser-${hashCode()}] Initialized Browser API")
+            logger.info("[CefBrowser-${browserApi.hashCode()}] Initialized Browser API")
         }
 
     override var isWorking: Boolean = false
@@ -118,8 +118,6 @@ class CefBrowser(
                 GlobalBrowserSettings.accelerated?.get() == true
             )
         ).apply {
-            logger.info("[CefBrowser-${this@CefBrowser.hashCode()}] Initializing Browser API with url='$url'")
-
             addOnPaintListener {
                 isWorking = true
                 comparePaintWithViewpoint(it.width, it.height)
@@ -129,6 +127,8 @@ class CefBrowser(
                 comparePaintWithViewpoint(it.width, it.height)
             }
         }
+
+        logger.info("[CefBrowser-${browserApi.hashCode()}] Initializing Browser API (url='$url')")
     }
 
     override var url: String
@@ -192,6 +192,7 @@ class CefBrowser(
     }
 
     override fun toString() = "CefBrowser(" +
+        "hash='${browserApi.hashCode()}', " +
         "id='${browserApi.identifier}', " +
         "url='$url', " +
         "visible=$visible, " +

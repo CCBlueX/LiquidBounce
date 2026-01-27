@@ -38,7 +38,11 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
+import org.cef.browser.CefFrame
 import org.cef.handler.CefLifeSpanHandlerAdapter
+import org.cef.handler.CefLoadHandler
+import org.cef.handler.CefLoadHandlerAdapter
+import org.cef.network.CefRequest
 
 /**
  * The time threshold for cleaning up old cache directories.
@@ -134,16 +138,16 @@ class CefBrowserBackend : BrowserBackend, EventListener {
                             file.deleteRecursively()
                             fileSize
                         } catch (e: Exception) {
-                            logger.error("Failed to clean up old cache directory", e)
+                            logger.error("[CEF] Failed to clean up old cache directory", e)
                             0
                         }
                     } ?: 0
             }.onFailure {
                 // Not a big deal, not fatal.
-                logger.error("Failed to clean up old JCEF cache directories", it)
+                logger.error("[CEF] Failed to clean up old JCEF cache directories", it)
             }.onSuccess { size ->
                 if (size > 0) {
-                    logger.info("Cleaned up ${size.formatAsCapacity()} JCEF cache directories")
+                    logger.info("[CEF] Cleaned up ${size.formatAsCapacity()} JCEF cache directories")
                 }
             }
         }
@@ -162,14 +166,36 @@ class CefBrowserBackend : BrowserBackend, EventListener {
                                 browser.isInitialized = true
                             }
                         } else {
-                            logger.warn("Browser ${createdBrowserApi.identifier} created but not found in backend")
+                            logger.warn("[CEF] Browser ${createdBrowserApi.identifier} created but not found in backend")
                         }
                     } catch (e: Exception) {
-                        logger.error("Failed to mark browser as initialized", e)
+                        logger.error("[CEF] Failed to mark browser as initialized", e)
                     }
 
                     super.onAfterCreated(createdBrowserApi)
                 }
+            })
+
+            MCEF.INSTANCE.client.addLoadHandler(object : CefLoadHandlerAdapter() {
+
+                override fun onLoadStart(browser: org.cef.browser.CefBrowser, frame: CefFrame?,
+                                         transitionType: CefRequest.TransitionType?) {
+                    logger.info("[CEF-${browser.hashCode()}] Started loading (url='${browser.url}')")
+                    super.onLoadStart(browser, frame, transitionType)
+                }
+
+                override fun onLoadEnd(browser: org.cef.browser.CefBrowser, frame: CefFrame?, httpStatusCode: Int) {
+                    logger.info("[CEF-${browser.hashCode()}] Finished loading (status=$httpStatusCode)")
+                    super.onLoadEnd(browser, frame, httpStatusCode)
+                }
+
+                override fun onLoadError(browser: org.cef.browser.CefBrowser, frame: CefFrame?,
+                                         errorCode: CefLoadHandler.ErrorCode?, errorText: String?, failedUrl: String?) {
+                    logger.error("[CEF-${browser.hashCode()}] Failed to load " +
+                        "(url='$failedUrl', error='$errorText', code='$errorCode')")
+                    super.onLoadError(browser, frame, errorCode, errorText, failedUrl)
+                }
+
             })
         }
 
@@ -191,7 +217,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
             try {
                 MCEF.INSTANCE.app.handle.N_DoMessageLoopWork()
             } catch (e: Exception) {
-                logger.error("Failed to draw browser globally", e)
+                logger.error("[CEF] Failed to draw browser globally", e)
             }
         }
     }
