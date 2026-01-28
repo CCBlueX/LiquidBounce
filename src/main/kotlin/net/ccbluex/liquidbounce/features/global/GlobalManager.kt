@@ -19,9 +19,6 @@
 package net.ccbluex.liquidbounce.features.global
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 
@@ -30,10 +27,9 @@ import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSetting
  *
  * Holds settings that apply across the whole client.
  */
-object GlobalManager : Configurable("Global"), EventListener {
+object GlobalManager : Configurable("Settings") {
 
-    @Suppress("unused")
-    private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
+    init {
         tree(CommandManager.GlobalSettings)
         tree(GlobalSettingsTarget)
         tree(GlobalSettingsAutoTranslate)
@@ -42,6 +38,5 @@ object GlobalManager : Configurable("Global"), EventListener {
         tree(GlobalSettingsClientChat)
         tree(GlobalSettingsRichPresence)
     }
-
 
 }
