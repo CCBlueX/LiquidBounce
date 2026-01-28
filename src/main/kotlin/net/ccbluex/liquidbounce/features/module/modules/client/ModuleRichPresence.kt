@@ -104,13 +104,12 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
 
     private val buttons = jsonArrayOf(
         jsonObject {
-            "label"("Download")
-            "url"("https://liquidbounce.net/")
+            "label"("Website")
+            "url"("https://liquidbounce.net")
         },
-
         jsonObject {
-            "label"("GitHub")
-            "url"("https://github.com/CCBlueX/LiquidBounce")
+            "label"("LiquidProxy")
+            "url"("https://liquidproxy.net")
         },
     )
 
