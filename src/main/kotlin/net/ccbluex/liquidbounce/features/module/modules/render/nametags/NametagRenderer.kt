@@ -37,7 +37,7 @@ private const val BACKGROUND_Y_OFFSET_TOP = -0.1f
 private const val BACKGROUND_Y_OFFSET_BOTTOM = 1.1f
 private const val BACKGROUND_X_PADDING = 0.2f * FONT_SIZE
 
-internal fun GuiGraphics.drawNametag(nametag: Nametag, posX: Float, posY: Float) {
+internal fun GuiGraphics.drawNametag(nametag: NametagRenderState, posX: Float, posY: Float) {
     if (nametag.items.any { !it.isEmpty }) {
         val currentItemStackRenderer = if (NametagEquipment.showInfo) {
             if (nametag.entity === player) {
