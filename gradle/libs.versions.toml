@@ -54,7 +54,7 @@ fabric-kotlin = "1.13.5+kotlin.2.2.10"
 netty = "4.2.7.Final"
 
 # LWJGL
-lwjgl = "3.3.3"
+lwjgl = "3.4.0"
 
 # Other plugins
 detekt = "2.0.0-alpha.1"
