@@ -106,6 +106,7 @@
     "minecraft.network.MixinPacketType",
     "minecraft.network.MixinPacketWrapper",
     "minecraft.network.MixinPlayerInfo",
+    "minecraft.network.MixinServerboundPlayerInputPacket",
     "minecraft.network.MixinServerboundUseItemOnPacket",
     "minecraft.network.MixinServerboundUseItemPacket",
     "minecraft.network.MixinServerNameResolver",

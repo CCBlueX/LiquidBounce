@@ -18,10 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.additions.forceSneak
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,11 +33,12 @@ import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_6
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
 import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.copy
 import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
@@ -89,21 +92,31 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
                 return@handler
             }
 
-            event.cancelEvent() // Because the packet is record
-            sendPacketSilently(ServerboundPlayerInputPacket(event.packet.input.copy(sneak = true)))
+            event.packet.forceSneak = true
         }
 
     }
 
     private object Switch : Choice("Switch") {
 
-        var networkSneaking = false
+        private var networkSneaking = false
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        override fun enable() {
+            if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) {
+                notification(
+                    "Protocol Error",
+                    "This mode can only be used on server with version earlier than 1.21.6.",
+                    NotificationEvent.Severity.ERROR,
+                )
+            }
+            super.enable()
+        }
+
         @Suppress("unused")
-        val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+        private val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->
             if (player.moving && notDuringMove) {
                 disable()
                 return@handler
