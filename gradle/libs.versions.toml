@@ -57,7 +57,7 @@ netty = "4.2.7.Final"
 lwjgl = "3.3.3"
 
 # Other plugins
-detekt = "2.0.0-alpha.1"
+detekt = "2.0.0-alpha.2"
 gradleGitProperties = "2.5.4"
 dokka = "2.1.0"
 nodeGradle = "7.1.0"

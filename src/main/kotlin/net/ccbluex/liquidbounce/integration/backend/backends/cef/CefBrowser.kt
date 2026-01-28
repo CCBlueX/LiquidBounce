@@ -102,7 +102,7 @@ class CefBrowser(
                 is BrowserState.Failure ->
                     logger.warn("Failed to load " +
                         "(url='${value.failedUrl}', errorCode=${value.errorCode}, errorText=${value.errorText})")
-                else -> error("Unexpected state: $value")
+                else -> { /* Idle state, do nothing */ }
             }
         }
 
@@ -154,6 +154,7 @@ class CefBrowser(
                 // We continue anyway, because the browser API might accept it anyway.
             }
 
+            state = BrowserState.Idle
             browserApi.loadURL(value)
         }
 
