@@ -38,9 +38,10 @@ private const val BACKGROUND_Y_OFFSET_BOTTOM = 1.1f
 private const val BACKGROUND_X_PADDING = 0.2f * FONT_SIZE
 
 internal fun GuiGraphics.drawNametag(nametag: NametagRenderState, posX: Float, posY: Float) {
-    if (nametag.items.any { !it.isEmpty }) {
+    val entity = nametag.entity ?: return
+    if (nametag.equipments.itemStacks.any { !it.isEmpty }) {
         val currentItemStackRenderer = if (NametagEquipment.showInfo) {
-            if (nametag.entity === player) {
+            if (entity === player) {
                 ItemStackListRenderer.SingleItemStackRenderer.All
             } else {
                 ItemStackListRenderer.SingleItemStackRenderer.ForOtherPlayer
@@ -49,7 +50,7 @@ internal fun GuiGraphics.drawNametag(nametag: NametagRenderState, posX: Float, p
             ItemStackListRenderer.SingleItemStackRenderer.OnlyItem
         }
 
-        drawItemStackList(nametag.items)
+        drawItemStackList(nametag.equipments.itemStacks)
             .centerX(posX)
             .centerY(posY - NAMETAG_PADDING * nametag.scale)
             .scale(nametag.scale)
@@ -89,13 +90,13 @@ internal fun GuiGraphics.drawNametag(nametag: NametagRenderState, posX: Float, p
     }
 
     // Draw enchantments directly for the entity (regardless of whether items are shown)
-    if (NametagEnchantmentRenderer.running && nametag.entity is LivingEntity) {
-        val entityPos = nametag.entity.position()
+    if (NametagEnchantmentRenderer.running && entity is LivingEntity) {
+        val entityPos = entity.position()
         val worldX = entityPos.x.toFloat()
-        val worldY = (entityPos.y + nametag.entity.bbHeight + 0.5f).toFloat()
+        val worldY = (entityPos.y + entity.bbHeight + 0.5f).toFloat()
 
         drawEntityEnchantments(
-            nametag.entity,
+            entity,
             worldX,
             worldY,
         )

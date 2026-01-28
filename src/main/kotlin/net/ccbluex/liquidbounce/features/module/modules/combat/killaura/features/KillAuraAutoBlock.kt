@@ -331,7 +331,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
      * Check if the player can block with the given item stack.
      */
     private fun canBlock(itemStack: ItemStack) =
-        itemStack.item?.getUseAnimation(itemStack) == ItemUseAnimation.BLOCK
+        itemStack.useAnimation == ItemUseAnimation.BLOCK
 
     /**
      * Check if the player is in danger.

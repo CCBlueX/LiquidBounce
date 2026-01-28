@@ -23,7 +23,6 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.item.ItemStack
 
 internal object NametagEquipment : Configurable("Equipment") {
 
@@ -37,19 +36,30 @@ internal object NametagEquipment : Configurable("Equipment") {
     )
     private val skipEmptySlot by boolean("SkipEmptySlot", true)
     val showInfo by boolean("ShowInfo", true)
+    private val highlightUsingItem by boolean("HighlightUsingItem", false)
 
     /**
      * Creates a list of items that should be rendered above the name tag.
      */
-    fun createItemList(entity: LivingEntity): List<ItemStack> {
+    fun update(entity: LivingEntity, equipments: NametagRenderState.Equipments) {
+        if (slots.isEmpty()) {
+            equipments.reset()
+            return
+        }
+
         val stacks = slots.mapToArray {
             entity.getItemBySlot(it.slot)
         }
 
-        return if (skipEmptySlot) {
+        equipments.itemStacks = if (skipEmptySlot) {
             stacks.filterNot { it.isEmpty }
         } else {
             stacks.asList()
+        }
+
+        if (highlightUsingItem && entity.isUsingItem) {
+            val usingStack = entity.getItemInHand(entity.usedItemHand)
+            equipments.highlightIndex = equipments.itemStacks.indexOfFirst { usingStack === it }
         }
     }
 }
