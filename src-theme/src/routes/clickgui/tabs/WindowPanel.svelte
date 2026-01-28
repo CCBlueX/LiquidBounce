@@ -38,7 +38,7 @@
     transform: translateX(-50%);
     width: min(820px, 92vw);
     --window-max-height: 70vh;
-    background-color: rgba($clickgui-base-color, 0.9);
+    background-color: rgba($clickgui-base-color, 0.8);
     border-radius: 12px;
     box-shadow: 0 0 14px rgba($clickgui-base-color, 0.55);
     overflow: hidden;
