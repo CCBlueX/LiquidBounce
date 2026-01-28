@@ -6,10 +6,12 @@
     import Panel from "./Panel.svelte";
     import Search from "./Search.svelte";
     import Description from "./Description.svelte";
+    import Tabs from "./tabs/Tabs.svelte";
+    import GlobalSettings from "./tabs/GlobalSettings.svelte";
     import {fade} from "svelte/transition";
     import {listen} from "../../integration/ws";
     import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
-    import {gridSize, os, scaleFactor, showGrid, snappingEnabled} from "./clickgui_store";
+    import {activeTab, gridSize, os, scaleFactor, showGrid, snappingEnabled} from "./clickgui_store";
 
     let categories: GroupedModules = {};
     let modules: Module[] = [];
@@ -56,11 +58,19 @@
      style="transform: scale({$scaleFactor * 50}%); width: {2 / $scaleFactor * 100}vw; height: {2 / $scaleFactor * 100}vh;
      background-size: {$gridSize}px {$gridSize}px;">
     <Description/>
-    <Search modules={structuredClone(modules)}/>
-
-    {#each Object.entries(categories) as [category, modules], panelIndex}
-        <Panel {category} {modules} {panelIndex}/>
-    {/each}
+    <Tabs/>
+    {#key $activeTab}
+        <div class="tab-content" transition:fade|global={{duration: 120}}>
+            {#if $activeTab === "Modules"}
+                <Search modules={structuredClone(modules)}/>
+                {#each Object.entries(categories) as [category, modules], panelIndex}
+                    <Panel {category} {modules} {panelIndex}/>
+                {/each}
+            {:else if $activeTab === "Settings"}
+                <GlobalSettings/>
+            {/if}
+        </div>
+    {/key}
 </div>
 
 <style lang="scss">
@@ -81,5 +91,9 @@
       background-image: linear-gradient(to right, $clickgui-grid-color 1px, transparent 1px),
       linear-gradient(to bottom, $clickgui-grid-color 1px, transparent 1px);
     }
+  }
+
+  .tab-content {
+    position: relative;
   }
 </style>
