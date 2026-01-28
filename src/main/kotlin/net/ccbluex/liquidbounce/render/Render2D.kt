@@ -285,7 +285,7 @@ inline fun GuiGraphics.drawGlyphOnCurrentLayer(
             textureSetup,
             copyPose(),
             this.scissorStack.peek(),
-            createBounds(x0, y0, x1 - x0, y1 - y0),
+            null,
         )
     )
 }
@@ -353,7 +353,7 @@ inline fun GuiGraphics.drawBlitOnCurrentLayer(
             v2,
             argb,
             this.scissorStack.peek(),
-            createBounds(x0.toFloat(), y0.toFloat(), (x1 - x0).toFloat(), (y1 - y0).toFloat()),
+            null,
         )
     )
 }
