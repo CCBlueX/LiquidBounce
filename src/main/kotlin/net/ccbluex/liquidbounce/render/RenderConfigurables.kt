@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.minecraft.core.BlockPos
 import net.minecraft.util.ToFloatFunction
@@ -118,8 +118,7 @@ class GenericDistanceHSBColorMode<T : Any>(
         @JvmOverloads
         fun entity(parent: ChoiceConfigurable<*>, fixedAlpha: Float? = null) =
             GenericDistanceHSBColorMode<Entity>(parent, fixedAlpha) {
-                val camera = mc.gameRenderer.mainCamera
-                camera.position().distanceTo(it.position()).toFloat()
+                it.position().cameraDistance().toFloat()
             }
     }
 }

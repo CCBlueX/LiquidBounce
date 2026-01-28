@@ -26,28 +26,22 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 
-class Nametag private constructor(
+class NametagRenderState(
     val entity: Entity,
+    val scale: Float,
+) {
     /**
      * The text to render as nametag
      */
-    val text: Component,
+    val text: Component = NametagTextFormatter.format(entity)
+
     /**
      * The items that should be rendered above the name tag
      */
-    val items: List<ItemStack>,
-    val scale: Float,
-) {
+    val items: List<ItemStack> = if (entity is LivingEntity) NametagEquipment.createItemList(entity) else emptyList()
 
     var screenPos: Vec3f? = null
         private set
-
-    constructor(entity: LivingEntity, scale: Float) : this(
-        entity,
-        NametagTextFormatter.format(entity),
-        NametagEquipment.createItemList(entity),
-        scale,
-    )
 
     fun calculateScreenPos(tickDelta: Float): Vec3f? {
         val nametagPos = entity.interpolateCurrentPosition(tickDelta)

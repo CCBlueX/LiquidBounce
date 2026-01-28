@@ -320,13 +320,13 @@ val LocalPlayer.lastRotation: Rotation
 val Entity.box: AABB
     get() = boundingBox.inflate(pickRadius.toDouble())
 
-val cameraEyePos: Vec3 get() = (mc.cameraEntity ?: player).eyePosition
+private val cameraPos: Vec3 get() = mc.gameRenderer.mainCamera.position()
 
-fun Position.cameraDistanceSq() = cameraEyePos.distanceToSqr(x(), y(), z())
+fun Position.cameraDistanceSq() = cameraPos.distanceToSqr(x(), y(), z())
 
 fun Position.cameraDistance() = sqrt(cameraDistanceSq())
 
-fun Vec3i.cameraDistanceSq() = cameraEyePos.distanceToSqr(x.toDouble(), y.toDouble(), z.toDouble())
+fun Vec3i.cameraDistanceSq() = cameraPos.distanceToSqr(x.toDouble(), y.toDouble(), z.toDouble())
 
 /**
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
