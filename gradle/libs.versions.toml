@@ -103,7 +103,7 @@ exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", versio
 immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
 iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
 waygl = { group = "maven.modrinth", name = "waygl", version.ref = "waygl" }
-cloth-config = { group = "maven.modrinth", name = "cloth-config", version = "21.11.153+fabric" }
+cloth-config = { group = "maven.modrinth", name = "cloth-config", version = "21.11.153+" }
 
 [plugins]
 fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
