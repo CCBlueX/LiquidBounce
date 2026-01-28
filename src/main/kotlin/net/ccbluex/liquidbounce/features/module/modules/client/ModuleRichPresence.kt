@@ -60,6 +60,8 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
     private val activityType by enumChoice("ActivityType", PresenceActivityType.COMPETING)
     private val statusDisplayType by enumChoice("StatusDisplayType", PresenceStatusDisplayType.NAME)
 
+    private val separatorText by text("Separator", " - ")
+
     private val detailsParts by multiEnumChoice(
         "DetailsParts",
         RichPresencePart.CLIENT_NAME,
@@ -71,8 +73,6 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
         RichPresencePart.MODULES_SUMMARY,
         RichPresencePart.PROTOCOL,
     )
-
-    private val separatorText by text("Separator", " - ")
 
     private object LargeImageConfig : ToggleableConfigurable(
         parent = this,
