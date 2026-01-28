@@ -72,7 +72,6 @@ import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
@@ -249,18 +248,14 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         }
     }
 
-    @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod")
+    @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod", "ReturnCount")
     private suspend fun startAttack(hitResult: HitResult, rotation: Rotation): Boolean {
-        if (player.isHandsBusy) {
+        if (player.isHandsBusy || !clicker.isClickTick) {
             return false
         }
 
-        val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
+        val itemStack = player.mainHandItem
         if (!canAttackWithItemStack(itemStack)) {
-            return false
-        }
-
-        if (!clicker.isClickTick) {
             return false
         }
 
