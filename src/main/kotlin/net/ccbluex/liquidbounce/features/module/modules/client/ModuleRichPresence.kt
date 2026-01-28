@@ -26,16 +26,13 @@ import com.jagrosh.discordipc.entities.pipe.PipeStatus
 import com.jagrosh.discordipc.exceptions.NoDiscordClientException
 import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_AUTHOR
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.clientBranch
 import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
-import net.ccbluex.liquidbounce.api.core.ioScope
-import net.ccbluex.liquidbounce.api.core.retrying
-import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn
 import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
 import net.ccbluex.liquidbounce.config.gson.util.jsonObject
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -47,37 +44,72 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
-import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Discord Rich Presence
+ *
+ * todo: use ordered multi choose (https://github.com/CCBlueX/LiquidBounce/pull/7350), which allows
+ *   custom ordering of parts.
+ */
 object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT, state = true, hide = true,
     aliases = listOf("DiscordPresence")
 ) {
 
-    private val ipcConfiguration = ioScope.retrying(
-        interval = 5.seconds,
-        name = "IPC-Configuration",
-        maxRetries = 5,
+    private const val IPC_APP_ID = 443472046031110144L
+
+    private val activityType by enumChoice("ActivityType", PresenceActivityType.COMPETING)
+    private val statusDisplayType by enumChoice("StatusDisplayType", PresenceStatusDisplayType.NAME)
+
+    private val separatorText by text("Separator", " - ")
+
+    private val detailsParts by multiEnumChoice(
+        "DetailsParts",
+        RichPresencePart.CLIENT_NAME,
+        RichPresencePart.CLIENT_VERSION,
+        RichPresencePart.CLIENT_AUTHOR
+    )
+    private val stateParts by multiEnumChoice(
+        "StateParts",
+        RichPresencePart.MODULES_SUMMARY,
+        RichPresencePart.PROTOCOL,
+    )
+
+    private object LargeImageConfig : ToggleableConfigurable(
+        parent = this,
+        name = "LargeImage",
+        enabled = true,
     ) {
-        ClientCdn.requestDiscordConfiguration().also {
-            LiquidBounce.logger.info("Successfully loaded Discord IPC configuration [${it.appID}].")
-        }
+        val asset by enumChoice("Asset", PresenceAsset.LOGO)
+        val parts by multiEnumChoice(
+            "Parts",
+            RichPresencePart.PROTOCOL,
+        )
     }
 
-    private val detailsText by text("Details", "Nextgen v%clientVersion% by %clientAuthor%")
-    private val stateText by text("State", "%enabledModules% of %totalModules% modules enabled")
+    private object SmallImageConfig : ToggleableConfigurable(
+        parent = this,
+        name = "SmallImage",
+        enabled = false,
+    ) {
+        val asset by enumChoice("Asset", PresenceAsset.LOGO)
+        val parts by multiEnumChoice(
+            "Parts",
+            RichPresencePart.BRANCH,
+            RichPresencePart.COMMIT
+        )
+    }
 
-    private val largeImageText by text("LargeImage", "Online with %protocol%")
-    private val smallImageText by text("SmallImage", "%clientBranch% (%clientCommit%)")
+    private val largeImage = tree(LargeImageConfig)
+    private val smallImage = tree(SmallImageConfig)
 
     private val buttons = jsonArrayOf(
         jsonObject {
-            "label"("Download")
-            "url"("https://liquidbounce.net/")
+            "label"("Website")
+            "url"("https://liquidbounce.net")
         },
-
         jsonObject {
-            "label"("GitHub")
-            "url"("https://github.com/CCBlueX/LiquidBounce")
+            "label"("LiquidProxy")
+            "url"("https://liquidproxy.net")
         },
     )
 
@@ -99,14 +131,12 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
     }
 
     private fun connectIpc() {
-        val ipcConfiguration = ipcConfiguration.getNow() ?: return
-
         if (doNotTryToConnect || ipcClient?.status == PipeStatus.CONNECTED) {
             return
         }
 
         runCatching {
-            ipcClient = IPCClient(ipcConfiguration.appID).also { it.connect() }
+            ipcClient = IPCClient(IPC_APP_ID).also { it.connect() }
         }.onFailure {
             if (it is NoDiscordClientException) {
                 notification(
@@ -143,7 +173,6 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
         }.onSuccess {
             logger.info("Successfully closed Discord RPC.")
         }
-        super.onDisabled()
     }
 
     @Suppress("unused")
@@ -162,24 +191,24 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
             return@tickHandler
         }
 
-        val ipcConfiguration = ipcConfiguration.getNow() ?: return@tickHandler
-
         ipcClient.sendRichPresence {
-            setActivityType(ActivityType.Playing)
-            setStatusDisplayType(StatusDisplayType.Name)
+            setActivityType(activityType.activityType)
+            setStatusDisplayType(statusDisplayType.statusDisplayType)
             setStartTimestamp(timestamp)
 
-            // Check assets contains logo and set logo
-            ipcConfiguration.assets["logo"]?.let { value ->
-                setLargeImageWithTooltip(value, formatText(largeImageText))
+            if (largeImage.enabled) {
+                largeImage.asset.assetValue?.let { assetValue ->
+                    setLargeImageWithTooltip(assetValue, buildText(largeImage.parts))
+                }
+            }
+            if (smallImage.enabled) {
+                smallImage.asset.assetValue?.let { assetValue ->
+                    setSmallImageWithTooltip(assetValue, buildText(smallImage.parts))
+                }
             }
 
-            ipcConfiguration.assets["smallLogo"]?.let { value ->
-                setLargeImageWithTooltip(value, formatText(smallImageText))
-            }
-
-            setDetails(formatText(detailsText))
-            setState(formatText(stateText))
+            setDetails(buildText(detailsParts))
+            setState(buildText(stateParts))
 
             setButtons(buttons)
         }
@@ -190,15 +219,18 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
         shutdownIpc()
     }
 
-    private fun formatText(text: String) = text.replace("%clientVersion%", clientVersion)
-        .replace("%clientAuthor%", CLIENT_AUTHOR)
-        .replace("%clientName%", CLIENT_NAME)
-        .replace("%clientBranch%", clientBranch)
-        .replace("%clientCommit%", clientCommit)
-        .replace("%enabledModules%", ModuleManager.count { it.running }.toString())
-        .replace("%totalModules%", ModuleManager.count().toString())
-        .replace("%protocol%", protocolVersion.let { "${it.name} (${it.version})" })
-        .replace("%server%", (mc.currentServer?.ip ?: "none").hideSensitiveAddress())
+    private fun buildText(parts: Set<RichPresencePart>): String {
+        val pieces = RichPresencePart.entries
+            .filter { it in parts }
+            .mapNotNull { it.getText() }
+            .filter { it.isNotBlank() }
+
+        if (pieces.isEmpty()) {
+            return ""
+        }
+
+        return pieces.joinToString(separatorText)
+    }
 
     private inline fun IPCClient.sendRichPresence(builderAction: RichPresence.Builder.() -> Unit) =
         sendRichPresence(RichPresence.Builder().apply(builderAction).build())
@@ -207,5 +239,56 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
      * Always running after initialized
      */
     override val running get() = LiquidBounce.isInitialized
+
+    private enum class RichPresencePart(override val choiceName: String) : NamedChoice {
+        CLIENT_NAME("Client Name"),
+        CLIENT_VERSION("Client Version"),
+        CLIENT_AUTHOR("Client Author"),
+        MODULES_SUMMARY("Modules"),
+        PROTOCOL("Protocol"),
+        SERVER("Server"),
+        BRANCH("Branch"),
+        COMMIT("Commit");
+
+        fun getText(): String? = when (this) {
+            CLIENT_NAME -> LiquidBounce.CLIENT_NAME
+            CLIENT_VERSION -> clientVersion
+            CLIENT_AUTHOR -> LiquidBounce.CLIENT_AUTHOR
+            MODULES_SUMMARY -> "${ModuleManager.count { it.running }}/${ModuleManager.count()} modules"
+            PROTOCOL -> protocolVersion.let { "${it.name} (${it.version})" }
+            SERVER -> (mc.currentServer?.ip ?: "none").hideSensitiveAddress()
+            BRANCH -> clientBranch
+            COMMIT -> clientCommit
+        }
+
+    }
+
+    @Suppress("unused")
+    private enum class PresenceActivityType(
+        override val choiceName: String,
+        val activityType: ActivityType,
+    ) : NamedChoice {
+        PLAYING("Playing", ActivityType.Playing),
+        LISTENING("Listening", ActivityType.Listening),
+        WATCHING("Watching", ActivityType.Watching),
+        COMPETING("Competing", ActivityType.Competing),
+    }
+
+    @Suppress("unused")
+    private enum class PresenceStatusDisplayType(
+        override val choiceName: String,
+        val statusDisplayType: StatusDisplayType,
+    ) : NamedChoice {
+        NAME("Name", StatusDisplayType.Name),
+        STATE("State", StatusDisplayType.State),
+        DETAILS("Details", StatusDisplayType.Details),
+    }
+
+    private enum class PresenceAsset(
+        override val choiceName: String,
+        val assetValue: String?,
+    ) : NamedChoice {
+        LOGO("Logo", "liquidbounce"),
+    }
 
 }
