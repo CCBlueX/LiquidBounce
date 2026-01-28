@@ -282,7 +282,6 @@ object LiquidBounce : EventListener {
         WorldToScreen
         ActiveServerList
         ConfigSystem.root(ClientItemGroups)
-        ConfigSystem.root(LanguageManager)
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
         ConfigSystem.root(GlobalManager)

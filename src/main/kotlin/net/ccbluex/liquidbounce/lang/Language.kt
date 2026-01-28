@@ -25,11 +25,10 @@
 package net.ccbluex.liquidbounce.lang
 
 import net.ccbluex.liquidbounce.config.gson.util.readJson
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
-import net.ccbluex.liquidbounce.lang.LanguageManager.knownLanguages
-import net.ccbluex.liquidbounce.lang.LanguageManager.languageMap
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.locale.Language
@@ -44,76 +43,98 @@ import java.util.concurrent.ConcurrentHashMap
 fun translation(key: String, vararg args: Any): MutableComponent =
     MutableComponent.create(LanguageText(key, args))
 
-object LanguageManager : Configurable("lang") {
+object LanguageManager : Configurable("Language") {
 
-    // Current language
-    val languageIdentifier: String
-        get() = overrideLanguage.ifBlank { mc.options.languageCode }
+    var clientLanguage by enumChoice("ClientLanguage", ClientLanguage.AUTO)
+        .onChanged { _ ->
+            loadLanguage(currentLanguageChoice())
+            EventManager.callEvent(ClientLanguageChangedEvent())
+        }
 
-    // The game language can be overridden by the user
-    var overrideLanguage by text("OverrideLanguage", "").onChanged { lang ->
-        loadLanguage(lang)
-        EventManager.callEvent(ClientLanguageChangedEvent())
+    private val COMMON_UNDERSTOOD_LANGUAGE = ClientLanguage.EN_US
+    val MINECRAFT_LANGUAGE: ClientLanguage?
+        get() = languageChoiceFromCode(mc.options.languageCode)
+
+    enum class ClientLanguage(override val choiceName: String, val code: String? = null) : NamedChoice {
+        AUTO("Auto"),
+        EN_US("English (US)", "en_us"),
+        EN_PT("English (Pirate)", "en_pt"),
+        DE_DE("German", "de_de"),
+        JA_JP("Japanese", "ja_jp"),
+        ZH_CN("Chinese (Simplified)", "zh_cn"),
+        ZH_TW("Chinese (Traditional)", "zh_tw"),
+        RU_RU("Russian", "ru_ru"),
+        UA_UA("Ukrainian", "ua_ua"),
+        PT_BR("Portuguese (Brazil)", "pt_br"),
+        TR_TR("Turkish", "tr_tr"),
+        NL_NL("Dutch (Netherlands)", "nl_nl"),
+        NL_BE("Dutch (Belgium)", "nl_be"),
     }
 
-    // Common language
-    private const val COMMON_UNDERSTOOD_LANGUAGE = "en_us"
+    val languageCodes = ClientLanguage.entries
+        .mapNotNull(ClientLanguage::code)
+        .toSet()
 
-    // List of all languages
-    val knownLanguages = setOf(
-        "en_us",
-        "de_de",
-        "ja_jp",
-        "zh_cn",
-        "zh_tw",
-        "ru_ru",
-        "ua_ua",
-        "en_pt",
-        "pt_br",
-        "tr_tr",
-        "nl_nl",
-        "nl_be"
-    )
-    private val languageMap = ConcurrentHashMap<String, ClientLanguage>()
+    private val languageRegistry = ConcurrentHashMap<ClientLanguage, net.ccbluex.liquidbounce.lang.ClientLanguage>()
 
-    /**
-     * Load a specified language which are pre-defined in [knownLanguages] and stored in assets.
-     * If a language is not found, it will be logged as error.
-     *
-     * Languages are stored in assets/minecraft/liquidbounce/lang and when loaded will be stored in [languageMap]
-     */
-    private fun loadLanguage(language: String): ClientLanguage? {
-        return if (languageMap.containsKey(language)) {
-            languageMap[language]!!
-        } else if (language !in knownLanguages) {
-            loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)
+    private fun loadLanguage(choice: ClientLanguage): net.ccbluex.liquidbounce.lang.ClientLanguage? {
+        require(choice != ClientLanguage.AUTO) { "Cannot load language ${choice.code} because it is auto" }
+        require(choice.code != null) { "Cannot load language ${choice.choiceName} because it has no code" }
+
+        return if (languageRegistry.containsKey(choice)) {
+            languageRegistry[choice]!!
         } else {
             runCatching {
-                languageMap.computeIfAbsent(language) {
-                    val languageFile = javaClass.getResourceAsStream("/resources/liquidbounce/lang/$language.json")
+                languageRegistry.computeIfAbsent(choice) {
+                    val languageFile = javaClass.getResourceAsStream(
+                        "/resources/liquidbounce/lang/${choice.code}.json"
+                    )
                     val translations = languageFile!!.readJson<HashMap<String, String>>()
 
                     ClientLanguage(translations)
                 }
             }.onSuccess {
-                logger.info("Loaded language $language")
+                logger.info("Loaded language ${choice.code}")
             }.onFailure {
-                logger.error("Failed to load language $language", it)
+                logger.error("Failed to load language ${choice.code}", it)
             }.getOrNull()
         }
     }
 
-    fun loadDefault() {
-        loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)
-        loadLanguage(languageIdentifier)
+    fun languageChoiceFromCode(code: String): ClientLanguage? {
+        if (code.isBlank()) {
+            return null
+        }
+
+        return ClientLanguage.entries.firstOrNull { language ->
+            language.code.equals(code, true)
+        }
     }
 
-    fun getLanguage() = loadLanguage(languageIdentifier) ?: loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)
+    private fun currentLanguageChoice(): ClientLanguage {
+        if (clientLanguage != ClientLanguage.AUTO) {
+            return clientLanguage
+        }
+
+        val minecraftChoice = MINECRAFT_LANGUAGE
+        if (minecraftChoice != null) {
+            return minecraftChoice
+        }
+
+        return COMMON_UNDERSTOOD_LANGUAGE
+    }
+
+    fun loadDefault() {
+        loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)
+        loadLanguage(currentLanguageChoice())
+    }
+
+    fun getLanguage() = loadLanguage(currentLanguageChoice()) ?: getCommonLanguage()
 
     fun getCommonLanguage() = loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)
 
     fun hasFallbackTranslation(key: String) =
-        loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)?.has(key) ?: false
+        getCommonLanguage()?.has(key) ?: false
 
 }
 

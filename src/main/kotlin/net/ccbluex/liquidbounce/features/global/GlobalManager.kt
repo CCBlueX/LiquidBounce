@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.global
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
+import net.ccbluex.liquidbounce.lang.LanguageManager
 
 /**
  * Global Manager
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSetting
 object GlobalManager : Configurable("Settings") {
 
     init {
+        tree(LanguageManager)
         tree(CommandManager.GlobalSettings)
         tree(GlobalSettingsTarget)
         tree(GlobalSettingsAutoTranslate)
