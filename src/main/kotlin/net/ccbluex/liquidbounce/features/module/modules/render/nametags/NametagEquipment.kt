@@ -22,6 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.render.drawQuad
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.world.entity.LivingEntity
 
 internal object NametagEquipment : Configurable("Equipment") {
@@ -36,7 +40,27 @@ internal object NametagEquipment : Configurable("Equipment") {
     )
     private val skipEmptySlot by boolean("SkipEmptySlot", true)
     val showInfo by boolean("ShowInfo", true)
-    private val highlightUsingItem by boolean("HighlightUsingItem", false)
+
+    object HighlightItemInUse : ToggleableConfigurable(ModuleNametags, "HighlightItemInUse", false) {
+        private val fillColor by color("FillColor", Color4b.RED.alpha(100))
+        private val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
+
+        context(guiGraphics: GuiGraphics)
+        fun draw(x: Float, y: Float) {
+            guiGraphics.drawQuad(
+                x,
+                y,
+                x + 16F,
+                y + 16F,
+                fillColor,
+                outlineColor,
+            )
+        }
+    }
+
+    init {
+        tree(HighlightItemInUse)
+    }
 
     /**
      * Creates a list of items that should be rendered above the name tag.
@@ -57,9 +81,11 @@ internal object NametagEquipment : Configurable("Equipment") {
             stacks.asList()
         }
 
-        if (highlightUsingItem && entity.isUsingItem) {
+        equipments.highlightIndex = if (HighlightItemInUse.enabled && entity.isUsingItem) {
             val usingStack = entity.getItemInHand(entity.usedItemHand)
-            equipments.highlightIndex = equipments.itemStacks.indexOfFirst { usingStack === it }
+            equipments.itemStacks.indexOfFirst { usingStack === it }
+        } else {
+            -1
         }
     }
 }

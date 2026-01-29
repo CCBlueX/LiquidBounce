@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.SingleItemStackRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.text.PlainText
@@ -27,7 +29,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 
-class NametagRenderState {
+internal class NametagRenderState {
 
     @JvmField var entity: Entity? = null
 
@@ -91,6 +93,29 @@ class NametagRenderState {
         fun reset() {
             this.itemStacks = emptyList()
             this.highlightIndex = -1
+        }
+    }
+
+    fun equipmentStackRenderer(): SingleItemStackRenderer {
+        val raw = if (NametagEquipment.showInfo) {
+            if (entity === player) {
+                SingleItemStackRenderer.All
+            } else {
+                SingleItemStackRenderer.ForOtherPlayer
+            }
+        } else {
+            SingleItemStackRenderer.OnlyItem
+        }
+
+        if (equipments.highlightIndex !in equipments.itemStacks.indices) return raw
+
+        return SingleItemStackRenderer { font, index, stack, x, y ->
+            with(raw) {
+                drawItemStack(font, index, stack, x, y)
+            }
+            if (equipments.highlightIndex == index) {
+                NametagEquipment.HighlightItemInUse.draw(x.toFloat(), y.toFloat())
+            }
         }
     }
 }

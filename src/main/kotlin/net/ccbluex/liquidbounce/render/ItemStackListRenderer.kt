@@ -333,7 +333,7 @@ class ItemStackListRenderer private constructor(
     }
 
     fun interface SingleItemStackRenderer {
-        fun GuiGraphics.drawItemStack(textRenderer: Font, index: Int, stack: ItemStack, x: Int, y: Int)
+        fun GuiGraphics.drawItemStack(font: Font, index: Int, stack: ItemStack, x: Int, y: Int)
 
         companion object {
 
