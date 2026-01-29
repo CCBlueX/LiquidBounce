@@ -17,29 +17,28 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.global
+package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.configs
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
-import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.dropPort
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.rootDomain
 import net.minecraft.client.gui.screens.ConnectScreen
 
-object GlobalSettingsAutoConfig : ToggleableConfigurable(
-    name = "AutoConfig",
-    enabled = true,
+object ModuleAutoConfig : ClientModule(
+    "AutoConfig",
+    ModuleCategories.MISC,
+    state = true,
     aliases = listOf("AutoSettings")
 ) {
 
@@ -56,20 +55,18 @@ object GlobalSettingsAutoConfig : ToggleableConfigurable(
         doNotIncludeAlways()
     }
 
-    override fun onEnabled() {
-        eventListenerScope.launch {
-            val currentServerEntry = mc.currentServer
+    override suspend fun enabledEffect() {
+        val currentServerEntry = mc.currentServer
 
-            if (currentServerEntry == null) {
-                notification(
-                    "AutoConfig", "You are not connected to a server.",
-                    NotificationEvent.Severity.ERROR
-                )
-                return@launch
-            }
-
-            loadServerConfig(currentServerEntry.ip.dropPort().rootDomain(), null)
+        if (currentServerEntry == null) {
+            notification(
+                "AutoConfig", "You are not connected to a server.",
+                NotificationEvent.Severity.ERROR
+            )
+            return
         }
+
+        loadServerConfig(currentServerEntry.ip.dropPort().rootDomain(), null)
     }
 
     @Suppress("unused")
@@ -114,9 +111,9 @@ object GlobalSettingsAutoConfig : ToggleableConfigurable(
         // There can be multiple configs for the same server, but with different names
         // and the global config is likely named e.g "hypixel", while the more specific ones are named
         // "hypixel-csgo", "hypixel-legit", etc.
-        val autoConfig = (configs ?: return).filter { config ->
+        val autoConfig = (AutoConfig.configs ?: return).filter { config ->
             config.serverAddress?.rootDomain().equals(address, true) ||
-                    config.serverAddress.equals(address, true)
+                config.serverAddress.equals(address, true)
         }.minByOrNull { config -> config.name.length }
 
         if (autoConfig == null) {
@@ -133,12 +130,16 @@ object GlobalSettingsAutoConfig : ToggleableConfigurable(
         }.onFailure { error ->
             logger.error("Failed to load config ${autoConfig.name} for $address.", error)
             connectScreen?.updateStatus(markAsError(message("failed", address)))
-            notification("Auto Config", "Failed to load config ${autoConfig.name}.",
-                NotificationEvent.Severity.ERROR)
+            notification(
+                "Auto Config", "Failed to load config ${autoConfig.name}.",
+                NotificationEvent.Severity.ERROR
+            )
         }.onSuccess {
             connectScreen?.updateStatus(regular(message("loaded", address)))
-            notification("Auto Config", "Successfully loaded config ${autoConfig.name}.",
-                NotificationEvent.Severity.SUCCESS)
+            notification(
+                "Auto Config", "Successfully loaded config ${autoConfig.name}.",
+                NotificationEvent.Severity.SUCCESS
+            )
         }
     }
 
@@ -146,9 +147,6 @@ object GlobalSettingsAutoConfig : ToggleableConfigurable(
      * Overwrites the condition requirement for being in-game
      */
     override val running
-        get() = !isDestructed && enabled
-
-    fun message(key: String, vararg args: Any) =
-        translation("liquidbounce.module.autoConfig.messages.$key", args = args)
+        get() = !HideAppearance.isDestructed && enabled
 
 }
