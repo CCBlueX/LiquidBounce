@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -27,6 +28,8 @@ import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.renderer.entity.state.EntityRenderState
@@ -58,10 +61,13 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
     val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    private val nametagsToRender = mutableListOf<Nametag>()
+    private val nametagPool = Pool(::NametagRenderState, NametagRenderState::reset)
+
+    private val nametagsToRender = mutableListOf<NametagRenderState>()
 
     override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
+        nametagPool.recycleAll(nametagsToRender)
         nametagsToRender.clear()
     }
 
@@ -91,23 +97,25 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
 
     /**
      * Collects all entities that should be rendered, gets the screen position, where the name tag should be displayed,
-     * add what should be rendered ([Nametag]). The nametags are sorted in order of rendering.
+     * add what should be rendered ([NametagRenderState]). The nametags are sorted in order of rendering.
      */
     private fun collectAndSortNametagsToRender() {
+        nametagPool.recycleAll(nametagsToRender)
         nametagsToRender.clear()
-        val cameraEntity = mc.cameraEntity ?: mc.player ?: return
         for (entity in RenderedEntities) {
-            val distance = entity.distanceTo(cameraEntity)
+            val distance = entity.position().cameraDistance().toFloat()
             val scale = scale.transform(distance)
             if (scale > 0.01f) {
-                nametagsToRender += Nametag(entity, scale)
+                val nametag = nametagPool.borrow()
+                nametag.update(entity, scale)
+                nametagsToRender += nametag
             }
         }
         nametagsToRender.sortWith(NAMETAG_COMPARATOR)
     }
 
-    private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
-        nametag.entity.distanceToSqr(mc.cameraEntity ?: return@comparingDouble Double.MAX_VALUE)
+    private val NAMETAG_COMPARATOR: Comparator<NametagRenderState> = Comparator.comparingDouble { nametag ->
+        nametag.entity!!.position().cameraDistanceSq()
     }
 
     fun shouldRenderVanillaNametag(state: EntityRenderState): Boolean {

@@ -26,6 +26,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -48,12 +49,16 @@ public abstract class MixinClientHandshakePacketListenerImplMixin {
             return original;
         }
 
-        var notOfflineMode = Component.literal("Not offline mode")
-                .withStyle(style -> style.withColor(ChatFormatting.RED).withUnderlined(true));
-        var requiresValidText = Component.literal("This server requires a valid session. Possible solutions:")
-                .withStyle(style -> style.withColor(ChatFormatting.RED));
-        var loginText = Component.literal("Login into a Minecraft premium account and try again.");
-        var retryText = Component.literal("If you've already signed into a premium account,\n" +
+        var notOfflineMode = PlainText.of(
+            "Not offline mode",
+            Style.EMPTY.withColor(ChatFormatting.RED).withUnderlined(true)
+        );
+        var requiresValidText = PlainText.of(
+            "This server requires a valid session. Possible solutions:",
+            ChatFormatting.RED
+        );
+        var loginText = PlainText.of("Login into a Minecraft premium account and try again.");
+        var retryText = PlainText.of("If you've already signed into a premium account,\n" +
                 "reload the game or re-sign into the account.");
 
         return Component.empty()

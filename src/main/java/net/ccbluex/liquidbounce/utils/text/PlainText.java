@@ -63,6 +63,10 @@ public record PlainText(
                 : new PlainText(content, style);
     }
 
+    public static PlainText of(String content) {
+        return of(content, Style.EMPTY);
+    }
+
     public static PlainText of(String content, Style style) {
         return content.isEmpty() && style.isEmpty()
                 ? EMPTY

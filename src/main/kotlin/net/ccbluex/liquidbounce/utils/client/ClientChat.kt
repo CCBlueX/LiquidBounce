@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAc
 import net.ccbluex.liquidbounce.interfaces.TextColorAddition
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.text.RunnableClickEvent
 import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
@@ -59,9 +60,11 @@ fun clickablePath(file: File): MutableComponent =
         .onClick(ClickEvent.OpenFile(file))
         .onHover(HoverEvent.ShowText("Open".asPlainText()))
 
-fun highlight(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.DARK_PURPLE)
+fun highlight(text: MutableComponent): MutableComponent = text
+    .withStyle(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD)
 
-fun highlight(text: String): MutableComponent = text.asText().withStyle(ChatFormatting.DARK_PURPLE)
+fun highlight(text: String): MutableComponent = text.asText()
+    .withStyle(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD)
 
 fun warning(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.YELLOW)
 
