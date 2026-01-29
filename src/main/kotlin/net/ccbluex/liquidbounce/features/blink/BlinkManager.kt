@@ -197,12 +197,12 @@ object BlinkManager : EventListener, Configurable("BlinkManager") {
         val pos = positions.firstOrNull() ?: return null
         val rotation = RotationManager.actualServerRotation
 
-        return BlinkEspData(player, pos, rotation)
-    }
-
-    fun isPerspectiveThirdPerson(): Boolean {
         val perspectiveEvent = EventManager.callEvent(PerspectiveEvent(mc.options.cameraType))
-        return perspectiveEvent.perspective != CameraType.FIRST_PERSON
+        if (perspectiveEvent.perspective == CameraType.FIRST_PERSON) {
+            return null
+        }
+
+        return BlinkEspData(player, pos, rotation)
     }
 
     private object EspBox : AbstractBlinkEspBox(::getEspData) {
@@ -213,22 +213,16 @@ object BlinkManager : EventListener, Configurable("BlinkManager") {
     private object EspWireframe : AbstractBlinkEspWireframe(::getEspData) {
         override val parent: ChoiceConfigurable<*>
             get() = espMode
-        override val running: Boolean
-            get() = super.running && isPerspectiveThirdPerson()
     }
 
     private object EspModel : AbstractBlinkEspModel(::getEspData) {
         override val parent: ChoiceConfigurable<*>
             get() = espMode
-        override val running: Boolean
-            get() = super.running && isPerspectiveThirdPerson()
     }
 
     private object EspNone : AbstractBlinkNone() {
         override val parent: ChoiceConfigurable<*>
             get() = espMode
-        override val running: Boolean
-            get() = super.running && isPerspectiveThirdPerson()
     }
 
     @Suppress("unused")
