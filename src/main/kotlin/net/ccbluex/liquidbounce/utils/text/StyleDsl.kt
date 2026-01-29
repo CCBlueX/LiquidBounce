@@ -17,24 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.client;
+package net.ccbluex.liquidbounce.utils.text
 
-import net.minecraft.network.chat.ClickEvent;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.network.chat.Style
 
-/**
- * Allows {@link net.minecraft.network.chat.MutableComponent} to execute anything on click.
- * <p>
- * Known issue: This type cannot be resolved with {@link ClickEvent#CODEC}.
- */
-public record RunnableClickEvent(Runnable runnable) implements ClickEvent, Runnable {
-    @Override
-    public ClickEvent.@NotNull Action action() {
-        return Action.CUSTOM;
-    }
+inline fun Style.with(block: StyleBuilder.() -> Unit): Style =
+    StyleBuilder(this).apply(block).build()
 
-    @Override
-    public void run() {
-        runnable.run();
-    }
-}
+inline fun style(block: StyleBuilder.() -> Unit): Style =
+    Style.EMPTY.with(block)
