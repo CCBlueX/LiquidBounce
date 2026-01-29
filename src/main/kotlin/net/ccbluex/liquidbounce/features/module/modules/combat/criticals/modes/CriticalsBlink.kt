@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.wouldDoCriticalHit
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
@@ -53,9 +53,9 @@ object CriticalsBlink : Choice("Blink") {
     }
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin == TransferOrigin.OUTGOING && !wouldDoCriticalHit(ignoreSprint = true) && enemyInRange) {
-            if (PacketQueueManager.isAboveTime(nextDelay.toLong())) {
+            if (BlinkManager.isAboveTime(nextDelay.toLong())) {
                 nextDelay = delay.random()
                 return@handler
             }
@@ -66,8 +66,8 @@ object CriticalsBlink : Choice("Blink") {
                 is ServerboundSignUpdatePacket,
                 is ServerboundInteractPacket,
                 is ServerboundSwingPacket,
-                is ServerboundResourcePackPacket -> PacketQueueManager.Action.PASS
-                else -> PacketQueueManager.Action.QUEUE
+                is ServerboundResourcePackPacket -> BlinkManager.Action.PASS
+                else -> BlinkManager.Action.QUEUE
             }
             isInState = true
         } else {

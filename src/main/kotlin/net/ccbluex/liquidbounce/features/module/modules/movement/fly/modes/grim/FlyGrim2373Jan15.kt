@@ -22,11 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -58,7 +58,7 @@ object FlyGrim2373Jan15 : Choice("Grim2373Jan15") {
     }
 
     @Suppress("unused")
-    private val queuePacketHandler = handler<QueuePacketEvent> { event ->
+    private val queuePacketHandler = handler<BlinkPacketEvent> { event ->
         val packet = event.packet
         if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
             shouldDelay = true

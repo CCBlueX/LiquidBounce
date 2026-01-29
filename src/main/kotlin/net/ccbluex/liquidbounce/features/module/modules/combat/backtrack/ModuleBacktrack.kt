@@ -19,33 +19,30 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.backtrack
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspBox
+import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspModel
+import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspWireframe
+import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkNone
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squareBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.render.WireframePlayer
-import net.minecraft.client.renderer.LightTexture
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
 import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
@@ -60,7 +57,6 @@ import net.minecraft.network.protocol.game.VecDeltaCodec
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
@@ -87,8 +83,11 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     }
 
     private val espMode = choices(
-        "EspMode", Wireframe, arrayOf(
-            Box, Model, Wireframe, None
+        "Esp", BacktrackWireframe, arrayOf(
+            BacktrackBox,
+            BacktrackModel,
+            BacktrackWireframe,
+            EspNone
         )
     ).apply {
         doNotIncludeAlways()
@@ -100,13 +99,13 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
 
     private var shouldPause = false
 
-    var target: Entity? = null
+    private var target: Entity? = null
     private val position = VecDeltaCodec()
 
     var currentDelay = delay.random()
 
     @Suppress("unused")
-    private val queuePacketHandler = handler<QueuePacketEvent> { event ->
+    private val queuePacketHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin != TransferOrigin.INCOMING) {
             return@handler
         }
@@ -117,7 +116,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
 
         if (packet == null) {
             if (shouldCancel || hasQueuedIncoming) {
-                event.action = PacketQueueManager.Action.PASS
+                event.action = BlinkManager.Action.PASS
             }
             return@handler
         }
@@ -129,7 +128,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         when (packet) {
             // Ignore message-related packets
             is ServerboundChatPacket, is ClientboundSystemChatPacket, is ServerboundChatCommandPacket -> {
-                event.action = PacketQueueManager.Action.PASS
+                event.action = BlinkManager.Action.PASS
                 return@handler
             }
 
@@ -142,7 +141,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
             // Ignore own hurt sounds
             is ClientboundSoundPacket -> {
                 if (packet.sound.value() == SoundEvents.PLAYER_HURT) {
-                    event.action = PacketQueueManager.Action.PASS
+                    event.action = BlinkManager.Action.PASS
                     return@handler
                 }
             }
@@ -174,96 +173,42 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
             // Is the target's actual position closer than its tracked position?
             if (target.squareBoxedDistanceTo(player, pos) < target.squaredBoxedDistanceTo(player)) {
                 // Process all packets. We want to be able to hit the enemy, not the opposite.
-                event.action = PacketQueueManager.Action.FLUSH
+                event.action = BlinkManager.Action.FLUSH
                 // And stop right here. No need to cancel further packets.
                 return@handler
             }
         }
 
-        event.action = PacketQueueManager.Action.QUEUE
+        event.action = BlinkManager.Action.QUEUE
     }
 
-    private sealed class RenderChoice(name: String) : Choice(name) {
-        final override val parent: ChoiceConfigurable<*>
+    fun getEspData(): BlinkEspData? {
+        val entity = target ?: return null
+        val pos = position.base
+        val rotation = entity.rotation
+
+        return BlinkEspData(entity, pos, rotation)
+    }
+
+    private object BacktrackBox : AbstractBlinkEspBox(::getEspData) {
+        override val parent: ChoiceConfigurable<*>
             get() = espMode
-
-        protected fun getEntityPosition(): Pair<Entity, Vec3>? {
-            val entity = target ?: return null
-            val pos = position.base
-            return entity to pos
-        }
     }
 
-    private object Box : RenderChoice("Box") {
-        private val color by color("Color", Color4b(36, 32, 147, 87))
-
-        @Suppress("unused")
-        private val renderHandler = handler<WorldRenderEvent> { event ->
-            val (entity, pos) = getEntityPosition() ?: return@handler
-
-            val dimensions = entity.getDimensions(entity.pose)
-            val d = dimensions.width.toDouble() / 2.0
-
-            val box = AABB(-d, 0.0, -d, d, dimensions.height.toDouble(), d).inflate(0.05)
-
-            renderEnvironmentForWorld(event.matrixStack) {
-                withPositionRelativeToCamera(pos) {
-                    drawBox(box, color)
-                }
-            }
-        }
+    private object BacktrackWireframe : AbstractBlinkEspWireframe(::getEspData) {
+        override val parent: ChoiceConfigurable<*>
+            get() = espMode
     }
 
-    private object Model : RenderChoice("Model") {
-        private val lightAmount by float("LightAmount", 0.3f, 0.01f..1f)
-
-        @Suppress("unused")
-        private val renderHandler = handler<WorldRenderEvent> { event ->
-            val (entity, pos) = getEntityPosition() ?: return@handler
-
-            val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
-
-            val rs = entityRenderer.createRenderState(entity, event.partialTicks)
-
-            val originalBlockLight = LightTexture.block(rs.lightCoords)
-            val originalSkyLight = LightTexture.sky(rs.lightCoords)
-            rs.lightCoords = LightTexture.pack(
-                (originalBlockLight * lightAmount).floorToInt(),
-                (originalSkyLight * lightAmount).floorToInt(),
-            )
-            rs.x = pos.x
-            rs.y = pos.y
-            rs.z = pos.z
-            val cameraState = mc.gameRenderer.levelRenderState.cameraRenderState
-            rs.distanceToCameraSq = pos.distanceToSqr(cameraState.pos)
-
-            // TODO(1.21.10-port): position & light incorrect
-            mc.entityRenderDispatcher.submit(
-                rs,
-                cameraState,
-                rs.x - cameraState.pos.x,
-                rs.y - cameraState.pos.y,
-                rs.z - cameraState.pos.z,
-                event.matrixStack,
-                mc.gameRenderer.submitNodeStorage,
-            )
-        }
+    private object BacktrackModel : AbstractBlinkEspModel(::getEspData) {
+        override val parent: ChoiceConfigurable<*>
+            get() = espMode
     }
 
-    private object Wireframe : RenderChoice("Wireframe") {
-        private val color by color("Color", Color4b(36, 32, 147, 87))
-        private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
-
-        @Suppress("unused")
-        private val renderHandler = handler<WorldRenderEvent> {
-            val (entity, pos) = getEntityPosition() ?: return@handler
-
-            val wireframePlayer = WireframePlayer(pos, entity.yRot, entity.xRot)
-            wireframePlayer.render(it, color, outlineColor)
-        }
+    private object EspNone : AbstractBlinkNone() {
+        override val parent: ChoiceConfigurable<*>
+            get() = espMode
     }
-
-    private object None : RenderChoice("None")
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> { event ->
@@ -279,11 +224,11 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
 
         if (running && shouldCancelPackets()) {
             val now = System.currentTimeMillis()
-            PacketQueueManager.flush { snapshot ->
+            BlinkManager.flush { snapshot ->
                 snapshot.origin == TransferOrigin.INCOMING && snapshot.timestamp <= now - currentDelay
             }
         } else if (hadQueuedIncoming) {
-            PacketQueueManager.flush(TransferOrigin.INCOMING)
+            BlinkManager.flush(TransferOrigin.INCOMING)
         }
 
         if (!hasQueuedIncoming()) {
@@ -352,9 +297,9 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
 
     fun clear(handlePackets: Boolean = true, clearOnly: Boolean = false, resetChronometer: Boolean = true) {
         if (handlePackets && !clearOnly) {
-            PacketQueueManager.flush(TransferOrigin.INCOMING)
+            BlinkManager.flush(TransferOrigin.INCOMING)
         } else if (clearOnly) {
-            PacketQueueManager.packetQueue.removeIf { snapshot -> snapshot.origin == TransferOrigin.INCOMING }
+            BlinkManager.packetQueue.removeIf { snapshot -> snapshot.origin == TransferOrigin.INCOMING }
         }
 
         if (target != null && resetChronometer) {
@@ -389,6 +334,6 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         target?.let { target -> target.isAlive && shouldBacktrack(target) } == true
 
     private fun hasQueuedIncoming() =
-        PacketQueueManager.packetQueue.any { snapshot -> snapshot.origin == TransferOrigin.INCOMING }
+        BlinkManager.packetQueue.any { snapshot -> snapshot.origin == TransferOrigin.INCOMING }
 
 }

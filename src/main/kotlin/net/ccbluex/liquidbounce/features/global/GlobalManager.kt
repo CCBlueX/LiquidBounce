@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.global
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.lang.LanguageManager
@@ -34,6 +35,7 @@ object GlobalManager : Configurable("Settings") {
         tree(LanguageManager)
         tree(CommandManager.GlobalSettings)
         tree(GlobalSettingsTarget)
+        tree(BlinkManager)
         tree(GlobalSettingsAutoTranslate)
         tree(GlobalBrowserSettings)
         tree(GlobalSettingsClientChat)

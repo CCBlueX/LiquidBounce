@@ -19,17 +19,17 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
@@ -57,7 +57,7 @@ internal object VelocityLag : VelocityMode("Lag") {
     }
 
     @Suppress("unused")
-    private val queuePacketHandler = handler<QueuePacketEvent> { event ->
+    private val queuePacketHandler = handler<BlinkPacketEvent> { event ->
         if (!shouldLag || event.origin != TransferOrigin.INCOMING || event.packet is ClientboundKeepAlivePacket) {
             return@handler
         }
@@ -77,7 +77,7 @@ internal object VelocityLag : VelocityMode("Lag") {
         if (shouldLag && lagTicks == 0) {
             shouldLag = false
             lagTicks = 0
-            PacketQueueManager.flush(TransferOrigin.INCOMING)
+            BlinkManager.flush(TransferOrigin.INCOMING)
             shouldJump = true
             waitTicks(2)
             shouldJump = false

@@ -19,17 +19,17 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.positions
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
@@ -110,19 +110,19 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
                     "FakeLag", "Unable to evade arrow. Blinking.",
                     NotificationEvent.Severity.INFO
                 )
-                PacketQueueManager.flush(TransferOrigin.OUTGOING)
+                BlinkManager.flush(TransferOrigin.OUTGOING)
             } else if (evadingPacket.ticksToImpact != null) {
                 notification("FakeLag", "Trying to evade arrow...", NotificationEvent.Severity.INFO)
-                PacketQueueManager.flush(evadingPacket.idx + 1)
+                BlinkManager.flush(evadingPacket.idx + 1)
             } else {
                 notification("FakeLag", "Arrow evaded.", NotificationEvent.Severity.INFO)
-                PacketQueueManager.flush(evadingPacket.idx + 1)
+                BlinkManager.flush(evadingPacket.idx + 1)
             }
         }
     }
 
     @Suppress("unused", "ComplexCondition")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin != TransferOrigin.OUTGOING || player.isDeadOrDying || player.isInWater
             || mc.screen != null
         ) {
@@ -133,7 +133,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
             return@handler
         }
 
-        if (PacketQueueManager.isAboveTime(nextDelay.toLong())) {
+        if (BlinkManager.isAboveTime(nextDelay.toLong())) {
             nextDelay = delay.random()
             return@handler
         }
@@ -193,12 +193,12 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
 
         // Support auto shoot with fake lag
         if (running && ModuleAutoShoot.constantLag && ModuleAutoShoot.targetTracker.target == null) {
-            event.action = PacketQueueManager.Action.QUEUE
+            event.action = BlinkManager.Action.QUEUE
             return@handler
         }
 
         event.action = when (mode) {
-            Mode.CONSTANT -> PacketQueueManager.Action.QUEUE
+            Mode.CONSTANT -> BlinkManager.Action.QUEUE
             Mode.DYNAMIC -> {
                 // If there is an enemy in range, we want to lag.
                 if (!isEnemyNearby) {
@@ -206,7 +206,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
                 }
 
                 val position = positions.firstOrNull() ?: run {
-                    event.action = PacketQueueManager.Action.QUEUE
+                    event.action = BlinkManager.Action.QUEUE
                     return@handler
                 }
                 val playerBox = player.dimensions.makeBoundingBox(position)
@@ -238,7 +238,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
                     return@handler
                 }
 
-                PacketQueueManager.Action.QUEUE
+                BlinkManager.Action.QUEUE
             }
         }
     }

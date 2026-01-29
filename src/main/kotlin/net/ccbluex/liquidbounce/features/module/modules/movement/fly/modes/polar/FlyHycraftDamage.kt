@@ -21,14 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.pola
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
@@ -69,7 +69,7 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
      * Used to works on different servers as well but now only Hycraft
      */
     @Suppress("unused")
-    private val packetHandler = handler<QueuePacketEvent> { event ->
+    private val packetHandler = handler<BlinkPacketEvent> { event ->
         val packet = event.packet
 
         if (event.origin != TransferOrigin.INCOMING) {
@@ -81,14 +81,14 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
                 damageTaken = true
                 ticks = 40
                 handlePacket(packet)
-                PacketQueueManager.Action.QUEUE
+                BlinkManager.Action.QUEUE
             }
 
             is ClientboundSetEntityMotionPacket if packet.id == player.id && damageTaken -> {
                 damageTaken = false
                 release = true
                 handlePacket(packet)
-                PacketQueueManager.Action.QUEUE
+                BlinkManager.Action.QUEUE
             }
 
             is ClientboundPingPacket -> {
@@ -100,11 +100,11 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
                 }
 
                 ticks--
-                PacketQueueManager.Action.QUEUE
+                BlinkManager.Action.QUEUE
             }
 
             // Prevent [PacketQueueManager] from flushing queued packets
-            else -> PacketQueueManager.Action.PASS
+            else -> BlinkManager.Action.PASS
         }
 
     }

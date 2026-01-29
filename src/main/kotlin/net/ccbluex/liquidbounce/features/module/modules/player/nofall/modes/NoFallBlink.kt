@@ -18,16 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -63,7 +63,7 @@ internal object NoFallBlink : NoFallMode("Blink") {
         if (!player.onGround()) {
             if (waitUntilGround || player.fallDistance > maximumFallDistance) {
                 if (blinkFall) {
-                    PacketQueueManager.rewrite<ServerboundMovePlayerPacket> { packet ->
+                    BlinkManager.rewrite<ServerboundMovePlayerPacket> { packet ->
                         packet.onGround = false
                     }
 
@@ -132,9 +132,9 @@ internal object NoFallBlink : NoFallMode("Blink") {
     }
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin == TransferOrigin.OUTGOING && blinkFall) {
-            event.action = PacketQueueManager.Action.QUEUE
+            event.action = BlinkManager.Action.QUEUE
         }
     }
 
