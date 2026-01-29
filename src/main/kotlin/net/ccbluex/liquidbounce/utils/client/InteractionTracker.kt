@@ -81,6 +81,7 @@ object InteractionTracker : EventListener {
         }
     }
 
+    @JvmRecord
     data class Interaction(val hand: InteractionHand, val action: ItemUseAnimation)
 
     override val running

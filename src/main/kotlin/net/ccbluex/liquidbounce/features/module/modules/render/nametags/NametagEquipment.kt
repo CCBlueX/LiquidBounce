@@ -22,8 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.render.drawQuad
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.item.ItemStack
 
 internal object NametagEquipment : Configurable("Equipment") {
 
@@ -38,18 +41,51 @@ internal object NametagEquipment : Configurable("Equipment") {
     private val skipEmptySlot by boolean("SkipEmptySlot", true)
     val showInfo by boolean("ShowInfo", true)
 
+    object HighlightItemInUse : ToggleableConfigurable(ModuleNametags, "HighlightItemInUse", false) {
+        private val fillColor by color("FillColor", Color4b.RED.alpha(100))
+        private val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
+
+        context(guiGraphics: GuiGraphics)
+        fun draw(x: Float, y: Float) {
+            guiGraphics.drawQuad(
+                x,
+                y,
+                x + 16F,
+                y + 16F,
+                fillColor,
+                outlineColor,
+            )
+        }
+    }
+
+    init {
+        tree(HighlightItemInUse)
+    }
+
     /**
      * Creates a list of items that should be rendered above the name tag.
      */
-    fun createItemList(entity: LivingEntity): List<ItemStack> {
+    fun update(entity: LivingEntity, equipments: NametagRenderState.Equipments) {
+        if (slots.isEmpty()) {
+            equipments.reset()
+            return
+        }
+
         val stacks = slots.mapToArray {
             entity.getItemBySlot(it.slot)
         }
 
-        return if (skipEmptySlot) {
+        equipments.itemStacks = if (skipEmptySlot) {
             stacks.filterNot { it.isEmpty }
         } else {
             stacks.asList()
+        }
+
+        equipments.highlightIndex = if (HighlightItemInUse.enabled && entity.isUsingItem) {
+            val usingStack = entity.getItemInHand(entity.usedItemHand)
+            equipments.itemStacks.indexOfFirst { usingStack === it }
+        } else {
+            -1
         }
     }
 }
