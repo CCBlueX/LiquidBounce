@@ -16,28 +16,38 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
+package net.ccbluex.liquidbounce.features.blink
 
 import com.google.common.collect.Queues
 import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameRenderTaskQueueEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspBox
+import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspModel
+import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspWireframe
+import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkNone
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
-import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.client.CameraType
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
@@ -56,12 +66,12 @@ import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * Allows to queue packets and flush them later on demand.
+ * Allows queueing packets and flush them later on demand.
  *
- * Fires [QueuePacketEvent] to determine whether a packet should be queued or not. They can be
+ * Fires [BlinkPacketEvent] to determine whether a packet should be queued or not. They can be
  * from origin [TransferOrigin.INCOMING] or [TransferOrigin.OUTGOING], but will be handled separately.
  */
-object PacketQueueManager : EventListener {
+object BlinkManager : EventListener, Configurable("BlinkManager") {
 
     val packetQueue: ConcurrentLinkedQueue<PacketSnapshot> = Queues.newConcurrentLinkedQueue()
     val positions
@@ -73,6 +83,22 @@ object PacketQueueManager : EventListener {
 
     val isLagging
         get() = packetQueue.isNotEmpty()
+
+    private val espMode = choices(
+        this,
+        "Esp",
+        EspWireframe,
+        arrayOf(
+            EspBox,
+            EspModel,
+            EspWireframe,
+            EspNone
+        )
+    ).apply {
+        doNotIncludeAlways()
+    }
+
+    private val lineColor by color("Line", Color4b.LIQUID_BOUNCE)
 
     @Suppress("unused")
     private val flushHandler = handler<GameRenderTaskQueueEvent> {
@@ -167,25 +193,49 @@ object PacketQueueManager : EventListener {
         }
     }
 
+    fun getEspData(): BlinkEspData? {
+        val pos = positions.firstOrNull() ?: return null
+        val rotation = RotationManager.actualServerRotation
+
+        val perspectiveEvent = EventManager.callEvent(PerspectiveEvent(mc.options.cameraType))
+        if (perspectiveEvent.perspective == CameraType.FIRST_PERSON) {
+            return null
+        }
+
+        return BlinkEspData(player, pos, rotation)
+    }
+
+    private object EspBox : AbstractBlinkEspBox(::getEspData) {
+        override val parent: ChoiceConfigurable<*>
+            get() = espMode
+    }
+
+    private object EspWireframe : AbstractBlinkEspWireframe(::getEspData) {
+        override val parent: ChoiceConfigurable<*>
+            get() = espMode
+    }
+
+    private object EspModel : AbstractBlinkEspModel(::getEspData) {
+        override val parent: ChoiceConfigurable<*>
+            get() = espMode
+    }
+
+    private object EspNone : AbstractBlinkNone() {
+        override val parent: ChoiceConfigurable<*>
+            get() = espMode
+    }
+
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
-
-        renderEnvironmentForWorld(matrixStack) {
-            // Use LiquidBounce accent color
-            drawLineStrip(
-                argb = Color4b.LIQUID_BOUNCE.argb,
-                positions = positions.mapToArray { vec3d -> Vec3f(relativeToCamera(vec3d)) },
-            )
-        }
-
-        val perspectiveEvent = EventManager.callEvent(PerspectiveEvent(mc.options.cameraType))
-        if (perspectiveEvent.perspective != CameraType.FIRST_PERSON) {
-            val pos = positions.firstOrNull() ?: return@handler
-            val rotation = RotationManager.actualServerRotation
-
-            val wireframePlayer = WireframePlayer(pos, rotation.yaw, rotation.pitch)
-            wireframePlayer.render(event, Color4b(36, 32, 147, 87), Color4b(36, 32, 147, 255))
+        if (lineColor.a > 0) {
+            renderEnvironmentForWorld(matrixStack) {
+                // Use LiquidBounce accent color
+                drawLineStrip(
+                    argb = lineColor.argb,
+                    positions = positions.mapToArray { vec3d -> Vec3f(relativeToCamera(vec3d)) },
+                )
+            }
         }
     }
 
@@ -260,7 +310,7 @@ object PacketQueueManager : EventListener {
     }
 
     private fun fireEvent(packet: Packet<*>?, origin: TransferOrigin) =
-        EventManager.callEvent(QueuePacketEvent(packet, origin)).action
+        EventManager.callEvent(BlinkPacketEvent(packet, origin)).action
 
     enum class Action(val priority: Int) {
         FLUSH(0),

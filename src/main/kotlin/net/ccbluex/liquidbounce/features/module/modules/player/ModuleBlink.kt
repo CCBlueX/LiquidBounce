@@ -20,20 +20,20 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.dummyPlayer
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.positions
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.player.RemotePlayer
@@ -83,7 +83,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     }
 
     override fun onDisabled() {
-        PacketQueueManager.flush(TransferOrigin.OUTGOING)
+        BlinkManager.flush(TransferOrigin.OUTGOING)
         removeClone()
     }
 
@@ -128,10 +128,10 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
                 enabled = false
             } else if (evadingPacket.ticksToImpact != null) {
                 notification("Blink", "Trying to evade arrow...", NotificationEvent.Severity.INFO)
-                PacketQueueManager.flush(evadingPacket.idx + 1)
+                BlinkManager.flush(evadingPacket.idx + 1)
             } else {
                 notification("Blink", "Arrow evaded.", NotificationEvent.Severity.INFO)
-                PacketQueueManager.flush(evadingPacket.idx + 1)
+                BlinkManager.flush(evadingPacket.idx + 1)
             }
         }
     }
@@ -140,9 +140,9 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     private val playerMoveHandler = handler<PlayerMovementTickEvent> {
         if (AutoResetOption.enabled && positions.count() > AutoResetOption.resetAfter) {
             when (AutoResetOption.action) {
-                ResetAction.RESET -> PacketQueueManager.cancel()
+                ResetAction.RESET -> BlinkManager.cancel()
                 ResetAction.BLINK -> {
-                    PacketQueueManager.flush(TransferOrigin.OUTGOING)
+                    BlinkManager.flush(TransferOrigin.OUTGOING)
                     dummyPlayer?.copyPosition(player)
                 }
             }
@@ -155,7 +155,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     }
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin == TransferOrigin.OUTGOING) {
             event.action = Action.QUEUE
         }

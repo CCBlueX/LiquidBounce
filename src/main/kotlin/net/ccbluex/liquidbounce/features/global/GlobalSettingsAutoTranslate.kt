@@ -17,22 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.client
+package net.ccbluex.liquidbounce.features.global
 
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorApi
 import net.ccbluex.liquidbounce.api.thirdparty.translator.providers.GoogleTranslateApi
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.event.EventListener
 
-object ModuleTranslation : ClientModule(
-    name = "Translation",
-    category = ModuleCategories.CLIENT,
-    notActivatable = true,
-    hide = true
-), TranslatorApi {
-    private val providers = choices("Provider", 0) {
+object GlobalSettingsAutoTranslate : Configurable(name = "AutoTranslate"), TranslatorApi, EventListener {
+
+    private val providers = choices(this, "Provider", 0) {
         arrayOf(
             GoogleTranslateApi(it)
         )

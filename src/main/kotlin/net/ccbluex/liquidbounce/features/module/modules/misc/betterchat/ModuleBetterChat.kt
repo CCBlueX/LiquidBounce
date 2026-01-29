@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsAutoTranslate
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -139,7 +139,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
         }
 
         val options = mc.options
-        val prefix = CommandManager.Options.prefix[0]
+        val prefix = CommandManager.GlobalSettings.prefix[0]
         when (it.keyCode) {
             options.keyChat.key.value -> mc.openChat("")
             options.keyCommand.key.value -> mc.openChat("/")
@@ -158,7 +158,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
             return@suspendHandler
         }
 
-        val result = ModuleTranslation.translate(text = plainMessage)
+        val result = GlobalSettingsAutoTranslate.translate(text = plainMessage)
         if (result.isValid) {
             chat(
                 result.toResultText(),

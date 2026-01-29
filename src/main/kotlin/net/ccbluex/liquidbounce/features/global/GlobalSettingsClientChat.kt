@@ -17,11 +17,14 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.client
+package net.ccbluex.liquidbounce.features.global
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CancelPrevious
+import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
@@ -37,8 +40,6 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.asPlainText
@@ -46,6 +47,7 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
@@ -54,7 +56,9 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import kotlin.time.Duration.Companion.seconds
 
-object ModuleLiquidChat : ClientModule("LiquidChat", ModuleCategories.CLIENT, hide = true, state = true,
+object GlobalSettingsClientChat : ToggleableConfigurable(
+    name = "ClientChat",
+    enabled = true,
     aliases = listOf("GlobalChat", "IRC")
 ) {
 
@@ -126,8 +130,10 @@ object ModuleLiquidChat : ClientModule("LiquidChat", ModuleCategories.CLIENT, hi
         CommandManager.addCommand(createChatJwtCommand())
     }
 
-    override suspend fun enabledEffect() {
-        chatClient.connect()
+    override fun onEnabled() {
+        eventListenerScope.launch {
+            chatClient.connect()
+        }
     }
 
     override fun onDisabled() {
@@ -174,7 +180,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", ModuleCategories.CLIENT, hi
             return@suspendHandler
         }
 
-        val result = ModuleTranslation.translate(text = event.message)
+        val result = GlobalSettingsAutoTranslate.translate(text = event.message)
         if (result.isValid) {
             writeChat(prefix().append(result.toResultText()))
         }

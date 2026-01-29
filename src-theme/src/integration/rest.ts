@@ -5,13 +5,13 @@ import type {
     ClientInfo,
     ClientUpdate,
     ClientUser,
-    HudComponent,
     ConfigurableSetting,
     FileSelectDialog,
     FileSelectResult,
     GameWindow,
     GeneratorResult,
     HitResult,
+    HudComponent,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -83,6 +83,23 @@ export async function getSpooferSettings(): Promise<ConfigurableSetting> {
 
 export async function setSpooferSettings(settings: ConfigurableSetting) {
     await fetch(`${API_BASE}/client/spoofer`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
+}
+
+export async function getGlobalSettings(): Promise<ConfigurableSetting> {
+    const response = await fetch(`${API_BASE}/client/global`);
+    const data = await response.json();
+
+    return data;
+}
+
+export async function setGlobalSettings(settings: ConfigurableSetting) {
+    await fetch(`${API_BASE}/client/global`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"

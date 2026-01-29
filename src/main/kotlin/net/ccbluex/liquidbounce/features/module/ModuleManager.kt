@@ -31,11 +31,6 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoLeave
@@ -96,6 +91,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDete
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoChatGame
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoConfig
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoPearl
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBookBot
@@ -434,6 +430,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleVomit,
 
             // Misc
+            ModuleAutoConfig,
             ModuleGUICloser,
             ModuleBookBot,
             ModuleAntiBot,
@@ -608,13 +605,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSurround,
             ModulePacketMine,
             ModuleHoleFiller,
-
-            // Client
-            ModuleAutoConfig,
-            ModuleRichPresence,
-            ModuleTargets,
-            ModuleTranslation,
-            ModuleLiquidChat
         )
 
         builtin.forEach { module ->

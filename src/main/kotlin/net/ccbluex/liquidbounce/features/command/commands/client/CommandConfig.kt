@@ -139,7 +139,7 @@ object CommandConfig : Command.Factory {
                         variable(settingName)
                             .onClick(
                                 ClickEvent.SuggestCommand(
-                                    CommandManager.Options.prefix + "config load $settingName"
+                                    CommandManager.GlobalSettings.prefix + "config load $settingName"
                                 )
                             )
                             .onHover(HoverEvent.ShowText(hoverText(settingName))),

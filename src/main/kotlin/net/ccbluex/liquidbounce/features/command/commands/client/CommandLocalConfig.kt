@@ -187,7 +187,7 @@ object CommandLocalConfig : Command.Factory {
                     variable(file.name)
                         .onClick(
                             ClickEvent.SuggestCommand(
-                                CommandManager.Options.prefix + "localconfig load $settingName"
+                                CommandManager.GlobalSettings.prefix + "localconfig load $settingName"
                             )
                         )
                         .onHover(HoverEvent.ShowText(hoverText(file, settingName))),

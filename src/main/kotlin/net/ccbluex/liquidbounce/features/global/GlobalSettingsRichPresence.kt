@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.client
+package net.ccbluex.liquidbounce.features.global
 
 import com.jagrosh.discordipc.IPCClient
 import com.jagrosh.discordipc.entities.ActivityType
@@ -38,12 +38,11 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
+import net.ccbluex.liquidbounce.utils.client.logger
 
 /**
  * Discord Rich Presence
@@ -51,7 +50,9 @@ import net.ccbluex.liquidbounce.utils.client.protocolVersion
  * todo: use ordered multi choose (https://github.com/CCBlueX/LiquidBounce/pull/7350), which allows
  *   custom ordering of parts.
  */
-object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT, state = true, hide = true,
+object GlobalSettingsRichPresence : ToggleableConfigurable(
+    name = "RichPresence",
+    enabled = true,
     aliases = listOf("DiscordPresence")
 ) {
 

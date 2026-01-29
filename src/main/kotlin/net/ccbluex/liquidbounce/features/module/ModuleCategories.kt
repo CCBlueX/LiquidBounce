@@ -48,12 +48,6 @@ object ModuleCategories {
     @JvmField
     val FUN = register(ModuleCategory("Fun"))
 
-    /**
-     * A temporary category for client-related modules, since we don't have a client settings UI yet.
-     */
-    @JvmField
-    val CLIENT = register(ModuleCategory("Client"))
-
     @JvmStatic
     val entries: Collection<ModuleCategory> get() = registry.sequencedValues()
 

@@ -47,9 +47,11 @@ import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.account.AccountManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
+import net.ccbluex.liquidbounce.features.global.GlobalManager
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -76,7 +78,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -272,7 +273,7 @@ object LiquidBounce : EventListener {
 
         // Utility managers
         RotationManager
-        PacketQueueManager
+        BlinkManager
         InteractionTracker
         CombatManager
         FriendManager
@@ -281,9 +282,9 @@ object LiquidBounce : EventListener {
         WorldToScreen
         ActiveServerList
         ConfigSystem.root(ClientItemGroups)
-        ConfigSystem.root(LanguageManager)
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
+        ConfigSystem.root(GlobalManager)
         ConfigSystem.root(MarketplaceManager)
         PostRotationExecutor
         ServerObserver

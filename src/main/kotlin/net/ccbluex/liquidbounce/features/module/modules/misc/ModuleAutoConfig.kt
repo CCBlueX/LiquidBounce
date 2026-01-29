@@ -17,16 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.client
+package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.configs
 import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.dropPort
@@ -38,7 +37,7 @@ import net.minecraft.client.gui.screens.ConnectScreen
 
 object ModuleAutoConfig : ClientModule(
     "AutoConfig",
-    ModuleCategories.CLIENT,
+    ModuleCategories.MISC,
     state = true,
     aliases = listOf("AutoSettings")
 ) {
@@ -112,9 +111,9 @@ object ModuleAutoConfig : ClientModule(
         // There can be multiple configs for the same server, but with different names
         // and the global config is likely named e.g "hypixel", while the more specific ones are named
         // "hypixel-csgo", "hypixel-legit", etc.
-        val autoConfig = (configs ?: return).filter { config ->
+        val autoConfig = (AutoConfig.configs ?: return).filter { config ->
             config.serverAddress?.rootDomain().equals(address, true) ||
-                    config.serverAddress.equals(address, true)
+                config.serverAddress.equals(address, true)
         }.minByOrNull { config -> config.name.length }
 
         if (autoConfig == null) {
@@ -131,12 +130,16 @@ object ModuleAutoConfig : ClientModule(
         }.onFailure { error ->
             logger.error("Failed to load config ${autoConfig.name} for $address.", error)
             connectScreen?.updateStatus(markAsError(message("failed", address)))
-            notification("Auto Config", "Failed to load config ${autoConfig.name}.",
-                NotificationEvent.Severity.ERROR)
+            notification(
+                "Auto Config", "Failed to load config ${autoConfig.name}.",
+                NotificationEvent.Severity.ERROR
+            )
         }.onSuccess {
             connectScreen?.updateStatus(regular(message("loaded", address)))
-            notification("Auto Config", "Successfully loaded config ${autoConfig.name}.",
-                NotificationEvent.Severity.SUCCESS)
+            notification(
+                "Auto Config", "Successfully loaded config ${autoConfig.name}.",
+                NotificationEvent.Severity.SUCCESS
+            )
         }
     }
 
@@ -144,6 +147,6 @@ object ModuleAutoConfig : ClientModule(
      * Overwrites the condition requirement for being in-game
      */
     override val running
-        get() = !isDestructed && enabled
+        get() = !HideAppearance.isDestructed && enabled
 
 }

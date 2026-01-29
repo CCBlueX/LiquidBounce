@@ -26,7 +26,7 @@ import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
@@ -159,11 +159,11 @@ private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
 
 // Extensions
 @JvmOverloads
-fun Entity.shouldBeShown(enemyConf: EnumSet<Targets> = ModuleTargets.visual) =
+fun Entity.shouldBeShown(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.visual) =
     enemyConf.shouldShow(this)
 
 @JvmOverloads
-fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = ModuleTargets.combat) =
+fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat) =
     this is Attackable && enemyConf.shouldAttack(this)
 
 /**
@@ -171,12 +171,12 @@ fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = ModuleTargets.combat) 
  */
 fun ClientLevel.findEnemy(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: EnumSet<Targets> = ModuleTargets.combat
+    enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat
 ) = findEnemies(range, enemyConf).minByOrNull { (_, distance) -> distance }?.key()
 
 fun ClientLevel.findEnemies(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: EnumSet<Targets> = ModuleTargets.combat
+    enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat
 ): List<ObjectDoublePair<Entity>> {
     val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
 

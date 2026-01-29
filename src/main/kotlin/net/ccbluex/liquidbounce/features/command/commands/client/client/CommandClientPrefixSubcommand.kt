@@ -36,7 +36,7 @@ object CommandClientPrefixSubcommand {
         )
         .handler {
             val prefix = args[0] as String
-            CommandManager.Options.prefix = prefix
+            CommandManager.GlobalSettings.prefix = prefix
             chat(regular(command.result("prefixChanged", variable(prefix))))
         }
         .build()

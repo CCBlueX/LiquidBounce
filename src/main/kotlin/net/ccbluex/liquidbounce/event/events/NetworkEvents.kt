@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.minecraft.network.protocol.Packet
 
 @Nameable("pipeline")
@@ -34,12 +34,12 @@ class PipelineEvent(val channelPipeline: ChannelPipeline, val local: Boolean) : 
 class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val original: Boolean = true) : CancellableEvent()
 
 @Nameable("queuePacket")
-class QueuePacketEvent(
+class BlinkPacketEvent(
     val packet: Packet<*>?,
     val origin: TransferOrigin
 ) : Event() {
 
-    var action: PacketQueueManager.Action = PacketQueueManager.Action.FLUSH
+    var action: BlinkManager.Action = BlinkManager.Action.FLUSH
         set(value) {
             if (field == value || field.priority >= value.priority) {
                 return

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -43,13 +43,13 @@ object CommandTargets : Command.Factory {
         .subcommand(
             CommandBuilder
                 .begin("combat")
-                .fromTargets(ModuleTargets.combatConfigurable)
+                .fromTargets(GlobalSettingsTarget.combatConfigurable)
                 .build()
         )
         .subcommand(
             CommandBuilder
                 .begin("visual")
-                .fromTargets(ModuleTargets.visualConfigurable)
+                .fromTargets(GlobalSettingsTarget.visualConfigurable)
                 .build()
         )
         .hub()

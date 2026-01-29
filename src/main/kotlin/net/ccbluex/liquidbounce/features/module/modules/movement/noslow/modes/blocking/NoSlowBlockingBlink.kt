@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.b
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
@@ -35,15 +35,15 @@ internal object NoSlowBlockingBlink : Choice("Blink") {
         get() = modes
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin != TransferOrigin.OUTGOING || !player.isBlockAction) {
             return@handler
         }
 
         event.action = if (event.packet is ServerboundMovePlayerPacket) {
-             PacketQueueManager.Action.QUEUE
-        } else if (event.action == PacketQueueManager.Action.FLUSH) {
-            PacketQueueManager.Action.PASS
+             BlinkManager.Action.QUEUE
+        } else if (event.action == BlinkManager.Action.FLUSH) {
+            BlinkManager.Action.PASS
         } else {
             return@handler
         }

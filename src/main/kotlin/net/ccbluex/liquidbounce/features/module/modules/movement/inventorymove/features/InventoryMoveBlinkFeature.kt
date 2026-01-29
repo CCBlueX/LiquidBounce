@@ -19,16 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig.message
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.formatAsTime
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -43,13 +43,13 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
     private val chronometer = Chronometer()
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         val packet = event.packet
 
         if (mc.screen is AbstractContainerScreen<*> && event.origin == TransferOrigin.OUTGOING) {
             event.action = when {
-                ModuleInventoryMove.isContainerPacket(packet) -> PacketQueueManager.Action.PASS
-                else -> PacketQueueManager.Action.QUEUE
+                ModuleInventoryMove.isContainerPacket(packet) -> BlinkManager.Action.PASS
+                else -> BlinkManager.Action.QUEUE
             }
         }
     }
@@ -60,7 +60,8 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
             chronometer.reset()
 
             notification(
-                "InventoryMove", message("blinkStart", maximumTime.formatAsTime()),
+                "InventoryMove",
+                ModuleBlink.message("blinkStart", maximumTime.formatAsTime()),
                 NotificationEvent.Severity.INFO
             )
         }
@@ -70,7 +71,11 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
     private val tickHandler = tickHandler {
         if (mc.screen is AbstractContainerScreen<*> && chronometer.hasElapsed(maximumTime.toLong())) {
             player.closeContainer()
-            notification("InventoryMove", message("blinkEnd"), NotificationEvent.Severity.INFO)
+            notification(
+                "InventoryMove",
+                ModuleBlink.message("blinkEnd"),
+                NotificationEvent.Severity.INFO
+            )
         }
     }
 

@@ -161,7 +161,7 @@ object CommandExecutor : EventListener {
                     // ⬥ .friend add <name> [<alias>]
                     // ⬥ .friend remove <name>
                     for (usage in e.usageInfo) {
-                        val prefix = CommandManager.Options.prefix
+                        val prefix = CommandManager.GlobalSettings.prefix
                         val text = regular("")
                             .append("\u2B25 ".asPlainText(ChatFormatting.BLUE))
                             .append(regular(prefix))
@@ -198,11 +198,11 @@ object CommandExecutor : EventListener {
      */
     @Suppress("unused")
     private val chatEventHandler = handler<ChatSendEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) {
-        if (!it.message.startsWith(CommandManager.Options.prefix)) {
+        if (!it.message.startsWith(CommandManager.GlobalSettings.prefix)) {
             return@handler
         }
 
-        val commandBody = it.message.substring(CommandManager.Options.prefix.length)
+        val commandBody = it.message.substring(CommandManager.GlobalSettings.prefix.length)
         try {
             CommandManager.execute(commandBody)
         } catch (e: Throwable) {

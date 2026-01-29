@@ -21,6 +21,9 @@ package net.ccbluex.liquidbounce.integration.backend.browser
 
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager.backend
@@ -29,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import kotlin.math.max
 
-object GlobalBrowserSettings : Configurable("GlobalRenderer") {
+object GlobalBrowserSettings : Configurable("GuiRenderer"), EventListener {
 
     /**
      * Quality setting that controls the rendering resolution.
@@ -48,14 +51,15 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
     var accelerated: Value<Boolean>? = null
         private set
 
-    init {
+    @Suppress("unused")
+    private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
         val accelerationFlags = backend?.accelerationFlags ?: BrowserAccelerationFlags.UNSUPPORTED
 
         if (!BrowserBackendManager.disableAcceleration && accelerationFlags.isSupported) {
             accelerated = if (accelerationFlags.isBeta) {
-                boolean("Accelerated(BETA)", false)
+                boolean("AcceleratedPaint(BETA)", false)
             } else {
-                boolean("Accelerated", true)
+                boolean("AcceleratedPaint", true)
             }.onChanged {
                 mc.execute {
                     ScreenManager.restart()

@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsAutoTranslate
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.highlight
@@ -61,7 +61,7 @@ private object AutoTranslate : ToggleableConfigurable(ModuleBetterTitle, "AutoTr
             ?.takeUnless(String::isBlank)
             ?: return@suspendHandler
 
-        val result = ModuleTranslation.translate(text = string)
+        val result = GlobalSettingsAutoTranslate.translate(text = string)
         if (result.isValid && result is TranslationResult.Success) {
             showIn.forEach { it.show(type, event, result) }
         }

@@ -17,21 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.client
+package net.ccbluex.liquidbounce.features.global
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.utils.combat.Targets
 import java.util.EnumSet
 
-object ModuleTargets : ClientModule(
+object GlobalSettingsTarget : Configurable(
     name = "Targets",
-    category = ModuleCategories.CLIENT,
-    notActivatable = true,
-    hide = true,
     aliases = listOf("Enemies")
 ) {
+
     val combatConfigurable = multiEnumChoice("Combat",
         default = enumSetOf(
             Targets.PLAYERS,

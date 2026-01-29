@@ -1,6 +1,5 @@
 <script lang="ts">
     import Router, {push} from "svelte-spa-router";
-    import ClickGui from "./routes/clickgui/ClickGui.svelte";
     import Hud from "./routes/hud/Hud.svelte";
     import {getVirtualScreen} from "./integration/rest";
     import {cleanupListeners, listenAlways} from "./integration/ws";
@@ -16,9 +15,10 @@
     import None from "./routes/none/None.svelte";
     import Disconnected from "./routes/menu/disconnected/Disconnected.svelte";
     import Browser from "./routes/browser/Browser.svelte";
+    import TabbedClickGui from "./routes/clickgui/TabbedClickGui.svelte";
 
     const routes = {
-        "/clickgui": ClickGui,
+        "/clickgui": TabbedClickGui,
         "/hud": Hud,
         "/inventory": Inventory,
         "/title": Title,

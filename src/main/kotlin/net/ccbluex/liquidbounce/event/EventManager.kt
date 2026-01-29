@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.BlockAttackEvent
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
@@ -111,7 +112,6 @@ import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -259,7 +259,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     EntityEquipmentChangeEvent::class.java,
     ClickGuiValueChangeEvent::class.java,
     BlockAttackEvent::class.java,
-    QueuePacketEvent::class.java,
+    BlinkPacketEvent::class.java,
     AllowAutoJumpEvent::class.java,
     WorldEntityRemoveEvent::class.java,
     TitleEvent.Title::class.java,
