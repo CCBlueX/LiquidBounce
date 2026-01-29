@@ -36,7 +36,6 @@ object GlobalManager : Configurable("Settings") {
         tree(GlobalSettingsTarget)
         tree(GlobalSettingsAutoTranslate)
         tree(GlobalBrowserSettings)
-        tree(GlobalSettingsAutoConfig)
         tree(GlobalSettingsClientChat)
         tree(GlobalSettingsRichPresence)
     }
