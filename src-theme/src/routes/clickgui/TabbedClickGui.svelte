@@ -46,14 +46,14 @@
         applyValues(clickGuiSettings);
 
         await setTyping(false);
+    });
 
-        listen("scaleFactorChange", (e: ScaleFactorChangeEvent) => {
-            minecraftScaleFactor = e.scaleFactor;
-        });
+    listen("scaleFactorChange", (e: ScaleFactorChangeEvent) => {
+        minecraftScaleFactor = e.scaleFactor;
+    });
 
-        listen("clickGuiValueChange", (e: ClickGuiValueChangeEvent) => {
-            applyValues(e.configurable);
-        });
+    listen("clickGuiValueChange", (e: ClickGuiValueChangeEvent) => {
+        applyValues(e.configurable);
     });
 </script>
 
