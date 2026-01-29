@@ -60,9 +60,11 @@ fun clickablePath(file: File): MutableComponent =
         .onClick(ClickEvent.OpenFile(file))
         .onHover(HoverEvent.ShowText("Open".asPlainText()))
 
-fun highlight(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.DARK_PURPLE)
+fun highlight(text: MutableComponent): MutableComponent = text
+    .withStyle(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD)
 
-fun highlight(text: String): MutableComponent = text.asText().withStyle(ChatFormatting.DARK_PURPLE)
+fun highlight(text: String): MutableComponent = text.asText()
+    .withStyle(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD)
 
 fun warning(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.YELLOW)
 

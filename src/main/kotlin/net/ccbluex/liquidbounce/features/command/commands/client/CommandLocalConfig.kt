@@ -36,10 +36,10 @@ import net.ccbluex.liquidbounce.features.command.builder.boolean
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
+import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.onClick
@@ -167,7 +167,7 @@ object CommandLocalConfig : Command.Factory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                "Local Configs:".asPlainText(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD)
+                highlight("Local Configs:")
             },
             items = {
                 ConfigSystem.userConfigsFolder.listFiles { _, name ->
