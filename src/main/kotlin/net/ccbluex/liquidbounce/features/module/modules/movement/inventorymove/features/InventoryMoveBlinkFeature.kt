@@ -60,7 +60,8 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
             chronometer.reset()
 
             notification(
-                "InventoryMove", ModuleBlink.message("blinkStart", maximumTime.formatAsTime()),
+                "InventoryMove",
+                ModuleBlink.message("blinkStart", maximumTime.formatAsTime()),
                 NotificationEvent.Severity.INFO
             )
         }
@@ -70,7 +71,11 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
     private val tickHandler = tickHandler {
         if (mc.screen is AbstractContainerScreen<*> && chronometer.hasElapsed(maximumTime.toLong())) {
             player.closeContainer()
-            notification("InventoryMove", ModuleBlink.message("blinkEnd"), NotificationEvent.Severity.INFO)
+            notification(
+                "InventoryMove",
+                ModuleBlink.message("blinkEnd"),
+                NotificationEvent.Severity.INFO
+            )
         }
     }
 
