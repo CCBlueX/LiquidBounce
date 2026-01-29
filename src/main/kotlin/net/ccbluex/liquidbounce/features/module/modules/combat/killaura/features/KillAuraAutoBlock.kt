@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -49,11 +50,10 @@ import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.ItemInHandRenderer
+import net.minecraft.core.component.DataComponents.BLOCKS_ATTACKS
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.phys.HitResult
 import kotlin.random.Random
 
@@ -106,7 +106,8 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
      * @see ItemInHandRenderer.renderArmWithItem
      */
     var blockVisual = false
-        get() = field && super.running && (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
+        get() = field && super.running &&
+            (isOlderThanOrEqual1_8 || isNewerThanOrEquals1_21_5 || ModuleSwordBlock.running)
 
     val shouldUnblockToHit
         get() = unblockMode != UnblockMode.NONE
@@ -143,16 +144,14 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             return
         }
 
-        val blockHand = when {
-            canBlock(player.mainHandItem) -> InteractionHand.MAIN_HAND
-            canBlock(player.offhandItem) -> InteractionHand.OFF_HAND
-            else -> return  // We cannot block with any item.
+        val blockHand = InteractionHand.entries.first {
+            player.getItemInHand(it).has(BLOCKS_ATTACKS)
         }
 
         val itemStack = player.getItemInHand(blockHand)
 
         // We do not want to block if the item is disabled.
-        if (itemStack.isEmpty || !itemStack.isItemEnabled(world.enabledFeatures())) {
+        if (!itemStack.isItemEnabled(world.enabledFeatures())) {
             return
         }
 
@@ -317,7 +316,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             return
         }
 
-        val hitResult = traceFromPlayer(rotationToTheServer) ?: return
+        val hitResult = traceFromPlayer(rotationToTheServer)
 
         if (hitResult.type != HitResult.Type.BLOCK) {
             return
@@ -326,12 +325,6 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         // Interact with block
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hitResult)
     }
-
-    /**
-     * Check if the player can block with the given item stack.
-     */
-    private fun canBlock(itemStack: ItemStack) =
-        itemStack.useAnimation == ItemUseAnimation.BLOCK
 
     /**
      * Check if the player is in danger.

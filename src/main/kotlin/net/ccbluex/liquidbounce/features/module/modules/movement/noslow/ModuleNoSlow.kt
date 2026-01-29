@@ -76,12 +76,15 @@ object ModuleNoSlow : ClientModule("NoSlow", ModuleCategories.MOVEMENT) {
         )
 
         ItemUseAnimation.BOW, ItemUseAnimation.TRIDENT,
-        ItemUseAnimation.CROSSBOW, ItemUseAnimation.SPEAR -> NoSlowBow.getMultiplier(
+        ItemUseAnimation.CROSSBOW-> NoSlowBow.getMultiplier(
             forward,
             sideways
         )
 
         ItemUseAnimation.BUNDLE -> NoSlowBundle.getMultiplier(forward, sideways)
+
+        // Vanilla spear doesn't make player slow down
+        ItemUseAnimation.SPEAR -> FloatFloatImmutablePair(1F, 1F)
     }
 
 }

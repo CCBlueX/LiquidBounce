@@ -66,7 +66,6 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.KnowledgeBookItem
 import net.minecraft.world.item.PlaceOnWaterBlockItem
 import net.minecraft.world.item.PotionItem
-import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.SpawnEggItem
 import net.minecraft.world.item.SpyglassItem
@@ -233,6 +232,8 @@ fun ItemStack.isInteractable(): Boolean {
 
     return this.get(DataComponents.EQUIPPABLE) != null // TODO: curse of binding
         || this.get(DataComponents.CONSUMABLE) != null
+        || this.get(DataComponents.BLOCKS_ATTACKS) != null // Shield, 1.8 Sword
+        || this.get(DataComponents.KINETIC_WEAPON) != null // Spear
 
         // from the use() method:
         || item is BoatItem
@@ -251,9 +252,7 @@ fun ItemStack.isInteractable(): Boolean {
         || item is BottleItem // TODO: water between an interactable block and the player
         || item is InstrumentItem // TODO: item delay?
         || item is KnowledgeBookItem
-        || (isSword && isOlderThanOrEqual1_8)
         || item is PlaceOnWaterBlockItem // TODO: water between an interactable block and the player
-        || item is ShieldItem
         || item is SnowballItem
         || item is SpawnEggItem
         || item is SpyglassItem
