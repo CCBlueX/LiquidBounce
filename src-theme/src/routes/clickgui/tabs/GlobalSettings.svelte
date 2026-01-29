@@ -23,7 +23,7 @@
     });
 </script>
 
-<WindowPanel title="Global Settings">
+<WindowPanel title="Global Settings" icon="client">
     <div class="settings-grid">
         {#if globalSettings}
             {#each globalSettings.value as _, i (globalSettings.value[i].name)}

@@ -1,16 +1,26 @@
 <script lang="ts">
-    import type { Snippet } from "svelte";
-    import { fade } from "svelte/transition";
+    import type {Snippet} from "svelte";
+    import {fade} from "svelte/transition";
     import {quintOut} from "svelte/easing";
 
-    let { title, children } = $props<{
+    let { title, icon, children } = $props<{
         title: string;
+        icon?: string;
         children: Snippet;
     }>();
 </script>
 
 <div class="window" transition:fade|global={{duration: 200, easing: quintOut}}>
-    <div class="title">{title}</div>
+    <div class="title">
+        {#if icon}
+            <img
+                    class="icon"
+                    src="img/clickgui/icon-{icon}.svg"
+                    alt="icon"
+            />
+        {/if}
+        <span class="title-text">{title}</span>
+    </div>
     <div class="content">
         {@render children()}
     </div>
@@ -35,12 +45,20 @@
   }
 
   .title {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    align-items: center;
+    column-gap: 12px;
     background-color: rgba($clickgui-base-color, 0.9);
     padding: 16px 22px;
     font-size: 16px;
     font-weight: 600;
     color: $clickgui-text-color;
     border-bottom: 2px solid rgba($accent-color, 0.8);
+  }
+
+  .title-text {
+    font-weight: 600;
   }
 
   .content {
