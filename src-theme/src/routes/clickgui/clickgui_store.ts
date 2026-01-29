@@ -1,7 +1,5 @@
 import {type Writable, writable} from "svelte/store";
 
-export type ClickGuiTab = "Modules" | "Settings";
-
 export interface TDescription {
     description: string;
     anchor: "left" | "right",
@@ -24,5 +22,3 @@ export const showGrid: Writable<boolean> = writable(false);
 export const snappingEnabled: Writable<boolean> = writable(true);
 
 export const gridSize: Writable<number> = writable(10);
-
-export const activeTab: Writable<ClickGuiTab> = writable("Modules");

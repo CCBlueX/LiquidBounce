@@ -1,50 +1,50 @@
-<!--
-  - This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
-  -
-  - Copyright (c) 2015 - 2026 CCBlueX
-  -
-  - LiquidBounce is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU General Public License as published by
-  - the Free Software Foundation, either version 3 of the License, or
-  - (at your option) any later version.
-  -
-  - LiquidBounce is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  - GNU General Public License for more details.
-  -
-  - You should have received a copy of the GNU General Public License
-  - along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
-  -->
-
 <script lang="ts">
-    import {activeTab, type ClickGuiTab} from "../clickgui_store";
+    import type { Component } from "svelte";
 
-    const tabs: ClickGuiTab[] = ["Modules", "Settings"];
+    type Tab = {
+        title: string;
+        content: Component;
+    };
+
+    let { tabs, activeTab = $bindable(0) } = $props<{
+        tabs: Tab[];
+        activeTab?: number;
+    }>();
+
+    const Active = $derived(tabs[activeTab]?.content);
 </script>
 
 <div class="tabs">
-    {#each tabs as tab}
-        <button
-                class="tab"
-                class:active={$activeTab === tab}
-                on:click={() => activeTab.set(tab)}
-        >
-            {tab}
-        </button>
-    {/each}
+    <div class="available-tabs">
+        {#each tabs as tab, index (tab.title)}
+            <button
+                    class="tab-button"
+                    class:active={index === activeTab}
+                    onclick={() => (activeTab = index)}
+                    type="button"
+            >
+                {tab.title}
+            </button>
+        {/each}
+    </div>
+
+    <div class="content">
+        {#if Active}
+            {@render Active()}
+        {/if}
+    </div>
 </div>
 
 <style lang="scss">
   @use "../../../colors.scss" as *;
 
-  .tabs {
+  .available-tabs {
     position: fixed;
     top: 15px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 8px;
+    gap: 5px;
     padding: 6px;
     border-radius: 999px;
     background-color: rgba($clickgui-base-color, 0.85);
@@ -52,16 +52,16 @@
     z-index: 9999999999;
   }
 
-  .tab {
-    border: none;
+  .tab-button {
     background: transparent;
     color: $clickgui-text-dimmed-color;
     padding: 6px 14px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     border-radius: 999px;
     cursor: pointer;
     transition: ease background-color 0.2s, ease color 0.2s;
+    border: solid 1px transparent;
 
     &:hover {
       color: $clickgui-text-color;
