@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render.entity;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.minecraft.client.Minecraft;
@@ -29,17 +31,16 @@ import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 @NullMarked
 @Mixin(ArmedEntityRenderState.class)
 public abstract class MixinArmedEntityRenderState {
 
-    @Redirect(
+    @WrapOperation(
         method = "extractArmedEntityRenderState",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getItemHeldByArm(Lnet/minecraft/world/entity/HumanoidArm;)Lnet/minecraft/world/item/ItemStack;")
     )
-    private static ItemStack hideOffhandShield(LivingEntity entity, HumanoidArm arm, @Local(argsOnly = true) ArmedEntityRenderState reusedState) {
+    private static ItemStack hideOffhandShield(LivingEntity entity, HumanoidArm arm, Operation<ItemStack> original, @Local(argsOnly = true) ArmedEntityRenderState reusedState) {
         if (entity == Minecraft.getInstance().player
             && ModuleSwordBlock.INSTANCE.getApplyToThirdPersonView()
             && ModuleSwordBlock.INSTANCE.shouldHideOffhand()
@@ -48,7 +49,7 @@ public abstract class MixinArmedEntityRenderState {
             return ItemStack.EMPTY;
         }
 
-        return entity.getItemHeldByArm(arm);
+        return original.call(entity, arm);
     }
 
 }

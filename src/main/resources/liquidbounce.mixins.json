@@ -111,7 +111,7 @@
     "minecraft.network.MixinServerboundUseItemPacket",
     "minecraft.network.MixinServerNameResolver",
     "minecraft.registry.MixinBuiltInRegistries",
-    "minecraft.render.MixinAvatarRenderer",
+    "minecraft.render.entity.MixinAvatarRenderer",
     "minecraft.render.MixinBlockEntityRenderDispatcher",
     "minecraft.render.MixinBlockRenderDispatcher",
     "minecraft.render.MixinCamera",
