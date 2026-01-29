@@ -64,7 +64,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.entity.vehicle.minecart.MinecartTNT
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.component.UseEffects
 import net.minecraft.world.item.enchantment.Enchantments
@@ -174,7 +173,7 @@ fun LocalPlayer.getMovementDirectionOfInput(input: DirectionalInput): Float {
 }
 
 val LocalPlayer.isBlockAction: Boolean
-    get() = isUsingItem && useItem.useAnimation == ItemUseAnimation.BLOCK
+    get() = isUsingItem && useItem.has(DataComponents.BLOCKS_ATTACKS)
 
 /**
  * @see LocalPlayer.isSlowDueToUsingItem
