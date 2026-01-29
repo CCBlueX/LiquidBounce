@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsAutoConfig.message
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.formatAsTime
@@ -60,7 +60,7 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
             chronometer.reset()
 
             notification(
-                "InventoryMove", message("blinkStart", maximumTime.formatAsTime()),
+                "InventoryMove", ModuleBlink.message("blinkStart", maximumTime.formatAsTime()),
                 NotificationEvent.Severity.INFO
             )
         }
@@ -70,7 +70,7 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
     private val tickHandler = tickHandler {
         if (mc.screen is AbstractContainerScreen<*> && chronometer.hasElapsed(maximumTime.toLong())) {
             player.closeContainer()
-            notification("InventoryMove", message("blinkEnd"), NotificationEvent.Severity.INFO)
+            notification("InventoryMove", ModuleBlink.message("blinkEnd"), NotificationEvent.Severity.INFO)
         }
     }
 
