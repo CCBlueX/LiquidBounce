@@ -188,6 +188,7 @@ public abstract class MixinItemInHandRenderer {
     private static boolean liquid_bounce$shouldAnimate(Player player) {
         return ModuleSwordBlock.INSTANCE.getRunning()
             && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player.getOffhandItem(), player.getMainHandItem())
+            && player.isUsingItem()
             || KillAuraAutoBlock.INSTANCE.getBlockVisual();
     }
 
