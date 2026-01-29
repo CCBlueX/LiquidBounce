@@ -1,5 +1,7 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
+    import { fade } from "svelte/transition";
+    import {quintOut} from "svelte/easing";
 
     let { title, children } = $props<{
         title: string;
@@ -7,7 +9,7 @@
     }>();
 </script>
 
-<div class="window">
+<div class="window" transition:fade|global={{duration: 200, easing: quintOut}}>
     <div class="title">{title}</div>
     <div class="content">
         {@render children()}
@@ -19,7 +21,7 @@
 
   .window {
     position: fixed;
-    top: 110px;
+    top: 70px;
     left: 50%;
     transform: translateX(-50%);
     width: min(820px, 92vw);
