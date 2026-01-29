@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiValueChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -141,6 +142,12 @@ object ModuleClickGui :
     @Suppress("unused")
     private val clientLanguageChangedHandler = handler<ClientLanguageChangedEvent> {
         standaloneScreen?.sync()
+    }
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        // For some reason, we actually need this.
+        standaloneScreen?.browser?.visible = mc.screen == standaloneScreen
     }
 
     fun updateStandaloneScreen(): Boolean {
