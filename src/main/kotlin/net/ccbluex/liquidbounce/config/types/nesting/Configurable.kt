@@ -127,7 +127,7 @@ open class Configurable(
             if (currentValue is Configurable) {
                 currentValue.walkKeyPath(this.key)
             } else {
-                currentValue.key = "${this.key}.value.${currentValue.name.toLowerCamelCase()}"
+                currentValue.key = "${this.key}.${currentValue.name.toLowerCamelCase()}"
             }
 
             if (currentValue is ChoiceConfigurable<*>) {
