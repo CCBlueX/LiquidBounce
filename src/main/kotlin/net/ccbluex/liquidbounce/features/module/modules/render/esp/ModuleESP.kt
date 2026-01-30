@@ -21,6 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.render.esp
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.esp
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.colors
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.Esp2DMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspBoxMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
@@ -29,6 +36,7 @@ import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -75,6 +83,11 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
     fun getColor(entity: LivingEntity): Color4b {
         if (entity.hurtTime > 0) {
             return Color4b.RED
+        }
+
+        if(syncClientWithPalette && colorModes.activeChoice !is GenericRainbowColorMode) {
+            val transparency = if(AdaptiveA.enabled) esp else a
+            return currentColors[accentColor.num].toColor4b(transparency)
         }
 
         if (entity is Player) {

@@ -29,6 +29,11 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.nonAccentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
@@ -41,6 +46,7 @@ import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.plus
@@ -178,8 +184,10 @@ class TargetRenderer(
                             translate(size / 2.0, size / 2.0, 0.0)
                         }
 
-                        val alpha = Mth.clamp(color.a - (i * alphaFactor), 0, color.a)
-                        val renderColor = color.alpha(alpha)
+                        val currColor = if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+
+                        val alpha = Mth.clamp(currColor.a - (i * alphaFactor), 0, currColor.a)
+                        val renderColor = currColor.alpha(alpha)
 
                         drawSquareTexture(ghostModeTexture, size, renderColor.argb)
 
@@ -214,9 +222,11 @@ class TargetRenderer(
                     val pos = entity.interpolateCurrentPosition(partialTicks)
                         .add(0.0, entity.bbHeight.toDouble() + extraYOffset.toDouble(), 0.0)
 
+                    val currColor = if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+
                     with(this) {
                         withPositionRelativeToCamera(pos) {
-                            drawBox(box, color)
+                            drawBox(box, currColor)
                         }
                     }
                 }
@@ -247,12 +257,19 @@ class TargetRenderer(
                     val height = heightMode.activeChoice.getHeight(entity, partialTicks)
                     val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
+                    val currOuterColor =
+                        if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else outerColor
+                    val currInnerColor =
+                        if(syncClientWithPalette) currentColors[nonAccentColor.num].toColor4b(a) else innerColor
+                    val currOutline =
+                        if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else outline.color
+
                     with(this) {
                         startBatch()
                         withPositionRelativeToCamera(pos) {
-                            drawGradientCircle(radius, innerRadius, outerColor, innerColor)
+                            drawGradientCircle(radius, innerRadius, currOuterColor, currInnerColor)
                             if (outline.enabled) {
-                                drawCircleOutline(radius, outline.color)
+                                drawCircleOutline(radius, currOutline)
                             }
                         }
                         commitBatch()
@@ -294,26 +311,33 @@ class TargetRenderer(
                         glowHeightSetting.toDouble()
                     }
 
+                    val currColor =
+                        if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+                    val currGlowColor =
+                        if(syncClientWithPalette) currentColors[nonAccentColor.num].toColor4b(a) else glowColor
+                    val currOutline =
+                        if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else outline.color
+
                     with(this) {
                         withPositionRelativeToCamera(pos) {
                             // Don't use batch mode because `drawGradientCircle` uses TRIANGLE_STRIP
                             drawGradientCircle(
                                 radius,
                                 radius,
-                                color,
-                                glowColor,
+                                currColor,
+                                currGlowColor,
                                 Vector3f(0f, glowHeight.toFloat(), 0f)
                             )
 
                             drawGradientCircle(
                                 radius,
                                 0f,
-                                color,
-                                color
+                                currColor,
+                                currColor
                             )
 
                             if (outline.enabled) {
-                                drawCircleOutline(radius, outline.color)
+                                drawCircleOutline(radius, currOutline)
                             }
                         }
                     }
@@ -354,13 +378,16 @@ class TargetRenderer(
 
                     val scaledWidth = nativeImage.width * scale
                     val scaledHeight = nativeImage.height * scale
+
+                    val currColor = if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+
                     drawTexQuad(
                         texture.textureSetup,
                         x0 = screenPos.x - scaledWidth * 0.5f,
                         y0 = screenPos.y - scaledHeight * 0.5f,
                         x1 = screenPos.x + scaledWidth * 0.5f,
                         y1 = screenPos.y + scaledHeight * 0.5f,
-                        argb = color.argb,
+                        argb = currColor.argb,
                     )
                 }
             }
@@ -390,8 +417,10 @@ class TargetRenderer(
                     val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
                     val screenPos = calculateScreenPos(pos) ?: return
 
+                    val currColor = if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+
                     texts.forEachIndexed { i, text ->
-                        fontRenderer.draw(text.asPlainText(Style.EMPTY + color)) {
+                        fontRenderer.draw(text.asPlainText(Style.EMPTY + currColor)) {
                             horizontalAnchor = HorizontalAnchor.CENTER
                             verticalAnchor = VerticalAnchor.MIDDLE
                             x = screenPos.x
@@ -409,6 +438,11 @@ class TargetRenderer(
                 private val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
                 private val size by float("Size", 1.5f, 0.5f..20f)
 
+                private val currColor =
+                    if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+                private val currOutlineColor =
+                    if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else outlineColor
+
                 override fun GuiGraphics.render(entity: Entity, partialTicks: Float) {
                     val pos = entity.interpolateCurrentPosition(partialTicks)
                         .add(0.0, entity.bbHeight.toDouble(), 0.0)
@@ -423,8 +457,8 @@ class TargetRenderer(
                         x0 = minX, y0 = minY,
                         x1 = midX, y1 = maxY,
                         x2 = maxX, y2 = minY,
-                        color,
-                        outlineColor,
+                        currColor,
+                        currOutlineColor,
                     )
                 }
             }

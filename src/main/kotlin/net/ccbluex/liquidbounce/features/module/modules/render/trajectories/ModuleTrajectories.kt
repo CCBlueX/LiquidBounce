@@ -23,9 +23,14 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.colors
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -92,7 +97,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             simulationResults += trajectoryRenderer to trajectoryRenderer.drawTrajectoryForProjectile(
                 maxSimulatedTicks,
                 event,
-                trajectoryColor = color,
+                trajectoryColor = if(syncClientWithPalette) colors.colors[accentColor.num].toColor4b(a) else color,
                 blockHitColor = color,
                 entityHitColor = color,
             )

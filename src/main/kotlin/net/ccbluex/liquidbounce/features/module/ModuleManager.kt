@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
@@ -614,7 +615,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleRichPresence,
             ModuleTargets,
             ModuleTranslation,
-            ModuleLiquidChat
+            ModuleLiquidChat,
+            ModuleColorTheme,
         )
 
         builtin.forEach { module ->

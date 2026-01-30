@@ -26,10 +26,18 @@ import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.itemChams
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.nonAccentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.ccbluex.liquidbounce.utils.render.copyFrom
@@ -79,7 +87,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         },
     ).slice()
 
-    private var uboDirty = true
+    var uboDirty = true
     private fun <T : Any> Value<T>.markDirtyOnChanged() = onChanged { uboDirty = true }
 
     private val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR, false)
@@ -89,13 +97,18 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
         this.storedLightmapTexture.copyFrom(source = textureView.texture())
 
+        val transparency = if(syncClientWithPalette) if (AdaptiveA.enabled) itemChams else a else alpha
+        val currBlendColor =
+            if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(transparency) else blendColor
+        val currGlowColor =
+            if(syncClientWithPalette) currentColors[nonAccentColor.num].toColor4b(transparency) else glowColor
         if (uboDirty) {
             UBO.writeStd140 {
                 putInt(0)
-                putFloat(alpha / 255f)
-                putVec4(blendColor)
+                putFloat(transparency / 255f)
+                putVec4(currBlendColor)
                 putFloat(layerSize)
-                putVec4(glowColor)
+                putVec4(currGlowColor)
                 putFloat(falloff)
                 putInt(layers)
             }

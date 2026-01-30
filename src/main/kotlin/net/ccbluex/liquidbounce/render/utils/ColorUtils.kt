@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.render.utils
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import org.apache.commons.codec.binary.Hex
 import java.awt.Color
 
 object ColorUtils {
@@ -76,4 +77,21 @@ fun interpolateHue(primaryColor: Color4b, otherColor: Color4b, percentageOther: 
         rgb and 0xFF,
         alpha.toInt()
     )
+}
+
+fun String.toColor4b(a: Int): Color4b {
+    val hex = this
+
+    val r = hex.substring(0, 2).toInt(16)
+    val g = hex.substring(2, 4).toInt(16)
+    val b = hex.substring(4, 6).toInt(16)
+
+    return Color4b(r, g, b, a)
+}
+
+fun Color4b.toHex(): String {
+    val rHex = r.coerceIn(0, 255).toString(16).padStart(2, '0')
+    val gHex = g.coerceIn(0, 255).toString(16).padStart(2, '0')
+    val bHex = b.coerceIn(0, 255).toString(16).padStart(2, '0')
+    return "$rHex$gHex$bHex"  // или "#$rHex$gHex$bHex" если с # нужно
 }

@@ -32,11 +32,18 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.breadCrumbs
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.minecraft.client.Camera
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
@@ -80,7 +87,15 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         }
 
         val matrixStack = event.matrixStack
-        val color = if (colorRainbow) rainbow() else color
+        val color =
+            if (colorRainbow) { rainbow()
+            } else if (syncClientWithPalette) {
+                currentColors[accentColor.num].toColor4b(a)
+            } else {
+                color
+            }
+
+        val transparency = if(Transparency.AdaptiveA.enabled) breadCrumbs else a
 
         renderEnvironmentForWorld(matrixStack) {
             if (height > 0) {
@@ -89,7 +104,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
 
             val camera = mc.entityRenderDispatcher.camera ?: return@handler
             val time = System.currentTimeMillis()
-            val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
+            val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, transparency / 255f)
             val lines = height == 0f
             drawCustomMesh(
                 if (lines) ClientRenderPipelines.Lines else ClientRenderPipelines.Quads

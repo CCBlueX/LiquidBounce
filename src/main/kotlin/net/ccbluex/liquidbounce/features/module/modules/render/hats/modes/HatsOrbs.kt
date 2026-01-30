@@ -21,12 +21,17 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.colors
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import kotlin.math.cos
@@ -92,7 +97,14 @@ internal object HatsOrbs : HatsMode("Orbs") {
                 val dx = x - cosA
                 val dz = z + sinA
 
-                val color = if (!isHurt) color else Color4b(255, 0, 0, color.a)
+                val color = if (isHurt) {
+                    Color4b(255, 0, 0, color.a)
+                } else if (syncClientWithPalette) {
+                    colors.colors[accentColor.num].toColor4b(a)
+                } else {
+                    color
+                }
+
                 // Rendering of the top part of the rhombus (4 faces/8 triangles).
                 addVertex(matrix, x, top, z).color(color)
                 addVertex(matrix, dx, y, dz).color(color)

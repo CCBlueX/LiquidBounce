@@ -29,10 +29,17 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.colors
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.collisionShape
@@ -236,12 +243,23 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
                     translate(size / 2.0, size / 2.0, 0.0)
                 }
 
-                val renderColor = color.alpha(
-                    Mth.clamp(
-                        (alpha * color.a.toFloat()).toInt(),
-                        0, color.a
+                val transparency = if(Transparency.AdaptiveA.enabled) Transparency.AdaptiveA.particles else a
+
+                val renderColor = if(syncClientWithPalette) {
+                    currentColors[accentColor.num].toColor4b(transparency).alpha(
+                        Mth.clamp(
+                            (alpha * transparency.toFloat()).toInt(),
+                            0, transparency
+                        )
                     )
-                )
+                } else {
+                    color.alpha(
+                        Mth.clamp(
+                            (alpha * color.a.toFloat()).toInt(),
+                            0, color.a
+                        )
+                    )
+                }
 
                 drawSquareTexture(particleImage.texture, size, renderColor.argb)
             }

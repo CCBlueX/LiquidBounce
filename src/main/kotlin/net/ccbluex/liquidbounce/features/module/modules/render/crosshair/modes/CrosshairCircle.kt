@@ -21,10 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render.crosshair.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.CrosshairColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.CrosshairMode
 import net.ccbluex.liquidbounce.render.drawCircle
 import net.minecraft.util.Mth
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 
 object CrosshairCircle : CrosshairMode("Circle") {
     private object Radius : Configurable("Radius") {
@@ -32,6 +36,7 @@ object CrosshairCircle : CrosshairMode("Circle") {
         val dynamicRadiusMultiplier by float("DynamicRadiusMultiplier", 1f, 0f..5f)
     }
     private val color = CrosshairColorSettings()
+
 
     init {
         tree(Radius)
@@ -42,6 +47,11 @@ object CrosshairCircle : CrosshairMode("Circle") {
         val multiplier = dynamicCrosshair(Radius.dynamicRadiusMultiplier)
         val innerRadius = Radius.radius.start + multiplier
         val outerRadius = Radius.radius.endInclusive + multiplier
+        val firstColor = if(syncClientWithPalette) { currentColors[0].toColor4b(a) }
+        else { color.firstColor }
+        val secondColor = if(syncClientWithPalette) { currentColors[1].toColor4b(a) }
+        else { color.secondColor }
+        val syncColors = if(syncClientWithPalette) false else color.syncColors
 
         context.drawCircle(
             x = 0f, y = 0f,
@@ -49,9 +59,9 @@ object CrosshairCircle : CrosshairMode("Circle") {
             innerRadius,
         ) { angle ->
             color.getCurrentStepColor(
-                color.firstColor,
-                color.secondColor,
-                color.syncColors,
+                firstColor,
+                secondColor,
+                syncColors,
                 color.spinSpeed,
                 angle,
             ).argb
