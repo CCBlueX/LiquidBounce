@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.render.placement
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -46,7 +46,7 @@ open class PlacementRenderer(
     val keep: Boolean = true,
     clump: Boolean = true,
     defaultColor: Color4b = Color4b(0, 255, 0, 90)
-) : ToggleableConfigurable(module, name, enabled) {
+) : ToggleableValueGroup(module, name, enabled) {
 
     val clump by boolean("Clump", clump)
 

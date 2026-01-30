@@ -106,7 +106,7 @@ public abstract class MixinItemInHandRenderer {
             var arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getRunning()) {
-                var activeChoice = ModuleAnimations.INSTANCE.getBlockAnimationChoice().getActiveChoice();
+                var activeChoice = ModuleAnimations.INSTANCE.getBlockAnimationChoice().getActiveMode();
                 activeChoice.transform(matrices, arm, equipProgress, swingProgress);
             } else {
                 // Default animation
@@ -186,7 +186,9 @@ public abstract class MixinItemInHandRenderer {
      */
     @Unique
     private static boolean liquid_bounce$shouldAnimate(Player player) {
-        return ModuleSwordBlock.INSTANCE.getRunning() && ModuleSwordBlock.isBlockingWithOffhandShield(player)
+        return ModuleSwordBlock.INSTANCE.getRunning()
+            && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player.getOffhandItem(), player.getMainHandItem())
+            && player.isUsingItem()
             || KillAuraAutoBlock.INSTANCE.getBlockVisual();
     }
 
@@ -227,7 +229,7 @@ public abstract class MixinItemInHandRenderer {
             return InteractionHand.MAIN_HAND;
         }
 
-        return entity.getUsedItemHand();
+        return original;
     }
 
     @ModifyExpressionValue(method = "renderArmWithItem", at = @At(
@@ -241,7 +243,7 @@ public abstract class MixinItemInHandRenderer {
             return 7200;
         }
 
-        return entity.getUseItemRemainingTicks();
+        return original;
     }
 
 

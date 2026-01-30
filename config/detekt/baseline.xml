@@ -2,14 +2,14 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CognitiveComplexMethod:AStarPathBuilder.kt:AStarPathBuilder$fun findPath(start: Vec3i, end: Vec3i, maxCost: Int): List&lt;Vec3i></ID>
-    <ID>CognitiveComplexMethod:BlockExtensions.kt:fun Block?.isInteractable(blockState: BlockState?): Boolean</ID>
-    <ID>CognitiveComplexMethod:CommandManager.kt:CommandManager$@ScriptApiRequired @JvmName("execute") fun execute(cmd: String)</ID>
-    <ID>CognitiveComplexMethod:PlacementRenderHandler.kt:PlacementRenderHandler$fun render(event: WorldRenderEvent, time: Long)</ID>
-    <ID>LongMethod:CommandManager.kt:CommandManager$@ScriptApiRequired @JvmName("execute") fun execute(cmd: String)</ID>
+    <ID>CognitiveComplexMethod:AStarPathBuilder.kt:AStarPathBuilder$fun findPath: List&lt;Vec3i></ID>
+    <ID>CognitiveComplexMethod:BlockExtensions.kt:fun Block?.isInteractable: Boolean</ID>
+    <ID>CognitiveComplexMethod:CommandManager.kt:CommandManager$@ScriptApiRequired @JvmName("execute") fun execute</ID>
+    <ID>CognitiveComplexMethod:PlacementRenderHandler.kt:PlacementRenderHandler$fun render</ID>
+    <ID>LongMethod:CommandManager.kt:CommandManager$@ScriptApiRequired @JvmName("execute") fun execute</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt:ModuleProjectilePuncher$for</ID>
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt:for</ID>
     <ID>MaxLineLength:ModuleBookBot.kt:ModuleBookBot.BookBuilder$*</ID>
-    <ID>ThrowsCount:CommandManager.kt:CommandManager$@ScriptApiRequired @JvmName("execute") fun execute(cmd: String)</ID>
+    <ID>ThrowsCount:CommandManager.kt:CommandManager$@ScriptApiRequired @JvmName("execute") fun execute</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -22,7 +22,7 @@ import kotlinx.atomicfu.atomic
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -128,7 +128,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
         }
     }
 
-    private enum class OutputTarget(override val choiceName: String) : NamedChoice {
+    private enum class OutputTarget(override val tag: String) : Tagged {
         CHAT("Chat") {
             override fun handle(origin: TransferOrigin, packet: Packet<*>, canceled: Boolean, packetId: Identifier) {
                 val clazz = packet.javaClass
@@ -181,7 +181,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
                 file.appendingSink().buffer().use {
                     it.writeUtf8(System.currentTimeMillis().toString())
                         .writeByte(','.code)
-                        .writeUtf8(origin.choiceName)
+                        .writeUtf8(origin.tag)
                         .writeByte(','.code)
                         .writeUtf8(packetClassName)
                         .writeByte(','.code)

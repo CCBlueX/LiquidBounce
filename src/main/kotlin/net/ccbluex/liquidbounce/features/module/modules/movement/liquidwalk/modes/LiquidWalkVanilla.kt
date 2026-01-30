@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,9 +30,9 @@ import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.world.level.block.LiquidBlock
 import net.minecraft.world.phys.shapes.Shapes
 
-internal object LiquidWalkVanilla : Choice("Vanilla") {
+internal object LiquidWalkVanilla : Mode("Vanilla") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = ModuleLiquidWalk.modes
 
     @Suppress("unused")

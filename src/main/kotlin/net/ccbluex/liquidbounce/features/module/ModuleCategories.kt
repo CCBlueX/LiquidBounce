@@ -48,19 +48,13 @@ object ModuleCategories {
     @JvmField
     val FUN = register(ModuleCategory("Fun"))
 
-    /**
-     * A temporary category for client-related modules, since we don't have a client settings UI yet.
-     */
-    @JvmField
-    val CLIENT = register(ModuleCategory("Client"))
-
     @JvmStatic
     val entries: Collection<ModuleCategory> get() = registry.sequencedValues()
 
     @JvmStatic
     private fun register(category: ModuleCategory): ModuleCategory {
-        if (registry.put(category.choiceName, category) != null) {
-            error("A module category with the name '${category.choiceName}' is already registered!")
+        if (registry.put(category.tag, category) != null) {
+            error("A module category with the name '${category.tag}' is already registered!")
         }
 
         return category

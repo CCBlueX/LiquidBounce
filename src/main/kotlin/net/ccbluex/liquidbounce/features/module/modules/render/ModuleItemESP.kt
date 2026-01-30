@@ -26,12 +26,6 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.itemESP
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawBox
@@ -40,7 +34,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -219,12 +212,5 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         }
     }
 
-    fun getColor(): Color4b {
-        val transparency = if(ModuleColorTheme.Transparency.AdaptiveA.enabled) itemESP else a
-        return if (syncClientWithPalette && colorMode.activeChoice is GenericStaticColorMode) {
-            currentColors[accentColor.num].toColor4b(transparency)
-        } else {
-            this.colorMode.activeChoice.getColor(null)
-        }
-    }
+    fun getColor() = this.colorMode.activeChoice.getColor(null)
 }

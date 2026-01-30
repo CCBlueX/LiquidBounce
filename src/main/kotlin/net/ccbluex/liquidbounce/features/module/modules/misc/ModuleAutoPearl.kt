@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
@@ -69,14 +69,14 @@ object ModuleAutoPearl : ClientModule(
 
     private val mode by enumChoice("Mode", Modes.TRIGGER)
 
-    private object Limits : ToggleableConfigurable(this, "Limits", true) {
+    private object Limits : ToggleableValueGroup(this, "Limits", true) {
         val angle by int("Angle", 180, 0..180, suffix = "°")
         val activationDistance by float("MinDistance", 8.0f, 0.0f..10.0f, suffix = "m")
         val destDistance by float("DestinationDistance", 8.0f, 0.0f..30.0f, suffix = "m")
     }
 
-    private object Rotate : ToggleableConfigurable(this, "Rotate", true) {
-        val rotations = tree(RotationsConfigurable(this))
+    private object Rotate : ToggleableValueGroup(this, "Rotate", true) {
+        val rotations = tree(RotationsValueGroup(this))
     }
 
     init {
@@ -240,7 +240,7 @@ object ModuleAutoPearl : ClientModule(
         queue.clear()
     }
 
-    private enum class Modes(override val choiceName: String) : NamedChoice {
+    private enum class Modes(override val tag: String) : Tagged {
         TRIGGER("Trigger"),
         TARGET("Target")
     }

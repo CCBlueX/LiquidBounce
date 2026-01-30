@@ -55,7 +55,7 @@ object CommandHelp : Command.Factory {
                     CommandManager.sortedBy { it.name }
                 },
                 eachRow = { _, command ->
-                    val commandStart = CommandManager.Options.prefix + command.name
+                    val commandStart = CommandManager.GlobalSettings.prefix + command.name
                     "\u2B25 ".asText()
                         .withStyle(ChatFormatting.BLUE)
                         .onHover(
@@ -80,7 +80,7 @@ object CommandHelp : Command.Factory {
             cmd.aliases.forEach { alias ->
                 aliasesText += ", ".asPlainText(ChatFormatting.DARK_GRAY)
                 aliasesText += regular(alias).withStyle(ChatFormatting.GRAY)
-                    .onClick(ClickEvent.SuggestCommand(CommandManager.Options.prefix + alias))
+                    .onClick(ClickEvent.SuggestCommand(CommandManager.GlobalSettings.prefix + alias))
             }
         }
 

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
@@ -90,8 +90,8 @@ object ModuleNoFall : ClientModule("NoFall", ModuleCategories.PLAYER) {
 
     @Suppress("unused")
     private enum class NotCondition(
-        override val choiceName: String,
-    ) : NamedChoice, BooleanSupplier {
+        override val tag: String,
+    ) : Tagged, BooleanSupplier {
         /**
          * With Elytra - we don't want to reduce fall damage.
          */

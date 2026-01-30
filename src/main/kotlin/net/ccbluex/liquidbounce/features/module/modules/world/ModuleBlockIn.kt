@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -57,8 +57,8 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val blocks by blocks("Blocks", blockSortedSetOf())
 
-    private sealed class Order(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private sealed class Order(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = placeOrder
 
         abstract fun positions(): MutableSet<BlockPos>
@@ -136,7 +136,7 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     }
 
     private fun getPositions() {
-        blockList = placeOrder.activeChoice.positions()
+        blockList = placeOrder.activeMode.positions()
         debugParameter("Place Count") { blockList.size }
     }
 

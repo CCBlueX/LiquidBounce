@@ -18,16 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 
-internal object SpiderVanilla : Choice("Vanilla") {
+internal object SpiderVanilla : Mode("Vanilla") {
 
     private val motion by float("Motion", 0.3F, 0.05f..0.8F)
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = ModuleSpider.modes
 
     val repeatable = tickHandler {

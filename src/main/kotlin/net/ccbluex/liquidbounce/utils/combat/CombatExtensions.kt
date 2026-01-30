@@ -23,10 +23,11 @@ package net.ccbluex.liquidbounce.utils.combat
 import it.unimi.dsi.fastutil.objects.ObjectDoublePair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
@@ -87,7 +88,7 @@ enum class EntityTargetClassification {
 /**
  * Configurable to configure which entities and their state (like being dead) should be considered as a target
  */
-enum class Targets(override val choiceName: String) : NamedChoice {
+enum class Targets(override val tag: String) : Tagged {
     SELF("Self"),
     PLAYERS("Players"),
     HOSTILE("Hostile"),
@@ -159,11 +160,11 @@ private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
 
 // Extensions
 @JvmOverloads
-fun Entity.shouldBeShown(enemyConf: EnumSet<Targets> = ModuleTargets.visual) =
+fun Entity.shouldBeShown(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.visual) =
     enemyConf.shouldShow(this)
 
 @JvmOverloads
-fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = ModuleTargets.combat) =
+fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat) =
     this is Attackable && enemyConf.shouldAttack(this)
 
 /**
@@ -171,18 +172,18 @@ fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = ModuleTargets.combat) 
  */
 fun ClientLevel.findEnemy(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: EnumSet<Targets> = ModuleTargets.combat
+    enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat
 ) = findEnemies(range, enemyConf).minByOrNull { (_, distance) -> distance }?.key()
 
 fun ClientLevel.findEnemies(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: EnumSet<Targets> = ModuleTargets.combat
+    enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat
 ): List<ObjectDoublePair<Entity>> {
     val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
 
     return getEntitiesInCuboid(player.eyePosition, squaredRange.endInclusive)
         .filter { it.shouldBeAttacked(enemyConf) }
-        .map { ObjectDoublePair.of(it, it.squaredBoxedDistanceTo(player)) }
+        .mapToArray { ObjectDoublePair.of(it, it.squaredBoxedDistanceTo(player)) }
         .filter { (_, distance) -> distance in squaredRange }
 }
 

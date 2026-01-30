@@ -18,20 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
-object ScaffoldSprintControlFeature : ToggleableConfigurable(ModuleScaffold, "SprintControl", false) {
+object ScaffoldSprintControlFeature : ToggleableValueGroup(ModuleScaffold, "SprintControl", false) {
 
     private val clientMode by enumChoice("Client", SprintMode.DO_NOT_CHANGE)
     private val serverMode by enumChoice("Server", SprintMode.DO_NOT_CHANGE)
 
-    private enum class SprintMode(override val choiceName: String) : NamedChoice {
+    private enum class SprintMode(override val tag: String) : Tagged {
 
         /**
          * This can be used to not change the sprint state.

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
@@ -37,8 +37,8 @@ object ModuleEntityControl : ClientModule("EntityControl", ModuleCategories.MOVE
     val enforceJumpStrength get() = running && Enforce.JUMP_STRENGTH in enforce
 
     private enum class Enforce(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         SADDLED("Saddled"),
         JUMP_STRENGTH("JumpStrength"),
     }

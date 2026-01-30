@@ -123,10 +123,10 @@ object CommandClientThemeSubcommand {
                     .append(regular(" by "))
                     .append(variable(theme.metadata.authors.joinToString(separator = ", ")).copyable())
                     .append(regular(" from "))
-                    .append(variable(theme.origin.choiceName))
+                    .append(variable(theme.origin.tag))
                 ).onClick(
                     ClickEvent.SuggestCommand(
-                        "${CommandManager.Options.prefix}client theme set ${theme.metadata.id}"
+                        "${CommandManager.GlobalSettings.prefix}client theme set ${theme.metadata.id}"
                     )
                 ).onHover(
                     HoverEvent.ShowText(

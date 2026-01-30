@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.fastutil.objectHashSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -27,19 +27,19 @@ import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
+import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.item.BoneMealItem
 import net.minecraft.world.phys.Vec3
 
-object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3?>(ModuleAutoFarm, "AutoWalk", false) {
+object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoWalk", false) {
 
     private val minimumDistance by float("MinimumDistance", 2f, 1f..4f)
 
     // Makes the player move to farmland blocks where there is a need for crop replacement
     private val toPlant by boolean("ToPlant", true, aliases = listOf("ToPlace"))
 
-    private val toItems = object : ToggleableConfigurable(this, "ToItems", true) {
+    private val toItems = object : ToggleableValueGroup(this, "ToItems", true) {
         private val range by float("Range", 20f, 8f..64f).onChanged {
             rangeSquared = it.sq()
         }

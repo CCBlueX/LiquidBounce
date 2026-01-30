@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -35,9 +35,9 @@ import net.minecraft.world.phys.Vec3
  * @anticheatVersion 2.8.9
  * @testedOn anticheat-test.com, eu.loyisa.cn
  */
-internal object VulcanLongJump : Choice("Vulcan289") {
+internal object VulcanLongJump : Mode("Vulcan289") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleLongJump.mode
 
     private var receivedSetback = false

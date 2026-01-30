@@ -19,13 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiValueChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -75,7 +76,7 @@ object ModuleClickGui :
                 screen is CustomStandaloneMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI
         }
 
-    object Snapping : ToggleableConfigurable(this, "Snapping", true) {
+    object Snapping : ToggleableValueGroup(this, "Snapping", true) {
 
         @Suppress("UnusedPrivateProperty", "unused")
         private val gridSize by int("GridSize", 10, 1..100, "px").onChanged {
@@ -141,6 +142,12 @@ object ModuleClickGui :
     @Suppress("unused")
     private val clientLanguageChangedHandler = handler<ClientLanguageChangedEvent> {
         standaloneScreen?.sync()
+    }
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        // For some reason, we actually need this.
+        standaloneScreen?.browser?.visible = mc.screen == standaloneScreen
     }
 
     fun updateStandaloneScreen(): Boolean {

@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
 import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
@@ -49,24 +49,24 @@ import kotlin.time.measureTimedValue
  * [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.AiAngleSmooth].
  */
 class AiAngleSmooth(
-    parent: ChoiceConfigurable<*>,
+    parent: ModeValueGroup<*>,
     val fallback: AngleSmooth
 ) : AngleSmooth("AI", parent, arrayListOf("Minarai")) {
 
-    private val choices = choices("Model", 0) { local ->
+    private val choices = modes("Model", 0) { local ->
         models.onChanged { _ ->
-            local.choices = models.choices
+            local.modes = models.modes
         }
 
-        models.choices.toTypedArray()
+        models.modes.toTypedArray()
     }
 
-    private class OutputMultiplier : Configurable("OutputMultiplier") {
+    private class OutputMultiplier : ValueGroup("OutputMultiplier") {
         var yawMultiplier by float("Yaw", 1.5f, 0.5f..2f)
         var pitchMultiplier by float("Pitch", 1f, 0.5f..2f)
     }
 
-    private var correctionMode = choices(this, "Correction") {
+    private var correctionMode = modes(this, "Correction") {
         arrayOf(
             /**
              * Works best with the model, as it allows for the most natural movement.
@@ -132,7 +132,7 @@ class AiAngleSmooth(
         )
 
         val (output, time) = measureTimedValue {
-            choices.activeChoice.predict(input.asInput)
+            choices.activeMode.predict(input.asInput)
         }
         ModuleDebug.debugParameter(this, "Output [0]", output[0])
         ModuleDebug.debugParameter(this, "Output [1]", output[1])
@@ -143,7 +143,7 @@ class AiAngleSmooth(
             currentRotation.pitch + output[1] * outputMultiplier.pitchMultiplier
         )
 
-        return correctionMode.activeChoice.process(
+        return correctionMode.activeMode.process(
             rotationTarget,
             modelOutput,
             targetRotation

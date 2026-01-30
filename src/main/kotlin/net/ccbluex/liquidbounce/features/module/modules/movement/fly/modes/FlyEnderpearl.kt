@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -43,9 +43,9 @@ import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
 
-internal object FlyEnderpearl : Choice("Enderpearl") {
+internal object FlyEnderpearl : Mode("Enderpearl") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     val speed by float("Speed", 1f, 0.5f..2f)
@@ -53,7 +53,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     var threwPearl = false
     var shouldFly = false
 
-    val rotations = tree(RotationsConfigurable(this))
+    val rotations = tree(RotationsValueGroup(this))
 
     override fun enable() {
         threwPearl = false
@@ -85,7 +85,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
         if (player.xRot <= 80) {
             RotationManager.setRotationTarget(
                 Rotation(player.yRot, (80f..90f).random()),
-                configurable = rotations,
+                valueGroup = rotations,
                 provider = ModuleFastUse,
                 priority = Priority.IMPORTANT_FOR_USAGE_2
             )

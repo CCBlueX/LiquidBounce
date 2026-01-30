@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair
 import it.unimi.dsi.fastutil.floats.FloatFloatPair
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura.player
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura.targetTracker
@@ -34,7 +34,7 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 
-object CrystalAuraDamageOptions : Configurable("Damage") {
+object CrystalAuraDamageOptions : ValueGroup("Damage") {
 
     private val maxSelfDamage by float("MaxSelfDamage", 2.0F, 0.0F..10.0F)
     private val maxFriendDamage by float("MaxFriendDamage", 1.0F, 0.0F..10.0F)
@@ -82,10 +82,10 @@ object CrystalAuraDamageOptions : Configurable("Damage") {
             val friends =
                 world
                     .getEntitiesBoxInRange(pos, 6.0) { FriendManager.isFriend(it) && it.boundingBox.maxY > pos.y }
-                    .filterIsInstance<LivingEntity>()
 
             if (friends.any {
-                it.getDamage(pos, requestingSubmodule, CheckedEntity.OTHER).isGreaterThan(maxFriendDamage)
+                it is LivingEntity &&
+                    it.getDamage(pos, requestingSubmodule, CheckedEntity.OTHER).isGreaterThan(maxFriendDamage)
             }) {
                 tooMuchDamageForFriend = true
             }

@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.LiquidBounce.logger
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.math.average
@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 
-object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Prediction", true) {
+object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Prediction", true) {
 
     private val lastPlacementOffsets = ArrayDeque<Vec3>()
 

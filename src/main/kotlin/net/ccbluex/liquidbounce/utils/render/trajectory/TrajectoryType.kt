@@ -19,15 +19,15 @@
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
 enum class TrajectoryType(
-    override val choiceName: String,
+    override val tag: String,
     /**
      * Determines if first-tick position skip is needed
      */
     val requiresInitialTickCorrection: Boolean,
-) : NamedChoice {
+) : Tagged {
     Arrow("Arrow", false),
     Potion("Potion", true),
     EnderPearl("EnderPearl", true),

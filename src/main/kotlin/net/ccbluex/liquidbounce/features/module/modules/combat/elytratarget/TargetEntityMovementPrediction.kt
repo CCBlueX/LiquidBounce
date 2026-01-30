@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -29,7 +29,7 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 
 @Suppress("MaxLineLength", "MagicNumber")
-internal object TargetEntityMovementPrediction : ToggleableConfigurable(ElytraRotationProcessor, "Prediction", true) {
+internal object TargetEntityMovementPrediction : ToggleableValueGroup(ElytraRotationProcessor, "Prediction", true) {
     private val mode by enumChoice("Mode", PredictMode.SIMPLE)
     private val glidingOnly by boolean("GlidingOnly", true)
     private val multiplier by floatRange("Multiplier", 1.8f..2f, 0.5f..3f)
@@ -45,9 +45,9 @@ internal object TargetEntityMovementPrediction : ToggleableConfigurable(ElytraRo
 
 @Suppress("unused", "MagicNumber")
 private enum class PredictMode(
-    override val choiceName: String,
+    override val tag: String,
     val predict: (target: LivingEntity, targetPosition: Vec3, multiplier: Double) -> Vec3
-) : NamedChoice {
+) : Tagged {
     SIMPLE("Simple", { target, targetPosition, multiplier ->
         targetPosition + target.deltaMovement * multiplier
     }),

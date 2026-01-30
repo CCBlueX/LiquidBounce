@@ -19,22 +19,20 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerDamage
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
-import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
-import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
-import net.minecraft.network.protocol.game.ClientboundExplodePacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
@@ -67,15 +65,8 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
     }
 
     override fun disable() {
-        PacketQueueManager.flush(TransferOrigin.INCOMING)
+        BlinkManager.flush(TransferOrigin.INCOMING)
     }
-
-    private val Packet<*>.isSelfDamage
-        get() = this is ClientboundDamageEventPacket && this.entityId == player.id
-
-    private val Packet<*>.isSelfVelocity
-        get() = this is ClientboundSetEntityMotionPacket && this.id == player.id
-            || this is ClientboundExplodePacket
 
     @Suppress("unused")
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
@@ -112,9 +103,9 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
 
         // Check for damage to make sure it will only cancel damage velocity (that all we need),
         // and not affect other types of velocity
-        if (packet.isSelfDamage) {
+        if (packet.isLocalPlayerDamage()) {
             cancelNextVelocity = true
-        } else if (cancelNextVelocity && event.packet.isSelfVelocity) {
+        } else if (cancelNextVelocity && event.packet.isLocalPlayerVelocity()) {
             event.cancelEvent()
             delay = true
             cancelNextVelocity = false
@@ -123,12 +114,12 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
     }
 
     @Suppress("unused")
-    private val queuePacketHandler = handler<QueuePacketEvent> { event ->
+    private val queuePacketHandler = handler<BlinkPacketEvent> { event ->
         if (waitForUpdate || !delay || event.origin != TransferOrigin.INCOMING) {
             return@handler
         }
 
-        event.action = PacketQueueManager.Action.QUEUE
+        event.action = BlinkManager.Action.QUEUE
     }
 
     @Suppress("unused")
@@ -144,7 +135,7 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
         hitResult?.let { hitResult ->
             delay = false
 
-            PacketQueueManager.flush(TransferOrigin.INCOMING)
+            BlinkManager.flush(TransferOrigin.INCOMING)
 
             if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, hitResult).consumesAction()) {
                 player.swing(InteractionHand.MAIN_HAND)

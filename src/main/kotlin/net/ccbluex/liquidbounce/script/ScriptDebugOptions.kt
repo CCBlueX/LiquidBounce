@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.script
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
 data class ScriptDebugOptions(
     val enabled: Boolean = false,
@@ -29,7 +29,7 @@ data class ScriptDebugOptions(
     val port: Int = 4242
 )
 
-enum class DebugProtocol(override val choiceName: String) : NamedChoice {
+enum class DebugProtocol(override val tag: String) : Tagged {
     DAP("DAP"),
     INSPECT("INSPECT"),
 }

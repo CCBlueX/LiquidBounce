@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.booleans.BooleanDoubleImmutablePair
 import it.unimi.dsi.fastutil.doubles.DoubleLongPair
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -275,8 +275,8 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
     )
 
     private enum class Features(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         /**
          * When enabled, only places when entities are about to enter a hole, otherwise fills all holes.
          */

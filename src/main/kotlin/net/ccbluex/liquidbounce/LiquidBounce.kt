@@ -34,10 +34,9 @@ import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
-import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.ConfigSystem.jsonFile
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
@@ -47,11 +46,12 @@ import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.account.AccountManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
-import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
-import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
+import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
+import net.ccbluex.liquidbounce.features.global.GlobalManager
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
@@ -76,7 +76,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -115,7 +114,7 @@ object LiquidBounce : EventListener {
     const val CLIENT_NAME = "LiquidBounce"
     const val CLIENT_AUTHOR = "CCBlueX"
 
-    private object Client : Configurable("Client") {
+    private object Client : Config("Client") {
         val version = text("Version", GitInfo.version())
             .immutable()
         val commit = text("Commit", GitInfo.get("git.commit.id.abbrev")?.let { "git-$it" } ?: "unknown")
@@ -272,7 +271,7 @@ object LiquidBounce : EventListener {
 
         // Utility managers
         RotationManager
-        PacketQueueManager
+        BlinkManager
         InteractionTracker
         CombatManager
         FriendManager
@@ -280,10 +279,9 @@ object LiquidBounce : EventListener {
         EnderChestInventoryTracker
         WorldToScreen
         ActiveServerList
-        ConfigSystem.root(ClientItemGroups)
-        ConfigSystem.root(LanguageManager)
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
+        ConfigSystem.root(GlobalManager)
         ConfigSystem.root(MarketplaceManager)
         PostRotationExecutor
         ServerObserver
@@ -339,7 +337,7 @@ object LiquidBounce : EventListener {
             }
             launch {
                 // Download player heads
-                HeadsItemGroup.heads.getFinalState()
+                HeadsCreativeModeTab.heads.getFinalState()
             }
             launch {
                 // Load configs

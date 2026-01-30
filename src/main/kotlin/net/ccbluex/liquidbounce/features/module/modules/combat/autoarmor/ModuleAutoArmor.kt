@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -48,7 +48,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
      * Should the module use the hotbar to equip armor pieces?
      * If disabled, it will only use inventory moves.
      */
-    object UseHotbar : ToggleableConfigurable(this, "Hotbar", true) {
+    object UseHotbar : ToggleableValueGroup(this, "Hotbar", true) {
         /**
          * Defines whether the [UseHotbar] option supports the armor swap from MC 1.19.4+.
          */

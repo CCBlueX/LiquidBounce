@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets.AutoQueueCustom.triggers
 
-sealed class AutoQueueAction(name: String) : Choice(name) {
-    override val parent: ChoiceConfigurable<*>
+sealed class AutoQueueAction(name: String) : Mode(name) {
+    override val parent: ModeValueGroup<*>
         get() = triggers
 
     abstract suspend fun execute()

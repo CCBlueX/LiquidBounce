@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.block.bed
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -42,25 +42,25 @@ import net.minecraft.world.level.block.BedBlock
 import org.joml.Vector3d
 import org.lwjgl.glfw.GLFW
 
-fun isSelfBedChoices(choice: ChoiceConfigurable<IsSelfBedChoice>): Array<IsSelfBedChoice> {
+fun isSelfBedChoices(choice: ModeValueGroup<IsSelfBedMode>): Array<IsSelfBedMode> {
     return arrayOf(
-        IsSelfBedChoice.None(choice),
-        IsSelfBedChoice.Color(choice),
-        IsSelfBedChoice.SpawnLocation(choice),
-        IsSelfBedChoice.Manual(choice),
+        IsSelfBedMode.None(choice),
+        IsSelfBedMode.Color(choice),
+        IsSelfBedMode.SpawnLocation(choice),
+        IsSelfBedMode.Manual(choice),
     )
 }
 
-sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConfigurable<*>) : Choice(name) {
+sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGroup<*>) : Mode(name) {
     abstract fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean
     open fun shouldDefend(block: BedBlock, pos: BlockPos): Boolean = isSelfBed(block, pos)
 
-    class None(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("None", parent) {
+    class None(parent: ModeValueGroup<*>) : IsSelfBedMode("None", parent) {
         override fun isSelfBed(block: BedBlock, pos: BlockPos) = false
         override fun shouldDefend(block: BedBlock, pos: BlockPos) = true
     }
 
-    class Color(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("Color", parent) {
+    class Color(parent: ModeValueGroup<*>) : IsSelfBedMode("Color", parent) {
         override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
             val color = block.color
             val colorRgb = color.textureDiffuseColor
@@ -70,7 +70,7 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
         }
     }
 
-    class SpawnLocation(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("SpawnLocation", parent) {
+    class SpawnLocation(parent: ModeValueGroup<*>) : IsSelfBedMode("SpawnLocation", parent) {
 
         private val bedDistance by float("BedDistance", 24.0f, 16.0f..48.0f)
         private val trackedSpawnLocation = Vector3d(Double.MAX_VALUE)
@@ -103,7 +103,7 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
 
     }
 
-    class Manual(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("Manual", parent) {
+    class Manual(parent: ModeValueGroup<*>) : IsSelfBedMode("Manual", parent) {
 
         private val trackKey by key("Track", GLFW.GLFW_KEY_KP_ADD)
         private val untrackKey by key("Untrack", GLFW.GLFW_KEY_KP_SUBTRACT)

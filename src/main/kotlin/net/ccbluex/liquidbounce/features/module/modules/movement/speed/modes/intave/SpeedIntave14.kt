@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
@@ -32,12 +32,12 @@ import net.ccbluex.liquidbounce.utils.math.multiply
  *
  * @author larryngton
  */
-class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Intave14", parent) {
+class SpeedIntave14(override val parent: ModeValueGroup<*>) : SpeedBHopBase("Intave14", parent) {
     companion object {
         private const val BOOST_CONSTANT = 0.003
     }
 
-    private inner class Strafe(parent: EventListener) : ToggleableConfigurable(parent, "Strafe", true) {
+    private inner class Strafe(parent: EventListener) : ToggleableValueGroup(parent, "Strafe", true) {
         private val strength by float("Strength", 0.27f, 0.01f..0.27f)
 
         @Suppress("unused")
@@ -48,7 +48,7 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
         }
     }
 
-    private inner class AirBoost(parent: EventListener) : ToggleableConfigurable(parent, "AirBoost", true) {
+    private inner class AirBoost(parent: EventListener) : ToggleableValueGroup(parent, "AirBoost", true) {
 
         @Suppress("unused")
         private val tickHandler = tickHandler {

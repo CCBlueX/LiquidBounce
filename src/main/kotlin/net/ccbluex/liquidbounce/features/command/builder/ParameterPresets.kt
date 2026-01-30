@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.features.command.builder
 
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -100,20 +100,36 @@ fun ParameterBuilder.Companion.modules(
     paramName = name, typeName = "Module", all = all, predicate = predicate
 )
 
-fun ParameterBuilder.Companion.rootConfigurables(
-    name: String = "configurables",
-    predicate: (Configurable) -> Boolean = { true }
-) = values<Configurable>(
-    paramName = name, typeName = "Configurable", all = ConfigSystem.configurables, predicate = predicate
+fun ParameterBuilder.Companion.configs(
+    name: String = "configs",
+    predicate: (Config) -> Boolean = { true }
+) = values<Config>(
+    paramName = name, typeName = "Config", all = ConfigSystem.configs, predicate = predicate
 )
+
+fun ParameterBuilder.Companion.valueGroupKeyPath(
+    name: String = "valueGroupPath",
+) = begin<String>(name)
+    .verifiedBy(STRING_VALIDATOR)
+    .autocompletedWith { begin, _ ->
+        suggestKeySegments(begin) { prefix -> ConfigSystem.valueGroupsKeySequence(prefix) }
+    }
+
+fun ParameterBuilder.Companion.valueKeyPath(
+    name: String = "path",
+) = begin<String>(name)
+    .verifiedBy(STRING_VALIDATOR)
+    .autocompletedWith { begin, _ ->
+        suggestKeySegments(begin) { prefix -> ConfigSystem.valueKeySequence(prefix) }
+    }
 
 inline fun <reified T> ParameterBuilder.Companion.enumChoice(
     name: String = "enum",
     crossinline predicate: (T) -> Boolean = { true },
-) where T : Enum<T>, T : NamedChoice = begin<T>(name)
+) where T : Enum<T>, T : Tagged = begin<T>(name)
     .verifiedBy { sourceText ->
         val values = enumValues<T>()
-        val choice = values.firstOrNull { v -> v.choiceName.equals(sourceText, true) && predicate(v) }
+        val choice = values.firstOrNull { v -> v.tag.equals(sourceText, true) && predicate(v) }
         if (choice == null) {
             Result.Error("$sourceText is not a valid choice")
         } else {
@@ -122,18 +138,18 @@ inline fun <reified T> ParameterBuilder.Companion.enumChoice(
     }
     .autocompletedWith { begin, _ ->
         enumValues<T>().mapNotNull { v ->
-            v.choiceName.takeIf { predicate(v) && it.startsWith(begin, true) }
+            v.tag.takeIf { predicate(v) && it.startsWith(begin, true) }
         }
     }
 
 inline fun <reified T> ParameterBuilder.Companion.enumChoices(
     name: String = "enums",
     crossinline predicate: (T) -> Boolean = { true },
-) where T : Enum<T>, T : NamedChoice = begin<Set<T>>(name)
+) where T : Enum<T>, T : Tagged = begin<Set<T>>(name)
     .verifiedBy { sourceText ->
         val values = enumValues<T>().filterTo(enumSetOf(), predicate)
         val choices = sourceText.split(',').mapNotNullTo(enumSetOf<T>()) {
-            values.firstOrNull { v -> v.choiceName.equals(it, ignoreCase = true) }
+            values.firstOrNull { v -> v.tag.equals(it, ignoreCase = true) }
         }
         if (choices.isEmpty()) {
             Result.Error("$sourceText contains no valid choice")
@@ -146,9 +162,9 @@ inline fun <reified T> ParameterBuilder.Companion.enumChoices(
         val prefix = begin.substring(0, splitAt)
         val choicePrefix = begin.substring(splitAt)
         enumValues<T>().filter { v ->
-            predicate(v) && v.choiceName.startsWith(choicePrefix, true)
+            predicate(v) && v.tag.startsWith(choicePrefix, true)
         }.map {
-            prefix + it.choiceName
+            prefix + it.tag
         }
     }
 
@@ -203,37 +219,73 @@ fun ParameterBuilder.Companion.playerName(
         mc.connection?.onlinePlayers?.map { it.profile.name }
     }
 
-fun ParameterBuilder.Companion.valueName(
-    name: String = "valueName",
-) = begin<String>(name)
-    .verifiedBy(STRING_VALIDATOR)
-    .autocompletedWith { begin, args ->
-        val moduleName = args[2]
-        val module = ModuleManager.find { module -> module.name.equals(moduleName, true) }
-            ?: return@autocompletedWith emptyList()
-
-        module.getContainedValuesRecursively()
-            .filter { !it.name.equals("Bind", true) }
-            .map { it.name }
-            .filter { it.startsWith(begin, true) }
-    }
-
 fun ParameterBuilder.Companion.valueType(
     name: String = "value",
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
     .autocompletedWith { begin, args ->
-        val moduleName = args[2]
-        val module = ModuleManager.find {
-            it.name.equals(moduleName, true)
-        } ?: return@autocompletedWith emptyList()
-
-        val valueName = args[3]
-
-        val value = module.getContainedValuesRecursively().firstOrNull {
-            it.name.equals(valueName, true)
-        } ?: return@autocompletedWith emptyList()
+        val value = ConfigSystem.findValueByKey(args[2]) ?: return@autocompletedWith emptyList()
 
         val options = value.valueType.completer.possible(value)
         options.filter { it.startsWith(begin, true) }
     }
+
+private data class KeySegmentQuery(
+    val prefix: String,
+    val typed: String,
+    val depth: Int,
+)
+
+private fun suggestKeySegments(begin: String, keyProvider: (String) -> Sequence<String>): List<String> {
+    val query = buildKeySegmentQuery(begin)
+    return keyProvider(query.prefix)
+        .map { it.lowercase() }
+        .filter { query.prefix.isBlank() || it.startsWith(query.prefix) }
+        .map { it.split('.') }
+        .filter { it.size > query.depth }
+        .map { it[query.depth] }
+        .filter { it.startsWith(query.typed, true) }
+        .map { formatSuggestion(query.prefix, it) }
+        .distinct()
+        .sorted()
+        .toList()
+}
+
+private fun buildKeySegmentQuery(begin: String): KeySegmentQuery {
+    val normalizedBegin = begin.lowercase()
+    val effectiveBegin = addDefaultPrefixIfMissing(normalizedBegin)
+    val (prefix, typed) = splitKeyPrefix(effectiveBegin)
+    val depth = countSegments(prefix)
+    return KeySegmentQuery(prefix, typed, depth)
+}
+
+private fun splitKeyPrefix(input: String): Pair<String, String> {
+    val endsWithDot = input.endsWith(".")
+    val lastDot = input.lastIndexOf('.')
+    val prefix = if (lastDot >= 0) input.substring(0, lastDot + 1) else ""
+    val typed = if (endsWithDot || lastDot < 0) input.substring(prefix.length) else input.substring(lastDot + 1)
+    return prefix to typed
+}
+
+private fun countSegments(prefix: String): Int {
+    return if (prefix.isBlank()) {
+        0
+    } else {
+        prefix.dropLast(1).count { it == '.' } + 1
+    }
+}
+
+private fun formatSuggestion(prefix: String, segment: String): String {
+    val suggestion = "$prefix$segment"
+    val defaultPrefix = "${ConfigSystem.KEY_PREFIX}."
+    return suggestion.removePrefix(defaultPrefix)
+}
+
+private fun addDefaultPrefixIfMissing(input: String): String {
+    val prefix = "${ConfigSystem.KEY_PREFIX}."
+    return if (input.startsWith(prefix) || input == ConfigSystem.KEY_PREFIX) {
+        input
+    } else {
+        prefix + input
+    }
+}

@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.techniques.FlyFireballCustomTechnique
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.techniques.FlyFireballLegitTechnique
@@ -31,15 +31,15 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.world.item.Items
 
-internal object FlyFireball : Choice("Fireball") {
+internal object FlyFireball : Mode("Fireball") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
-    val technique = choices("Technique", FlyFireballLegitTechnique,
+    val technique = modes("Technique", FlyFireballLegitTechnique,
         arrayOf(FlyFireballLegitTechnique, FlyFireballCustomTechnique))
 
-    val trigger = choices("Trigger", FlyFireballInstantTrigger,
+    val trigger = modes("Trigger", FlyFireballInstantTrigger,
         arrayOf(FlyFireballInstantTrigger, FlyFireballOnEdgeTrigger))
 
     // Silent fireball selection

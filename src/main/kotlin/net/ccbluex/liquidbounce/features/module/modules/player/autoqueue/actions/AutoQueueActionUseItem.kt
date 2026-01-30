@@ -27,12 +27,12 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 
 object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
 
-    private val mode = choices("Mode", 0) {
+    private val mode = modes("Mode", 0) {
         arrayOf(AutoQueueItemMode.ByName(it), AutoQueueItemMode.ByItem(it))
     }
 
     override suspend fun execute() {
-        val slot = Slots.OffhandWithHotbar.findSlot(mode.activeChoice::test) ?: return
+        val slot = Slots.OffhandWithHotbar.findSlot(mode.activeMode::test) ?: return
 
         SilentHotbar.selectSlotSilently(ModuleAutoQueue, slot, 20)
         waitTicks(1)

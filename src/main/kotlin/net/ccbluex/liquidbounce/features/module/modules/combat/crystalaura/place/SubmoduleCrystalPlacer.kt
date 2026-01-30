@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
@@ -44,7 +44,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
-object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place", true) {
+object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place", true) {
 
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
     private val switchMode by enumChoice("Switch", SwitchMode.SILENT)
@@ -136,7 +136,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
             data.first
         } ?: return
 
-        if (ModuleCrystalAura.rotationMode.activeChoice is NoRotationMode) {
+        if (ModuleCrystalAura.rotationMode.activeMode is NoRotationMode) {
             blockHitResult = raytraceBlock(
                 getMaxRange().toDouble(),
                 rotation.rotation,
@@ -151,7 +151,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
     }
 
     private fun queuePlacing(rotation: RotationWithVector, targetPos: BlockPos, side: Direction) {
-        ModuleCrystalAura.rotationMode.activeChoice.rotate(rotation.rotation, isFinished = {
+        ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, isFinished = {
             blockHitResult = raytraceBlock(
                 getMaxRange().toDouble(),
                 RotationManager.serverRotation,

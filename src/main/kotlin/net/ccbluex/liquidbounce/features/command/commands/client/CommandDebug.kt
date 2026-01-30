@@ -28,25 +28,25 @@ import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.core.parse
-import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.script.ScriptManager
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.plus
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.minecraft.ChatFormatting
 import net.minecraft.SharedConstants
 import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.TextColor
+import net.minecraft.network.chat.Style
 import java.net.URI
 import java.util.EnumSet
 
@@ -82,13 +82,8 @@ object CommandDebug : Command.Factory {
             buffer.clear()
 
             chat(
-                Component.literal("Debug information has been uploaded to: ").withStyle { style ->
-                    style.withColor(TextColor.fromLegacyFormat(ChatFormatting.GREEN))
-                }.append(
-                    Component.literal(paste)
-                        .withStyle(ChatFormatting.YELLOW)
-                        .onClick(ClickEvent.OpenUrl(URI(paste)))
-                )
+                "Debug information has been uploaded to: ".asPlainText(ChatFormatting.GREEN),
+                paste.asPlainText(Style.EMPTY + ChatFormatting.YELLOW + ClickEvent.OpenUrl(URI(paste))),
             )
         }
         .build()
@@ -136,7 +131,7 @@ object CommandDebug : Command.Factory {
 
         add("language", JsonObject().apply {
             addProperty("language", mc.languageManager.selected)
-            addProperty("clientLanguage", LanguageManager.languageIdentifier)
+            addProperty("clientLanguage", LanguageManager.clientLanguage.tag)
         })
 
         add("server", JsonObject().apply {
@@ -166,7 +161,7 @@ object CommandDebug : Command.Factory {
             }
         })
 
-        add("enemies", publicGson.toJsonTree(ModuleTargets.combat, EnumSet::class.javaObjectType))
+        add("enemies", publicGson.toJsonTree(GlobalSettingsTarget.combat, EnumSet::class.javaObjectType))
     }
 
     /**

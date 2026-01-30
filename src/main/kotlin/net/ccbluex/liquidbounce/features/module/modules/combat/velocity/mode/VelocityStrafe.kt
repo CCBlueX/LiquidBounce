@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
@@ -30,9 +30,8 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
-import net.minecraft.network.protocol.game.ClientboundExplodePacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * Strafe velocity
@@ -42,7 +41,7 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
     private val delay by int("Delay", 2, 0..10, "ticks")
     private val strength by float("Strength", 1f, 0.1f..2f)
 
-    object OnlyFacing: ToggleableConfigurable(this, "OnlyFacing", false) {
+    object OnlyFacing: ToggleableValueGroup(this, "OnlyFacing", false) {
         val range by float("Range", 3.5f, 0.1f..6f)
     }
 
@@ -72,9 +71,7 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
         val packet = event.packet
 
         // Check if this is a regular velocity update
-        if ((packet is ClientboundSetEntityMotionPacket && packet.id == player.id)
-            || packet is ClientboundExplodePacket
-        ) {
+        if (packet.isLocalPlayerVelocity()) {
             if (OnlyFacing.enabled && !shouldStrafe) {
                 return@sequenceHandler
             }

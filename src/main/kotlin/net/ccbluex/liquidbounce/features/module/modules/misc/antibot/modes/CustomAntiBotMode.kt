@@ -23,9 +23,9 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachInt
-import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -54,7 +54,7 @@ import kotlin.math.abs
 @Suppress("MagicNumber")
 object CustomAntiBotMode : AntiBotMode("Custom") {
 
-    private object InvalidGround : ToggleableConfigurable(ModuleAntiBot, "InvalidGround", true) {
+    private object InvalidGround : ToggleableValueGroup(ModuleAntiBot, "InvalidGround", true) {
         val vlToConsiderAsBot by int("VLToConsiderAsBot", 10, 1..50, "flags")
     }
 
@@ -65,26 +65,26 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         CustomConditions.FAKE_ENTITY_ID,
     )
 
-    private object AlwaysInRadius : ToggleableConfigurable(ModuleAntiBot, "AlwaysInRadius", false) {
+    private object AlwaysInRadius : ToggleableValueGroup(ModuleAntiBot, "AlwaysInRadius", false) {
         val alwaysInRadiusRange by float("AlwaysInRadiusRange", 20f, 5f..30f)
     }
 
-    private object Age : ToggleableConfigurable(ModuleAntiBot, "Age", false), AntiBotPredicate {
+    private object Age : ToggleableValueGroup(ModuleAntiBot, "Age", false), AntiBotPredicate {
         private val minimum by int("Minimum", 20, 0..120, "ticks")
 
         override fun isBot(entity: Player): Boolean = entity.tickCount < minimum
     }
 
-    private object Armor : ToggleableConfigurable(ModuleAntiBot, "Armor", false) {
+    private object Armor : ToggleableValueGroup(ModuleAntiBot, "Armor", false) {
 
         /**
          * @see ArmorMaterials
          */
         @Suppress("UNUSED")
         private enum class ArmorPredicate(
-            override val choiceName: String,
+            override val tag: String,
             val predicate: Predicate<ItemStack>,
-        ) : NamedChoice {
+        ) : Tagged {
             // General
             NOTHING("Nothing", Predicate(ItemStack::isEmpty)),
             LEATHER(
@@ -158,7 +158,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             ArmorPredicate.NETHERITE, ArmorPredicate.ELYTRA,
         )
 
-        private val values = enumMapOf<EquipmentSlot, MultiChooseListValue<ArmorPredicate>>(
+        private val values = enumMapOf<EquipmentSlot, MultiChoiceListValue<ArmorPredicate>>(
             EquipmentSlot.HEAD, multiEnumChoice("Helmet", enumSetOf(ArmorPredicate.NOTHING), HELMET),
             EquipmentSlot.CHEST, multiEnumChoice("Chestplate", enumSetOf(ArmorPredicate.NOTHING), CHESTPLATE),
             EquipmentSlot.LEGS, multiEnumChoice("Leggings", enumSetOf(ArmorPredicate.NOTHING), BASE),
@@ -177,14 +177,14 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         }
     }
 
-    private object Name : ToggleableConfigurable(ModuleAntiBot, "Name", true), AntiBotPredicate {
+    private object Name : ToggleableValueGroup(ModuleAntiBot, "Name", true), AntiBotPredicate {
         private val lengthRange by intRange("Length", 3..16, 1..32)
         private val validateChars by multiEnumChoice("ValidateChars", enumSetOf(CharacterValidator.VANILLA))
 
         /**
          * https://en.wikipedia.org/wiki/Unicode_block
          */
-        private enum class CharacterValidator(override val choiceName: String) : NamedChoice, IntPredicate {
+        private enum class CharacterValidator(override val tag: String) : Tagged, IntPredicate {
             VANILLA("Vanilla") {
                 override fun test(value: Int): Boolean {
                     return value in '0'.code..'9'.code
@@ -343,9 +343,9 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
 
     @Suppress("unused")
     private enum class CustomConditions(
-        override val choiceName: String,
+        override val tag: String,
         private val isBot: AntiBotPredicate
-    ) : NamedChoice, AntiBotPredicate by isBot {
+    ) : Tagged, AntiBotPredicate by isBot {
         DUPLICATE("Duplicate", { suspected ->
             isADuplicate(suspected.gameProfile)
         }),

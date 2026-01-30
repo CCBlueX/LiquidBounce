@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -45,7 +45,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_A
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
+import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.client.CameraType
 import net.minecraft.core.Direction
@@ -67,7 +67,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
      * Allows to interact from the camera perspective. This is very useful to interact with blocks that
      * are behind the player or walls. Similar functionality to the GhostBlock module.
      */
-    private object CameraInteract : ToggleableConfigurable(ModuleFreeCam, "AllowCameraInteract", true) {
+    private object CameraInteract : ToggleableValueGroup(ModuleFreeCam, "AllowCameraInteract", true) {
         val lookAt by boolean("LookAt", true)
     }
 
@@ -75,7 +75,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
      * This is useful for cancelling FreeCam on certain events.
      * For example, when the player takes damage.
      */
-    private enum class CancelOn(override val choiceName: String) : NamedChoice {
+    private enum class CancelOn(override val tag: String) : Tagged {
         DAMAGE("Damage"),
         MOVE("Move"),
         LIQUID("Liquid"),
@@ -86,7 +86,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
     /**
      * Navigation configuration for the FreeCam module
      */
-    private object Navigation : NavigationBaseConfigurable<Unit>(ModuleFreeCam, "Navigation", false) {
+    private object Navigation : NavigationBaseValueGroup<Unit>(ModuleFreeCam, "Navigation", false) {
 
         private val controlKey by key("Key", InputConstants.KEY_LCONTROL)
 
@@ -119,7 +119,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
     private val keepSneaking by boolean("KeepSneaking", false)
 
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     init {
         tree(CameraInteract)
@@ -225,7 +225,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
             return@handler
         }
 
-        RotationManager.setRotationTarget(rotationsConfigurable.toRotationTarget(lookAt),
+        RotationManager.setRotationTarget(rotations.toRotationTarget(lookAt),
             Priority.NOT_IMPORTANT, ModuleFreeCam)
     }
 

@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.consume
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,7 +31,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
  * based off of intave consume noslow, might work on some other ac
  */
 
-internal class NoSlowConsumeRelease(override val parent: ChoiceConfigurable<*>) : Choice("Release") {
+internal class NoSlowConsumeRelease(override val parent: ModeValueGroup<*>) : Mode("Release") {
 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->

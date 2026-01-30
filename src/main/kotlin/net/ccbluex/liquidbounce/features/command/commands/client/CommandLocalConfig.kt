@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import kotlinx.coroutines.async
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
-import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
-import net.ccbluex.liquidbounce.config.AutoSettingsMetadata
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.IncludeConfiguration
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
+import net.ccbluex.liquidbounce.config.autoconfig.IncludeConfiguration
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
@@ -36,10 +36,10 @@ import net.ccbluex.liquidbounce.features.command.builder.boolean
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
+import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.onClick
@@ -87,7 +87,7 @@ object CommandLocalConfig : Command.Factory {
             AsyncLoadingText(
                 ioScope.async {
                     file.bufferedReader().use { r ->
-                        publicGson.fromJson(r, AutoSettingsMetadata::class.java)
+                        publicGson.fromJson(r, AutoConfigMetadata::class.java)
                     }.asText()
                 }
             )
@@ -167,7 +167,7 @@ object CommandLocalConfig : Command.Factory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                "Local Configs:".asPlainText(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD)
+                highlight("Local Configs:")
             },
             items = {
                 ConfigSystem.userConfigsFolder.listFiles { _, name ->
@@ -187,7 +187,7 @@ object CommandLocalConfig : Command.Factory {
                     variable(file.name)
                         .onClick(
                             ClickEvent.SuggestCommand(
-                                CommandManager.Options.prefix + "localconfig load $settingName"
+                                CommandManager.GlobalSettings.prefix + "localconfig load $settingName"
                             )
                         )
                         .onHover(HoverEvent.ShowText(hoverText(file, settingName))),

@@ -38,11 +38,11 @@ object AlignmentAdapter : JsonDeserializer<Alignment>, JsonSerializer<Alignment>
     ): Alignment {
         val obj = json.asJsonObject
         val horizontalAlignmentStr = obj["horizontalAlignment"].asString
-        val horizontalAlignment = ScreenAxisX.entries.find { it.choiceName == horizontalAlignmentStr }
+        val horizontalAlignment = ScreenAxisX.entries.find { it.tag == horizontalAlignmentStr }
             ?: throw IllegalArgumentException("Invalid horizontal alignment: $horizontalAlignmentStr")
         val horizontalOffset = obj["horizontalOffset"].asInt
         val verticalAlignmentStr = obj["verticalAlignment"].asString
-        val verticalAlignment = Alignment.ScreenAxisY.entries.find { it.choiceName == verticalAlignmentStr }
+        val verticalAlignment = Alignment.ScreenAxisY.entries.find { it.tag == verticalAlignmentStr }
             ?: throw IllegalArgumentException("Invalid vertical alignment: $verticalAlignmentStr")
         val verticalOffset = obj["verticalOffset"].asInt
 
@@ -54,9 +54,9 @@ object AlignmentAdapter : JsonDeserializer<Alignment>, JsonSerializer<Alignment>
         typeOfSrc: Type,
         context: JsonSerializationContext
     ) = JsonObject().apply {
-        addProperty("horizontalAlignment", src.horizontalAlignment.choiceName)
+        addProperty("horizontalAlignment", src.horizontalAlignment.tag)
         addProperty("horizontalOffset", src.horizontalOffset)
-        addProperty("verticalAlignment", src.verticalAlignment.choiceName)
+        addProperty("verticalAlignment", src.verticalAlignment.tag)
         addProperty("verticalOffset", src.verticalOffset)
     }
 

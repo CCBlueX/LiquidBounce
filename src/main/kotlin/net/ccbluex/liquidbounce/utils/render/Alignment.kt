@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.client.mc
 
@@ -28,7 +28,7 @@ class Alignment(
     horizontalOffset: Int,
     verticalAlignment: ScreenAxisY,
     verticalOffset: Int,
-) : Configurable("Alignment") {
+) : ValueGroup("Alignment") {
 
     companion object {
         @JvmStatic
@@ -64,14 +64,14 @@ class Alignment(
         return BoundingBox2f(x, y, x + width, y + height)
     }
 
-    enum class ScreenAxisX(override val choiceName: String) : NamedChoice {
+    enum class ScreenAxisX(override val tag: String) : Tagged {
         LEFT("Left"),
         CENTER("Center"),
         CENTER_TRANSLATED("CenterTranslated"),
         RIGHT("Right"),
     }
 
-    enum class ScreenAxisY(override val choiceName: String) : NamedChoice {
+    enum class ScreenAxisY(override val tag: String) : Tagged {
         TOP("Top"),
         CENTER("Center"),
         CENTER_TRANSLATED("CenterTranslated"),

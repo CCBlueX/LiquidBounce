@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCircleOutline
@@ -40,7 +40,7 @@ import kotlin.math.sqrt
  * Renders a circle around the player indicating the KillAura attack range.
  * Synced with KillAura settings for Range, WallRange, and IgnoreOpenInventory.
  */
-object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeIndicator", false) {
+object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndicator", false) {
 
     private val colorMode by enumChoice("ColorMode", ColorMode.STATIC)
     private val idleColor by color("IdleColor", Color4b(255, 50, 50, 80))
@@ -67,7 +67,7 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
 
     private var colorFactor = 0f
 
-    private enum class ColorMode(override val choiceName: String) : NamedChoice {
+    private enum class ColorMode(override val tag: String) : Tagged {
         STATIC("Static"),
         RAINBOW("Rainbow"),
         DISTANCE("Distance")

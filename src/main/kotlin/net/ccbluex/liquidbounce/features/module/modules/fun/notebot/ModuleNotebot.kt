@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsNot
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -62,10 +62,10 @@ object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQu
     private val pianoOnly by boolean("PianoOnly", false)
     val reuseBlocks by boolean("ReuseBlocks", true).onChanged { enabled = false }
     val range by float("Range", 6f, 1f..6f)
-    val rotationsConfigurable = RotationsConfigurable(this)
+    val rotations = RotationsValueGroup(this)
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    private object StartDelay : Configurable("StartDelay") {
+    private object StartDelay : ValueGroup("StartDelay") {
         val test by int("Test", 0, 0..20, "ticks")
         val tune by int("Tune", 0, 0..20, "ticks")
         val play by int("Play", 2, 0..20, "ticks")

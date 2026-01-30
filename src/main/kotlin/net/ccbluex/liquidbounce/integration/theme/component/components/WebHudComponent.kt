@@ -32,12 +32,12 @@ class WebHudComponent(
     val values: Array<JsonObject> = emptyArray()
 ) : HudComponent(name, enabled, alignment, tweaks) {
 
-    override fun initConfigurable() {
+    override fun walkInit() {
         for (value in values) {
             json(value)
         }
         registerComponentListen(this)
-        super.initConfigurable()
+        super.walkInit()
     }
 
 }

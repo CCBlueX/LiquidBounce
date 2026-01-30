@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.UseHotbar
@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 
-object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor", true) {
+object AutoArmorSaveArmor : ToggleableValueGroup(ModuleAutoArmor, "SaveArmor", true) {
     val durabilityThreshold by int("DurabilityThreshold", 24, 0..100)
     private val autoOpen by boolean("AutoOpenInventory", true)
 

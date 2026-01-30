@@ -32,10 +32,6 @@ import kotlin.math.sin
  */
 object ModuleVehicleBoost : ClientModule("VehicleBoost", ModuleCategories.MOVEMENT) {
 
-    init {
-        enableLock()
-    }
-
     private var horizontalSpeed by float("HorizontalSpeed", 2f, 0.1f..10f)
     private var verticalSpeed by float("VerticalSpeed", 1f, 0.1f..5f)
     private var wasInVehicle = false

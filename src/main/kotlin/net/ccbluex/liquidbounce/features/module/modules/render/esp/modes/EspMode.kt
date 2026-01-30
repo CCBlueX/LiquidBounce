@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.modes
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
@@ -28,7 +28,7 @@ import net.minecraft.world.entity.Entity
 sealed class EspMode(
     name: String,
     val requiresTrueSight: Boolean = false
-) : Choice(name) {
+) : Mode(name) {
     final override val parent
         get() = modes
 

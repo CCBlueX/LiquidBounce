@@ -23,14 +23,12 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import it.unimi.dsi.fastutil.objects.ObjectArrays
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.command.CommandManager.getSubCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandBind
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandBinds
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandClear
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandContainers
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandDebug
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandFriend
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandHelp
@@ -98,7 +96,7 @@ private val commandSet = ObjectRBTreeSet<Command>(Comparator.comparing({ it.name
  */
 object CommandManager : Collection<Command> by commandSet {
 
-    object Options : Configurable("Commands") {
+    object GlobalSettings : ValueGroup("Commands") {
 
         /**
          * The prefix of the commands.
@@ -110,7 +108,7 @@ object CommandManager : Collection<Command> by commandSet {
          * prefix (.)
          * ```
          */
-        var prefix by text("prefix", ".")
+        var prefix by text("Prefix", ".")
 
         /**
          * How many hints should we give for unknown commands?
@@ -119,9 +117,6 @@ object CommandManager : Collection<Command> by commandSet {
     }
 
     init {
-        ConfigSystem.root(Options)
-
-        // Initialize the executor
         CommandExecutor
     }
 
@@ -147,7 +142,6 @@ object CommandManager : Collection<Command> by commandSet {
             CommandLocalConfig,
             CommandAutoDisable,
             CommandScript,
-            CommandContainers,
             CommandSay,
             CommandFakePlayer,
             CommandAutoAccount,
@@ -256,7 +250,7 @@ object CommandManager : Collection<Command> by commandSet {
                 "liquidbounce.commandManager.unknownCommand",
                 args[0]
             ),
-            usageInfo = if (rootCommandMap.isEmpty() || Options.hintCount == 0) {
+            usageInfo = if (rootCommandMap.isEmpty() || GlobalSettings.hintCount == 0) {
                 emptyList()
             } else {
                 commandSet.sortedBy { command ->
@@ -268,7 +262,7 @@ object CommandManager : Collection<Command> by commandSet {
                         )
                     }
                     distance
-                }.take(Options.hintCount).map { command ->
+                }.take(GlobalSettings.hintCount).map { command ->
                     if (command.aliases.isEmpty()) {
                         command.nameAsText()
                     } else {
@@ -461,12 +455,12 @@ object CommandManager : Collection<Command> by commandSet {
             return Suggestions.empty()
         }
 
-        if (start < Options.prefix.length) {
+        if (start < GlobalSettings.prefix.length) {
             return Suggestions.empty()
         }
 
         try {
-            val cmd = origCmd.substring(Options.prefix.length, start)
+            val cmd = origCmd.substring(GlobalSettings.prefix.length, start)
             val tokenized = tokenizeCommand(cmd)
             var args = tokenized.first
 
@@ -485,7 +479,7 @@ object CommandManager : Collection<Command> by commandSet {
                 currentArgStart = cmd.length
             }
 
-            val builder = SuggestionsBuilder(origCmd, currentArgStart + Options.prefix.length)
+            val builder = SuggestionsBuilder(origCmd, currentArgStart + GlobalSettings.prefix.length)
 
             // getSubcommands will only return null if it returns on the first index.
             // since the first index must contain a valid command, it is reported as

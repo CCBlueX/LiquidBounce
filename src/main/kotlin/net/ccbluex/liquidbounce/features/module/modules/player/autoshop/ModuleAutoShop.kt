@@ -29,13 +29,12 @@ import kotlinx.coroutines.delay
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.fastutil.intListOf
-import net.ccbluex.liquidbounce.config.AutoShopConfig.loadAutoShopConfig
-import net.ccbluex.liquidbounce.config.ShopConfigPreset
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.AutoShopConfig.loadAutoShopConfig
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.NormalPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.QuickPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo
@@ -65,7 +64,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     }
 
     private val startDelay by intRange("StartDelay", 1..2, 0..10, "ticks")
-    val purchaseMode = choices(this, "PurchaseMode", NormalPurchaseMode,
+    val purchaseMode = modes(this, "PurchaseMode", NormalPurchaseMode,
         arrayOf(NormalPurchaseMode, QuickPurchaseMode)
     )
 
@@ -148,7 +147,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         }
 
         // buys an item (1 click only)
-        if (purchaseMode.activeChoice == NormalPurchaseMode) {
+        if (purchaseMode.activeMode == NormalPurchaseMode) {
             buyItem(itemSlot, currentElement)
             return
         }

@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsAutoTranslate
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -70,7 +70,7 @@ object CommandTranslate : Command.Factory {
             }
 
             val text = texts.joinToString(" ")
-            val result = ModuleTranslation.translate(
+            val result = GlobalSettingsAutoTranslate.translate(
                 sourceLanguage.asLanguage(), targetLanguage.asLanguage(), text
             )
 

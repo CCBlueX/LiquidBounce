@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -31,7 +31,7 @@ import net.minecraft.world.phys.BlockHitResult
  * made for intave version 14.8.4
  */
 
-internal class NoSlowBlockIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
+internal class NoSlowBlockIntave14(override val parent: ModeValueGroup<*>) : Mode("Intave14") {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->

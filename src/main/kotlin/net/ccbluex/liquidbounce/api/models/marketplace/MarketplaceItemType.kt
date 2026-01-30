@@ -19,15 +19,15 @@
 package net.ccbluex.liquidbounce.api.models.marketplace
 
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 
 enum class MarketplaceItemType(
-    override val choiceName: String,
+    override val tag: String,
     val isListable: Boolean,
     val isSubscribable: Boolean
-) : NamedChoice {
+) : Tagged {
     @SerializedName("Config")
     CONFIG("Config", false, false),
     @SerializedName("Script")

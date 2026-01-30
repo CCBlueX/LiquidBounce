@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -36,10 +36,10 @@ import net.minecraft.world.effect.MobEffectInstance
  */
 object ModulePotionSpoof : ClientModule("PotionSpoof", ModuleCategories.PLAYER) {
 
-    private class StatusEffectConfigurable(
+    private class StatusEffectValueGroup(
         val registryEntry: Holder<MobEffect>,
         specifiedLanguage: Map<String, String>,
-    ) : ToggleableConfigurable(
+    ) : ToggleableValueGroup(
         parent = this,
         // Value name (en_us)
         name = specifiedLanguage.getOrDefault(registryEntry.value().descriptionId, "Unknown"),
@@ -62,7 +62,7 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", ModuleCategories.PLAYER) 
         }
 
         BuiltInRegistries.MOB_EFFECT.listElements().map {
-            tree(StatusEffectConfigurable(it, specifiedLanguage = language))
+            tree(StatusEffectValueGroup(it, specifiedLanguage = language))
         }.toList()
     }
 

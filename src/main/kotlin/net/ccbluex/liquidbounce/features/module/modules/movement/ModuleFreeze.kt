@@ -19,15 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleEasyPearl
@@ -35,7 +36,6 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -162,15 +162,15 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     /**
      * Queue network communication - acts as network lag
      */
-    object Queue : Choice("Queue") {
+    object Queue : Mode("Queue") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
         @Suppress("unused")
-        private val fakeLagHandler = handler<QueuePacketEvent>(
+        private val fakeLagHandler = handler<BlinkPacketEvent>(
             priority = EventPriorityConvention.SAFETY_FEATURE
         ) { event ->
             if (origin.any { origin -> origin == event.origin }) {
@@ -183,11 +183,11 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     /**
      * Cancel network communication
      */
-    object Cancel : Choice("Cancel") {
+    object Cancel : Mode("Cancel") {
 
         private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -202,7 +202,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     /**
      * Stationary freeze - only cancel movement but keeps network communication intact
      */
-    object Stationary : Choice("Stationary") {
+    object Stationary : Mode("Stationary") {
         /**
          * Bypasses Grim's BadPacketsR and Matrix7 Timer Check
          */
@@ -210,7 +210,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         private val yawOffset = FloatOffsetGenerator()
         private val pitchOffset = FloatOffsetGenerator()
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         /**

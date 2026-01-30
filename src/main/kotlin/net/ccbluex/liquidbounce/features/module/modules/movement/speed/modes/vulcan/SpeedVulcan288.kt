@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -37,7 +37,7 @@ import kotlin.math.abs
  * BHop Speed for Vulcan 288
  * Tested on both anticheat-test.com and loyisa.cn
  */
-class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Vulcan288", parent) {
+class SpeedVulcan288(override val parent: ModeValueGroup<*>) : SpeedBHopBase("Vulcan288", parent) {
 
     @Suppress("unused")
     private val afterJumpHandler = sequenceHandler<PlayerAfterJumpEvent> {

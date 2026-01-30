@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -74,9 +74,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
 }
 
-abstract class TpAuraChoice(name: String) : Choice(name) {
+abstract class TpAuraMode(name: String) : Mode(name) {
 
-    final override val parent: ChoiceConfigurable<TpAuraChoice>
+    final override val parent: ModeValueGroup<TpAuraMode>
         get() = ModuleTpAura.mode
 
 }

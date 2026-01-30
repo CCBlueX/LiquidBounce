@@ -24,7 +24,7 @@ import net.ccbluex.fastutil.forEachFloat
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -83,7 +83,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     private val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    object RenderSimulatedPlayer : ToggleableConfigurable(this, "SimulatedPlayer", false) {
+    object RenderSimulatedPlayer : ToggleableValueGroup(this, "SimulatedPlayer", false) {
 
         private val ticksToPredict by int("TicksToPredict", 20, 5..100)
 
@@ -108,7 +108,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
     }
 
-    object Graph : ToggleableConfigurable(this, "Graph", false) {
+    object Graph : ToggleableValueGroup(this, "Graph", false) {
 
         private val curve = curve(
             "Curve", mutableListOf(

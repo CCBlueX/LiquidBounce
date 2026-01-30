@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
 import net.ccbluex.liquidbounce.additions.shooter
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -34,7 +34,7 @@ import net.minecraft.world.item.Items
 
 internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
-    private object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
+    private object ConsiderInventory : ToggleableValueGroup(this, "ConsiderInventory", enabled = false) {
         val constraints = tree(PlayerInventoryConstraints())
     }
 

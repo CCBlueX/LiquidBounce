@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.point
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
@@ -37,7 +37,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
-class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventListener {
+class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventListener {
 
     override fun parent() = parent
 

@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.objectRBTreeSetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -114,7 +114,7 @@ object ModuleAutoDisable : ClientModule("AutoDisable", ModuleCategories.WORLD) {
         }
     }
 
-    private enum class DisableOn(override val choiceName: String) : NamedChoice {
+    private enum class DisableOn(override val tag: String) : Tagged {
         FLAG("Flag"),
         DEATH("Death"),
         WORLD_CHANGE("WorldChange"),

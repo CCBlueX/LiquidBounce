@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -40,7 +40,7 @@ import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Items
 
-object AutoQueueGommeDuels : Choice("GommeDuels") {
+object AutoQueueGommeDuels : Mode("GommeDuels") {
 
     private var inMatch = false
 
@@ -49,7 +49,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
 
     private var controlKillAura by boolean("ControlKillAura", true)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = presets
 
     override fun enable() {
@@ -125,11 +125,12 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
     private suspend fun handleLobbySituation() {
         inMatch = false
 
-        val duelsEntity = world.entitiesForRendering().filterIsInstance<ArmorStand>().find {
-            it.boxedDistanceTo(player) < 5 && it.displayName?.string?.contains("Duels") == true
+        val duelsEntity = world.entitiesForRendering().find {
+            it is ArmorStand && it.boxedDistanceTo(player) < 5 && it.displayName?.string?.contains("Duels") == true
         }?.let { armorStand ->
-            world.entitiesForRendering().filterIsInstance<Player>().find {
-                it.boxedDistanceTo(player) < 5 && it.position() == armorStand.position().subtract(0.0, 2.0, 0.0)
+            world.entitiesForRendering().find {
+                it is Player && it.boxedDistanceTo(player) < 5 &&
+                    it.position() == armorStand.position().subtract(0.0, 2.0, 0.0)
             }
         }
 

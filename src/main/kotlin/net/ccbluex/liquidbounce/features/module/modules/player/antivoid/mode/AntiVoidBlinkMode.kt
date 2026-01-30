@@ -18,19 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.positions
 
 object AntiVoidBlinkMode : AntiVoidMode("Blink") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleAntiVoid.mode
 
     // Cases in which the AntiVoid protection should not be active.
@@ -42,7 +42,7 @@ object AntiVoidBlinkMode : AntiVoidMode("Blink") {
         get() = running && ModuleAntiVoid.isLikelyFalling && ModuleAntiVoid.rescuePosition != null && !isExempt
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin == TransferOrigin.OUTGOING && requiresLag) {
             event.action = Action.QUEUE
         }
@@ -69,7 +69,7 @@ object AntiVoidBlinkMode : AntiVoidMode("Blink") {
             return false
         }
 
-        PacketQueueManager.cancel()
+        BlinkManager.cancel()
         return true
     }
 

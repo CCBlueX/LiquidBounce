@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
@@ -127,7 +127,7 @@ object CommandServerInfo : Command.Factory, EventListener {
         command.printStyledText("address", serverInfo?.ip?.hideSensitiveAddress())
         command.printStyledText("resolvedAddress", resolvedServerAddress?.hideSensitiveAddress())
         command.printStyledText("serverId", ServerObserver.serverId)
-        command.printStyledText("serverType", ServerObserver.serverType?.choiceName)
+        command.printStyledText("serverType", ServerObserver.serverType?.tag)
         command.printStyledText("brand", network.serverBrand())
         command.printStyledText("advertisedVersion", advertisedVersion)
         command.printStyledText(
@@ -173,7 +173,7 @@ object CommandServerInfo : Command.Factory, EventListener {
 
         // Show available detection methods if none were specified
         if (detections.isEmpty()) {
-            val detectionList = DetectionType.entries.map { variable(it.choiceName) }.joinToText(regular(", "))
+            val detectionList = DetectionType.entries.map { variable(it.tag) }.joinToText(regular(", "))
             command.printStyledComponent("detectParameter", detectionList, formatting = ::warning)
         }
     }
@@ -201,7 +201,7 @@ object CommandServerInfo : Command.Factory, EventListener {
     /**
      * Detection for further server information
      */
-    private enum class DetectionType(override val choiceName: String) : NamedChoice {
+    private enum class DetectionType(override val tag: String) : Tagged {
         PLUGINS("Plugins"),
         HOSTING("Hosting");
     }

@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,15 +31,15 @@ internal object NoFallPacketJump : NoFallMode("PacketJump") {
     private val packetType by enumChoice("PacketType", MovePacketType.FULL,
         enumSetOf(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND)
     )
-    private val fallDistance = choices("FallDistance", Smart, arrayOf(Smart, Constant))
-    private val timing = choices("Timing", Landing, arrayOf(Landing, Falling))
+    private val fallDistance = modes("FallDistance", Smart, arrayOf(Smart, Constant))
+    private val timing = modes("Timing", Landing, arrayOf(Landing, Falling))
 
     @Volatile
     private var falling = false
 
     val tickHandler = handler<PlayerTickEvent> {
-        falling = player.fallDistance > fallDistance.activeChoice.value
-        if (timing.activeChoice is Falling && !player.onGround() && falling) {
+        falling = player.fallDistance > fallDistance.activeMode.value
+        if (timing.activeMode is Falling && !player.onGround() && falling) {
             network.send(packetType.generatePacket().apply {
                 y += 1.0E-9
             })
@@ -50,7 +50,7 @@ internal object NoFallPacketJump : NoFallMode("PacketJump") {
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (timing.activeChoice is Landing &&
+        if (timing.activeMode is Landing &&
             event.packet is ServerboundMovePlayerPacket && event.packet.onGround && falling
         ) {
             falling = false
@@ -63,20 +63,20 @@ internal object NoFallPacketJump : NoFallMode("PacketJump") {
         }
     }
 
-    private object Landing : Choice("Landing") {
-        override val parent: ChoiceConfigurable<*>
+    private object Landing : Mode("Landing") {
+        override val parent: ModeValueGroup<*>
             get() = timing
     }
 
-    private object Falling : Choice("Falling") {
-        override val parent: ChoiceConfigurable<*>
+    private object Falling : Mode("Falling") {
+        override val parent: ModeValueGroup<*>
             get() = timing
 
         val resetFallDistance by boolean("ResetFallDistance", true)
     }
 
-    private abstract class DistanceMode(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private abstract class DistanceMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = fallDistance
 
         abstract val value: Float

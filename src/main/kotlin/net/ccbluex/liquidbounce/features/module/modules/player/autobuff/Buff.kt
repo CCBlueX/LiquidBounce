@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoSwap
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -32,7 +32,7 @@ import net.minecraft.world.item.ItemStack
 
 abstract class Buff(
     name: String,
-) : ToggleableConfigurable(ModuleAutoBuff, name, true) {
+) : ToggleableValueGroup(ModuleAutoBuff, name, true) {
 
     internal open val passesRequirements: Boolean
         get() = enabled && !InventoryManager.isInventoryOpen

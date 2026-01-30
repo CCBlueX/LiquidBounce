@@ -21,12 +21,16 @@ package net.ccbluex.liquidbounce.deeplearn
 import ai.djl.engine.Engine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.ConfigSystem.rootFolder
 import net.ccbluex.liquidbounce.integration.task.type.Task
-import net.ccbluex.liquidbounce.utils.client.logger
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.util.Locale
 
 object DeepLearningEngine {
+
+    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/AI")
 
     var isInitialized = false
         private set
@@ -76,14 +80,14 @@ object DeepLearningEngine {
     suspend fun init(task: Task) {
         this.task = task
 
-        logger.info("[AI] Initializing engine...")
+        logger.info("Initializing engine...")
         val engine = withContext(Dispatchers.IO) {
             Engine.getInstance()
         }
         val name = engine.engineName
         val version = engine.version
         val deviceType = engine.defaultDevice().deviceType.uppercase(Locale.ENGLISH)
-        logger.info("[AI] Using deep learning engine $name $version on $deviceType.")
+        logger.info("Using deep learning engine $name $version on $deviceType.")
 
         isInitialized = true
         this.task = null

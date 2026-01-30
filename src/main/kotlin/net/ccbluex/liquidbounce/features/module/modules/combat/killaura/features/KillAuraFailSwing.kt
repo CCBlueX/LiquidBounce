@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.attack
@@ -38,7 +38,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.HitResult
 import kotlin.math.pow
 
-internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", false) {
+internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSwing", false) {
 
     /**
      * Additional range for fail swing to work
@@ -46,8 +46,8 @@ internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "Fail
     private val additionalRange by floatRange("AdditionalRange", 2.5f..3f, 0f..10f).onChanged { range ->
         currentAdditionalRange = range.random()
     }
-    val mode = choices(this, "NotifyWhenFail", activeIndex = 1) {
-        arrayOf(NoneChoice(it), Box, Sound)
+    val mode = modes(this, "NotifyWhenFail", activeIndex = 1) {
+        arrayOf(NoneMode(it), Box, Sound)
     }.apply {
         doNotIncludeAlways()
     }

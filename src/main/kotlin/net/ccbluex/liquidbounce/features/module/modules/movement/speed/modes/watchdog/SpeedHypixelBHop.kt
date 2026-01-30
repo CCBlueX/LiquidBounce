@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -39,7 +39,7 @@ import net.minecraft.world.effect.MobEffects
  * @anticheatVersion 12.12.2023
  * @testedOn hypixel.net
  */
-class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("HypixelBHop", parent) {
+class SpeedHypixelBHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelBHop", parent) {
 
     private val horizontalAcceleration by boolean("HorizontalAcceleration", true)
     private val verticalAcceleration by boolean("VerticalAcceleration", true)

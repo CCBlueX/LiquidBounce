@@ -18,14 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ALL
@@ -36,7 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -49,15 +50,14 @@ import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.ItemInHandRenderer
+import net.minecraft.core.component.DataComponents.BLOCKS_ATTACKS
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.phys.HitResult
 import kotlin.random.Random
 
-object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false) {
+object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", false) {
 
     private val blockMode by enumChoice("BlockMode", BlockMode.INTERACT)
     private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM)
@@ -106,7 +106,8 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
      * @see ItemInHandRenderer.renderArmWithItem
      */
     var blockVisual = false
-        get() = field && super.running && (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
+        get() = field && super.running &&
+            (isOlderThanOrEqual1_8 || isNewerThanOrEquals1_21_5 || ModuleSwordBlock.running)
 
     val shouldUnblockToHit
         get() = unblockMode != UnblockMode.NONE
@@ -143,16 +144,14 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             return
         }
 
-        val blockHand = when {
-            canBlock(player.mainHandItem) -> InteractionHand.MAIN_HAND
-            canBlock(player.offhandItem) -> InteractionHand.OFF_HAND
-            else -> return  // We cannot block with any item.
+        val blockHand = InteractionHand.entries.first {
+            player.getItemInHand(it).has(BLOCKS_ATTACKS)
         }
 
         val itemStack = player.getItemInHand(blockHand)
 
         // We do not want to block if the item is disabled.
-        if (itemStack.isEmpty || !itemStack.isItemEnabled(world.enabledFeatures())) {
+        if (!itemStack.isItemEnabled(world.enabledFeatures())) {
             return
         }
 
@@ -212,7 +211,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
     }
 
     @Suppress("unused")
-    private val blinkHandler = handler<QueuePacketEvent> { event ->
+    private val blinkHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin != TransferOrigin.OUTGOING) {
             return@handler
         }
@@ -234,7 +233,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             flushTicks >= blink -> flush("T")
 
             // Start to queue
-            else -> event.action = PacketQueueManager.Action.QUEUE
+            else -> event.action = BlinkManager.Action.QUEUE
         }
     }
 
@@ -317,7 +316,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             return
         }
 
-        val hitResult = traceFromPlayer(rotationToTheServer) ?: return
+        val hitResult = traceFromPlayer(rotationToTheServer)
 
         if (hitResult.type != HitResult.Type.BLOCK) {
             return
@@ -326,12 +325,6 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         // Interact with block
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hitResult)
     }
-
-    /**
-     * Check if the player can block with the given item stack.
-     */
-    private fun canBlock(itemStack: ItemStack) =
-        itemStack.item?.getUseAnimation(itemStack) == ItemUseAnimation.BLOCK
 
     /**
      * Check if the player is in danger.
@@ -346,14 +339,14 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         ) != null
     }
 
-    enum class BlockMode(override val choiceName: String) : NamedChoice {
+    enum class BlockMode(override val tag: String) : Tagged {
         BASIC("Basic"),
         INTERACT("Interact"),
         HYPIXEL("Hypixel"),
         FAKE("Fake"),
     }
 
-    enum class UnblockMode(override val choiceName: String) : NamedChoice {
+    enum class UnblockMode(override val tag: String) : Tagged {
         STOP_USING_ITEM("StopUsingItem"),
         CHANGE_SLOT("ChangeSlot"),
         NONE("None")

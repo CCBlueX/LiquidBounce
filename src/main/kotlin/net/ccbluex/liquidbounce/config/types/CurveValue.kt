@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.config.types
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import net.ccbluex.liquidbounce.config.types.list.ListValue
 import net.ccbluex.liquidbounce.utils.math.CurveUtil
 import org.joml.Vector2f
 

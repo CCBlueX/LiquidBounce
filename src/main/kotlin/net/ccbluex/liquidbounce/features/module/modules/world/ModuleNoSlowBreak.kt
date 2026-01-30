@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
@@ -44,7 +44,7 @@ object ModuleNoSlowBreak : ClientModule("NoSlowBreak", ModuleCategories.WORLD) {
     val water get() = running && When.UNDERWATER in `when`
 
     @Suppress("unused")
-    private enum class When(override val choiceName: String) : NamedChoice {
+    private enum class When(override val tag: String) : Tagged {
         MINING_FATIGUE("MiningFatigue"),
         ON_AIR("OnAir"),
         UNDERWATER("Underwater");

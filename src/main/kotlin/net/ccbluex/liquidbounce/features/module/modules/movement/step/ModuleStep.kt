@@ -19,25 +19,25 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.canStep
@@ -61,8 +61,8 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         Hypixel
     )).apply { tagBy(this) }
 
-    object Legit : Choice("Legit") {
-        override val parent: ChoiceConfigurable<Choice>
+    object Legit : Mode("Legit") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -72,9 +72,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
 
     }
 
-    object Instant : Choice("Instant") {
+    object Instant : Mode("Instant") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         /**
@@ -180,9 +180,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author InspectorBoat (and translated by 1zuna)
      */
-    object Vulcan286 : Choice("Vulcan286") {
+    object Vulcan286 : Mode("Vulcan286") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private var stepCounter = 0
@@ -225,9 +225,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author @liquidsquid1
      */
-    object BlocksMC : Choice("BlocksMC") {
+    object BlocksMC : Mode("BlocksMC") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private var baseTimer by float("BaseTimer", 3.0f, 0.1f..5.0f)
@@ -256,9 +256,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         }
 
         @Suppress("unused")
-        private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+        private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
             if (event.origin == TransferOrigin.OUTGOING && stepping) {
-                event.action = PacketQueueManager.Action.QUEUE
+                event.action = BlinkManager.Action.QUEUE
             }
         }
 
@@ -275,9 +275,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
     /**
      * does not seem to work above a certain y level for some reason
      */
-    object Hypixel : Choice("Hypixel") {
+    object Hypixel : Mode("Hypixel") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         val alternateBypass by boolean("AlternateBypass", false)

@@ -20,17 +20,17 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.CachedPlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
@@ -50,11 +50,11 @@ import net.minecraft.world.phys.Vec3
 
 @Suppress("MagicNumber")
 object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
-    private object AllowRotationChange : ToggleableConfigurable(this, "AllowRotationChange", false) {
+    private object AllowRotationChange : ToggleableValueGroup(this, "AllowRotationChange", false) {
         val allowJump by boolean("AllowJump", true)
     }
 
-    private object AllowTimer : ToggleableConfigurable(this, "AllowTimer", false) {
+    private object AllowTimer : ToggleableValueGroup(this, "AllowTimer", false) {
         val timerSpeed by float("TimerSpeed", 2.0F, 1.0F..10.0F, suffix = "x")
     }
 
@@ -167,7 +167,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
         var bestPacketIdx: Int? = null
         var bestTimeToImpact = 0
 
-        for (position in PacketQueueManager.positions) {
+        for (position in BlinkManager.positions) {
             packetIndex += 1
 
             // Process packets only if they are at least some distance away from each other
@@ -215,8 +215,8 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
     )
 
     private enum class Ignore(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         OPEN_INVENTORY("OpenInventory"),
         USING_ITEM("UsingItem"),
         USING_SCAFFOLD("UsingScaffold")

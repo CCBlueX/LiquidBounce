@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.event.events
 
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.combat.EntityTargetClassification
@@ -29,18 +29,18 @@ import net.ccbluex.liquidbounce.utils.kotlin.PriorityField
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 
-@Nameable("attack")
+@Tag("attack")
 class AttackEntityEvent(
     val entity: Entity
 ) : Event()
 
-@Nameable("entityMargin")
+@Tag("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 
-@Nameable("entityHealthUpdate")
+@Tag("entityHealthUpdate")
 class EntityHealthUpdateEvent(val entity: LivingEntity, val old: Float, val new: Float, val max: Float) : Event()
 
-@Nameable("tagEntityEvent")
+@Tag("tagEntityEvent")
 class TagEntityEvent(val entity: Entity, var targetingInfo: EntityTargetingInfo) : Event() {
     val color: PriorityField<Color4b?> = PriorityField(null, Priority.NOT_IMPORTANT)
 

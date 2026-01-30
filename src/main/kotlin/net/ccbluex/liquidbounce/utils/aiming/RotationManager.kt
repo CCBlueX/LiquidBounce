@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
@@ -32,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -87,7 +87,7 @@ object RotationManager : EventListener {
     var previousRotation: Rotation? = null
 
     private val fakeLagging
-        get() = PacketQueueManager.isLagging || ModuleBacktrack.isLagging()
+        get() = BlinkManager.isLagging || ModuleBacktrack.isLagging()
 
     private val freezing
         get() = ModuleFreeze.running
@@ -109,12 +109,12 @@ object RotationManager : EventListener {
     fun setRotationTarget(
         rotation: Rotation,
         considerInventory: Boolean = true,
-        configurable: RotationsConfigurable,
+        valueGroup: RotationsValueGroup,
         priority: Priority,
         provider: ClientModule,
         whenReached: RestrictedSingleUseAction? = null
     ) {
-        setRotationTarget(configurable.toRotationTarget(
+        setRotationTarget(valueGroup.toRotationTarget(
             rotation, considerInventory = considerInventory, whenReached = whenReached
         ), priority, provider)
     }

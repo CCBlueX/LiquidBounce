@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.objectLinkedSetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
 import net.ccbluex.liquidbounce.config.types.ValueType.FLOAT
 import net.ccbluex.liquidbounce.config.types.ValueType.FLOAT_RANGE
 import net.ccbluex.liquidbounce.config.types.ValueType.INT
 import net.ccbluex.liquidbounce.config.types.ValueType.INT_RANGE
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.client.DummyRangedValueProvider
 import net.ccbluex.liquidbounce.utils.client.NoneRangedValueProvider
@@ -91,7 +91,7 @@ open class TargetTracker(
 open class TargetSelector(
     defaultPriority: TargetPriority = TargetPriority.HEALTH,
     rangeValue: RangedValueProvider = NoneRangedValueProvider
-) : Configurable("Target") {
+) : ValueGroup("Target") {
 
     constructor(defaultPriority: TargetPriority = TargetPriority.HEALTH, range: RangedValue<*>) :
         this(defaultPriority, DummyRangedValueProvider(range))
@@ -189,7 +189,7 @@ open class TargetSelector(
 
 }
 
-enum class TargetPriority(override val choiceName: String) : NamedChoice, Comparator<LivingEntity> {
+enum class TargetPriority(override val tag: String) : Tagged, Comparator<LivingEntity> {
     /**
      * Player first
      */

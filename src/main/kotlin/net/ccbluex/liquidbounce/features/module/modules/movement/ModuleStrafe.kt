@@ -34,10 +34,6 @@ import net.minecraft.world.entity.MoverType
  */
 object ModuleStrafe : ClientModule("Strafe", ModuleCategories.MOVEMENT) {
 
-    init {
-        enableLock()
-    }
-
     private var strengthInAir by float("StrengthInAir", 1f, 0.0f..1f)
     private var strengthOnGround by float("StrengthOnGround", 1f, 0.0f..1f)
 

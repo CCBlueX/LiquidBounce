@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  *
  * @see ModuleScaffold
  */
-object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Telly", false) {
+object ScaffoldTellyFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Telly", false) {
 
     val doNotAim: Boolean
         get() = player.airTicks <= straightTicks &&
@@ -85,7 +85,7 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
         jumpTicks = jumpTicksOpt.random()
     }
 
-    enum class Mode(override val choiceName: String) : NamedChoice {
+    enum class Mode(override val tag: String) : Tagged {
         REVERSE("Reverse"),
         RESET("Reset")
     }

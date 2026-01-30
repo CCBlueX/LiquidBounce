@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
@@ -41,7 +41,7 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 
-enum class AimMode(override val choiceName: String) : NamedChoice {
+enum class AimMode(override val tag: String) : Tagged {
     CENTER("Center"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),

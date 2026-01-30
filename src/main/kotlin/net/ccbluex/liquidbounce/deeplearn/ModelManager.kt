@@ -20,15 +20,19 @@
 package net.ccbluex.liquidbounce.deeplearn
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
-import net.ccbluex.liquidbounce.utils.client.logger
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import kotlin.time.measureTime
 
-object ModelManager : EventListener, Configurable("AI") {
+object ModelManager : EventListener, ValueGroup("AI") {
+
+    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/AI/ModelManager")
 
     /**
      * Base models that are always available
@@ -53,11 +57,11 @@ object ModelManager : EventListener, Configurable("AI") {
     private val allCombatModels: Array<String>
         get() = combatModels + availableCombatModels
 
-    val models = choices(this, "Model", 0) { choiceConfigurable ->
+    val models = modes(this, "Model", 0) { modeValueGroup ->
         // Empty models for start-up initialization.
         // These will be replaced later on at [load].
         allCombatModels.mapToArray { name ->
-            TwoDimensionalRegressionModel(name, choiceConfigurable)
+            TwoDimensionalRegressionModel(name, modeValueGroup)
         }
     }
 
@@ -67,7 +71,7 @@ object ModelManager : EventListener, Configurable("AI") {
      * through the choice initialization.
      */
     fun load() {
-        logger.info("[AI] Loading models...")
+        logger.info("Loading models...")
         val choices = allCombatModels.mapToArray { name ->
             TwoDimensionalRegressionModel(name, models)
         }
@@ -78,14 +82,14 @@ object ModelManager : EventListener, Configurable("AI") {
                     model.load()
                 }
             }.onFailure { error ->
-                logger.error("[AI] Failed to load model '${model.name}'.", error)
+                logger.error("Failed to load model '${model.name}'.", error)
             }.onSuccess { time ->
-                logger.info("[AI] Loaded model '${model.name}' in ${time.inWholeMilliseconds}ms.")
+                logger.info("Loaded model '${model.name}' in ${time.inWholeMilliseconds}ms.")
             }
         }
 
-        models.choices = choices.toMutableList()
-        models.setByString(models.activeChoice.name)
+        models.modes = choices.toMutableList()
+        models.setByString(models.activeMode.name)
         ModuleClickGui.sync()
     }
 
@@ -93,8 +97,8 @@ object ModelManager : EventListener, Configurable("AI") {
      * Unload all models.
      */
     fun unload() {
-        models.choices.forEach { it.close() }
-        models.choices.clear()
+        models.modes.forEach { it.close() }
+        models.modes.clear()
     }
 
     /**

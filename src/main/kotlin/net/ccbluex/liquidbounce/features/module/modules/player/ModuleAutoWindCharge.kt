@@ -19,14 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWindCharge.Rotate.rotations
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
@@ -43,11 +43,11 @@ import net.minecraft.world.item.Items
  */
 object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PLAYER) {
 
-    private object Rotate : ToggleableConfigurable(this, "Rotate", true) {
-        val rotations = tree(RotationsConfigurable(this))
+    private object Rotate : ToggleableValueGroup(this, "Rotate", true) {
+        val rotations = tree(RotationsValueGroup(this))
     }
 
-    private object HorizontalBoost : ToggleableConfigurable(this, "HorizontalBoost", true) {
+    private object HorizontalBoost : ToggleableValueGroup(this, "HorizontalBoost", true) {
         val pitch by float("Pitch", 70f, 0f..90f)
         val boostKey by key("Key", InputConstants.KEY_LCONTROL)
     }

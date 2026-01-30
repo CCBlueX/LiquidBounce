@@ -46,7 +46,7 @@ object SessionSerializer : JsonSerializer<User> {
 
             addProperty("username", it.name)
             addProperty("uuid", it.profileId.toString())
-            addProperty("service", service.choiceName)
+            addProperty("service", service.tag)
             addProperty("type", it.accountType)
             addProperty("avatar", formatAvatarUrl(it.profileId, it.name))
             addProperty("online", service.canJoinOnline)

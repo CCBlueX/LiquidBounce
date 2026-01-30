@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.fastutil.filterIsInstanceTo
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -47,18 +49,18 @@ import kotlin.math.sin
 object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.tntTimer"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.tntTimer"
 
     // Glow ESP
     val esp by boolean("ESP", true)
 
-    private object ShowTimer : ToggleableConfigurable(this, "ShowTimer", false) {
+    private object ShowTimer : ToggleableValueGroup(this, "ShowTimer", false) {
         val scale by float("Scale", 1.5F, 0.25F..4F)
         val renderY by float("RenderY", 1.0F, -2.0F..2.0F)
         val ownerName by boolean("OwnerName", true)
         val timeUnit by enumChoice("TimeUnit", TimeUnit.TICKS)
 
-        enum class TimeUnit(override val choiceName: String): NamedChoice, IntFunction<String> {
+        enum class TimeUnit(override val tag: String): Tagged, IntFunction<String> {
             TICKS("Ticks"),
             SECONDS("Seconds");
 
@@ -72,12 +74,10 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
 
         @Suppress("unused")
         private val render2DHandler = handler<OverlayRenderEvent> { event ->
-            tntEntities.forEach { tnt ->
-                if (tnt.fuse <= 0) return@forEach
-
+            for (tnt in tntEntities) {
                 val pos = tnt.box.center.add(0.0, renderY.toDouble(), 0.0)
 
-                val screenPos = WorldToScreen.calculateScreenPos(pos) ?: return@forEach
+                val screenPos = WorldToScreen.calculateScreenPos(pos) ?: continue
 
                 // Yellow #ffff00 -> Red #ff0000
                 val color = Color4b(255, Mth.floor(255F * tnt.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
@@ -117,7 +117,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
 
     private val tntEntities by computedOn<GameTickEvent, MutableSet<PrimedTnt>>(ReferenceOpenHashSet()) { _, set ->
         set.clear()
-        world.entitiesForRendering().filterIsInstanceTo(set)
+        world.entitiesForRendering().filterIsInstanceTo(set) { it.fuse > 0 }
         set
     }
 

@@ -38,12 +38,6 @@ object ModuleMaceKill : ClientModule("MaceKill", ModuleCategories.COMBAT) {
 
     private val fallHeight by int("FallHeight", 22, 1..170).apply { tagBy(this) }
 
-    init {
-        // This module will likely not bypass any anti-cheat, so to prevent someone using it,
-        // in case they don't know what it does, we allow it to be locked by config.
-        enableLock()
-    }
-
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         // Check if player is holding a mace

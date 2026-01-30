@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.fastutil.forEachIsInstance
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -32,7 +34,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
-import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomOverlay
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -54,7 +55,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     override val running
         get() = this.enabled && !isDestructed
     override val baseKey: String
-        get() = "liquidbounce.module.hud"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.hud"
 
     private val isVisible: Boolean
         get() = !isHidingNow && inGame
@@ -68,7 +69,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         tree(Blur)
     }
 
-    object Blur : ToggleableConfigurable(ModuleHud, "Blur", enabled = true) {
+    object Blur : ToggleableValueGroup(ModuleHud, "Blur", enabled = true) {
         /**
          * The range in which the blending from not-blurred to blurred occurs.
          */
@@ -84,9 +85,9 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     val isBlurEffectActive
         get() = Blur.enabled && !(mc.options.hideGui && mc.screen == null)
 
-    val themes = tree(Configurable("Themes"))
+    val themes = tree(ValueGroup("Themes"))
 
-    val components = tree(Configurable("AdditionalComponents")).apply {
+    val components = tree(ValueGroup("AdditionalComponents")).apply {
         tree(MinimapHudComponent)
     }
 
@@ -94,13 +95,13 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
      * Updates [themes] content
      */
     fun updateThemes() {
-        themes.inner.filterIsInstance<Configurable>().forEach {
+        themes.inner.forEachIsInstance<ValueGroup> {
             themes.drop(it)
         }
         for (theme in ThemeManager.themes) {
             themes.tree(theme.settings)
         }
-        themes.initConfigurable()
+        themes.walkInit()
         themes.walkKeyPath()
     }
 
@@ -120,7 +121,6 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
-        tree(GlobalBrowserSettings)
         tree(overlay.browserSettings)
     }
 

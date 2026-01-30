@@ -19,7 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -42,12 +43,12 @@ object ModuleGUICloser : ClientModule(
 ) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.guiCloser"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.guiCloser"
 
     private val mode by enumChoice("Mode", Mode.MATCHES)
     private val filters by regexList("Filter", mutableSetOf(Regex("^Vote$")))
 
-    private enum class Mode(override val choiceName: String) : NamedChoice, BiPredicate<Regex, Component> {
+    private enum class Mode(override val tag: String) : Tagged, BiPredicate<Regex, Component> {
         MATCHES("Matches"),
         CONTAINS("Contains");
 

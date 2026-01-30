@@ -19,17 +19,17 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -51,7 +51,7 @@ import net.minecraft.world.phys.shapes.Shapes
  *
  * @author 1zuna <marco@ccbluex.net>
  */
-object FlyNcpClip : Choice("NcpClip") {
+object FlyNcpClip : Mode("NcpClip") {
 
     private val speed by float("Speed", 7.5f, 2f..10f)
     private val additionalEntrySpeed by float("AdditionalEntry", 2f, 0f..2f)
@@ -64,7 +64,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
     private val maximumDistance by float("MaximumDistance", 200f, 0.1f..500f)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     private var startPosition: Vec3? = null
@@ -127,7 +127,7 @@ object FlyNcpClip : Choice("NcpClip") {
         } else if (startPos.distanceTo(player.position()) > maximumDistance) {
             if (shouldLag) {
                 // If we are lagging, we can abuse this to get us back to safety
-                PacketQueueManager.cancel()
+                BlinkManager.cancel()
                 shouldLag = false
             }
 
@@ -180,9 +180,9 @@ object FlyNcpClip : Choice("NcpClip") {
     }
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (blink && shouldLag && event.origin == TransferOrigin.OUTGOING) {
-            event.action = PacketQueueManager.Action.QUEUE
+            event.action = BlinkManager.Action.QUEUE
         }
     }
 
