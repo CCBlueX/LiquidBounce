@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.point.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
@@ -56,7 +56,7 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
     val speed by floatRange("Speed", 0.1f..0.2f, 0.01f..1f)
     val tolerance by float("Tolerance", 0.05f, 0.01f..0.1f)
 
-    private inner class Dynamic : ToggleableConfigurable(this, "Dynamic", false) {
+    private inner class Dynamic : ToggleableValueGroup(this, "Dynamic", false) {
         val hurtTime by int("HurtTime", 10, 0..10)
         val yawFactor by float("YawFactor", 0f, 0f..10f, "x")
         val pitchFactor by float("PitchFactor", 0f, 0f..10f, "x")

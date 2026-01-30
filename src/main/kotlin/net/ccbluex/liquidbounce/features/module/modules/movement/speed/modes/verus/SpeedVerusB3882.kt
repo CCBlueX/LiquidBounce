@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -38,7 +38,7 @@ import net.minecraft.world.entity.MoverType
  * @anticheatVersion b3882
  * @testedOn eu.anticheat-test.com
  */
-class SpeedVerusB3882(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("VerusB3882", parent) {
+class SpeedVerusB3882(override val parent: ModeValueGroup<*>) : SpeedBHopBase("VerusB3882", parent) {
 
     @Suppress("unused")
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {

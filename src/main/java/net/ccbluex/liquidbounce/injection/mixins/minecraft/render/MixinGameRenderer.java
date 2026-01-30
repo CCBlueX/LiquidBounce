@@ -104,8 +104,8 @@ public abstract class MixinGameRenderer {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/fog/FogRenderer;getBuffer(Lnet/minecraft/client/renderer/fog/FogRenderer$FogMode;)Lcom/mojang/blaze3d/buffers/GpuBufferSlice;")
     )
     private FogRenderer.FogMode disableFog(FogRenderer.FogMode fogMode) {
-        var fogConfigurable = ModuleCustomAmbience.FogConfigurable.INSTANCE;
-        if (fogConfigurable.getRunning() && ModuleCustomAmbience.FogConfigurable.INSTANCE.getDisableWorldFog()) {
+        var fogValueGroup = ModuleCustomAmbience.FogValueGroup.INSTANCE;
+        if (fogValueGroup.getRunning() && ModuleCustomAmbience.FogValueGroup.INSTANCE.getDisableWorldFog()) {
             return FogRenderer.FogMode.NONE;
         }
         return fogMode;

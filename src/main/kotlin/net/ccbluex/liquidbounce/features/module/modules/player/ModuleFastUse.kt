@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -84,9 +84,9 @@ object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases 
         }
     }
 
-    private object Immediate : Choice("Immediate") {
+    private object Immediate : Mode("Immediate") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         val delay by int("Delay", 0, 0..10, "ticks")
@@ -117,9 +117,9 @@ object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases 
 
     }
 
-    private object ItemUseTime : Choice("ItemUseTime") {
+    private object ItemUseTime : Mode("ItemUseTime") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         val consumeTime by int("ConsumeTime", 15, 0..20)
@@ -140,9 +140,9 @@ object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases 
 
     @Suppress("unused")
     private enum class UseConditions(
-        override val choiceName: String,
+        override val tag: String,
         val meetsConditions: () -> Boolean
-    ) : NamedChoice {
+    ) : Tagged {
         NOT_IN_THE_AIR("NotInTheAir", {
             !player.onGround()
         }),

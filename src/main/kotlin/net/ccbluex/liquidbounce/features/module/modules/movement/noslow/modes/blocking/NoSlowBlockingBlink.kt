@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.bl
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
-internal object NoSlowBlockingBlink : Choice("Blink") {
+internal object NoSlowBlockingBlink : Mode("Blink") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = modes
 
     @Suppress("unused")

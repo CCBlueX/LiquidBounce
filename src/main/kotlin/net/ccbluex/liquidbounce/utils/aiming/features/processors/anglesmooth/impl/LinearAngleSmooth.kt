@@ -19,14 +19,14 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.FactorAngleSmooth
 import net.ccbluex.liquidbounce.utils.kotlin.random
 
 class LinearAngleSmooth(
-    parent: ChoiceConfigurable<*>,
+    parent: ModeValueGroup<*>,
     horizontalTurnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
     verticalTurnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
 ) : FactorAngleSmooth("Linear", parent) {

@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
-import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.VisualsConfigurable.showCriticals
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.VisualsValueGroup.showCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.canDoCriticalHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.modes
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
@@ -33,12 +33,12 @@ import net.minecraft.world.entity.LivingEntity
 /**
  * Packet criticals mode
  */
-object CriticalsPacket : Choice("Packet") {
+object CriticalsPacket : Mode("Packet") {
 
     private val mode by enumChoice("Mode", Mode.NO_CHEAT_PLUS)
     private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<net.ccbluex.liquidbounce.config.types.group.Mode>
         get() = modes
 
     @Suppress("unused")
@@ -115,7 +115,7 @@ object CriticalsPacket : Choice("Packet") {
         })
     }
 
-    enum class Mode(override val choiceName: String) : NamedChoice {
+    enum class Mode(override val tag: String) : Tagged {
         VANILLA("Vanilla"),
         NO_CHEAT_PLUS("NoCheatPlus"),
         FALLING("Falling"),

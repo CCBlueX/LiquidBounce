@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
@@ -40,9 +40,9 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
  *   January 15, 2026
  * @testedOn test.ccbluex.net
  */
-object FlyGrim2373Jan15 : Choice("Grim2373Jan15") {
+object FlyGrim2373Jan15 : Mode("Grim2373Jan15") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     private val autoLag by boolean("AutoLagInAir", true)

@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.rotationTiming
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.simulateInventoryClosing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions
@@ -155,7 +155,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
                 return true
             }
 
-            if (rotationTiming == KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK && rotation != null) {
+            if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
                 network.send(
                     PosRot(
                         player.x, player.y, player.z, rotation.yaw, rotation.pitch, player.onGround(),
@@ -167,7 +167,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
         }
 
         fun unprepare() {
-            if (rotationTiming == KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK && rotation != null) {
+            if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
                 network.send(
                     PosRot(
                         player.x, player.y, player.z, player.withFixedYaw(rotation), player.xRot, player.onGround(),

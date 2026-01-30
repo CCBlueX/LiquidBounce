@@ -20,14 +20,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer.canBeStolen
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.BackgroundChoice.Companion.backgroundChoices
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.BackgroundMode.Companion.backgroundChoices
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
@@ -44,13 +44,13 @@ import net.minecraft.world.phys.HitResult
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMinecraft
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinAbstractContainerScreen
  */
-object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentScreen", false) {
+object FeatureSilentScreen : ToggleableValueGroup(ModuleChestStealer, "SilentScreen", false) {
 
     val unlockCursor by boolean("UnlockCursor", false)
 
-    private val drawInventoryTag = object : ToggleableConfigurable(this, "DrawInventoryTag", enabled = true) {
+    private val drawInventoryTag = object : ToggleableValueGroup(this, "DrawInventoryTag", enabled = true) {
 
-        private val background = choices(this, "Background", 0, ::backgroundChoices)
+        private val background = modes(this, "Background", 0, ::backgroundChoices)
         private val scale by float("Scale", 1.5F, 0.25F..4F)
         private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
         private val showTitle by boolean("ShowTitle", false)
@@ -90,7 +90,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
                 .centerX(pos.x)
                 .centerY(pos.y)
                 .scale(scale)
-                .background(background.activeChoice)
+                .background(background.activeMode)
                 .draw()
         }
     }

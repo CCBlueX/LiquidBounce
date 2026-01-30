@@ -27,9 +27,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.longListOf
 import net.ccbluex.liquidbounce.api.core.ioScope
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -61,8 +61,8 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
         arrayOf(MessageProvider.Setting, MessageProvider.File)
     }
 
-    private sealed class MessageProvider(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private sealed class MessageProvider(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = message
 
         abstract fun nextMessage(): String
@@ -130,7 +130,7 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
         while (true) {
             repeat(mps.random()) {
                 val chosenMessage = try {
-                    message.activeChoice.nextMessage()
+                    message.activeMode.nextMessage()
                 } catch (e: Exception) {
                     chat(markAsError("Failed to get spammer message: $e"))
                     return@repeat
@@ -204,7 +204,7 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
         return newString.toString()
     }
 
-    enum class MessageConverterMode(override val choiceName: String, val convert: (String) -> String) : NamedChoice {
+    enum class MessageConverterMode(override val tag: String, val convert: (String) -> String) : Tagged {
         NO_CONVERTER("None", { text ->
             text
         }),
@@ -239,7 +239,7 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
         }),
     }
 
-    enum class SpammerPattern(override val choiceName: String) : NamedChoice {
+    enum class SpammerPattern(override val tag: String) : Tagged {
         RANDOM("Random"),
         LINEAR("Linear"),
     }

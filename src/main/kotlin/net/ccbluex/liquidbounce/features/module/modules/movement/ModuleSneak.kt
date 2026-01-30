@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.additions.forceSneak
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -58,11 +58,11 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
     private val modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch)).apply { tagBy(this) }
     private val notDuringMove by boolean("NotDuringMove", false)
 
-    private object Legit : Choice("Legit") {
+    private object Legit : Mode("Legit") {
 
         private val onMagmaBlocksOnly by boolean("OnMagmaBlocksOnly", false)
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -81,9 +81,9 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
 
     }
 
-    private object Vanilla : Choice("Vanilla") {
+    private object Vanilla : Mode("Vanilla") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -97,11 +97,11 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
 
     }
 
-    private object Switch : Choice("Switch") {
+    private object Switch : Mode("Switch") {
 
         private var networkSneaking = false
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         override fun enable() {

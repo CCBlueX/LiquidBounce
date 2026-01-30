@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -50,7 +50,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
         tree(EquipOffset)
     }
 
-    object MainHand : ToggleableConfigurable(this, "MainHand", false) {
+    object MainHand : ToggleableValueGroup(this, "MainHand", false) {
         val mainHandItemScale by float("ItemScale", 0f, -5f..5f)
         val mainHandX by float("X", 0f, -5f..5f)
         val mainHandY by float("Y", 0f, -5f..5f)
@@ -59,7 +59,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
         val mainHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
     }
 
-    object OffHand : ToggleableConfigurable(this, "OffHand", false) {
+    object OffHand : ToggleableValueGroup(this, "OffHand", false) {
         val offHandItemScale by float("ItemScale", 0f, -5f..5f)
         val offHandX by float("X", 0f, -1f..1f)
         val offHandY by float("Y", 0f, -1f..1f)
@@ -82,7 +82,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
         )
     )
 
-    object EquipOffset : ToggleableConfigurable(this, "EquipOffset", true) {
+    object EquipOffset : ToggleableValueGroup(this, "EquipOffset", true) {
         private val ignore by multiEnumChoice("Ignore",
             Ignores.BLOCKING,
             Ignores.PLACE
@@ -93,8 +93,8 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
         val ignoreAmount get() = Ignores.AMOUNT in ignore
 
         private enum class Ignores(
-            override val choiceName: String
-        ) : NamedChoice {
+            override val tag: String
+        ) : Tagged {
             BLOCKING("Blocking"),
             PLACE("Place"),
             AMOUNT("Amount")
@@ -116,9 +116,9 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
     /**
      * A choice that aims to transform the held item transformation during the swing progress.
      */
-    abstract class AnimationChoice(name: String) : Choice(name) {
+    abstract class AnimationMode(name: String) : Mode(name) {
 
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = blockAnimationChoice
 
         protected fun applySwingOffset(matrices: PoseStack, arm: HumanoidArm, swingProgress: Float) {
@@ -142,7 +142,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
      * This animation is used in the ViaFabricPlus project.
      * https://github.com/ViaVersion/ViaFabricPlus/blob/9eb2adf6265cf0ac9d2a17921791642f2b0cdd2c/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/item/MixinHeldItemRenderer.java#L50-L60
      */
-    object OneSevenAnimation : AnimationChoice("1.7") {
+    object OneSevenAnimation : AnimationMode("1.7") {
 
         private val translateY by float("Y", 0.1f, 0.05f..0.3f)
         private val swingProgressScale by float("SwingScale", 0.9f, 0.1f..1.0f)
@@ -160,7 +160,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
      *
      * This animation is not the same as the original, but it is similar.
      */
-    object PushdownAnimation : AnimationChoice("Pushdown") {
+    object PushdownAnimation : AnimationMode("Pushdown") {
 
         override fun transform(matrices: PoseStack, arm: HumanoidArm, equipProgress: Float, swingProgress: Float) {
             matrices.translate(if (arm == HumanoidArm.RIGHT) -0.1f else 0.1f, 0.1f, 0.0f)

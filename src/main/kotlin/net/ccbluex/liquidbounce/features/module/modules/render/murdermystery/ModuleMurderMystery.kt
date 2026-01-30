@@ -58,7 +58,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
         )
 
     private val currentMode: MurderMysteryMode
-        get() = this.modes.activeChoice
+        get() = this.modes.activeMode
 
     override fun onDisabled() {
         this.reset()

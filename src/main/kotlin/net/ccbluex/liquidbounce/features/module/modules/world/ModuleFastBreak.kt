@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -39,7 +39,7 @@ object ModuleFastBreak : ClientModule("FastBreak", ModuleCategories.WORLD) {
     private val breakDamage by float("BreakDamage", 0.8f, 0.1f..1f)
     private val onlyTool by boolean("OnlyTool", false)
 
-    private val modeChoice = choices("Mode", 0) { arrayOf(NoneChoice(it), AbortAnother) }.apply(::tagBy)
+    private val modeChoice = choices("Mode", 0) { arrayOf(NoneMode(it), AbortAnother) }.apply(::tagBy)
 
     val repeatable = tickHandler {
         if (onlyTool && !player.mainHandItem.isMiningTool) {
@@ -59,9 +59,9 @@ object ModuleFastBreak : ClientModule("FastBreak", ModuleCategories.WORLD) {
      *
      * https://github.com/GrimAnticheat/Grim/issues/1296
      */
-    object AbortAnother : Choice("AbortAnother") {
+    object AbortAnother : Mode("AbortAnother") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modeChoice
 
         val packetHandler = handler<PacketEvent> {

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -40,7 +40,7 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
 
     private val tracking by multiEnumChoice("Tracking", Tracking.entries, canBeNone = false)
 
-    private enum class Tracking(override val choiceName: String): NamedChoice {
+    private enum class Tracking(override val tag: String): Tagged {
         FALLING_BLOCKS("FallingBlocks"),
         BLOCK_UPDATES("BlockUpdates"),
         CHUNK_DELTA_UPDATES("ChunkDeltaUpdates"),

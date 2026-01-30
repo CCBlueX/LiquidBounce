@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
 
-class SpeedSpeedYPort(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("YPort", parent) {
+class SpeedSpeedYPort(override val parent: ModeValueGroup<*>) : SpeedBHopBase("YPort", parent) {
 
     private val speed by float("Speed", 0.4f, 0.1f..1f)
 
@@ -47,9 +47,9 @@ class SpeedSpeedYPort(override val parent: ChoiceConfigurable<*>) : SpeedBHopBas
 
 }
 
-class SpeedLegitHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("LegitHop", parent)
+class SpeedLegitHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase("LegitHop", parent)
 
-open class SpeedBHopBase(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
+open class SpeedBHopBase(name: String, override val parent: ModeValueGroup<*>) : Mode(name) {
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->

@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.world.entity.player.Player
 
-open class ItemCooldown : Configurable("ItemCooldown", aliases = listOf("Cooldown")) {
+open class ItemCooldown : ValueGroup("ItemCooldown", aliases = listOf("Cooldown")) {
 
     private val minimumCooldown by floatRange(
         "Minimum",

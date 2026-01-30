@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -53,13 +53,13 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
     // Glow ESP
     val esp by boolean("ESP", true)
 
-    private object ShowTimer : ToggleableConfigurable(this, "ShowTimer", false) {
+    private object ShowTimer : ToggleableValueGroup(this, "ShowTimer", false) {
         val scale by float("Scale", 1.5F, 0.25F..4F)
         val renderY by float("RenderY", 1.0F, -2.0F..2.0F)
         val ownerName by boolean("OwnerName", true)
         val timeUnit by enumChoice("TimeUnit", TimeUnit.TICKS)
 
-        enum class TimeUnit(override val choiceName: String): NamedChoice, IntFunction<String> {
+        enum class TimeUnit(override val tag: String): Tagged, IntFunction<String> {
             TICKS("Ticks"),
             SECONDS("Seconds");
 

@@ -78,16 +78,16 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
             ShapeFlag.noShapeChange = false
         }
 
-        val rescuePosition = mode.activeChoice.discoverRescuePosition()
+        val rescuePosition = mode.activeMode.discoverRescuePosition()
         if (rescuePosition != null) {
             this@ModuleAntiVoid.rescuePosition = rescuePosition
         }
 
-        debugParameter("IsExempt") { mode.activeChoice.isExempt }
+        debugParameter("IsExempt") { mode.activeMode.isExempt }
         debugParameter("IsLikelyFalling") { isLikelyFalling }
         debugParameter("SafePosition") { ModuleAntiVoid.rescuePosition }
 
-        if (mode.activeChoice.isExempt || !isLikelyFalling) {
+        if (mode.activeMode.isExempt || !isLikelyFalling) {
             return@tickHandler
         }
 
@@ -102,7 +102,7 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
         val collisions = world.getBlockCollisions(player, boundingBox)
 
         if (collisions.none() || collisions.all { shape -> shape == Shapes.empty() }) {
-            if (mode.activeChoice.rescue()) {
+            if (mode.activeMode.rescue()) {
                 notification(
                     "AntiVoid", "Action taken to prevent void fall",
                     NotificationEvent.Severity.INFO

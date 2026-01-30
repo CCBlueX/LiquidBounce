@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
@@ -69,8 +69,8 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
     private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
 
-    private object Gapple : ToggleableConfigurable(this, "Gapple", true) {
-        object WhileHoldingSword : ToggleableConfigurable(this, "WhileHoldingSword", true) {
+    private object Gapple : ToggleableValueGroup(this, "Gapple", true) {
+        object WhileHoldingSword : ToggleableValueGroup(this, "WhileHoldingSword", true) {
             val onlyWhileKa by boolean("OnlyWhileKillAura", true)
         }
 
@@ -81,19 +81,19 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         }
     }
 
-    private object Crystal : ToggleableConfigurable(this, "Crystal", true) {
+    private object Crystal : ToggleableValueGroup(this, "Crystal", true) {
         val onlyWhileCa by boolean("OnlyWhileCrystalAura", false)
         val whenNoTotems by boolean("WhenNoTotems", true)
         val crystalBind by key("CrystalBind")
     }
 
-    private object Strength : ToggleableConfigurable(this, "StrengthPotion", false) {
+    private object Strength : ToggleableValueGroup(this, "StrengthPotion", false) {
         val onlyWhileHoldingSword by boolean("OnlyWhileHoldingSword", true)
         val onlyWhileKa by boolean("OnlyWhileKillAura", true)
         val strengthBind by key("StrengthBind")
     }
 
-    private object Block : ToggleableConfigurable(this, "Block", false) {
+    private object Block : ToggleableValueGroup(this, "Block", false) {
         val whileScaffold by boolean("WhileScaffold", true)
         val whileEagle by boolean("WhileEagle", true)
     }
@@ -382,7 +382,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     }
 
     @Suppress("unused")
-    private enum class SwitchMode(override val choiceName: String) : NamedChoice {
+    private enum class SwitchMode(override val tag: String) : Tagged {
         /**
          * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to send fewer packets.
          * Works on all versions.

@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
@@ -63,7 +63,7 @@ object ModuleProjectilePuncher : ClientModule(
     private var target: Entity? = null
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     override fun onDisabled() {
         target = null
@@ -126,7 +126,7 @@ object ModuleProjectilePuncher : ClientModule(
             RotationManager.setRotationTarget(
                 spot.rotation,
                 considerInventory = !ignoreOpenInventory,
-                configurable = rotations,
+                valueGroup = rotations,
                 Priority.IMPORTANT_FOR_USER_SAFETY,
                 this@ModuleProjectilePuncher
             )

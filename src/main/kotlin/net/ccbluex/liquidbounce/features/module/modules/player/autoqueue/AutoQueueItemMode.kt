@@ -20,19 +20,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue
 
 import net.ccbluex.fastutil.objectRBTreeSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import java.util.function.Predicate
 
 sealed class AutoQueueItemMode(
-    final override val parent: ChoiceConfigurable<*>,
+    final override val parent: ModeValueGroup<*>,
     name: String,
-) : Choice(name), Predicate<ItemStack> {
+) : Mode(name), Predicate<ItemStack> {
 
-    class ByName(parent: ChoiceConfigurable<*>) : AutoQueueItemMode(parent, "Name") {
+    class ByName(parent: ModeValueGroup<*>) : AutoQueueItemMode(parent, "Name") {
         private val stackName by textList("Name", objectRBTreeSetOf("Paper"))
         override fun test(itemStack: ItemStack): Boolean {
             val string = itemStack.hoverName.string
@@ -40,7 +40,7 @@ sealed class AutoQueueItemMode(
         }
     }
 
-    class ByItem(parent: ChoiceConfigurable<*>) : AutoQueueItemMode(parent, "Item") {
+    class ByItem(parent: ModeValueGroup<*>) : AutoQueueItemMode(parent, "Item") {
         private val slotItem by items("Item", itemSortedSetOf(Items.PAPER))
         override fun test(itemStack: ItemStack): Boolean =
             slotItem.any { it === itemStack.item }

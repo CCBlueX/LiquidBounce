@@ -106,7 +106,7 @@ public abstract class MixinItemInHandRenderer {
             var arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getRunning()) {
-                var activeChoice = ModuleAnimations.INSTANCE.getBlockAnimationChoice().getActiveChoice();
+                var activeChoice = ModuleAnimations.INSTANCE.getBlockAnimationChoice().getActiveMode();
                 activeChoice.transform(matrices, arm, equipProgress, swingProgress);
             } else {
                 // Default animation

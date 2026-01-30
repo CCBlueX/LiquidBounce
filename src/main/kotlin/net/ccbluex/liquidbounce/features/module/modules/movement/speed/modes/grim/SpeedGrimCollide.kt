@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.movementForward
@@ -31,7 +31,7 @@ import net.minecraft.world.entity.decoration.ArmorStand
 import kotlin.math.cos
 import kotlin.math.sin
 
-class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("GrimCollide") {
+class SpeedGrimCollide(override val parent: ModeValueGroup<*>) : Mode("GrimCollide") {
 
     private val speed by float("BoostSpeed", 0.08F, 0.01F..0.08F, "b/t")
 
@@ -39,7 +39,7 @@ class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("Gri
      * 0.5f shrink box can bypass newest versions of GrimAC (e.g., 2.3.73)
      * 1f shrink box can bypass older GrimAC versions
      */
-    
+
     private val shrinkBox by float("ShrinkBox", 0.5f, 0.1f..2f)
 
     /**

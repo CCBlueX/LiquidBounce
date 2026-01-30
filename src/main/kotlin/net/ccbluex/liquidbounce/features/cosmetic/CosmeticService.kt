@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory
 import net.ccbluex.liquidbounce.api.services.cosmetics.CosmeticApi
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
@@ -48,7 +48,7 @@ import java.util.UUID
  * shown immediately when account switches, but we can reduce the stress
  * on the API and the connection of the user.
  */
-object CosmeticService : EventListener, Configurable("Cosmetics") {
+object CosmeticService : EventListener, ValueGroup("Cosmetics") {
 
     private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/CosmeticService")
 

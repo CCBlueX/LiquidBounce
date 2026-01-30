@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.config.util.asRefreshable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockSide
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -80,11 +80,11 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
 
     private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
-    private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlant", true, aliases = listOf("AutoPlace")) {
+    private object AutoPlaceCrops : ToggleableValueGroup(this, "AutoPlant", true, aliases = listOf("AutoPlace")) {
         val swapBackDelay by intRange("SwapBackDelay", 1..2, 1..20, "ticks")
     }
 
-    internal object AutoUseBoneMeal : ToggleableConfigurable(this, "AutoUseBoneMeal", false) {
+    internal object AutoUseBoneMeal : ToggleableValueGroup(this, "AutoUseBoneMeal", false) {
         private val chronometer = Chronometer()
         // TODO Use filter (wheat/potato/...)
         private val useDelay = intRange("UseDelay", 20..200, 0..20000, "ms").asRefreshable()
@@ -107,7 +107,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         tree(AutoFarmVisualizer)
     }
 
-    internal val rotations = tree(RotationsConfigurable(this))
+    internal val rotations = tree(RotationsValueGroup(this))
 
     private fun swapToSlotWithFortune() {
         if (!fortune) {
@@ -228,7 +228,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             // aim at target
             RotationManager.setRotationTarget(
                 rotation,
-                configurable = rotations,
+                valueGroup = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
                 provider = this@ModuleAutoFarm
             )
@@ -291,7 +291,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             // aim at target
             RotationManager.setRotationTarget(
                 rotation,
-                configurable = rotations,
+                valueGroup = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
                 provider = this@ModuleAutoFarm
             )

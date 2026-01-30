@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
+import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -43,19 +43,19 @@ object CommandTargets : Command.Factory {
         .subcommand(
             CommandBuilder
                 .begin("combat")
-                .fromTargets(GlobalSettingsTarget.combatConfigurable)
+                .fromTargets(GlobalSettingsTarget.combatChoices)
                 .build()
         )
         .subcommand(
             CommandBuilder
                 .begin("visual")
-                .fromTargets(GlobalSettingsTarget.visualConfigurable)
+                .fromTargets(GlobalSettingsTarget.visualChoices)
                 .build()
         )
         .hub()
         .build()
 
-    private fun CommandBuilder.fromTargets(targets: MultiChooseListValue<Targets>): CommandBuilder {
+    private fun CommandBuilder.fromTargets(targets: MultiChoiceListValue<Targets>): CommandBuilder {
         this.parameter(
             ParameterBuilder
                 .enumChoice<Targets>("category") { it in targets.choices }

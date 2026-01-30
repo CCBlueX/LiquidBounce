@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -29,7 +29,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  * This mode spoofs the 'onGround' flag in PlayerMoveC2SPacket to prevent fall damage.
  */
 internal object NoFallSpoofGround : NoFallMode("SpoofGround") {
-    private val fallDistance = choices("FallDistance", Smart, arrayOf(Smart, Constant))
+    private val fallDistance = modes("FallDistance", Smart, arrayOf(Smart, Constant))
     private val resetFallDistance by boolean("ResetFallDistance", true)
 
     // Packet handler to intercept and modify PlayerMoveC2SPacket
@@ -38,7 +38,7 @@ internal object NoFallSpoofGround : NoFallMode("SpoofGround") {
         val packet = it.packet
 
         // Check if the packet is a PlayerMoveC2SPacket
-        if (packet is ServerboundMovePlayerPacket && player.fallDistance >= fallDistance.activeChoice.value) {
+        if (packet is ServerboundMovePlayerPacket && player.fallDistance >= fallDistance.activeMode.value) {
             // Modify the 'onGround' flag to true, preventing fall damage
             packet.onGround = true
             if (resetFallDistance) {
@@ -47,8 +47,8 @@ internal object NoFallSpoofGround : NoFallMode("SpoofGround") {
         }
     }
 
-    private abstract class DistanceMode(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private abstract class DistanceMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = fallDistance
 
         abstract val value: Float

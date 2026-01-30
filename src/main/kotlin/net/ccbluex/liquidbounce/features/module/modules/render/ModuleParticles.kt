@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.platform.NativeImage
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -63,7 +63,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
     private val particleSize by float("Size", 1f, 0.5f..2f)
     private val count by intRange("Count", 2..10, 2..30, "particles")
     private val rotate by boolean("RandomParticleRotation", true)
-    private class Physical : Configurable("Physical") {
+    private class Physical : ValueGroup("Physical") {
         val motion by float("Motion", 15f, 1f..30f)
         val bounceX by float("BounceX", 0.8f, 0.0f..1.0f)
         val bounceY by float("BounceY", 0.6f, 0.0f..1.0f)
@@ -140,9 +140,9 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
 
     @Suppress("UNUSED")
     private enum class ParticleImage(
-        override val choiceName: String,
+        override val tag: String,
         val image: NativeImage,
-    ) : NamedChoice {
+    ) : Tagged {
         /**
          * Original: IDK (first: https://github.com/CCBlueX/LiquidBounce/pull/4976)
          */
@@ -160,7 +160,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
          */
         DOLLAR("Dollar", LiquidBounce.resource("particles/dollar.png").toNativeImage());
 
-        val texture = this.image.asTexture { choiceName }
+        val texture = this.image.asTexture { this@ParticleImage.tag }
     }
 
     private class Particle(var pos: Vec3, val particleImage: ParticleImage) {

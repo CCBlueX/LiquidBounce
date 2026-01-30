@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -30,9 +30,9 @@ import java.util.function.BooleanSupplier
 
 sealed class RotationMode(
     name: String,
-    private val configurable: ChoiceConfigurable<RotationMode>,
+    private val modeValueGroup: ModeValueGroup<RotationMode>,
     val module: ClientModule,
-) : Choice(name), MinecraftShortcuts {
+) : Mode(name), MinecraftShortcuts {
 
     /**
      * Already sends the packet on post-move.
@@ -52,22 +52,22 @@ sealed class RotationMode(
 
     abstract fun rotate(rotation: Rotation, isFinished: BooleanSupplier, onFinished: Runnable)
 
-    override val parent: ChoiceConfigurable<*>
-        get() = configurable
+    override val parent: ModeValueGroup<*>
+        get() = modeValueGroup
 
 }
 
 class NormalRotationMode(
-    configurable: ChoiceConfigurable<RotationMode>,
+    modeValueGroup: ModeValueGroup<RotationMode>,
     module: ClientModule,
     val priority: Priority = Priority.IMPORTANT_FOR_USAGE_2,
 
     // some modules might want to aim even tho it was instantly executed because the player's rotation should not
     // snap back as the same rotation might be needed for the next action
     private val aimAfterInstantAction: Boolean = false
-) : RotationMode("Normal", configurable, module) {
+) : RotationMode("Normal", modeValueGroup, module) {
 
-    val rotations = tree(RotationsConfigurable(this))
+    val rotations = tree(RotationsValueGroup(this))
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     override fun rotate(rotation: Rotation, isFinished: BooleanSupplier, onFinished: Runnable) {
@@ -86,7 +86,7 @@ class NormalRotationMode(
             RotationManager.setRotationTarget(
                 rotation,
                 considerInventory = !ignoreOpenInventory,
-                configurable = rotations,
+                valueGroup = rotations,
                 provider = module,
                 priority = priority,
                 whenReached = RestrictedSingleUseAction(canExecute = isFinished, action = {
@@ -98,8 +98,8 @@ class NormalRotationMode(
 
 }
 
-class NoRotationMode(configurable: ChoiceConfigurable<RotationMode>, module: ClientModule)
-    : RotationMode("None", configurable, module) {
+class NoRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, module: ClientModule)
+    : RotationMode("None", modeValueGroup, module) {
 
     val send by boolean("SendRotationPacket", false)
 

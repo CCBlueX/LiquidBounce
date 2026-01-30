@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.waterspeed
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -29,16 +29,16 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
 
-internal object WaterSpeed : ToggleableConfigurable(ModuleTerrainSpeed, "WaterSpeed", true) {
+internal object WaterSpeed : ToggleableValueGroup(ModuleTerrainSpeed, "WaterSpeed", true) {
 
     val autoSwim by boolean("AutoSwim", true)
 
-    object BaseSpeed : Configurable("BaseSpeed") {
+    object BaseSpeed : ValueGroup("BaseSpeed") {
         val horizontalSpeed by float("Horizontal", 0.44f, 0.1f..10f)
         val verticalSpeed by float("Vertical", 0.44f, 0.1f..10f)
     }
 
-    object SprintSpeed : ToggleableConfigurable(this, "SprintSpeed", true) {
+    object SprintSpeed : ToggleableValueGroup(this, "SprintSpeed", true) {
         val horizontalSpeed by float("Horizontal", 1f, 0.1f..10f)
         val verticalSpeed by float("Vertical", 1f, 0.1f..10f)
     }

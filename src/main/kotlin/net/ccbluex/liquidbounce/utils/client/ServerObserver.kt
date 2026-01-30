@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -348,7 +348,7 @@ object ServerObserver : EventListener {
         }
     }
 
-    enum class ServerType(override val choiceName: String) : NamedChoice {
+    enum class ServerType(override val tag: String) : Tagged {
 
         /**
          * Allows only premium players to join.

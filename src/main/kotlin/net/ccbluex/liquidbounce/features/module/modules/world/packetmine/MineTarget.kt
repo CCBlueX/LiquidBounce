@@ -45,7 +45,7 @@ class MineTarget(val targetPos: BlockPos) {
     fun cleanUp() {
         with(ModulePacketMine) {
             targetRenderer.removeBlock(targetPos)
-            if (!finished && mode.activeChoice.canAbort) {
+            if (!finished && mode.activeMode.canAbort) {
                 abort(true)
             }
         }
@@ -57,12 +57,12 @@ class MineTarget(val targetPos: BlockPos) {
 
     fun isInvalidOrOutOfRange(): Boolean {
         val state = targetPos.getState()!!
-        val invalid = ModulePacketMine.mode.activeChoice.isInvalid(this, state)
+        val invalid = ModulePacketMine.mode.activeMode.isInvalid(this, state)
         return invalid || targetPos.getCenterDistanceSquaredEyes() > ModulePacketMine.keepRange.sq()
     }
 
     fun abort(force: Boolean = false) {
-        val notPossible = !started || finished || !ModulePacketMine.mode.activeChoice.canAbort
+        val notPossible = !started || finished || !ModulePacketMine.mode.activeMode.canAbort
         if (notPossible || !force && targetPos.getCenterDistanceSquaredEyes() <= ModulePacketMine.keepRange.sq()) {
             return
         }

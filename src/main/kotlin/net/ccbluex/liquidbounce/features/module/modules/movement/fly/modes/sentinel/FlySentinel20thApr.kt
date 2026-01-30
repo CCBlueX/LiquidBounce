@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -46,7 +46,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  *
  * Thanks to the_bi11iona1re for making me aware that Sentinal folds to Verus Damage exploit.
  */
-internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
+internal object FlySentinel20thApr : Mode("Sentinel20thApr") {
 
     private val horizontalSpeed by float("HorizontalSpeed", 3.5f, 0.1f..10f)
     private val constantSpeed by boolean("ConstantSpeed", false)
@@ -55,7 +55,7 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
     private val boostOnce by boolean("BoostOnce", false)
     private val nostalgia by boolean("Nostalgia", false)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     private var hasBeenHurt = false

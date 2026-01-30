@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clicker
@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.times
-import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
+import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
@@ -60,13 +60,13 @@ data class CombatTarget(
 /**
  * A fight bot that handles combat and movement automatically
  */
-object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAura, "FightBot", false) {
+object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura, "FightBot", false) {
 
     private val opponentRange by float("OpponentRange", 3f, 0.1f..10f)
     private val dangerousYawDiff by float("DangerousYaw", 55f, 0f..90f, suffix = "°")
     private val runawayOnCooldown by boolean("RunawayOnCooldown", true)
 
-    internal object TargetFilter : Configurable("TargetFilter") {
+    internal object TargetFilter : ValueGroup("TargetFilter") {
         internal var range by float("Range", 50f, 10f..100f)
         internal var visibleOnly by boolean("VisibleOnly", true)
         internal var notWhenVoid by boolean("NotWhenVoid", true)
@@ -75,7 +75,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
     /**
      * Configuration for leader following functionality
      */
-    internal object LeaderFollower : ToggleableConfigurable(this, "Leader", false) {
+    internal object LeaderFollower : ToggleableValueGroup(this, "Leader", false) {
         internal val username by text("Username", "")
         internal val radius by float("Radius", 5f, 2f..10f)
     }

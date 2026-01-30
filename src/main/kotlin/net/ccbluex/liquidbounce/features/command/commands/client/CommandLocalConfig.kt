@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import kotlinx.coroutines.async
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
-import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
-import net.ccbluex.liquidbounce.config.AutoSettingsMetadata
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.IncludeConfiguration
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
+import net.ccbluex.liquidbounce.config.autoconfig.IncludeConfiguration
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
@@ -87,7 +87,7 @@ object CommandLocalConfig : Command.Factory {
             AsyncLoadingText(
                 ioScope.async {
                     file.bufferedReader().use { r ->
-                        publicGson.fromJson(r, AutoSettingsMetadata::class.java)
+                        publicGson.fromJson(r, AutoConfigMetadata::class.java)
                     }.asText()
                 }
             )

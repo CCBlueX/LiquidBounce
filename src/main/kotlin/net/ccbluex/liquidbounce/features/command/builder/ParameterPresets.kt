@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.features.command.builder
 
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -100,19 +100,19 @@ fun ParameterBuilder.Companion.modules(
     paramName = name, typeName = "Module", all = all, predicate = predicate
 )
 
-fun ParameterBuilder.Companion.rootConfigurables(
-    name: String = "configurables",
-    predicate: (Configurable) -> Boolean = { true }
-) = values<Configurable>(
-    paramName = name, typeName = "Configurable", all = ConfigSystem.configurables, predicate = predicate
+fun ParameterBuilder.Companion.configs(
+    name: String = "configs",
+    predicate: (Config) -> Boolean = { true }
+) = values<Config>(
+    paramName = name, typeName = "Config", all = ConfigSystem.configs, predicate = predicate
 )
 
-fun ParameterBuilder.Companion.configurableKeyPath(
-    name: String = "configurablePath",
+fun ParameterBuilder.Companion.valueGroupKeyPath(
+    name: String = "valueGroupPath",
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
     .autocompletedWith { begin, _ ->
-        suggestKeySegments(begin) { prefix -> ConfigSystem.configurableKeySequence(prefix) }
+        suggestKeySegments(begin) { prefix -> ConfigSystem.valueGroupsKeySequence(prefix) }
     }
 
 fun ParameterBuilder.Companion.valueKeyPath(
@@ -126,10 +126,10 @@ fun ParameterBuilder.Companion.valueKeyPath(
 inline fun <reified T> ParameterBuilder.Companion.enumChoice(
     name: String = "enum",
     crossinline predicate: (T) -> Boolean = { true },
-) where T : Enum<T>, T : NamedChoice = begin<T>(name)
+) where T : Enum<T>, T : Tagged = begin<T>(name)
     .verifiedBy { sourceText ->
         val values = enumValues<T>()
-        val choice = values.firstOrNull { v -> v.choiceName.equals(sourceText, true) && predicate(v) }
+        val choice = values.firstOrNull { v -> v.tag.equals(sourceText, true) && predicate(v) }
         if (choice == null) {
             Result.Error("$sourceText is not a valid choice")
         } else {
@@ -138,18 +138,18 @@ inline fun <reified T> ParameterBuilder.Companion.enumChoice(
     }
     .autocompletedWith { begin, _ ->
         enumValues<T>().mapNotNull { v ->
-            v.choiceName.takeIf { predicate(v) && it.startsWith(begin, true) }
+            v.tag.takeIf { predicate(v) && it.startsWith(begin, true) }
         }
     }
 
 inline fun <reified T> ParameterBuilder.Companion.enumChoices(
     name: String = "enums",
     crossinline predicate: (T) -> Boolean = { true },
-) where T : Enum<T>, T : NamedChoice = begin<Set<T>>(name)
+) where T : Enum<T>, T : Tagged = begin<Set<T>>(name)
     .verifiedBy { sourceText ->
         val values = enumValues<T>().filterTo(enumSetOf(), predicate)
         val choices = sourceText.split(',').mapNotNullTo(enumSetOf<T>()) {
-            values.firstOrNull { v -> v.choiceName.equals(it, ignoreCase = true) }
+            values.firstOrNull { v -> v.tag.equals(it, ignoreCase = true) }
         }
         if (choices.isEmpty()) {
             Result.Error("$sourceText contains no valid choice")
@@ -162,9 +162,9 @@ inline fun <reified T> ParameterBuilder.Companion.enumChoices(
         val prefix = begin.substring(0, splitAt)
         val choicePrefix = begin.substring(splitAt)
         enumValues<T>().filter { v ->
-            predicate(v) && v.choiceName.startsWith(choicePrefix, true)
+            predicate(v) && v.tag.startsWith(choicePrefix, true)
         }.map {
-            prefix + it.choiceName
+            prefix + it.tag
         }
     }
 

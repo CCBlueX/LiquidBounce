@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -67,10 +67,10 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
     }
 
     private enum class Avoid(
-        override val choiceName: String,
+        override val tag: String,
         val fullCube: Boolean = true,
         val test: (block: Block, fluidState: FluidState, pos: BlockPos) -> Boolean
-    ) : NamedChoice {
+    ) : Tagged {
         CACTI("Cacti", test = { block, _, _ ->
             block is CactusBlock
         }),

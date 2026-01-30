@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove
 
 import net.ccbluex.fastutil.fastIterable
 import net.ccbluex.fastutil.referenceBooleanArrayMapOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -67,7 +67,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     private val behavior by enumChoice("Behavior", Behaviour.NORMAL).also(::tagBy)
 
     @Suppress("unused")
-    enum class Behaviour(override val choiceName: String) : NamedChoice {
+    enum class Behaviour(override val tag: String) : Tagged {
         NORMAL("Normal"),
         SAFE("Safe"), // disable clicks while moving
         UNDETECTABLE("Undetectable"), // stop in inventory

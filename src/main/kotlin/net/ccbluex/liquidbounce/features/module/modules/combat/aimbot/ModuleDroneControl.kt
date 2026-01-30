@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -35,7 +35,7 @@ import net.minecraft.world.phys.Vec3
 
 object ModuleDroneControl : ClientModule("DroneControl", ModuleCategories.COMBAT) {
 
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     var screen: DroneControlScreen? = null
 
@@ -70,7 +70,7 @@ object ModuleDroneControl : ClientModule("DroneControl", ModuleCategories.COMBAT
         if (currentRotation != null) {
             RotationManager.setRotationTarget(
                 rotation = currentRotation,
-                configurable = rotationsConfigurable,
+                valueGroup = rotations,
                 priority = Priority.NORMAL,
                 provider = ModuleDroneControl
             )

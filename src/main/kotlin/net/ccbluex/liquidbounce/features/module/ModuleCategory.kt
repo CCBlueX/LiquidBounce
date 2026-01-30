@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
-class ModuleCategory(override val choiceName: String) : NamedChoice {
+class ModuleCategory(override val tag: String) : Tagged {
 
     @Deprecated(
         message = "For script compatibility only. Use choiceName instead",
@@ -28,6 +28,6 @@ class ModuleCategory(override val choiceName: String) : NamedChoice {
         level = DeprecationLevel.ERROR
     )
     val readableName: String
-        get() = choiceName
+        get() = tag
 
 }

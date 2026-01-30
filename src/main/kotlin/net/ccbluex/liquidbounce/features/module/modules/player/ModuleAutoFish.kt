@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.fastutil.objectRBTreeSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -46,7 +46,7 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
 
     private val reelDelay by intRange("ReelDelay", 5..8, 0..20, "ticks")
 
-    private object RecastRod : ToggleableConfigurable(this, "RecastRod", true) {
+    private object RecastRod : ToggleableValueGroup(this, "RecastRod", true) {
         val delay by intRange("Delay", 15..20, 10..30, "ticks")
     }
 
@@ -66,7 +66,7 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
      * This is useful to prevent false triggers when the sound is played
      * from a different position than our fishing hook.
      */
-    private object PullTriggerSoundDistance : ToggleableConfigurable(
+    private object PullTriggerSoundDistance : ToggleableValueGroup(
         this,
         "SoundDistance",
         true

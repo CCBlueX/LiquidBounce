@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
@@ -62,8 +62,8 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
             arrayOf(DynamicSelectMode, StaticSelectMode)
         )
 
-    sealed class ToolSelectorMode(name: String) : Choice(name) {
-        final override val parent: ChoiceConfigurable<*>
+    sealed class ToolSelectorMode(name: String) : Mode(name) {
+        final override val parent: ModeValueGroup<*>
             get() = toolSelector
 
         fun getTool(blockState: BlockState): HotbarItemSlot? =
@@ -79,7 +79,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     private object DynamicSelectMode : ToolSelectorMode("Dynamic") {
         private val ignoreDurability by boolean("IgnoreDurability", false)
 
-        object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
+        object ConsiderInventory : ToggleableValueGroup(this, "ConsiderInventory", enabled = false) {
             private val inventoryConstraints = tree(InventoryConstraints())
 
             @JvmField var currentBestTool: ItemSlot? = null
@@ -156,7 +156,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val blocks by blocks("Blocks", blockSortedSetOf())
 
-    private object SilkTouchHandler : ToggleableConfigurable(
+    private object SilkTouchHandler : ToggleableValueGroup(
         this, "SilkTouchHandler", enabled = false
     ) {
         private val filter by enumChoice("Filter", Filter.WHITELIST)
@@ -179,7 +179,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
 
     private val requireSneaking by boolean("RequireSneaking", false)
 
-    private object RequireNearBed : ToggleableConfigurable(
+    private object RequireNearBed : ToggleableValueGroup(
         this, "RequireNearBed", enabled = false
     ), BedBlockTracker.Subscriber {
         override val maxLayers: Int get() = 1
@@ -217,7 +217,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
         }
 
         val blockState = pos.getState()!!
-        val slot = toolSelector.activeChoice.getTool(blockState) ?: return
+        val slot = toolSelector.activeMode.getTool(blockState) ?: return
         SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
     }
 

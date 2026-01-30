@@ -251,9 +251,9 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         }
         this.rotationThreadLocal.remove();
 
-        if (ModuleNoRotateSet.INSTANCE.getMode().getActiveChoice() == ModuleNoRotateSet.ResetRotation.INSTANCE) {
+        if (ModuleNoRotateSet.INSTANCE.getMode().getActiveMode() == ModuleNoRotateSet.ResetRotation.INSTANCE) {
             // Changes your server side rotation and then resets it with provided settings
-            var rotationTarget = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().toRotationTarget(
+            var rotationTarget = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotations().toRotationTarget(
                     new Rotation(playerEntity.getYRot(), playerEntity.getXRot(), true),
                     null,
                     true,

@@ -19,18 +19,18 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue.presets
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.world.item.Items
 
-object AutoQueueHypixelSW : Choice("HypixelSW") {
+object AutoQueueHypixelSW : Mode("HypixelSW") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = presets
 
     private val gameMode by enumChoice("GameMode", SkyWarsGameMode.NORMAL)
@@ -50,7 +50,7 @@ object AutoQueueHypixelSW : Choice("HypixelSW") {
     }
 
     @Suppress("unused")
-    enum class SkyWarsGameMode(override val choiceName: String, val joinName: String) : NamedChoice {
+    enum class SkyWarsGameMode(override val tag: String, val joinName: String) : Tagged {
         NORMAL("Normal", "solo_normal"),
         INSANE("Insane", "solo_insane");
     }

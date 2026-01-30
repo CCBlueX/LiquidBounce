@@ -21,13 +21,13 @@ package net.ccbluex.liquidbounce.features.module
 import com.mojang.blaze3d.platform.InputConstants
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventListenerScope
@@ -61,7 +61,7 @@ open class ClientModule(
     @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
     aliases: List<String> = emptyList(), // additional names under which the module is known
     hide: Boolean = false // default hide
-) : ToggleableConfigurable(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
+) : ToggleableValueGroup(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
     protected val logger: Logger = LogManager.getLogger("$CLIENT_NAME/$name")
 
@@ -69,7 +69,7 @@ open class ClientModule(
      * If a module is running or not is separated from the enabled state. A module can be paused even when
      * it is enabled, or it can be running when it is not enabled.
      *
-     * Note: This overwrites [ToggleableConfigurable] declaration of [running].
+     * Note: This overwrites [ToggleableValueGroup] declaration of [running].
      */
     override val running: Boolean
         get() = super<EventListener>.running && inGame && (enabled || notActivatable)
@@ -184,7 +184,7 @@ open class ClientModule(
     /**
      * Warns when no module description is set in the main translation file.
      *
-     * Requires that [Configurable.walkKeyPath] has previously been run.
+     * Requires that [ValueGroup.walkKeyPath] has previously been run.
      */
     fun verifyFallbackDescription() {
         if (!LanguageManager.hasFallbackTranslation(descriptionKey!!)) {

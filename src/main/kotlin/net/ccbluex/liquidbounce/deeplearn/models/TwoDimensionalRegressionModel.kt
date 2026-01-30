@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.deeplearn.models
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.deeplearn.translators.FloatArrayInAndOutTranslator
 
 class TwoDimensionalRegressionModel(
     name: String,
-    parent: ChoiceConfigurable<*>
+    parent: ModeValueGroup<*>
 ) : ModelWrapper<FloatArray, FloatArray>(
     name,
     FloatArrayInAndOutTranslator(),

@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.utils.block.placer
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
@@ -36,9 +36,9 @@ import kotlin.math.max
 
 abstract class BlockPlacerRotationMode(
     name: String,
-    private val configurable: ChoiceConfigurable<BlockPlacerRotationMode>,
+    private val modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>,
     val placer: BlockPlacer
-) : Choice(name), MinecraftShortcuts {
+) : Mode(name), MinecraftShortcuts {
 
     val postMove by boolean("PostMove", false)
 
@@ -48,8 +48,8 @@ abstract class BlockPlacerRotationMode(
 
     open fun onTickStart() {}
 
-    override val parent: ChoiceConfigurable<*>
-        get() = configurable
+    override val parent: ModeValueGroup<*>
+        get() = modeValueGroup
 
 }
 
@@ -57,17 +57,17 @@ abstract class BlockPlacerRotationMode(
  * Normal rotations.
  * Only one placement per tick is possible, possible less because rotating takes some time.
  */
-class NormalRotationMode(configurable: ChoiceConfigurable<BlockPlacerRotationMode>, placer: BlockPlacer)
-    : BlockPlacerRotationMode("Normal", configurable, placer) {
+class NormalRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>, placer: BlockPlacer)
+    : BlockPlacerRotationMode("Normal", modeValueGroup, placer) {
 
-    val rotations = tree(RotationsConfigurable(this))
+    val rotations = tree(RotationsValueGroup(this))
 
     override fun invoke(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget): Boolean {
         val interactedBlockPos = placementTarget.interactedBlockPos
         RotationManager.setRotationTarget(
             placementTarget.rotation,
             considerInventory = !placer.ignoreOpenInventory,
-            configurable = rotations,
+            valueGroup = rotations,
             provider = placer.module,
             priority = placer.priority,
             whenReached = RestrictedSingleUseAction({
@@ -101,8 +101,8 @@ class NormalRotationMode(configurable: ChoiceConfigurable<BlockPlacerRotationMod
 /**
  * No rotations, or just a packet containing the rotation target.
  */
-class NoRotationMode(configurable: ChoiceConfigurable<BlockPlacerRotationMode>, placer: BlockPlacer)
-    : BlockPlacerRotationMode("None", configurable, placer) {
+class NoRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>, placer: BlockPlacer)
+    : BlockPlacerRotationMode("None", modeValueGroup, placer) {
 
     val send by boolean("SendRotationPacket", false)
 

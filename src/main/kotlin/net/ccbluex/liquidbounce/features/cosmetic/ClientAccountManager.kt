@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.features.cosmetic
 
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.Config
 
-object ClientAccountManager : Configurable("account") {
+object ClientAccountManager : Config("account") {
     var clientAccount by value("account", ClientAccount.ENV_ACCOUNT ?: ClientAccount.EMPTY_ACCOUNT)
 }

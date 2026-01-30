@@ -238,8 +238,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
         // The jumping cooldown would lead to very slow tower building
         var towerActive = ModuleScaffold.INSTANCE.getRunning() &&
-                ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice() != ScaffoldTowerNone.INSTANCE &&
-                ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice().getRunning();
+                ModuleScaffold.INSTANCE.getTowerMode().getActiveMode() != ScaffoldTowerNone.INSTANCE &&
+                ModuleScaffold.INSTANCE.getTowerMode().getActiveMode().getRunning();
 
         if (noJumpDelay || towerActive) {
             this.noJumpDelay = 0;

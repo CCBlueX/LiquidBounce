@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.objectArraySetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_HORIZONTAL
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.core.BlockPos
@@ -35,9 +35,9 @@ import net.minecraft.world.level.block.state.BlockState
 
 sealed interface AutoFarmTrackedState {
     enum class Plantable(
-        override val choiceName: String,
+        override val tag: String,
         val items: Collection<Item>,
-    ) : AutoFarmTrackedState, NamedChoice {
+    ) : AutoFarmTrackedState, Tagged {
         FARM(
             "Farmland",
             objectArraySetOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO),

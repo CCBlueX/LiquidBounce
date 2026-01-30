@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
@@ -46,8 +46,8 @@ private val ROTATION = Quaternionf()
 /**
  * @author minecrrrr
  */
-abstract class HatsMode(name: String) : Choice(name) {
-    final override val parent: ChoiceConfigurable<*>
+abstract class HatsMode(name: String) : Mode(name) {
+    final override val parent: ModeValueGroup<*>
         get() = modes
 
     // --- Settings ---
@@ -55,7 +55,7 @@ abstract class HatsMode(name: String) : Choice(name) {
 
     protected val height by float("HeightOffset", 0.2f, 0f..2f)
 
-    private class EquipOffset : Configurable("EquipmentOffset") {
+    private class EquipOffset : ValueGroup("EquipmentOffset") {
         val equipmentOffset by float("ArmorOffset", 0.1f, 0f..1f)
     }
 
@@ -63,7 +63,7 @@ abstract class HatsMode(name: String) : Choice(name) {
 
     private val hurtMarked by boolean("ShowDamage", true)
 
-    private class FriendsOptions : Configurable("FriendsOptions") {
+    private class FriendsOptions : ValueGroup("FriendsOptions") {
         val friendView by boolean("ViewOnFriend", true)
         val distance by int("Distance", 64, 8..512, "blocks")
     }

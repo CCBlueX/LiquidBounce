@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
@@ -34,22 +34,22 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 object ModuleAutoBuild : ClientModule("AutoBuild", ModuleCategories.WORLD, aliases = listOf("Platform", "AutoPortal")) {
 
     private val mode = choices("Mode", PortalMode, arrayOf(PortalMode, PlatformMode)).apply { tagBy(this) }
-    val placer = tree(BlockPlacer("Placing", this, Priority.NORMAL, { mode.activeChoice.getSlot() }))
+    val placer = tree(BlockPlacer("Placing", this, Priority.NORMAL, { mode.activeMode.getSlot() }))
 
     init {
         mode.onChanged { enabled = false }
     }
 
     override fun onEnabled() {
-        mode.activeChoice.enabled()
+        mode.activeMode.enabled()
     }
 
     override fun onDisabled() {
         placer.disable()
-        mode.activeChoice.disabled()
+        mode.activeMode.disabled()
     }
 
-    abstract class AutoBuildMode(name: String) : Choice(name) {
+    abstract class AutoBuildMode(name: String) : Mode(name) {
 
         abstract fun getSlot(): HotbarItemSlot?
 
@@ -57,7 +57,7 @@ object ModuleAutoBuild : ClientModule("AutoBuild", ModuleCategories.WORLD, alias
 
         open fun disabled() {}
 
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = mode
 
     }

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -120,7 +120,7 @@ private data class EnchantmentInfo(
     val isCurse: Boolean = false
 )
 
-internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNametags, "Enchantment", true) {
+internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags, "Enchantment", true) {
 
     private val slots by multiEnumChoice(
         "Slots",

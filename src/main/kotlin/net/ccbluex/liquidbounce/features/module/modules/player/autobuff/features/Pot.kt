@@ -90,7 +90,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
             NORMAL -> {
                 RotationManager.setRotationTarget(
                     rotation,
-                    configurable = ModuleAutoBuff.Rotations,
+                    valueGroup = ModuleAutoBuff.Rotations,
                     provider = ModuleAutoBuff,
                     priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
                 )

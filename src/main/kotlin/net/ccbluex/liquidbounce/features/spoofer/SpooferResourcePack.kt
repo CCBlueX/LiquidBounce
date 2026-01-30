@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.spoofer
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.network.protocol.common.ClientboundResourcePackPushPacket
@@ -33,7 +33,7 @@ import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Actio
  *
  * Prevents servers from forcing you to download their resource pack.
  */
-object SpooferResourcePack : ToggleableConfigurable(name = "ResourceSpoofer", enabled = false) {
+object SpooferResourcePack : ToggleableValueGroup(name = "ResourceSpoofer", enabled = false) {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->

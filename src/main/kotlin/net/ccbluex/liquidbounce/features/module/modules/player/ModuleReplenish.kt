@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -185,8 +185,8 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
                 )
 
     private enum class Features(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         CLEANUP("CleanUp"),
         USE_PICKUP_ALL("UsePickupAll"),
         USE_SWAP("UseSwap"),
@@ -194,8 +194,8 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
 
     @Suppress("unused")
     private enum class InsideOf(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         CHESTS("Chests"),
         INVENTORIES("Inventories")
     }

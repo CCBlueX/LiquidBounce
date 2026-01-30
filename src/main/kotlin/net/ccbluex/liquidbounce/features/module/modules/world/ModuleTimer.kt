@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -45,9 +45,9 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
 
     val modes = choices("Mode", Classic, arrayOf(Classic, Pulse, Boost)).apply { tagBy(this) }
 
-    object Classic : Choice("Classic") {
+    object Classic : Mode("Classic") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val speed by float("Speed", 2f, 0.1f..20f)
@@ -58,9 +58,9 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
 
     }
 
-    object Pulse : Choice("Pulse") {
+    object Pulse : Mode("Pulse") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..20f)
@@ -104,9 +104,9 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
 
     }
 
-    object Boost : Choice("Boost") {
+    object Boost : Mode("Boost") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val boostSpeed by float("BoostSpeed", 1.3f, 0.1f..20f)

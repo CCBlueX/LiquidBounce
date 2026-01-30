@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.config.AutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -64,7 +64,7 @@ object CommandPanic : Command.Factory {
                         val category = ModuleCategories.byName(type)
                             ?: throw CommandException(command.result("categoryNotFound", type))
                         modules = modules.filter { it.category == category }
-                        msg = command.result("disabledAllCategoryModules", category.choiceName)
+                        msg = command.result("disabledAllCategoryModules", category.tag)
                     }
                 }
 

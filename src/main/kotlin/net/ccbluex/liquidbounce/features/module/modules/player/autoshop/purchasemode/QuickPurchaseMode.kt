@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 
-object QuickPurchaseMode : Choice("Quick") {
-    override val parent: ChoiceConfigurable<*>
+object QuickPurchaseMode : Mode("Quick") {
+    override val parent: ModeValueGroup<*>
         get() = ModuleAutoShop.purchaseMode
 
     val delay by intRange("Delay", 50..70, 0..150, "ms")

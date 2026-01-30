@@ -1,0 +1,94 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.script.bindings.features
+
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.EVENT_NAME_TO_CLASS
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.newEventHook
+import net.ccbluex.liquidbounce.utils.client.logger
+
+class ScriptMode(choiceObject: Map<String, Any>, override val parent: ModeValueGroup<Mode>) : Mode(
+    name = choiceObject["name"] as String,
+) {
+
+    private val events = hashMapOf<String, org.graalvm.polyglot.Value>()
+    private val _values = linkedMapOf<String, Value<*>>()
+
+    /**
+     * Allows the user to access values by typing module.settings.<valuename>
+     */
+    val settings by lazy { _values }
+
+    init {
+        if (choiceObject.containsKey("settings")) {
+            val settingsObject = choiceObject["settings"] as Map<String, Value<*>>
+
+            for ((name, value) in settingsObject) {
+                _values[name] = value(value)
+            }
+        }
+    }
+
+    /**
+     * Called from inside the script to register a new event handler.
+     * @param eventName Name of the event.
+     * @param handler JavaScript function used to handle the event.
+     */
+    fun on(eventName: String, handler: org.graalvm.polyglot.Value) {
+        if (!handler.canExecute()) {
+            logger.error("Invalid event handler for $eventName")
+            return
+        }
+
+        events[eventName] = handler
+        hookHandler(eventName)
+    }
+
+    override fun enable() = callEvent("enable")
+
+    override fun disable() = callEvent("disable")
+
+    /**
+     * Calls the function of the [event]  with the [payload] of the event.
+     */
+    private fun callEvent(event: String, payload: Event? = null) {
+        try {
+            events[event]?.executeVoid(payload)
+        } catch (throwable: Throwable) {
+            logger.error("Script caused exception in module $name on $event event!", throwable)
+        }
+    }
+
+    /**
+     * Register new event hook
+     */
+    private fun hookHandler(eventName: String) {
+        // Get event case-insensitive
+        val clazz = EVENT_NAME_TO_CLASS[eventName] ?: return
+
+        EventManager.registerEventHook(
+            clazz,
+            newEventHook { callEvent(eventName, it) }
+        )
+    }
+}

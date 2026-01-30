@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -40,7 +40,7 @@ private var fireworkCooldown = 750
 private val fireworkChronometer = Chronometer()
 
 @Suppress("MagicNumber")
-internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoFirework", true) {
+internal object AutoFirework : ToggleableValueGroup(ModuleElytraTarget, "AutoFirework", true) {
     private val useMode by enumChoice("UseMode", FireworkUseMode.NORMAL)
     private val extraDistance by float("ExtraDistance", 50f, 5f..100f, suffix = "m")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..20, "ticks")

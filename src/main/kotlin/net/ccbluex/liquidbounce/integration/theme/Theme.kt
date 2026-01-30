@@ -27,9 +27,9 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
@@ -65,7 +65,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             .build()
     ), Closeable, ResourceManagerReloadListener {
 
-    enum class Origin(override val choiceName: String, val external: Boolean) : NamedChoice {
+    enum class Origin(override val tag: String, val external: Boolean) : Tagged {
         RESOURCE("resource", false),
         LOCAL("local", false),
         MARKETPLACE("marketplace", false),
@@ -89,8 +89,8 @@ class Theme private constructor(val origin: Origin, url: String) :
     val components: List<HudComponent>
         get() = requireNotNull(_components) { "components not loaded" }
 
-    private var _settings: Configurable? = null
-    val settings: Configurable
+    private var _settings: ValueGroup? = null
+    val settings: ValueGroup
         get() = requireNotNull(_settings) { "settings not loaded" }
 
     private suspend fun loadComponents() {
@@ -113,7 +113,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             check(count == 1) { "Found duplicated component name '$name'" }
         }
 
-        _settings = Configurable(metadata.id.capitalize()).apply {
+        _settings = ValueGroup(metadata.id.capitalize()).apply {
             metadata.values?.let { values ->
                 for (value in values) {
                     json(value)
@@ -121,7 +121,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             }
 
             @Suppress("UNCHECKED_CAST")
-            val componentSettings = Configurable("Components", components as MutableList<Value<*>>)
+            val componentSettings = ValueGroup("Components", components as MutableList<Value<*>>)
             tree(componentSettings)
         }
     }
@@ -240,7 +240,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         _components?.forEach { EventManager.unregisterEventHandler(it) }
     }
 
-    override fun toString() = "Theme(name=${metadata.name}, origin=${origin.choiceName}, url=$baseUrl)"
+    override fun toString() = "Theme(name=${metadata.name}, origin=${origin.tag}, url=$baseUrl)"
 
     companion object {
 
@@ -252,7 +252,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         @JvmStatic
         suspend fun load(origin: Origin, file: File) = Theme(
             origin,
-            url = "${ClientInteropServer.url}/${origin.choiceName}/${file.invariantSeparatorsPath}/"
+            url = "${ClientInteropServer.url}/${origin.tag}/${file.invariantSeparatorsPath}/"
         ).loadAll()
     }
 

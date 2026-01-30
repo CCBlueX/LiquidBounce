@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.fastutil.enumMapOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArmorItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArrowItemFacet
@@ -131,7 +131,7 @@ enum class ItemFunction {
 }
 
 enum class ItemSortChoice(
-    override val choiceName: String,
+    override val tag: String,
     val category: ItemCategory,
     /**
      * This is the function that is used for the greedy check.
@@ -139,7 +139,7 @@ enum class ItemSortChoice(
      * IF IT WAS IMPLEMENTED
      */
     val satisfactionCheck: Predicate<ItemStack>? = null,
-) : NamedChoice {
+) : Tagged {
     SWORD("Sword", ItemType.SWORD.defaultCategory, { it.isSword }),
     WEAPON("Weapon", ItemType.WEAPON.defaultCategory),
     SPEAR("Spear", ItemType.SPEAR.defaultCategory, { it.isSpear }),

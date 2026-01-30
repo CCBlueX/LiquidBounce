@@ -20,8 +20,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
@@ -50,11 +50,11 @@ import net.minecraft.world.phys.Vec3
 
 @Suppress("MagicNumber")
 object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
-    private object AllowRotationChange : ToggleableConfigurable(this, "AllowRotationChange", false) {
+    private object AllowRotationChange : ToggleableValueGroup(this, "AllowRotationChange", false) {
         val allowJump by boolean("AllowJump", true)
     }
 
-    private object AllowTimer : ToggleableConfigurable(this, "AllowTimer", false) {
+    private object AllowTimer : ToggleableValueGroup(this, "AllowTimer", false) {
         val timerSpeed by float("TimerSpeed", 2.0F, 1.0F..10.0F, suffix = "x")
     }
 
@@ -215,8 +215,8 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
     )
 
     private enum class Ignore(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         OPEN_INVENTORY("OpenInventory"),
         USING_ITEM("UsingItem"),
         USING_SCAFFOLD("UsingScaffold")

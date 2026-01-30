@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.powdersnow
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
 
-object NoSlowPowderSnow : ToggleableConfigurable(ModuleNoSlow, "PowderSnow", true) {
+object NoSlowPowderSnow : ToggleableValueGroup(ModuleNoSlow, "PowderSnow", true) {
 
     val multiplier by float("Multiplier", 1f, 0.4f..2f)
 

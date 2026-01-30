@@ -20,10 +20,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.additions.drawBorder
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinGuiAccessor
@@ -41,13 +40,13 @@ import net.minecraft.world.item.ItemStack
 
 object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.RENDER) {
 
-    private object HighlightClicked : ToggleableConfigurable(this, "HighlightClicked", enabled = true) {
-        val mode = choices(this, "Mode", 0) {
+    private object HighlightClicked : ToggleableValueGroup(this, "HighlightClicked", enabled = true) {
+        val mode = modes(this, "Mode", 0) {
             arrayOf(Mode.Border, Mode.Texture)
         }
 
-        sealed class Mode(choiceName: String) : Choice(choiceName) {
-            final override val parent: ChoiceConfigurable<*>
+        sealed class Mode(choiceName: String) : net.ccbluex.liquidbounce.config.types.group.Mode(choiceName) {
+            final override val parent: ModeValueGroup<*>
                 get() = mode
 
             abstract fun drawHighlightSlot(context: GuiGraphics, slot: Slot)
@@ -83,7 +82,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         tree(HighlightClicked)
     }
 
-    private object TextCooldownProgress : ToggleableConfigurable(this, "TextCooldownProgress", enabled = true) {
+    private object TextCooldownProgress : ToggleableValueGroup(this, "TextCooldownProgress", enabled = true) {
         val mode by enumChoice("Mode", CooldownProgressMode.PERCENTAGE)
 
         val scale by float("Scale", 1F, 0.25F..4F)
@@ -94,13 +93,13 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         tree(TextCooldownProgress)
     }
 
-    private enum class CooldownProgressMode(override val choiceName: String): NamedChoice {
+    private enum class CooldownProgressMode(override val tag: String): Tagged {
         PERCENTAGE("Percentage"),
         DURATION_TICKS("DurationTicks"),
         DURATION_SECONDS("DurationSeconds"),
     }
 
-    private object ContainerItemView : ToggleableConfigurable(this, "ContainerItemView", enabled = true) {
+    private object ContainerItemView : ToggleableValueGroup(this, "ContainerItemView", enabled = true) {
         val skipEmptyStack by boolean("SkipEmptyStack", false)
 
         val scale by float("Scale", 1F, 0.25F..4F)
@@ -144,7 +143,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
     fun GuiGraphics.drawHighlightSlot(slot: Slot) {
         if (!running || !HighlightClicked.enabled || slot.index != InventoryManager.lastClickedSlot) return
 
-        HighlightClicked.mode.activeChoice.drawHighlightSlot(this, slot)
+        HighlightClicked.mode.activeMode.drawHighlightSlot(this, slot)
     }
 
     fun GuiGraphics.drawContainerItemView(

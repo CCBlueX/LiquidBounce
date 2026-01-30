@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
@@ -36,18 +36,18 @@ import net.minecraft.world.phys.AABB
 
 object Esp2DMode : EspMode("2D") {
 
-    object Outline : ToggleableConfigurable(this, "Outline", true) {
+    object Outline : ToggleableValueGroup(this, "Outline", true) {
         val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
 
-    object Border : ToggleableConfigurable(this, "Border", true) {
+    object Border : ToggleableValueGroup(this, "Border", true) {
         val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
 
     private val expand by float("Expand", 0.05f, 0f..0.5f)
     private val fill by boolean("Fill", true)
 
-    object HealthBar : ToggleableConfigurable(this, "HealthBar", true) {
+    object HealthBar : ToggleableValueGroup(this, "HealthBar", true) {
         val spacing by float("Spacing", 2f, 0f..32f, "px")
     }
 

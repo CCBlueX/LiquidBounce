@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.global
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CancelPrevious
 import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
@@ -56,7 +56,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import kotlin.time.Duration.Companion.seconds
 
-object GlobalSettingsClientChat : ToggleableConfigurable(
+object GlobalSettingsClientChat : ToggleableValueGroup(
     name = "ClientChat",
     enabled = true,
     aliases = listOf("GlobalChat", "IRC")

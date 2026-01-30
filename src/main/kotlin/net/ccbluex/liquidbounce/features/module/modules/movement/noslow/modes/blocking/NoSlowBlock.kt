@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.b
 
 import it.unimi.dsi.fastutil.floats.FloatFloatPair
 import net.ccbluex.fastutil.pair
-import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2364MC18
@@ -34,9 +34,9 @@ internal object NoSlowBlock : NoSlowUseActionHandler("Blocking") {
 
     private val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
-    val modes = choices(this, "Choice") {
+    val modes = modes(this, "Choice") {
         arrayOf(
-            NoneChoice(it),
+            NoneMode(it),
             NoSlowBlockingReuse,
             NoSlowBlockingSwitch,
             NoSlowBlockingBlink,

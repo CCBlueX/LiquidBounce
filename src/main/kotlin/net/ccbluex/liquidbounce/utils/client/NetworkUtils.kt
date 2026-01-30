@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
@@ -184,8 +184,8 @@ fun sendPacketSilently(packet: Packet<*>) {
     mc.connection?.connection?.send(packetEvent.packet, null)
 }
 
-enum class MovePacketType(override val choiceName: String, val generatePacket: () -> ServerboundMovePlayerPacket)
-    : NamedChoice {
+enum class MovePacketType(override val tag: String, val generatePacket: () -> ServerboundMovePlayerPacket)
+    : Tagged {
     ON_GROUND_ONLY("OnGroundOnly", {
         ServerboundMovePlayerPacket.StatusOnly(player.onGround(), player.horizontalCollision)
     }),

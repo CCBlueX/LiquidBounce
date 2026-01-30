@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.placer
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -36,7 +36,7 @@ import java.util.PriorityQueue
 /**
  * Places blocks to support placements.
  */
-class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "Support", true) {
+class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Support", true) {
 
     private val depth by int("Depth", 4, 1..12)
     val delay by int("Delay", 500, 0..1000, "ms")

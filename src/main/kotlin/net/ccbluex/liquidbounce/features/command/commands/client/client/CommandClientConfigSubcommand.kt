@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
-import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.rootConfigurables
-import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
+import net.ccbluex.liquidbounce.features.command.builder.configs
+import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -50,31 +50,31 @@ object CommandClientConfigSubcommand {
         .subcommand(browseSubcommand())
         .build()
 
-    private val defaultConfigurableList
+    private val defaultConfigs
         get() = listOf(
-            modulesConfigurable
+            modulesConfig
         )
 
     private fun backupSubcommand() = CommandBuilder.begin("backup")
         .parameter(
-            ParameterBuilder.rootConfigurables()
+            ParameterBuilder.configs()
                 .optional()
                 .build()
         )
         .handler {
-            val configurables = args.getOrNull(0) as Set<Configurable>? ?: defaultConfigurableList
-            val formattedNames = configurables.joinToString(", ") { configurable ->
-                configurable.name.toLowerCamelCase()
+            val configs = args.getOrNull(0) as Set<Config>? ?: defaultConfigs
+            val formattedNames = configs.joinToString(", ") { config ->
+                config.name.toLowerCamelCase()
             }
 
             runCatching {
                 chat(regular(command.result("backingUp", variable(formattedNames))))
-                for (configurable in configurables) {
-                    ConfigSystem.store(configurable)
+                for (config in configs) {
+                    ConfigSystem.store(config)
                 }
 
                 val fileName = "manual-${LocalDateTime.now().toUnderlinedString()}"
-                ConfigSystem.backup(fileName, configurables)
+                ConfigSystem.backup(fileName, configs)
                 fileName
             }.onFailure { exception ->
                 chat(markAsError(command.result("failedToBackup", exception.message ?: "Unknown error")))
@@ -116,25 +116,25 @@ object CommandClientConfigSubcommand {
     private fun resetSubCommand() = CommandBuilder
         .begin("reset")
         .parameter(
-            ParameterBuilder.rootConfigurables()
+            ParameterBuilder.configs()
                 .optional()
                 .build()
         )
         .handler {
-            val configurables = args.getOrNull(0) as Set<Configurable>? ?: defaultConfigurableList
-            val formattedNames = configurables.joinToString(", ") { configurable ->
-                configurable.name.toLowerCamelCase()
+            val configs = args.getOrNull(0) as Set<Config>? ?: defaultConfigs
+            val formattedNames = configs.joinToString(", ") { config ->
+                config.name.toLowerCamelCase()
             }
 
             AutoConfig.withLoading {
                 runCatching {
                     chat(regular(command.result("resetting", variable(formattedNames))))
 
-                    for (configurable in configurables) {
+                    for (config in configs) {
                         // TODO: We could straight up use configurable.restore(), however, we
                         //   want to filter out the ModuleHud module
 
-                        for (value in configurable.inner) {
+                        for (value in config.inner) {
                             // TODO: Remove when HUD no longer contains the Element Configuration
                             if (value is ModuleHud) {
                                 continue

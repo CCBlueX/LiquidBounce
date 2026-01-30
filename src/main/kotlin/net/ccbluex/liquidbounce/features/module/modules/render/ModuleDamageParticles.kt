@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Reference2FloatOpenHashMap
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -57,14 +57,14 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
         tree(Colors)
     }
 
-    private object Colors : Configurable("Colors") {
+    private object Colors : ValueGroup("Colors") {
         val damage by color("Damage", Color4b.RED)
         val death by color("Death", Color4b.RED)
         val heal by color("Heal", Color4b.GREEN)
         val maxHealth by color("MaxHealth", Color4b.GREEN)
     }
 
-    private enum class TrackMode(override val choiceName: String) : NamedChoice {
+    private enum class TrackMode(override val tag: String) : Tagged {
         ON_TICK("OnTick"),
         ON_UPDATE("OnUpdate"),
     }

@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -91,8 +91,8 @@ object ModuleHandDerp : ClientModule("HandDerp", ModuleCategories.FUN) {
         }
     }
 
-    private object Delay : Choice("Delay") {
-        override val parent: ChoiceConfigurable<Choice>
+    private object Delay : Mode("Delay") {
+        override val parent: ModeValueGroup<Mode>
             get() = mode
 
         val delayValue by int("Delay", 1, 0..20, "ticks")
@@ -104,8 +104,8 @@ object ModuleHandDerp : ClientModule("HandDerp", ModuleCategories.FUN) {
         }
     }
 
-    private object Swing : Choice("Swing") {
-        override val parent: ChoiceConfigurable<Choice>
+    private object Swing : Mode("Swing") {
+        override val parent: ModeValueGroup<Mode>
             get() = mode
 
         @Suppress("unused")

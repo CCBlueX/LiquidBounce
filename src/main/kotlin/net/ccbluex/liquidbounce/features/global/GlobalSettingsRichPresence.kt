@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
 import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
 import net.ccbluex.liquidbounce.config.gson.util.jsonObject
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -40,9 +40,9 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
-import net.ccbluex.liquidbounce.utils.client.logger
 
 /**
  * Discord Rich Presence
@@ -50,7 +50,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
  * todo: use ordered multi choose (https://github.com/CCBlueX/LiquidBounce/pull/7350), which allows
  *   custom ordering of parts.
  */
-object GlobalSettingsRichPresence : ToggleableConfigurable(
+object GlobalSettingsRichPresence : ToggleableValueGroup(
     name = "RichPresence",
     enabled = true,
     aliases = listOf("DiscordPresence")
@@ -75,7 +75,7 @@ object GlobalSettingsRichPresence : ToggleableConfigurable(
         RichPresencePart.PROTOCOL,
     )
 
-    private object LargeImageConfig : ToggleableConfigurable(
+    private object LargeImageConfig : ToggleableValueGroup(
         parent = this,
         name = "LargeImage",
         enabled = true,
@@ -87,7 +87,7 @@ object GlobalSettingsRichPresence : ToggleableConfigurable(
         )
     }
 
-    private object SmallImageConfig : ToggleableConfigurable(
+    private object SmallImageConfig : ToggleableValueGroup(
         parent = this,
         name = "SmallImage",
         enabled = false,
@@ -241,7 +241,7 @@ object GlobalSettingsRichPresence : ToggleableConfigurable(
      */
     override val running get() = LiquidBounce.isInitialized
 
-    private enum class RichPresencePart(override val choiceName: String) : NamedChoice {
+    private enum class RichPresencePart(override val tag: String) : Tagged {
         CLIENT_NAME("Client Name"),
         CLIENT_VERSION("Client Version"),
         CLIENT_AUTHOR("Client Author"),
@@ -266,9 +266,9 @@ object GlobalSettingsRichPresence : ToggleableConfigurable(
 
     @Suppress("unused")
     private enum class PresenceActivityType(
-        override val choiceName: String,
+        override val tag: String,
         val activityType: ActivityType,
-    ) : NamedChoice {
+    ) : Tagged {
         PLAYING("Playing", ActivityType.Playing),
         LISTENING("Listening", ActivityType.Listening),
         WATCHING("Watching", ActivityType.Watching),
@@ -277,18 +277,18 @@ object GlobalSettingsRichPresence : ToggleableConfigurable(
 
     @Suppress("unused")
     private enum class PresenceStatusDisplayType(
-        override val choiceName: String,
+        override val tag: String,
         val statusDisplayType: StatusDisplayType,
-    ) : NamedChoice {
+    ) : Tagged {
         NAME("Name", StatusDisplayType.Name),
         STATE("State", StatusDisplayType.State),
         DETAILS("Details", StatusDisplayType.Details),
     }
 
     private enum class PresenceAsset(
-        override val choiceName: String,
+        override val tag: String,
         val assetValue: String?,
-    ) : NamedChoice {
+    ) : Tagged {
         LOGO("Logo", "liquidbounce"),
     }
 

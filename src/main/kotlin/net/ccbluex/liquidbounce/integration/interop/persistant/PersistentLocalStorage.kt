@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.integration.interop.persistant
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.Config
 import java.util.concurrent.ConcurrentHashMap
 
-object PersistentLocalStorage : Configurable("storage") {
+object PersistentLocalStorage : Config("storage") {
 
     val map by value("map", ConcurrentHashMap<String, String>())
 

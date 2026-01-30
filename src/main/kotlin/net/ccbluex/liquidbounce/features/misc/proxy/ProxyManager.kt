@@ -21,8 +21,9 @@ package net.ccbluex.liquidbounce.features.misc.proxy
 import io.netty.handler.proxy.Socks5ProxyHandler
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -39,7 +40,7 @@ import org.apache.logging.log4j.Logger
  *
  * Only supports SOCKS5 proxies.
  */
-object ProxyManager : Configurable("proxy"), EventListener {
+object ProxyManager : Config("proxy"), EventListener {
 
     private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ProxyManager")
 

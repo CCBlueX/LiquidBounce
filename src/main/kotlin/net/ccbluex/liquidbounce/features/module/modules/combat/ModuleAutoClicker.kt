@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -57,7 +57,7 @@ import net.minecraft.world.phys.EntityHitResult
 
 object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, aliases = listOf("TriggerBot")) {
 
-    object AttackButton : ToggleableConfigurable(this, "Attack", true) {
+    object AttackButton : ToggleableValueGroup(this, "Attack", true) {
 
         val clicker = tree(Clicker(this, mc.options.keyAttack))
 
@@ -69,21 +69,21 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
         private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
 
-        private enum class ObjectiveType(override val choiceName: String) : NamedChoice {
+        private enum class ObjectiveType(override val tag: String) : Tagged {
             ENEMY("Enemy"),
             ENTITY("Entity"),
             BLOCK("Block"),
             ANY("Any")
         }
 
-        private enum class Weapon(override val choiceName: String) : NamedChoice {
+        private enum class Weapon(override val tag: String) : Tagged {
             SWORD("Sword"),
             AXE("Axe"),
             BOTH("Both"),
             ANY("Any")
         }
 
-        private enum class Use(override val choiceName: String) : NamedChoice {
+        private enum class Use(override val tag: String) : Tagged {
             WAIT("Wait"),
             STOP("Stop"),
             IGNORE("Ignore")
@@ -149,7 +149,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
 
     }
 
-    object UseButton : ToggleableConfigurable(this, "Use", false) {
+    object UseButton : ToggleableValueGroup(this, "Use", false) {
         val clicker = tree(Clicker(this, mc.options.keyUse, null))
         internal val holdingItemsForIgnore by items(
             "HoldingItemsForIgnore",

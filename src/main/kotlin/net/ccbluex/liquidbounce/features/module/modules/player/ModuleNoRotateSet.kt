@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 
 /**
  * NoRotateSet module.
@@ -36,15 +36,15 @@ object ModuleNoRotateSet : ClientModule("NoRotateSet", ModuleCategories.PLAYER) 
         )
     ).apply { tagBy(this) }
 
-    object ResetRotation : Choice("ResetRotation") {
-        override val parent: ChoiceConfigurable<Choice>
+    object ResetRotation : Mode("ResetRotation") {
+        override val parent: ModeValueGroup<Mode>
             get() = mode
 
-        val rotationsConfigurable = tree(RotationsConfigurable(this))
+        val rotations = tree(RotationsValueGroup(this))
     }
 
-    object SilentAccept : Choice("SilentAccept") {
-        override val parent: ChoiceConfigurable<Choice>
+    object SilentAccept : Mode("SilentAccept") {
+        override val parent: ModeValueGroup<Mode>
             get() = mode
     }
 }

@@ -1,0 +1,93 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
+
+import com.google.gson.GsonBuilder
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopConfig
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopElement
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNode
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ItemConditionNode
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.notification
+
+object AutoShopConfig {
+
+    private val autoShopGson = GsonBuilder()
+        .setPrettyPrinting()
+        .registerTypeAdapter(ShopElement::class.java, ShopElement.Deserializer)
+        .registerTypeAdapter(ItemInfo::class.java, ItemInfo.Deserializer)
+        .registerTypeAdapter(ConditionNode::class.java, ConditionNode.Deserializer)
+        .registerTypeAdapter(ItemConditionNode::class.java, ItemConditionNode.Deserializer)
+        .create()
+
+    /**
+     * Loads [shopConfigPreset] and displays a notification depending on the result
+     */
+    fun loadAutoShopConfig(shopConfigPreset: ShopConfigPreset) : Boolean {
+        val result = load(shopConfigPreset)
+        val message = ModuleAutoShop.message(if (result) "reloadSuccess" else "loadError")
+
+        notification(message, ModuleAutoShop.name,
+            if (result) NotificationEvent.Severity.INFO else NotificationEvent.Severity.ERROR
+        )
+        return result
+    }
+
+    fun load(shopConfigPreset: ShopConfigPreset): Boolean {
+        runCatching {
+            javaClass.getResourceAsStream(shopConfigPreset.internalPath).use { inputStream ->
+                check(inputStream != null) { "Failed to load resource: ${shopConfigPreset.internalPath}" }
+
+                val shopConfig = autoShopGson.fromJson(inputStream.reader(), ShopConfig::class.java)
+
+                // add items to AutoShop
+                ModuleAutoShop.onDisabled()
+                ModuleAutoShop.currentConfig = shopConfig
+                ModuleAutoShop.onEnabled()
+            }
+        }.onFailure {
+            logger.error("Failed to load items for AutoShop.", it)
+            ModuleAutoShop.currentConfig = ShopConfig.Empty
+            return false
+        }
+
+        return true
+    }
+
+}
+
+/**
+ * Represents the locally available shop configurations
+ */
+@Suppress("unused")
+enum class ShopConfigPreset(override val tag: String, localFileName: String) : Tagged {
+
+    PIKA_NETWORK("PikaNetwork", "pika-network"),
+    BLOCKSMC("BlocksMC", "blocksmc"),
+    CUBECRAFT("CubeCraft", "cubecraft"),
+    TEAMHOLY("TeamHoly", "teamholy"),
+    FUNNYMC("FunnyMC", "funnymc"),
+    DEXLAND("Dexland", "dexland");
+
+    val internalPath = "/resources/liquidbounce/data/shops/${localFileName}.json"
+
+}

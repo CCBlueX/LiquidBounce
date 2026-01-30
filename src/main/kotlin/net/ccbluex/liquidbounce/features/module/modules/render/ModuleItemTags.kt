@@ -25,8 +25,8 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -84,7 +84,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
 
     private val mergeMode by enumChoice("MergeMode", MergeMode.BY_COMPONENTS)
 
-    private object Shulker : ToggleableConfigurable(this, "Shulker", false) {
+    private object Shulker : ToggleableValueGroup(this, "Shulker", false) {
         val mergeStacks by boolean("MergeStacks", true)
         val showTitle by boolean("ShowTitle", true)
     }
@@ -98,9 +98,9 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
 
     @Suppress("unused")
     private enum class MergeMode(
-        override val choiceName: String,
+        override val tag: String,
         val merge: (stacks: Array<ItemStack>) -> Array<ItemStack>,
-    ) : NamedChoice {
+    ) : Tagged {
         /**
          * Nothing will be merged.
          */

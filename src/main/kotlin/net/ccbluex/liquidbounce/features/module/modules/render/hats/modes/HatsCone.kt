@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
@@ -38,8 +38,8 @@ internal object HatsCone : HatsMode("Cone") {
 
     private val colors = HatsColorSettings()
 
-    private object HatConeSettings : Configurable("HatSettings") {
-        object RadiusSettings : Configurable("RadiusSettings") {
+    private object HatConeSettings : ValueGroup("HatSettings") {
+        object RadiusSettings : ValueGroup("RadiusSettings") {
             val outerRadius by float("OuterRadius", 0.6f, 0.1f..2f)
         }
 

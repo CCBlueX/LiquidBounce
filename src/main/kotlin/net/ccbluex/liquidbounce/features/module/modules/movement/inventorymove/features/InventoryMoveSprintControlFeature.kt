@@ -18,20 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
-object InventoryMoveSprintControlFeature : ToggleableConfigurable(ModuleInventoryMove, "SprintControl", false) {
+object InventoryMoveSprintControlFeature : ToggleableValueGroup(ModuleInventoryMove, "SprintControl", false) {
 
     private val clientMode by enumChoice("Client", SprintMode.DO_NOT_CHANGE)
     private val serverMode by enumChoice("Server", SprintMode.DO_NOT_CHANGE)
 
-    private enum class SprintMode(override val choiceName: String) : NamedChoice {
+    private enum class SprintMode(override val tag: String) : Tagged {
 
         /**
          * This can be used to not change the sprint state.

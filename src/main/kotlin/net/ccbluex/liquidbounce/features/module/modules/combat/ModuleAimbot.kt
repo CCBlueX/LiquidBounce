@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -70,7 +70,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     private val requirementsMet
         get() = requires.all { it.asBoolean }
 
-    private var angleSmooth = choices(this, "AngleSmooth") {
+    private var angleSmooth = modes(this, "AngleSmooth") {
         arrayOf(
             InterpolationAngleSmooth(it),
             SigmoidAngleSmooth(it),
@@ -94,11 +94,11 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         }
 
         targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
-            angleSmooth.activeChoice.process(
+            angleSmooth.activeMode.process(
                 RotationTarget(
                     rotation = rotation.rotation,
                     entity = target,
-                    processors = listOf(angleSmooth.activeChoice),
+                    processors = listOf(angleSmooth.activeMode),
                     ticksUntilReset = 1,
                     resetThreshold = 1f,
                     considerInventory = true,
@@ -188,8 +188,8 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     }
 
     private enum class IgnoreOpened(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         SCREEN("Screen"),
         CONTAINER("Container")
     }

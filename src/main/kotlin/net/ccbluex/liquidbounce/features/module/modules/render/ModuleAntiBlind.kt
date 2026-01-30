@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.client.gui.Gui
@@ -74,7 +74,7 @@ object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, alia
         }
 }
 
-enum class DoRender(override val choiceName: String) : NamedChoice {
+enum class DoRender(override val tag: String) : Tagged {
     BLINDING("Blinding"),
     DARKNESS("Darkness"),
     NAUSEA("Nausea"),

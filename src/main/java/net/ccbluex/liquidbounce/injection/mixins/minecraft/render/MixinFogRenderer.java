@@ -38,7 +38,7 @@ public abstract class MixinFogRenderer {
     @Inject(method = "computeFogColor", at = @At("HEAD"), cancellable = true)
     private void editFogColor(Camera camera, float tickProgress, ClientLevel world, int viewDistance, float skyDarkness,
         CallbackInfoReturnable<Vector4f> cir) {
-        var fogColorOverride = ModuleCustomAmbience.FogConfigurable.FogColorOverride.INSTANCE;
+        var fogColorOverride = ModuleCustomAmbience.FogValueGroup.FogColorOverride.INSTANCE;
         if (fogColorOverride.getRunning()) {
             cir.setReturnValue(fogColorOverride.getColor().toVector4f());
         }
@@ -50,7 +50,7 @@ public abstract class MixinFogRenderer {
     )
     private void editFogData(Camera camera, int viewDistance, DeltaTracker renderTickCounter, float f,
         ClientLevel clientWorld, CallbackInfoReturnable<Vector4f> cir, @Local FogData fogData) {
-        ModuleCustomAmbience.FogConfigurable.INSTANCE.modifyFogData(fogData);
+        ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyFogData(fogData);
     }
 
 }

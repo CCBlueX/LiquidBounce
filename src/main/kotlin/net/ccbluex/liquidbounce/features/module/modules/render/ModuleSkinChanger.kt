@@ -42,9 +42,8 @@ import net.ccbluex.liquidbounce.api.thirdparty.PlayerSkinApi
 import net.ccbluex.liquidbounce.authlib.utils.generateOfflinePlayerUuid
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
@@ -89,7 +88,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
             // debounce skin uploads to prevent rapid calls
             uploadSkinFlow.debounce(DEBOUNCE_DURATION).filter { canUploadSkin() }.collectLatest {
                 logger.info("Uploading skin...")
-                mode.activeChoice.uploadSkin()
+                mode.activeMode.uploadSkin()
             }
         }
 
@@ -124,8 +123,8 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
         }
     }
 
-    private sealed class Mode(name: String) : Choice(name) {
-        final override val parent: ChoiceConfigurable<*>
+    private sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
+        final override val parent: ModeValueGroup<*>
             get() = mode
 
         abstract val skinTextures: Supplier<PlayerSkin>?
@@ -193,9 +192,9 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
             override fun texturePath() = identifier
 
             private enum class ModelChoice(
-                override val choiceName: String,
+                override val tag: String,
                 val type: PlayerModelType,
-            ) : NamedChoice {
+            ) : Tagged {
                 SLIM("Slim", PlayerModelType.SLIM),
                 WIDE("Default", PlayerModelType.WIDE),
             }
@@ -238,7 +237,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
         }
     }
 
-    val skinTextures: Supplier<PlayerSkin>? get() = mode.activeChoice.skinTextures
+    val skinTextures: Supplier<PlayerSkin>? get() = mode.activeMode.skinTextures
 
     @JvmStatic
     fun shouldApplyChanges(): Boolean =

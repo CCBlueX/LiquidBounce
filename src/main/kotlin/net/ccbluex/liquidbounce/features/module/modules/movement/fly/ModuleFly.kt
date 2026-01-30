@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -97,7 +97,7 @@ object ModuleFly : ClientModule("Fly", ModuleCategories.MOVEMENT, aliases = list
         )
     ).apply { tagBy(this) }
 
-    private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
+    private object Visuals : ToggleableValueGroup(this, "Visuals", true) {
 
         private val stride by boolean("Stride", true)
 

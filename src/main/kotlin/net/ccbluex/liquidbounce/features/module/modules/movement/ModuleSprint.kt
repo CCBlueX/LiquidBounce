@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSprintControlFeature
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.fastCos
@@ -49,7 +49,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
 
-    private enum class SprintMode(override val choiceName: String) : NamedChoice {
+    private enum class SprintMode(override val tag: String) : Tagged {
         LEGIT("Legit"),
         OMNIDIRECTIONAL("Omnidirectional"),
         OMNIROTATIONAL("Omnirotational"),
@@ -107,7 +107,7 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
     }
 
     // DO NOT USE TREE TO MAKE SURE THAT THE ROTATIONS ARE NOT CHANGED
-    private val rotationsConfigurable = RotationsConfigurable(this)
+    private val rotations = RotationsValueGroup(this)
 
     @Suppress("unused")
     private val omniRotationalHandler = handler<GameTickEvent> {
@@ -121,7 +121,7 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
         // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
         val rotation = Rotation(yaw, player.xRot)
 
-        RotationManager.setRotationTarget(rotationsConfigurable.toRotationTarget(rotation), Priority.NOT_IMPORTANT,
+        RotationManager.setRotationTarget(rotations.toRotationTarget(rotation), Priority.NOT_IMPORTANT,
             this@ModuleSprint)
     }
 
@@ -142,13 +142,13 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
             && !hasForwardMovement
     }
 
-    private enum class Ignore(override val choiceName: String) : NamedChoice {
+    private enum class Ignore(override val tag: String) : Tagged {
         BLINDNESS("Blindness"),
         HUNGER("Hunger"),
         COLLISION("Collision"),
     }
 
-    private enum class StopOn(override val choiceName: String) : NamedChoice {
+    private enum class StopOn(override val tag: String) : Tagged {
         GROUND("Ground"),
         AIR("Air"),
         USING_ITEM("UsingItem"),

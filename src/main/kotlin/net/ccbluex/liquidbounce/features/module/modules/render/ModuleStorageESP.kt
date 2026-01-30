@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import kotlinx.atomicfu.atomic
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -44,7 +44,7 @@ import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.translate
-import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
+import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
@@ -88,7 +88,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     private val modes = choices("Mode", GlowMode, arrayOf(BoxMode, GlowMode))
 
-    sealed class ChestType(name: String, defaultColor: Color4b) : ToggleableConfigurable(this, name, enabled = true) {
+    sealed class ChestType(name: String, defaultColor: Color4b) : ToggleableValueGroup(this, name, enabled = true) {
         val color by color("Color", defaultColor)
         val tracers by boolean("Tracers", false)
 
@@ -130,7 +130,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
 
-    private val distanceFade = tree(DistanceFadeUniformConfigurable())
+    private val distanceFade = tree(DistanceFadeUniformValueGroup())
 
     override fun onEnabled() {
         ChunkScanner.subscribe(StorageScanner)
@@ -140,8 +140,8 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         ChunkScanner.unsubscribe(StorageScanner)
     }
 
-    private object BoxMode : Choice("Box") {
-        override val parent: ChoiceConfigurable<Choice>
+    private object BoxMode : Mode("Box") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         val dirtyFlag = atomic(true)
@@ -267,7 +267,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     }
 
-    object GlowMode : Choice("Glow") {
+    object GlowMode : Mode("Glow") {
         internal val dirtyFlag = atomic(true)
 
         private val renderState = RenderPassRenderState("${ModuleStorageESP.name} $name")
@@ -283,7 +283,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             super.disable()
         }
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")

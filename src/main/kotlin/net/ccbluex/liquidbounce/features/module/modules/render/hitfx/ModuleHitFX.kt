@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.hitfx
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -39,7 +39,7 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         HitFXRegistry
     }
 
-    enum class Particle(override val choiceName: String) : NamedChoice {
+    enum class Particle(override val tag: String) : Tagged {
         BLOOD("Blood"),
         FIRE("Fire"),
         HEART("Heart"),
@@ -51,9 +51,9 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
 
     @Suppress("unused")
     enum class Sound(
-        override val choiceName: String,
+        override val tag: String,
         val sounds: Array<SoundEvent>
-    ) : NamedChoice {
+    ) : Tagged {
         HIT("Hit", arrayOf(SoundEvents.ARROW_HIT)),
         ORB("Orb", arrayOf(SoundEvents.EXPERIENCE_ORB_PICKUP)),
         BONK("Bonk", HitFXRegistry.BONK),

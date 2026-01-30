@@ -25,13 +25,13 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.ccbluex.liquidbounce.utils.range.RangeConfigurable
+import net.ccbluex.liquidbounce.utils.range.RangeValueGroup
 import kotlin.math.max
 
 /**
  * Allows adjusting your attack range and scan range.
  */
-object KillAuraRange : RangeConfigurable("Range", 1f, 3f), MinecraftShortcuts {
+object KillAuraRange : RangeValueGroup("Range", 1f, 3f), MinecraftShortcuts {
 
     internal val scanRange
         get() = maxOf(interactionRange, interactionThroughWallsRange) + currentScanRangeAddition

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -31,7 +31,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 object VelocityIntave : VelocityMode("Intave") {
 
-    private class ReduceOnAttack(parent: EventListener?) : ToggleableConfigurable(
+    private class ReduceOnAttack(parent: EventListener?) : ToggleableValueGroup(
         parent, "ReduceOnAttack",
         true
     ) {
@@ -56,14 +56,14 @@ object VelocityIntave : VelocityMode("Intave") {
         tree(ReduceOnAttack(this))
     }
 
-    private class JumpReset(parent: EventListener?) : ToggleableConfigurable(
+    private class JumpReset(parent: EventListener?) : ToggleableValueGroup(
         parent, "JumpReset",
         true
     ) {
 
         private val chance by float("Chance", 50f, 0f..100f, "%")
 
-        private inner class Randomize : ToggleableConfigurable(this, "Randomize", false) {
+        private inner class Randomize : ToggleableValueGroup(this, "Randomize", false) {
             val delayTicks by intRange("DelayTicks", 0..5, 0..10)
         }
 

@@ -19,16 +19,16 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sneaking
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
 import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
 
-internal class NoSlowSneakingSwitch(override val parent: ChoiceConfigurable<*>) : Choice("Switch") {
+internal class NoSlowSneakingSwitch(override val parent: ModeValueGroup<*>) : Mode("Switch") {
     private val timingMode by enumChoice("Timing", TimingMode.PRE_POST)
 
     @Suppress("unused")
@@ -49,7 +49,7 @@ internal class NoSlowSneakingSwitch(override val parent: ChoiceConfigurable<*>) 
         }
     }
 
-    private enum class TimingMode(override val choiceName: String) : NamedChoice {
+    private enum class TimingMode(override val tag: String) : Tagged {
         PRE_POST("PreAndPost"),
         PRE_TICK("Pre"),
         POST_TICK("Post")

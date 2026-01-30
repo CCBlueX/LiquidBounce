@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -35,7 +35,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
     val weather = enumChoice("Weather", WeatherType.SNOWY)
     private val time = enumChoice("Time", TimeType.NIGHT)
 
-    object Precipitation : ToggleableConfigurable(this, "ModifyPrecipitation", true) {
+    object Precipitation : ToggleableValueGroup(this, "ModifyPrecipitation", true) {
         val gradient by float("Gradient", 0.7f, 0.1f..1f)
 //        val layers by int("Layers", 3, 1..14)
     }
@@ -43,11 +43,11 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
     /**
      * @see FogData
      */
-    object FogConfigurable : ToggleableConfigurable(this, "Fog", true) {
+    object FogValueGroup : ToggleableValueGroup(this, "Fog", true) {
 
         val disableWorldFog by boolean("DisableWorldFog", false)
 
-        object FogColorOverride : ToggleableConfigurable(this, "FogColorOverride", false) {
+        object FogColorOverride : ToggleableValueGroup(this, "FogColorOverride", false) {
             val color by color("Color", Color4b(47, 128, 255, 201))
         }
 
@@ -88,17 +88,17 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
      *
      * FIXME: redesign
      */
-    object CustomLightmap : ToggleableConfigurable(this, "CustomLightmap", false) {
+    object CustomLightmap : ToggleableValueGroup(this, "CustomLightmap", false) {
         val color by color("Color", Color4b.LIQUID_BOUNCE)
     }
 
-    object SkyColor : ToggleableConfigurable(this, "SkyColor", false) {
+    object SkyColor : ToggleableValueGroup(this, "SkyColor", false) {
         val color by color("Color", Color4b.BLUE)
     }
 
     init {
         tree(Precipitation)
-        tree(FogConfigurable)
+        tree(FogValueGroup)
         tree(CustomLightmap)
         tree(SkyColor)
     }
@@ -121,7 +121,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
     }
 
     @Suppress("unused")
-    enum class WeatherType(override val choiceName: String) : NamedChoice {
+    enum class WeatherType(override val tag: String) : Tagged {
         NO_CHANGE("NoChange"),
         SUNNY("Sunny"),
         RAINY("Rainy"),
@@ -129,7 +129,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
         THUNDER("Thunder")
     }
 
-    enum class TimeType(override val choiceName: String) : NamedChoice {
+    enum class TimeType(override val tag: String) : Tagged {
         NO_CHANGE("NoChange"),
         DAWN("Dawn"),
         DAY("Day"),

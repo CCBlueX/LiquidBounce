@@ -28,7 +28,7 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.string
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import java.lang.reflect.Type
 
@@ -37,7 +37,7 @@ object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind>
     override fun serialize(src: InputBind, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         return JsonObject().apply {
             add("boundKey", context.serialize(src.boundKey, InputConstants.Key::class.java))
-            add("action", context.serialize(src.action, NamedChoice::class.java))
+            add("action", context.serialize(src.action, Tagged::class.java))
             if (src.modifiers.isNotEmpty()) {
                 add("modifiers", context.serialize(src.modifiers))
             }
@@ -68,7 +68,7 @@ object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind>
             InputConstants.Key::class.java
         )
         val actionStr = jsonObject.string("action")
-        val action = InputBind.BindAction.entries.find { it.choiceName.equals(actionStr, ignoreCase = true) }
+        val action = InputBind.BindAction.entries.find { it.tag.equals(actionStr, ignoreCase = true) }
             ?: InputBind.BindAction.TOGGLE
         val modifierSet = jsonObject.array("modifiers")?.mapNotNullTo(enumSetOf<InputBind.Modifier>()) { element ->
             InputBind.Modifier.of(element.asString)

@@ -19,13 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 
-import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ScrollAdjustValueGroup
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -50,7 +50,7 @@ import net.minecraft.world.phys.BlockHitResult
  */
 object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
 
-    private object Preview : ToggleableConfigurable(this, "Preview", true) {
+    private object Preview : ToggleableValueGroup(this, "Preview", true) {
         val outlineOnly by boolean("OutlineOnly", false)
         val fillColor by color("Color", Color4b(69, 119, 255, 104))
         val outlineColor by color("OutlineColor", Color4b.WHITE)
@@ -58,11 +58,11 @@ object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
 
     private val liquidPlace by boolean("PlaceInLiquid", false)
 
-    private object CustomRange : ToggleableConfigurable(this, "CustomRange", false) {
+    private object CustomRange : ToggleableValueGroup(this, "CustomRange", false) {
         private val rangeBounds = 1.0f..4.5f
         val range = float("Range", 3.0f, rangeBounds)
 
-        private val scrollAdjust = ScrollAdjustConfigurable(this, "ScrollAdjust", true, { delta ->
+        private val scrollAdjust = ScrollAdjustValueGroup(this, "ScrollAdjust", true, { delta ->
             val newValue = range.get() + delta
             range.set(newValue.coerceIn(rangeBounds))
         })

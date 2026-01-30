@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.formatAsTime
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
-object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "Blink", false) {
+object InventoryMoveBlinkFeature : ToggleableValueGroup(ModuleInventoryMove, "Blink", false) {
 
     /**
      * After reaching this time, we will close the inventory and blink.

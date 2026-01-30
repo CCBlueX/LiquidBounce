@@ -20,16 +20,16 @@
 package net.ccbluex.liquidbounce.features.global
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.utils.combat.Targets
 import java.util.EnumSet
 
-object GlobalSettingsTarget : Configurable(
+object GlobalSettingsTarget : ValueGroup(
     name = "Targets",
     aliases = listOf("Enemies")
 ) {
 
-    val combatConfigurable = multiEnumChoice("Combat",
+    val combatChoices = multiEnumChoice("Combat",
         default = enumSetOf(
             Targets.PLAYERS,
             Targets.HOSTILE,
@@ -40,7 +40,7 @@ object GlobalSettingsTarget : Configurable(
         choices = EnumSet.allOf(Targets::class.java).apply { remove(Targets.SELF) }
     )
 
-    val visualConfigurable = multiEnumChoice("Visual",
+    val visualChoices = multiEnumChoice("Visual",
         default = enumSetOf(
             Targets.PLAYERS,
             Targets.HOSTILE,
@@ -51,7 +51,7 @@ object GlobalSettingsTarget : Configurable(
         choices = EnumSet.allOf(Targets::class.java)
     )
 
-    inline val combat: EnumSet<Targets> get() = combatConfigurable.get() as EnumSet
+    inline val combat: EnumSet<Targets> get() = combatChoices.get() as EnumSet
 
-    inline val visual: EnumSet<Targets> get() = visualConfigurable.get() as EnumSet
+    inline val visual: EnumSet<Targets> get() = visualChoices.get() as EnumSet
 }

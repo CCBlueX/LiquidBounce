@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -52,8 +52,8 @@ object ModuleRotations : ClientModule("Rotations", ModuleCategories.RENDER) {
 
     @Suppress("unused")
     enum class BodyPart(
-        override val choiceName: String,
-    ) : NamedChoice {
+        override val tag: String,
+    ) : Tagged {
         HEAD("Head"),
         BODY("Body");
     }

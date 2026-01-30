@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntity
@@ -73,7 +73,7 @@ private fun getDimensions(width: Float, height: Float, eyeHeight: Float): Entity
 }
 
 @Suppress("unused") /* Used as settings */
-enum class SneakHeights(override val choiceName: String, val dimensions: EntityDimensions): NamedChoice {
+enum class SneakHeights(override val tag: String, val dimensions: EntityDimensions): Tagged {
     ONEEIGHT("1.8", getDimensions(0.6f, 1.8f, 1.54f)),
     ONENINE("1.9", getDimensions(0.6f, 1.65f, 1.54f)),
     ONEFIFTEEN("1.15", getDimensions(0.6f, 1.5f, 1.27f));

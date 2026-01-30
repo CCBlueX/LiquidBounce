@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -40,7 +40,7 @@ import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Items
 
-object AutoQueueGommeDuels : Choice("GommeDuels") {
+object AutoQueueGommeDuels : Mode("GommeDuels") {
 
     private var inMatch = false
 
@@ -49,7 +49,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
 
     private var controlKillAura by boolean("ControlKillAura", true)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = presets
 
     override fun enable() {

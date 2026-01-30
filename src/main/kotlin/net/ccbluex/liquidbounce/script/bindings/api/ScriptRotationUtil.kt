@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptRotationUtil.newRotationEntity
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
@@ -91,7 +91,7 @@ object ScriptRotationUtil {
     fun aimAtRotation(rotation: Rotation, fixVelocity: Boolean) {
         RotationManager.setRotationTarget(
             rotation,
-            configurable = RotationsConfigurable(
+            valueGroup = RotationsValueGroup(
                 object : EventListener { },
                 movementCorrection = if (fixVelocity) MovementCorrection.SILENT else MovementCorrection.OFF
             ), priority = Priority.NORMAL, provider = ClientModule("ScriptAPI", ModuleCategories.MISC)

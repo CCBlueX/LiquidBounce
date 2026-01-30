@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
@@ -37,12 +37,12 @@ import net.minecraft.world.phys.Vec3
  * @testedOn eu.loyisa.cn
  * @note Slow on high ping
  */
-internal object FlyGrim2859V : Choice("Grim2859-V") {
+internal object FlyGrim2859V : Mode("Grim2859-V") {
 
     private val toggle by int("Toggle", 0, 0..100)
     private val timer by float("Timer", 0.446f, 0.1f..1f)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
 

@@ -51,7 +51,7 @@ fun BlockPlacer.placeInstantOnBlockUpdate(event: PacketEvent) {
 private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
     val irrelevantPacket = !state.canBeReplaced() || pos.asLong() !in blocks
 
-    val rotationMode = rotationMode.activeChoice
+    val rotationMode = rotationMode.activeMode
     if (irrelevantPacket || rotationMode !is NoRotationMode || pos.isBlockedByEntities()) {
         return
     }

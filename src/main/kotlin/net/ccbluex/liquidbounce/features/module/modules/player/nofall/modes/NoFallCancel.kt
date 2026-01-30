@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -27,7 +27,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 internal object NoFallCancel : NoFallMode("Cancel") {
 
-    private val fallDistance = choices("FallDistance", Smart,
+    private val fallDistance = modes("FallDistance", Smart,
         arrayOf(Smart, Constant))
     private val resetFallDistance by boolean("ResetFallDistance", true)
     private val cancelSetback by boolean("CancelSetbackPacket", false)
@@ -64,7 +64,7 @@ internal object NoFallCancel : NoFallMode("Cancel") {
             }
 
             is ServerboundMovePlayerPacket -> {
-                if (player.fallDistance >= fallDistance.activeChoice.value) {
+                if (player.fallDistance >= fallDistance.activeMode.value) {
                     isFalling = true
 
                     event.cancelEvent()
@@ -76,8 +76,8 @@ internal object NoFallCancel : NoFallMode("Cancel") {
         }
     }
 
-    private abstract class DistanceMode(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private abstract class DistanceMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = fallDistance
 
         abstract val value: Float

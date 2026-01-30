@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.fastutil.WeightedSortedList
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
@@ -89,7 +89,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
      *
      * Useful for Hypixel and CubeCraft
      */
-    private object FuckerEntrance : ToggleableConfigurable(this, "Entrance", false) {
+    private object FuckerEntrance : ToggleableValueGroup(this, "Entrance", false) {
         /**
          * Breaks the weakest block around target block and makes an entrance
          */
@@ -113,7 +113,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
     private val targetRenderer = tree(
         PlacementRenderer("TargetRendering", true, this,
             defaultColor = Color4b(255, 0, 0, 90)
@@ -256,7 +256,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
         return player.eyePosition.searchBlocksInCuboid(range + 1) { pos, state ->
             when (val block = state.block) {
                 !in targets -> false
-                is BedBlock if isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
+                is BedBlock if isSelfBedMode.activeMode.isSelfBed(block, pos) -> false
                 else -> true
             }
         }.toCollection(WeightedSortedList(upperBound = range.sq().toDouble()) { (pos, state) ->
@@ -364,7 +364,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             RotationManager.setRotationTarget(
                 raytrace.rotation,
                 considerInventory = !ignoreOpenInventory,
-                configurable = rotations,
+                valueGroup = rotations,
                 if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
                 this@ModuleFucker
             )
@@ -435,7 +435,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
         val resistance: Double
     )
 
-    private enum class DestroyAction(override val choiceName: String) : NamedChoice {
+    private enum class DestroyAction(override val tag: String) : Tagged {
         DESTROY("Destroy"), USE("Use")
     }
 

@@ -60,7 +60,7 @@ object ModuleLongJump : ClientModule("LongJump", ModuleCategories.MOVEMENT) {
 
         // AutoJump
         if (autoJump && player.onGround() && player.moving
-            && mode.activeChoice != NoCheatPlusBow) {
+            && mode.activeMode != NoCheatPlusBow) {
             player.jumpFromGround()
             jumped = true
         }

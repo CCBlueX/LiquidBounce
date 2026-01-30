@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Pot
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Refill
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 
@@ -64,7 +64,7 @@ object ModuleAutoBuff : ClientModule(
      *
      * It also allows to customize the delay between each swap.
      */
-    internal object AutoSwap : ToggleableConfigurable(ModuleAutoBuff, "AutoSwap", true) {
+    internal object AutoSwap : ToggleableValueGroup(ModuleAutoBuff, "AutoSwap", true) {
 
         /**
          * How long should we wait after swapping to the item?
@@ -86,11 +86,11 @@ object ModuleAutoBuff : ClientModule(
     /**
      * Rotation Configurable for every feature that depends on rotation change
      */
-    internal object Rotations : RotationsConfigurable(this) {
+    internal object Rotations : RotationsValueGroup(this) {
 
         val rotationTiming by enumChoice("RotationTiming", RotationTimingMode.NORMAL)
 
-        enum class RotationTimingMode(override val choiceName: String) : NamedChoice {
+        enum class RotationTimingMode(override val tag: String) : Tagged {
             NORMAL("Normal"),
             ON_TICK("OnTick"),
             ON_USE("OnUse")

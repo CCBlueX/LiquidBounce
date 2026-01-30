@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.placer
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -38,14 +38,14 @@ import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 class CrystalDestroyFeature(eventListener: EventListener, private val module: ClientModule) :
-    ToggleableConfigurable(eventListener, "DestroyCrystals", true) {
+    ToggleableValueGroup(eventListener, "DestroyCrystals", true) {
 
     private val range by float("Range", 4.5f, 1f..6f)
     private val wallRange by float("WallRange", 4.5f, 0f..6f)
     private val delay by int("Delay", 0, 0..1000, "ms")
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
-    private val rotationMode = choices(this, "RotationMode") {
+    private val rotationMode = modes(this, "RotationMode") {
         arrayOf(NormalRotationMode(it, module, Priority.IMPORTANT_FOR_USAGE_3), NoRotationMode(it, module))
     }
 
@@ -86,7 +86,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
                 wallsRange = wallRange.toDouble(),
             ) ?: return@tickHandler
 
-        rotationMode.activeChoice.rotate(rotation, isFinished = {
+        rotationMode.activeMode.rotate(rotation, isFinished = {
             isLookingAtEntity(
                 toEntity = target,
                 rotation = RotationManager.serverRotation,

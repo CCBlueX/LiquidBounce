@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.soulsand
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockVelocityMultiplierEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
 import net.minecraft.world.level.block.SoulSandBlock
 
-internal object NoSlowSoulsand : ToggleableConfigurable(ModuleNoSlow, "Soulsand", true) {
+internal object NoSlowSoulsand : ToggleableValueGroup(ModuleNoSlow, "Soulsand", true) {
 
     val multiplier by float("Multiplier", 1f, 0.4f..2f)
 

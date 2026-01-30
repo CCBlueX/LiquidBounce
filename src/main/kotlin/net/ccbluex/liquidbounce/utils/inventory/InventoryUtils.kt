@@ -23,10 +23,10 @@ package net.ccbluex.liquidbounce.utils.inventory
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.objectRBTreeSetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -70,7 +70,7 @@ import java.util.function.Predicate
  * It Also allows setting delays for opening, clicking and closing the inventory.
  */
 @Suppress("MagicNumber")
-open class InventoryConstraints : Configurable("Constraints") {
+open class InventoryConstraints : ValueGroup("Constraints") {
 
     internal val startDelay by intRange("StartDelay", 1..2, 0..20, "ticks")
     internal val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
@@ -109,8 +109,8 @@ class PlayerInventoryConstraints : InventoryConstraints() {
 }
 
 enum class InventoryRequirements(
-    override val choiceName: String,
-) : NamedChoice, Predicate<InventoryAction> {
+    override val tag: String,
+) : Tagged, Predicate<InventoryAction> {
     NO_MOVEMENT("NoMovement"),
 
     NO_ROTATION("NoRotation"),
@@ -138,9 +138,9 @@ enum class InventoryRequirements(
     }
 }
 
-class CheckScreenHandlerTypeConfigurable(
+class CheckScreenHandlerTypeValueGroup(
     parent: EventListener,
-) : ToggleableConfigurable(parent, "CheckScreenHandlerType", enabled = true) {
+) : ToggleableValueGroup(parent, "CheckScreenHandlerType", enabled = true) {
     private val types by registryList(
         "Types",
         objectRBTreeSetOf(
@@ -156,9 +156,9 @@ class CheckScreenHandlerTypeConfigurable(
     }
 }
 
-class CheckScreenTitleConfigurable(
+class CheckScreenTitleValueGroup(
     parent: EventListener,
-) : ToggleableConfigurable(parent, "CheckScreenTitle", enabled = true, aliases = listOf("CheckTitle")) {
+) : ToggleableValueGroup(parent, "CheckScreenTitle", enabled = true, aliases = listOf("CheckTitle")) {
     private val titles by multiEnumChoice(
         "Titles",
         enumSetOf(
@@ -185,7 +185,7 @@ class CheckScreenTitleConfigurable(
     }
 
     @Suppress("unused")
-    private enum class ContainerTitle(override val choiceName: String, val translatableKey: String) : NamedChoice {
+    private enum class ContainerTitle(override val tag: String, val translatableKey: String) : Tagged {
         BARREL("Barrel", "container.barrel"),
         BEACON("Beacon", "container.beacon"),
         BLAST_FURNACE("BlastFurnace", "container.blast_furnace"),

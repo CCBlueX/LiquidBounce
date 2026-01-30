@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.script
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.command.Command
@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider.setupContext
-import net.ccbluex.liquidbounce.script.bindings.features.ScriptChoice
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptCommandBuilder
+import net.ccbluex.liquidbounce.script.bindings.features.ScriptMode
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
@@ -156,7 +156,7 @@ class PolyglotScript(
      */
     private val registeredModules = mutableListOf<ClientModule>()
     private val registeredCommands = mutableListOf<Command>()
-    private val registeredChoices = mutableListOf<Choice>()
+    private val registeredModes = mutableListOf<Mode>()
 
     /**
      * Initialization of scripts
@@ -234,26 +234,49 @@ class PolyglotScript(
     }
 
     /**
+     * Registers a new script mode to an existing mode value group which can be obtained
+     * from existing modules.
+     *
+     * @param modeValueGroup The choice configurable to add the choice to.
+     * @param modeObject JavaScript object containing information about the choice.
+     * @param callback JavaScript function to which the corresponding instance of [ScriptMode] is passed.
+     *
+     * @see ScriptMode
+     * @see ModeValueGroup
+     */
+    @Suppress("unused")
+    fun registerMode(
+        modeValueGroup: ModeValueGroup<Mode>,
+        modeObject: Map<String, Any>,
+        callback: Consumer<Mode>
+    ) {
+        ScriptMode(modeObject, modeValueGroup).apply {
+            callback.accept(this)
+            registeredModes += this
+        }
+    }
+
+    /**
      * Registers a new script choice to an existing choice configurable which can be obtained
      * from existing modules.
      *
-     * @param choiceConfigurable The choice configurable to add the choice to.
-     * @param choiceObject JavaScript object containing information about the choice.
-     * @param callback JavaScript function to which the corresponding instance of [ScriptChoice] is passed.
+     * @param modeValueGroup The choice configurable to add the choice to.
+     * @param modeObject JavaScript object containing information about the choice.
+     * @param callback JavaScript function to which the corresponding instance of [ScriptMode] is passed.
      *
-     * @see ScriptChoice
-     * @see ChoiceConfigurable
+     * @see ScriptMode
+     * @see ModeValueGroup
      */
     @Suppress("unused")
+    @Deprecated(
+        "Use registerMode instead",
+        ReplaceWith("registerMode(modeValueGroup, modeObject, callback)")
+    )
     fun registerChoice(
-        choiceConfigurable: ChoiceConfigurable<Choice>, choiceObject: Map<String, Any>,
-        callback: Consumer<Choice>
-    ) {
-        ScriptChoice(choiceObject, choiceConfigurable).apply {
-            callback.accept(this)
-            registeredChoices += this
-        }
-    }
+        modeValueGroup: ModeValueGroup<Mode>,
+        modeObject: Map<String, Any>,
+        callback: Consumer<Mode>
+    ) = registerMode(modeValueGroup, modeObject, callback)
 
     /**
      * Called from inside the script to register a new event handler.
@@ -277,9 +300,9 @@ class PolyglotScript(
         registeredModules.forEach(ModuleManager::addModule)
         registeredCommands.forEach(CommandManager::addCommand)
 
-        registeredChoices.forEach { choice ->
+        registeredModes.forEach { choice ->
             @Suppress("UNCHECKED_CAST")
-            (choice.parent.choices as MutableList<Any>).add(choice)
+            (choice.parent.modes as MutableList<Any>).add(choice)
         }
         scriptEnabled = true
     }
@@ -298,7 +321,7 @@ class PolyglotScript(
         registeredModules.forEach(ModuleManager::removeModule)
         registeredCommands.forEach(CommandManager::removeCommand)
 
-        registeredChoices.forEach { it.parent.choices.remove(it) }
+        registeredModes.forEach { it.parent.modes.remove(it) }
 
         EventManager.callEvent(RefreshArrayListEvent)
 

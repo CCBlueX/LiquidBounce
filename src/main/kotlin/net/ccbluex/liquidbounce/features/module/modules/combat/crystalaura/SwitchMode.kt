@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
-enum class SwitchMode(override val choiceName: String) : NamedChoice {
+enum class SwitchMode(override val tag: String) : Tagged {
     SILENT("Silent"),
     NORMAL("Normal"),
     NONE("None")

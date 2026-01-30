@@ -86,13 +86,13 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
             EntityTaggingManager.getTag(entity).color?.let { return it }
         }
 
-        return colorModes.activeChoice.getColor(entity)
+        return colorModes.activeMode.getColor(entity)
     }
 
     /**
      * Check if the entity requires true sight to be shown with the current ESP mode
      */
     fun requiresTrueSight(entity: LivingEntity) =
-        modes.activeChoice.requiresTrueSight && entity.shouldBeShown()
+        modes.activeMode.requiresTrueSight && entity.shouldBeShown()
 
 }

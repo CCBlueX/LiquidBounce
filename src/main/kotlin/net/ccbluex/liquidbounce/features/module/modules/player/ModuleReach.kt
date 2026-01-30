@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.range.RangeConfigurable
+import net.ccbluex.liquidbounce.utils.range.RangeValueGroup
 
 /**
  * Reach module
@@ -31,6 +31,6 @@ import net.ccbluex.liquidbounce.utils.range.RangeConfigurable
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.item.MixinAttackRange
  */
 object ModuleReach : ClientModule("Reach", ModuleCategories.PLAYER) {
-    val entity = tree(RangeConfigurable("Entity", 1f, 0f))
+    val entity = tree(RangeValueGroup("Entity", 1f, 0f))
     val blockRangeIncrease by float("BlockRangeIncrease", 0.5f, 0f..64f)
 }

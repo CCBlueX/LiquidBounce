@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -59,9 +59,9 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
 
     @Suppress("unused")
     private enum class Conditions(
-        override val choiceName: String,
+        override val tag: String,
         val testCondition: (target: Entity) -> Boolean
-    ) : NamedChoice {
+    ) : Tagged {
         ONLY_FACING("OnlyFacing", { target ->
             target.lookAngle.dot(player.position() - target.position()) < 0
         }),
@@ -73,7 +73,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
         }),
     }
 
-    private object OnlyOnMove : ToggleableConfigurable(this, "OnlyOnMove", true) {
+    private object OnlyOnMove : ToggleableValueGroup(this, "OnlyOnMove", true) {
         val onlyForward by boolean("OnlyForward", true)
     }
 
@@ -81,8 +81,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
         tree(OnlyOnMove)
     }
 
-    object Packet : Choice("Packet") {
-        override val parent: ChoiceConfigurable<Choice>
+    object Packet : Mode("Packet") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused", "ComplexCondition")
@@ -111,8 +111,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
         }
     }
 
-    object SprintTap : Choice("SprintTap") {
-        override val parent: ChoiceConfigurable<Choice>
+    object SprintTap : Mode("SprintTap") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val reSprintTicks by intRange("ReSprint", 0..1, 0..10, "ticks")
@@ -156,8 +156,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
 
     }
 
-    object WTap : Choice("WTap") {
-        override val parent: ChoiceConfigurable<Choice>
+    object WTap : Mode("WTap") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val ticksUntilMovementBlock by intRange("UntilMovementBlock", 0..1, 0..10,

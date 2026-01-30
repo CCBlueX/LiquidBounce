@@ -19,11 +19,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.resources.Identifier
 
-sealed class MurderMysteryMode(name: String) : Choice(name) {
+sealed class MurderMysteryMode(name: String) : Mode(name) {
     final override val parent
         get() = ModuleMurderMystery.modes
 

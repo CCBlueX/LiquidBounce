@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.spoofer
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 
 @Suppress("SpellCheckingInspection")
-object SpooferClient : ToggleableConfigurable(name = "ClientSpoofer", enabled = false) {
+object SpooferClient : ToggleableValueGroup(name = "ClientSpoofer", enabled = false) {
 
-    val mode = choices(
+    val mode = modes(
         this,
         "Mode",
         Lunar,
@@ -35,7 +35,7 @@ object SpooferClient : ToggleableConfigurable(name = "ClientSpoofer", enabled = 
     override val running: Boolean
         get() = this.enabled
 
-    fun clientBrand(brand: String) = if (running) mode.activeChoice.getBrand() else brand
+    fun clientBrand(brand: String) = if (running) mode.activeMode.getBrand() else brand
 
     private object Vanilla : SpoofMode("Vanilla") {
         override fun getBrand(): String = "vanilla"
@@ -61,9 +61,9 @@ object SpooferClient : ToggleableConfigurable(name = "ClientSpoofer", enabled = 
 
     }
 
-    abstract class SpoofMode(name: String) : Choice(name) {
+    abstract class SpoofMode(name: String) : Mode(name) {
 
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = mode
 
         abstract fun getBrand(): String

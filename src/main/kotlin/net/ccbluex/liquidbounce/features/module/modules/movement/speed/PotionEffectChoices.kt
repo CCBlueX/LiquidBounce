@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
 import net.minecraft.world.effect.MobEffects
 
-object SpeedPotionEffectChoice : ModuleSpeed.PotionEffectChoice("Speed") {
+object SpeedPotionEffectMode : ModuleSpeed.PotionEffectMode("Speed") {
     private val levelRange by intRange("LevelRange", 1..2, 0..4)
 
     override fun checkPotionEffects(): Boolean {
@@ -29,7 +29,7 @@ object SpeedPotionEffectChoice : ModuleSpeed.PotionEffectChoice("Speed") {
     }
 }
 
-object SlownessPotionEffectChoice : ModuleSpeed.PotionEffectChoice("Slowness") {
+object SlownessPotionEffectMode : ModuleSpeed.PotionEffectMode("Slowness") {
     private val levelRange by intRange("LevelRange", 1..2, 0..4)
 
     override fun checkPotionEffects(): Boolean {
@@ -38,7 +38,7 @@ object SlownessPotionEffectChoice : ModuleSpeed.PotionEffectChoice("Slowness") {
     }
 }
 
-object BothEffectsChoice : ModuleSpeed.PotionEffectChoice("Both") {
+object BothEffectsMode : ModuleSpeed.PotionEffectMode("Both") {
     private val boostRange by floatRange("PotionEffectsBoostRange", 1.15f..1.35f, 0.25f..2f)
 
     /**

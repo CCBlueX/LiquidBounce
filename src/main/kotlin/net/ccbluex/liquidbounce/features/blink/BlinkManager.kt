@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.blink
 
 import com.google.common.collect.Queues
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
@@ -71,7 +71,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * Fires [BlinkPacketEvent] to determine whether a packet should be queued or not. They can be
  * from origin [TransferOrigin.INCOMING] or [TransferOrigin.OUTGOING], but will be handled separately.
  */
-object BlinkManager : EventListener, Configurable("BlinkManager") {
+object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
     val packetQueue: ConcurrentLinkedQueue<PacketSnapshot> = Queues.newConcurrentLinkedQueue()
     val positions
@@ -84,7 +84,7 @@ object BlinkManager : EventListener, Configurable("BlinkManager") {
     val isLagging
         get() = packetQueue.isNotEmpty()
 
-    private val espMode = choices(
+    private val espMode = modes(
         this,
         "Esp",
         EspWireframe,
@@ -206,22 +206,22 @@ object BlinkManager : EventListener, Configurable("BlinkManager") {
     }
 
     private object EspBox : AbstractBlinkEspBox(::getEspData) {
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = espMode
     }
 
     private object EspWireframe : AbstractBlinkEspWireframe(::getEspData) {
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = espMode
     }
 
     private object EspModel : AbstractBlinkEspModel(::getEspData) {
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = espMode
     }
 
     private object EspNone : AbstractBlinkNone() {
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = espMode
     }
 

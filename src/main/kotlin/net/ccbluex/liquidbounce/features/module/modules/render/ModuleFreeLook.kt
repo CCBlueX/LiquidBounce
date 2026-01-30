@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -68,9 +68,9 @@ object ModuleFreeLook : ClientModule(
 
     @Suppress("unused")
     private enum class PerspectiveChoice(
-        override val choiceName: String,
+        override val tag: String,
         val perspective: CameraType
-    ) : NamedChoice {
+    ) : Tagged {
         FRONT("Front", THIRD_PERSON_FRONT),
         BACK("Back", THIRD_PERSON_BACK)
     }

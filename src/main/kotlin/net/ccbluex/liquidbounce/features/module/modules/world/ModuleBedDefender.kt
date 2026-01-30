@@ -123,7 +123,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
             val block = state.block
             when {
                 block !is BedBlock -> false
-                else -> isSelfBedMode.activeChoice.shouldDefend(block, pos)
+                else -> isSelfBedMode.activeMode.shouldDefend(block, pos)
             }
         }
 

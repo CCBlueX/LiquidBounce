@@ -19,13 +19,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.minecraft.world.entity.EquipmentSlot
 
 enum class EquipmentSlotChoice(
-    override val choiceName: String,
+    override val tag: String,
     val slot: EquipmentSlot,
-) : NamedChoice {
+) : Tagged {
     MAINHAND("Mainhand", EquipmentSlot.MAINHAND),
     OFFHAND("Offhand", EquipmentSlot.OFFHAND),
     FEET("Feet", EquipmentSlot.FEET),

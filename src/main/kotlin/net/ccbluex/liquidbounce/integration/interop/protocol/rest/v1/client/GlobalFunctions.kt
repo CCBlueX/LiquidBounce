@@ -28,12 +28,12 @@ import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 
 @Suppress("UNUSED_PARAMETER")
-fun getGlobalConfigurable(request: RequestObject): FullHttpResponse {
-    return httpOk(ConfigSystem.serializeConfigurable(GlobalManager, gson = interopGson))
+fun getGlobalConfig(request: RequestObject): FullHttpResponse {
+    return httpOk(ConfigSystem.serializeValueGroup(GlobalManager, gson = interopGson))
 }
 
-fun putGlobalConfigurable(request: RequestObject): FullHttpResponse {
-    ConfigSystem.deserializeConfigurable(GlobalManager, request.body.reader())
+fun putGlobalConfig(request: RequestObject): FullHttpResponse {
+    ConfigSystem.deserializeValueGroup(GlobalManager, request.body.reader())
     ConfigSystem.store(GlobalManager)
     return httpNoContent()
 }

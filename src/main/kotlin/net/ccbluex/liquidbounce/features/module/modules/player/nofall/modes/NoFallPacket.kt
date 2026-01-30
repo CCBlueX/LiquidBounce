@@ -18,29 +18,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 
 internal object NoFallPacket : NoFallMode("Packet") {
     private val packetType by enumChoice("PacketType", MovePacketType.FULL)
-    private val filter = choices("Filter", FallDistance, arrayOf(FallDistance, Always))
+    private val filter = modes("Filter", FallDistance, arrayOf(FallDistance, Always))
 
     val repeatable = tickHandler {
-        if (filter.activeChoice.isActive) {
+        if (filter.activeMode.isActive) {
             network.send(packetType.generatePacket().apply {
                 onGround = true
             })
 
-            if (filter.activeChoice is FallDistance && FallDistance.resetFallDistance) {
+            if (filter.activeMode is FallDistance && FallDistance.resetFallDistance) {
                 player.resetFallDistance()
             }
         }
     }
 
-    private abstract class Filter(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private abstract class Filter(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = filter
 
         abstract val isActive: Boolean
@@ -48,13 +48,13 @@ internal object NoFallPacket : NoFallMode("Packet") {
 
     private object FallDistance : Filter("FallDistance") {
         override val isActive: Boolean
-            get() = player.fallDistance - player.deltaMovement.y > distance.activeChoice.value && player.tickCount > 20
+            get() = player.fallDistance - player.deltaMovement.y > distance.activeMode.value && player.tickCount > 20
 
-        private val distance = choices("Distance", Smart, arrayOf(Smart, Constant))
+        private val distance = modes("Distance", Smart, arrayOf(Smart, Constant))
         val resetFallDistance by boolean("ResetFallDistance", true)
 
-        private abstract class DistanceMode(name: String) : Choice(name) {
-            override val parent: ChoiceConfigurable<*>
+        private abstract class DistanceMode(name: String) : Mode(name) {
+            override val parent: ModeValueGroup<*>
                 get() = distance
 
             abstract val value: Float

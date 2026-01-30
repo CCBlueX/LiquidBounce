@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -54,9 +54,9 @@ object ModuleFastPlace : ClientModule("FastPlace", ModuleCategories.WORLD) {
 
     @Suppress("unused")
     private enum class ApplyTo(
-        override val choiceName: String,
+        override val tag: String,
         val condition: Predicate<Item>
-    ): NamedChoice {
+    ): Tagged {
         PROJECTILES("Projectiles", { item -> item is ProjectileItem }),
         BLOCKS("Blocks", { item -> item is BlockItem })
     }

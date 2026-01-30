@@ -109,12 +109,12 @@ object RotationManager : EventListener {
     fun setRotationTarget(
         rotation: Rotation,
         considerInventory: Boolean = true,
-        configurable: RotationsConfigurable,
+        valueGroup: RotationsValueGroup,
         priority: Priority,
         provider: ClientModule,
         whenReached: RestrictedSingleUseAction? = null
     ) {
-        setRotationTarget(configurable.toRotationTarget(
+        setRotationTarget(valueGroup.toRotationTarget(
             rotation, considerInventory = considerInventory, whenReached = whenReached
         ), priority, provider)
     }

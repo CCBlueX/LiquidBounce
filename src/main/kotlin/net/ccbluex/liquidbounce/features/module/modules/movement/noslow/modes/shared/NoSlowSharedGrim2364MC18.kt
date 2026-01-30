@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,7 +30,7 @@ import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
  * @anticheat Grim
  * @anticheatVersion 2.3.64
  */
-internal class NoSlowSharedGrim2364MC18(override val parent: ChoiceConfigurable<*>) : Choice("Grim2364-1.8") {
+internal class NoSlowSharedGrim2364MC18(override val parent: ModeValueGroup<*>) : Mode("Grim2364-1.8") {
 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->

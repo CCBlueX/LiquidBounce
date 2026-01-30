@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -53,9 +53,9 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  * - Avoid edge bump
  *
  */
-class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Custom", parent) {
+class SpeedCustom(override val parent: ModeValueGroup<*>) : SpeedBHopBase("Custom", parent) {
 
-    private class HorizontalModification(parent: EventListener?) : ToggleableConfigurable(parent,
+    private class HorizontalModification(parent: EventListener?) : ToggleableValueGroup(parent,
         "HorizontalModification", true) {
 
         private val horizontalAcceleration by float("HorizontalAcceleration", 0f, -0.1f..0.2f)
@@ -94,7 +94,7 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
 
     }
 
-    private class VerticalModification(parent: EventListener?) : ToggleableConfigurable(parent,
+    private class VerticalModification(parent: EventListener?) : ToggleableValueGroup(parent,
         "VerticalModification", true) {
 
         private val jumpHeight by float("JumpHeight", 0.42f, 0.0f..3f)
@@ -121,7 +121,7 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
 
     }
 
-    private class Strafe(parent: EventListener?) : ToggleableConfigurable(parent, "Strafe", true) {
+    private class Strafe(parent: EventListener?) : ToggleableValueGroup(parent, "Strafe", true) {
 
         private val strength by float("Strength", 1f, 0.1f..1f)
 

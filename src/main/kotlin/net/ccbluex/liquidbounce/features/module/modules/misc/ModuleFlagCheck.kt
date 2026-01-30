@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -54,7 +54,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
     private var notification by boolean("Notification", false)
     private var invalidAttributes by boolean("InvalidAttributes", false)
 
-    private object ResetFlags : ToggleableConfigurable(this, "ResetFlags", true) {
+    private object ResetFlags : ToggleableValueGroup(this, "ResetFlags", true) {
 
         private val afterSeconds by int("After", 30, 1..300, "s")
 
@@ -66,7 +66,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
 
     }
 
-    private object Render : ToggleableConfigurable(this, "Render", true) {
+    private object Render : ToggleableValueGroup(this, "Render", true) {
 
         private val notInFirstPerson by boolean("NotInFirstPerson", true)
         private val renderTime by int("Alive", 1000, 0..3000, "ms")

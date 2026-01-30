@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -45,7 +45,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.TridentItem
 import net.minecraft.world.phys.Vec3
 
-object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoot", true) {
+object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot", true) {
 
     private val charged by int("Charged", 15, 3..20, suffix = "ticks")
 

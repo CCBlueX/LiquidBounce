@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
-enum class HorizontalAnchor(override val choiceName: String) : NamedChoice {
+enum class HorizontalAnchor(override val tag: String) : Tagged {
     START("Start") {
         override fun anchorToDrawX(x: Float, width: Float, scale: Float): Float =
             x

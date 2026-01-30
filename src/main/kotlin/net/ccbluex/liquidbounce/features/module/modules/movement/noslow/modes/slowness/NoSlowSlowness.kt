@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slowness
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
 import net.minecraft.resources.Identifier
@@ -26,7 +26,7 @@ import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
 
-internal object NoSlowSlowness : ToggleableConfigurable(ModuleNoSlow, "Slowness", true) {
+internal object NoSlowSlowness : ToggleableValueGroup(ModuleNoSlow, "Slowness", true) {
     val multiplier by float("PerLevelMultiplier", 0f, 0f..0.15f)
 
     @Suppress("unused")

@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
@@ -40,14 +40,14 @@ import net.minecraft.world.item.TridentItem
 /**
  * Automatically shoots with your bow when you aim correctly at an enemy or when the bow is fully charged.
  */
-object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot", true) {
+object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", true) {
 
     val targetTracker = TargetTracker(TargetPriority.DISTANCE)
-    private val rotationConfigurable = RotationsConfigurable(this)
+    private val rotations = RotationsValueGroup(this)
 
     init {
         tree(targetTracker)
-        tree(rotationConfigurable)
+        tree(rotations)
         tree(TargetRenderer(AutoBowAimbotFeature, targetTracker))
     }
 
@@ -85,7 +85,7 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
             rotation!!,
             priority = Priority.IMPORTANT_FOR_USAGE_1,
             provider = ModuleAutoBow,
-            configurable = rotationConfigurable
+            valueGroup = rotations
         )
     }
 

@@ -23,7 +23,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import it.unimi.dsi.fastutil.objects.ObjectArrays
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.command.CommandManager.getSubCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandBind
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandBinds
@@ -97,7 +97,7 @@ private val commandSet = ObjectRBTreeSet<Command>(Comparator.comparing({ it.name
  */
 object CommandManager : Collection<Command> by commandSet {
 
-    object GlobalSettings : Configurable("Commands") {
+    object GlobalSettings : ValueGroup("Commands") {
 
         /**
          * The prefix of the commands.

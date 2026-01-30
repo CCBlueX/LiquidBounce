@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.config.types
 
-import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
+import net.ccbluex.liquidbounce.config.utils.AutoCompletionProvider
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer.registryItemDeserializer
 import net.minecraft.core.registries.BuiltInRegistries
@@ -56,18 +56,24 @@ enum class ValueType(
     VECTOR3_D,
     VECTOR2_F,
 
-    // Configuration Types
-    CHOICE(completer = AutoCompletionProvider.choiceCompleter),
-    CHOOSE(completer = AutoCompletionProvider.chooseCompleter),
-    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer, AutoCompletionProvider.multiChooseCompleter),
+    // Lists
     LIST,
+    // todo: rename to CHOICE_LIST
+    CHOOSE(completer = AutoCompletionProvider.choiceListCompleter),
+    // todo: rename to MULTI_CHOICE_LIST
+    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer, AutoCompletionProvider.multiChooseCompleter),
     MUTABLE_LIST,
     NAMED_ITEM_LIST,
     REGISTRY_LIST,
     CURVE,
 
+    // Groups
+    // todo: rename to VALUE_GROUP
     CONFIGURABLE,
+    // todo: rename to TOGGLEABLE_GROUP
     TOGGLEABLE,
+    // todo: rename to MODE_GROUP
+    CHOICE(completer = AutoCompletionProvider.modeGroupCompleter),
 
     // Client Types
     FRIEND,
@@ -76,5 +82,5 @@ enum class ValueType(
     SUBSCRIBED_ITEM,
 
     // Invalid type
-    INVALID;
+    INVALID
 }

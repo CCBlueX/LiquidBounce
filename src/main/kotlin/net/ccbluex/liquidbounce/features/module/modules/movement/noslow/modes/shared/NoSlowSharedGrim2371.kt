@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
@@ -29,7 +29,7 @@ import net.minecraft.network.protocol.game.ServerboundUseItemPacket
  * Bypassing Grim 2.3.71
  * @from https://github.com/GrimAnticheat/Grim/issues/2216
  */
-internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) : Choice("Grim2371") {
+internal class NoSlowSharedGrim2371(override val parent: ModeValueGroup<*>) : Mode("Grim2371") {
 
     companion object {
         @JvmStatic

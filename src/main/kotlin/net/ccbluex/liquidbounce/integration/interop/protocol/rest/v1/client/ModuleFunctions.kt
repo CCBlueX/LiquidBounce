@@ -24,13 +24,13 @@ import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMethod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
+import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.netty.http.model.RequestObject
@@ -42,11 +42,11 @@ import org.apache.commons.io.input.CharSequenceReader
 
 private fun ClientModule.toJsonObject() = JsonObject().apply {
     addProperty("name", name)
-    addProperty("category", category.choiceName)
+    addProperty("category", category.tag)
     add("keyBind", interopGson.toJsonTree(bind))
     addProperty("enabled", enabled)
     addProperty("description", description.get())
-    addProperty("tag", tag)
+    addProperty("tag", this@toJsonObject.tag)
     addProperty("hidden", hidden)
     add("aliases", interopGson.toJsonTree(aliases))
 }
@@ -80,7 +80,7 @@ suspend fun toggleModule(requestObject: RequestObject): FullHttpResponse {
 fun getSettings(requestObject: RequestObject): FullHttpResponse {
     val name = requestObject.queryParams["name"] ?: return httpBadRequest("Missing parameter 'name'")
     val module = ModuleManager[name] ?: return httpForbidden("Module '$name' not found")
-    return httpOk(ConfigSystem.serializeConfigurable(module, gson = interopGson))
+    return httpOk(ConfigSystem.serializeValueGroup(module, gson = interopGson))
 }
 
 // PUT /api/v1/client/modules/settings
@@ -88,8 +88,8 @@ suspend fun putSettings(requestObject: RequestObject): FullHttpResponse {
     val name = requestObject.queryParams["name"] ?: return httpBadRequest("Missing parameter 'name'")
     val module = ModuleManager[name] ?: return httpForbidden("Module '$name' not found")
     return withContext(Dispatchers.Minecraft) {
-        ConfigSystem.deserializeConfigurable(module, CharSequenceReader(requestObject.body))
-        ConfigSystem.store(modulesConfigurable)
+        ConfigSystem.deserializeValueGroup(module, CharSequenceReader(requestObject.body))
+        ConfigSystem.store(modulesConfig)
 
         httpNoContent()
     }
@@ -108,7 +108,7 @@ suspend fun postPanic(requestObject: RequestObject): FullHttpResponse = withCont
                 module.enabled = false
             }
 
-            ConfigSystem.store(modulesConfigurable)
+            ConfigSystem.store(modulesConfig)
         }.onFailure {
             logger.error("Failed to panic disable modules", it)
         }
@@ -133,7 +133,7 @@ private data class ModuleRequest(val name: String) {
             try {
                 module.enabled = supposedNew
 
-                ConfigSystem.store(modulesConfigurable)
+                ConfigSystem.store(modulesConfig)
             } catch (e: Exception) {
                 logger.error("Failed to toggle module $name", e)
             }

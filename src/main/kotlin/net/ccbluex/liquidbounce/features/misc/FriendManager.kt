@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.misc
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -28,7 +28,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import java.util.TreeSet
 
-object FriendManager : Configurable("Friends"), EventListener {
+object FriendManager : Config("Friends"), EventListener {
 
     val friends by list(name, TreeSet<Friend>(), valueType = ValueType.FRIEND)
 

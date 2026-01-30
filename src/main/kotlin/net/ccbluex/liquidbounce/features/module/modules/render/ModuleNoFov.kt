@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
@@ -32,9 +32,9 @@ object ModuleNoFov : ClientModule("NoFOV", ModuleCategories.RENDER) {
 
     val mode = choices("Mode", ConstantFov, arrayOf(ConstantFov, Custom))
 
-    fun getFovMultiplier(original: Float) = mode.activeChoice.getFovMultiplier(original)
+    fun getFovMultiplier(original: Float) = mode.activeMode.getFovMultiplier(original)
 
-    fun getFov(original: Int) = mode.activeChoice.getFov(original)
+    fun getFov(original: Int) = mode.activeMode.getFov(original)
 
     object ConstantFov : FovMode("Constant") {
 
@@ -61,9 +61,9 @@ object ModuleNoFov : ClientModule("NoFOV", ModuleCategories.RENDER) {
 
     }
 
-    abstract class FovMode(name: String) : Choice(name) {
+    abstract class FovMode(name: String) : Mode(name) {
 
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = mode
 
         abstract fun getFovMultiplier(original: Float): Float

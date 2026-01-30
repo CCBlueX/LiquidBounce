@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -39,9 +39,9 @@ import net.minecraft.network.protocol.game.ClientboundExplodePacket
  * @testedOn hypixel.net
  * @author @liquidsquid1
  */
-object FlyHypixel : Choice("Hypixel") {
+object FlyHypixel : Mode("Hypixel") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     private val timer by float("Timer", 1.0f, 0.1f..1.0f)

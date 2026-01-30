@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.TitleEvent
@@ -58,7 +58,7 @@ object ModuleAutoAccount : ClientModule(
 
     private val messageSources by multiEnumChoice("MessageSource", MessageSource.entries, canBeNone = false)
 
-    private enum class MessageSource(override val choiceName: String) : NamedChoice {
+    private enum class MessageSource(override val tag: String) : Tagged {
         CHAT("Chat"),
         TITLE("Title"),
         SUBTITLE("Subtitle"),

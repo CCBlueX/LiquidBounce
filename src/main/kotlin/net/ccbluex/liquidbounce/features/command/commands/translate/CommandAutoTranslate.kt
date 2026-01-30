@@ -18,19 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 
-object CommandAutoTranslate : Configurable("AutoTranslate"), Command.Factory {
-
-    init {
-        ConfigSystem.root(this)
-    }
+object CommandAutoTranslate : ValueGroup("AutoTranslate"), Command.Factory {
 
     var languageCode by text("LanguageCode", "en")
         private set

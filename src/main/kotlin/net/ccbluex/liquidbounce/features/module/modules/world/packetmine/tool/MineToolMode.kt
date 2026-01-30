@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool
 
 import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
@@ -46,7 +46,7 @@ abstract class MineToolMode(
     choiceName: String,
     val syncOnStart: Boolean = false,
     private val switchesNever: Boolean = false
-) : Choice(choiceName), MinecraftShortcuts {
+) : Mode(choiceName), MinecraftShortcuts {
 
     abstract fun shouldSwitch(mineTarget: MineTarget): Boolean
 
@@ -65,12 +65,12 @@ abstract class MineToolMode(
             return null
         }
 
-        return ModuleAutoTool.toolSelector.activeChoice.getTool(state)?.let {
+        return ModuleAutoTool.toolSelector.activeMode.getTool(state)?.let {
             IntObjectImmutablePair(it.hotbarSlot, it.itemStack)
         }
     }
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModulePacketMine.switchMode
 
 }
