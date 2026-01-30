@@ -43,12 +43,12 @@ import net.ccbluex.liquidbounce.config.gson.adapter.Vec2fAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.Vec3dAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.Vec3iAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.Vector2fcAdapter
-import net.ccbluex.liquidbounce.config.gson.serializer.ChoiceConfigurableSerializer
-import net.ccbluex.liquidbounce.config.gson.serializer.ConfigurableSerializer
-import net.ccbluex.liquidbounce.config.gson.serializer.EnumChoiceSerializer
+import net.ccbluex.liquidbounce.config.gson.serializer.ModeValueGroupSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.ReadOnlyComponentSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.ReadOnlyThemeSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.SupplierSerializer
+import net.ccbluex.liquidbounce.config.gson.serializer.TaggedSerializer
+import net.ccbluex.liquidbounce.config.gson.serializer.ValueGroupSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ItemStackSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ScreenSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ServerInfoSerializer
@@ -57,9 +57,9 @@ import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.StatusEffectIns
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.StringIdentifiableSerializer
 import net.ccbluex.liquidbounce.config.gson.stategies.ExcludeStrategy
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExcludeStrategy
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -96,7 +96,7 @@ import java.util.function.Supplier
 val fileGson: Gson = GsonBuilder()
     .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.FILE_SERIALIZER)
+    .registerTypeHierarchyAdapter(ValueGroup::class.javaObjectType, ValueGroupSerializer.FILE_SERIALIZER)
     .create()
 
 /**
@@ -106,7 +106,7 @@ val publicGson: Gson = GsonBuilder()
     .setPrettyPrinting()
     .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.PUBLIC_SERIALIZER)
+    .registerTypeHierarchyAdapter(ValueGroup::class.javaObjectType, ValueGroupSerializer.PUBLIC_SERIALIZER)
     .create()
 
 /**
@@ -115,7 +115,7 @@ val publicGson: Gson = GsonBuilder()
 internal val interopGson: Gson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
+    .registerTypeHierarchyAdapter(ValueGroup::class.javaObjectType, ValueGroupSerializer.INTEROP_SERIALIZER)
     .create()
 
 /**
@@ -125,7 +125,7 @@ internal val interopGson: Gson = GsonBuilder()
 internal val accessibleInteropGson: Gson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
+    .registerTypeHierarchyAdapter(ValueGroup::class.javaObjectType, ValueGroupSerializer.INTEROP_SERIALIZER)
     .registerTypeHierarchyAdapter(Theme::class.javaObjectType, ReadOnlyThemeSerializer)
     .registerTypeHierarchyAdapter(HudComponent::class.javaObjectType, ReadOnlyComponentSerializer)
     .registerTypeHierarchyAdapter(Alignment::class.javaObjectType, AlignmentAdapter)
@@ -162,8 +162,8 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(Block::class.javaObjectType, IdentifierWithRegistryAdapter.BLOCK)
         .registerTypeHierarchyAdapter(InputConstants.Key::class.javaObjectType, InputUtilAdapter)
         .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)
-        .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
-        .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
+        .registerTypeAdapter(ModeValueGroup::class.javaObjectType, ModeValueGroupSerializer)
+        .registerTypeHierarchyAdapter(Tagged::class.javaObjectType, TaggedSerializer)
         .registerTypeHierarchyAdapter(MinecraftAccount::class.javaObjectType, MinecraftAccountAdapter)
         .registerTypeHierarchyAdapter(Component::class.javaObjectType, CodecBasedAdapter.PROCESSED_TEXT)
         .registerTypeHierarchyAdapter(Screen::class.javaObjectType, ScreenSerializer)

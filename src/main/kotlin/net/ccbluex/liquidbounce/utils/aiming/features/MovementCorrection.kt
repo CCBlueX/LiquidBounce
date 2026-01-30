@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.features
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
 /**
  * Corrects movement when aiming away from client-side view direction.
  */
-enum class MovementCorrection(override val choiceName: String) : NamedChoice {
+enum class MovementCorrection(override val tag: String) : Tagged {
 
     /**
      * No movement correction is applied. This feels the best, as it does not

@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.utils.client.asPlainText
@@ -51,7 +51,7 @@ private val BABY_TEXT = "Baby ".asPlainText()
 
 private val BOT_TEXT = "Bot".asPlainText(BOT_STYLE)
 
-internal object NametagTextFormatter : Configurable("Text") {
+internal object NametagTextFormatter : ValueGroup("Text") {
 
     private val parts by multiEnumChoice(
         "Parts",
@@ -59,7 +59,7 @@ internal object NametagTextFormatter : Configurable("Text") {
         canBeNone = false
     )
 
-    private enum class Part(override val choiceName: String) : NamedChoice, Function<Entity, Component?> {
+    private enum class Part(override val tag: String) : Tagged, Function<Entity, Component?> {
         DISTANCE("Distance") {
             override fun apply(t: Entity): Component? {
                 if (t === player) return null

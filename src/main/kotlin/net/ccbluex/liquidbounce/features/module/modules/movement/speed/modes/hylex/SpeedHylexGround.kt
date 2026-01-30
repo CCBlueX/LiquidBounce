@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.minecraft.world.effect.MobEffects
 
@@ -29,7 +29,7 @@ import net.minecraft.world.effect.MobEffects
  * Works because of a silly exemption from Hylex
  * @author @liquidsquid1
  */
-class SpeedHylexGround(override val parent: ChoiceConfigurable<*>) : Choice("HylexGround") {
+class SpeedHylexGround(override val parent: ModeValueGroup<*>) : Mode("HylexGround") {
 
     private var groundTicks = 0
 

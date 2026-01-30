@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
@@ -32,8 +32,8 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 
-sealed class ScaffoldTechnique(name: String) : Choice(name) {
-    final override val parent: ChoiceConfigurable<ScaffoldTechnique>
+sealed class ScaffoldTechnique(name: String) : Mode(name) {
+    final override val parent: ModeValueGroup<ScaffoldTechnique>
         get() = ModuleScaffold.technique
 
     abstract fun findPlacementTarget(

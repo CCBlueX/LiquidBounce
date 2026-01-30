@@ -72,6 +72,6 @@ object ModuleNoWeb : ClientModule("NoWeb", ModuleCategories.MOVEMENT) {
             return false
         }
 
-        return modes.activeChoice.handleEntityCollision(pos)
+        return modes.activeMode.handleEntityCollision(pos)
     }
 }

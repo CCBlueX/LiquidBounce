@@ -70,7 +70,7 @@ object CommandModels : Command.Factory {
                 val name = args[0] as String
 
                 // Check if model exists
-                if (models.choices.any { model -> model.name.equals(name, true) }) {
+                if (models.modes.any { model -> model.name.equals(name, true) }) {
                     throw CommandException(command.result("modelExists", name))
                 }
 
@@ -98,7 +98,7 @@ object CommandModels : Command.Factory {
             )
             .suspendHandler {
                 val name = args[0] as String
-                val model = models.choices.find { model -> model.name.equals(name, true) } ?:
+                val model = models.modes.find { model -> model.name.equals(name, true) } ?:
                     throw CommandException(command.result("modelNotFound", name))
 
                 chat(command.result("trainingStart", name))
@@ -120,7 +120,7 @@ object CommandModels : Command.Factory {
             )
             .handler {
                 val name = args[0] as String
-                val model = models.choices.find { model -> model.name.equals(name, true) }
+                val model = models.modes.find { model -> model.name.equals(name, true) }
 
                 if (model == null) {
                     chat(markAsError(command.result("modelNotFound", name)))
@@ -128,7 +128,7 @@ object CommandModels : Command.Factory {
                 }
 
                 model.delete()
-                models.choices.remove(model)
+                models.modes.remove(model)
                 chat(command.result("modelDeleted", name))
             }
             .build()
@@ -184,7 +184,7 @@ object CommandModels : Command.Factory {
         chat(command.result("preparedData", datasetTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
         val trainingTime = measureTime {
-            val model = model ?: TwoDimensionalRegressionModel(name, models).also { model -> models.choices.add(model) }
+            val model = model ?: TwoDimensionalRegressionModel(name, models).also { model -> models.modes.add(model) }
             model.train(dataset.features, dataset.labels)
             model.save()
 

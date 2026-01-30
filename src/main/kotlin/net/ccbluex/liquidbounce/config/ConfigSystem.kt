@@ -25,10 +25,10 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.gson.fileGson
 import net.ccbluex.liquidbounce.config.gson.util.parseTree
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.DynamicConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
@@ -40,9 +40,7 @@ import java.io.Reader
 import java.io.Writer
 
 /**
- * A config system which uses configurables
- *
- * @author kawaiinekololis (@team ccbluex)
+ * A hierarchy config system
  */
 @Suppress("TooManyFunctions")
 object ConfigSystem {
@@ -87,96 +85,80 @@ object ConfigSystem {
         }
     }
 
-    // A mutable list of all root configurable classes (and their subclasses)
-    val configurables = ArrayList<Configurable>()
+    val configs = ArrayList<Config>()
 
     fun findValueByKey(key: String): Value<*>? {
         ensureRootKeys()
         val normalizedKey = normalizeKeyInput(key)
-        return configurables.asSequence()
+        return configs.asSequence()
             .flatMap { it.collectValuesRecursively().asSequence() }
             .firstOrNull { it.key?.equals(normalizedKey, true) == true }
     }
 
-    fun findConfigurableByKey(key: String): Configurable? {
+    fun findValueGroupByKey(key: String): ValueGroup? {
         ensureRootKeys()
         val normalizedKey = normalizeKeyInput(key)
-        return configurables.asSequence()
-            .flatMap { it.collectConfigurablesRecursively().asSequence() }
+        return configs.asSequence()
+            .flatMap { it.collectValueGroupsRecursively().asSequence() }
             .firstOrNull { it.key?.equals(normalizedKey, true) == true }
     }
 
     fun valueKeySequence(prefix: String): Sequence<String> = sequence {
         ensureRootKeys()
-        for (configurable in configurables) {
-            for (value in configurable.collectValuesRecursively(prefix)) {
+        for (valueGroup in configs) {
+            for (value in valueGroup.collectValuesRecursively(prefix)) {
                 value.key?.let { yield(it) }
             }
         }
     }
 
-    fun configurableKeySequence(prefix: String): Sequence<String> = sequence {
+    fun valueGroupsKeySequence(prefix: String): Sequence<String> = sequence {
         ensureRootKeys()
-        for (configurable in configurables) {
-            for (child in configurable.collectConfigurablesRecursively(prefix)) {
+        for (valueGroup in configs) {
+            for (child in valueGroup.collectValueGroupsRecursively(prefix)) {
                 child.key?.let { yield(it) }
             }
         }
     }
 
     /**
-     * Create new root configurable
+     * Create an config based on an existing tree
      */
-    fun root(name: String, tree: MutableCollection<out Configurable> = mutableListOf()): Configurable {
+    fun root(name: String, tree: MutableCollection<out ValueGroup> = mutableListOf()): Config {
         @Suppress("UNCHECKED_CAST")
-        return root(Configurable(name, value = tree as MutableCollection<Value<*>>))
-    }
-
-    fun dynamic(
-        name: String,
-        tree: MutableCollection<out Configurable> = mutableListOf(),
-        factory: (String, JsonObject) -> Value<*>
-    ): Configurable {
-        @Suppress("UNCHECKED_CAST")
-        return root(DynamicConfigurable(name, tree as MutableCollection<Value<*>>, factory))
+        return root(Config(name, value = tree as MutableCollection<Value<*>>))
     }
 
     /**
-     * Add a root configurable
+     * Add an existing config instance
      */
-    fun root(configurable: Configurable): Configurable {
-        configurable.initConfigurable()
-        configurables.add(configurable)
-        return configurable
+    fun root(config: Config): Config {
+        config.walkInit()
+        configs.add(config)
+        return config
     }
 
-    val Configurable.jsonFile: File
-        get() {
-            require(this in configurables) { "${this.name} is not root configurable" }
-            return File(rootFolder, "${this.loweredName}.json")
-        }
-
     /**
-     * Create a ZIP file of root configurable files
+     * Create a ZIP file backup of configs
      */
-    fun backup(fileName: String, configurables: Iterable<Configurable> = this.configurables) {
+    fun backup(fileName: String, groups: Iterable<Config> = this.configs) {
         var zipFile = File(backupFolder, "$fileName.zip")
         var suffix = 1
         while (zipFile.exists()) {
             zipFile = File(backupFolder, "${fileName}_${suffix++}.zip")
         }
 
-        configurables.map { configurable -> configurable.jsonFile }.createZipArchive(zipFile)
+        groups.map { valueGroup -> valueGroup.jsonFile }.createZipArchive(zipFile)
     }
 
     /**
-     * Restore a backup from a ZIP file to the root configurable files
+     * Restore a backup from a ZIP file to the configs
      */
     fun restore(fileName: String) {
         val zipFile = File(backupFolder, "$fileName.zip")
         check(zipFile.exists()) { "Backup file does not exist" }
 
-        // Store all configurables to make sure they are up to date,
+        // Store all configs to make sure they are up to date,
         // before we overwrite some of them through [extractZip]
         storeAll()
         extractZip(zipFile, rootFolder)
@@ -184,135 +166,114 @@ object ConfigSystem {
     }
 
     /**
-     * All configurables should load now.
+     * Loads all registered configs.
      */
     fun loadAll() {
-        for (configurable in configurables) { // Make a new .json file to save our root configurable
-            load(configurable)
+        for (valueGroup in configs) { // Make a new .json file to save our root config
+            load(valueGroup)
         }
     }
 
-    fun load(configurable: Configurable) {
-        configurable.jsonFile.runCatching {
+    fun load(config: Config) {
+        config.jsonFile.runCatching {
             if (!exists()) {
                 // Do not try to load a non-existing file
                 return@runCatching
             }
 
-            logger.debug("Reading config ${configurable.loweredName}...")
-            deserializeConfigurable(configurable, bufferedReader())
+            logger.debug("Reading config ${config.loweredName}...")
+            deserializeValueGroup(config, bufferedReader())
         }.onSuccess {
-            logger.info("Successfully loaded config '${configurable.loweredName}'.")
+            logger.info("Successfully loaded config '${config.loweredName}'.")
         }.onFailure {
-            logger.error("Unable to load config ${configurable.loweredName}", it)
+            logger.error("Unable to load config ${config.loweredName}", it)
         }
 
         // After loading the config, we need to store it again to make sure all values are up to date
-        store(configurable)
+        store(config)
     }
 
     /**
-     * All configurables known to the config system should be stored now.
+     * All configs known to the config system should be stored now.
      * This will overwrite all existing files with the new values.
      *
-     * These configurables are root configurables, which always create a new file with their name.
+     * These configs are root configs, which always create a new file with their name.
      */
     fun storeAll() {
-        configurables.forEach(::store)
+        configs.forEach(::store)
     }
 
     /**
-     * Store configurable to a file (will be created if not exists).
+     * Store config to a file (will be created if not exists).
      *
-     * The configurable should be known to the config system.
+     * The config should be known to the config system.
      */
-    fun store(configurable: Configurable) { // Make a new .json file to save our root configurable
-        configurable.jsonFile.runCatching {
+    fun store(config: Config) { // Make a new .json file to save our root config
+        config.jsonFile.runCatching {
             if (!exists()) {
                 createNewFile().let { logger.debug("Created new file (status: $it)") }
             }
 
-            logger.debug("Writing config ${configurable.loweredName}...")
-            serializeConfigurable(configurable, bufferedWriter())
-            logger.info("Successfully saved config '${configurable.loweredName}'.")
+            logger.debug("Writing config ${config.loweredName}...")
+            serializeValueGroup(config, bufferedWriter())
+            logger.info("Successfully saved config '${config.loweredName}'.")
         }.onFailure {
-            logger.error("Unable to store config ${configurable.loweredName}", it)
+            logger.error("Unable to store config ${config.loweredName}", it)
         }
     }
 
     /**
-     * Serialize a configurable to a writer, and close it
+     * Serialize a config to a writer and close it
      */
-    private fun serializeConfigurable(configurable: Configurable, writer: Writer, gson: Gson = fileGson) {
+    private fun serializeValueGroup(valueGroup: ValueGroup, writer: Writer, gson: Gson = fileGson) {
         gson.newJsonWriter(writer).use {
-            gson.toJson(configurable, Configurable::class.javaObjectType, it)
+            gson.toJson(valueGroup, ValueGroup::class.javaObjectType, it)
         }
     }
 
     /**
-     * Serialize a configurable to a [JsonObject].
+     * Serialize a config to a [JsonObject].
      */
-    fun serializeConfigurable(configurable: Configurable, gson: Gson = fileGson): JsonObject =
-        gson.toJsonTree(configurable, Configurable::class.javaObjectType) as JsonObject
+    fun serializeValueGroup(valueGroup: ValueGroup, gson: Gson = fileGson): JsonObject =
+        gson.toJsonTree(valueGroup, ValueGroup::class.javaObjectType) as JsonObject
 
     /**
-     * Deserialize a configurable from a reader, and close it
+     * Deserialize a config from a reader, and close it
      */
-    fun deserializeConfigurable(configurable: Configurable, reader: Reader, gson: Gson = fileGson) {
+    fun deserializeValueGroup(valueGroup: ValueGroup, reader: Reader, gson: Gson = fileGson) {
         gson.newJsonReader(reader).use { reader ->
-            deserializeConfigurable(configurable, reader.parseTree())
+            deserializeValueGroup(valueGroup, reader.parseTree())
         }
     }
 
     /**
-     * Deserialize a configurable from a [JsonElement]. It should be [JsonObject].
+     * Deserialize a config from a [JsonElement]. It should be [JsonObject].
      */
-    fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement) {
+    fun deserializeValueGroup(valueGroup: ValueGroup, jsonElement: JsonElement) {
         val jsonObject = jsonElement.asJsonObject
 
-        // Check if the name is the same as the configurable name
+        // Check if the name is the same as the config name
         val name = jsonObject.getAsJsonPrimitive("name").asString
-        check(name == configurable.name || configurable.aliases.contains(name)) {
-            "Configurable name does not match the name in the json object"
+        check(name == valueGroup.name || valueGroup.aliases.contains(name)) {
+            "config name does not match the name in the json object"
         }
 
         val values = jsonObject.getAsJsonArray("value")
             .map { valueElement -> valueElement.asJsonObject }
             .associateBy { valueObj -> valueObj["name"].asString!! }
 
-        when (configurable) {
+        // Migration Code for KillAura's Range Values
+        if (valueGroup is ModuleKillAura) {
+            valueGroup.range.migrateFromValues(values)
+        }
 
-            // On a dynamic configurable, we first create an instance of the value and then deserialize it
-            is DynamicConfigurable -> {
-                if (values.isNotEmpty()) {
-                    // Clear the current values
-                    configurable.inner.clear()
-                }
+        for (value in valueGroup.inner) {
+            val currentElement = values[value.name]
+            // Alias support
+                ?: values.entries.firstOrNull { entry -> entry.key in value.aliases }?.value
+                ?: continue
 
-                for ((name, value) in values) {
-                    val valueInstance = configurable.factory(name, value) ?: continue
-                    configurable.value(valueInstance)
-
-                    deserializeValue(valueInstance, value)
-                }
-            }
-
-            // On an ordinary configurable, we simply deserialize the values that are present
-            else -> {
-                // Migration Code for KillAura's Range Values
-                if (configurable is ModuleKillAura) {
-                    configurable.range.migrateFromValues(values)
-                }
-
-                for (value in configurable.inner) {
-                    val currentElement = values[value.name]
-                        // Alias support
-                        ?: values.entries.firstOrNull { entry -> entry.key in value.aliases }?.value
-                        ?: continue
-
-                    deserializeValue(value, currentElement)
-                }
-            }
+            deserializeValue(value, currentElement)
         }
     }
 
@@ -320,10 +281,10 @@ object ConfigSystem {
      * Deserialize a value from a json object
      */
     fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
-        // In the case of a configurable, we need to go deeper and deserialize the configurable itself
-        if (value is Configurable) {
+        // In the case of a config, we need to go deeper and deserialize the config itself
+        if (value is ValueGroup) {
             runCatching {
-                if (value is ChoiceConfigurable<*>) {
+                if (value is ModeValueGroup<*>) {
                     // Set current active choice
                     runCatching {
                         value.setByString(jsonObject["active"].asString)
@@ -334,24 +295,24 @@ object ConfigSystem {
                     // Deserialize each choice
                     val choices = jsonObject["choices"].asJsonObject
 
-                    for (choice in value.choices) {
+                    for (choice in value.modes) {
                         runCatching {
                             val choiceElement = choices[choice.name]
                                 // Alias support
                                 ?: choice.aliases.firstNotNullOfOrNull { alias -> choices[alias] }
                                 ?: error("Choice ${choice.name} not found")
 
-                            deserializeConfigurable(choice, choiceElement)
+                            deserializeValueGroup(choice, choiceElement)
                         }.onFailure {
                             logger.error("Unable to deserialize choice ${choice.name}", it)
                         }
                     }
                 }
 
-                // Deserialize the rest of the configurable
-                deserializeConfigurable(value, jsonObject)
+                // Deserialize the rest of the config
+                deserializeValueGroup(value, jsonObject)
             }.onFailure {
-                logger.error("Unable to deserialize configurable ${value.name}", it)
+                logger.error("Unable to deserialize config ${value.name}", it)
             }
 
             return
@@ -365,14 +326,10 @@ object ConfigSystem {
         }
     }
 
-    fun getConfigurableByName(name: String): Configurable? {
-        return configurables.firstOrNull { it.name.equals(name, true) }
-    }
-
     private fun ensureRootKeys() {
-        for (configurable in configurables) {
-            if (configurable.key == null) {
-                configurable.walkKeyPath()
+        for (valueGroup in configs) {
+            if (valueGroup.key == null) {
+                valueGroup.walkKeyPath()
             }
         }
     }

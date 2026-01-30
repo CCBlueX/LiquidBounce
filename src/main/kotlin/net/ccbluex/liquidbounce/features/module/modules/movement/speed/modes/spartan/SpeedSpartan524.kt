@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -39,7 +39,7 @@ import net.minecraft.world.item.Items
  * @testedOn minecraft.vagdedes.com
  * @note it will flag randomly, that's just spartan for you
  */
-class SpeedSpartanV4043(override val parent: ChoiceConfigurable<*>) : Choice("Spartan-4.0.4.3") {
+class SpeedSpartanV4043(override val parent: ModeValueGroup<*>) : Mode("Spartan-4.0.4.3") {
 
     @Suppress("unused")
     private val moveHandler = handler<PlayerMoveEvent> { event ->
@@ -70,7 +70,7 @@ class SpeedSpartanV4043(override val parent: ChoiceConfigurable<*>) : Choice("Sp
  * @testedOn minecraft.vagdedes.com
  * @note it will flag randomly, that's just spartan for you. Could flag anywhere from 0-20vl if you do 180's with it on
  */
-class SpeedSpartanV4043FastFall(override val parent: ChoiceConfigurable<*>) : Choice("Spartan-4.0.4.3-FastFall") {
+class SpeedSpartanV4043FastFall(override val parent: ModeValueGroup<*>) : Mode("Spartan-4.0.4.3-FastFall") {
 
     override fun disable() {
         player.stopXZVelocity()

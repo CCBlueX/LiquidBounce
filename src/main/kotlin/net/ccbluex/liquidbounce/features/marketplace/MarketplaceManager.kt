@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.integration.task.type.Task
@@ -39,7 +39,7 @@ import java.io.File
 /**
  * Marketplace manager for subscribing and updating items.
  */
-object MarketplaceManager : Configurable("marketplace"), EventListener {
+object MarketplaceManager : Config("marketplace"), EventListener {
 
     private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/MarketplaceManager")
 

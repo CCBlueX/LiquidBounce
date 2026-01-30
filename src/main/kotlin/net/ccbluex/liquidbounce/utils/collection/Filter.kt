@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.utils.collection
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.minecraft.world.level.block.Block
 
-enum class Filter(override val choiceName: String) : NamedChoice {
+enum class Filter(override val tag: String) : Tagged {
     WHITELIST("Whitelist") {
         override fun <T> invoke(item: T, collection: Collection<T>): Boolean = item in collection
     },

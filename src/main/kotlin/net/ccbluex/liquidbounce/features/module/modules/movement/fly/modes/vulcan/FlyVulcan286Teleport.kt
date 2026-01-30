@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -41,9 +41,9 @@ import net.minecraft.world.phys.Vec3
  * @note Few seconds cooldown to not flag. Requires 1.8 serverside
  * @author Nullable
  */
-internal object FlyVulcan286Teleport : Choice("Vulcan286-Teleport-18") {
+internal object FlyVulcan286Teleport : Mode("Vulcan286-Teleport-18") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     private var jumping = false

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.repeated
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isFallDamageBlocking
@@ -54,14 +54,14 @@ import net.minecraft.world.level.block.Blocks
 internal object NoFallMLG : NoFallMode("MLG") {
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
 
-    private object PickupWater : ToggleableConfigurable(NoFallMLG, "PickUpWater", true) {
+    private object PickupWater : ToggleableValueGroup(NoFallMLG, "PickUpWater", true) {
         /**
          * Don't pick up before the lower bound, don't pick up after the upper bound
          */
         val pickupSpan by intRange("PickupSpan", 200..1000, 0..10000, "ms")
     }
 
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     private var currentTarget: PlacementPlan? = null
     private val lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
@@ -109,7 +109,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
             RotationManager.setRotationTarget(
                 currentGoal.placementTarget.rotation,
-                configurable = rotationsConfigurable,
+                valueGroup = rotations,
                 priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
                 provider = ModuleNoFall,
             )

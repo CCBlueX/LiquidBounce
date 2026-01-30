@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.navigation
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -38,11 +38,11 @@ import net.minecraft.world.phys.Vec3
 /**
  * Base class for navigation-related features that handles common movement functionality
  */
-abstract class NavigationBaseConfigurable<T>(
+abstract class NavigationBaseValueGroup<T>(
     parent: EventListener? = null,
     name: String,
     enabled: Boolean
-) : ToggleableConfigurable(parent, name, enabled) {
+) : ToggleableValueGroup(parent, name, enabled) {
 
     private val autoAction by multiEnumChoice("Auto", AutoAction.entries)
 
@@ -133,7 +133,7 @@ abstract class NavigationBaseConfigurable<T>(
         }
     }
 
-    private enum class AutoAction(override val choiceName: String) : NamedChoice {
+    private enum class AutoAction(override val tag: String) : Tagged {
         JUMP("Jump"),
         SWIM("Swim"),
         SPRINT("Sprint")

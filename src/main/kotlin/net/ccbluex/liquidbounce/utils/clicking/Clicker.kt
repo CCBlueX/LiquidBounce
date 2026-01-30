@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
@@ -62,7 +62,7 @@ open class Clicker<T>(
     val itemCooldown: ItemCooldown? = ItemCooldown(),
     maxCps: Int = 60,
     name: String = "Clicker"
-) : Configurable(name, aliases = listOf("ClickScheduler")), EventListener where T : EventListener {
+) : ValueGroup(name, aliases = listOf("ClickScheduler")), EventListener where T : EventListener {
 
     companion object {
         internal val RNG = Random()
@@ -201,7 +201,7 @@ open class Clicker<T>(
             clickArray.push(cycleArray)
         }
 
-        debugParameter("Click Technique") { pattern.choiceName }
+        debugParameter("Click Technique") { pattern.tag }
         debugParameter("Click Array") {
             clickArray.array.withIndex().joinToString { (i, v) ->
                 if (i == clickArray.head) "*$v" else v.toString()
@@ -224,9 +224,9 @@ open class Clicker<T>(
 
     @Suppress("unused")
     enum class ClickPatterns(
-        override val choiceName: String,
+        override val tag: String,
         val pattern: ClickPattern
-    ) : NamedChoice {
+    ) : Tagged {
         STABILIZED("Stabilized", StabilizedPattern),
         EFFICIENT("Efficient", EfficientPattern),
         SPAMMING("Spamming", SpammingPattern),

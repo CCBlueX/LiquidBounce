@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.bow
 
-import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowNoBlockInteract
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
@@ -30,9 +30,9 @@ import net.minecraft.world.item.ItemUseAnimation
 
 internal object NoSlowBow : NoSlowUseActionHandler("Bow") {
 
-    val modes = choices(this, "Choice") {
+    val modes = modes(this, "Choice") {
         arrayOf(
-            NoneChoice(it),
+            NoneMode(it),
             NoSlowSharedGrim2360(it),
             NoSlowSharedGrim2364MC18(it),
             NoSlowSharedGrim2371(it),

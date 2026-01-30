@@ -35,13 +35,13 @@ object AutoQueueTriggerItem : AutoQueueTrigger("Item") {
      * The name also can be a custom name of the item and does not have to be matching,
      * and only contains the text.
      */
-    private val mode = choices("Mode", 0) {
+    private val mode = modes("Mode", 0) {
         arrayOf(AutoQueueItemMode.ByName(it), AutoQueueItemMode.ByItem(it))
     }
 
     override val isTriggered: Boolean
         get() = Slots.OffhandWithHotbar.findSlot { itemStack ->
-            mode.activeChoice.test(itemStack)
+            mode.activeMode.test(itemStack)
         } != null
 
 }

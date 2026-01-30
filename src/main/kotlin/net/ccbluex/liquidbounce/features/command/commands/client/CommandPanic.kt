@@ -64,7 +64,7 @@ object CommandPanic : Command.Factory {
                         val category = ModuleCategories.byName(type)
                             ?: throw CommandException(command.result("categoryNotFound", type))
                         modules = modules.filter { it.category == category }
-                        msg = command.result("disabledAllCategoryModules", category.choiceName)
+                        msg = command.result("disabledAllCategoryModules", category.tag)
                     }
                 }
 

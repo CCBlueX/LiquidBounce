@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.Window
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -66,9 +66,9 @@ object ModuleItemScroller : ClientModule("ItemScroller", ModuleCategories.MISC) 
 
 @Suppress("UNUSED")
 enum class ClickMode(
-    override val choiceName: String,
+    override val tag: String,
     val action: ClickAction
-) : NamedChoice {
+) : Tagged {
     QUICK_MOVE("QuickMove", { _, slot, callback ->
         callback(slot, slot.index, GLFW.GLFW_MOUSE_BUTTON_LEFT, ClickType.QUICK_MOVE)
     })

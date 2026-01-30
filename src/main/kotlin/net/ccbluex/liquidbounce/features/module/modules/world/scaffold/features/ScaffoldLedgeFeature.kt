@@ -46,7 +46,7 @@ fun ledge(
     extension: ScaffoldLedgeExtension? = null
 ): LedgeAction {
     if (player.isCloseToEdge(DirectionalInput(player.input))) {
-        val ticks = ModuleScaffold.ScaffoldRotationConfigurable.calculateTicks(rotation)
+        val ticks = ModuleScaffold.ScaffoldRotationValueGroup.calculateTicks(rotation)
 
         ModuleDebug.debugParameter(ModuleScaffold, "TicksUntilDestination", ticks)
 

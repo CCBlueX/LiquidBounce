@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.event.events
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.AxoUser
@@ -51,7 +51,7 @@ import net.minecraft.world.level.block.Block
 class ClickGuiScaleChangeEvent(val value: Float) : Event(), WebSocketEvent
 
 @Nameable("clickGuiValueChange")
-class ClickGuiValueChangeEvent(val configurable: Configurable) : Event(), WebSocketEvent
+class ClickGuiValueChangeEvent(val valueGroup: ValueGroup) : Event(), WebSocketEvent
 
 @Nameable("spaceSeperatedNamesChange")
 class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
@@ -125,7 +125,7 @@ class ClientChatMessageEvent(
     val message: String,
     val chatGroup: ChatGroup,
 ) : Event(), WebSocketEvent {
-    enum class ChatGroup(override val choiceName: String) : NamedChoice {
+    enum class ChatGroup(override val tag: String) : Tagged {
         @SerializedName("public")
         PUBLIC_CHAT("PublicChat"),
 

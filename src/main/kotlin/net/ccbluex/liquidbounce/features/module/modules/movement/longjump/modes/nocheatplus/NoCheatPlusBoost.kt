@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
  * @anticheatVersion 3.16.1-SNAPSHOT-sMD5NET-b115s
  * @testedOn eu.loyisa.cn
  */
-internal object NoCheatPlusBoost : Choice("NoCheatPlusBoost") {
-    override val parent: ChoiceConfigurable<*>
+internal object NoCheatPlusBoost : Mode("NoCheatPlusBoost") {
+    override val parent: ModeValueGroup<*>
         get() = ModuleLongJump.mode
 
     val ncpBoost by float("NCPBoost", 4.25f, 1f..10f)

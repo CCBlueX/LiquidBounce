@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.reporthelper
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import kotlinx.coroutines.Dispatchers
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import kotlin.random.Random
 
-internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelper, "AutoReport", false) {
+internal object ReportHelperAutoReport : ToggleableValueGroup(ModuleReportHelper, "AutoReport", false) {
 
     private val delay by intRange("Delay", 1..3, 0..20, "ticks")
     private val chance by int("Chance", 100, 1..100, "%")

@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import kotlin.math.pow
 
 /**
  * Functions from https://easings.net.
  */
 @Suppress("unused")
-enum class Easing(override val choiceName: String) : NamedChoice {
+enum class Easing(override val tag: String) : Tagged {
 
     LINEAR("Linear") {
         override fun transform(x: Float) = x

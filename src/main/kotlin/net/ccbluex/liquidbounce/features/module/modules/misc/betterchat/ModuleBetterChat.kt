@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -81,7 +81,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
     private val autoTranslate by multiEnumChoice<ChatReceiveEvent.ChatType>("AutoTranslate")
 
     // FIXME(1.21.11)
-    object Copy : ToggleableConfigurable(this, "Copy", true) {
+    object Copy : ToggleableValueGroup(this, "Copy", true) {
         private val notify by boolean("Notify", true)
         val highlight by boolean("Highlight", true)
 
@@ -196,7 +196,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
     private sealed class MessageModifier(
         name: String,
         enabled: Boolean
-    ) : ToggleableConfigurable(this, name, enabled) {
+    ) : ToggleableValueGroup(this, name, enabled) {
         fun modifyMessage(content: String) =
             if (!this.enabled) {
                 content
@@ -208,7 +208,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
     }
 
     @Suppress("unused")
-    private enum class Features(override val choiceName: String) : NamedChoice {
+    private enum class Features(override val tag: String) : Tagged {
         INFINITE("Infinite"),
         ANTI_CLEAR("AntiClear"),
         KEEP_AFTER_DEATH("KeepAfterDeath"),

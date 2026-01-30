@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeConfigurable
-import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleConfigurable
+import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeValueGroup
+import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleValueGroup
 import net.minecraft.client.CameraType
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
@@ -32,8 +32,8 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
  */
 object ModuleAutoF5 : ClientModule("AutoF5", ModuleCategories.RENDER) {
 
-    private val checkScreenHandlerType = tree(CheckScreenHandlerTypeConfigurable(this))
-    private val checkScreenTitle = tree(CheckScreenTitleConfigurable(this))
+    private val checkScreenHandlerType = tree(CheckScreenHandlerTypeValueGroup(this))
+    private val checkScreenTitle = tree(CheckScreenTitleValueGroup(this))
 
     @Suppress("unused")
     private val perspectiveHandler = handler<PerspectiveEvent> { event ->

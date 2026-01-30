@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.types.nesting
+package net.ccbluex.liquidbounce.config.types.group
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
@@ -32,88 +32,85 @@ import java.util.function.ToIntFunction
 /**
  * Allows configuring and manage modes
  */
-class ChoiceConfigurable<T : Choice>(
+class ModeValueGroup<T : Mode>(
     @Exclude @ProtocolExclude val eventListener: EventListener,
     name: String,
-    activeChoiceIndexCallback: ToIntFunction<List<T>>,
-    choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
-) : Configurable(name, valueType = ValueType.CHOICE) {
+    activeModeIndexCallback: ToIntFunction<List<T>>,
+    modesCallback: (ModeValueGroup<T>) -> Array<T>
+) : ValueGroup(name, valueType = ValueType.CHOICE) {
 
-    var choices: MutableList<T> = ObjectArrayList.wrap(choicesCallback(this))
+    var modes: MutableList<T> = ObjectArrayList.wrap(modesCallback(this))
         internal set
-    private var defaultChoice: T = choices[activeChoiceIndexCallback.applyAsInt(choices)]
-    var activeChoice: T = defaultChoice
+    private var defaultMode: T = modes[activeModeIndexCallback.applyAsInt(modes)]
+    var activeMode: T = defaultMode
         private set
 
     init {
-        for (choice in choices) {
+        for (choice in modes) {
             choice.base = this
         }
     }
 
     internal fun updateChildState(state: Boolean) {
         if (state) {
-            this.activeChoice.enable()
+            this.activeMode.enable()
         } else {
-            this.activeChoice.disable()
+            this.activeMode.disable()
         }
     }
 
-    private fun setAndUpdate(newChoice: T) {
-        if (this.activeChoice === newChoice) {
+    private fun setAndUpdate(newMode: T) {
+        if (this.activeMode === newMode) {
             return
         }
 
-        if (this.activeChoice.running) {
-            this.activeChoice.disable()
+        if (this.activeMode.running) {
+            this.activeMode.disable()
         }
 
-        // Don't remove this! This is important. We need to call the listeners of the choice in order to update
+        // Don't remove this! This is important. We need to call the listeners of the mode to update
         // the other systems accordingly. For whatever reason the conditional configurable is bypassing the value system
         // which the other configurables use, so we do it manually.
-        set(mutableListOf(newChoice), apply = {
-            this.activeChoice = it.first() as T
+        set(mutableListOf(newMode), apply = {
+            this.activeMode = it.first() as T
         })
 
-        if (this.activeChoice.running) {
-            this.activeChoice.enable()
+        if (this.activeMode.running) {
+            this.activeMode.enable()
         }
     }
 
     override fun setByString(name: String) {
-        val newChoice = choices.firstOrNull { choice ->
-            choice.choiceName == name || name in choice.aliases
+        val newMode = modes.firstOrNull { choice ->
+            choice.tag == name || name in choice.aliases
         }
 
-        if (newChoice == null) {
+        if (newMode == null) {
             throw IllegalArgumentException("ChoiceConfigurable `${this.name}` has no option named $name" +
-                " (available options are ${this.choices.joinToString { it.choiceName }})")
+                " (available options are ${this.modes.joinToString { it.tag }})")
         }
 
-        this.setAndUpdate(newChoice)
+        this.setAndUpdate(newMode)
     }
 
     override fun restore() {
-        this.setAndUpdate(defaultChoice)
+        this.setAndUpdate(defaultMode)
     }
 
     @ScriptApiRequired
-    fun getChoicesStrings(): Array<String> = choices.mapToArray { it.name }
+    fun getModeStrings(): Array<String> = modes.mapToArray { it.name }
 
 }
 
-/**
- * A mode is submodule to separate different bypasses into extra classes
- */
-abstract class Choice(
+abstract class Mode(
     name: String,
     aliases: List<String> = emptyList()
-) : Configurable(name, aliases = aliases), EventListener, NamedChoice, MinecraftShortcuts {
+) : ValueGroup(name, aliases = aliases), EventListener, Tagged, MinecraftShortcuts {
 
-    final override val choiceName: String
+    final override val tag: String
         get() = this.name
 
-    abstract val parent: ChoiceConfigurable<*>
+    abstract val parent: ModeValueGroup<*>
 
     open fun enable() { }
 
@@ -123,7 +120,7 @@ abstract class Choice(
      * Check if the choice is selected on the parent.
      */
     internal val isSelected: Boolean
-        get() = this.parent.activeChoice === this
+        get() = this.parent.activeMode === this
 
     /**
      * We check if the parent is active and if the mode is active, if so
@@ -134,19 +131,17 @@ abstract class Choice(
 
     override fun parent() = this.parent.eventListener
 
-    protected fun <T: Choice> choices(name: String, active: T, choices: Array<T>) =
-        choices(this, name, active, choices)
+    protected fun <T: Mode> modes(name: String, active: T, choices: Array<T>) =
+        modes(this, name, active, choices)
 
-    protected fun <T: Choice> choices(
+    protected fun <T: Mode> modes(
         name: String,
         activeIndex: Int = 0,
-        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
-    ) = choices(this, name, activeIndex, choicesCallback)
+        choicesCallback: (ModeValueGroup<T>) -> Array<T>
+    ) = modes(this, name, activeIndex, choicesCallback)
 }
 
 /**
- * Empty choice.
- * It does nothing.
- * Use it when you want a client-user to disable a feature.
+ * Empty mode without any functionality. Use as a disable mode.
  */
-class NoneChoice(override val parent: ChoiceConfigurable<*>) : Choice("None")
+class NoneMode(override val parent: ModeValueGroup<*>) : Mode("None")

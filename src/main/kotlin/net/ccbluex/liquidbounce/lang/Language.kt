@@ -25,8 +25,8 @@
 package net.ccbluex.liquidbounce.lang
 
 import net.ccbluex.liquidbounce.config.gson.util.readJson
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap
 fun translation(key: String, vararg args: Any): MutableComponent =
     MutableComponent.create(LanguageText(key, args))
 
-object LanguageManager : Configurable("Language") {
+object LanguageManager : ValueGroup("Language") {
 
     var clientLanguage by enumChoice("ClientLanguage", ClientLanguage.AUTO)
         .onChanged { _ ->
@@ -55,7 +55,7 @@ object LanguageManager : Configurable("Language") {
     val MINECRAFT_LANGUAGE: ClientLanguage?
         get() = languageChoiceFromCode(mc.options.languageCode)
 
-    enum class ClientLanguage(override val choiceName: String, val code: String? = null) : NamedChoice {
+    enum class ClientLanguage(override val tag: String, val code: String? = null) : Tagged {
         AUTO("Auto"),
         EN_US("English (US)", "en_us"),
         EN_PT("English (Pirate)", "en_pt"),
@@ -79,7 +79,7 @@ object LanguageManager : Configurable("Language") {
 
     private fun loadLanguage(choice: ClientLanguage): net.ccbluex.liquidbounce.lang.ClientLanguage? {
         require(choice != ClientLanguage.AUTO) { "Cannot load language ${choice.code} because it is auto" }
-        require(choice.code != null) { "Cannot load language ${choice.choiceName} because it has no code" }
+        require(choice.code != null) { "Cannot load language ${choice.tag} because it has no code" }
 
         return if (languageRegistry.containsKey(choice)) {
             languageRegistry[choice]!!

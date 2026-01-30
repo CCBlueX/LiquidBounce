@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.Igniti
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.TrapPlayerSimulation
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTrapPlanner
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -51,7 +51,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     private val ignitionTrapPlanner = tree(IgnitionTrapPlanner(this))
     private val webTrapPlanner = tree(WebTrapPlanner(this))
     val targetTracker = tree(TargetTracker(range = range))
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     private var currentPlan: BlockChangeIntent<*>? = null
 
@@ -79,7 +79,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             RotationManager.setRotationTarget(
                 (intent.blockChangeInfo as BlockChangeInfo.PlaceBlock).blockPlacementTarget.rotation,
                 considerInventory = !ignoreOpenInventory,
-                configurable = rotationsConfigurable,
+                valueGroup = rotations,
                 Priority.IMPORTANT_FOR_PLAYER_LIFE,
                 this
             )

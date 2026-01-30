@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
 import net.ccbluex.liquidbounce.config.gson.publicGson
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.AimDebugRecorder
@@ -60,8 +60,8 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", ModuleCategories.MISC
         BoxDebugRecorder
     ))
 
-    abstract class DebugRecorderMode<T>(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    abstract class DebugRecorderMode<T>(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = modes
 
         val folder = ConfigSystem.rootFolder.resolve("debug-recorder/$name").apply {

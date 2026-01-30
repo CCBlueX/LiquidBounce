@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.FontManager
@@ -36,12 +36,12 @@ import net.minecraft.world.phys.Vec3
 import java.text.DecimalFormat
 import java.util.function.BiFunction
 
-object TrajectoryDetailedInfoRenderer : ToggleableConfigurable(ModuleTrajectories, "ShowDetailedInfo", false) {
+object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories, "ShowDetailedInfo", false) {
     private val showAt by enumChoice("ShowAt", ShowAt.ENTITY)
 
     private enum class ShowAt(
-        override val choiceName: String,
-    ) : NamedChoice, BiFunction<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult, Vec3> {
+        override val tag: String,
+    ) : Tagged, BiFunction<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult, Vec3> {
         OWNER("Owner"),
         ENTITY("Entity"),
         LANDING("Landing");
@@ -63,8 +63,8 @@ object TrajectoryDetailedInfoRenderer : ToggleableConfigurable(ModuleTrajectorie
     private val color by color("Color", Color4b.WHITE)
 
     private enum class DurationUnit(
-        override val choiceName: String,
-    ) : NamedChoice {
+        override val tag: String,
+    ) : Tagged {
         TICKS("Ticks") {
             override fun format(ticks: Int): String = ticks.toString()
         },

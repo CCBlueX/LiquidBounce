@@ -131,7 +131,7 @@ object CommandDebug : Command.Factory {
 
         add("language", JsonObject().apply {
             addProperty("language", mc.languageManager.selected)
-            addProperty("clientLanguage", LanguageManager.clientLanguage.choiceName)
+            addProperty("clientLanguage", LanguageManager.clientLanguage.tag)
         })
 
         add("server", JsonObject().apply {

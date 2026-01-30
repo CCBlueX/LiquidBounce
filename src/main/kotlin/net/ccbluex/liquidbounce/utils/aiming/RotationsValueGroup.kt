@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.aiming
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
@@ -36,13 +36,13 @@ import net.minecraft.world.entity.Entity
 /**
  * Configurable to configure the dynamic rotation engine
  */
-open class RotationsConfigurable(
+open class RotationsValueGroup(
     owner: EventListener,
     movementCorrection: MovementCorrection = MovementCorrection.SILENT,
     combatSpecific: Boolean = false
-) : Configurable("Rotations") {
+) : ValueGroup("Rotations") {
 
-    private val angleSmooth = choices(owner, "AngleSmooth", 0) {
+    private val angleSmooth = modes(owner, "AngleSmooth", 0) {
         val linearAngleSmooth = LinearAngleSmooth(it)
         val interpolationAngleSmooth = if (combatSpecific) InterpolationAngleSmooth(it) else null
 
@@ -71,7 +71,7 @@ open class RotationsConfigurable(
         rotation,
         entity,
         listOfNotNull(
-            angleSmooth.activeChoice,
+            angleSmooth.activeMode,
             fail.takeIf { failFocus -> failFocus?.running == true },
             shortStop.takeIf { shortStop -> shortStop?.running == true }
         ),
@@ -91,7 +91,7 @@ open class RotationsConfigurable(
      * @param rotation The rotation to rotate to
      * @return The amount of ticks it takes to rotate to the rotation
      */
-    fun calculateTicks(rotation: Rotation) = angleSmooth.activeChoice
+    fun calculateTicks(rotation: Rotation) = angleSmooth.activeMode
         .calculateTicks(RotationManager.actualServerRotation, rotation)
 
 }

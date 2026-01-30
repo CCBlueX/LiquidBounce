@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
@@ -32,7 +32,7 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.block.state.BlockState
 import org.joml.Vector2f
 
-abstract class GenericColorMode<in T>(name: String): Choice(name) {
+abstract class GenericColorMode<in T>(name: String): Mode(name) {
     /**
      * @return Whether the color mode is sensitive to the parameter of [getColor].
      * If false, it can be used as ColorModulator (shader color)
@@ -43,7 +43,7 @@ abstract class GenericColorMode<in T>(name: String): Choice(name) {
 }
 
 class GenericStaticColorMode(
-    override val parent: ChoiceConfigurable<*>,
+    override val parent: ModeValueGroup<*>,
     defaultColor: Color4b
 ) : GenericColorMode<Any?>("Static") {
     private val staticColor = color("Color", defaultColor)
@@ -52,7 +52,7 @@ class GenericStaticColorMode(
 }
 
 class GenericRainbowColorMode(
-    override val parent: ChoiceConfigurable<*>,
+    override val parent: ModeValueGroup<*>,
     private val alpha: Int = 50
 ) : GenericColorMode<Any?>("Rainbow") {
     override val isParamSensitive: Boolean = false
@@ -60,7 +60,7 @@ class GenericRainbowColorMode(
 }
 
 class MapColorMode(
-    override val parent: ChoiceConfigurable<*>,
+    override val parent: ModeValueGroup<*>,
     private val alpha: Int = 100
 ) : GenericColorMode<Pair<BlockPos, BlockState>>("MapColor") {
     override fun getColor(param: Pair<BlockPos, BlockState>): Color4b {
@@ -72,7 +72,7 @@ class MapColorMode(
 }
 
 class GenericEntityHealthColorMode(
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
 ) : GenericColorMode<LivingEntity>("Health") {
     private val alpha by int("Alpha", 255, 0..255)
 
@@ -90,7 +90,7 @@ class GenericEntityHealthColorMode(
 }
 
 class GenericDistanceHSBColorMode<T : Any>(
-    override val parent: ChoiceConfigurable<*>,
+    override val parent: ModeValueGroup<*>,
     private val fixedAlpha: Float?,
     private val distanceGetter: ToFloatFunction<T>,
 ) : GenericColorMode<T>("Distance") {
@@ -116,7 +116,7 @@ class GenericDistanceHSBColorMode<T : Any>(
     companion object {
         @JvmStatic
         @JvmOverloads
-        fun entity(parent: ChoiceConfigurable<*>, fixedAlpha: Float? = null) =
+        fun entity(parent: ModeValueGroup<*>, fixedAlpha: Float? = null) =
             GenericDistanceHSBColorMode<Entity>(parent, fixedAlpha) {
                 it.position().cameraDistance().toFloat()
             }

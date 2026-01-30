@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
@@ -42,7 +42,7 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
     private val delay by int("Delay", 2, 0..10, "ticks")
     private val strength by float("Strength", 1f, 0.1f..2f)
 
-    object OnlyFacing: ToggleableConfigurable(this, "OnlyFacing", false) {
+    object OnlyFacing: ToggleableValueGroup(this, "OnlyFacing", false) {
         val range by float("Range", 3.5f, 0.1f..6f)
     }
 

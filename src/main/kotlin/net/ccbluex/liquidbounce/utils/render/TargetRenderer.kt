@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.utils.render
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.toTextureProperty
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -65,17 +65,17 @@ import kotlin.math.sin
  * A target tracker to choose the best enemy to attack
  */
 class TargetRenderer(
-    owner: ToggleableConfigurable,
+    owner: ToggleableValueGroup,
     val target: () -> Entity?,
-) : ToggleableConfigurable(owner, "TargetRendering", true) {
+) : ToggleableValueGroup(owner, "TargetRendering", true) {
 
-    constructor(module: ToggleableConfigurable, targetTracker: TargetTracker) : this(module, targetTracker::target)
+    constructor(module: ToggleableValueGroup, targetTracker: TargetTracker) : this(module, targetTracker::target)
 
     init {
         doNotIncludeAlways()
     }
 
-    private val appearance = choices(owner, "Mode", 2) {
+    private val appearance = modes(owner, "Mode", 2) {
         arrayOf(
             TargetRenderAppearance.World.Legacy(it),
             TargetRenderAppearance.World.Circle(owner, it),
@@ -89,7 +89,7 @@ class TargetRenderer(
 
     @Suppress("unused")
     private val worldRenderHandler = handler<WorldRenderEvent> { event ->
-        val mode = appearance.activeChoice as? TargetRenderAppearance.World ?: return@handler
+        val mode = appearance.activeMode as? TargetRenderAppearance.World ?: return@handler
 
         val target = target() ?: return@handler
 
@@ -102,7 +102,7 @@ class TargetRenderer(
 
     @Suppress("unused")
     private val guiRenderHandler = handler<OverlayRenderEvent> { event ->
-        val mode = appearance.activeChoice as? TargetRenderAppearance.Gui ?: return@handler
+        val mode = appearance.activeMode as? TargetRenderAppearance.Gui ?: return@handler
 
         val target = target() ?: return@handler
 
@@ -111,12 +111,12 @@ class TargetRenderer(
         }
     }
 
-    private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Choice(name) {
+    private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name) {
         abstract fun Ctx.render(entity: Entity, partialTicks: Float)
 
         sealed class World(name: String) : TargetRenderAppearance<WorldRenderEnvironment>(name) {
 
-            class Ghost(override val parent: ChoiceConfigurable<*>) : World("Ghost") {
+            class Ghost(override val parent: ModeValueGroup<*>) : World("Ghost") {
 
                 private var lastTime = System.currentTimeMillis()
 
@@ -195,7 +195,7 @@ class TargetRenderer(
                 }
             }
 
-            class Legacy(override val parent: ChoiceConfigurable<*>) : World("Legacy") {
+            class Legacy(override val parent: ModeValueGroup<*>) : World("Legacy") {
 
                 private val size by float("Size", 0.5f, 0.1f..2f)
 
@@ -222,13 +222,13 @@ class TargetRenderer(
                 }
             }
 
-            class Circle(owner: ToggleableConfigurable, override val parent: ChoiceConfigurable<*>) : World("Circle") {
+            class Circle(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) : World("Circle") {
 
                 private val radius by float("Radius", 0.85f, 0.1f..2f)
                 private val innerRadius by float("InnerRadius", 0f, 0f..2f)
                     .onChange { min(radius, it) }
 
-                private val heightMode = choices(owner, "HeightMode") {
+                private val heightMode = modes(owner, "HeightMode") {
                     arrayOf(
                         HeightMode.Feet(it),
                         HeightMode.Top(it),
@@ -244,7 +244,7 @@ class TargetRenderer(
                 private val outline = tree(Outline(owner))
 
                 override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
-                    val height = heightMode.activeChoice.getHeight(entity, partialTicks)
+                    val height = heightMode.activeMode.getHeight(entity, partialTicks)
                     val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
                     with(this) {
@@ -261,11 +261,11 @@ class TargetRenderer(
 
             }
 
-            class GlowingCircle(owner: ToggleableConfigurable, override val parent: ChoiceConfigurable<*>) :
+            class GlowingCircle(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) :
                 World("GlowingCircle") {
                 private val radius by float("Radius", 0.85f, 0.1f..2f)
 
-                private val heightMode = choices(owner, "HeightMode") {
+                private val heightMode = modes(owner, "HeightMode") {
                     arrayOf(
                         HeightMode.Feet(it),
                         HeightMode.Top(it),
@@ -283,10 +283,10 @@ class TargetRenderer(
                 private val outline = tree(Outline(owner))
 
                 override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
-                    val height = heightMode.activeChoice.getHeight(entity, partialTicks)
+                    val height = heightMode.activeMode.getHeight(entity, partialTicks)
                     val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
-                    val currentHeightMode = heightMode.activeChoice
+                    val currentHeightMode = heightMode.activeMode
 
                     val glowHeight = if (currentHeightMode is HeightMode.WithGlow) {
                         currentHeightMode.getGlowHeight(entity, partialTicks) - height
@@ -321,20 +321,20 @@ class TargetRenderer(
 
             }
 
-            private class Outline(parent: EventListener) : ToggleableConfigurable(parent, "Outline", true) {
+            private class Outline(parent: EventListener) : ToggleableValueGroup(parent, "Outline", true) {
                 val color by color("Color", Color4b.fullAlpha(0x007CFF))
             }
         }
 
         sealed class Gui(name: String) : TargetRenderAppearance<GuiGraphics>(name) {
 
-            class Image(owner: ToggleableConfigurable, override val parent: ChoiceConfigurable<*>) : Gui("Image") {
+            class Image(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) : Gui("Image") {
 
                 private val scale by float("Scale", 1f, 0.01f..10f)
                 private val color by color("ColorModulator", Color4b.WHITE)
                 private val texture by file("File").toTextureProperty(owner)
 
-                private val heightMode = choices(owner, "HeightMode") {
+                private val heightMode = modes(owner, "HeightMode") {
                     arrayOf(
                         HeightMode.Feet(it),
                         HeightMode.Top(it),
@@ -348,7 +348,7 @@ class TargetRenderer(
                     val texture = texture ?: return
                     val nativeImage = texture.pixels ?: return
 
-                    val height = heightMode.activeChoice.getHeight(entity, partialTicks)
+                    val height = heightMode.activeMode.getHeight(entity, partialTicks)
                     val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
                     val screenPos = calculateScreenPos(pos) ?: return
 
@@ -365,7 +365,7 @@ class TargetRenderer(
                 }
             }
 
-            class Text(owner: ToggleableConfigurable, override val parent: ChoiceConfigurable<*>) : Gui("Text") {
+            class Text(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) : Gui("Text") {
 
                 private val textScale by float("Scale", 1f, 0.01f..10f)
                 private val textShadow by boolean("Shadow", true)
@@ -373,7 +373,7 @@ class TargetRenderer(
 
                 private val texts by textList("Text", mutableListOf("TARGET"))
 
-                private val heightMode = choices(owner, "HeightMode") {
+                private val heightMode = modes(owner, "HeightMode") {
                     arrayOf(
                         HeightMode.Feet(it),
                         HeightMode.Top(it),
@@ -386,7 +386,7 @@ class TargetRenderer(
                 private val fontRenderer get() = FontManager.FONT_RENDERER
 
                 override fun GuiGraphics.render(entity: Entity, partialTicks: Float) {
-                    val height = heightMode.activeChoice.getHeight(entity, partialTicks)
+                    val height = heightMode.activeMode.getHeight(entity, partialTicks)
                     val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
                     val screenPos = calculateScreenPos(pos) ?: return
 
@@ -403,7 +403,7 @@ class TargetRenderer(
                 }
             }
 
-            class Arrow(override val parent: ChoiceConfigurable<*>) : Gui("Arrow") {
+            class Arrow(override val parent: ModeValueGroup<*>) : Gui("Arrow") {
 
                 private val color by color("Color", Color4b.RED)
                 private val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
@@ -438,19 +438,19 @@ private val defaultColor = Color4b.LIQUID_BOUNCE.alpha(100)
 private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
     .toNativeImage().asTexture { "TargetRenderer Ghost" }
 
-private sealed class HeightMode(name: String) : Choice(name) {
+private sealed class HeightMode(name: String) : Mode(name) {
     abstract fun getHeight(entity: Entity, partialTicks: Float): Double
 
     interface WithGlow {
         fun getGlowHeight(entity: Entity, partialTicks: Float): Double
     }
 
-    class Feet(override val parent: ChoiceConfigurable<*>) : HeightMode("Feet") {
+    class Feet(override val parent: ModeValueGroup<*>) : HeightMode("Feet") {
         private val offset by float("Offset", 0f, -1f..1f)
         override fun getHeight(entity: Entity, partialTicks: Float): Double = offset.toDouble()
     }
 
-    class Top(override val parent: ChoiceConfigurable<*>) : HeightMode("Top") {
+    class Top(override val parent: ModeValueGroup<*>) : HeightMode("Top") {
         private val offset by float("Offset", 0f, -1f..1f)
         override fun getHeight(entity: Entity, partialTicks: Float) = entity.box.maxY - entity.box.minY + offset
     }
@@ -459,7 +459,7 @@ private sealed class HeightMode(name: String) : Choice(name) {
     // Use 1 for it to always be at the top of the entity
     // Use 0 for it to always be at the feet of the entity
 
-    class Relative(override val parent: ChoiceConfigurable<*>) : HeightMode("Relative") {
+    class Relative(override val parent: ModeValueGroup<*>) : HeightMode("Relative") {
         private val height by float("Height", 0.5f, -0.5f..1.5f)
 
         override fun getHeight(entity: Entity, partialTicks: Float): Double {
@@ -469,7 +469,7 @@ private sealed class HeightMode(name: String) : Choice(name) {
         }
     }
 
-    class Health(override val parent: ChoiceConfigurable<*>) : HeightMode("Health") {
+    class Health(override val parent: ModeValueGroup<*>) : HeightMode("Health") {
         override fun getHeight(entity: Entity, partialTicks: Float): Double {
             if (entity !is LivingEntity) return 0.0
             val box = entity.box
@@ -478,7 +478,7 @@ private sealed class HeightMode(name: String) : Choice(name) {
         }
     }
 
-    class Animated(override val parent: ChoiceConfigurable<*>) : HeightMode("Animated"), WithGlow {
+    class Animated(override val parent: ModeValueGroup<*>) : HeightMode("Animated"), WithGlow {
         private val speed by float("Speed", 0.18f, 0.01f..1f)
         private val heightMultiplier by float("HeightMultiplier", 0.4f, 0.1f..1f)
         private val heightOffset by float("HeightOffset", 1.3f, 0f..2f)

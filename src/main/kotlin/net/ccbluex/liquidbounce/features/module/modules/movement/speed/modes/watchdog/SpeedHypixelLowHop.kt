@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -34,7 +34,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * @anticheatVersion 25.01.25
  * @testedOn hypixel.net
  */
-class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("HypixelLowHop", parent) {
+class SpeedHypixelLowHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelLowHop", parent) {
 
     companion object {
         var shouldStrafe = false

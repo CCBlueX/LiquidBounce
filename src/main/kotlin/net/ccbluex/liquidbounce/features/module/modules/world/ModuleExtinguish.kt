@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -60,7 +60,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     private val cooldown by float("Cooldown", 1.0F, 0.0F..20.0F, "s")
     private val notDuringCombat by boolean("NotDuringCombat", true)
 
-    private object Pickup : ToggleableConfigurable(ModuleExtinguish, "Pickup", true) {
+    private object Pickup : ToggleableValueGroup(ModuleExtinguish, "Pickup", true) {
         val pickupSpan by floatRange("PickupSpan", 0.1F..10.0F, 0.0F..20.0F, "s")
     }
 
@@ -70,7 +70,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
 
     private var currentTarget: PlacementPlan? = null
 
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     private val cooldownTimer = Chronometer()
 
@@ -96,7 +96,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
 
         RotationManager.setRotationTarget(
             target.placementTarget.rotation,
-            configurable = rotationsConfigurable,
+            valueGroup = rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleNoFall
         )

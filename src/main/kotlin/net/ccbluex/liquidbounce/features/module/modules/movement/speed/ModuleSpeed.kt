@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -67,37 +67,37 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
      *
      * This is useful for the `OnlyOnPotionEffect` choice, which has its own set of modes
      */
-    private fun initializeSpeeds(configurable: ChoiceConfigurable<*>) = arrayOf(
-        SpeedLegitHop(configurable),
-        SpeedCustom(configurable),
-        SpeedSpeedYPort(configurable),
+    private fun initializeSpeeds(modeValueGroup: ModeValueGroup<*>) = arrayOf(
+        SpeedLegitHop(modeValueGroup),
+        SpeedCustom(modeValueGroup),
+        SpeedSpeedYPort(modeValueGroup),
 
-        SpeedVerusB3882(configurable),
+        SpeedVerusB3882(modeValueGroup),
 
-        SpeedHypixelBHop(configurable),
-        SpeedHypixelLowHop(configurable),
+        SpeedHypixelBHop(modeValueGroup),
+        SpeedHypixelLowHop(modeValueGroup),
 
-        SpeedSpartanV4043(configurable),
-        SpeedSpartanV4043FastFall(configurable),
+        SpeedSpartanV4043(modeValueGroup),
+        SpeedSpartanV4043FastFall(modeValueGroup),
 
-        SpeedSentinelDamage(configurable),
+        SpeedSentinelDamage(modeValueGroup),
 
-        SpeedVulcan286(configurable),
-        SpeedVulcan288(configurable),
-        SpeedVulcanGround286(configurable),
-        SpeedGrimCollide(configurable),
+        SpeedVulcan286(modeValueGroup),
+        SpeedVulcan288(modeValueGroup),
+        SpeedVulcanGround286(modeValueGroup),
+        SpeedGrimCollide(modeValueGroup),
 
-        SpeedNCP(configurable),
+        SpeedNCP(modeValueGroup),
 
-        SpeedIntave14(configurable),
-        SpeedIntave14Fast(configurable),
+        SpeedIntave14(modeValueGroup),
+        SpeedIntave14Fast(modeValueGroup),
 
-        SpeedHylexLowHop(configurable),
-        SpeedHylexGround(configurable),
+        SpeedHylexLowHop(modeValueGroup),
+        SpeedHylexGround(modeValueGroup),
 
-        SpeedBlocksMC(configurable),
+        SpeedBlocksMC(modeValueGroup),
 
-        SpeedMatrix7(configurable)
+        SpeedMatrix7(modeValueGroup)
     )
 
     val modes = choices("Mode", 0, this::initializeSpeeds).apply(::tagBy)
@@ -121,7 +121,7 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
                 !(super.running || ModuleScaffold.running && ModuleScaffold.autoSpeed) -> false
                 !passesRequirements() -> false
                 OnlyInCombat.enabled && CombatManager.isInCombat -> false
-                OnlyOnPotionEffect.enabled && potionEffects.activeChoice.checkPotionEffects() -> false
+                OnlyOnPotionEffect.enabled && potionEffects.activeMode.checkPotionEffects() -> false
                 else -> true
             }
         }
@@ -132,9 +132,9 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
         else -> notCondition.all { it.testCondition.asBoolean }
     }
 
-    private object OnlyInCombat : ToggleableConfigurable(this, "OnlyInCombat", false) {
+    private object OnlyInCombat : ToggleableValueGroup(this, "OnlyInCombat", false) {
 
-        val modes = choices(this, "Mode", activeIndex = 0, ModuleSpeed::initializeSpeeds)
+        val modes = modes(this, "Mode", activeIndex = 0, ModuleSpeed::initializeSpeeds)
 
         /**
          * Controls [modes] activation state.
@@ -148,16 +148,16 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
     }
 
-    private object OnlyOnPotionEffect : ToggleableConfigurable(this, "OnlyOnPotionEffect", false) {
+    private object OnlyOnPotionEffect : ToggleableValueGroup(this, "OnlyOnPotionEffect", false) {
 
-        val potionEffects = choices(
+        val potionEffects = modes(
             this,
             "PotionEffect",
-            SpeedPotionEffectChoice,
-            arrayOf(SpeedPotionEffectChoice, SlownessPotionEffectChoice, BothEffectsChoice)
+            SpeedPotionEffectMode,
+            arrayOf(SpeedPotionEffectMode, SlownessPotionEffectMode, BothEffectsMode)
         )
 
-        val modes = choices(this, "Mode", activeIndex = 0, ModuleSpeed::initializeSpeeds)
+        val modes = modes(this, "Mode", activeIndex = 0, ModuleSpeed::initializeSpeeds)
 
         /**
          * Controls [modes] activation state.
@@ -166,13 +166,13 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
             get() = when {
                 !inGame || isDestructed -> false
                 !ModuleSpeed.enabled || !this.enabled || !passesRequirements() -> false
-                else -> potionEffects.activeChoice.checkPotionEffects()
+                else -> potionEffects.activeMode.checkPotionEffects()
             }
 
     }
 
-    abstract class PotionEffectChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<PotionEffectChoice>
+    abstract class PotionEffectMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<PotionEffectMode>
             get() = potionEffects
 
         abstract fun checkPotionEffects(): Boolean
@@ -193,9 +193,9 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
     @Suppress("unused")
     private enum class NotCondition(
-        override val choiceName: String,
+        override val tag: String,
         val testCondition: BooleanSupplier
-    ) : NamedChoice {
+    ) : Tagged {
         WHILE_USING_ITEM("WhileUsingItem", {
             !player.isUsingItem
         }),

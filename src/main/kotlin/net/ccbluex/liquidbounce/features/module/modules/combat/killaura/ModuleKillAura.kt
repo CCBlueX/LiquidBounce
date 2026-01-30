@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.KillAuraRotationTiming.SNAP
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.KillAuraRotationTiming.SNAP
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ALL
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_NONE
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ONLYENEMY
@@ -90,7 +90,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     val targetTracker = tree(KillAuraTargetTracker)
 
     // Rotation
-    private val rotations = tree(KillAuraRotationsConfigurable)
+    private val rotations = tree(KillAuraRotationsValueGroup)
     private val pointTracker = tree(PointTracker(this))
 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
@@ -443,7 +443,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         return !isInventoryBlockingAttack
     }
 
-    enum class RaycastMode(override val choiceName: String) : NamedChoice {
+    enum class RaycastMode(override val tag: String) : Tagged {
         TRACE_NONE("None"),
         TRACE_ONLYENEMY("Enemy"),
         TRACE_ALL("All")

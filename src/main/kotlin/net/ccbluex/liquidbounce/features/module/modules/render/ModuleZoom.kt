@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -42,7 +42,7 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
 
     val zoom by int("Zoom", 30, 10..150)
 
-    object Scroll : ToggleableConfigurable(this, "Scroll", true) {
+    object Scroll : ToggleableValueGroup(this, "Scroll", true) {
 
         val speed by float("Speed", 2f, 0.5f..8f)
 

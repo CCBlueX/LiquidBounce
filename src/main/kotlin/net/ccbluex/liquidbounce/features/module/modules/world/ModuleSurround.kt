@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.fastutil.fastIterator
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
@@ -93,7 +93,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
      *
      * Destroying requires the crystal destroyer in the placer to be active.
      */
-    private object Protect : ToggleableConfigurable(this, "Protect", true) {
+    private object Protect : ToggleableValueGroup(this, "Protect", true) {
 
         /**
          * At what destroy stage, actions should be taken.
@@ -114,7 +114,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
          * X = obsidian
          * p = the players hitbox
          */
-        object ExtraLayer : ToggleableConfigurable(this, "ExtraLayer", true) {
+        object ExtraLayer : ToggleableValueGroup(this, "ExtraLayer", true) {
 
             /**
              * Will place even more blocks (top view):
@@ -374,16 +374,16 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
     }
 
     private enum class DisableOn(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         Y_CHANGE("YChange"),
         XZ_MOVE("XZMove"),
         XZ_SPEED("XZSpeed");
     }
 
     private enum class Features(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         /**
          * Runs [CommandCenter] when the module is enabled.
          */

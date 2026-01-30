@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import com.google.common.collect.Ordering
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.synchronized
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -71,23 +71,23 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         it
     }
 
-    private object Radius : Configurable("ProtectionRadius") {
+    private object Radius : ValueGroup("ProtectionRadius") {
         val x by int("RadiusX", 20, 1..256, "blocks")
         val z by int("RadiusZ", 20, 1..256, "blocks")
         val y by int("RadiusY", 383, 1..383, "blocks")
     }
 
-    private object Renderer : Configurable("Renderer") {
+    private object Renderer : ValueGroup("Renderer") {
         val renderLimit by int("RenderLimit", 16, 3..50, "zones")
         val holdBlockToRender by boolean("HoldBlockToRender", false)
 
-        object ProtectionColors : Configurable("ProtectionColors") {
+        object ProtectionColors : ValueGroup("ProtectionColors") {
             val zoneFill by color("ZoneFill", DEFAULT_ZONE_FILL)
             val zoneOutline by color("ZoneOutline", DEFAULT_ZONE_OUTLINE)
             val centerZoneOutline by color("CenterZoneOutline", DEFAULT_CENTER_OUTLINE)
         }
 
-        object IndicatorColors : Configurable("IndicatorColors") {
+        object IndicatorColors : ValueGroup("IndicatorColors") {
             val indicatorOutline by color("IndicatorOutline", DEFAULT_INDICATOR_OUTLINE)
             val indicatorFill by color("IndicatorFill", DEFAULT_INDICATOR_FILL)
         }
@@ -97,7 +97,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         }
     }
 
-    private object Indicator : Configurable("PlacementIndicator") {
+    private object Indicator : ValueGroup("PlacementIndicator") {
         val snapY by boolean("SnapToY", false)
     }
 

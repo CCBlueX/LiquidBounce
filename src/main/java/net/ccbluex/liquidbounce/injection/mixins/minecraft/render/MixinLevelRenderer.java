@@ -92,7 +92,7 @@ public abstract class MixinLevelRenderer {
 
     @ModifyExpressionValue(method = "method_62218", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/ARGB;colorFromFloat(FFFF)I"))
     private int customFogClearColor(int original) {
-        return ModuleCustomAmbience.FogConfigurable.INSTANCE.modifyClearColor(original);
+        return ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyClearColor(original);
     }
 
     // this method is a lambda

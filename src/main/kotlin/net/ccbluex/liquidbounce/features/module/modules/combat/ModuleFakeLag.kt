@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
@@ -64,9 +64,9 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     private val flushOn by multiEnumChoice("FlushOn", FlushOn.entries)
 
     private enum class FlushOn(
-        override val choiceName: String,
+        override val tag: String,
         val testPacket: (packet: Packet<*>?) -> Boolean
-    ) : NamedChoice {
+    ) : Tagged {
         ENTITY_INTERACT("EntityInteract", {
             it is ServerboundInteractPacket
             || it is ServerboundSwingPacket
@@ -80,7 +80,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
         })
     }
 
-    private enum class Mode(override val choiceName: String) : NamedChoice {
+    private enum class Mode(override val tag: String) : Tagged {
         CONSTANT("Constant"),
         DYNAMIC("Dynamic")
     }

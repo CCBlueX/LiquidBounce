@@ -23,8 +23,8 @@ import kotlinx.coroutines.Dispatchers
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.additions.drawStackCount
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -81,8 +81,8 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
     private val ignoreSelfBed = choices("IgnoreSelfBed", 0, ::isSelfBedChoices)
     private val ignoreAdjacent by boolean("IgnoreAdjacent", false)
 
-    private sealed class FilterMode(name: String) : Choice(name), Predicate<Block> {
-        final override val parent: ChoiceConfigurable<*>
+    private sealed class FilterMode(name: String) : Mode(name), Predicate<Block> {
+        final override val parent: ModeValueGroup<*>
             get() = filterMode
 
         object Predefined : FilterMode("Predefined") {
@@ -148,7 +148,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
             renderState.distance = bedState.pos.cameraDistance()
 
             val surrounding = (if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks)
-                .filter { filterMode.activeChoice.test(it.block) }
+                .filter { filterMode.activeMode.test(it.block) }
             renderState.surrounding = surrounding
 
             renderState.itemStacksForRender = if (showBed) {
@@ -199,7 +199,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
             val scale = scale.transform(distance.toFloat())
 
             if (scale < 0.01f ||
-                ignoreSelfBed.activeChoice.isSelfBed(bedState.block, currPos) ||
+                ignoreSelfBed.activeMode.isSelfBed(bedState.block, currPos) ||
                 ignoreAdjacent && beds.any { isAdjacentAndNotEquals(it.bedState.trackedBlockPos, currPos) }
             ) {
                 continue

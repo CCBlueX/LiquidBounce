@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.renderScope
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
@@ -44,7 +44,7 @@ import org.apache.logging.log4j.Logger
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
-object ThemeManager : Configurable("theme") {
+object ThemeManager : Config("theme") {
 
     private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ThemeManager")
 

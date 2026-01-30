@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
@@ -61,7 +61,7 @@ object ModuleTeleport : ClientModule("Teleport", ModuleCategories.EXPLOIT, alias
 
     private val decimalFormat = DecimalFormat("##0.000")
 
-    enum class GroundMode(override val choiceName: String) : NamedChoice {
+    enum class GroundMode(override val tag: String) : Tagged {
         TRUE("True"),
         FALSE("False"),
         CORRECT("Correct")

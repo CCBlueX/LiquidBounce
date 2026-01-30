@@ -16,16 +16,37 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.config.gson.serializer
 
-import com.google.gson.JsonPrimitive
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import java.lang.reflect.Type
 
-object EnumChoiceSerializer : JsonSerializer<NamedChoice> {
-    override fun serialize(src: NamedChoice, typeOfSrc: Type, context: JsonSerializationContext) =
-        JsonPrimitive(src.choiceName)
+object ModeValueGroupSerializer : JsonSerializer<ModeValueGroup<Mode>> {
+
+    override fun serialize(
+        src: ModeValueGroup<Mode>, typeOfSrc: Type, context: JsonSerializationContext
+    ): JsonElement {
+        val obj = JsonObject()
+
+        obj.addProperty("name", src.name)
+        obj.addProperty("active", src.activeMode.tag)
+        obj.add("value", context.serialize(src.inner))
+
+        val choices = JsonObject()
+
+        for (choice in src.modes) {
+            choices.add(choice.name, context.serialize(choice))
+        }
+
+        obj.add("choices", choices)
+        obj.add("valueType", context.serialize(src.valueType))
+
+        return obj
+    }
+
 }

@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -59,8 +59,8 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         arrayOf(TiltMode.Static, TiltMode.ByPitch)
     }
 
-    private sealed class TiltMode(name: String) : Choice(name) {
-        final override val parent: ChoiceConfigurable<*>
+    private sealed class TiltMode(name: String) : Mode(name) {
+        final override val parent: ModeValueGroup<*>
             get() = tiltModes
 
         abstract fun transform(pose: Matrix3x2f, partialTick: Float)
@@ -100,8 +100,8 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         arrayOf(PointerMode.Triangle)
     }
 
-    private sealed class PointerMode(name: String) : Choice(name) {
-        final override val parent: ChoiceConfigurable<*>
+    private sealed class PointerMode(name: String) : Mode(name) {
+        final override val parent: ModeValueGroup<*>
             get() = pointerModes
 
         context(ctx: GuiGraphics)
@@ -180,7 +180,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 val yawRad = player.getYRot(it.tickDelta).toRadians()
                 val playerPos = player.interpolateCurrentPosition(it.tickDelta)
 
-                tiltModes.activeChoice.transform(this, it.tickDelta)
+                tiltModes.activeMode.transform(this, it.tickDelta)
 
                 if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) {
                     scale(-1f, 1f)
@@ -196,7 +196,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                     val alpha = (alpha.transform(cameraDistance) * 255).floorToInt()
                     if (alpha == 0) continue
 
-                    val color = colorModes.activeChoice.getColor(entity).alpha(alpha)
+                    val color = colorModes.activeMode.getColor(entity).alpha(alpha)
 
                     val diffX = entityPos.x - playerPos.x
                     val diffZ = entityPos.z - playerPos.z
@@ -205,7 +205,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                         rotate(atan2(diffZ, diffX).toFloat() + Mth.HALF_PI)
                         translate(0f, radius)
                         with(this@with) {
-                            pointerModes.activeChoice.draw(color = color)
+                            pointerModes.activeMode.draw(color = color)
                         }
                     }
                 }

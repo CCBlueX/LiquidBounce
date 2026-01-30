@@ -53,7 +53,7 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
         }
     }
 
-    private fun reset() = this.modes.choices.forEach {
+    private fun reset() = this.modes.modes.forEach {
         it.reset()
     }
 
@@ -95,7 +95,7 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
             return true
         }
 
-        return this.modes.activeChoice.isBot(player)
+        return this.modes.activeMode.isBot(player)
     }
 
 }

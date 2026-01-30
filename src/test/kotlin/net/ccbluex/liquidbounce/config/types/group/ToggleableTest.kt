@@ -17,8 +17,9 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.types.nesting
+package net.ccbluex.liquidbounce.config.types.group
 
+import net.ccbluex.liquidbounce.features.misc.Toggleable
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 import kotlin.test.assertEquals

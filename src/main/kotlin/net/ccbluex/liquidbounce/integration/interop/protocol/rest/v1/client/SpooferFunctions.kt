@@ -28,13 +28,13 @@ import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 
 @Suppress("UNUSED_PARAMETER")
-fun getSpooferConfigurable(request: RequestObject): FullHttpResponse {
+fun getSpooferConfig(request: RequestObject): FullHttpResponse {
     // Serialize MultiplayerConfigurable to JSON
-    return httpOk(ConfigSystem.serializeConfigurable(SpooferManager, gson = interopGson))
+    return httpOk(ConfigSystem.serializeValueGroup(SpooferManager, gson = interopGson))
 }
 
-fun putSpooferConfigurable(request: RequestObject): FullHttpResponse {
-    ConfigSystem.deserializeConfigurable(SpooferManager, request.body.reader())
+fun putSpooferConfig(request: RequestObject): FullHttpResponse {
+    ConfigSystem.deserializeValueGroup(SpooferManager, request.body.reader())
     ConfigSystem.store(SpooferManager)
     return httpNoContent()
 }

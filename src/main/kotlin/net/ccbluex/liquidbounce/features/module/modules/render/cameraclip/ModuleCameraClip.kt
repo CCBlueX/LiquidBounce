@@ -16,16 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+
+package net.ccbluex.liquidbounce.features.module.modules.render.cameraclip
 
 import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustOptions
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.CameraType
@@ -52,7 +52,7 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
             cameraDistance.get()
         }
 
-    private object ScrollAdjust : ScrollAdjustConfigurable(
+    private object ScrollAdjust : ScrollAdjustValueGroup(
         ModuleCameraClip,
         "ScrollAdjust",
         true,

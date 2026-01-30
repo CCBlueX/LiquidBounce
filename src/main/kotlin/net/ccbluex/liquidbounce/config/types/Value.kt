@@ -27,7 +27,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.lang.translation
@@ -64,7 +67,7 @@ open class Value<T : Any>(
     @Exclude val valueType: ValueType,
 
     /**
-     * If true, the description won't be bound to any [net.ccbluex.liquidbounce.config.types.nesting.Configurable].
+     * If true, the description won't be bound to any [net.ccbluex.liquidbounce.config.types.group.ValueGroup].
      */
     @Exclude @ProtocolExclude var independentDescription: Boolean = false
 ) {
@@ -158,18 +161,18 @@ open class Value<T : Any>(
 
     @JvmName("getTagValue")
     fun getTagValue(): Any = when (this) {
-        is MultiChooseListValue<*> -> "${get().size}/${choices.size}"
+        is MultiChoiceListValue<*> -> "${get().size}/${choices.size}"
         else -> getValue()
     }
 
     @ScriptApiRequired
     @JvmName("getValue")
     fun getValue(): Any = when (this) {
-        is ChoiceConfigurable<*> -> activeChoice.name
+        is ModeValueGroup<*> -> activeMode.name
         else -> when (val v = get()) {
             is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
             is IntRange -> intArrayOf(v.first, v.last)
-            is NamedChoice -> v.choiceName
+            is Tagged -> v.tag
             else -> v
         }
     }
@@ -178,7 +181,7 @@ open class Value<T : Any>(
     @JvmName("setValue")
     @Suppress("UNCHECKED_CAST")
     fun setValue(t: PolyglotValue) = runCatching {
-        if (this is ChooseListValue<*>) {
+        if (this is ChoiceListValue<*>) {
             setByString(t.asString())
             return@runCatching
         }

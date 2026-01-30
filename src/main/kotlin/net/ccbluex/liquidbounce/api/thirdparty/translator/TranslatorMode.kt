@@ -16,20 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+package net.ccbluex.liquidbounce.api.thirdparty.translator
 
-object KillAuraRotationsConfigurable : RotationsConfigurable(ModuleKillAura, combatSpecific = true) {
+import net.ccbluex.liquidbounce.config.types.group.Mode
 
-    val rotationTiming by enumChoice("RotationTiming", KillAuraRotationTiming.NORMAL)
-    val aimThroughWalls by boolean("ThroughWalls", false)
-
-    enum class KillAuraRotationTiming(override val choiceName: String) : NamedChoice {
-        NORMAL("Normal"),
-        SNAP("Snap"),
-        ON_TICK("OnTick")
-    }
-
-}
+abstract class TranslatorMode(
+    name: String
+) : Mode(name), TranslatorApi

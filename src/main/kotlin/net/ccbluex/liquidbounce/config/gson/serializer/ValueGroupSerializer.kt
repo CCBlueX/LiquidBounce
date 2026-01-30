@@ -23,58 +23,58 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import java.lang.reflect.Type
 
-class ConfigurableSerializer(
+class ValueGroupSerializer(
     private val withValueType: Boolean, private val includePrivate: Boolean, private val includeNotAnOption: Boolean
-) : JsonSerializer<Configurable> {
+) : JsonSerializer<ValueGroup> {
 
     companion object {
 
         /**
-         * This serializer is used to serialize [Configurable]s to JSON
+         * This serializer is used to serialize [ValueGroup]s to JSON
          */
         @JvmField
-        val FILE_SERIALIZER = ConfigurableSerializer(
+        val FILE_SERIALIZER = ValueGroupSerializer(
             withValueType = false, includePrivate = true, includeNotAnOption = true
         )
 
         /**
-         * This serializer is used to serialize [Configurable]s to JSON for interop communication
+         * This serializer is used to serialize [ValueGroup]s to JSON for interop communication
          */
         @JvmField
-        val INTEROP_SERIALIZER = ConfigurableSerializer(
+        val INTEROP_SERIALIZER = ValueGroupSerializer(
             withValueType = true, includePrivate = true, includeNotAnOption = false
         )
 
         /**
-         * This serializer is used to serialize [Configurable]s to JSON for public config
+         * This serializer is used to serialize [ValueGroup]s to JSON for public config
          */
         @JvmField
-        val PUBLIC_SERIALIZER = ConfigurableSerializer(
+        val PUBLIC_SERIALIZER = ValueGroupSerializer(
             withValueType = false, includePrivate = false, includeNotAnOption = true
         )
 
         /**
-         * Serialize a [Configurable] to a read-only [JsonObject]
+         * Serialize a [ValueGroup] to a read-only [JsonObject]
          *
          * Used for interop communication by [ReadOnlyComponentSerializer]
          * and [ReadOnlyThemeSerializer].
          */
         @JvmStatic
         fun serializeReadOnly(
-            configurable: Configurable,
+            valueGroup: ValueGroup,
             context: JsonSerializationContext
         ): JsonObject = JsonObject().apply {
-            for (v in configurable.inner) {
+            for (v in valueGroup.inner) {
                 add(v.name.toLowerCamelCase(), when (v) {
                     is Alignment -> context.serialize(v, Alignment::class.java)
-                    is Configurable -> serializeReadOnly(v, context)
+                    is ValueGroup -> serializeReadOnly(v, context)
                     else -> context.serialize(v.inner)
                 })
             }
@@ -83,7 +83,7 @@ class ConfigurableSerializer(
     }
 
     override fun serialize(
-        src: Configurable, typeOfSrc: Type, context: JsonSerializationContext
+        src: ValueGroup, typeOfSrc: Type, context: JsonSerializationContext
     ) = JsonObject().apply {
         addProperty("name", src.name)
         try {

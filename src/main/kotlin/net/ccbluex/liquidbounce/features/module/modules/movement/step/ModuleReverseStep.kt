@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -74,8 +74,8 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
         }
     }
 
-    object Instant : Choice("Instant") {
-        override val parent: ChoiceConfigurable<Choice>
+    object Instant : Mode("Instant") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val ticks by int("Ticks", 20, 1..40, "ticks")
@@ -121,8 +121,8 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
 
     }
 
-    object Accelerator : Choice("Accelerator") {
-        override val parent: ChoiceConfigurable<Choice>
+    object Accelerator : Mode("Accelerator") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val factor by float("Factor", 1.0F, 0.1F..5.0F)
@@ -139,9 +139,9 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
 
     }
 
-    object Strict : Choice("Strict") {
+    object Strict : Mode("Strict") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val motion by float("Motion", 1.0F, 0.1F..5.0F)

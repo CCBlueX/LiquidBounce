@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
@@ -253,16 +253,16 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
         val onGround: Boolean
     )
 
-    private enum class TickBaseMode(override val choiceName: String) : NamedChoice {
+    private enum class TickBaseMode(override val tag: String) : Tagged {
         PAST("Past"),
         FUTURE("Future")
     }
 
     @Suppress("unused")
     private enum class TickBaseCall(
-        override val choiceName: String,
+        override val tag: String,
         private val tick: Runnable
-    ) : NamedChoice {
+    ) : Tagged {
 
         /**
          * Runs a full game tick.

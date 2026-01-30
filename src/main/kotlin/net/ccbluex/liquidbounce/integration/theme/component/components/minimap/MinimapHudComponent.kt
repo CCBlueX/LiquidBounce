@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -70,11 +70,11 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
     private val fixedDirection by boolean("FixedDirection", false)
 
-    private object TextureConfigurable : ToggleableConfigurable(this, "Texture", true) {
+    private object TextureValueGroup : ToggleableValueGroup(this, "Texture", true) {
         val vertexColor by color("VertexColor", Color4b.WHITE)
     }
 
-    private object EntityConfigurable : ToggleableConfigurable(this, "Entity", true) {
+    private object EntityValueGroup : ToggleableValueGroup(this, "Entity", true) {
         val scale by float("Scale", 1f, 0.25F..4F)
     }
 
@@ -82,7 +82,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         name: String,
         private val size: Float,
         private val draw: Renderer,
-    ) : ToggleableConfigurable(this, name, false) {
+    ) : ToggleableValueGroup(this, name, false) {
         val placement by enumChoice("Placement", Placement.TOP_LEFT)
 
         fun render(ctx: GuiGraphics, boundingBox: BoundingBox2f) {
@@ -99,7 +99,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             }
         }
 
-        private enum class Placement(override val choiceName: String) : NamedChoice {
+        private enum class Placement(override val tag: String) : Tagged {
             TOP_LEFT("TopLeft"),
             TOP_RIGHT("TopRight"),
             BOTTOM_LEFT("BottomLeft"),
@@ -124,8 +124,8 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     private val CLOCK = Items.CLOCK.defaultInstance
 
     init {
-        tree(TextureConfigurable)
-        tree(EntityConfigurable)
+        tree(TextureValueGroup)
+        tree(EntityValueGroup)
         extraElements.forEach(::tree)
         ChunkRenderer
         registerComponentListen(this)
@@ -267,7 +267,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         chunksToRenderAround: Int,
         viewDistance: Float,
     ) {
-        if (!TextureConfigurable.enabled) {
+        if (!TextureValueGroup.enabled) {
             return
         }
 
@@ -290,7 +290,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                     val fromY = z.toFloat()
                     val toX = fromX + 1F
                     val toY = fromY + 1F
-                    val color = TextureConfigurable.vertexColor.argb
+                    val color = TextureValueGroup.vertexColor.argb
 
                     addVertexWith2DPose(pose, fromX, fromY).setUv(texPosition.xMin, texPosition.yMin)
                         .setColor(color)
@@ -310,7 +310,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         baseX: Float,
         baseZ: Float,
     ) {
-        if (!EntityConfigurable.enabled) {
+        if (!EntityValueGroup.enabled) {
             return
         }
 
@@ -325,7 +325,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             pose().pushMatrix()
             pose().translate(pos.x.toFloat() / 16.0F - baseX, pos.z.toFloat() / 16.0F - baseZ)
             pose().rotate(rot.yaw.toRadians())
-            pose().scale(EntityConfigurable.scale)
+            pose().scale(EntityValueGroup.scale)
 
             val w = 2.0f
             val h = w * 1.618f

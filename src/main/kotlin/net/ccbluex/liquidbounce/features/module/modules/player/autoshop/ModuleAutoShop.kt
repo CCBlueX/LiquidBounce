@@ -65,7 +65,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     }
 
     private val startDelay by intRange("StartDelay", 1..2, 0..10, "ticks")
-    val purchaseMode = choices(this, "PurchaseMode", NormalPurchaseMode,
+    val purchaseMode = modes(this, "PurchaseMode", NormalPurchaseMode,
         arrayOf(NormalPurchaseMode, QuickPurchaseMode)
     )
 
@@ -148,7 +148,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         }
 
         // buys an item (1 click only)
-        if (purchaseMode.activeChoice == NormalPurchaseMode) {
+        if (purchaseMode.activeMode == NormalPurchaseMode) {
             buyItem(itemSlot, currentElement)
             return
         }

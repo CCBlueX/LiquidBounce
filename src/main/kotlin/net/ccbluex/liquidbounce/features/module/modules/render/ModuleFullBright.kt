@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -40,9 +40,9 @@ object ModuleFullBright : ClientModule("FullBright", ModuleCategories.RENDER) {
         )
     )
 
-    object FullBrightGamma : Choice("Gamma") {
+    object FullBrightGamma : Mode("Gamma") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         val brightness by int("Brightness", 15, 1..15)
@@ -61,9 +61,9 @@ object ModuleFullBright : ClientModule("FullBright", ModuleCategories.RENDER) {
 
     }
 
-    private object FullBrightNightVision : Choice("NightVision") {
+    private object FullBrightNightVision : Mode("NightVision") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")

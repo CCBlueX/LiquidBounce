@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
@@ -58,8 +58,8 @@ object ModuleTrueSight : ClientModule("TrueSight", ModuleCategories.RENDER) {
     }
 
     private enum class Sight(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         BARRIERS("Barriers"),
         ENTITIES("Entities")
     }

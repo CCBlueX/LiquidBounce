@@ -18,15 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
 import net.minecraft.core.BlockPos
 
-sealed class ScaffoldTower(name: String) : Choice(name) {
+sealed class ScaffoldTower(name: String) : Mode(name) {
 
-    final override val parent: ChoiceConfigurable<*>
+    final override val parent: ModeValueGroup<*>
         get() = towerMode
 
     /**

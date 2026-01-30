@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -167,9 +167,9 @@ object ModuleBlockTrap : ClientModule("BlockTrap", ModuleCategories.WORLD) {
      */
     @Suppress("unused")
     private enum class PlacePriority(
-        override val choiceName: String,
+        override val tag: String,
         val comparator: Comparator<BlockPos>
-    ) : NamedChoice {
+    ) : Tagged {
         CLOSEST("Closest", compareBy { it.distToCenterSqr(player.position()) }),
         FURTHEST("Furthest", compareByDescending { it.distToCenterSqr(player.position()) }),
         HIGHEST("Highest", compareByDescending { it.y }),
@@ -177,8 +177,8 @@ object ModuleBlockTrap : ClientModule("BlockTrap", ModuleCategories.WORLD) {
     }
 
     private enum class PlaceAt(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         /**
          * Allows placing crystals next to their legs and keep them at the spot when disabled.
          */
@@ -191,8 +191,8 @@ object ModuleBlockTrap : ClientModule("BlockTrap", ModuleCategories.WORLD) {
     }
 
     private enum class DoublePlace(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         /**
          * Places two blocks above the target's head so that they can't mine the block and at the same time tower up to
          * escape.

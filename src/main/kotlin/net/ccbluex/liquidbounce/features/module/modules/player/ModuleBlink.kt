@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -54,7 +54,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     private val ambush by boolean("Ambush", false)
     private val autoDisable by boolean("AutoDisable", true)
 
-    private object AutoResetOption : ToggleableConfigurable(this, "AutoReset", false) {
+    private object AutoResetOption : ToggleableValueGroup(this, "AutoReset", false) {
         val resetAfter by int("ResetAfter", 100, 1..1000)
         val action by enumChoice("ResetAction", ResetAction.RESET)
     }
@@ -161,7 +161,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
         }
     }
 
-    enum class ResetAction(override val choiceName: String) : NamedChoice {
+    enum class ResetAction(override val tag: String) : Tagged {
         RESET("Reset"),
         BLINK("Blink");
     }

@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
@@ -43,14 +43,14 @@ import net.minecraft.world.phys.shapes.Shapes
  * @note ONLY WORKS ON 1.8 SERVERS
  * @author Nullable
  */
-internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
+internal object FlyVulcan286MC18 : Mode("Vulcan286-18") {
 
 
     // 2.5 is the maximum timer tested.
     private val timer by float("Timer", 2.5f, 1f..2.5f)
     private val autoDisable by boolean("AutoDisable", false)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     var flags = 0

@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
@@ -35,9 +35,9 @@ import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 
-object CriticalsBlink : Choice("Blink") {
+object CriticalsBlink : Mode("Blink") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleCriticals.modes
 
     private val delay by intRange("Delay", 300..600, 0..1000, "ms")

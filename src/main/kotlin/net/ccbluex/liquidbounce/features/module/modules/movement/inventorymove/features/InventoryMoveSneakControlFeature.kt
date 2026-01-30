@@ -18,19 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
-object InventoryMoveSneakControlFeature : ToggleableConfigurable(ModuleInventoryMove, "SneakControl", false) {
+object InventoryMoveSneakControlFeature : ToggleableValueGroup(ModuleInventoryMove, "SneakControl", false) {
 
     private val clientMode by enumChoice("Client", SneakMode.DO_NOT_CHANGE)
 
-    private enum class SneakMode(override val choiceName: String) : NamedChoice {
+    private enum class SneakMode(override val tag: String) : Tagged {
 
         /**
          * This can be used to not change the sprint state.

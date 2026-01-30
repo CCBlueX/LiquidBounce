@@ -17,10 +17,19 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.api.thirdparty.translator
+package net.ccbluex.liquidbounce.config.types
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.ConfigSystem.configs
+import net.ccbluex.liquidbounce.config.ConfigSystem.rootFolder
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import java.io.File
 
-abstract class TranslatorChoice(
-    name: String
-) : Choice(name), TranslatorApi
+open class Config(name: String, value: MutableCollection<Value<*>> = mutableListOf()) : ValueGroup(name, value) {
+
+    val jsonFile: File
+        get() {
+            require(this in configs) { "${this.name} is not registered" }
+            return File(rootFolder, "${this.loweredName}.json")
+        }
+
+}

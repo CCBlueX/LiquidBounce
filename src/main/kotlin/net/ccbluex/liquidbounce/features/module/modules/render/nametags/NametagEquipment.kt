@@ -21,14 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.world.entity.LivingEntity
 
-internal object NametagEquipment : Configurable("Equipment") {
+internal object NametagEquipment : ValueGroup("Equipment") {
 
     private val slots by multiEnumChoice(
         "Slots",
@@ -41,7 +41,7 @@ internal object NametagEquipment : Configurable("Equipment") {
     private val skipEmptySlot by boolean("SkipEmptySlot", true)
     val showInfo by boolean("ShowInfo", true)
 
-    object HighlightItemInUse : ToggleableConfigurable(ModuleNametags, "HighlightItemInUse", false) {
+    object HighlightItemInUse : ToggleableValueGroup(ModuleNametags, "HighlightItemInUse", false) {
         private val fillColor by color("FillColor", Color4b.RED.alpha(100))
         private val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
 

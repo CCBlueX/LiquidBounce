@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -36,7 +36,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * @testedOn anticheat-test.com, eu.loyisa.cn
  * @note flags on specific blocks such as fences
  */
-class SpeedVulcanGround286(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("VulcanGround286", parent) {
+class SpeedVulcanGround286(override val parent: ModeValueGroup<*>) : SpeedBHopBase("VulcanGround286", parent) {
 
     @Suppress("unused")
     private val afterJumpHandler = tickHandler {

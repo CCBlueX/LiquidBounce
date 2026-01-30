@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.range
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
@@ -32,11 +32,11 @@ import kotlin.math.min
 /**
  * Allows adjusting your attack range and scan range.
  */
-open class RangeConfigurable(
+open class RangeValueGroup(
     name: String,
     maxRangeIncrease: Float,
     throughWallsRange: Float
-) : Configurable(name), MinecraftShortcuts {
+) : ValueGroup(name), MinecraftShortcuts {
 
     /**
      * @see net.minecraft.world.entity.player.Player.entityInteractionRange
@@ -89,9 +89,9 @@ open class RangeConfigurable(
     fun adjustAttackRange(attackRange: AttackRange = AttackRange.defaultFor(player)) =
         AttackRange(
             max(0f, attackRange.minRange/* - minRangeDecrease*/),
-            attackRange.maxRange + this@RangeConfigurable.maxRangeIncrease,
+            attackRange.maxRange + this@RangeValueGroup.maxRangeIncrease,
             max(0f, attackRange.minCreativeRange/* - minRangeDecrease*/),
-            attackRange.maxCreativeRange + this@RangeConfigurable.maxRangeIncrease,
+            attackRange.maxCreativeRange + this@RangeValueGroup.maxRangeIncrease,
             attackRange.hitboxMargin,
             attackRange.mobFactor
         )

@@ -19,11 +19,11 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 
-abstract class FactorAngleSmooth(name: String, parent: ChoiceConfigurable<*>) : AngleSmooth(name, parent) {
+abstract class FactorAngleSmooth(name: String, parent: ModeValueGroup<*>) : AngleSmooth(name, parent) {
 
     /**
      * Calculate the factors for the rotation towards the target rotation.

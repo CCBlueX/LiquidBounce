@@ -22,7 +22,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.LfuCache
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.fastutil.Pool.Companion.use
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
@@ -60,8 +60,8 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
         arrayOf(GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it))
     }
 
-    private object ReplaceFriendNames : ToggleableConfigurable(this, "ObfuscateFriends", true) {
-        val colorMode = choices<GenericColorMode<Unit>>(
+    private object ReplaceFriendNames : ToggleableValueGroup(this, "ObfuscateFriends", true) {
+        val colorMode = modes<GenericColorMode<Unit>>(
             ReplaceFriendNames,
             "ColorMode",
             0
@@ -70,8 +70,8 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
         }
     }
 
-    private object ReplaceOthers : ToggleableConfigurable(this, "ObfuscateOthers", false) {
-        val colorMode = choices<GenericColorMode<Unit>>(
+    private object ReplaceOthers : ToggleableValueGroup(this, "ObfuscateOthers", false) {
+        val colorMode = modes<GenericColorMode<Unit>>(
             ReplaceOthers,
             "ColorMode",
             0
@@ -91,9 +91,9 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
     private val replacementMappings = NameProtectMappings()
 
     private val coloringInfo = NameProtectMappings.ColoringInfo(
-        username = { this.colorMode.activeChoice.getColor(Unit) },
-        friends = { ReplaceFriendNames.colorMode.activeChoice.getColor(Unit) },
-        otherPlayers = { ReplaceOthers.colorMode.activeChoice.getColor(Unit) },
+        username = { this.colorMode.activeMode.getColor(Unit) },
+        friends = { ReplaceFriendNames.colorMode.activeMode.getColor(Unit) },
+        otherPlayers = { ReplaceOthers.colorMode.activeMode.getColor(Unit) },
     )
 
     @Suppress("unused")

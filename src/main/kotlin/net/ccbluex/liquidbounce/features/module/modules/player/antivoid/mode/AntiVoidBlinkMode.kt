@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 
 object AntiVoidBlinkMode : AntiVoidMode("Blink") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleAntiVoid.mode
 
     // Cases in which the AntiVoid protection should not be active.

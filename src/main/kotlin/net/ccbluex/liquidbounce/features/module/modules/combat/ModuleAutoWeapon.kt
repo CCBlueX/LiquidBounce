@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -64,9 +64,9 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     @Suppress("unused")
     private enum class WeaponType(
-        override val choiceName: String,
+        override val tag: String,
         val filter: (WeaponItemFacet) -> Boolean
-    ): NamedChoice {
+    ): Tagged {
         ANY("Any", { true }),
         SWORD("Sword", { it.itemStack.isSword }),
         AXE("Axe", { it.itemStack.isAxe }),
@@ -88,8 +88,8 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     @Suppress("unused")
     private enum class ChangeOnAction(
-        override val choiceName: String
-    ): NamedChoice {
+        override val tag: String
+    ): Tagged {
         ON_ATTACK("OnAttack"),
         ON_TARGET("OnTarget")
     }

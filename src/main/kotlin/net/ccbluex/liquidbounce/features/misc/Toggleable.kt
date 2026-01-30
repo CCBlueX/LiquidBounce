@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.types.nesting
+package net.ccbluex.liquidbounce.features.misc
 
 interface Toggleable {
 

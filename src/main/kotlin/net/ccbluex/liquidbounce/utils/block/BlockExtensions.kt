@@ -24,7 +24,7 @@ package net.ccbluex.liquidbounce.utils.block
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
@@ -529,9 +529,9 @@ fun BlockState.canBeReplacedWith(
 
 @Suppress("unused")
 enum class SwingMode(
-    override val choiceName: String,
+    override val tag: String,
     val serverSwing: Boolean,
-) : NamedChoice, Consumer<InteractionHand> {
+) : Tagged, Consumer<InteractionHand> {
 
     DO_NOT_HIDE("DoNotHide", true),
     HIDE_BOTH("HideForBoth", false),

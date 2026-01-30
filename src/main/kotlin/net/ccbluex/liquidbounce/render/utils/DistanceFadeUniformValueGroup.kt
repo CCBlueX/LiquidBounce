@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.render.utils
 
 import com.mojang.blaze3d.systems.RenderPass
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 
-class DistanceFadeUniformConfigurable : Configurable("DistanceFade") {
+class DistanceFadeUniformValueGroup : ValueGroup("DistanceFade") {
 
     val nearStart: Float by float("NearStart", 0F, 0F..512F).onChange {
         minOf(it, nearEnd)

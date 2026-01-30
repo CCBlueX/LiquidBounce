@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -44,12 +44,12 @@ import net.minecraft.world.InteractionHand
  */
 object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MOVEMENT, aliases = listOf("BoatFly")) {
 
-    object BaseSpeed : Configurable("BaseSpeed") {
+    object BaseSpeed : ValueGroup("BaseSpeed") {
         val horizontalSpeed by float("Horizontal", 0.5f, 0.1f..10f)
         val verticalSpeed by float("Vertical", 0.35f, 0.1f..10f)
     }
 
-    object SprintSpeed : ToggleableConfigurable(this, "SprintSpeed", true) {
+    object SprintSpeed : ToggleableValueGroup(this, "SprintSpeed", true) {
         val horizontalSpeed by float("Horizontal", 5f, 0.1f..10f)
         val verticalSpeed by float("Vertical", 2f, 0.1f..10f)
     }
@@ -135,7 +135,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
     /**
      * Bypasses BoatFly checks on anti-cheats such as Vulcan 2.9.1
      */
-    object Rehook : ToggleableConfigurable(this, "Rehook", false) {
+    object Rehook : ToggleableValueGroup(this, "Rehook", false) {
 
         private var unhookAfter by int("UnhookAfter", 4, 1..10)
         private var hookAfter by int("HookAfter", 2, 1..10)

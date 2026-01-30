@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool
 
 import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.network.PickFromInventoryPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.world.item.ItemStack
 
-enum class SwitchMethod(override val choiceName: String, val shouldSync: Boolean) : NamedChoice, MinecraftShortcuts {
+enum class SwitchMethod(override val tag: String, val shouldSync: Boolean) : Tagged, MinecraftShortcuts {
 
     NORMAL("Normal", true) {
 

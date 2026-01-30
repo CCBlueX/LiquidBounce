@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAu
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.stuckChronometer
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.targetSelector
-import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraChoice
+import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraMode
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -55,7 +55,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
 
-object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
+object AStarMode : TpAuraMode("AStar"), AStarPathBuilder {
 
     private val maximumDistance by int("MaximumDistance", 95, 50..250)
     private val maximumCost by int("MaximumCost", 250, 50..500)

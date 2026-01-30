@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -61,8 +61,8 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         Hypixel
     )).apply { tagBy(this) }
 
-    object Legit : Choice("Legit") {
-        override val parent: ChoiceConfigurable<Choice>
+    object Legit : Mode("Legit") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -72,9 +72,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
 
     }
 
-    object Instant : Choice("Instant") {
+    object Instant : Mode("Instant") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         /**
@@ -180,9 +180,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author InspectorBoat (and translated by 1zuna)
      */
-    object Vulcan286 : Choice("Vulcan286") {
+    object Vulcan286 : Mode("Vulcan286") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private var stepCounter = 0
@@ -225,9 +225,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author @liquidsquid1
      */
-    object BlocksMC : Choice("BlocksMC") {
+    object BlocksMC : Mode("BlocksMC") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private var baseTimer by float("BaseTimer", 3.0f, 0.1f..5.0f)
@@ -275,9 +275,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
     /**
      * does not seem to work above a certain y level for some reason
      */
-    object Hypixel : Choice("Hypixel") {
+    object Hypixel : Mode("Hypixel") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         val alternateBypass by boolean("AlternateBypass", false)

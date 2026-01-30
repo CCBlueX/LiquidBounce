@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.event.events
 
 import io.netty.channel.ChannelPipeline
 import net.ccbluex.liquidbounce.annotations.Nameable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
@@ -50,7 +50,7 @@ class BlinkPacketEvent(
 
 }
 
-enum class TransferOrigin(override val choiceName: String) : NamedChoice {
+enum class TransferOrigin(override val tag: String) : Tagged {
     INCOMING("Incoming"),
     OUTGOING("Outgoing");
 }

@@ -17,17 +17,19 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.types
+package net.ccbluex.liquidbounce.config.types.list
 
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import java.util.SortedMap
 
-class ChooseListValue<T : NamedChoice>(
+class ChoiceListValue<T : Tagged>(
     name: String,
     aliases: List<String> = emptyList(),
     defaultValue: T,
@@ -45,12 +47,12 @@ class ChooseListValue<T : NamedChoice>(
     }
 
     override fun setByString(string: String) {
-        val newValue = choices.firstOrNull { it.choiceName == string }
+        val newValue = choices.firstOrNull { it.tag == string }
 
         if (newValue == null) {
             throw IllegalArgumentException(
-                "ChooseListValue `${this.name}` has no option named $string" +
-                    " (available options are ${this.choices.joinToString { it.choiceName }})"
+                "ChoiceListValue `${this.name}` has no option named $string" +
+                    " (available options are ${this.choices.joinToString { it.tag }})"
             )
         }
 
@@ -59,38 +61,38 @@ class ChooseListValue<T : NamedChoice>(
 
     @ScriptApiRequired
     fun getChoicesStrings(): Array<String> {
-        return choices.mapToArray { it.choiceName }
+        return choices.mapToArray { it.tag }
     }
 
 }
 
-interface NamedChoice {
-    val choiceName: String
+interface Tagged {
+    val tag: String
 
     companion object {
-        inline fun <reified T> makeLookupTable(): SortedMap<String, T> where T : NamedChoice, T : Enum<T> =
+        inline fun <reified T> makeLookupTable(): SortedMap<String, T> where T : Tagged, T : Enum<T> =
             T::class.java.enumConstants.associateByTo(
                 Object2ObjectRBTreeMap<String, T>(String.CASE_INSENSITIVE_ORDER)
-            ) { it.choiceName }
+            ) { it.tag }
 
         @JvmName("of")
         @JvmStatic
-        fun String.asNamedChoice(): NamedChoice = object : NamedChoice, Comparable<NamedChoice> {
-            override val choiceName get() = this@asNamedChoice
+        fun String.asTagged(): Tagged = object : Tagged, Comparable<Tagged> {
+            override val tag get() = this@asTagged
 
             override fun equals(other: Any?): Boolean =
                 when (other) {
-                    is NamedChoice -> other.choiceName == this.choiceName
-                    is CharSequence -> this.choiceName == other
-                    is Enum<*> -> this.choiceName == other.name
+                    is Tagged -> other.tag == this.tag
+                    is CharSequence -> this.tag == other
+                    is Enum<*> -> this.tag == other.name
                     else -> false
                 }
 
-            override fun hashCode(): Int = this.choiceName.hashCode()
+            override fun hashCode(): Int = this.tag.hashCode()
 
-            override fun toString(): String = this.choiceName
+            override fun toString(): String = this.tag
 
-            override fun compareTo(other: NamedChoice): Int = this.choiceName.compareTo(other.choiceName)
+            override fun compareTo(other: Tagged): Int = this.tag.compareTo(other.tag)
         }
     }
 }

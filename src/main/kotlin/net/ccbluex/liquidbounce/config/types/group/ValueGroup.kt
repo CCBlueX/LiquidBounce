@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.types.nesting
+package net.ccbluex.liquidbounce.config.types.group
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonNull
@@ -27,22 +27,23 @@ import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.BindValue
-import net.ccbluex.liquidbounce.config.types.ChooseListValue
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.CurveValue
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
 import net.ccbluex.liquidbounce.config.types.FileDialogMode
 import net.ccbluex.liquidbounce.config.types.FileValue
-import net.ccbluex.liquidbounce.config.types.ItemListValue
-import net.ccbluex.liquidbounce.config.types.ListValue
-import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
-import net.ccbluex.liquidbounce.config.types.MutableListValue
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.NamedChoice.Companion.asNamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
-import net.ccbluex.liquidbounce.config.types.RegistryListValue
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.Vec3Value
+import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.ItemListValue
+import net.ccbluex.liquidbounce.config.types.list.ListValue
+import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.MutableListValue
+import net.ccbluex.liquidbounce.config.types.list.RegistryListValue
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.asTagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -66,14 +67,14 @@ import java.util.SequencedSet
 import java.util.function.ToIntFunction
 
 @Suppress("TooManyFunctions")
-open class Configurable(
+open class ValueGroup(
     name: String,
     value: MutableCollection<Value<*>> = mutableListOf(),
     valueType: ValueType = ValueType.CONFIGURABLE,
 
     /**
-     * Signalizes that the [Configurable]'s translation key
-     * should not depend on another [Configurable].
+     * Signalizes that the [ValueGroup]'s translation key
+     * should not depend on another [ValueGroup].
      * This means the [baseKey] will be directly used.
      *
      * The options should be used in common options, so that
@@ -93,10 +94,10 @@ open class Configurable(
 ) {
 
     /**
-     * Stores the [Configurable] in which
-     * the [Configurable] is included, can be null.
+     * Stores the [ValueGroup] in which
+     * the [ValueGroup] is included, can be null.
      */
-    var base: Configurable? = null
+    var base: ValueGroup? = null
 
     /**
      * The base key used when [base] is null,
@@ -106,14 +107,14 @@ open class Configurable(
     open val baseKey: String
         get() = "${ConfigSystem.KEY_PREFIX}.${name.toLowerCamelCase()}"
 
-    open fun initConfigurable() {
-        inner.filterIsInstance<Configurable>().forEach {
-            it.initConfigurable()
+    open fun walkInit() {
+        inner.filterIsInstance<ValueGroup>().forEach { valueGroup ->
+            valueGroup.walkInit()
         }
     }
 
     /**
-     * Walks the path of the [Configurable] and its children
+     * Walks the path of the [ValueGroup] and its children
      */
     fun walkKeyPath(previousBaseKey: String? = null) {
         this.key = if (previousBaseKey != null) {
@@ -124,16 +125,16 @@ open class Configurable(
 
         // Update children
         for (currentValue in this.inner) {
-            if (currentValue is Configurable) {
+            if (currentValue is ValueGroup) {
                 currentValue.walkKeyPath(this.key)
             } else {
                 currentValue.key = "${this.key}.${currentValue.name.toLowerCamelCase()}"
             }
 
-            if (currentValue is ChoiceConfigurable<*>) {
+            if (currentValue is ModeValueGroup<*>) {
                 val currentKey = currentValue.key
 
-                currentValue.choices.forEach { choice -> choice.walkKeyPath(currentKey) }
+                currentValue.modes.forEach { choice -> choice.walkKeyPath(currentKey) }
             }
         }
     }
@@ -144,7 +145,7 @@ open class Configurable(
      */
     private fun constructBaseKey(): String {
         val values = mutableListOf<String>()
-        var current: Configurable? = this
+        var current: ValueGroup? = this
         while (current != null) {
             val base1 = current.base
             if (base1 == null) {
@@ -172,44 +173,44 @@ open class Configurable(
 
     protected fun collectValuesRecursivelyInternal(output: MutableList<Value<*>>) {
         for (currentValue in this.inner) {
-            if (currentValue is ToggleableConfigurable) {
+            if (currentValue is ToggleableValueGroup) {
                 output.add(currentValue)
                 currentValue.collectValuesRecursivelyInternal(output)
             } else {
-                if (currentValue is Configurable) {
+                if (currentValue is ValueGroup) {
                     currentValue.collectValuesRecursivelyInternal(output)
                 } else {
                     output.add(currentValue)
                 }
             }
 
-            if (currentValue is ChoiceConfigurable<*>) {
+            if (currentValue is ModeValueGroup<*>) {
                 output.add(currentValue)
 
-                currentValue.choices.forEach {
+                currentValue.modes.forEach {
                     it.collectValuesRecursivelyInternal(output)
                 }
             }
         }
     }
 
-    fun collectConfigurablesRecursively(): Array<Configurable> {
-        val output = mutableListOf<Configurable>()
+    fun collectValueGroupsRecursively(): Array<ValueGroup> {
+        val output = mutableListOf<ValueGroup>()
 
-        this.collectConfigurablesRecursivelyInternal(output)
+        this.collectValueGroupsRecursivelyInternal(output)
 
         return output.toTypedArray()
     }
 
-    protected fun collectConfigurablesRecursivelyInternal(output: MutableList<Configurable>) {
+    protected fun collectValueGroupsRecursivelyInternal(output: MutableList<ValueGroup>) {
         output.add(this)
         for (currentValue in this.inner) {
             when (currentValue) {
-                is ChoiceConfigurable<*> -> {
+                is ModeValueGroup<*> -> {
                     output.add(currentValue)
-                    currentValue.choices.forEach { it.collectConfigurablesRecursivelyInternal(output) }
+                    currentValue.modes.forEach { it.collectValueGroupsRecursivelyInternal(output) }
                 }
-                is Configurable -> currentValue.collectConfigurablesRecursivelyInternal(output)
+                is ValueGroup -> currentValue.collectValueGroupsRecursivelyInternal(output)
             }
         }
     }
@@ -217,34 +218,34 @@ open class Configurable(
     fun collectValuesRecursively(prefix: String): Sequence<Value<*>> = sequence {
         val normalizedPrefix = prefix.lowercase()
 
-        suspend fun SequenceScope<Value<*>>.walk(current: Configurable) {
+        suspend fun SequenceScope<Value<*>>.walk(current: ValueGroup) {
             val currentKey = current.key?.lowercase()
             if (!shouldWalkKey(currentKey, normalizedPrefix)) {
                 return
             }
             for (value in current.inner) {
                 when (value) {
-                    is ToggleableConfigurable -> {
+                    is ToggleableValueGroup -> {
                         yield(value)
                         walk(value)
                     }
-                    is ChoiceConfigurable<*> -> {
+                    is ModeValueGroup<*> -> {
                         yield(value)
-                        value.choices.forEach { walk(it) }
+                        value.modes.forEach { walk(it) }
                     }
-                    is Configurable -> walk(value)
+                    is ValueGroup -> walk(value)
                     else -> yield(value)
                 }
             }
         }
 
-        walk(this@Configurable)
+        walk(this@ValueGroup)
     }
 
-    fun collectConfigurablesRecursively(prefix: String): Sequence<Configurable> = sequence {
+    fun collectValueGroupsRecursively(prefix: String): Sequence<ValueGroup> = sequence {
         val normalizedPrefix = prefix.lowercase()
 
-        suspend fun SequenceScope<Configurable>.walk(current: Configurable) {
+        suspend fun SequenceScope<ValueGroup>.walk(current: ValueGroup) {
             val currentKey = current.key?.lowercase()
             if (!shouldWalkKey(currentKey, normalizedPrefix)) {
                 return
@@ -252,16 +253,16 @@ open class Configurable(
             yield(current)
             for (value in current.inner) {
                 when (value) {
-                    is ChoiceConfigurable<*> -> {
+                    is ModeValueGroup<*> -> {
                         walk(value)
-                        value.choices.forEach { walk(it) }
+                        value.modes.forEach { walk(it) }
                     }
-                    is Configurable -> walk(value)
+                    is ValueGroup -> walk(value)
                 }
             }
         }
 
-        walk(this@Configurable)
+        walk(this@ValueGroup)
     }
 
     private fun shouldWalkKey(currentKey: String?, prefix: String): Boolean {
@@ -283,28 +284,32 @@ open class Configurable(
 
     // Common value types
 
-    fun <T : Configurable> tree(configurable: T): T {
-        if (configurable.base != null) {
-            logger.warn("Configurable '${configurable.name}' is already added to a parent '${configurable.base?.name}'")
+    fun <T : ValueGroup> tree(valueGroup: T): T {
+        require(valueGroup !is Config) {
+            "ValueGroup '${valueGroup.name}' is a Config and cannot be added to another ValueGroup."
         }
 
-        inner.add(configurable)
-        configurable.base = this
-        return configurable
-    }
-
-    fun <T : Configurable> treeAll(vararg configurable: T) {
-        configurable.forEach(this::tree)
-    }
-
-    fun <T : Configurable> drop(configurable: T): T {
-        require(configurable.base === this) {
-            "Configurable '${configurable.name}' is not a child of '${this.name}'."
+        if (valueGroup.base != null) {
+            logger.warn("ValueGroup '${valueGroup.name}' is already added to a parent '${valueGroup.base?.name}'")
         }
 
-        inner.remove(configurable)
-        configurable.base = null
-        return configurable
+        inner.add(valueGroup)
+        valueGroup.base = this
+        return valueGroup
+    }
+
+    fun <T : ValueGroup> treeAll(vararg valueGroups: T) {
+        valueGroups.forEach(this::tree)
+    }
+
+    fun <T : ValueGroup> drop(valueGroup: T): T {
+        require(valueGroup.base === this) {
+            "ValueGroup '${valueGroup.name}' is not a child of '${this.name}'."
+        }
+
+        inner.remove(valueGroup)
+        valueGroup.base = null
+        return valueGroup
     }
 
     fun <T : Any> value(
@@ -313,7 +318,7 @@ open class Configurable(
         valueType: ValueType = ValueType.INVALID,
         aliases: List<String> = emptyList(),
     ) = Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType).apply {
-        this@Configurable.inner.add(this)
+        this@ValueGroup.inner.add(this)
     }
 
     internal inline fun <T : MutableCollection<E>, reified E> list(
@@ -321,7 +326,7 @@ open class Configurable(
         defaultValue: T,
         valueType: ValueType,
     ) = ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java).apply {
-        this@Configurable.inner.add(this)
+        this@ValueGroup.inner.add(this)
     }
 
     internal inline fun <T : MutableCollection<E>, reified E> mutableList(
@@ -329,7 +334,7 @@ open class Configurable(
         defaultValue: T,
         valueType: ValueType,
     ) = MutableListValue(name, defaultValue, valueType, E::class.java).apply {
-        this@Configurable.inner.add(this)
+        this@ValueGroup.inner.add(this)
     }
 
     internal inline fun <T : MutableSet<E>, reified E> itemList(
@@ -338,7 +343,7 @@ open class Configurable(
         items: Set<ItemListValue.NamedItem<E>>,
         valueType: ValueType,
     ) = ItemListValue(name, defaultValue, items, valueType, E::class.java).apply {
-        this@Configurable.inner.add(this)
+        this@ValueGroup.inner.add(this)
     }
 
     internal inline fun <T : SequencedSet<E>, reified E> registryList(
@@ -346,7 +351,7 @@ open class Configurable(
         defaultValue: T,
         valueType: ValueType,
     ) = RegistryListValue(name, defaultValue, valueType, E::class.java).apply {
-        this@Configurable.inner.add(this)
+        this@ValueGroup.inner.add(this)
     }
 
     private fun <T : Any> rangedValue(
@@ -364,7 +369,7 @@ open class Configurable(
         suffix = suffix,
         valueType = valueType,
     ).apply {
-        this@Configurable.inner.add(this)
+        this@ValueGroup.inner.add(this)
     }
 
     // Fixed data types
@@ -413,7 +418,7 @@ open class Configurable(
     )
 
     fun bind(name: String, default: InputBind) = BindValue(name, defaultValue = default).apply {
-        this@Configurable.inner.add(this)
+        this@ValueGroup.inner.add(this)
     }
 
     fun key(name: String, default: Int) = key(name, InputConstants.Type.KEYSYM.getOrCreate(default))
@@ -486,7 +491,7 @@ open class Configurable(
         yAxis: Axis,
         tension: Float = CurveValue.DEFAULT_TENSION,
     ) = CurveValue(name, default, xAxis, yAxis, tension).apply {
-        this@Configurable.inner.add(this)
+        this@ValueGroup.inner.add(this)
     }
 
     inline fun curve(name: String, block: CurveValue.Builder.() -> Unit): CurveValue {
@@ -501,21 +506,21 @@ open class Configurable(
         dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
         supportedExtensions: Set<String>? = null,
     ) = FileValue(name, default, dialogMode, supportedExtensions).apply {
-        this@Configurable.inner.add(this)
+        this@ValueGroup.inner.add(this)
     }
 
     inline fun <reified T> multiEnumChoice(
         name: String,
         vararg default: T,
         canBeNone: Boolean = true,
-    ) where T : Enum<T>, T : NamedChoice =
+    ) where T : Enum<T>, T : Tagged =
         multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
 
     inline fun <reified T> multiEnumChoice(
         name: String,
         default: Iterable<T>,
         canBeNone: Boolean = true,
-    ) where T : Enum<T>, T : NamedChoice =
+    ) where T : Enum<T>, T : Tagged =
         multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
 
     inline fun <reified T> multiEnumChoice(
@@ -523,7 +528,7 @@ open class Configurable(
         default: EnumSet<T> = enumSetOf(),
         choices: EnumSet<T> = EnumSet.allOf(T::class.java),
         canBeNone: Boolean = true,
-    ) where T : Enum<T>, T : NamedChoice =
+    ) where T : Enum<T>, T : Tagged =
         multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = false)
 
     inline fun <reified T> multiEnumChoice(
@@ -531,66 +536,66 @@ open class Configurable(
         default: SequencedSet<T>,
         choices: EnumSet<T> = EnumSet.allOf(T::class.java),
         canBeNone: Boolean = true,
-    ) where T : Enum<T>, T : NamedChoice =
+    ) where T : Enum<T>, T : Tagged =
         multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = true)
 
-    fun <T : NamedChoice> multiEnumChoice(
+    fun <T : Tagged> multiEnumChoice(
         name: String,
         default: MutableSet<T>,
         choices: Set<T>,
         canBeNone: Boolean,
         isOrderSensitive: Boolean,
-    ) = MultiChooseListValue(name, default, choices, canBeNone, isOrderSensitive).apply {
-        this@Configurable.inner.add(this)
+    ) = MultiChoiceListValue(name, default, choices, canBeNone, isOrderSensitive).apply {
+        this@ValueGroup.inner.add(this)
     }
 
-    inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
-        where T : Enum<T>, T : NamedChoice = enumChoice(name, default, EnumSet.allOf(T::class.java))
+    inline fun <reified T> enumChoice(name: String, default: T): ChoiceListValue<T>
+        where T : Enum<T>, T : Tagged = enumChoice(name, default, EnumSet.allOf(T::class.java))
 
-    fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Set<T>): ChooseListValue<T> =
-        ChooseListValue(name, defaultValue = default, choices = choices).apply { this@Configurable.inner.add(this) }
+    fun <T : Tagged> enumChoice(name: String, default: T, choices: Set<T>): ChoiceListValue<T> =
+        ChoiceListValue(name, defaultValue = default, choices = choices).apply { this@ValueGroup.inner.add(this) }
 
-    protected fun <T : Choice> choices(
+    protected fun <T : Mode> modes(
         eventListener: EventListener,
         name: String,
         active: T,
-        choices: Array<T>,
-    ): ChoiceConfigurable<T> {
-        return choices(eventListener, name, {
-            val idx = choices.indexOf(active)
+        modes: Array<T>,
+    ): ModeValueGroup<T> {
+        return modes(eventListener, name, {
+            val idx = modes.indexOf(active)
 
             check(idx != -1) { "The active choice $active is not contained within the choice array ($it)" }
 
             idx
-        }) { choices }
+        }) { modes }
     }
 
-    protected fun <T : Choice> choices(
+    protected fun <T : Mode> modes(
         eventListener: EventListener,
         name: String,
         activeCallback: ToIntFunction<List<T>>,
-        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>,
-    ): ChoiceConfigurable<T> {
-        return ChoiceConfigurable(eventListener, name, activeCallback, choicesCallback).apply {
-            this@Configurable.inner.add(this)
-            this.base = this@Configurable
+        modesCallback: (ModeValueGroup<T>) -> Array<T>,
+    ): ModeValueGroup<T> {
+        return ModeValueGroup(eventListener, name, activeCallback, modesCallback).apply {
+            this@ValueGroup.inner.add(this)
+            this.base = this@ValueGroup
         }
     }
 
-    protected fun <T : Choice> choices(
+    protected fun <T : Mode> modes(
         eventListener: EventListener,
         name: String,
         activeIndex: Int = 0,
-        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>,
-    ) = choices(eventListener, name, { activeIndex }, choicesCallback)
+        choicesCallback: (ModeValueGroup<T>) -> Array<T>,
+    ) = modes(eventListener, name, { activeIndex }, choicesCallback)
 
-    fun <V : Value<*>> value(value: V) = value.apply { this@Configurable.inner.add(this) }
+    fun <V : Value<*>> value(value: V) = value.apply { this@ValueGroup.inner.add(this) }
 
     /**
      * Assigns the value of the settings to the component
      *
      * A component can have dynamic settings which can be assigned through the JSON file
-     * These have to be interpreted and assigned to the configurable
+     * These have to be interpreted and assigned to the value group
      *
      * An example:
      * {
@@ -665,29 +670,29 @@ open class Configurable(
             }
 
             ValueType.CONFIGURABLE -> {
-                val subConfigurable = Configurable(name)
+                val subValueGroup = ValueGroup(name)
                 val values = valueObject["values"].asJsonArray
                 for (value in values) {
-                    subConfigurable.json(value.asJsonObject)
+                    subValueGroup.json(value.asJsonObject)
                 }
-                tree(subConfigurable)
+                tree(subValueGroup)
             }
-            // same as configurable but it is [ToggleableConfigurable]
+            // same as value group but it is [ToggleableValueGroup]
             ValueType.TOGGLEABLE -> {
                 val value = valueObject["value"].asBoolean
                 // Parent is NULL in that case because we are not dealing with Listenable anyway and only use it
-                // as toggleable Configurable
-                val subConfigurable = object : ToggleableConfigurable(null, name, value) {}
+                // as toggleable ValueGroup
+                val subValueGroup = object : ToggleableValueGroup(null, name, value) {}
                 val settings = valueObject["values"].asJsonArray
                 for (setting in settings) {
-                    subConfigurable.json(setting.asJsonObject)
+                    subValueGroup.json(setting.asJsonObject)
                 }
-                tree(subConfigurable)
+                tree(subValueGroup)
             }
 
             ValueType.CHOOSE -> {
-                val value = valueObject["value"].asString.asNamedChoice()
-                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
+                val value = valueObject["value"].asString.asTagged()
+                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asTagged() }
 
                 enumChoice(name, value, choices)
             }
@@ -704,8 +709,8 @@ open class Configurable(
 
                 val value = valueObject["value"].asJsonArray.mapTo(
                     if (isOrderSensitive) sortedSetOf() else linkedSetOf()
-                ) { it.asString.asNamedChoice() }
-                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
+                ) { it.asString.asTagged() }
+                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asTagged() }
 
                 multiEnumChoice(name, default = value, choices, canBeNone, isOrderSensitive)
             }

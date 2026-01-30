@@ -23,8 +23,8 @@ import it.unimi.dsi.fastutil.ints.Int2ReferenceMap
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.unmodifiable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
@@ -153,14 +153,14 @@ data class InputBind(
      * Enum representing the action associated with a key binding.
      * It includes two actions: TOGGLE and HOLD.
      *
-     * @param choiceName The display name of the action.
+     * @param tag The display name of the action.
      */
-    enum class BindAction(override val choiceName: String) : NamedChoice {
+    enum class BindAction(override val tag: String) : Tagged {
         TOGGLE("Toggle"),
         HOLD("Hold")
     }
 
-    enum class Modifier(override val choiceName: String, val bitMask: Int, vararg val keyCodes: Int): NamedChoice {
+    enum class Modifier(override val tag: String, val bitMask: Int, vararg val keyCodes: Int): Tagged {
         SHIFT("Shift", GLFW.GLFW_MOD_SHIFT, InputConstants.KEY_LSHIFT, InputConstants.KEY_RSHIFT),
         CONTROL("Control", GLFW.GLFW_MOD_CONTROL, InputConstants.KEY_LCONTROL, InputConstants.KEY_RCONTROL),
         ALT("Alt", GLFW.GLFW_MOD_ALT, InputConstants.KEY_LALT, InputConstants.KEY_RALT),
@@ -183,7 +183,7 @@ data class InputBind(
             Util.OS.WINDOWS -> when (this) {
                 CONTROL -> "Ctrl"
                 SUPER -> "\u229e"
-                else -> choiceName
+                else -> tag
             }
             Util.OS.OSX -> when (this) {
                 SHIFT -> "\u21e7"
@@ -192,12 +192,12 @@ data class InputBind(
                 SUPER -> "\u2318"
                 // else -> choiceName
             }
-            else -> choiceName
+            else -> tag
         }
 
         companion object {
             @JvmStatic
-            private val LOOKUP_TABLE = NamedChoice.makeLookupTable<Modifier>()
+            private val LOOKUP_TABLE = Tagged.makeLookupTable<Modifier>()
 
             @JvmStatic
             private val KEY_CODE_LOOKUP: Int2ReferenceMap<Modifier> = run {
@@ -259,10 +259,10 @@ fun InputBind.renderText(): Component = buildList {
     if (modifiers.isNotEmpty()) {
         modifiers.forEach {
             add(divider)
-            add(variable(it.platformRenderName).onHover(HoverEvent.ShowText(it.choiceName.asPlainText())))
+            add(variable(it.platformRenderName).onHover(HoverEvent.ShowText(it.tag.asPlainText())))
         }
     }
     add(regular(" ("))
-    add(variable(action.choiceName))
+    add(variable(action.tag))
     add(regular(")"))
 }.asText()

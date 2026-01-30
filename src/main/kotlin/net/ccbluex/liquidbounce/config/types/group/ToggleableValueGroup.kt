@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.types.nesting
+package net.ccbluex.liquidbounce.config.types.group
 
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
@@ -25,22 +25,23 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.removeEventListenerScope
+import net.ccbluex.liquidbounce.features.misc.Toggleable
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 
 /**
- * A [ToggleableConfigurable] has a state that can be toggled on and off. It also allows you
+ * A [ToggleableValueGroup] has a state that can be toggled on and off. It also allows you
  * to register event handlers that are only active when the state is on,
  * it also features [onEnabled] and [onDisabled] which are called when the state is toggled.
  */
-abstract class ToggleableConfigurable(
+abstract class ToggleableValueGroup(
     @Exclude @ProtocolExclude val parent: EventListener? = null,
     name: String,
     enabled: Boolean,
     aliases: List<String> = emptyList(),
-) : Configurable(name, valueType = ValueType.TOGGLEABLE, aliases = aliases), EventListener, Toggleable,
+) : ValueGroup(name, valueType = ValueType.TOGGLEABLE, aliases = aliases), EventListener, Toggleable,
     MinecraftShortcuts {
 
     @ScriptApiRequired
@@ -81,7 +82,7 @@ abstract class ToggleableConfigurable(
         }
 
         val state = super.onToggled(state)
-        this@ToggleableConfigurable.updateChildState(state)
+        this@ToggleableValueGroup.updateChildState(state)
         return state
     }
 
@@ -94,33 +95,33 @@ abstract class ToggleableConfigurable(
 
     final override fun parent() = parent
 
-    protected fun <T : Choice> choices(name: String, active: T, choices: Array<T>) =
-        choices(this, name, active, choices)
+    protected fun <T : Mode> choices(name: String, active: T, choices: Array<T>) =
+        modes(this, name, active, choices)
 
-    protected fun <T : Choice> choices(
+    protected fun <T : Mode> choices(
         name: String,
         activeIndex: Int = 0,
-        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
-    ) = choices(this, name, activeIndex, choicesCallback)
+        choicesCallback: (ModeValueGroup<T>) -> Array<T>
+    ) = modes(this, name, activeIndex, choicesCallback)
 
 }
 
 /**
- * Updates the state of all child [Configurable]s.
+ * Updates the state of all child [ValueGroup]s.
  *
- * All implementations of [Toggleable] with super class [Configurable]
+ * All implementations of [Toggleable] with super class [ValueGroup]
  * should call this function in [Toggleable.onToggled].
  */
-private fun Configurable.updateChildState(state: Boolean) {
+private fun ValueGroup.updateChildState(state: Boolean) {
     for (value in inner) {
         when (value) {
-            is ToggleableConfigurable -> if (state && value.enabled) {
+            is ToggleableValueGroup -> if (state && value.enabled) {
                 value.onToggled(state = true, isParentUpdate = true)
             } else if (!state && value.enabled) {
                 value.onToggled(state = false, isParentUpdate = true)
             }
-            is ChoiceConfigurable<*> -> value.updateChildState(state)
-            is Configurable -> value.updateChildState(state)
+            is ModeValueGroup<*> -> value.updateChildState(state)
+            is ValueGroup -> value.updateChildState(state)
             is Toggleable -> if (state && value.enabled) {
                 value.onToggled(true)
             } else if (!state && value.enabled) {

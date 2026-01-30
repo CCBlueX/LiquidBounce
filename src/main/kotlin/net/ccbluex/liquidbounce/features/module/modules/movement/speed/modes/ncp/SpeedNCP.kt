@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -39,9 +39,9 @@ import net.minecraft.world.effect.MobEffects
  * tested on anticheat.test.com and eu.loyisa.cn
  * made for ncp, works on uncp and other anticheats by changing some options
  */
-class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP", parent) {
+class SpeedNCP(override val parent: ModeValueGroup<*>) : SpeedBHopBase("NCP", parent) {
 
-    private inner class PullDown(parent: EventListener?) : ToggleableConfigurable(parent, "PullDown", true) {
+    private inner class PullDown(parent: EventListener?) : ToggleableValueGroup(parent, "PullDown", true) {
 
         private val motionMultiplier by float("MotionMultiplier", 1f, 0.01f..10f)
         private val onTick by int("OnTick", 5, 1..9)
@@ -72,7 +72,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         tree(PullDown(this))
     }
 
-    private inner class Boost(parent: EventListener?) : ToggleableConfigurable(parent, "Boost", true) {
+    private inner class Boost(parent: EventListener?) : ToggleableValueGroup(parent, "Boost", true) {
         private val initialBoostMultiplier by float("InitialBoostMultiplier", 1f,
             0.01f..10f)
 

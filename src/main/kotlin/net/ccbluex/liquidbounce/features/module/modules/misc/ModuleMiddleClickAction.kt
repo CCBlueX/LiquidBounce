@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -52,13 +52,13 @@ object ModuleMiddleClickAction : ClientModule(
         doNotIncludeAlways()
     }
 
-    private val mode = choices(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
+    private val mode = modes(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
 
     override fun onDisabled() {
         Pearl.disable()
     }
 
-    object Pearl : Choice("Pearl") {
+    object Pearl : Mode("Pearl") {
 
         private val slotResetDelay by int("SlotResetDelay", 1, 0..10, "ticks")
         private val stopOnSubmit by floatRange("StopOnSubmit", 85F..90F, 60F..90F, "Pitch")
@@ -101,16 +101,16 @@ object ModuleMiddleClickAction : ClientModule(
 
         fun cancelPick(): Boolean {
             return ModuleMiddleClickAction.running &&
-                mode.activeChoice == this &&
+                mode.activeMode == this &&
                 Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) != null
         }
 
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = mode
 
     }
 
-    object FriendClicker : Choice("FriendClicker") {
+    object FriendClicker : Mode("FriendClicker") {
 
         private val pickUpRange by float("PickUpRange", 3.0f, 1f..100f)
 
@@ -153,7 +153,7 @@ object ModuleMiddleClickAction : ClientModule(
             clicked = pickup
         }
 
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = mode
 
     }

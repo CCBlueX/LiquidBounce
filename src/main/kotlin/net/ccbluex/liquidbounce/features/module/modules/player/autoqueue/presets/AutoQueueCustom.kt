@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets
 
 import kotlinx.coroutines.Dispatchers
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -40,12 +40,12 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.AutoQueueTriggerTitle
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 
-object AutoQueueCustom : Choice("Custom") {
+object AutoQueueCustom : Mode("Custom") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleAutoQueue.presets
 
-    internal val triggers = choices("Trigger", 0) {
+    internal val triggers = modes("Trigger", 0) {
         arrayOf(
             AutoQueueTriggerTitle,
             AutoQueueTriggerSubtitle,
@@ -56,14 +56,14 @@ object AutoQueueCustom : Choice("Custom") {
         )
     }
 
-    internal val actions = choices("Action", 0) {
+    internal val actions = modes("Action", 0) {
         arrayOf(
             AutoQueueActionChat,
             AutoQueueActionUseItem
         )
     }
 
-    private object AutoQueueControl : ToggleableConfigurable(this, "Control", true) {
+    private object AutoQueueControl : ToggleableValueGroup(this, "Control", true) {
 
         val killAura by boolean("KillAura", true)
         val speed by boolean("Speed", false)
@@ -91,12 +91,12 @@ object AutoQueueCustom : Choice("Custom") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler(Dispatchers.Minecraft) {
-        val trigger = triggers.activeChoice
+        val trigger = triggers.activeMode
 
         if (trigger.isTriggered) {
             AutoQueueControl.wasInQueue = true
 
-            actions.activeChoice.execute()
+            actions.activeMode.execute()
 
             if (waitUntilWorldChange) {
                 tickUntil { worldChangeOccurred }

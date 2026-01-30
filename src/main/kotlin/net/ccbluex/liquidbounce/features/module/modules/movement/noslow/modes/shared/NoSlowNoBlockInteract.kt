@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -35,7 +35,7 @@ import net.minecraft.world.item.ItemUseAnimation
 internal class NoSlowNoBlockInteract(
     parent: EventListener? = null,
     actionFilter: (ItemUseAnimation) -> Boolean = { true }
-) : ToggleableConfigurable(parent, "NoBlockInteract", true) {
+) : ToggleableValueGroup(parent, "NoBlockInteract", true) {
 
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet

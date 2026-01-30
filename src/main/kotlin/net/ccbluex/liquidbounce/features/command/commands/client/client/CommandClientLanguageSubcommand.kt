@@ -56,7 +56,7 @@ object CommandClientLanguageSubcommand {
                 return@handler
             }
 
-            chat(regular("Setting language to ${choice.choiceName}..."))
+            chat(regular("Setting language to ${choice.tag}..."))
             LanguageManager.clientLanguage = choice
 
             ConfigSystem.store(GlobalManager)

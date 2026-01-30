@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.point.exempts
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.minecraft.world.phys.Vec3
 
 internal class ExemptBestHitVector(parent: EventListener) :
-    ToggleableConfigurable(parent, "ExemptBestHitVector", false), ExemptPoint {
+    ToggleableValueGroup(parent, "ExemptBestHitVector", false), ExemptPoint {
 
     private val vertical by float("Vertical", 0.2f, 0.0f..1f)
     private val horizontal by float("Horizontal", 0.1f, 0.0f..1f)

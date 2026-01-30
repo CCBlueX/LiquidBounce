@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -68,7 +68,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         tree(Blur)
     }
 
-    object Blur : ToggleableConfigurable(ModuleHud, "Blur", enabled = true) {
+    object Blur : ToggleableValueGroup(ModuleHud, "Blur", enabled = true) {
         /**
          * The range in which the blending from not-blurred to blurred occurs.
          */
@@ -84,9 +84,9 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     val isBlurEffectActive
         get() = Blur.enabled && !(mc.options.hideGui && mc.screen == null)
 
-    val themes = tree(Configurable("Themes"))
+    val themes = tree(ValueGroup("Themes"))
 
-    val components = tree(Configurable("AdditionalComponents")).apply {
+    val components = tree(ValueGroup("AdditionalComponents")).apply {
         tree(MinimapHudComponent)
     }
 
@@ -94,13 +94,13 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
      * Updates [themes] content
      */
     fun updateThemes() {
-        themes.inner.filterIsInstance<Configurable>().forEach {
+        themes.inner.filterIsInstance<ValueGroup>().forEach {
             themes.drop(it)
         }
         for (theme in ThemeManager.themes) {
             themes.tree(theme.settings)
         }
-        themes.initConfigurable()
+        themes.walkInit()
         themes.walkKeyPath()
     }
 

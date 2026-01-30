@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.FULL_BOX
@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3f
 import kotlin.math.hypot
 
-object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", true) {
-    private object Path : ToggleableConfigurable(this, "Path", true) {
+object AutoFarmVisualizer : ToggleableValueGroup(ModuleAutoFarm, "Visualize", true) {
+    private object Path : ToggleableValueGroup(this, "Path", true) {
         val color by color("PathColor", Color4b(36, 237, 0, 255))
 
         override val running: Boolean
@@ -55,7 +55,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
         }
     }
 
-    private object Blocks : ToggleableConfigurable(this, "Blocks", true) {
+    private object Blocks : ToggleableValueGroup(this, "Blocks", true) {
         val outline by boolean("Outline", true)
 
         private val readyColor by color("ReadyColor", Color4b(36, 237, 0, 255))
@@ -66,7 +66,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
         private val placeTargets by multiEnumChoice("PlaceTargets", AutoFarmTrackedState.Plantable.entries)
 
-        private object CurrentTarget : ToggleableConfigurable(this.parent, "CurrentTarget", true) {
+        private object CurrentTarget : ToggleableValueGroup(this.parent, "CurrentTarget", true) {
             private val color by color("Color", Color4b(66, 120, 245, 255))
             private val colorRainbow by boolean("Rainbow", false)
 

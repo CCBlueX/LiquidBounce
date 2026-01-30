@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.authlib.account.SessionAccount
 import net.ccbluex.liquidbounce.authlib.yggdrasil.clientIdentifier
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
@@ -45,7 +45,7 @@ import java.util.Optional
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("TooManyFunctions")
-object AccountManager : Configurable("Accounts"), EventListener {
+object AccountManager : Config("Accounts"), EventListener {
 
     val accounts by list(name, mutableListOf<MinecraftAccount>(), ValueType.ACCOUNT)
 

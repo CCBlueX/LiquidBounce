@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -83,9 +83,9 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
 
     @Suppress("unused")
     private enum class Matches(
-        override val choiceName: String,
+        override val tag: String,
         val testMatches: Predicate<LivingEntity>,
-    ) : NamedChoice {
+    ) : Tagged {
         /**
          * Check if [LivingEntity] is in your own team using scoreboard,
          */
@@ -129,9 +129,9 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
 
     @Suppress("unused", "MagicNumber")
     private enum class ArmorColor(
-        override val choiceName: String,
+        override val tag: String,
         val slot: EquipmentSlot,
-    ) : NamedChoice {
+    ) : Tagged {
         HELMET("Helmet", EquipmentSlot.HEAD),
         CHESTPLATE("Chestplate", EquipmentSlot.CHEST),
         PANTS("Pants", EquipmentSlot.LEGS),

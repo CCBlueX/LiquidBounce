@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoWeb.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -34,14 +34,14 @@ import net.minecraft.core.BlockPos
  * @author XeContrast
  */
 object NoWebStrafe : NoWebMode("Strafe") {
-    override val parent: ChoiceConfigurable<NoWebMode>
+    override val parent: ModeValueGroup<NoWebMode>
         get() = modes
 
     private val strength by float("Strength", 0.23f, 0.01f..0.8f)
     private val motionY = tree(Motion())
     private val onlyGround by boolean("OnlyOnGround", false)
 
-    private class Motion : ToggleableConfigurable(this@NoWebStrafe, "MotionY", false) {
+    private class Motion : ToggleableValueGroup(this@NoWebStrafe, "MotionY", false) {
         val motionStrength by float("MotionYStrength", 0.6f, -2.00f..2.00f)
     }
 

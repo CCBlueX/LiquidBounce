@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 
-object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "StabilizeMovement",
+object ScaffoldStabilizeMovementFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "StabilizeMovement",
     true) {
     private const val MAX_CENTER_DEVIATION: Double = 0.2
     private const val MAX_CENTER_DEVIATION_IF_MOVING_TOWARDS: Double = 0.075

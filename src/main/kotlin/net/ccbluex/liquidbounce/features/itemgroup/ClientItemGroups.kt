@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.itemgroup
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.features.itemgroup.groups.ContainerItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.groups.ExploitsItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
@@ -38,7 +38,7 @@ import net.minecraft.world.item.ItemStack
  * @author kawaiinekololis (@team CCBlueX)
  * @depends FabricAPI (for page buttons)
  */
-object ClientItemGroups : Configurable("tabs") {
+object ClientItemGroups : Config("tabs") {
 
     private var beenSetup = false
     val containers by textList("Containers", mutableListOf())

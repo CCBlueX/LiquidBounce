@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -41,9 +41,9 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  *
  * @note Tested in Bedwars, Skywars. Pretty much flagless
  */
-internal object FlyHycraftDamage : Choice("HycraftDamage") {
+internal object FlyHycraftDamage : Mode("HycraftDamage") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     private var damageTaken = false

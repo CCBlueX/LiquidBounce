@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -54,7 +54,7 @@ object ModuleCrystalAura : ClientModule(
         rangeValue =  FloatValueProvider("Range", 4.5f, 1f..12f)
     ))
 
-    object PredictFeature : Configurable("Predict") {
+    object PredictFeature : ValueGroup("Predict") {
         init {
             treeAll(SelfPredict, TargetPredict)
         }
@@ -77,7 +77,7 @@ object ModuleCrystalAura : ClientModule(
         tree(TargetRenderer(this, targetTracker))
     }
 
-    val rotationMode = choices(this, "RotationMode") {
+    val rotationMode = modes(this, "RotationMode") {
         arrayOf(
             NormalRotationMode(it, this, Priority.IMPORTANT_FOR_USAGE_2, true),
             NoRotationMode(it, this)

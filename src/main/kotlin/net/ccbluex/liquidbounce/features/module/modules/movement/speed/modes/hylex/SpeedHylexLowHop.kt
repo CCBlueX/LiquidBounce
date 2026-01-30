@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  * Works because of a silly exemption from Hylex
  * @author @liquidsquid1
  */
-class SpeedHylexLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("HylexLowHop", parent) {
+class SpeedHylexLowHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase("HylexLowHop", parent) {
 
     private var airTicks = 0
 

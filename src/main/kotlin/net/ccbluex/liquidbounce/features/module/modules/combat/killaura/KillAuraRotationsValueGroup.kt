@@ -16,18 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.types.nesting
+package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 
-/**
- * A dynamic configurable that can create instances of values that are not yet present.
- */
-open class DynamicConfigurable(
-    name: String,
-    value: MutableCollection<Value<*>> = mutableListOf(),
-    val factory: (String, JsonObject) -> Value<*>?,
-    valueType: ValueType = ValueType.CONFIGURABLE
-) : Configurable(name, value = value, valueType = valueType)
+object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura, combatSpecific = true) {
+
+    val rotationTiming by enumChoice("RotationTiming", KillAuraRotationTiming.NORMAL)
+    val aimThroughWalls by boolean("ThroughWalls", false)
+
+    enum class KillAuraRotationTiming(override val tag: String) : Tagged {
+        NORMAL("Normal"),
+        SNAP("Snap"),
+        ON_TICK("OnTick")
+    }
+
+}

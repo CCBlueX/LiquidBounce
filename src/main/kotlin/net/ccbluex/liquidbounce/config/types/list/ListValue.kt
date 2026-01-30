@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.types
+package net.ccbluex.liquidbounce.config.types.list
 
 import com.google.gson.Gson
 import com.google.gson.JsonArray
@@ -25,6 +25,8 @@ import com.google.gson.JsonElement
 import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import java.util.SequencedSet
 
@@ -52,7 +54,7 @@ open class ListValue<T : MutableCollection<E>, E>(
      */
     @Exclude @ProtocolExclude val innerType: Class<E>,
 
-) : Value<T>(
+    ) : Value<T>(
     name,
     defaultValue = value,
     valueType = valueType,

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -153,8 +153,8 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     }
 
     private enum class Show(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         ALWAYS_SHOW_BOW("AlwaysShowBow"),
         OTHER_PLAYERS("OtherPlayers"),
         ACTIVE_TRAJECTORY_ARROW("ActiveTrajectoryArrow"),

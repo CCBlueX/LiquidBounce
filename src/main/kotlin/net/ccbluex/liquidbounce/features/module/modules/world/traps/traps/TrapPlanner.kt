@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
 import it.unimi.dsi.fastutil.doubles.DoubleLongPair
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockIntentProvider
@@ -43,7 +43,7 @@ abstract class TrapPlanner<T>(
     parent: EventListener,
     name: String,
     enabled: Boolean
-): ToggleableConfigurable(parent, name, enabled), BlockIntentProvider<T> {
+): ToggleableValueGroup(parent, name, enabled), BlockIntentProvider<T> {
     protected abstract val trapItems: Set<Item>
     protected abstract val trapWorthyBlocks: Set<Block>
 

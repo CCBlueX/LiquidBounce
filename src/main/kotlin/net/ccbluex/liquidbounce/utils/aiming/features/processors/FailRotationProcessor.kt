@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.features.processors
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -34,7 +34,7 @@ import kotlin.random.Random
  * The fail focus acts as fail rate, it will purposely miss the target on a certain rate.
  */
 class FailRotationProcessor(owner: EventListener? = null)
-    : ToggleableConfigurable(owner, "Fail", false), RotationProcessor {
+    : ToggleableValueGroup(owner, "Fail", false), RotationProcessor {
 
     private val failRate by int("Rate", 3, 1..100, "%")
     val failFactor by float("Factor", 0.04f, 0.01f..0.99f)

@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.blocksmc
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -42,7 +42,7 @@ import kotlin.math.round
  * @author liquidsquid1
  */
 
-class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("BlocksMC") {
+class SpeedBlocksMC(override val parent: ModeValueGroup<*>) : Mode("BlocksMC") {
 
     private var roundStrafeYaw by boolean("RoundStrafeYaw", false)
 

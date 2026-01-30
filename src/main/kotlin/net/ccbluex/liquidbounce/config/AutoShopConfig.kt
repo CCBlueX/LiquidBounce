@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.config
 
 import com.google.gson.GsonBuilder
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo
@@ -80,7 +80,7 @@ object AutoShopConfig {
  * Represents the locally available shop configurations
  */
 @Suppress("unused")
-enum class ShopConfigPreset(override val choiceName: String, localFileName: String) : NamedChoice {
+enum class ShopConfigPreset(override val tag: String, localFileName: String) : Tagged {
 
     PIKA_NETWORK("PikaNetwork", "pika-network"),
     BLOCKSMC("BlocksMC", "blocksmc"),

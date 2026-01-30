@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
@@ -121,8 +121,8 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
         }
     }
 
-    private object SilentOffhand : ToggleableConfigurable(this, "SilentOffhand", true) {
-        private object RenderSlot : ToggleableConfigurable(this, "RenderSlot", true) {
+    private object SilentOffhand : ToggleableValueGroup(this, "SilentOffhand", true) {
+        private object RenderSlot : ToggleableValueGroup(this, "RenderSlot", true) {
 
             private val offset by int("Offset", 40, 30..70)
 
@@ -205,7 +205,7 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
 
     }
 
-    private object AutoEat : ToggleableConfigurable(this, "AutoEat", true) {
+    private object AutoEat : ToggleableValueGroup(this, "AutoEat", true) {
 
         private val minHunger by int("MinHunger", 15, 0..20)
         private var forceUseKey = false

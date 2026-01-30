@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -162,9 +162,9 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     /**
      * Queue network communication - acts as network lag
      */
-    object Queue : Choice("Queue") {
+    object Queue : Mode("Queue") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
@@ -183,11 +183,11 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     /**
      * Cancel network communication
      */
-    object Cancel : Choice("Cancel") {
+    object Cancel : Mode("Cancel") {
 
         private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -202,7 +202,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     /**
      * Stationary freeze - only cancel movement but keeps network communication intact
      */
-    object Stationary : Choice("Stationary") {
+    object Stationary : Mode("Stationary") {
         /**
          * Bypasses Grim's BadPacketsR and Matrix7 Timer Check
          */
@@ -210,7 +210,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         private val yawOffset = FloatOffsetGenerator()
         private val pitchOffset = FloatOffsetGenerator()
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         /**

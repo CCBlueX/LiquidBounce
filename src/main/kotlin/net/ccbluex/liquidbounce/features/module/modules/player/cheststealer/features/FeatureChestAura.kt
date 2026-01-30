@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
@@ -59,7 +59,7 @@ import java.util.function.BooleanSupplier
  * ChestAura feature is responsible for automatically interacting with storage blocks (such as chests)
  * within a specified range and line of sight of the player.
  */
-object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", true) {
+object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true) {
 
     // Configuration fields with appropriate names
     private val interactionRange by float("Range", 3F, 1F..6F)
@@ -77,7 +77,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     private val pauseOn by multiEnumChoice("PauseOn", enumSetOf<PauseCondition>())
 
     @Suppress("unused")
-    private enum class PauseCondition(override val choiceName: String) : NamedChoice, BooleanSupplier {
+    private enum class PauseCondition(override val tag: String) : Tagged, BooleanSupplier {
         COMBAT("Combat") {
             override fun getAsBoolean() = CombatManager.isInCombat
         },
@@ -87,7 +87,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     // Sub-configurable for managing the await container settings
-    private object AwaitContainerSettings : ToggleableConfigurable(this, "AwaitContainer", true) {
+    private object AwaitContainerSettings : ToggleableValueGroup(this, "AwaitContainer", true) {
         val retryTimeout by int("Timeout", 10, 1..80, "ticks")
         val maxInteractionRetries by int("MaxRetries", 4, 1..10)
     }
@@ -108,7 +108,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     // Rotation configuration settings
-    private val rotationConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     // The block position currently being interacted with
     private var currentTargetBlock: BlockPos? = null
@@ -168,7 +168,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
             RotationManager.setRotationTarget(
                 rotation,
                 considerInventory = true,
-                configurable = rotationConfigurable,
+                valueGroup = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
                 ModuleChestStealer
             )

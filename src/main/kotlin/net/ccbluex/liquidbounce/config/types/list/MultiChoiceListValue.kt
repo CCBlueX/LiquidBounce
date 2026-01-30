@@ -16,17 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.types
+package net.ccbluex.liquidbounce.config.types.list
 
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.ValueType
 import java.util.SequencedSet
 import java.util.TreeMap
 
-class MultiChooseListValue<T : NamedChoice>(
+class MultiChoiceListValue<T : Tagged>(
     name: String,
     /**
      * Enabled values in [MutableSet].
@@ -74,7 +76,7 @@ class MultiChooseListValue<T : NamedChoice>(
         value.retainAll(choices)
     }
 
-    private val choiceByName = choices.associateByTo(TreeMap(String.CASE_INSENSITIVE_ORDER)) { it.choiceName }
+    private val choiceByName = choices.associateByTo(TreeMap(String.CASE_INSENSITIVE_ORDER)) { it.tag }
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val active = get()

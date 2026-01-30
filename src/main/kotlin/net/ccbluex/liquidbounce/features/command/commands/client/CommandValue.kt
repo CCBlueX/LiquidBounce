@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.configurableKeyPath
+import net.ccbluex.liquidbounce.features.command.builder.valueGroupKeyPath
 import net.ccbluex.liquidbounce.features.command.builder.valueKeyPath
 import net.ccbluex.liquidbounce.features.command.builder.valueType
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -106,22 +106,22 @@ object CommandValue : Command.Factory {
     private fun resetAllSubCommand() = CommandBuilder
         .begin("reset-all")
         .parameter(
-            ParameterBuilder.configurableKeyPath("configurablePath")
+            ParameterBuilder.valueGroupKeyPath("valueGroupPath")
                 .required()
                 .build()
         )
         .handler {
-            val configurableKey = args[0] as String
-            val configurable = ConfigSystem.findConfigurableByKey(configurableKey)
-                ?: throw CommandException(command.result("configurableNotFound", configurableKey))
+            val valueGroupKey = args[0] as String
+            val valueGroup = ConfigSystem.findValueGroupByKey(valueGroupKey)
+                ?: throw CommandException(command.result("valueGroupNotFound", valueGroupKey))
 
-            configurable.collectValuesRecursively()
+            valueGroup.collectValuesRecursively()
                 .filter { !it.name.equals("Bind", true) }
                 .forEach { it.restore() }
             ModuleClickGui.sync()
             chat(
-                regular(command.result("resetAllSuccess", variable(configurableKey))),
-                metadata = MessageMetadata(id = "CValue#resetAll${configurableKey}")
+                regular(command.result("resetAllSuccess", variable(valueGroupKey))),
+                metadata = MessageMetadata(id = "CValue#resetAll${valueGroupKey}")
             )
         }
         .build()

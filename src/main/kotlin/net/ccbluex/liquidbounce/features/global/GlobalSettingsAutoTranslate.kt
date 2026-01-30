@@ -23,12 +23,12 @@ import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorApi
 import net.ccbluex.liquidbounce.api.thirdparty.translator.providers.GoogleTranslateApi
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 
-object GlobalSettingsAutoTranslate : Configurable(name = "AutoTranslate"), TranslatorApi, EventListener {
+object GlobalSettingsAutoTranslate : ValueGroup(name = "AutoTranslate"), TranslatorApi, EventListener {
 
-    private val providers = choices(this, "Provider", 0) {
+    private val providers = modes(this, "Provider", 0) {
         arrayOf(
             GoogleTranslateApi(it)
         )
@@ -39,7 +39,7 @@ object GlobalSettingsAutoTranslate : Configurable(name = "AutoTranslate"), Trans
         targetLanguage: TranslateLanguage,
         text: String
     ): TranslationResult {
-        return providers.activeChoice.translateInternal(
+        return providers.activeMode.translateInternal(
             sourceLanguage,
             targetLanguage,
             text

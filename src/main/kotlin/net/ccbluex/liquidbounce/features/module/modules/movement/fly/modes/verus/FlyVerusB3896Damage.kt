@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
@@ -38,9 +38,9 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  * @testedOn eu.loyisa.cn
  * @note it gives you ~2 flags for damage
  */
-internal object FlyVerusB3896Damage : Choice("VerusB3896Damage") {
+internal object FlyVerusB3896Damage : Mode("VerusB3896Damage") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     private var flyTicks = 0

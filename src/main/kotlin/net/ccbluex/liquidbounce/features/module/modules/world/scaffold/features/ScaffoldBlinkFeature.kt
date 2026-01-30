@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 
-object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", false) {
+object ScaffoldBlinkFeature : ToggleableValueGroup(ModuleScaffold, "Blink", false) {
 
     private val time by intRange("Time", 50..250, 0..3000, "ms")
     private val flushOn by multiEnumChoice<FlushOn>("FlushOn")
@@ -59,9 +59,9 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
 
     @Suppress("unused")
     private enum class FlushOn(
-        override val choiceName: String,
+        override val tag: String,
         val cond: (packet: Packet<*>?) -> Boolean
-    ) : NamedChoice {
+    ) : Tagged {
         PLACE("Place", { packet ->
             packet is ServerboundUseItemOnPacket
         }),

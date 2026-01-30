@@ -25,7 +25,7 @@ import it.unimi.dsi.fastutil.objects.ObjectFloatPair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -58,13 +58,13 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
     private val colorRainbow by boolean("Rainbow", false)
     private val height by float("Height", 0.5f, 0f..2f)
 
-    private object TemporaryConfigurable : ToggleableConfigurable(this, "Temporary", true) {
+    private object TemporaryValueGroup : ToggleableValueGroup(this, "Temporary", true) {
         val alive by int("Alive", 900, 10..10000, "ms")
         val fade by boolean("Fade", true)
     }
 
     init {
-        tree(TemporaryConfigurable)
+        tree(TemporaryValueGroup)
     }
 
     private val trails = IdentityHashMap<Entity, Trail>()
@@ -161,11 +161,11 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         val positions = ArrayDeque<TrailPart>()
 
         fun verifyAndRenderTrail(renderData: RenderData, camera: Camera, entity: Entity, time: Long) {
-            val aliveDurationF = TemporaryConfigurable.alive.toFloat()
+            val aliveDurationF = TemporaryValueGroup.alive.toFloat()
             val initialAlpha = renderData.color.w
 
-            if (TemporaryConfigurable.enabled) {
-                val aliveDuration = TemporaryConfigurable.alive.toLong()
+            if (TemporaryValueGroup.enabled) {
+                val aliveDuration = TemporaryValueGroup.alive.toLong()
                 val expirationTime = time - aliveDuration
 
                 // Remove outdated positions, the positions are ordered by time (ascending)
@@ -178,7 +178,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
                 return
             }
 
-            val shouldFade = TemporaryConfigurable.fade && TemporaryConfigurable.enabled
+            val shouldFade = TemporaryValueGroup.fade && TemporaryValueGroup.enabled
             val pointsWithAlpha = positions.mapToArray { position ->
                 val alpha = if (shouldFade) {
                     val deltaTime = time - position.creationTime

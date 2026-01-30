@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
@@ -76,7 +76,7 @@ object ModuleClickGui :
                 screen is CustomStandaloneMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI
         }
 
-    object Snapping : ToggleableConfigurable(this, "Snapping", true) {
+    object Snapping : ToggleableValueGroup(this, "Snapping", true) {
 
         @Suppress("UnusedPrivateProperty", "unused")
         private val gridSize by int("GridSize", 10, 1..100, "px").onChanged {

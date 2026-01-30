@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.utils.combat
 import it.unimi.dsi.fastutil.objects.ObjectDoublePair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
@@ -87,7 +87,7 @@ enum class EntityTargetClassification {
 /**
  * Configurable to configure which entities and their state (like being dead) should be considered as a target
  */
-enum class Targets(override val choiceName: String) : NamedChoice {
+enum class Targets(override val tag: String) : Tagged {
     SELF("Self"),
     PLAYERS("Players"),
     HOSTILE("Hostile"),

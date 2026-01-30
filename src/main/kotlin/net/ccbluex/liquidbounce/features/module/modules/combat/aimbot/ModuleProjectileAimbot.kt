@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.entity.handItems
@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", ModuleCategories.COMBAT) {
 
     private val targetSelector = TargetSelector()
-    private val rotations = RotationsConfigurable(this)
+    private val rotations = RotationsValueGroup(this)
 
     init {
         tree(targetSelector)

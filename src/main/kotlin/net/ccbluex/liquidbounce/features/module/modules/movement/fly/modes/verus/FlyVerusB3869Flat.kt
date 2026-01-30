@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -43,11 +43,11 @@ import net.minecraft.world.phys.shapes.Shapes
  * @testedOn anticheat-test
  * @note it can rarely flag once | needs 1.9x or above
  */
-internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
+internal object FlyVerusB3869Flat : Mode("VerusB3896Flat") {
 
     private val timer by float("Timer", 5.0f, 1.0f..20.0f)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     @Suppress("unused")

@@ -19,10 +19,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -57,7 +57,7 @@ import kotlin.math.sin
 object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEMENT) {
 
     // Configuration options
-    private val modes = choices<Choice>("Mode", MotionMode, arrayOf(MotionMode)).apply { tagBy(this) }
+    private val modes = choices<Mode>("Mode", MotionMode, arrayOf(MotionMode)).apply { tagBy(this) }
     private val targetSelector = TargetSelector(range = float("Range", 2.95f, 0.0f..8.0f))
     private val followRange by float("FollowRange", 4f, 0.0f..10.0f).onChange {
         it.coerceAtLeast(targetSelector.maxRange)
@@ -68,8 +68,8 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
     private val requirementsMet
         get() = requirements.all { it.meets() }
 
-    object MotionMode : Choice("Motion") {
-        override val parent: ChoiceConfigurable<Choice>
+    object MotionMode : Mode("Motion") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val controlDirection by boolean("ControlDirection", true)
@@ -80,18 +80,18 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
             tree(AdaptiveRange)
         }
 
-        object Validation : ToggleableConfigurable(MotionMode, "Validation", true) {
+        object Validation : ToggleableValueGroup(MotionMode, "Validation", true) {
 
             init {
                 tree(EdgeCheck)
                 tree(VoidCheck)
             }
 
-            object EdgeCheck : ToggleableConfigurable(Validation, "EdgeCheck", true) {
+            object EdgeCheck : ToggleableValueGroup(Validation, "EdgeCheck", true) {
                 val maxFallHeight by float("MaxFallHeight", 1.2f, 0.1f..4f)
             }
 
-            object VoidCheck : ToggleableConfigurable(Validation, "VoidCheck", true) {
+            object VoidCheck : ToggleableValueGroup(Validation, "VoidCheck", true) {
                 val safetyExpand by float("SafetyExpand", 0.1f, 0.0f..5f)
             }
 
@@ -141,7 +141,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
         }
 
-        object AdaptiveRange : ToggleableConfigurable(MotionMode, "AdaptiveRange", false) {
+        object AdaptiveRange : ToggleableValueGroup(MotionMode, "AdaptiveRange", false) {
             val maxRange by float("MaxRange", 4f, 1f..5f)
             val rangeStep by float("RangeStep", 0.5f, 0.0f..1.0f)
         }
@@ -263,9 +263,9 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
     @Suppress("unused")
     private enum class Requirements(
-        override val choiceName: String,
+        override val tag: String,
         val meets: () -> Boolean
-    ) : NamedChoice {
+    ) : Tagged {
         SPACE("Space", {
             mc.options.keyJump.isDown
         }),

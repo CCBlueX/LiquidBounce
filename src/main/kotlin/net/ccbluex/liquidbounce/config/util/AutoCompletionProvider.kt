@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.config.util
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.ChooseListValue
-import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
 import net.ccbluex.liquidbounce.config.types.RangedValue
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
 
 fun interface AutoCompletionProvider {
 
@@ -51,18 +51,18 @@ fun interface AutoCompletionProvider {
         }
 
         @JvmField
-        val choiceCompleter = AutoCompletionProvider { value ->
-            (value as ChoiceConfigurable<*>).choices.mapToArray { it.choiceName }.asList()
+        val modeGroupCompleter = AutoCompletionProvider { value ->
+            (value as ModeValueGroup<*>).modes.mapToArray { it.tag }.asList()
         }
 
         @JvmField
-        val chooseCompleter = AutoCompletionProvider { value ->
-            (value as ChooseListValue<*>).choices.mapToArray { it.choiceName }.asList()
+        val choiceListCompleter = AutoCompletionProvider { value ->
+            (value as ChoiceListValue<*>).choices.mapToArray { it.tag }.asList()
         }
 
         @JvmField
         val multiChooseCompleter = AutoCompletionProvider { value ->
-            (value as MultiChooseListValue<*>).choices.mapToArray { it.choiceName }.asList()
+            (value as MultiChoiceListValue<*>).choices.mapToArray { it.tag }.asList()
         }
     }
 

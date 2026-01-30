@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
@@ -39,9 +39,9 @@ import net.minecraft.world.phys.shapes.Shapes
  * @anticheatVersion b3901 and b3896
  * @testedOn anticheat-test.com and eu.loyisa.cn
  */
-internal object LiquidWalkVerusB3901 : Choice("VerusB3901") {
+internal object LiquidWalkVerusB3901 : Mode("VerusB3901") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = ModuleLiquidWalk.modes
 
     private var spoof = true

@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoW
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbAccessor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.input.InputBind
@@ -73,11 +73,11 @@ object ModuleFastExp : ClientModule(
      */
     private const val EXPERIENCE_PER_BOTTLE = 7
 
-    private object Rotate : ToggleableConfigurable(this, "Rotate", true) {
-        val rotations = tree(RotationsConfigurable(this))
+    private object Rotate : ToggleableValueGroup(this, "Rotate", true) {
+        val rotations = tree(RotationsValueGroup(this))
     }
 
-    private object NoWaste : ToggleableConfigurable(this, "NoWaste", true) {
+    private object NoWaste : ToggleableValueGroup(this, "NoWaste", true) {
         /**
          * If at least one of the items to repair has durability lower than or equal to [minDurabilityToStartRepair],
          * the module will start throwing experience bottles.
@@ -103,14 +103,14 @@ object ModuleFastExp : ClientModule(
         tree(NoWaste)
     }
 
-    private val throwMode = choices(this,
+    private val throwMode = modes(this,
         "ThrowMode",
         Normal ,
         arrayOf(Normal, Fast)
     )
 
-    private sealed class ThrowMode(name: String) : Choice(name) {
-        final override val parent: ChoiceConfigurable<ThrowMode>
+    private sealed class ThrowMode(name: String) : Mode(name) {
+        final override val parent: ModeValueGroup<ThrowMode>
             get() = throwMode
 
         abstract fun nextTickItems(): Float
@@ -222,7 +222,7 @@ object ModuleFastExp : ClientModule(
             }
         }
 
-        itemsToThrow += throwMode.activeChoice.nextTickItems()
+        itemsToThrow += throwMode.activeMode.nextTickItems()
         val times = itemsToThrow.toInt()
         itemsToThrow -= times
 

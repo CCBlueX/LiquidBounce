@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getA
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getAllLocalStorage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getClientInfo
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getComponents
-import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getGlobalConfigurable
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getGlobalConfig
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getLocalStorage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getLocationInfo
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getMarketplaceItem
@@ -49,7 +49,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getS
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getScreenSize
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getSessionInfo
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getSettings
-import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getSpooferConfigurable
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getSpooferConfig
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getTheme
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getToggleShaderInfo
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getUpdateInfo
@@ -85,11 +85,11 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.post
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putAllLocalStorage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putFavoriteAccount
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putFavoriteProxy
-import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putGlobalConfigurable
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putGlobalConfig
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putLocalStorage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putScreen
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putSettings
-import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putSpooferConfigurable
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putSpooferConfig
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.subscribeMarketplaceItem
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.toggleModule
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.unsubscribeMarketplaceItem
@@ -247,11 +247,11 @@ internal fun Node.registerInteropFunctions() = withPath("/api/v1/client") {
     post("/reconnect", ::postReconnect)
 
     // Spoofer Functions
-    get("/spoofer", ::getSpooferConfigurable)
-    put("/spoofer", ::putSpooferConfigurable)
+    get("/spoofer", ::getSpooferConfig)
+    put("/spoofer", ::putSpooferConfig)
     // Global Functions
-    get("/global", ::getGlobalConfigurable)
-    put("/global", ::putGlobalConfigurable)
+    get("/global", ::getGlobalConfig)
+    put("/global", ::putGlobalConfig)
 
     // Input Functions
     get("/input", ::getInputInfo)

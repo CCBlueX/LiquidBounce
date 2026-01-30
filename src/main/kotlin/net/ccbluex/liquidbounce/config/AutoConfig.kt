@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsType
 import net.ccbluex.liquidbounce.authlib.utils.obj
 import net.ccbluex.liquidbounce.authlib.utils.string
-import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeConfigurable
+import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeValueGroup
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.util.parseTree
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -107,7 +107,7 @@ object AutoConfig {
      */
     fun loadAutoConfig(
         reader: Reader,
-        modules: Collection<Configurable> = emptyList()
+        modules: Collection<ValueGroup> = emptyList()
     ) {
         publicGson.newJsonReader(reader).use { reader ->
             loadAutoConfig(reader.parseTree().asJsonObject, modules)
@@ -119,11 +119,11 @@ object AutoConfig {
      * should be displayed to the user.
      *
      * @param jsonObject The JSON object of the configurable
-     * @see ConfigSystem.deserializeConfigurable
+     * @see ConfigSystem.deserializeValueGroup
      */
     fun loadAutoConfig(
         jsonObject: JsonObject,
-        modules: Collection<Configurable> = emptyList()
+        modules: Collection<ValueGroup> = emptyList()
     ) {
         chat(metadata = MessageMetadata(prefix = false))
         chat("Auto Config".asPlainText(Style.EMPTY + ChatFormatting.LIGHT_PURPLE + ChatFormatting.BOLD))
@@ -133,15 +133,15 @@ object AutoConfig {
             "autoconfig" -> {
                 // Deserialize Module Configurable
                 jsonObject.obj("modules")?.let { moduleObject ->
-                    deserializeModuleConfigurable(moduleObject, modules)
+                    deserializeModuleValueGroup(moduleObject, modules)
                 }
 
                 // Deserialize Spoofer Configurable
                 jsonObject.obj("spoofers")?.let { spooferObject ->
-                    deserializeConfigurable(SpooferManager, spooferObject)
+                    deserializeValueGroup(SpooferManager, spooferObject)
                 }
             }
-            "modules" -> deserializeModuleConfigurable(jsonObject, modules)
+            "modules" -> deserializeModuleValueGroup(jsonObject, modules)
             else -> error("Unknown auto config type: $name")
         }
 
@@ -262,8 +262,8 @@ object AutoConfig {
         this.includeConfiguration = includeConfiguration
 
         // Store the config
-        val moduleTree = ConfigSystem.serializeConfigurable(ModuleManager.modulesConfigurable, publicGson)
-        val spooferTree = ConfigSystem.serializeConfigurable(SpooferManager, publicGson)
+        val moduleTree = ConfigSystem.serializeValueGroup(ModuleManager.modulesConfig, publicGson)
+        val spooferTree = ConfigSystem.serializeValueGroup(SpooferManager, publicGson)
 
         if (!moduleTree.isJsonObject || !spooferTree.isJsonObject) {
             error("Root element is not a json object")
@@ -309,26 +309,26 @@ object AutoConfig {
     /**
      * Deserialize module configurable from a JSON object
      */
-    private fun deserializeModuleConfigurable(
+    private fun deserializeModuleValueGroup(
         jsonObject: JsonObject,
-        modules: Collection<Configurable> = emptyList()
+        modules: Collection<ValueGroup> = emptyList()
     ) {
         // Deserialize full module configurable
         if (modules.isEmpty()) {
-            deserializeConfigurable(ModuleManager.modulesConfigurable, jsonObject)
+            deserializeValueGroup(ModuleManager.modulesConfig, jsonObject)
             return
         }
 
         modules.forEach { module ->
-            val moduleConfigurable = ModuleManager.modulesConfigurable.inner.find { value ->
+            val moduleValueGroup = ModuleManager.modulesConfig.inner.find { value ->
                 value.name == module.name
-            } as? Configurable ?: return@forEach
+            } as? ValueGroup ?: return@forEach
 
             val moduleElement = jsonObject.asJsonObject["value"].asJsonArray.find { jsonElement ->
                 jsonElement.asJsonObject["name"].asString == module.name
             } ?: return@forEach
 
-            deserializeConfigurable(moduleConfigurable, moduleElement)
+            deserializeValueGroup(moduleValueGroup, moduleElement)
         }
     }
 

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -34,11 +34,11 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
 
     private val chance by float("Chance", 100f, 0f..100f, "%")
 
-    private object JumpByReceivedHits : ToggleableConfigurable(ModuleVelocity, "JumpByReceivedHits", false) {
+    private object JumpByReceivedHits : ToggleableValueGroup(ModuleVelocity, "JumpByReceivedHits", false) {
         val hitsUntilJump by intRange("HitsUntilJump", 2..2, 0..10)
     }
 
-    private object JumpByDelay : ToggleableConfigurable(ModuleVelocity, "JumpByDelay", true) {
+    private object JumpByDelay : ToggleableValueGroup(ModuleVelocity, "JumpByDelay", true) {
         val ticksUntilJump by intRange("UntilJump", 2..2, 0..20, "ticks")
     }
 

@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.blink.esp
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.drawBox
@@ -36,12 +36,12 @@ import net.minecraft.world.phys.Vec3
 
 data class BlinkEspData(val entity: Entity, val pos: Vec3, val rotation: Rotation)
 
-abstract class BlinkEspChoice(
+abstract class BlinkEspMode(
     name: String,
     val getEspData: () -> BlinkEspData?
-) : Choice(name)
+) : Mode(name)
 
-abstract class AbstractBlinkEspBox(getEspData: () -> BlinkEspData?) : BlinkEspChoice("Box", getEspData) {
+abstract class AbstractBlinkEspBox(getEspData: () -> BlinkEspData?) : BlinkEspMode("Box", getEspData) {
     private val color by color("Color", Color4b(36, 32, 147, 87))
 
     @Suppress("unused")
@@ -61,7 +61,7 @@ abstract class AbstractBlinkEspBox(getEspData: () -> BlinkEspData?) : BlinkEspCh
     }
 }
 
-abstract class AbstractBlinkEspModel(getEspData: () -> BlinkEspData?) : BlinkEspChoice("Model", getEspData) {
+abstract class AbstractBlinkEspModel(getEspData: () -> BlinkEspData?) : BlinkEspMode("Model", getEspData) {
     private val lightAmount by float("LightAmount", 0.3f, 0.01f..1f)
 
     @Suppress("unused")
@@ -97,7 +97,7 @@ abstract class AbstractBlinkEspModel(getEspData: () -> BlinkEspData?) : BlinkEsp
     }
 }
 
-abstract class AbstractBlinkEspWireframe(getEspData: () -> BlinkEspData?) : BlinkEspChoice("Wireframe", getEspData) {
+abstract class AbstractBlinkEspWireframe(getEspData: () -> BlinkEspData?) : BlinkEspMode("Wireframe", getEspData) {
     private val color by color("Color", Color4b(36, 32, 147, 87))
     private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
 
@@ -110,4 +110,4 @@ abstract class AbstractBlinkEspWireframe(getEspData: () -> BlinkEspData?) : Blin
     }
 }
 
-abstract class AbstractBlinkNone : BlinkEspChoice("None", { null })
+abstract class AbstractBlinkNone : BlinkEspMode("None", { null })

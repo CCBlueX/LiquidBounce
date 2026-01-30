@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementPositionCandidate
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
@@ -43,7 +43,7 @@ import kotlin.math.max
 /**
  * Tries to build improved placement spots.
  */
-object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace", true) {
+object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace", true) {
 
     /**
      * How long to wait before starting a new calculation.
@@ -78,7 +78,7 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
      * Makes sure we don't run into the placement. This does not mean the damage will be predicted at the simulated
      * position.
      */
-    private object SimulateMovement : ToggleableConfigurable(this, "SimulateMovement", true) {
+    private object SimulateMovement : ToggleableValueGroup(this, "SimulateMovement", true) {
 
         /**
          * How many ticks the player movement is simulated.

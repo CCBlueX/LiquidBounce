@@ -91,7 +91,7 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                     val color = if (FriendManager.isFriend(entity)) {
                         Color4b.BLUE
                     } else {
-                        EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity)
+                        EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)
                     }
 
                     val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
