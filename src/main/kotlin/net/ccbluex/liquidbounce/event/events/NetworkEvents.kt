@@ -20,20 +20,20 @@
 package net.ccbluex.liquidbounce.event.events
 
 import io.netty.channel.ChannelPipeline
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.minecraft.network.protocol.Packet
 
-@Nameable("pipeline")
+@Tag("pipeline")
 class PipelineEvent(val channelPipeline: ChannelPipeline, val local: Boolean) : Event()
 
-@Nameable("packet")
+@Tag("packet")
 class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val original: Boolean = true) : CancellableEvent()
 
-@Nameable("queuePacket")
+@Tag("queuePacket")
 class BlinkPacketEvent(
     val packet: Packet<*>?,
     val origin: TransferOrigin

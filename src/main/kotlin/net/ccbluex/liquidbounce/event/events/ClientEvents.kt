@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.event.events
 
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -47,56 +47,56 @@ import net.minecraft.world.level.block.Block
     ReplaceWith("ClickGuiScaleChangeEvent"),
     DeprecationLevel.WARNING
 )
-@Nameable("clickGuiScaleChange")
+@Tag("clickGuiScaleChange")
 class ClickGuiScaleChangeEvent(val value: Float) : Event(), WebSocketEvent
 
-@Nameable("clickGuiValueChange")
+@Tag("clickGuiValueChange")
 class ClickGuiValueChangeEvent(val valueGroup: ValueGroup) : Event(), WebSocketEvent
 
-@Nameable("spaceSeperatedNamesChange")
+@Tag("spaceSeperatedNamesChange")
 class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
 
-@Nameable("clientStart")
+@Tag("clientStart")
 object ClientStartEvent : Event()
 
-@Nameable("clientShutdown")
+@Tag("clientShutdown")
 object ClientShutdownEvent : Event()
 
-@Nameable("clientLanguageChanged")
+@Tag("clientLanguageChanged")
 class ClientLanguageChangedEvent : Event(), WebSocketEvent
 
-@Nameable("valueChanged")
+@Tag("valueChanged")
 class ValueChangedEvent(val value: Value<*>) : Event(), WebSocketEvent
 
-@Nameable("moduleActivation")
+@Tag("moduleActivation")
 class ModuleActivationEvent(val moduleName: String) : Event(), WebSocketEvent
 
-@Nameable("moduleToggle")
+@Tag("moduleToggle")
 class ModuleToggleEvent(val moduleName: String, val hidden: Boolean, val enabled: Boolean) : Event(), WebSocketEvent
 
-@Nameable("refreshArrayList")
+@Tag("refreshArrayList")
 object RefreshArrayListEvent : Event(), WebSocketEvent
 
-@Nameable("notification")
+@Tag("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event(), WebSocketEvent {
     enum class Severity {
         INFO, SUCCESS, ERROR, ENABLED, DISABLED
     }
 }
 
-@Nameable("gameModeChange")
+@Tag("gameModeChange")
 class GameModeChangeEvent(val gameMode: GameType) : Event(), WebSocketEvent
 
-@Nameable("targetChange")
+@Tag("targetChange")
 class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
 
-@Nameable("blockCountChange")
+@Tag("blockCountChange")
 class BlockCountChangeEvent(val nextBlock: Block?, val count: Int?) : Event(), WebSocketEvent
 
-@Nameable("bedStateChange")
+@Tag("bedStateChange")
 class BedStateChangeEvent(val bedStates: Collection<BedState>) : Event(), WebSocketEvent
 
-@Nameable("clientChatStateChange")
+@Tag("clientChatStateChange")
 class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {
     enum class State {
         @SerializedName("connecting")
@@ -119,7 +119,7 @@ class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {
     }
 }
 
-@Nameable("clientChatMessage")
+@Tag("clientChatMessage")
 class ClientChatMessageEvent(
     val user: AxoUser,
     val message: String,
@@ -134,34 +134,34 @@ class ClientChatMessageEvent(
     }
 }
 
-@Nameable("clientChatError")
+@Tag("clientChatError")
 class ClientChatErrorEvent(val error: String) : Event(), WebSocketEvent
 
-@Nameable("clientChatJwtToken")
+@Tag("clientChatJwtToken")
 // Do not define as WebSocket event, because it contains sensitive data
 class ClientChatJwtTokenEvent(val jwt: String) : Event()
 
-@Nameable("accountManagerMessage")
+@Tag("accountManagerMessage")
 class AccountManagerMessageEvent(val message: String) : Event(), WebSocketEvent
 
-@Nameable("accountManagerLogin")
+@Tag("accountManagerLogin")
 class AccountManagerLoginResultEvent(val username: String? = null, val error: String? = null) : Event(), WebSocketEvent
 
-@Nameable("accountManagerAddition")
+@Tag("accountManagerAddition")
 class AccountManagerAdditionResultEvent(
     val username: String? = null, val error: String? = null
 ) : Event(), WebSocketEvent
 
-@Nameable("accountManagerRemoval")
+@Tag("accountManagerRemoval")
 class AccountManagerRemovalResultEvent(val username: String?) : Event(), WebSocketEvent
 
-@Nameable("proxyCheckResult")
+@Tag("proxyCheckResult")
 class ProxyCheckResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event(), WebSocketEvent
 
-@Nameable("browserReady")
+@Tag("browserReady")
 object BrowserReadyEvent : Event()
 
-@Nameable("virtualScreen")
+@Tag("virtualScreen")
 class VirtualScreenEvent(
     val type: CustomScreenType,
     @Deprecated("Use `type` instead") val screenName: String = type.routeName,
@@ -178,24 +178,24 @@ class VirtualScreenEvent(
 
 }
 
-@Nameable("serverPinged")
+@Tag("serverPinged")
 class ServerPingedEvent(val server: ServerData) : Event(), WebSocketEvent
 
-@Nameable("componentsUpdate")
+@Tag("componentsUpdate")
 class ComponentsUpdateEvent(val id: String? = null, val components: List<HudComponent>) : Event(), WebSocketEvent {
     override val serializer get() = accessibleInteropGson
 }
 
-@Nameable("rotationUpdate")
+@Tag("rotationUpdate")
 object RotationUpdateEvent : Event()
 
-@Nameable("resourceReload")
+@Tag("resourceReload")
 object ResourceReloadEvent : Event()
 
-@Nameable("scaleFactorChange")
+@Tag("scaleFactorChange")
 class ScaleFactorChangeEvent(val scaleFactor: Int) : Event(), WebSocketEvent
 
-@Nameable("scheduleInventoryAction")
+@Tag("scheduleInventoryAction")
 class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Chain> = mutableListOf()) : Event() {
 
     fun schedule(
@@ -223,15 +223,15 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Cha
     }
 }
 
-@Nameable("selectHotbarSlotSilently")
+@Tag("selectHotbarSlotSilently")
 class SelectHotbarSlotSilentlyEvent(val requester: Any?, val slot: Int): CancellableEvent()
 
-@Nameable("browserUrlChange")
+@Tag("browserUrlChange")
 class BrowserUrlChangeEvent(val index: Int, val url: String) : Event(), WebSocketEvent
 
-@Nameable("userLoggedIn")
+@Tag("userLoggedIn")
 object UserLoggedInEvent : Event(), WebSocketEvent
 
-@Nameable("userLoggedOut")
+@Tag("userLoggedOut")
 object UserLoggedOutEvent : Event(), WebSocketEvent
 

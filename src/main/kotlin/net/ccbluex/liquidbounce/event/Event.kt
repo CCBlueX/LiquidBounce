@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.event
 
 import it.unimi.dsi.fastutil.objects.Object2ReferenceRBTreeMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 
 /**
@@ -71,13 +71,13 @@ val Class<out Event>.eventName: String
 private val EVENT_CLASS_TO_NAME: Map<Class<out Event>, String> = ALL_EVENT_CLASSES.associateWithTo(
     Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
 ) {
-    it.getAnnotation(Nameable::class.java)!!.name
+    it.getAnnotation(Tag::class.java)!!.name
 }
 
 @JvmField
 internal val EVENT_NAME_TO_CLASS: Map<String, Class<out Event>> = ALL_EVENT_CLASSES.associateByTo(
     Object2ReferenceRBTreeMap(String.CASE_INSENSITIVE_ORDER)
 ) {
-    it.getAnnotation(Nameable::class.java)!!.name
+    it.getAnnotation(Tag::class.java)!!.name
 }
 

@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.event.events
 
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventState
@@ -33,22 +33,22 @@ import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.phys.Vec3
 
 // Entity events bound to client-user entity
-@Nameable("healthUpdate")
+@Tag("healthUpdate")
 class HealthUpdateEvent(val health: Float, val food: Int, val saturation: Float, val previousHealth: Float) : Event()
 
-@Nameable("death")
+@Tag("death")
 object DeathEvent : Event(), WebSocketEvent
 
-@Nameable("playerTick")
+@Tag("playerTick")
 class PlayerTickEvent : CancellableEvent()
 
-@Nameable("playerPostTick")
+@Tag("playerPostTick")
 object PlayerPostTickEvent : Event()
 
-@Nameable("playerMovementTick")
+@Tag("playerMovementTick")
 object PlayerMovementTickEvent : Event()
 
-@Nameable("playerNetworkMovementTick")
+@Tag("playerNetworkMovementTick")
 class PlayerNetworkMovementTickEvent(
     val state: EventState,
     var x: Double,
@@ -57,51 +57,51 @@ class PlayerNetworkMovementTickEvent(
     var ground: Boolean
 ) : CancellableEvent()
 
-@Nameable("playerPushOut")
+@Tag("playerPushOut")
 class PlayerPushOutEvent : CancellableEvent()
 
-@Nameable("playerMove")
+@Tag("playerMove")
 class PlayerMoveEvent(val type: MoverType, var movement: Vec3) : Event()
 
-@Nameable("playerJump")
+@Tag("playerJump")
 class PlayerJumpEvent(var motion: Float, var yaw: Float) : CancellableEvent()
 
-@Nameable("playerAfterJump")
+@Tag("playerAfterJump")
 object PlayerAfterJumpEvent : Event()
 
-@Nameable("playerUseMultiplier")
+@Tag("playerUseMultiplier")
 class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
 
-@Nameable("playerSneakMultiplier")
+@Tag("playerSneakMultiplier")
 class PlayerSneakMultiplier(var multiplier: Double) : Event()
 
 /**
  * Warning: UseHotbarSlotOrOffHand won't stimulate this event
  */
-@Nameable("playerInteractItem")
+@Tag("playerInteractItem")
 class PlayerInteractItemEvent(val player: Player, val hand: InteractionHand) : CancellableEvent()
 
-@Nameable("playerInteractedItem")
+@Tag("playerInteractedItem")
 class PlayerInteractedItemEvent(
     val player: Player,
     val hand: InteractionHand,
     val actionResult: InteractionResult,
 ) : Event()
 
-@Nameable("playerStrafe")
+@Tag("playerStrafe")
 class PlayerVelocityStrafe(val movementInput: Vec3, val speed: Float, val yaw: Float, var velocity: Vec3) : Event()
 
-@Nameable("playerStride")
+@Tag("playerStride")
 class PlayerStrideEvent(var strideForce: Float) : Event()
 
-@Nameable("playerSafeWalk")
+@Tag("playerSafeWalk")
 class PlayerSafeWalkEvent(var isSafeWalk: Boolean = false) : Event()
 
-@Nameable("playerStep")
+@Tag("playerStep")
 class PlayerStepEvent(var height: Float) : Event()
 
-@Nameable("playerStepSuccess")
+@Tag("playerStepSuccess")
 class PlayerStepSuccessEvent(val movementVec: Vec3, var adjustedVec: Vec3) : Event()
 
-@Nameable("playerFluidCollisionCheck")
+@Tag("playerFluidCollisionCheck")
 class PlayerFluidCollisionCheckEvent(val fluid: TagKey<Fluid>) : CancellableEvent()
