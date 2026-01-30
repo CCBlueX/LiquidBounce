@@ -23,9 +23,9 @@ import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import com.mojang.blaze3d.platform.InputConstants
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.toEnumSet
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.BindValue
 import net.ccbluex.liquidbounce.config.types.ChooseListValue
 import net.ccbluex.liquidbounce.config.types.CurveValue
@@ -104,7 +104,7 @@ open class Configurable(
      * is used when its base is null and so on.
      */
     open val baseKey: String
-        get() = "liquidbounce.option.${name.toLowerCamelCase()}"
+        get() = "${ConfigSystem.KEY_PREFIX}.${name.toLowerCamelCase()}"
 
     open fun initConfigurable() {
         inner.filterIsInstance<Configurable>().forEach {
@@ -127,7 +127,7 @@ open class Configurable(
             if (currentValue is Configurable) {
                 currentValue.walkKeyPath(this.key)
             } else {
-                currentValue.key = "${this.key}.value.${currentValue.name.toLowerCamelCase()}"
+                currentValue.key = "${this.key}.${currentValue.name.toLowerCamelCase()}"
             }
 
             if (currentValue is ChoiceConfigurable<*>) {
@@ -162,22 +162,22 @@ open class Configurable(
     val containedValues: Array<Value<*>>
         get() = this.inner.toTypedArray()
 
-    fun getContainedValuesRecursively(): Array<Value<*>> {
+    fun collectValuesRecursively(): Array<Value<*>> {
         val output = mutableListOf<Value<*>>()
 
-        this.getContainedValuesRecursivelyInternal(output)
+        this.collectValuesRecursivelyInternal(output)
 
         return output.toTypedArray()
     }
 
-    protected fun getContainedValuesRecursivelyInternal(output: MutableList<Value<*>>) {
+    protected fun collectValuesRecursivelyInternal(output: MutableList<Value<*>>) {
         for (currentValue in this.inner) {
             if (currentValue is ToggleableConfigurable) {
                 output.add(currentValue)
-                currentValue.inner.filterTo(output) { it.name.equals("Enabled", true) }
+                currentValue.collectValuesRecursivelyInternal(output)
             } else {
                 if (currentValue is Configurable) {
-                    currentValue.getContainedValuesRecursivelyInternal(output)
+                    currentValue.collectValuesRecursivelyInternal(output)
                 } else {
                     output.add(currentValue)
                 }
@@ -186,11 +186,92 @@ open class Configurable(
             if (currentValue is ChoiceConfigurable<*>) {
                 output.add(currentValue)
 
-                currentValue.choices.filter { it.isSelected }.forEach {
-                    it.getContainedValuesRecursivelyInternal(output)
+                currentValue.choices.forEach {
+                    it.collectValuesRecursivelyInternal(output)
                 }
             }
         }
+    }
+
+    fun collectConfigurablesRecursively(): Array<Configurable> {
+        val output = mutableListOf<Configurable>()
+
+        this.collectConfigurablesRecursivelyInternal(output)
+
+        return output.toTypedArray()
+    }
+
+    protected fun collectConfigurablesRecursivelyInternal(output: MutableList<Configurable>) {
+        output.add(this)
+        for (currentValue in this.inner) {
+            when (currentValue) {
+                is ChoiceConfigurable<*> -> {
+                    output.add(currentValue)
+                    currentValue.choices.forEach { it.collectConfigurablesRecursivelyInternal(output) }
+                }
+                is Configurable -> currentValue.collectConfigurablesRecursivelyInternal(output)
+            }
+        }
+    }
+
+    fun collectValuesRecursively(prefix: String): Sequence<Value<*>> = sequence {
+        val normalizedPrefix = prefix.lowercase()
+
+        suspend fun SequenceScope<Value<*>>.walk(current: Configurable) {
+            val currentKey = current.key?.lowercase()
+            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+                return
+            }
+            for (value in current.inner) {
+                when (value) {
+                    is ToggleableConfigurable -> {
+                        yield(value)
+                        walk(value)
+                    }
+                    is ChoiceConfigurable<*> -> {
+                        yield(value)
+                        value.choices.forEach { walk(it) }
+                    }
+                    is Configurable -> walk(value)
+                    else -> yield(value)
+                }
+            }
+        }
+
+        walk(this@Configurable)
+    }
+
+    fun collectConfigurablesRecursively(prefix: String): Sequence<Configurable> = sequence {
+        val normalizedPrefix = prefix.lowercase()
+
+        suspend fun SequenceScope<Configurable>.walk(current: Configurable) {
+            val currentKey = current.key?.lowercase()
+            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+                return
+            }
+            yield(current)
+            for (value in current.inner) {
+                when (value) {
+                    is ChoiceConfigurable<*> -> {
+                        walk(value)
+                        value.choices.forEach { walk(it) }
+                    }
+                    is Configurable -> walk(value)
+                }
+            }
+        }
+
+        walk(this@Configurable)
+    }
+
+    private fun shouldWalkKey(currentKey: String?, prefix: String): Boolean {
+        if (prefix.isBlank()) {
+            return true
+        }
+        if (currentKey == null) {
+            return false
+        }
+        return currentKey.startsWith(prefix) || prefix.startsWith(currentKey)
     }
 
     /**

@@ -47,6 +47,8 @@ import java.io.Writer
 @Suppress("TooManyFunctions")
 object ConfigSystem {
 
+    const val KEY_PREFIX = "liquidbounce"
+
     private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ConfigSystem")
 
     var isFirstLaunch: Boolean = false
@@ -87,6 +89,40 @@ object ConfigSystem {
 
     // A mutable list of all root configurable classes (and their subclasses)
     val configurables = ArrayList<Configurable>()
+
+    fun findValueByKey(key: String): Value<*>? {
+        ensureRootKeys()
+        val normalizedKey = normalizeKeyInput(key)
+        return configurables.asSequence()
+            .flatMap { it.collectValuesRecursively().asSequence() }
+            .firstOrNull { it.key?.equals(normalizedKey, true) == true }
+    }
+
+    fun findConfigurableByKey(key: String): Configurable? {
+        ensureRootKeys()
+        val normalizedKey = normalizeKeyInput(key)
+        return configurables.asSequence()
+            .flatMap { it.collectConfigurablesRecursively().asSequence() }
+            .firstOrNull { it.key?.equals(normalizedKey, true) == true }
+    }
+
+    fun valueKeySequence(prefix: String): Sequence<String> = sequence {
+        ensureRootKeys()
+        for (configurable in configurables) {
+            for (value in configurable.collectValuesRecursively(prefix)) {
+                value.key?.let { yield(it) }
+            }
+        }
+    }
+
+    fun configurableKeySequence(prefix: String): Sequence<String> = sequence {
+        ensureRootKeys()
+        for (configurable in configurables) {
+            for (child in configurable.collectConfigurablesRecursively(prefix)) {
+                child.key?.let { yield(it) }
+            }
+        }
+    }
 
     /**
      * Create new root configurable
@@ -331,6 +367,27 @@ object ConfigSystem {
 
     fun getConfigurableByName(name: String): Configurable? {
         return configurables.firstOrNull { it.name.equals(name, true) }
+    }
+
+    private fun ensureRootKeys() {
+        for (configurable in configurables) {
+            if (configurable.key == null) {
+                configurable.walkKeyPath()
+            }
+        }
+    }
+
+    private fun normalizeKeyInput(key: String): String {
+        val trimmed = key.trim()
+        if (trimmed.isBlank()) {
+            return trimmed
+        }
+        val prefix = "$KEY_PREFIX."
+        return if (trimmed.startsWith(prefix, ignoreCase = true)) {
+            trimmed
+        } else {
+            prefix + trimmed
+        }
     }
 
 }

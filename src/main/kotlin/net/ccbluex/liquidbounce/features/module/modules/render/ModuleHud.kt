@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
@@ -53,7 +54,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     override val running
         get() = this.enabled && !isDestructed
     override val baseKey: String
-        get() = "liquidbounce.module.hud"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.hud"
 
     private val isVisible: Boolean
         get() = !isHidingNow && inGame

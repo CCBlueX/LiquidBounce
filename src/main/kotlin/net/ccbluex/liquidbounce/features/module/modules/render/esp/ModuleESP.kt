@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -43,7 +44,7 @@ import net.minecraft.world.entity.player.Player
 object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.esp"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.esp"
 
     val modes = choices("Mode", EspGlowMode, arrayOf(
         EspBoxMode,

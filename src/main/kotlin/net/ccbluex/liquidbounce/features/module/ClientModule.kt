@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -94,7 +95,7 @@ open class ClientModule(
             }
         }
 
-    override val baseKey: String = "liquidbounce.module.${name.toLowerCamelCase()}"
+    override val baseKey: String = "${ConfigSystem.KEY_PREFIX}.module.${name.toLowerCamelCase()}"
 
     // Tag to be displayed on the HUD
     open val tag: String?

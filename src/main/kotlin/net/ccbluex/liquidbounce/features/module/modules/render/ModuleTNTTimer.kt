@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.computedOn
@@ -47,7 +48,7 @@ import kotlin.math.sin
 object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.tntTimer"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.tntTimer"
 
     // Glow ESP
     val esp by boolean("ESP", true)
