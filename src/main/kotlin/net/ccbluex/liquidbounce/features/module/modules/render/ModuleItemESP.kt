@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -59,7 +60,7 @@ import net.minecraft.world.phys.AABB
 object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.itemEsp"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.itemEsp"
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", itemSortedSetOf())

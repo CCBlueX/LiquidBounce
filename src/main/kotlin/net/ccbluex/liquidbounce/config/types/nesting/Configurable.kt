@@ -23,9 +23,9 @@ import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import com.mojang.blaze3d.platform.InputConstants
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.toEnumSet
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.BindValue
 import net.ccbluex.liquidbounce.config.types.ChooseListValue
 import net.ccbluex.liquidbounce.config.types.CurveValue
@@ -104,7 +104,7 @@ open class Configurable(
      * is used when its base is null and so on.
      */
     open val baseKey: String
-        get() = "liquidbounce.option.${name.toLowerCamelCase()}"
+        get() = "${ConfigSystem.KEY_PREFIX}.${name.toLowerCamelCase()}"
 
     open fun initConfigurable() {
         inner.filterIsInstance<Configurable>().forEach {
@@ -162,22 +162,22 @@ open class Configurable(
     val containedValues: Array<Value<*>>
         get() = this.inner.toTypedArray()
 
-    fun getContainedValuesRecursively(): Array<Value<*>> {
+    fun collectValuesDeep(): Array<Value<*>> {
         val output = mutableListOf<Value<*>>()
 
-        this.getContainedValuesRecursivelyInternal(output)
+        this.collectValuesDeepInternal(output)
 
         return output.toTypedArray()
     }
 
-    protected fun getContainedValuesRecursivelyInternal(output: MutableList<Value<*>>) {
+    protected fun collectValuesDeepInternal(output: MutableList<Value<*>>) {
         for (currentValue in this.inner) {
             if (currentValue is ToggleableConfigurable) {
                 output.add(currentValue)
-                currentValue.inner.filterTo(output) { it.name.equals("Enabled", true) }
+                currentValue.collectValuesDeepInternal(output)
             } else {
                 if (currentValue is Configurable) {
-                    currentValue.getContainedValuesRecursivelyInternal(output)
+                    currentValue.collectValuesDeepInternal(output)
                 } else {
                     output.add(currentValue)
                 }
@@ -186,9 +186,30 @@ open class Configurable(
             if (currentValue is ChoiceConfigurable<*>) {
                 output.add(currentValue)
 
-                currentValue.choices.filter { it.isSelected }.forEach {
-                    it.getContainedValuesRecursivelyInternal(output)
+                currentValue.choices.forEach {
+                    it.collectValuesDeepInternal(output)
                 }
+            }
+        }
+    }
+
+    fun collectConfigurablesDeep(): Array<Configurable> {
+        val output = mutableListOf<Configurable>()
+
+        this.collectConfigurablesDeepInternal(output)
+
+        return output.toTypedArray()
+    }
+
+    protected fun collectConfigurablesDeepInternal(output: MutableList<Configurable>) {
+        output.add(this)
+        for (currentValue in this.inner) {
+            when (currentValue) {
+                is ChoiceConfigurable<*> -> {
+                    output.add(currentValue)
+                    currentValue.choices.forEach { it.collectConfigurablesDeepInternal(output) }
+                }
+                is Configurable -> currentValue.collectConfigurablesDeepInternal(output)
             }
         }
     }

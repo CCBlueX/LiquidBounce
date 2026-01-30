@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import it.unimi.dsi.fastutil.longs.LongSets
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -41,7 +42,7 @@ import net.minecraft.world.level.chunk.ChunkAccess
 object ModuleVoidESP : ClientModule("VoidESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.voidEsp"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.voidEsp"
 
     private val yThreshold by int("YThreshold", 16, 3..32)
     private val rangeSide by int("RangeSide", 3, 0..32)

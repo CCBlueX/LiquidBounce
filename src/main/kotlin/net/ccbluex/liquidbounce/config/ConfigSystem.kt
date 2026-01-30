@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.DynamicConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
@@ -46,6 +47,8 @@ import java.io.Writer
  */
 @Suppress("TooManyFunctions")
 object ConfigSystem {
+
+    const val KEY_PREFIX = "liquidbounce"
 
     private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ConfigSystem")
 
@@ -87,6 +90,78 @@ object ConfigSystem {
 
     // A mutable list of all root configurable classes (and their subclasses)
     val configurables = ArrayList<Configurable>()
+
+    fun findValueByKey(key: String): Value<*>? {
+        ensureRootKeys()
+        val normalizedKey = normalizeKeyInput(key)
+        return configurables.asSequence()
+            .flatMap { it.collectValuesDeep().asSequence() }
+            .firstOrNull { it.key?.equals(normalizedKey, true) == true }
+    }
+
+    fun findConfigurableByKey(key: String): Configurable? {
+        ensureRootKeys()
+        val normalizedKey = normalizeKeyInput(key)
+        return configurables.asSequence()
+            .flatMap { it.collectConfigurablesDeep().asSequence() }
+            .firstOrNull { it.key?.equals(normalizedKey, true) == true }
+    }
+
+    fun valueKeySequence(prefix: String): Sequence<String> = sequence {
+        ensureRootKeys()
+        val normalizedPrefix = prefix.lowercase()
+
+        suspend fun SequenceScope<String>.walk(current: Configurable) {
+            val currentKey = current.key?.lowercase()
+            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+                return
+            }
+            for (value in current.inner) {
+                when (value) {
+                    is ToggleableConfigurable -> {
+                        value.key?.let { yield(it) }
+                        walk(value)
+                    }
+                    is ChoiceConfigurable<*> -> {
+                        value.key?.let { yield(it) }
+                        for (choice in value.choices) {
+                            walk(choice)
+                        }
+                    }
+                    is Configurable -> walk(value)
+                    else -> value.key?.let { yield(it) }
+                }
+            }
+        }
+
+        configurables.forEach { walk(it) }
+    }
+
+    fun configurableKeySequence(prefix: String): Sequence<String> = sequence {
+        ensureRootKeys()
+        val normalizedPrefix = prefix.lowercase()
+
+        suspend fun SequenceScope<String>.walk(current: Configurable) {
+            val currentKey = current.key?.lowercase()
+            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+                return
+            }
+            current.key?.let { yield(it) }
+            for (value in current.inner) {
+                when (value) {
+                    is ChoiceConfigurable<*> -> {
+                        walk(value)
+                        for (choice in value.choices) {
+                            walk(choice)
+                        }
+                    }
+                    is Configurable -> walk(value)
+                }
+            }
+        }
+
+        configurables.forEach { walk(it) }
+    }
 
     /**
      * Create new root configurable
@@ -331,6 +406,37 @@ object ConfigSystem {
 
     fun getConfigurableByName(name: String): Configurable? {
         return configurables.firstOrNull { it.name.equals(name, true) }
+    }
+
+    private fun ensureRootKeys() {
+        for (configurable in configurables) {
+            if (configurable.key == null) {
+                configurable.walkKeyPath()
+            }
+        }
+    }
+
+    private fun normalizeKeyInput(key: String): String {
+        val trimmed = key.trim()
+        if (trimmed.isBlank()) {
+            return trimmed
+        }
+        val prefix = "$KEY_PREFIX."
+        return if (trimmed.startsWith(prefix, ignoreCase = true)) {
+            trimmed
+        } else {
+            prefix + trimmed
+        }
+    }
+
+    private fun shouldWalkKey(currentKey: String?, prefix: String): Boolean {
+        if (prefix.isBlank()) {
+            return true
+        }
+        if (currentKey == null) {
+            return false
+        }
+        return currentKey.startsWith(prefix) || prefix.startsWith(currentKey)
     }
 
 }
