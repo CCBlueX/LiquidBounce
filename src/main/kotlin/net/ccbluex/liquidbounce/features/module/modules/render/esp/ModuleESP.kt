@@ -85,7 +85,7 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
             return Color4b.RED
         }
 
-        if(syncClientWithPalette && colorModes.activeChoice !is GenericRainbowColorMode) {
+        if(syncClientWithPalette && colorModes.activeChoice is GenericStaticColorMode) {
             val transparency = if(AdaptiveA.enabled) esp else a
             return currentColors[accentColor.num].toColor4b(transparency)
         }

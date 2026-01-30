@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.itemESP
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.colors
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
@@ -222,7 +221,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
     fun getColor(): Color4b {
         val transparency = if(ModuleColorTheme.Transparency.AdaptiveA.enabled) itemESP else a
-        return if (syncClientWithPalette && colorMode.activeChoice !is GenericRainbowColorMode) {
+        return if (syncClientWithPalette && colorMode.activeChoice is GenericStaticColorMode) {
             currentColors[accentColor.num].toColor4b(transparency)
         } else {
             this.colorMode.activeChoice.getColor(null)

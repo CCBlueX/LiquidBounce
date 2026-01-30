@@ -23,6 +23,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.tracers
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
@@ -32,6 +38,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -88,8 +95,11 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                         continue
                     }
 
+                    val transparency = if(Transparency.AdaptiveA.enabled) tracers else a
                     val color = if (FriendManager.isFriend(entity)) {
                         Color4b.BLUE
+                    } else if(syncClientWithPalette && modes.activeChoice is GenericStaticColorMode) {
+                        currentColors[accentColor.num].toColor4b(transparency)
                     } else {
                         EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity)
                     }

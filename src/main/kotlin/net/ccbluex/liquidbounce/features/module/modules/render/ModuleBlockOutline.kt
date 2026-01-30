@@ -24,11 +24,18 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.blockOutline
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLevelRenderer
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.core.Direction
@@ -110,19 +117,25 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
         val translatedPosition = renderPosition - (mc.entityRenderDispatcher
             .camera?.position() ?: return@handler)
 
+        val transparency = if(Transparency.AdaptiveA.enabled) blockOutline else a
+        val currColor =
+            if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(transparency) else color
+        val currOutlineColor =
+            if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(transparency) else outlineColor
+
         renderEnvironmentForWorld(event.matrixStack) {
             if (sideOnly) {
                 drawBoxSide(
                     translatedPosition,
                     side,
-                    color,
-                    outlineColor,
+                    currColor,
+                    currOutlineColor,
                 )
             } else {
                 drawBox(
                     translatedPosition,
-                    color,
-                    outlineColor,
+                    currColor,
+                    currOutlineColor,
                 )
             }
         }

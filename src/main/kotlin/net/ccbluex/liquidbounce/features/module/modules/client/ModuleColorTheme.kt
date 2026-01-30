@@ -72,6 +72,8 @@ object ModuleColorTheme : ClientModule(
         // Unique transparency for every module
         object AdaptiveA : ToggleableConfigurable(this@ModuleColorTheme, "AdaptiveList", true) {
             val breadCrumbs by int("Breadcrumbs", 75, 0..255)
+            val blockESP by int("BlockESP", 125, 0..255)
+            val blockOutline by int("BlockOutline", 125, 0..255)
             val esp by int("ESP", 125, 0..255)
             val hats by int("Hats", 200, 0..255)
             val itemChams by int("ItemChams", 255, 0..255).onChanged {
@@ -80,6 +82,7 @@ object ModuleColorTheme : ClientModule(
             val itemESP by int("ItemESP", 125, 0..255)
             val jumpcircle by int("JumpCircle", 255, 0..255)
             val particles by int("Particles", 255, 0..255)
+            val tracers by int("Tracers", 255, 0..255)
         }
         val adaptiveA = tree(AdaptiveA)
     }
