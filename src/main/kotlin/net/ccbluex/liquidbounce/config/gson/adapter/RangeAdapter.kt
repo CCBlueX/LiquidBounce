@@ -23,11 +23,15 @@ import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import java.lang.reflect.Type
 
 object RangeAdapter : JsonSerializer<ClosedRange<*>>, JsonDeserializer<ClosedRange<*>> {
+
+    private val TYPE_FLOAT_RANGE = (0.0f..5.0f).javaClass
+    private val TYPE_DOUBLE_RANGE = (0.0..5.0).javaClass
 
     override fun serialize(src: ClosedRange<*>, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val obj = JsonObject()
@@ -44,13 +48,13 @@ object RangeAdapter : JsonSerializer<ClosedRange<*>>, JsonDeserializer<ClosedRan
         val first = obj["from"]
         val second = obj["to"]
 
-        if (typeOfT == (0.0f..5.0f).javaClass) {
-            return first.asFloat..second.asFloat
-        } else if (typeOfT == (0.0..5.0).javaClass) {
-            return first.asDouble..second.asDouble
-        }
+        return when (typeOfT) {
+            TYPE_FLOAT_RANGE -> first.asFloat..second.asFloat
 
-        throw IllegalArgumentException("Not implemented")
+            TYPE_DOUBLE_RANGE -> first.asDouble..second.asDouble
+
+            else -> throw JsonParseException("Unknown range type: $typeOfT for input $json")
+        }
     }
 
 }
