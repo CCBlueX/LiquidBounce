@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
@@ -131,7 +130,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     @Suppress("ReturnCount", "CognitiveComplexMethod")
     fun startBlocking() {
-        if (!enabled || (player.isBlockAction && blockMode != BlockMode.HYPIXEL)) {
+        if (!enabled || (player.isBlocking && blockMode != BlockMode.HYPIXEL)) {
             return
         }
 
@@ -247,7 +246,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         // We do not want the player to stop eating or else. Only when he blocks.
-        if (!player.isBlockAction) {
+        if (!player.isBlocking) {
             return false
         }
 

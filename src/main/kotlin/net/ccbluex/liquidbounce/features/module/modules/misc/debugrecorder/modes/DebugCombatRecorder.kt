@@ -44,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -87,7 +86,7 @@ object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>
             return@handler
         }
 
-        if (interaction.isDestroying || player.isUsingItem && !player.isBlockAction) {
+        if (interaction.isDestroying || player.isUsingItem && !player.isBlocking) {
             reset()
             return@handler
         }

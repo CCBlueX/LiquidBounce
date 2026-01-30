@@ -30,9 +30,8 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
-import net.minecraft.network.protocol.game.ClientboundExplodePacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * Strafe velocity
@@ -72,9 +71,7 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
         val packet = event.packet
 
         // Check if this is a regular velocity update
-        if ((packet is ClientboundSetEntityMotionPacket && packet.id == player.id)
-            || packet is ClientboundExplodePacket
-        ) {
+        if (packet.isLocalPlayerVelocity()) {
             if (OnlyFacing.enabled && !shouldStrafe) {
                 return@sequenceHandler
             }

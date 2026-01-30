@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
-import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 internal object NoSlowBlockingBlink : Mode("Blink") {
@@ -36,7 +35,7 @@ internal object NoSlowBlockingBlink : Mode("Blink") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
-        if (event.origin != TransferOrigin.OUTGOING || !player.isBlockAction) {
+        if (event.origin != TransferOrigin.OUTGOING || !player.isBlocking) {
             return@handler
         }
 
