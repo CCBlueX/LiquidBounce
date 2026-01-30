@@ -50,9 +50,8 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
+import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
 import net.ccbluex.liquidbounce.features.global.GlobalManager
-import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
-import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
@@ -280,7 +279,6 @@ object LiquidBounce : EventListener {
         EnderChestInventoryTracker
         WorldToScreen
         ActiveServerList
-        ConfigSystem.root(ClientItemGroups)
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
         ConfigSystem.root(GlobalManager)
@@ -339,7 +337,7 @@ object LiquidBounce : EventListener {
             }
             launch {
                 // Download player heads
-                HeadsItemGroup.heads.getFinalState()
+                HeadsCreativeModeTab.heads.getFinalState()
             }
             launch {
                 // Load configs

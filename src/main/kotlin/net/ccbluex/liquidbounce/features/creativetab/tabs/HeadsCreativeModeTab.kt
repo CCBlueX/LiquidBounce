@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.itemgroup.groups
+package net.ccbluex.liquidbounce.features.creativetab.tabs
 
 import com.google.common.collect.ImmutableMultimap
 import com.mojang.authlib.GameProfile
@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.api.core.retrying
-import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroup
+import net.ccbluex.liquidbounce.features.creativetab.CustomCreativeModeTab
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -88,7 +88,7 @@ data class Head(val name: String, val uuid: UUID, val value: String) {
     }
 }
 
-class HeadsItemGroup : ClientItemGroup(
+class HeadsCreativeModeTab : CustomCreativeModeTab(
     "Heads",
     icon = { Items.SKELETON_SKULL.defaultInstance },
     items = { items ->
