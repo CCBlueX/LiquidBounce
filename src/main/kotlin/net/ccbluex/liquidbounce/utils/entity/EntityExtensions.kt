@@ -172,7 +172,7 @@ fun LocalPlayer.getMovementDirectionOfInput(input: DirectionalInput): Float {
     return getMovementDirectionOfInput(this.yRot, input)
 }
 
-val Player.isBlocking: Boolean
+val Player.isBlockAction: Boolean
     get() = isUsingItem && useItem.has(DataComponents.BLOCKS_ATTACKS)
 
 inline fun LocalPlayer.setDeltaMovement(block: (Vec3) -> Vec3) {
