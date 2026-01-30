@@ -82,10 +82,10 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
             val friends =
                 world
                     .getEntitiesBoxInRange(pos, 6.0) { FriendManager.isFriend(it) && it.boundingBox.maxY > pos.y }
-                    .filterIsInstance<LivingEntity>()
 
             if (friends.any {
-                it.getDamage(pos, requestingSubmodule, CheckedEntity.OTHER).isGreaterThan(maxFriendDamage)
+                it is LivingEntity &&
+                    it.getDamage(pos, requestingSubmodule, CheckedEntity.OTHER).isGreaterThan(maxFriendDamage)
             }) {
                 tooMuchDamageForFriend = true
             }

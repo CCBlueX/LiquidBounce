@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.utils.combat
 import it.unimi.dsi.fastutil.objects.ObjectDoublePair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -182,7 +183,7 @@ fun ClientLevel.findEnemies(
 
     return getEntitiesInCuboid(player.eyePosition, squaredRange.endInclusive)
         .filter { it.shouldBeAttacked(enemyConf) }
-        .map { ObjectDoublePair.of(it, it.squaredBoxedDistanceTo(player)) }
+        .mapToArray { ObjectDoublePair.of(it, it.squaredBoxedDistanceTo(player)) }
         .filter { (_, distance) -> distance in squaredRange }
 }
 

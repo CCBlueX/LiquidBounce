@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -84,7 +85,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
 
         renderEnvironmentForWorld(event.matrixStack) {
             startBatch()
-            world.entitiesForRendering().filterIsInstance<ArmorStand>().forEach {
+            world.entitiesForRendering().forEachIsInstance<ArmorStand> {
                 if (it.getItemBySlot(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
                     renderDroppedBowBox(event.partialTicks, it)
                 }

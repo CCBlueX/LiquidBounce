@@ -27,7 +27,7 @@ httpServer = "2.5.2"
 discordIpc = "4.0.1"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
-fastutil4k = "0.2.5"
+fastutil4k = "0.2.6"
 
 # Recommended mods
 modmenu = "17.0.0-beta.1"

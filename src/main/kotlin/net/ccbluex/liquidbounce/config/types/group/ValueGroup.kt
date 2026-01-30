@@ -24,6 +24,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.BindValue
@@ -108,7 +109,7 @@ open class ValueGroup(
         get() = "${ConfigSystem.KEY_PREFIX}.${name.toLowerCamelCase()}"
 
     open fun walkInit() {
-        inner.filterIsInstance<ValueGroup>().forEach { valueGroup ->
+        inner.forEachIsInstance<ValueGroup> { valueGroup ->
             valueGroup.walkInit()
         }
     }
