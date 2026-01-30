@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -94,7 +95,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
      * Updates [themes] content
      */
     fun updateThemes() {
-        themes.inner.filterIsInstance<ValueGroup>().forEach {
+        themes.inner.forEachIsInstance<ValueGroup> {
             themes.drop(it)
         }
         for (theme in ThemeManager.themes) {

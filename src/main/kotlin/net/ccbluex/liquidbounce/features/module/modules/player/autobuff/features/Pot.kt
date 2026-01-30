@@ -56,8 +56,8 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                 // Check if there is any entity that we care about that can benefit from the potion
                 // This means we will only care about entities that are our enemies and are close enough to us
                 // That means we will still throw the potion if there is a friendly friend or team member nearby
-                val benefits = world.entitiesForRendering().filterIsInstance<LivingEntity>().any {
-                    it.shouldBeAttacked() && hasBenefit(it)
+                val benefits = world.entitiesForRendering().any {
+                    it is LivingEntity && it.shouldBeAttacked() && hasBenefit(it)
                 }
 
                 if (benefits) {
@@ -159,8 +159,9 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
      * Check if the player is standing inside a lingering potion cloud
      */
     private fun isStandingInsideLingering() =
-        world.entitiesForRendering().filterIsInstance<AreaEffectCloud>().any {
-            it.distanceToSqr(player) <= BENEFICIAL_SQUARE_RANGE &&
+        world.entitiesForRendering().any {
+            it is AreaEffectCloud &&
+                it.distanceToSqr(player) <= BENEFICIAL_SQUARE_RANGE &&
                 it.potionContents.allEffects.any { effect ->
                 effect.effect == MobEffects.REGENERATION || effect.effect == MobEffects.INSTANT_HEALTH
                     || effect.effect == MobEffects.STRENGTH
@@ -171,8 +172,9 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
      * Check if splash potion is nearby to prevent throwing a potion that is not needed
      */
     private fun isSplashNearby() =
-        world.entitiesForRendering().filterIsInstance<AbstractThrownPotion>().any {
-            it.distanceToSqr(player) <= BENEFICIAL_SQUARE_RANGE
+        world.entitiesForRendering().any {
+            it is AbstractThrownPotion &&
+                it.distanceToSqr(player) <= BENEFICIAL_SQUARE_RANGE
         }
 
 }

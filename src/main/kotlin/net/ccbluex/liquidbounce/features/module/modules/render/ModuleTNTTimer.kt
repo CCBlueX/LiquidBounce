@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.filterIsInstanceTo
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -73,12 +74,10 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
 
         @Suppress("unused")
         private val render2DHandler = handler<OverlayRenderEvent> { event ->
-            tntEntities.forEach { tnt ->
-                if (tnt.fuse <= 0) return@forEach
-
+            for (tnt in tntEntities) {
                 val pos = tnt.box.center.add(0.0, renderY.toDouble(), 0.0)
 
-                val screenPos = WorldToScreen.calculateScreenPos(pos) ?: return@forEach
+                val screenPos = WorldToScreen.calculateScreenPos(pos) ?: continue
 
                 // Yellow #ffff00 -> Red #ff0000
                 val color = Color4b(255, Mth.floor(255F * tnt.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
@@ -118,7 +117,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
 
     private val tntEntities by computedOn<GameTickEvent, MutableSet<PrimedTnt>>(ReferenceOpenHashSet()) { _, set ->
         set.clear()
-        world.entitiesForRendering().filterIsInstanceTo(set)
+        world.entitiesForRendering().filterIsInstanceTo(set) { it.fuse > 0 }
         set
     }
 

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.blink.esp
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.drawBox
@@ -34,19 +35,23 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
+@JvmRecord
 data class BlinkEspData(val entity: Entity, val pos: Vec3, val rotation: Rotation)
 
-abstract class BlinkEspMode(
+sealed class BlinkEspMode(
     name: String,
-    val getEspData: () -> BlinkEspData?
+    protected val getEspData: () -> BlinkEspData?
 ) : Mode(name)
 
-abstract class AbstractBlinkEspBox(getEspData: () -> BlinkEspData?) : BlinkEspMode("Box", getEspData) {
+class BlinkEspBox(
+    override val parent: ModeValueGroup<*>,
+    getEspData: () -> BlinkEspData?,
+) : BlinkEspMode("Box", getEspData) {
     private val color by color("Color", Color4b(36, 32, 147, 87))
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val (entity, pos, rotation) = getEspData() ?: return@handler
+        val (entity, pos, rotation) = this.getEspData() ?: return@handler
 
         val dimensions = entity.getDimensions(entity.pose)
         val d = dimensions.width.toDouble() / 2.0
@@ -61,12 +66,15 @@ abstract class AbstractBlinkEspBox(getEspData: () -> BlinkEspData?) : BlinkEspMo
     }
 }
 
-abstract class AbstractBlinkEspModel(getEspData: () -> BlinkEspData?) : BlinkEspMode("Model", getEspData) {
+class BlinkEspModel(
+    override val parent: ModeValueGroup<*>,
+    getEspData: () -> BlinkEspData?,
+) : BlinkEspMode("Model", getEspData) {
     private val lightAmount by float("LightAmount", 0.3f, 0.01f..1f)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val (entity, pos, rotation) = getEspData() ?: return@handler
+        val (entity, pos, rotation) = this.getEspData() ?: return@handler
 
         val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
 
@@ -97,17 +105,20 @@ abstract class AbstractBlinkEspModel(getEspData: () -> BlinkEspData?) : BlinkEsp
     }
 }
 
-abstract class AbstractBlinkEspWireframe(getEspData: () -> BlinkEspData?) : BlinkEspMode("Wireframe", getEspData) {
+class BlinkEspWireframe(
+    override val parent: ModeValueGroup<*>,
+    getEspData: () -> BlinkEspData?,
+) : BlinkEspMode("Wireframe", getEspData) {
     private val color by color("Color", Color4b(36, 32, 147, 87))
     private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> {
-        val (entity, pos, rotation) = getEspData() ?: return@handler
+        val (entity, pos, rotation) = this.getEspData() ?: return@handler
 
         val wireframePlayer = WireframePlayer(pos, rotation.yaw, rotation.pitch)
         wireframePlayer.render(it, color, outlineColor)
     }
 }
 
-abstract class AbstractBlinkNone : BlinkEspMode("None", { null })
+class BlinkEspNone(override val parent: ModeValueGroup<*>) : BlinkEspMode("None", { null })

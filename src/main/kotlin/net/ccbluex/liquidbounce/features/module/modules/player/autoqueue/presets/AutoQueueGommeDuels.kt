@@ -125,11 +125,12 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
     private suspend fun handleLobbySituation() {
         inMatch = false
 
-        val duelsEntity = world.entitiesForRendering().filterIsInstance<ArmorStand>().find {
-            it.boxedDistanceTo(player) < 5 && it.displayName?.string?.contains("Duels") == true
+        val duelsEntity = world.entitiesForRendering().find {
+            it is ArmorStand && it.boxedDistanceTo(player) < 5 && it.displayName?.string?.contains("Duels") == true
         }?.let { armorStand ->
-            world.entitiesForRendering().filterIsInstance<Player>().find {
-                it.boxedDistanceTo(player) < 5 && it.position() == armorStand.position().subtract(0.0, 2.0, 0.0)
+            world.entitiesForRendering().find {
+                it is Player && it.boxedDistanceTo(player) < 5 &&
+                    it.position() == armorStand.position().subtract(0.0, 2.0, 0.0)
             }
         }
 

@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.backtrack
 
-import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -29,10 +28,10 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
-import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspBox
-import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspModel
-import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspWireframe
-import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkNone
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspBox
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -82,14 +81,14 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         RANGE("Range")
     }
 
-    private val espMode = choices(
-        "Esp", BacktrackWireframe, arrayOf(
-            BacktrackBox,
-            BacktrackModel,
-            BacktrackWireframe,
-            EspNone
+    private val espMode = choices("Esp", 2) {
+        arrayOf(
+            BlinkEspBox(it, ::getEspData),
+            BlinkEspModel(it, ::getEspData),
+            BlinkEspWireframe(it, ::getEspData),
+            BlinkEspNone(it),
         )
-    ).apply {
+    }.apply {
         doNotIncludeAlways()
     }
 
@@ -182,32 +181,12 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         event.action = BlinkManager.Action.QUEUE
     }
 
-    fun getEspData(): BlinkEspData? {
+    private fun getEspData(): BlinkEspData? {
         val entity = target ?: return null
         val pos = position.base
         val rotation = entity.rotation
 
         return BlinkEspData(entity, pos, rotation)
-    }
-
-    private object BacktrackBox : AbstractBlinkEspBox(::getEspData) {
-        override val parent: ModeValueGroup<*>
-            get() = espMode
-    }
-
-    private object BacktrackWireframe : AbstractBlinkEspWireframe(::getEspData) {
-        override val parent: ModeValueGroup<*>
-            get() = espMode
-    }
-
-    private object BacktrackModel : AbstractBlinkEspModel(::getEspData) {
-        override val parent: ModeValueGroup<*>
-            get() = espMode
-    }
-
-    private object EspNone : AbstractBlinkNone() {
-        override val parent: ModeValueGroup<*>
-            get() = espMode
     }
 
     @Suppress("unused")

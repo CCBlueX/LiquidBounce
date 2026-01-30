@@ -19,8 +19,9 @@
 package net.ccbluex.liquidbounce.features.blink
 
 import com.google.common.collect.Queues
+import net.ccbluex.fastutil.filterIsInstance
+import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -33,10 +34,10 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspBox
-import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspModel
-import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkEspWireframe
-import net.ccbluex.liquidbounce.features.blink.esp.AbstractBlinkNone
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspBox
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -77,24 +78,20 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     val positions
         get() = packetQueue
             .map { snapshot -> snapshot.packet }
-            .filterIsInstance<ServerboundMovePlayerPacket>()
-            .filter { playerMoveC2SPacket -> playerMoveC2SPacket.hasPos }
+            .filterIsInstance<ServerboundMovePlayerPacket> { playerMoveC2SPacket -> playerMoveC2SPacket.hasPos }
             .map { playerMoveC2SPacket -> Vec3(playerMoveC2SPacket.x, playerMoveC2SPacket.y, playerMoveC2SPacket.z) }
 
     val isLagging
         get() = packetQueue.isNotEmpty()
 
-    private val espMode = modes(
-        this,
-        "Esp",
-        EspWireframe,
+    private val espMode = modes(this, "Esp", 2) {
         arrayOf(
-            EspBox,
-            EspModel,
-            EspWireframe,
-            EspNone
+            BlinkEspBox(it, ::getEspData),
+            BlinkEspModel(it, ::getEspData),
+            BlinkEspWireframe(it, ::getEspData),
+            BlinkEspNone(it),
         )
-    ).apply {
+    }.apply {
         doNotIncludeAlways()
     }
 
@@ -193,7 +190,7 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
         }
     }
 
-    fun getEspData(): BlinkEspData? {
+    private fun getEspData(): BlinkEspData? {
         val pos = positions.firstOrNull() ?: return null
         val rotation = RotationManager.actualServerRotation
 
@@ -203,26 +200,6 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
         }
 
         return BlinkEspData(player, pos, rotation)
-    }
-
-    private object EspBox : AbstractBlinkEspBox(::getEspData) {
-        override val parent: ModeValueGroup<*>
-            get() = espMode
-    }
-
-    private object EspWireframe : AbstractBlinkEspWireframe(::getEspData) {
-        override val parent: ModeValueGroup<*>
-            get() = espMode
-    }
-
-    private object EspModel : AbstractBlinkEspModel(::getEspData) {
-        override val parent: ModeValueGroup<*>
-            get() = espMode
-    }
-
-    private object EspNone : AbstractBlinkNone() {
-        override val parent: ModeValueGroup<*>
-            get() = espMode
     }
 
     @Suppress("unused")
@@ -297,9 +274,7 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     }
 
     inline fun <reified T> rewrite(action: (T) -> Unit) {
-        packetQueue
-            .filterIsInstance<T>()
-            .forEach(action)
+        packetQueue.forEachIsInstance<T>(action)
     }
 
     private fun flushSnapshot(snapshot: PacketSnapshot) {
@@ -315,11 +290,12 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     enum class Action(val priority: Int) {
         FLUSH(0),
         PASS(1),
-        QUEUE(2)
+        QUEUE(2),
     }
 
 }
 
+@JvmRecord
 data class PacketSnapshot(
     val packet: Packet<*>,
     val origin: TransferOrigin,
