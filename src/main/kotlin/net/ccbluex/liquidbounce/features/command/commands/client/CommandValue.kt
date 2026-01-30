@@ -115,7 +115,7 @@ object CommandValue : Command.Factory {
             val configurable = ConfigSystem.findConfigurableByKey(configurableKey)
                 ?: throw CommandException(command.result("configurableNotFound", configurableKey))
 
-            configurable.collectValuesDeep()
+            configurable.collectValuesRecursively()
                 .filter { !it.name.equals("Bind", true) }
                 .forEach { it.restore() }
             ModuleClickGui.sync()

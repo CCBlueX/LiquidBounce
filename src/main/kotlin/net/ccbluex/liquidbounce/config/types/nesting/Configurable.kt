@@ -162,22 +162,22 @@ open class Configurable(
     val containedValues: Array<Value<*>>
         get() = this.inner.toTypedArray()
 
-    fun collectValuesDeep(): Array<Value<*>> {
+    fun collectValuesRecursively(): Array<Value<*>> {
         val output = mutableListOf<Value<*>>()
 
-        this.collectValuesDeepInternal(output)
+        this.collectValuesRecursivelyInternal(output)
 
         return output.toTypedArray()
     }
 
-    protected fun collectValuesDeepInternal(output: MutableList<Value<*>>) {
+    protected fun collectValuesRecursivelyInternal(output: MutableList<Value<*>>) {
         for (currentValue in this.inner) {
             if (currentValue is ToggleableConfigurable) {
                 output.add(currentValue)
-                currentValue.collectValuesDeepInternal(output)
+                currentValue.collectValuesRecursivelyInternal(output)
             } else {
                 if (currentValue is Configurable) {
-                    currentValue.collectValuesDeepInternal(output)
+                    currentValue.collectValuesRecursivelyInternal(output)
                 } else {
                     output.add(currentValue)
                 }
@@ -187,31 +187,91 @@ open class Configurable(
                 output.add(currentValue)
 
                 currentValue.choices.forEach {
-                    it.collectValuesDeepInternal(output)
+                    it.collectValuesRecursivelyInternal(output)
                 }
             }
         }
     }
 
-    fun collectConfigurablesDeep(): Array<Configurable> {
+    fun collectConfigurablesRecursively(): Array<Configurable> {
         val output = mutableListOf<Configurable>()
 
-        this.collectConfigurablesDeepInternal(output)
+        this.collectConfigurablesRecursivelyInternal(output)
 
         return output.toTypedArray()
     }
 
-    protected fun collectConfigurablesDeepInternal(output: MutableList<Configurable>) {
+    protected fun collectConfigurablesRecursivelyInternal(output: MutableList<Configurable>) {
         output.add(this)
         for (currentValue in this.inner) {
             when (currentValue) {
                 is ChoiceConfigurable<*> -> {
                     output.add(currentValue)
-                    currentValue.choices.forEach { it.collectConfigurablesDeepInternal(output) }
+                    currentValue.choices.forEach { it.collectConfigurablesRecursivelyInternal(output) }
                 }
-                is Configurable -> currentValue.collectConfigurablesDeepInternal(output)
+                is Configurable -> currentValue.collectConfigurablesRecursivelyInternal(output)
             }
         }
+    }
+
+    fun collectValuesRecursively(prefix: String): Sequence<Value<*>> = sequence {
+        val normalizedPrefix = prefix.lowercase()
+
+        suspend fun SequenceScope<Value<*>>.walk(current: Configurable) {
+            val currentKey = current.key?.lowercase()
+            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+                return
+            }
+            for (value in current.inner) {
+                when (value) {
+                    is ToggleableConfigurable -> {
+                        yield(value)
+                        walk(value)
+                    }
+                    is ChoiceConfigurable<*> -> {
+                        yield(value)
+                        value.choices.forEach { walk(it) }
+                    }
+                    is Configurable -> walk(value)
+                    else -> yield(value)
+                }
+            }
+        }
+
+        walk(this@Configurable)
+    }
+
+    fun collectConfigurablesRecursively(prefix: String): Sequence<Configurable> = sequence {
+        val normalizedPrefix = prefix.lowercase()
+
+        suspend fun SequenceScope<Configurable>.walk(current: Configurable) {
+            val currentKey = current.key?.lowercase()
+            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+                return
+            }
+            yield(current)
+            for (value in current.inner) {
+                when (value) {
+                    is ChoiceConfigurable<*> -> {
+                        walk(value)
+                        value.choices.forEach { walk(it) }
+                    }
+                    is Configurable -> walk(value)
+                }
+            }
+        }
+
+        walk(this@Configurable)
+    }
+
+    private fun shouldWalkKey(currentKey: String?, prefix: String): Boolean {
+        if (prefix.isBlank()) {
+            return true
+        }
+        if (currentKey == null) {
+            return false
+        }
+        return currentKey.startsWith(prefix) || prefix.startsWith(currentKey)
     }
 
     /**
