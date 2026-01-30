@@ -20,7 +20,24 @@
 package net.ccbluex.liquidbounce.utils.network
 
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_9
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+
+fun Packet<*>.isLocalPlayerDamage(): Boolean {
+    return this is ClientboundDamageEventPacket && this.entityId == mc.player?.id
+}
+
+@JvmOverloads
+fun Packet<*>.isLocalPlayerVelocity(considerExplosion: Boolean = true): Boolean {
+    return when (this) {
+        is ClientboundSetEntityMotionPacket -> this.id == mc.player?.id
+        is ClientboundExplodePacket -> considerExplosion
+        else -> false
+    }
+}
 
 fun ClientboundSetEntityMotionPacket.isMovementYFallDamage(): Boolean {
     // >= 1.21.9 -0.0783739241897089

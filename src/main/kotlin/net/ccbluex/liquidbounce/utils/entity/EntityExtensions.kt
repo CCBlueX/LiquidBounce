@@ -172,8 +172,12 @@ fun LocalPlayer.getMovementDirectionOfInput(input: DirectionalInput): Float {
     return getMovementDirectionOfInput(this.yRot, input)
 }
 
-val LocalPlayer.isBlockAction: Boolean
+val Player.isBlockAction: Boolean
     get() = isUsingItem && useItem.has(DataComponents.BLOCKS_ATTACKS)
+
+inline fun LocalPlayer.setDeltaMovement(block: (Vec3) -> Vec3) {
+    this.deltaMovement = block(this.deltaMovement)
+}
 
 /**
  * @see LocalPlayer.isSlowDueToUsingItem
@@ -183,7 +187,7 @@ val Player.isSlowDueToUsingItem: Boolean
 
 fun Entity.lastRenderPos() = Vec3(this.xOld, this.yOld, this.zOld)
 
-fun LocalPlayer.wouldBeCloseToFallOff(position: Vec3): Boolean {
+fun Player.wouldBeCloseToFallOff(position: Vec3): Boolean {
     val hitbox =
         this.dimensions
             .makeBoundingBox(position)

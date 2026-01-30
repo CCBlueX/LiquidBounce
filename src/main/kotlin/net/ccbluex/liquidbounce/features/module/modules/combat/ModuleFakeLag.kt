@@ -47,6 +47,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.phys.Vec3
 import kotlin.jvm.optionals.getOrNull
 
 /**
@@ -161,9 +162,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
 
             // Flush on knockback
             is ClientboundSetEntityMotionPacket -> {
-                if (packet.id == player.id
-                    && (packet.movement.x != 0.0 || packet.movement.y != 0.0 || packet.movement.z != 0.0)
-                ) {
+                if (packet.id == player.id && packet.movement != Vec3.ZERO) {
                     chronometer.reset()
                     return@handler
                 }
@@ -172,7 +171,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
             // Flush on explosion
             is ClientboundExplodePacket -> {
                 packet.playerKnockback.getOrNull()?.let { knockback ->
-                    if (knockback.x != 0.0 || knockback.y != 0.0 || knockback.z != 0.0) {
+                    if (knockback != Vec3.ZERO) {
                         chronometer.reset()
                         return@handler
                     }
