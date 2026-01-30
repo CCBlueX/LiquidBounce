@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.itemgroup
+package net.ccbluex.liquidbounce.features.creativetab
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.asPlainText
@@ -32,19 +32,17 @@ import java.util.function.Supplier
 /**
  * An item group from the client
  */
-open class ClientItemGroup(
+open class CustomCreativeModeTab(
     val plainName: String,
     val icon: Supplier<ItemStack>,
     val items: Consumer<CreativeModeTab.Output>,
 ) {
 
-    // Create item group and assign to minecraft groups
-    fun setup(): CreativeModeTab {
-        // Expand array
+    fun init(): CreativeModeTab {
         val itemGroup = FabricItemGroup.builder()
             .title(plainName.asPlainText())
             .icon(icon)
-            .displayItems { displayContext, entries ->
+            .displayItems { _, entries ->
                 runCatching {
                     items.accept(entries)
                 }.onFailure {
@@ -53,7 +51,7 @@ open class ClientItemGroup(
             }
             .build()
 
-        // Add tab to creative inventory
+        // Add a creative tab to creative inventory
         Registry.register(
             BuiltInRegistries.CREATIVE_MODE_TAB,
             LiquidBounce.identifier(plainName.lowercase()),

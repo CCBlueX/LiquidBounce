@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandBind
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandBinds
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandClear
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandContainers
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandDebug
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandFriend
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandHelp
@@ -143,7 +142,6 @@ object CommandManager : Collection<Command> by commandSet {
             CommandLocalConfig,
             CommandAutoDisable,
             CommandScript,
-            CommandContainers,
             CommandSay,
             CommandFakePlayer,
             CommandAutoAccount,
