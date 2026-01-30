@@ -87,7 +87,7 @@ object ModuleColorTheme : ClientModule(
         val adaptiveA = tree(AdaptiveA)
     }
 
-    val colors by enumChoice("Color", Color.STANDART).onChanged { uboDirty = true }
+    val colors by enumChoice("Palette", Color.STANDART).onChanged { uboDirty = true }
 
     val currentColors get() = getActiveColors()
     val accentColors = AccentColor.entries
