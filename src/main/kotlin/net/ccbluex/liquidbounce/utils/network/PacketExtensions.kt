@@ -34,7 +34,7 @@ fun Packet<*>.isLocalPlayerDamage(): Boolean {
 fun Packet<*>.isLocalPlayerVelocity(considerExplosion: Boolean = true): Boolean {
     return when (this) {
         is ClientboundSetEntityMotionPacket -> this.id == mc.player?.id
-        is ClientboundExplodePacket -> considerExplosion
+        is ClientboundExplodePacket -> this.playerKnockback.isPresent && considerExplosion
         else -> false
     }
 }
