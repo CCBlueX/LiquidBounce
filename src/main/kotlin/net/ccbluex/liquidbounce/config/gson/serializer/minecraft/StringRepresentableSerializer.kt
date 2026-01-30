@@ -17,20 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.gson.adapter
+package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.minecraft.resources.Identifier
+import net.minecraft.util.StringRepresentable
 import java.lang.reflect.Type
 
-object IdentifierAdapter : JsonSerializer<Identifier>, JsonDeserializer<Identifier> {
-    override fun serialize(src: Identifier?, typeOfSrc: Type, context: JsonSerializationContext) =
-        src?.let { JsonPrimitive(it.toString()) }
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Identifier? =
-        Identifier.tryParse(json.asString)
+object StringRepresentableSerializer : JsonSerializer<StringRepresentable> {
+    override fun serialize(src: StringRepresentable?, typeOfSrc: Type, context: JsonSerializationContext) =
+        src?.let { JsonPrimitive(it.serializedName) }
 }

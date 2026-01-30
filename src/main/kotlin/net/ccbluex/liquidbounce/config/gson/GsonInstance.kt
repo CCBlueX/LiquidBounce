@@ -26,19 +26,16 @@ import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.gson.adapter.AlignmentAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.CodecBasedAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.ColorAdapter
-import net.ccbluex.liquidbounce.config.gson.adapter.FileAdapter
-import net.ccbluex.liquidbounce.config.gson.adapter.IdentifierAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.IdentifierWithRegistryAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.InputBindAdapter
-import net.ccbluex.liquidbounce.config.gson.adapter.InputUtilAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.IntRangeAdapter
-import net.ccbluex.liquidbounce.config.gson.adapter.KotlinRegexAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.LocalDateAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.LocalDateTimeAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.MinecraftAccountAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.OffsetDateTimeAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.OptionalAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.RangeAdapter
+import net.ccbluex.liquidbounce.config.gson.adapter.SimpleStringTypeAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.Vec2fAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.Vec3dAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.Vec3iAdapter
@@ -54,7 +51,7 @@ import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ScreenSerialize
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ServerInfoSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.SessionSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.StatusEffectInstanceSerializer
-import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.StringIdentifiableSerializer
+import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.StringRepresentableSerializer
 import net.ccbluex.liquidbounce.config.gson.stategies.ExcludeStrategy
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExcludeStrategy
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -85,6 +82,7 @@ import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector2fc
 import java.io.File
+import java.nio.file.Path
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -144,13 +142,13 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
     registerTypeAdapter(LocalDate::class.java, LocalDateAdapter)
         .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter)
         .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter)
-        .registerTypeAdapter(Regex::class.java, KotlinRegexAdapter)
+        .registerTypeAdapter(Regex::class.java, SimpleStringTypeAdapter.KT_REGEX)
         .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
-        .registerTypeHierarchyAdapter(File::class.javaObjectType, FileAdapter)
+        .registerTypeHierarchyAdapter(File::class.java, SimpleStringTypeAdapter.FILE)
         .registerTypeHierarchyAdapter(EntityType::class.java, IdentifierWithRegistryAdapter.ENTITY_TYPE)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, IdentifierWithRegistryAdapter.ITEM)
-        .registerTypeAdapter(DataComponentPatch::class.java, CodecBasedAdapter.COMPONENT_CHANGES)
+        .registerTypeAdapter(DataComponentPatch::class.java, CodecBasedAdapter.DATA_COMPONENT_PATCH)
         .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, IdentifierWithRegistryAdapter.SOUND_EVENT)
         .registerTypeHierarchyAdapter(MobEffect::class.javaObjectType, IdentifierWithRegistryAdapter.STATUS_EFFECT)
         .registerTypeHierarchyAdapter(MenuType::class.java, IdentifierWithRegistryAdapter.SCREEN_HANDLER)
@@ -160,18 +158,18 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(Vec2::class.javaObjectType, Vec2fAdapter)
         .registerTypeHierarchyAdapter(Vector2fc::class.java, Vector2fcAdapter)
         .registerTypeHierarchyAdapter(Block::class.javaObjectType, IdentifierWithRegistryAdapter.BLOCK)
-        .registerTypeHierarchyAdapter(InputConstants.Key::class.javaObjectType, InputUtilAdapter)
+        .registerTypeHierarchyAdapter(InputConstants.Key::class.javaObjectType, SimpleStringTypeAdapter.INPUT_KEY)
         .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)
         .registerTypeAdapter(ModeValueGroup::class.javaObjectType, ModeValueGroupSerializer)
         .registerTypeHierarchyAdapter(Tagged::class.javaObjectType, TaggedSerializer)
         .registerTypeHierarchyAdapter(MinecraftAccount::class.javaObjectType, MinecraftAccountAdapter)
-        .registerTypeHierarchyAdapter(Component::class.javaObjectType, CodecBasedAdapter.PROCESSED_TEXT)
+        .registerTypeHierarchyAdapter(Component::class.javaObjectType, CodecBasedAdapter.TRANSLATED_COMPONENT)
         .registerTypeHierarchyAdapter(Screen::class.javaObjectType, ScreenSerializer)
         .registerTypeHierarchyAdapter(User::class.javaObjectType, SessionSerializer)
         .registerTypeAdapter(ServerData::class.javaObjectType, ServerInfoSerializer)
-        .registerTypeHierarchyAdapter(StringRepresentable::class.java, StringIdentifiableSerializer)
+        .registerTypeHierarchyAdapter(StringRepresentable::class.java, StringRepresentableSerializer)
         .registerTypeAdapter(ItemStack::class.javaObjectType, ItemStackSerializer)
-        .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierAdapter)
+        .registerTypeAdapter(Identifier::class.javaObjectType, SimpleStringTypeAdapter.IDENTIFIER)
         .registerTypeAdapter(MobEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
         .registerTypeHierarchyAdapter(Supplier::class.javaObjectType, SupplierSerializer)
         .registerTypeAdapterFactory(OptionalAdapter)
