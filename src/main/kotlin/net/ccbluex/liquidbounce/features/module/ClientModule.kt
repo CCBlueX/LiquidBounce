@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module
 import com.mojang.blaze3d.platform.InputConstants
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup

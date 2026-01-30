@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.config.types
 
-import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
+import net.ccbluex.liquidbounce.config.utils.AutoCompletionProvider
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer.registryItemDeserializer
 import net.minecraft.core.registries.BuiltInRegistries

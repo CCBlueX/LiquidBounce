@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.util
+package net.ccbluex.liquidbounce.config.utils
 
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.utils.kotlin.random

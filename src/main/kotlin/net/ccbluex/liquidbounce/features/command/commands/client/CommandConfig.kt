@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
-import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.configs
-import net.ccbluex.liquidbounce.config.AutoSettingsMetadata
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.configs
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
@@ -89,7 +89,7 @@ object CommandConfig : Command.Factory {
             AsyncLoadingText(
                 ioScope.async {
                     ClientApi.requestSettingsScript(settingName).use { r ->
-                        publicGson.fromJson(r, AutoSettingsMetadata::class.java)
+                        publicGson.fromJson(r, AutoConfigMetadata::class.java)
                     }.asText()
                 }
             )

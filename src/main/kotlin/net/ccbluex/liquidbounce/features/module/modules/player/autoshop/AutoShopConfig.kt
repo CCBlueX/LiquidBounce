@@ -16,12 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config
+package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
 import com.google.gson.GsonBuilder
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopConfig
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopElement

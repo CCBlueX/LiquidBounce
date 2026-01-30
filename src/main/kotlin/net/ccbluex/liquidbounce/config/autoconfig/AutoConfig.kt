@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config
+package net.ccbluex.liquidbounce.config.autoconfig
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsType
 import net.ccbluex.liquidbounce.authlib.utils.obj
 import net.ccbluex.liquidbounce.authlib.utils.string
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeValueGroup
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.util.parseTree
@@ -70,7 +71,7 @@ object AutoConfig {
             }
         }
 
-    var includeConfiguration = IncludeConfiguration.DEFAULT
+    var includeConfiguration = IncludeConfiguration.Companion.DEFAULT
 
     @Volatile
     var configs: Array<AutoSettings>? = null
@@ -119,7 +120,7 @@ object AutoConfig {
      * should be displayed to the user.
      *
      * @param jsonObject The JSON object of the configurable
-     * @see ConfigSystem.deserializeValueGroup
+     * @see deserializeValueGroup
      */
     fun loadAutoConfig(
         jsonObject: JsonObject,
@@ -153,7 +154,7 @@ object AutoConfig {
      * Print out information from the auto config
      */
     private fun printOutMetadata(jsonObject: JsonObject) {
-        val metadata = publicGson.fromJson(jsonObject, AutoSettingsMetadata::class.java)
+        val metadata = publicGson.fromJson(jsonObject, AutoConfigMetadata::class.java)
 
         val serverAddress = metadata.serverAddress
         if (serverAddress != null) {
@@ -255,7 +256,7 @@ object AutoConfig {
      */
     fun serializeAutoConfig(
         writer: Writer,
-        includeConfiguration: IncludeConfiguration = IncludeConfiguration.DEFAULT,
+        includeConfiguration: IncludeConfiguration = IncludeConfiguration.Companion.DEFAULT,
         autoSettingsType: AutoSettingsType = AutoSettingsType.RAGE,
         statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING
     ) {
@@ -303,7 +304,7 @@ object AutoConfig {
             publicGson.toJson(jsonObject, it)
         }
 
-        this.includeConfiguration = IncludeConfiguration.DEFAULT
+        this.includeConfiguration = IncludeConfiguration.Companion.DEFAULT
     }
 
     /**

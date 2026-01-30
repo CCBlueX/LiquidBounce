@@ -29,13 +29,12 @@ import kotlinx.coroutines.delay
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.fastutil.intListOf
-import net.ccbluex.liquidbounce.config.AutoShopConfig.loadAutoShopConfig
-import net.ccbluex.liquidbounce.config.ShopConfigPreset
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.AutoShopConfig.loadAutoShopConfig
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.NormalPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.QuickPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo

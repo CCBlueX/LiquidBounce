@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.util
+package net.ccbluex.liquidbounce.config.utils
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.RangedValue

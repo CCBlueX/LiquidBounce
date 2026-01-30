@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -186,7 +186,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInven
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockOutline
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs
-import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCrystalView
@@ -225,6 +224,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleVoidESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom
+import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats

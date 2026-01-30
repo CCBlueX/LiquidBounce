@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.core.parse
-import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.features.command.Command

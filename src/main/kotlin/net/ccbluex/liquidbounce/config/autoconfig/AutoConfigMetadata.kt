@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config
+package net.ccbluex.liquidbounce.config.autoconfig
 
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsType
@@ -30,7 +30,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 
 @JvmRecord
-data class AutoSettingsMetadata(
+data class AutoConfigMetadata(
     val name: String,
     val author: String?,
     val date: String?,

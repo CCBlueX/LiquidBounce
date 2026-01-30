@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config
+package net.ccbluex.liquidbounce.config.autoconfig
 
 @JvmRecord
 data class IncludeConfiguration(
