@@ -27,6 +27,6 @@
 
 <style lang="scss">
     .setting {
-        padding: 7px 0px;
+        padding: 7px 0;
     }
 </style>

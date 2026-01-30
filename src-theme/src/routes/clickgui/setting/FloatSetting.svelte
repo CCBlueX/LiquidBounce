@@ -67,7 +67,7 @@
 </div>
 
 <style lang="scss">
-    @use "../../../colors.scss" as *;
+    @use "../../../colors" as *;
 
     .setting {
         padding: 7px 0 2px 0;
@@ -91,7 +91,7 @@
 
     .suffix,
     .setting {
-        color: $clickgui-text-color;
+        color: var(--clickgui-base-text-color);
         font-weight: 500;
         font-size: 12px;
     }

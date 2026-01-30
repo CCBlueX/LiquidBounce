@@ -11,7 +11,7 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
+    @use "../../../../colors3" as *;
 
     .health-progress {
         position: relative;

@@ -72,12 +72,12 @@
   }
 
   .dimmed {
-    color: $clickgui-text-dimmed-color;
+    color: var(--clickgui-base-text-dimmed-color);
   }
 
   .modifier:after {
     content: "+";
-    color: $clickgui-text-dimmed-color;
+    color: var(--clickgui-base-text-dimmed-color);
     opacity: 0.8;
     line-height: 1;
     font-family: monospace;

@@ -36,7 +36,7 @@
 {/if}
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
+  @use "../../../colors3" as *;
 
   .counter {
     background-color: rgba($blockcounter-base-color, 0.68);

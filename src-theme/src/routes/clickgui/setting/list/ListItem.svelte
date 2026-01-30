@@ -39,7 +39,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
+  @use "../../../../colors" as *;
 
   .item {
     display: grid;
@@ -65,7 +65,7 @@
 
   .name {
     font-size: 12px;
-    color: $clickgui-text-color;
+    color: var(--clickgui-base-text-color);
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;

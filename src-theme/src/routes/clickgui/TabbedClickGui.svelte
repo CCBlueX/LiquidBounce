@@ -71,12 +71,10 @@
 </div>
 
 <style lang="scss">
-  @use "../../colors.scss" as *;
-
-  $GRID_SIZE: 10px;
+  @use "../../colors" as *;
 
   .tabbed-clickgui {
-    background-color: rgba($clickgui-base-color, 0.6);
+    background-color: var(--clickgui-menu-background-color);
     overflow: hidden;
     position: absolute;
     will-change: opacity;
@@ -85,8 +83,8 @@
     top: 0;
 
     &.grid {
-      background-image: linear-gradient(to right, $clickgui-grid-color 1px, transparent 1px),
-      linear-gradient(to bottom, $clickgui-grid-color 1px, transparent 1px);
+      background-image: linear-gradient(to right, var(--clickgui-grid-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--clickgui-grid-color) 1px, transparent 1px);
     }
   }
 </style>

@@ -28,27 +28,27 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
+  @use "../../../colors" as *;
 
   .setting {
-    padding: 7px 0px;
+    padding: 7px 0;
   }
 
   .name {
     font-weight: 500;
-    color: $clickgui-text-color;
+    color: var(--clickgui-base-text-color);
     font-size: 12px;
     margin-bottom: 5px;
   }
 
   .value {
     width: 100%;
-    background-color: rgba($clickgui-base-color, .36);
+    background-color: var(--clickgui-background-color-light);
     font-family: monospace;
     font-size: 12px;
-    color: $clickgui-text-color;
+    color: var(--clickgui-base-text-color);
     border: none;
-    border-bottom: solid 2px $accent-color;
+    border-bottom: solid 2px var(--clickgui-base-accent-color);
     padding: 5px;
     border-radius: 3px;
     transition: ease border-color .2s;
