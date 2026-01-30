@@ -26,12 +26,6 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.blockESP
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -45,7 +39,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.translate
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
-import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -113,12 +106,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
             colorModulator = if (useColor) {
                 Color4b.WHITE
             } else {
-                val transparency = if(Transparency.AdaptiveA.enabled) blockESP else a
-                val color = if(syncClientWithPalette && colorMode.activeChoice is GenericStaticColorMode) {
-                    currentColors[accentColor.num].toColor4b(transparency)
-                } else {
-                    colorMode.activeChoice.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
-                }
+                val color = colorMode.activeChoice.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
                 if (colorModulatorAlpha == -1) color else color.alpha(colorModulatorAlpha)
             }
         )
