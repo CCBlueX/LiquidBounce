@@ -21,6 +21,6 @@ package net.ccbluex.liquidbounce.annotations
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Nameable(
+annotation class Tag(
     val name: String
 )

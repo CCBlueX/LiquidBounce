@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.event.events
 
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
@@ -28,23 +28,23 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Player
 import net.minecraft.network.chat.Component
 import net.minecraft.world.effect.MobEffectInstance
 
-@Nameable("fps")
+@Tag("fps")
 @Suppress("unused")
 class FpsChangeEvent(val fps: Int) : Event(), WebSocketEvent
 
-@Nameable("fpsLimit")
+@Tag("fpsLimit")
 @Suppress("unused")
 class FpsLimitEvent(var fps: Int) : Event()
 
-@Nameable("clientPlayerData")
+@Tag("clientPlayerData")
 @Suppress("unused")
 class ClientPlayerDataEvent(val playerData: PlayerData) : Event(), WebSocketEvent
 
-@Nameable("clientPlayerEffect")
+@Tag("clientPlayerEffect")
 @Suppress("unused")
 class ClientPlayerEffectEvent(val effects: List<MobEffectInstance>) : Event(), WebSocketEvent
 
-@Nameable("clientPlayerInventory")
+@Tag("clientPlayerInventory")
 @Suppress("unused")
 class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event(), WebSocketEvent
 
@@ -53,15 +53,15 @@ sealed class TitleEvent : CancellableEvent(), WebSocketEvent {
         abstract var text: Component?
     }
 
-    @Nameable("title")
+    @Tag("title")
     class Title(override var text: Component?) : TextContent()
 
-    @Nameable("subtitle")
+    @Tag("subtitle")
     class Subtitle(override var text: Component?) : TextContent()
 
-    @Nameable("titleFade")
+    @Tag("titleFade")
     class Fade(var fadeInTicks: Int, var stayTicks: Int, var fadeOutTicks: Int) : TitleEvent()
 
-    @Nameable("clearTitle")
+    @Tag("clearTitle")
     class Clear(var reset: Boolean) : TitleEvent()
 }

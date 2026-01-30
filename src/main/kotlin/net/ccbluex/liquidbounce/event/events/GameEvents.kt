@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.event.events
 
 import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
@@ -37,7 +37,7 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress
 import net.minecraft.network.chat.Component
 import net.minecraft.world.item.ItemStack
 
-@Nameable("gameTick")
+@Tag("gameTick")
 object GameTickEvent : Event()
 
 /**
@@ -45,30 +45,30 @@ object GameTickEvent : Event()
  * executed in the same frame. This is useful for more responsive task execution
  * and allows to also schedule tasks off-schedule.
  */
-@Nameable("gameRenderTaskQueue")
+@Tag("gameRenderTaskQueue")
 object GameRenderTaskQueueEvent : Event()
 
-@Nameable("tickPacketProcess")
+@Tag("tickPacketProcess")
 object TickPacketProcessEvent : Event()
 
-@Nameable("key")
+@Tag("key")
 class KeyEvent(
     val key: InputConstants.Key,
     val action: Int,
 ) : Event(), WebSocketEvent
 
 // Input events
-@Nameable("inputHandle")
+@Tag("inputHandle")
 object InputHandleEvent : Event()
 
-@Nameable("movementInput")
+@Tag("movementInput")
 class MovementInputEvent(
     var directionalInput: DirectionalInput,
     var jump: Boolean,
     var sneak: Boolean,
 ) : Event()
 
-@Nameable("sprint")
+@Tag("sprint")
 class SprintEvent(
     val directionalInput: DirectionalInput,
     var sprint: Boolean,
@@ -81,30 +81,30 @@ class SprintEvent(
     }
 }
 
-@Nameable("mouseRotation")
+@Tag("mouseRotation")
 class MouseRotationEvent(
     var cursorDeltaX: Double,
     var cursorDeltaY: Double,
 ) : CancellableEvent()
 
-@Nameable("keybindChange")
+@Tag("keybindChange")
 object KeybindChangeEvent : Event(), WebSocketEvent
 
-@Nameable("keybindIsPressed")
+@Tag("keybindIsPressed")
 class KeybindIsPressedEvent(
     val keyBinding: KeyMapping,
     var isPressed: Boolean,
 ) : Event()
 
-@Nameable("useCooldown")
+@Tag("useCooldown")
 class UseCooldownEvent(
     var cooldown: Int,
 ) : Event()
 
-@Nameable("cancelBlockBreaking")
+@Tag("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
-@Nameable("allowAutoJump")
+@Tag("allowAutoJump")
 class AllowAutoJumpEvent(
     var isAllowed: Boolean,
 ) : Event()
@@ -113,22 +113,22 @@ class AllowAutoJumpEvent(
  * All events which are related to the minecraft client
  */
 
-@Nameable("session")
+@Tag("session")
 class SessionEvent(
     val session: User,
 ) : Event(), WebSocketEvent
 
-@Nameable("screen")
+@Tag("screen")
 class ScreenEvent(
     val screen: Screen?,
 ) : CancellableEvent()
 
-@Nameable("chatSend")
+@Tag("chatSend")
 class ChatSendEvent(
     val message: String,
 ) : CancellableEvent(), WebSocketEvent
 
-@Nameable("chatReceive")
+@Tag("chatReceive")
 class ChatReceiveEvent(
     val message: String,
     val textData: Component,
@@ -142,7 +142,7 @@ class ChatReceiveEvent(
     }
 }
 
-@Nameable("serverConnect")
+@Tag("serverConnect")
 class ServerConnectEvent(
     val connectScreen: ConnectScreen,
     val address: ServerAddress,
@@ -150,21 +150,21 @@ class ServerConnectEvent(
     val cookieStorage: TransferState?,
 ) : CancellableEvent()
 
-@Nameable("disconnect")
+@Tag("disconnect")
 object DisconnectEvent : Event(), WebSocketEvent
 
-@Nameable("overlayMessage")
+@Tag("overlayMessage")
 class OverlayMessageEvent(
     val text: Component,
     val tinted: Boolean,
 ) : Event(), WebSocketEvent
 
-@Nameable("perspective")
+@Tag("perspective")
 class PerspectiveEvent(
     var perspective: CameraType,
 ) : Event()
 
-@Nameable("itemLoreQuery")
+@Tag("itemLoreQuery")
 class ItemLoreQueryEvent(
     val itemStack: ItemStack,
     val lore: ArrayList<Component>,
