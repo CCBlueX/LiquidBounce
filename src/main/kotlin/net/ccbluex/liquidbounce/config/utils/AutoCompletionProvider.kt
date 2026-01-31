@@ -61,7 +61,7 @@ fun interface AutoCompletionProvider {
         }
 
         @JvmField
-        val multiChooseCompleter = AutoCompletionProvider { value ->
+        val multiChoiceCompleter = AutoCompletionProvider { value ->
             (value as MultiChoiceListValue<*>).choices.mapToArray { it.tag }.asList()
         }
     }
