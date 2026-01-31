@@ -25,9 +25,9 @@ import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA.itemChams
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList.ItemChams
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Alpha.a
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.nonAccentColor
@@ -97,7 +97,10 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
         this.storedLightmapTexture.copyFrom(source = textureView.texture())
 
-        val transparency = if(GlobalSettingsColorTheme.enabled) if (AdaptiveA.enabled) itemChams else a else alpha
+        val transparency =
+            if(GlobalSettingsColorTheme.enabled) {
+                if (AdaptiveList.enabled && ItemChams.enabled) ItemChams.alpha else a
+            } else { alpha }
         val currBlendColor =
             if(GlobalSettingsColorTheme.enabled) currentColors[accentColor.num].toColor4b(transparency) else blendColor
         val currGlowColor =

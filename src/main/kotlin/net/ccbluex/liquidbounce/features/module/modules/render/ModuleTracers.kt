@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA.tracers
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList.Tracers
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Alpha.a
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.misc.FriendManager
@@ -95,7 +95,8 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                         continue
                     }
 
-                    val transparency = if(AdaptiveA.enabled) tracers else a
+                    val transparency =
+                        if(AdaptiveList.enabled && Tracers.enabled) Tracers.alpha else a
                     val color = if (FriendManager.isFriend(entity)) {
                         Color4b.BLUE
                     } else if(GlobalSettingsColorTheme.enabled && modes.activeMode is GenericStaticColorMode) {

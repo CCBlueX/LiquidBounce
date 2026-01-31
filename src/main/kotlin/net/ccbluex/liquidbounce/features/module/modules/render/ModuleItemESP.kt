@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA.itemESP
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList.ItemESP
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Alpha.a
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -222,7 +222,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
     fun getColor(): Color4b {
         if(GlobalSettingsColorTheme.enabled && colorMode.activeMode is GenericStaticColorMode) {
-            val transparency = if(AdaptiveA.enabled) itemESP else a
+            val transparency = if(AdaptiveList.enabled && ItemESP.enabled) ItemESP.alpha else a
             return currentColors[accentColor.num].toColor4b(transparency)
         } else {
             return this.colorMode.activeMode.getColor(null)

@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Alpha.a
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.nonAccentColor
@@ -426,7 +426,7 @@ class TargetRenderer(
                     val screenPos = calculateScreenPos(pos) ?: return
 
                     val currColor =
-                        if(GlobalSettingsColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else color
+                        if(GlobalSettingsColorTheme.enabled) currentColors[accentColor.num].toColor4b(255) else color
 
                     texts.forEachIndexed { i, text ->
                         fontRenderer.draw(text.asPlainText(Style.EMPTY + currColor)) {

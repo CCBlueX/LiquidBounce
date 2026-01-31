@@ -65,26 +65,30 @@ object GlobalSettingsColorTheme : ToggleableValueGroup(
         SECOND("Second", 1),
     }
 
-    @Suppress("unused")
-    object Transparency : ValueGroup("Transparency") {
+    object Alpha : ValueGroup("UnifiedAlpha") {
         val a by int("Value", 255, 0..255).onChanged { uboDirty = true }
-        // Unique transparency for every module
-        object AdaptiveA : ToggleableValueGroup(this@GlobalSettingsColorTheme, "AdaptiveList", true) {
-            val breadCrumbs by int("Breadcrumbs", 75, 0..255)
-            val blockOutline by int("BlockOutline", 125, 0..255)
-            val esp by int("ESP", 125, 0..255)
-            val hats by int("Hats", 200, 0..255)
-            val itemChams by int("ItemChams", 255, 0..255).onChanged {
-                uboDirty = true
-            }
-            val itemESP by int("ItemESP", 125, 0..255)
-            val jumpcircle by int("JumpCircle", 255, 0..255)
-            val particles by int("Particles", 255, 0..255)
-            val tracers by int("Tracers", 255, 0..255)
-        }
-        val adaptiveA = tree(AdaptiveA)
     }
 
+    @Suppress("unused")
+    object AdaptiveList : ToggleableValueGroup(this@GlobalSettingsColorTheme, "AdaptiveList", true) {
+
+        class AlphaGroup(name: String, default: Int = 255) :
+            ToggleableValueGroup(this@AdaptiveList, name, true) {
+            val alpha by int("Alpha", default, 0..255).onChanged { uboDirty = true }
+        }
+
+        val Breadcrumbs = tree(AlphaGroup("Breadcrumbs", 75))
+        val BlockOutline = tree(AlphaGroup("BlockOutline", 125))
+        val Crosshair = tree(AlphaGroup("Crosshair", 255))
+        val ESP = tree(AlphaGroup("ESP", 125))
+        val Hats = tree(AlphaGroup("Hats", 200))
+        val ItemChams = tree(AlphaGroup("ItemChams", 255))
+        val ItemESP = tree(AlphaGroup("ItemESP", 125))
+        val JumpCircle = tree(AlphaGroup("JumpCircle", 255))
+        val Particles = tree(AlphaGroup("Particles", 255))
+        val Tracers = tree(AlphaGroup("Tracers", 255))
+
+    }
     val palette by enumChoice("Palette", Palette.STANDART).onChanged { uboDirty = true }
     val currentColors get() = getActiveColors()
     val accentColors = AccentColor.entries
@@ -93,7 +97,8 @@ object GlobalSettingsColorTheme : ToggleableValueGroup(
 
     init {
         tree(CustomPalette)
-        tree(Transparency)
+        tree(Alpha)
+        tree(AdaptiveList)
     }
 
     fun getActiveColors(): Array<String> {

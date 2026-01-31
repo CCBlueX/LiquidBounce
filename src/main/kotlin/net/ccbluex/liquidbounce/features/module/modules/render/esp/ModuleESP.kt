@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render.esp
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA.esp
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList.ESP
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Alpha.a
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.misc.FriendManager
@@ -86,7 +86,7 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
         }
 
         if(GlobalSettingsColorTheme.enabled && colorModes.activeMode is GenericStaticColorMode) {
-            val transparency = if(AdaptiveA.enabled) esp else a
+            val transparency = if(AdaptiveList.enabled && ESP.enabled) ESP.alpha else a
             return currentColors[accentColor.num].toColor4b(transparency)
         }
 

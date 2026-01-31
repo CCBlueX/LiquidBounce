@@ -28,8 +28,9 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList.Particles
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Alpha.a
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -241,7 +242,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
                     translate(size / 2.0, size / 2.0, 0.0)
                 }
 
-                val transparency = if(AdaptiveA.enabled) AdaptiveA.particles else a
+                val transparency = if(AdaptiveList.enabled && Particles.enabled) Particles.alpha else a
 
                 val renderColor = if(GlobalSettingsColorTheme.enabled) {
                     currentColors[accentColor.num].toColor4b(transparency).alpha(

@@ -22,7 +22,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render.crosshair.modes
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList.Crosshair
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Alpha.a
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.CrosshairColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.CrosshairMode
@@ -31,6 +33,7 @@ import net.minecraft.util.Mth
 import net.ccbluex.liquidbounce.render.utils.toColor4b
 
 object CrosshairCircle : CrosshairMode("Circle") {
+
     private object Radius : ValueGroup("Radius") {
         val radius by floatRange("Range", 3f..5f, 0f..25f)
         val dynamicRadiusMultiplier by float("DynamicRadiusMultiplier", 1f, 0f..5f)
@@ -47,9 +50,11 @@ object CrosshairCircle : CrosshairMode("Circle") {
         val multiplier = dynamicCrosshair(Radius.dynamicRadiusMultiplier)
         val innerRadius = Radius.radius.start + multiplier
         val outerRadius = Radius.radius.endInclusive + multiplier
-        val firstColor = if(GlobalSettingsColorTheme.enabled) { currentColors[0].toColor4b(a) }
+
+        val alpha = if(AdaptiveList.enabled && Crosshair.enabled) Crosshair.alpha else a
+        val firstColor = if(GlobalSettingsColorTheme.enabled) { currentColors[0].toColor4b(alpha) }
         else { color.firstColor }
-        val secondColor = if(GlobalSettingsColorTheme.enabled) { currentColors[1].toColor4b(a) }
+        val secondColor = if(GlobalSettingsColorTheme.enabled) { currentColors[1].toColor4b(alpha) }
         else { color.secondColor }
         val syncColors = if(GlobalSettingsColorTheme.enabled) false else color.syncColors
 

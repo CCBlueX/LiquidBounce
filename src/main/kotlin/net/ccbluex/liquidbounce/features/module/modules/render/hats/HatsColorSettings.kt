@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA.hats
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList.Hats
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Alpha.a
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.nonAccentColor
@@ -38,7 +38,7 @@ class HatsColorSettings : ValueGroup("Colors") {
     val spinSpeed by float("SpinSpeed", 1f, 0f..10f)
 
     fun getCurrentStepColor(angle: Float): Color4b {
-        val transparency = if(AdaptiveA.enabled) hats else a
+        val transparency = if(AdaptiveList.enabled) Hats.alpha else a
         val first =
             if(GlobalSettingsColorTheme.enabled) { currentColors[accentColor.num].toColor4b(transparency)
             } else { firstColor }
