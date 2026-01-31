@@ -30,6 +30,12 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.AdaptiveList.Breadcrumbs
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Alpha.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
@@ -37,6 +43,7 @@ import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.minecraft.client.Camera
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
@@ -80,7 +87,12 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         }
 
         val matrixStack = event.matrixStack
-        val color = if (colorRainbow) rainbow() else color
+
+        val alpha = if(AdaptiveList.enabled && Breadcrumbs.enabled) { Breadcrumbs.alpha
+        } else if (GlobalSettingsColorTheme.enabled) { a } else { color.a }
+
+        val color = if (colorRainbow) { rainbow() } else if (GlobalSettingsColorTheme.enabled)
+        { currentColors[accentColor.num].toColor4b(alpha) } else { color }
 
         renderEnvironmentForWorld(matrixStack) {
             if (height > 0) {
