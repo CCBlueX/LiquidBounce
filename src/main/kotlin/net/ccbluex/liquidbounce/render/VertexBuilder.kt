@@ -17,6 +17,8 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("NOTHING_TO_INLINE", "detekt:TooManyFunctions")
+
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
@@ -26,8 +28,22 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4fc
+import org.joml.Vector3fc
+
+inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vec3): VertexConsumer =
+    addVertex(pose, pos.x.toFloat(), pos.y.toFloat(), pos.z.toFloat())
+
+inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vec3f): VertexConsumer =
+    addVertex(pose, pos.x, pos.y, pos.z)
+
+inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vector3fc): VertexConsumer =
+    addVertex(pose, pos.x(), pos.y(), pos.z())
+
+inline fun VertexConsumer.color(color: Color4b): VertexConsumer = setColor(color.argb)
 
 fun VertexConsumer.addBoxOutlines(
     pose: Matrix4fc,

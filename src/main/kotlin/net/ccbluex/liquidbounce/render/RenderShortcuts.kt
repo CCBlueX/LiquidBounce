@@ -195,6 +195,7 @@ private fun getVbo(vertexFormat: VertexFormat): GrowableMappableRingBuffer =
         GrowableMappableRingBuffer(
             "${LiquidBounce.CLIENT_NAME} Shared VBO for $it",
             GpuBuffer.USAGE_VERTEX,
+            GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 11)
         )
     }
 
@@ -261,8 +262,8 @@ internal fun drawMesh(
  */
 fun WorldRenderEnvironment.drawLine(p1: Vec3f, p2: Vec3f, argb: Int) =
     drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
-        addVertex(matrix, p1.x, p1.y, p1.z).setColor(argb)
-        addVertex(matrix, p2.x, p2.y, p2.z).setColor(argb)
+        addVertex(matrix, p1).setColor(argb)
+        addVertex(matrix, p2).setColor(argb)
     }
 
 /**
@@ -308,8 +309,8 @@ private fun WorldRenderEnvironment.drawLines(
     }
 
     drawCustomMesh(pipeline) { matrix ->
-        lines.forEach { (x, y, z) ->
-            addVertex(matrix, x, y, z).setColor(argb)
+        lines.forEach {
+            addVertex(matrix, it).setColor(argb)
         }
     }
 }
@@ -338,18 +339,11 @@ fun WorldRenderEnvironment.drawSquareTexture(
 
 fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: Int) {
     drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-        addVertex(matrix, p1.x, p1.y, p1.z).setColor(argb)
-        addVertex(matrix, p2.x, p2.y, p2.z).setColor(argb)
-        addVertex(matrix, p3.x, p3.y, p3.z).setColor(argb)
+        addVertex(matrix, p1).setColor(argb)
+        addVertex(matrix, p2).setColor(argb)
+        addVertex(matrix, p3).setColor(argb)
     }
 }
-
-@Suppress("NOTHING_TO_INLINE")
-inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vector3fc): VertexConsumer =
-    addVertex(pose, pos.x(), pos.y(), pos.z())
-
-@Suppress("NOTHING_TO_INLINE")
-inline fun VertexConsumer.color(color: Color4b): VertexConsumer = setColor(color.argb)
 
 /**
  * Function to draw a colored [box].
@@ -453,9 +447,9 @@ private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3f>, colo
     require(vertices.size == colors.size) { "there must be a color for every vertex" }
     require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
-        vertices.forEachIndexed { index, (x, y, z) ->
+        vertices.forEachIndexed { index, pos ->
             val color4b = colors[index]
-            addVertex(matrix, x, y, z).setColor(color4b.argb)
+            addVertex(matrix, pos).setColor(color4b.argb)
         }
     }
 }
@@ -482,10 +476,8 @@ fun WorldRenderEnvironment.drawGradientCircle(
             outerP.set(cosine * outerRadius, 0f, sine * outerRadius)
             innerP.set(cosine * innerRadius, 0f, sine * innerRadius).add(innerOffset)
 
-            addVertex(matrix, outerP.x, outerP.y, outerP.z)
-                .setColor(outerColor.argb)
-            addVertex(matrix, innerP.x, innerP.y, innerP.z)
-                .setColor(innerColor.argb)
+            addVertex(matrix, outerP).setColor(outerColor.argb)
+            addVertex(matrix, innerP).setColor(innerColor.argb)
         }
     }
 }
