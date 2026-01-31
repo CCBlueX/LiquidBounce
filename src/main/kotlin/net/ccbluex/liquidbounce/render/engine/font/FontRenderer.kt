@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.FontFace
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.color
+import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.drawCustomMeshTextured
 import net.ccbluex.liquidbounce.render.drawGlyphOnCurrentLayer
@@ -262,10 +262,10 @@ class FontRenderer(
             (ctx as WorldRenderEnvironment).drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
                 val y0 = y
                 val y1 = y + 1f
-                addVertex(matrix, x0, y0, z).color(color)
-                addVertex(matrix, x0, y1, z).color(color)
-                addVertex(matrix, x1, y1, z).color(color)
-                addVertex(matrix, x1, y0, z).color(color)
+                addVertex(matrix, x0, y0, z).setColor(color)
+                addVertex(matrix, x0, y1, z).setColor(color)
+                addVertex(matrix, x1, y1, z).setColor(color)
+                addVertex(matrix, x1, y0, z).setColor(color)
             }
         }
     }

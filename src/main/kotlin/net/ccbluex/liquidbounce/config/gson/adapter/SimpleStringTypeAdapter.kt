@@ -24,33 +24,46 @@ import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.resources.Identifier
+import java.io.File
+import java.util.function.Function
 
-object ColorAdapter : TypeAdapter<Color4b>() {
-    override fun write(
-        writer: JsonWriter,
-        value: Color4b?,
-    ) {
+class SimpleStringTypeAdapter<T : Any>(
+    val fromString: Function<String, T>,
+    val toString: Function<T, String>,
+) : TypeAdapter<T>() {
+    override fun write(writer: JsonWriter, value: T?) {
         if (value == null) {
             writer.nullValue()
         } else {
-            writer.value(value.argb)
+            writer.value(toString.apply(value))
         }
     }
 
-    override fun read(reader: JsonReader): Color4b? {
+    override fun read(reader: JsonReader): T? {
         return when (val token = reader.peek()) {
             JsonToken.NULL -> {
                 reader.nextNull()
                 null
             }
-            // Use nextLong().toInt() to safely handle unsigned 32-bit integers in JSON
-            JsonToken.NUMBER -> Color4b(reader.nextLong().toInt())
-            JsonToken.STRING -> Color4b.fromHex(reader.nextString())
-            else -> {
-                reader.skipValue()
-                throw JsonParseException("Only number or hex format string can be parsed as color, found $token")
-            }
+            JsonToken.STRING -> fromString.apply(reader.nextString())
+            else -> throw JsonParseException("Unexpected token $token for String input")
         }
     }
+
+    companion object {
+        @JvmField
+        val FILE = SimpleStringTypeAdapter(::File, File::getPath)
+
+        @JvmField
+        val KT_REGEX = SimpleStringTypeAdapter(::Regex) { it.pattern }
+
+        @JvmField
+        val INPUT_KEY = SimpleStringTypeAdapter(InputConstants::getKey, InputConstants.Key::getName)
+
+        @JvmField
+        val IDENTIFIER = SimpleStringTypeAdapter(Identifier::parse, Any::toString)
+    }
+
 }

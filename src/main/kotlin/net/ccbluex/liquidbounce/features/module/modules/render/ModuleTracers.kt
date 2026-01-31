@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.drawLinesWithWidth
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.longLines
@@ -57,6 +58,8 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
         )
     }
 
+    private val lineWidth by float("LineWidth", 1f, 1f..16f)
+
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     override fun onEnabled() {
@@ -76,8 +79,8 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
 
         renderEnvironmentForWorld(matrixStack) {
             val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotatePitch(-camera.xRot().toRadians())
-                .rotateYaw(-camera.yRot().toRadians())
+                .rotateX(-camera.xRot().toRadians())
+                .rotateY(-camera.yRot().toRadians())
 
             longLines {
                 startBatch()
@@ -95,12 +98,13 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                     }
 
                     val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
+                    val topPos = pos.add(0f, entity.bbHeight, 0f)
 
-                    drawLines(
-                        argb = color.argb,
-                        eyeVector, pos,
-                        pos, pos.add(0f, entity.bbHeight, 0f)
-                    )
+                    if (lineWidth == 1.0f) {
+                        drawLines(color.argb, eyeVector, pos, pos, topPos)
+                    } else {
+                        drawLinesWithWidth(color.argb, lineWidth, eyeVector, pos, pos, topPos)
+                    }
                 }
                 commitBatch()
             }

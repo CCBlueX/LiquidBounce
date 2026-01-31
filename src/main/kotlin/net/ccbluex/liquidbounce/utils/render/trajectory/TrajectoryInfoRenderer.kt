@@ -19,15 +19,13 @@
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
-import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
-import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.drawLineStripAsLines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -41,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.move
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.scaleMut
 import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.toVec3f
@@ -249,9 +246,10 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         }
     }
 
+    context(env: WorldRenderEnvironment)
     fun drawTrajectoryForProjectile(
         maxTicks: Int,
-        event: WorldRenderEvent,
+        partialTicks: Float,
         trajectoryColor: Color4b,
         blockHitColor: Color4b?,
         entityHitColor: Color4b?,
@@ -260,38 +258,34 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
 
         val (landingPosition, positions) = simulationResult
 
-        drawTrajectoryForProjectile(positions, trajectoryColor, event.matrixStack)
+        env.drawTrajectoryForProjectile(positions, trajectoryColor.argb)
 
         when (landingPosition) {
             null -> return simulationResult
             is BlockHitResult -> if (blockHitColor != null) {
-                renderHitBlockFace(event.matrixStack, landingPosition, blockHitColor)
+                env.renderHitBlockFace(landingPosition, blockHitColor)
             }
             is EntityHitResult -> if (entityHitColor != null) {
                 val entities = listOf(landingPosition.entity)
 
-                drawHitEntities(event.matrixStack, entityHitColor, entities, event.partialTicks)
+                env.drawHitEntities(entityHitColor, entities, partialTicks)
             }
             else -> error("Unexpected HitResult type: ${landingPosition::class.java.name}")
         }
 
         if (trajectoryInfo == TrajectoryInfo.POTION && entityHitColor != null) {
-            drawSplashPotionTargets(landingPosition.location, trajectoryInfo, event, entityHitColor)
+            env.drawSplashPotionTargets(landingPosition.location, trajectoryInfo, partialTicks, entityHitColor)
         }
 
         return simulationResult
     }
 
-    private fun drawTrajectoryForProjectile(
-        positions: List<Vec3>,
-        color: Color4b,
-        matrixStack: PoseStack,
-    ) {
-        renderEnvironmentForWorld(matrixStack) {
-            drawLineStrip(
-                color.argb,
-                positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3f() })
-        }
+    private fun WorldRenderEnvironment.drawTrajectoryForProjectile(positions: List<Vec3>, argb: Int) {
+        // Don't use LineStrip because in batch mode
+        matrixStack.pushPose()
+        matrixStack.translate(renderOffset - camera.position())
+        drawLineStripAsLines(argb, positions = positions.mapToArray { it.toVec3f() })
+        matrixStack.popPose()
     }
 
     @JvmRecord
@@ -301,67 +295,60 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
     )
 }
 
-private fun drawSplashPotionTargets(
+private fun WorldRenderEnvironment.drawSplashPotionTargets(
     landingPosition: Vec3,
     trajectoryInfo: TrajectoryInfo,
-    event: WorldRenderEvent,
+    partialTicks: Float,
     entityHitColor: Color4b,
 ) {
     val box: AABB = trajectoryInfo.hitbox(landingPosition).inflate(4.0, 2.0, 4.0)
 
     val hitTargets =
-        world.getEntitiesOfClass(LivingEntity::class.java, box)
-            .takeWhile { it.distanceToSqr(landingPosition) <= 16.0 }
-            .filter { it.isAffectedByPotions }
+        world.getEntitiesOfClass(LivingEntity::class.java, box) {
+            it.distanceToSqr(landingPosition) <= 16.0 && it.isAffectedByPotions
+        }
 
-    drawHitEntities(event.matrixStack, entityHitColor, hitTargets, event.partialTicks)
+    drawHitEntities(entityHitColor, hitTargets, partialTicks)
 }
 
-private fun drawHitEntities(
-    matrixStack: PoseStack,
+private fun WorldRenderEnvironment.drawHitEntities(
     entityHitColor: Color4b,
     entities: List<Entity>,
     partialTicks: Float
 ) {
-    renderEnvironmentForWorld(matrixStack) {
-        startBatch()
-        for (entity in entities) {
-            if (entity === player) {
-                continue
-            }
-
-            val pos = entity.interpolateCurrentPosition(partialTicks)
-
-            withPositionRelativeToCamera(pos) {
-                drawBox(
-                    entity
-                        .getDimensions(entity.pose)
-                        .makeBoundingBox(Vec3.ZERO),
-                    entityHitColor,
-                )
-            }
+    for (entity in entities) {
+        if (entity === player) {
+            continue
         }
-        commitBatch()
+
+        val pos = entity.interpolateCurrentPosition(partialTicks)
+
+        withPositionRelativeToCamera(pos) {
+            drawBox(
+                entity
+                    .getDimensions(entity.pose)
+                    .makeBoundingBox(Vec3.ZERO),
+                entityHitColor,
+            )
+        }
     }
 }
 
-private fun renderHitBlockFace(matrixStack: PoseStack, blockHitResult: BlockHitResult, color: Color4b) {
+private fun WorldRenderEnvironment.renderHitBlockFace(blockHitResult: BlockHitResult, color: Color4b) {
     val currPos = blockHitResult.blockPos
     val currState = currPos.getState()!!
 
     val bestBox = currState.getShape(world, currPos, CollisionContext.of(player)).toAabbs()
-        .filter { blockHitResult.location in it.inflate(0.01, 0.01, 0.01).move(currPos) }
+        .filter { blockHitResult.location in it.inflate(0.01).move(currPos) }
         .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.location) }
 
     if (bestBox != null) {
-        renderEnvironmentForWorld(matrixStack) {
-            withPositionRelativeToCamera(currPos) {
-                drawBoxSide(
-                    bestBox,
-                    side = blockHitResult.direction,
-                    faceColor = color,
-                )
-            }
+        withPositionRelativeToCamera(currPos) {
+            drawBoxSide(
+                bestBox,
+                side = blockHitResult.direction,
+                faceColor = color,
+            )
         }
     }
 }

@@ -174,9 +174,9 @@ inline fun WorldRenderEnvironment.drawCustomMeshTextured(
 
 inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
-    drawer: VertexConsumer.(Matrix4fc) -> Unit,
+    drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) {
-    val matrix = matrixStack.last().pose()
+    val matrix = matrixStack.last()
 
     val buffer = getOrCreateBuffer(pipeline)
 
@@ -195,6 +195,7 @@ private fun getVbo(vertexFormat: VertexFormat): GrowableMappableRingBuffer =
         GrowableMappableRingBuffer(
             "${LiquidBounce.CLIENT_NAME} Shared VBO for $it",
             GpuBuffer.USAGE_VERTEX,
+            GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 11)
         )
     }
 
@@ -260,22 +261,50 @@ internal fun drawMesh(
  * Draws a line with endpoint [p1] and [p2] and color [argb].
  */
 fun WorldRenderEnvironment.drawLine(p1: Vec3f, p2: Vec3f, argb: Int) =
-    drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
-        addVertex(matrix, p1.x, p1.y, p1.z).setColor(argb)
-        addVertex(matrix, p2.x, p2.y, p2.z).setColor(argb)
+    drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+        addVertex(pose, p1).setColor(argb)
+        addVertex(pose, p2).setColor(argb)
     }
 
 /**
- * Function to draw lines using the specified [lines] vectors.
- *
- * @param lines The vectors representing the lines.
+ * Draws lines with [width].
+ * Modern GL doesn't support `glLineWidth` well, so draw with shader simulation.
  */
-fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3f) {
-    drawLines(
-        lines,
-        pipeline = ClientRenderPipelines.Lines,
-        argb = argb,
-    )
+fun WorldRenderEnvironment.drawLinesWithWidth(argb: Int, width: Float, vararg positions: Vec3f) {
+    if (positions.isEmpty()) return
+    require(positions.size and 1 == 0)
+
+    drawCustomMesh(pipeline = ClientRenderPipelines.LinesWithWidth) { pose ->
+        for (i in 0 until positions.size step 2) {
+            val p1 = positions[i]
+            val p2 = positions[i + 1]
+            val norm1 = (p1 - p2).normalized()
+            addVertex(pose, p1)
+                .setColor(argb)
+                .setNormal(pose, norm1)
+                .setLineWidth(width)
+            addVertex(pose, p2)
+                .setColor(argb)
+                .setNormal(pose, -norm1)
+                .setLineWidth(width)
+        }
+    }
+}
+
+/**
+ * Function to draw lines using the specified [positions] vectors.
+ *
+ * @param positions The vectors representing the lines.
+ */
+fun WorldRenderEnvironment.drawLines(argb: Int, vararg positions: Vec3f) {
+    if (positions.isEmpty()) return
+    require(positions.size and 1 == 0)
+
+    drawCustomMesh(pipeline = ClientRenderPipelines.Lines) { pose ->
+        for (pos in positions) {
+            addVertex(pose, pos).setColor(argb)
+        }
+    }
 }
 
 /**
@@ -284,32 +313,30 @@ fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3f) {
  * @param positions The vectors representing the line strip.
  */
 fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3f) {
-    drawLines(
-        positions,
-        pipeline = ClientRenderPipelines.LineStrip,
-        argb = argb,
-    )
+    if (positions.isEmpty()) return
+
+    drawCustomMesh(pipeline = ClientRenderPipelines.LineStrip) { pose ->
+        for (pos in positions) {
+            addVertex(pose, pos).setColor(argb)
+        }
+    }
 }
 
 /**
- * Helper function to draw lines using the specified [lines] vectors and [pipeline].
+ * Function to draw a 'line strip' using the specified [positions] vectors,
+ * actual pipeline is [ClientRenderPipelines.Lines].
  *
- * @param lines The vectors representing the lines.
- * @param pipeline The render pipeline for the lines.
+ * @param positions The vectors representing the line strip.
  */
-private fun WorldRenderEnvironment.drawLines(
-    lines: Array<out Vec3f>,
-    pipeline: RenderPipeline,
-    argb: Int,
-) {
-    // If the array of lines is empty, we don't need to draw anything
-    if (lines.isEmpty()) {
-        return
-    }
+fun WorldRenderEnvironment.drawLineStripAsLines(argb: Int, vararg positions: Vec3f) {
+    if (positions.isEmpty()) return
 
-    drawCustomMesh(pipeline) { matrix ->
-        lines.forEach { (x, y, z) ->
-            addVertex(matrix, x, y, z).setColor(argb)
+    drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+        positions.forEachIndexed { index, pos ->
+            if (index != 0 && index != positions.lastIndex) {
+                addVertex(pose, pos).setColor(argb)
+            }
+            addVertex(pose, pos).setColor(argb)
         }
     }
 }
@@ -338,18 +365,11 @@ fun WorldRenderEnvironment.drawSquareTexture(
 
 fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: Int) {
     drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-        addVertex(matrix, p1.x, p1.y, p1.z).setColor(argb)
-        addVertex(matrix, p2.x, p2.y, p2.z).setColor(argb)
-        addVertex(matrix, p3.x, p3.y, p3.z).setColor(argb)
+        addVertex(matrix, p1).setColor(argb)
+        addVertex(matrix, p2).setColor(argb)
+        addVertex(matrix, p3).setColor(argb)
     }
 }
-
-@Suppress("NOTHING_TO_INLINE")
-inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vector3fc): VertexConsumer =
-    addVertex(pose, pos.x(), pos.y(), pos.z())
-
-@Suppress("NOTHING_TO_INLINE")
-inline fun VertexConsumer.color(color: Color4b): VertexConsumer = setColor(color.argb)
 
 /**
  * Function to draw a colored [box].
@@ -362,14 +382,14 @@ fun WorldRenderEnvironment.drawBox(
     outlineVertices: Int = -1,
 ) {
     if (faceColor != null && !faceColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
-            addBoxFaces(matrix, box, color = faceColor, verticesToUse = faceVertices)
+        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+            addBoxFaces(pose.pose(), box, color = faceColor, verticesToUse = faceVertices)
         }
     }
 
     if (outlineColor != null && !outlineColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
-            addBoxOutlines(matrix, box, outlineColor, outlineVertices)
+        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+            addBoxOutlines(pose.pose(), box, outlineColor, outlineVertices)
         }
     }
 }
@@ -453,9 +473,9 @@ private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3f>, colo
     require(vertices.size == colors.size) { "there must be a color for every vertex" }
     require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
-        vertices.forEachIndexed { index, (x, y, z) ->
+        vertices.forEachIndexed { index, pos ->
             val color4b = colors[index]
-            addVertex(matrix, x, y, z).setColor(color4b.argb)
+            addVertex(matrix, pos).setColor(color4b.argb)
         }
     }
 }
@@ -482,10 +502,8 @@ fun WorldRenderEnvironment.drawGradientCircle(
             outerP.set(cosine * outerRadius, 0f, sine * outerRadius)
             innerP.set(cosine * innerRadius, 0f, sine * innerRadius).add(innerOffset)
 
-            addVertex(matrix, outerP.x, outerP.y, outerP.z)
-                .setColor(outerColor.argb)
-            addVertex(matrix, innerP.x, innerP.y, innerP.z)
-                .setColor(innerColor.argb)
+            addVertex(matrix, outerP).setColor(outerColor.argb)
+            addVertex(matrix, innerP).setColor(innerColor.argb)
         }
     }
 }

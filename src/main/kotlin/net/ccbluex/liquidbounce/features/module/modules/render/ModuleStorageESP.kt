@@ -338,8 +338,8 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
         renderEnvironmentForWorld(event.matrixStack) {
             val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotatePitch(-camera.xRot().toRadians())
-                .rotateYaw(-camera.yRot().toRadians())
+                .rotateX(-camera.xRot().toRadians())
+                .rotateY(-camera.yRot().toRadians())
 
             startBatch()
             longLines {
