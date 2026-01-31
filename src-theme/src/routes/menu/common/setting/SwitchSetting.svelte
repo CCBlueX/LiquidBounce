@@ -18,7 +18,7 @@
 
 <style lang="scss">
   @use "sass:color";
-  @use "../../../../colors.scss" as *;
+  @use "../../../../colors3" as *;
 
   .switch-setting {
     display: flex;

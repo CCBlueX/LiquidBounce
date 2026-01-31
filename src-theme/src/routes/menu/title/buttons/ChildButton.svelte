@@ -27,7 +27,7 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
+    @use "../../../../colors3" as *;
 
     .child-button {
       position: relative;

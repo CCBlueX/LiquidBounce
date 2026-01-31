@@ -12,7 +12,7 @@
     Taken from https://loading.io/css/
    */
 
-  @use "../../../colors.scss" as *;
+  @use "../../../colors3" as *;
 
   .loader-wrapper {
     position: absolute;

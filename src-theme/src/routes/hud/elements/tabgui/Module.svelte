@@ -32,7 +32,7 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
+    @use "../../../../colors3" as *;
 
     .module {
         font-weight: 500;

@@ -45,7 +45,7 @@
 {/if}
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
+  @use "../../../colors3" as *;
 
   .effects {
     display: flex;

@@ -51,14 +51,14 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
+  @use "../../../colors" as *;
 
   .setting {
     padding: 7px 0;
   }
 
   .title {
-    color: $clickgui-text-color;
+    color: var(--clickgui-base-text-color);
     font-size: 12px;
     font-weight: 600;
   }
@@ -74,7 +74,7 @@
   }
 
   .nested-settings {
-    border-left: solid 2px $accent-color;
+    border-left: solid 2px var(--clickgui-base-accent-color);
     padding-left: 7px;
   }
 </style>

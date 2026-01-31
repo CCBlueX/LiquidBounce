@@ -39,7 +39,7 @@
 {/if}
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
+  @use "../../../colors3" as *;
 
   .scoreboard {
     width: max-content;

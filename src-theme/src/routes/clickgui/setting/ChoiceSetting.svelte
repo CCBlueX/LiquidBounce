@@ -67,10 +67,10 @@
 </div>
 
 <style lang="scss">
-    @use "../../../colors.scss" as *;
+    @use "../../../colors" as *;
 
     .setting {
-        padding: 7px 0px;
+        padding: 7px 0;
 
         .head {
           transition: ease margin-bottom .2s;
@@ -86,7 +86,7 @@
         }
     }
     .nested-settings {
-        border-left: solid 2px $accent-color;
+        border-left: solid 2px var(--clickgui-base-accent-color);
         padding-left: 7px;
     }
 </style>

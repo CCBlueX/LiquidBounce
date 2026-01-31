@@ -30,7 +30,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors" as *;
+  @use "../../../../colors3" as *;
 
   .hidden {
     display: none;

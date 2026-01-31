@@ -37,7 +37,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
+  @use "../../../../colors3" as *;
 
   .available-tabs {
     display: flex;

@@ -204,12 +204,12 @@
 
   .change-bind {
     background-color: transparent;
-    border: solid 2px $accent-color;
+    border: solid 2px var(--clickgui-base-accent-color);
     border-radius: 3px;
     cursor: pointer;
     padding: 4px;
     font-weight: 500;
-    color: $clickgui-text-color;
+    color: var(--clickgui-base-text-color);
     font-size: 12px;
     font-family: "Inter", sans-serif;
     width: 100%;

@@ -30,7 +30,7 @@
 {/if}
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
+  @use "../../../../colors3" as *;
 
   .modal-wrapper {
     position: fixed;
