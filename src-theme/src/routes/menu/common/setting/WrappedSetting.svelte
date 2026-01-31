@@ -74,7 +74,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors3" as *;
+  @use "../../../../colors.scss" as *;
 
   .configurable-title {
     color: $menu-text-color;

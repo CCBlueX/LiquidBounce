@@ -27,7 +27,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors" as *;
+  @use "../../../colors.scss" as *;
 
   .window {
     position: fixed;
@@ -36,11 +36,11 @@
     transform: translateX(-50%);
     width: min(820px, 92vw);
     --window-max-height: 70vh;
-    background-color: var(--clickgui-background-color-medium);
+    background-color: rgba($clickgui-base-color, 0.8);
     max-height: var(--window-max-height, none);
     border-radius: 5px;
     overflow: hidden;
-    box-shadow: 0 0 10px var(--clickgui-background-color-light);
+    box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
     user-select: none;
   }
 
@@ -49,12 +49,12 @@
     grid-template-columns: max-content 1fr;
     align-items: center;
     column-gap: 12px;
-    background-color: var(--clickgui-background-color-dark);
+    background-color: rgba($clickgui-base-color, 0.9);
     padding: 16px 22px;
     font-size: 16px;
     font-weight: 600;
-    color: var(--clickgui-base-text-color);
-    border-bottom: 2px solid var(--clickgui-base-accent-color);
+    color: $clickgui-text-color;
+    border-bottom: 2px solid rgba($accent-color, 0.8);
   }
 
   .title-text {

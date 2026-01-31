@@ -167,7 +167,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../../colors3" as *;
+  @use "../../../../../colors" as *;
 
   .account {
     width: 488px;

@@ -77,22 +77,22 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors" as *;
+  @use "../../../colors.scss" as *;
 
   .setting {
     padding: 7px 0;
-    color: var(--clickgui-base-text-color);
+    color: $clickgui-text-color;
   }
 
   .title {
-    color: var(--clickgui-base-text-color);
+    color: $clickgui-text-color;
     font-size: 12px;
     font-weight: 600;
   }
 
   .choice {
-    color: var(--clickgui-base-text-dimmed-color);
-    background-color: var(--clickgui-background-color-light);
+    color: $clickgui-text-dimmed-color;
+    background-color: rgba($clickgui-base-color, 0.3);
     border-radius: 3px;
     padding: 3px 6px;
     cursor: pointer;
@@ -101,17 +101,17 @@
     overflow-wrap: anywhere;
 
     &:hover {
-      color: var(--clickgui-base-text-color);
+      color: $clickgui-text-color;
     }
 
     &.error {
-      background-color: var(--clickgui-multi-choose-setting-error-color) !important;
-      color: var(--clickgui-multi-choose-setting-error-color) !important;
+      background-color: rgba($menu-error-color, 0.1) !important;
+      color: $menu-error-color !important;
     }
 
     &.active {
-      background-color: var(--clickgui-base-accent-dimmed-color);
-      color: var(--clickgui-base-accent-color);
+      background-color: rgba($accent-color, 0.1);
+      color: $accent-color;
     }
   }
 
@@ -134,8 +134,8 @@
   }
 
   .choices {
-    border-left: solid 2px var(--clickgui-base-accent-color);
-    color: var(--clickgui-base-text-color);
+    border-left: solid 2px $accent-color;
+    color: $clickgui-text-color;
     padding: 7px 7px;
     display: flex;
     flex-wrap: wrap;

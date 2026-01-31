@@ -1,29 +1,50 @@
-:root {
-  --primary-background-color: 0 0 0;
-  --primary-text-color: 255 255 255;
-  --primary-text-dimmed-color: rgb(var(--primary-text-color) / .9);
-  --accent-color: 108 168 148;
+$accent-color: #4677ff;
 
-  // ClickGUI
-  --clickgui-base-background-color: var(--primary-background-color);
-  --clickgui-base-text-color: rgb(var(--primary-text-color));
-  --clickgui-base-text-dimmed-color: var(--primary-text-dimmed-color);
-  --clickgui-base-accent-color: rgb(var(--accent-color));
-  --clickgui-base-accent-darkened-color: color-mix(in hsl, color-mix(in hsl, var(--clickgui-base-accent-color) 70%, gray) 90%, black);
-  --clickgui-base-accent-dimmed-color: rgb(var(--accent-color) / .15);
+$clickgui-base-color: black;
+$clickgui-text-color: white;
+$clickgui-text-dimmed-color: rgba(211, 211, 211, 255);
+$clickgui-grid-color: rgba(128, 128, 128, 0.25);
 
-  --clickgui-background-color-full: rgb(var(--clickgui-base-background-color));
-  --clickgui-background-color-dark: rgb(var(--clickgui-base-background-color) / .9);
-  --clickgui-background-color-medium: rgb(var(--clickgui-base-background-color) / .8);
-  --clickgui-background-color-light: rgb(var(--clickgui-base-background-color) / .5);
+$tabgui-base-color: black;
+$tabgui-text-color: white;
+$tabgui-text-dimmed-color: rgba(211, 211, 211, 255);
 
-  --clickgui-menu-background-color: rgb(var(--clickgui-base-background-color) / .6);
-  --clickgui-grid-color: rgb(128 128 128 / .25);
-  --clickgui-global-settings-column-rule-color: rgb(var(--primary-text-color) / .12);
+$arraylist-base-color: black;
+$arraylist-text-color: white;
+$arraylist-tag-color: #AAAAAA;
 
-  --clickgui-switch-setting-unchecked-background-color: color-mix(in hsl, var(--clickgui-base-text-color) 45%, black);
-  --clickgui-switch-setting-checked-background-color: color-mix(in oklch, color-mix(in oklch, var(--clickgui-base-accent-color) 40%, gray) 85%, black);
-  --clickgui-slider-target-color: color-mix(in hsl, var(--clickgui-base-text-color) 20%, black);
+$targethud-base-color: black;
+$targethud-text-color: white;
+$targethud-text-dimmed-color: rgba(211, 211, 211, 255);
 
-  --clickgui-multi-choose-setting-error-color: rgb(252 65 48 / .1);
-}
+$blockcounter-base-color: black;
+
+$hotbar-base-color: black;
+$hotbar-text-color: white;
+/* TODO: currently unused */
+$hotbar-experience-color: #88C657;
+$hotbar-health-color: #FC4130;
+$hotbar-hunger-color: #B88458;
+
+$menu-account-premium-color: #67D24A;
+$menu-base-color: black;
+$menu-text-color: white;
+$menu-text-dimmed-color: rgba(211, 211, 211, 255);
+$menu-error-color: #fc4130;
+$menu-button-loader-color: white;
+
+$scoreboard-base-color: black;
+
+$keystrokes-base-color: black;
+$keystrokes-text-color: white;
+
+$item-damage-base-color: black;
+
+$keybinds-base-color: black;
+$keybinds-text-color: white;
+$keybinds-enabled-color: #4dac68;
+
+$effects-amplifier-color: #FC4130;
+$effects-name-color: white;
+$effects-background-color: rgba(0, 0, 0, 0.5);
+$effects-duration-color: white;

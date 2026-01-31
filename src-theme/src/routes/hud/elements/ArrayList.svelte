@@ -70,7 +70,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors3" as *;
+  @use "../../../colors.scss" as *;
 
   .module {
     background-color: rgba($arraylist-base-color, 0.68);

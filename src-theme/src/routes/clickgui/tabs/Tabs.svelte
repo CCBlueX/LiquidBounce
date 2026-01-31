@@ -36,7 +36,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors" as *;
+  @use "../../../colors.scss" as *;
 
   .available-tabs {
     position: fixed;
@@ -47,14 +47,14 @@
     gap: 5px;
     padding: 6px;
     border-radius: 999px;
-    background-color: var(--clickgui-background-color-dark);
-    box-shadow: 0 0 10px var(--clickgui-background-color-light);
+    background-color: rgba($clickgui-base-color, 0.85);
+    box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
     z-index: 9999999999;
   }
 
   .tab-button {
     background: transparent;
-    color: var(--clickgui-base-text-dimmed-color);
+    color: $clickgui-text-dimmed-color;
     padding: 6px 14px;
     font-size: 14px;
     font-weight: 600;
@@ -64,14 +64,14 @@
     border: solid 1px transparent;
 
     &:hover {
-      color: var(--clickgui-base-text-color);
-      background-color: var(--clickgui-background-color-medium);
+      color: $clickgui-text-color;
+      background-color: rgba($clickgui-base-color, 0.7);
     }
 
     &.active {
-      color: var(--clickgui-base-text-color);
-      background-color: var(--clickgui-base-accent-dimmed-color);
-      border: 1px solid var(--clickgui-base-accent-color);
+      color: $clickgui-text-color;
+      background-color: rgba($accent-color, 0.15);
+      border: 1px solid rgba($accent-color, 0.8);
     }
   }
 </style>

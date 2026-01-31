@@ -85,31 +85,31 @@
 </div>
 
 <style lang="scss">
-    @use "../../../colors" as *;
+    @use "../../../colors.scss" as *;
 
     .setting {
         display: grid;
         grid-template-areas:
             "a b"
             "c c";
-        padding: 7px 0;
+        padding: 7px 0px;
     }
 
     .name {
         grid-area: a;
         font-weight: 500;
-        color: var(--clickgui-base-text-color);
+        color: $clickgui-text-color;
         font-size: 12px;
     }
 
     .hidden {
-        height: 0;
+        height: 0px;
         display: none;
     }
 
     .value {
         font-weight: 500;
-        color: var(--clickgui-base-text-color);
+        color: $clickgui-text-color;
         text-align: right;
         font-size: 12px;
         cursor: text;
@@ -140,10 +140,10 @@
         margin-bottom: -2px;
         width: 30px;
         border-radius: 3px;
+        background-color: blue;
         border-style: none;
-
-      &:focus  {
-        outline: none;
-      }
+    }
+    .color-pickr-button:focus {
+        outline: 3px solid #ffffff;
     }
 </style>

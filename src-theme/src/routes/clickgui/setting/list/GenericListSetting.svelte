@@ -62,7 +62,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors" as *;
+  @use "../../../../colors.scss" as *;
 
   .setting {
     padding: 7px 0;
@@ -78,7 +78,7 @@
     }
 
     .name {
-      color: var(--clickgui-base-text-color);
+      color: $clickgui-text-color;
       font-size: 12px;
       font-weight: 600;
     }
@@ -96,12 +96,12 @@
   .search-input {
     width: 100%;
     border: none;
-    border-bottom: solid 1px var(--clickgui-base-accent-color);
+    border-bottom: solid 1px $accent-color;
     font-family: "Inter", sans-serif;
     font-size: 12px;
     padding: 5px;
-    color: var(--clickgui-base-text-color);
+    color: $clickgui-text-color;
     margin-bottom: 5px;
-    background-color: var(--clickgui-background-color-light);
+    background-color: rgba($clickgui-base-color, .36);
   }
 </style>

@@ -32,7 +32,7 @@
 </GenericSelect>
 
 <style lang="scss">
-  @use "../../../../../colors3" as *;
+  @use "../../../../../colors.scss" as *;
 
   .title {
     font-weight: 600;

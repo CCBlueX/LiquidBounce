@@ -1,7 +1,8 @@
-@use "../../../colors" as *;
+@use "sass:color";
+@use "../../../colors.scss" as *;
 
 .noUi-handle {
-    background-color: var(--clickgui-base-accent-color);
+    background-color: $accent-color;
     box-shadow: unset;
     border: none;
     border-radius: 50%;
@@ -19,10 +20,10 @@
     margin: 10px 0;
     height: 2px;
     border: none;
-    background-color: var(--clickgui-slider-target-color);
+    background-color: color.adjust($clickgui-text-color, $lightness: -80%);
     box-shadow: unset;
 }
 
 .noUi-connect {
-    background-color: var(--clickgui-base-accent-color);
+    background-color: $accent-color;
 }

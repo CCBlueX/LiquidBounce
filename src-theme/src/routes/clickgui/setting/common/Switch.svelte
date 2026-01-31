@@ -17,7 +17,8 @@
 </label>
 
 <style lang="scss">
-  @use "../../../../colors" as *;
+  @use "sass:color";
+  @use "../../../../colors.scss" as *;
 
   .switch-container {
     display: flex;
@@ -27,7 +28,7 @@
 
   .name {
     font-weight: 500;
-    color: var(--clickgui-base-text-color);
+    color: $clickgui-text-color;
     font-size: 12px;
     margin-left: 7px;
     white-space: nowrap;
@@ -41,7 +42,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--clickgui-switch-setting-unchecked-background-color);
+    background-color: color.adjust($clickgui-text-color, $lightness: -55%);
     transition: ease 0.4s;
     height: 8px;
     border-radius: 4px;
@@ -53,7 +54,7 @@
       width: 12px;
       top: -2px;
       left: 0;
-      background-color: var(--clickgui-base-text-color);
+      background-color: $clickgui-text-color;
       transition: ease 0.4s;
       border-radius: 50%;
     }
@@ -69,12 +70,12 @@
     }
 
     input:checked + .slider {
-      background-color: var(--clickgui-switch-setting-checked-background-color);
+      background-color: color.adjust($accent-color, $saturation: -60%, $lightness: -15%);
     }
 
     input:checked + .slider:before {
       transform: translateX(10px);
-      background-color: var(--clickgui-base-accent-color);
+      background-color: $accent-color;
     }
   }
 </style>

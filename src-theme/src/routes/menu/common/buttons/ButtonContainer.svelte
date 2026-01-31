@@ -3,7 +3,7 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../colors3" as *;
+    @use "../../../../colors.scss" as *;
 
     .button-container {
       background-color: rgba($menu-base-color, 0.68);

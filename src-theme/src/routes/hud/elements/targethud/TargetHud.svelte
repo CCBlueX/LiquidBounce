@@ -75,7 +75,7 @@
 {/if}
 
 <style lang="scss">
-    @use "../../../../colors3" as *;
+    @use "../../../../colors.scss" as *;
 
     .targethud {
         background-color: rgba($targethud-base-color, 0.68);

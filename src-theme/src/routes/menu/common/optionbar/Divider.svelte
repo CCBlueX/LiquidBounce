@@ -1,7 +1,7 @@
 <div class="divider"></div>
 
 <style lang="scss">
-  @use "../../../../colors3" as *;
+  @use "../../../../colors.scss" as *;
 
   .divider {
     height: 100%;

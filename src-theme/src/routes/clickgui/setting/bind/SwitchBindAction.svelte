@@ -69,7 +69,7 @@
 
     &.arrow-right::after {
       @include icon-settings-expand($size: 10px, $right: auto);
-      color: var(--clickgui-base-text-dimmed-color);
+      color: $clickgui-text-dimmed-color;
     }
   }
 
@@ -78,7 +78,7 @@
 
     .chosen {
       font-weight: 500;
-      color: var(--clickgui-base-text-color);
+      color: $clickgui-text-color;
       font-size: 12px;
       text-overflow: ellipsis;
       white-space: nowrap;

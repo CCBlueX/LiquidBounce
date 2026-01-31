@@ -289,7 +289,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors" as *;
+  @use "../../../colors.scss" as *;
 
   .setting {
     padding: 7px 0;
@@ -310,7 +310,7 @@
   }
 
   .title {
-    color: var(--clickgui-base-text-color);
+    color: $clickgui-text-color;
     font-size: 12px;
     font-weight: 600;
   }
