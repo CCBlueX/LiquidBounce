@@ -18,54 +18,25 @@
  */
 package net.ccbluex.liquidbounce.config.gson.adapter
 
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
-import com.google.gson.JsonPrimitive
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
-import java.lang.reflect.Type
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.Temporal
+import java.time.temporal.TemporalQuery
 
-object LocalDateAdapter : JsonSerializer<LocalDate>, JsonDeserializer<LocalDate> {
-    private val FORMATTER: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
+private fun <T : Temporal> temporalAsStringAdapter(formatter: DateTimeFormatter, temporalQuery: TemporalQuery<T>) =
+    SimpleStringTypeAdapter({ formatter.parse(it, temporalQuery) }, formatter::format)
 
-    override fun serialize(src: LocalDate, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(src.format(FORMATTER))
-    }
+@JvmField
+val LocalDateAdapter = temporalAsStringAdapter(DateTimeFormatter.ISO_LOCAL_DATE, LocalDate::from)
 
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LocalDate {
-        return LocalDate.parse(json.asString, FORMATTER)
-    }
-}
+@JvmField
+val LocalDateTimeAdapter = temporalAsStringAdapter(DateTimeFormatter.ISO_LOCAL_DATE_TIME, LocalDateTime::from)
 
-object LocalDateTimeAdapter : JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
-    private val FORMATTER: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+@JvmField
+val OffsetDateTimeAdapter = temporalAsStringAdapter(DateTimeFormatter.ISO_OFFSET_DATE_TIME, OffsetDateTime::from)
 
-    override fun serialize(src: LocalDateTime, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
-        return JsonPrimitive(src.format(FORMATTER))
-    }
+private val UNDERLINED_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
 
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): LocalDateTime {
-        return LocalDateTime.parse(json.asString, FORMATTER)
-    }
-}
-
-object OffsetDateTimeAdapter : JsonSerializer<OffsetDateTime>, JsonDeserializer<OffsetDateTime> {
-    private val FORMATTER: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
-
-    override fun serialize(src: OffsetDateTime, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
-        return JsonPrimitive(src.format(FORMATTER))
-    }
-
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): OffsetDateTime {
-        return OffsetDateTime.parse(json.asString, FORMATTER)
-    }
-}
-
-private val UNDERLINED_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
-
-fun LocalDateTime.toUnderlinedString(): String = UNDERLINED_DATETIME_FORMATTER.format(this)
+fun LocalDateTime.toUnderlinedString(): String = UNDERLINED_LOCAL_DATE_TIME_FORMATTER.format(this)

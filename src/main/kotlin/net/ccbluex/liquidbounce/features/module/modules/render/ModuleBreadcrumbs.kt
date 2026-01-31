@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.vertex.VertexConsumer
 import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
 import it.unimi.dsi.fastutil.objects.ObjectFloatPair
@@ -33,10 +32,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.client.Camera
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
@@ -83,10 +84,6 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         val color = if (colorRainbow) rainbow() else color
 
         renderEnvironmentForWorld(matrixStack) {
-            if (height > 0) {
-                GlStateManager._disableCull()
-            }
-
             val camera = mc.entityRenderDispatcher.camera ?: return@handler
             val time = System.currentTimeMillis()
             val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
@@ -98,10 +95,6 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
                 trails.forEach { (entity, trail) ->
                     trail.verifyAndRenderTrail(renderData, camera, entity, time)
                 }
-            }
-
-            if (height > 0) {
-                GlStateManager._enableCull()
             }
         }
     }
@@ -128,11 +121,11 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
 
     private fun updateEntityTrail(time: Long, entity: Entity) {
         val last = lastPositions[entity]
-        if (last != null && entity.x == last.x && entity.y == last.y && entity.z == last.z) {
+        if (last != null && entity.position() == last) {
             return
         }
 
-        lastPositions[entity] = Vec3(entity.x, entity.y, entity.z)
+        lastPositions[entity] = entity.position().copy()
         trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.x, entity.y, entity.z, time))
     }
 
@@ -150,7 +143,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
     private data class TrailPart(val x: Double, val y: Double, val z: Double, val creationTime: Long)
 
     private class RenderData(
-        val matrix: Matrix4fc,
+        val pose: Matrix4fc,
         val bufferBuilder: VertexConsumer,
         val color: Vector4f,
         val lines: Boolean
@@ -215,11 +208,11 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
                     val (v0, alpha0) = list[i]
                     val (v2, alpha2) = list[i - 1]
 
-                    addVertex(renderData.matrix, v0.x, v0.y, v0.z).setColor(red, green, blue, alpha0)
-                    addVertex(renderData.matrix, v2.x, v2.y, v2.z).setColor(red, green, blue, alpha2)
+                    addVertex(renderData.pose, v0).setColor(red, green, blue, alpha0)
+                    addVertex(renderData.pose, v2).setColor(red, green, blue, alpha2)
                     if (!renderData.lines) {
-                        addVertex(renderData.matrix, v2.x, v2.y + height, v2.z).setColor(red, green, blue, alpha2)
-                        addVertex(renderData.matrix, v0.x, v0.y + height, v0.z).setColor(red, green, blue, alpha0)
+                        addVertex(renderData.pose, v2.x, v2.y + height, v2.z).setColor(red, green, blue, alpha2)
+                        addVertex(renderData.pose, v0.x, v0.y + height, v0.z).setColor(red, green, blue, alpha0)
                     }
                 }
             }
