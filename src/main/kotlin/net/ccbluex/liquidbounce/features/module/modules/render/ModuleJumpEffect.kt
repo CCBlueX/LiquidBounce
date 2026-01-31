@@ -21,14 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA.jumpcircle
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.jumpcircle
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.colors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -61,9 +60,9 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
-        val transparency = if(Transparency.AdaptiveA.enabled) jumpcircle else a
-        val OuterColor = if(syncClientWithPalette) currentColors[0].toColor4b(transparency) else outerColor
-        val InnerColor = if(syncClientWithPalette) currentColors[1].toColor4b(transparency) else innerColor
+        val transparency = if(AdaptiveA.enabled) jumpcircle else a
+        val currOuterColor = if(ModuleColorTheme.enabled) currentColors[0].toColor4b(transparency) else outerColor
+        val currInnerColor = if(ModuleColorTheme.enabled) currentColors[1].toColor4b(transparency) else innerColor
 
         renderEnvironmentForWorld(matrixStack) {
             circles.forEach {
@@ -75,8 +74,8 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
                     drawGradientCircle(
                         endRadius.endInclusive * progress,
                         endRadius.start * progress,
-                        animateColor(OuterColor, progress),
-                        animateColor(InnerColor, progress)
+                        animateColor(currOuterColor, progress),
+                        animateColor(currInnerColor, progress)
                     )
                 }
             }

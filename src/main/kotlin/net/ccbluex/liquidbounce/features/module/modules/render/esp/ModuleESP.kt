@@ -19,16 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.esp
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA.esp
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.esp
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.colors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.Esp2DMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspBoxMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
@@ -86,7 +85,7 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
             return Color4b.RED
         }
 
-        if(syncClientWithPalette && colorModes.activeChoice is GenericStaticColorMode) {
+        if(ModuleColorTheme.enabled && colorModes.activeMode is GenericStaticColorMode) {
             val transparency = if(AdaptiveA.enabled) esp else a
             return currentColors[accentColor.num].toColor4b(transparency)
         }

@@ -24,15 +24,15 @@ import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA.itemChams
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.nonAccentColor
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.itemChams
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.nonAccentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.createRenderPass
@@ -97,11 +97,11 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
         this.storedLightmapTexture.copyFrom(source = textureView.texture())
 
-        val transparency = if(syncClientWithPalette) if (AdaptiveA.enabled) itemChams else a else alpha
+        val transparency = if(ModuleColorTheme.enabled) if (AdaptiveA.enabled) itemChams else a else alpha
         val currBlendColor =
-            if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(transparency) else blendColor
+            if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(transparency) else blendColor
         val currGlowColor =
-            if(syncClientWithPalette) currentColors[nonAccentColor.num].toColor4b(transparency) else glowColor
+            if(ModuleColorTheme.enabled) currentColors[nonAccentColor.num].toColor4b(transparency) else glowColor
         if (uboDirty) {
             UBO.writeStd140 {
                 putInt(0)

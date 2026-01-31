@@ -19,19 +19,31 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA.hats
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.nonAccentColor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.minecraft.util.Mth
 
-class HatsColorSettings : Configurable("Colors") {
+class HatsColorSettings : ValueGroup("Colors") {
     val syncColors by boolean("SyncColors", true)
     val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
     val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
     val spinSpeed by float("SpinSpeed", 1f, 0f..10f)
 
     fun getCurrentStepColor(angle: Float): Color4b {
-        val first = firstColor
-        val second = if (!syncColors) secondColor else firstColor
+        val transparency = if(AdaptiveA.enabled) hats else a
+        val first = if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(transparency) else firstColor
+        val second = if(ModuleColorTheme.enabled) {
+            currentColors[nonAccentColor.num].toColor4b(transparency)
+        } else if (!syncColors) { secondColor } else { first }
+
         val speed = spinSpeed
 
         return getColorByAngle(angle, first, second, speed)

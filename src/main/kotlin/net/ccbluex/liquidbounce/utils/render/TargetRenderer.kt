@@ -29,11 +29,11 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.nonAccentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.nonAccentColor
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
@@ -184,7 +184,8 @@ class TargetRenderer(
                             translate(size / 2.0, size / 2.0, 0.0)
                         }
 
-                        val currColor = if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+                        val currColor =
+                            if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else color
 
                         val alpha = Mth.clamp(currColor.a - (i * alphaFactor), 0, currColor.a)
                         val renderColor = currColor.alpha(alpha)
@@ -222,7 +223,7 @@ class TargetRenderer(
                     val pos = entity.interpolateCurrentPosition(partialTicks)
                         .add(0.0, entity.bbHeight.toDouble() + extraYOffset.toDouble(), 0.0)
 
-                    val currColor = if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+                    val currColor = if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else color
 
                     with(this) {
                         withPositionRelativeToCamera(pos) {
@@ -258,11 +259,11 @@ class TargetRenderer(
                     val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
                     val currOuterColor =
-                        if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else outerColor
+                        if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else outerColor
                     val currInnerColor =
-                        if(syncClientWithPalette) currentColors[nonAccentColor.num].toColor4b(a) else innerColor
+                        if(ModuleColorTheme.enabled) currentColors[nonAccentColor.num].toColor4b(a) else innerColor
                     val currOutline =
-                        if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else outline.color
+                        if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else outline.color
 
                     with(this) {
                         startBatch()
@@ -312,11 +313,11 @@ class TargetRenderer(
                     }
 
                     val currColor =
-                        if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+                        if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else color
                     val currGlowColor =
-                        if(syncClientWithPalette) currentColors[nonAccentColor.num].toColor4b(a) else glowColor
+                        if(ModuleColorTheme.enabled) currentColors[nonAccentColor.num].toColor4b(a) else glowColor
                     val currOutline =
-                        if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else outline.color
+                        if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else outline.color
 
                     with(this) {
                         withPositionRelativeToCamera(pos) {
@@ -379,7 +380,7 @@ class TargetRenderer(
                     val scaledWidth = nativeImage.width * scale
                     val scaledHeight = nativeImage.height * scale
 
-                    val currColor = if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+                    val currColor = if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else color
 
                     drawTexQuad(
                         texture.textureSetup,
@@ -417,7 +418,7 @@ class TargetRenderer(
                     val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
                     val screenPos = calculateScreenPos(pos) ?: return
 
-                    val currColor = if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+                    val currColor = if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else color
 
                     texts.forEachIndexed { i, text ->
                         fontRenderer.draw(text.asPlainText(Style.EMPTY + currColor)) {
@@ -439,9 +440,9 @@ class TargetRenderer(
                 private val size by float("Size", 1.5f, 0.5f..20f)
 
                 private val currColor =
-                    if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else color
+                    if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else color
                 private val currOutlineColor =
-                    if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(a) else outlineColor
+                    if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(a) else outlineColor
 
                 override fun GuiGraphics.render(entity: Entity, partialTicks: Float) {
                     val pos = entity.interpolateCurrentPosition(partialTicks)

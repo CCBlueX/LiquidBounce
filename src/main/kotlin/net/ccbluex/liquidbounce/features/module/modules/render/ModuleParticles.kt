@@ -27,14 +27,13 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.colors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -242,9 +241,9 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
                     translate(size / 2.0, size / 2.0, 0.0)
                 }
 
-                val transparency = if(Transparency.AdaptiveA.enabled) Transparency.AdaptiveA.particles else a
+                val transparency = if(AdaptiveA.enabled) AdaptiveA.particles else a
 
-                val renderColor = if(syncClientWithPalette) {
+                val renderColor = if(ModuleColorTheme.enabled) {
                     currentColors[accentColor.num].toColor4b(transparency).alpha(
                         Mth.clamp(
                             (alpha * transparency.toFloat()).toInt(),

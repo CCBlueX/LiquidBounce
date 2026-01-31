@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -39,13 +39,13 @@ internal object HatsOrbs : HatsMode("Orbs") {
 
     val color by color("color", Color4b(0, 0, 255, 125))
 
-    private object HatOrbsSettings : Configurable("HatSettings") {
+    private object HatOrbsSettings : ValueGroup("HatSettings") {
         val radius by float("Radius", 0.5f, 0f..2f)
         val speed by float("Speed", 0.5f, 0.1f..10f)
         val size by float("OrbsSize", 0.1f, 0.01f..0.5f)
         val count by int("OrbsCount", 6, 1..12)
 
-        object WaveSettings : ToggleableConfigurable(this@HatsOrbs, "Wave", true) {
+        object WaveSettings : ToggleableValueGroup(this@HatsOrbs, "Wave", true) {
             val waveHeight by float("WaveHeight", 0.1f, 0.01f..1f)
             val waveSpeed by float("WaveSpeed", 2.0f, 0.1f..10f)
         }

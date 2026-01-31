@@ -17,27 +17,25 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.client
+package net.ccbluex.liquidbounce.features.global
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams.uboDirty
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.toHex
 
-object ModuleColorTheme : ClientModule(
-    "ColorTheme",
-    ModuleCategories.CLIENT,
-    notActivatable = true,
-    hide = true
+object ModuleColorTheme : ToggleableValueGroup(
+    name = "ColorTheme",
+    enabled = true,
+    aliases = listOf("Palette")
 ) {
-    val syncClientWithPalette by boolean("SyncClientWithPalette", true)
+
+    var color: Array<String> = arrayOf()
 
     // Custom palette
-    object CustomPalette : Configurable("CustomPalette") {
+    object CustomPalette : ValueGroup("CustomPalette") {
         val firstColor by color("FirstColor",
             Color4b(0, 0, 0)).onChanged { uboDirty = true }
         val secondColor by color("SecondColor",
@@ -47,9 +45,10 @@ object ModuleColorTheme : ClientModule(
     val firstColor get() = CustomPalette.firstColor.toHex()
     val secondColor get() = CustomPalette.secondColor.toHex()
 
+
     // Palette Presets
     @Suppress("unused")
-    enum class Color(override val choiceName: String, val colors: Array<String>) : NamedChoice {
+    enum class Palette(override val tag: String, val colors: Array<String>) : Tagged {
         STANDART("Standart", arrayOf("4677ff", "465c99")),
         LUME("Lume", arrayOf("ff6b6b", "ffd93d")),
         NIGHT("Night", arrayOf("1b263b", "415a77")),
@@ -61,16 +60,16 @@ object ModuleColorTheme : ClientModule(
     }
 
     @Suppress("unused")
-    enum class AccentColor(override val choiceName: String, val num: Int) : NamedChoice {
+    enum class AccentColor(override val tag: String, val num: Int) : Tagged {
         FIRST("First", 0),
         SECOND("Second", 1),
     }
 
     @Suppress("unused")
-    object Transparency : Configurable("Transparency") {
+    object Transparency : ValueGroup("Transparency") {
         val a by int("Value", 255, 0..255).onChanged { uboDirty = true }
         // Unique transparency for every module
-        object AdaptiveA : ToggleableConfigurable(this@ModuleColorTheme, "AdaptiveList", true) {
+        object AdaptiveA : ToggleableValueGroup(this@ModuleColorTheme, "AdaptiveList", true) {
             val breadCrumbs by int("Breadcrumbs", 75, 0..255)
             val blockOutline by int("BlockOutline", 125, 0..255)
             val esp by int("ESP", 125, 0..255)
@@ -86,7 +85,7 @@ object ModuleColorTheme : ClientModule(
         val adaptiveA = tree(AdaptiveA)
     }
 
-    val colors by enumChoice("Palette", Color.STANDART).onChanged { uboDirty = true }
+    val colors by enumChoice("Palette", Palette.STANDART).onChanged { uboDirty = true }
 
     val currentColors get() = getActiveColors()
     val accentColors = AccentColor.entries
@@ -100,10 +99,10 @@ object ModuleColorTheme : ClientModule(
     }
 
     fun getActiveColors(): Array<String> {
-        return if (colors == Color.CUSTOM) {
+        return if (colors == Palette.CUSTOM) {
             arrayOf(CustomPalette.firstColor.toHex(), CustomPalette.secondColor.toHex())
         } else {
-            colors.colors
+            color
         }
     }
 }

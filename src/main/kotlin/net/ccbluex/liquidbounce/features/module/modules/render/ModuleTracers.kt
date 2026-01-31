@@ -20,15 +20,15 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA.tracers
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.tracers
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
@@ -95,10 +95,10 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                         continue
                     }
 
-                    val transparency = if(Transparency.AdaptiveA.enabled) tracers else a
+                    val transparency = if(AdaptiveA.enabled) tracers else a
                     val color = if (FriendManager.isFriend(entity)) {
                         Color4b.BLUE
-                    } else if(syncClientWithPalette && modes.activeChoice is GenericStaticColorMode) {
+                    } else if(ModuleColorTheme.enabled && modes.activeChoice is GenericStaticColorMode) {
                         currentColors[accentColor.num].toColor4b(transparency)
                     } else {
                         EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)

@@ -30,14 +30,14 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA.breadCrumbs
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.breadCrumbs
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -89,13 +89,13 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         val matrixStack = event.matrixStack
         val color =
             if (colorRainbow) { rainbow()
-            } else if (syncClientWithPalette) {
+            } else if (ModuleColorTheme.enabled) {
                 currentColors[accentColor.num].toColor4b(a)
             } else {
                 color
             }
 
-        val transparency = if(Transparency.AdaptiveA.enabled) breadCrumbs else a
+        val transparency = if(AdaptiveA.enabled) breadCrumbs else a
 
         renderEnvironmentForWorld(matrixStack) {
             if (height > 0) {

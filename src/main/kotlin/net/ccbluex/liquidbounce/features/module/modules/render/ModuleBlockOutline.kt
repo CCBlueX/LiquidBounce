@@ -22,14 +22,14 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA.blockOutline
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.AdaptiveA.blockOutline
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.currentColors
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleColorTheme.syncClientWithPalette
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLevelRenderer
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
@@ -117,11 +117,11 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
         val translatedPosition = renderPosition - (mc.entityRenderDispatcher
             .camera?.position() ?: return@handler)
 
-        val transparency = if(Transparency.AdaptiveA.enabled) blockOutline else a
+        val transparency = if(AdaptiveA.enabled) blockOutline else a
         val currColor =
-            if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(transparency) else color
+            if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(transparency) else color
         val currOutlineColor =
-            if(syncClientWithPalette) currentColors[accentColor.num].toColor4b(transparency) else outlineColor
+            if(ModuleColorTheme.enabled) currentColors[accentColor.num].toColor4b(transparency) else outlineColor
 
         renderEnvironmentForWorld(event.matrixStack) {
             if (sideOnly) {

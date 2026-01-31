@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -67,7 +68,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
     val showTracers by boolean("Tracers", false)
 
-    private object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
+    private object ShowArrows : ToggleableValueGroup(this, "ShowArrows", true) {
         val regularArrows by boolean("RegularArrows", true)
         val spectralArrows by boolean("SpectralArrows", true)
         val arrowsWithEffects by boolean("ArrowsWithEffects", true)
