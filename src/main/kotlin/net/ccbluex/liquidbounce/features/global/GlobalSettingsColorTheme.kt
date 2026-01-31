@@ -57,7 +57,7 @@ object GlobalSettingsColorTheme : ToggleableValueGroup(
         EMBER("Ember", arrayOf("ffb5a7", "fcd5ce")),
         SPACE("Space", arrayOf("6d597a", "c9b56b")),
         CUSTOM("Custom", arrayOf(firstColor, secondColor))
-    }
+        }
 
     @Suppress("unused")
     enum class AccentColor(override val tag: String, val num: Int) : Tagged {
@@ -85,13 +85,11 @@ object GlobalSettingsColorTheme : ToggleableValueGroup(
         val adaptiveA = tree(AdaptiveA)
     }
 
-    val colors by enumChoice("Palette", Palette.STANDART).onChanged { uboDirty = true }
-
+    val palette by enumChoice("Palette", Palette.STANDART).onChanged { uboDirty = true }
     val currentColors get() = getActiveColors()
     val accentColors = AccentColor.entries
     val accentColor by enumChoice("AccentColor", AccentColor.FIRST).onChanged { uboDirty = true }
     val nonAccentColor get() = accentColors.first { it.num != accentColor.num }
-
 
     init {
         tree(CustomPalette)
@@ -99,10 +97,10 @@ object GlobalSettingsColorTheme : ToggleableValueGroup(
     }
 
     fun getActiveColors(): Array<String> {
-        return if (colors == Palette.CUSTOM) {
+        return if (palette == Palette.CUSTOM) {
             arrayOf(CustomPalette.firstColor.toHex(), CustomPalette.secondColor.toHex())
         } else {
-            colors.colors
+            palette.colors
         }
     }
 }
