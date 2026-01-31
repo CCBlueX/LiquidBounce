@@ -39,7 +39,6 @@ class ModeValueGroup<T : Mode>(
     modesCallback: (ModeValueGroup<T>) -> Array<T>
 ) : ValueGroup(name, valueType = ValueType.CHOICE) {
 
-    val activeChoice: Any
     var modes: MutableList<T> = ObjectArrayList.wrap(modesCallback(this))
         internal set
     private var defaultMode: T = modes[activeModeIndexCallback.applyAsInt(modes)]

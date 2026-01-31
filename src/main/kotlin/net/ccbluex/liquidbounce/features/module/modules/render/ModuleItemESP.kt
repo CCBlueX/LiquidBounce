@@ -18,13 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA.itemESP
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
@@ -35,6 +41,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.toColor4b
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -60,7 +67,7 @@ import net.minecraft.world.phys.AABB
 object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.itemEsp"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.itemEsp"
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", itemSortedSetOf())
@@ -130,9 +137,9 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         }
     }
 
-    private object BoxMode : Choice("Box") {
+    private object BoxMode : Mode("Box") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val box = AABB(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
@@ -174,13 +181,13 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         }
     }
 
-    object GlowMode : Choice("Glow") {
-        override val parent: ChoiceConfigurable<Choice>
+    object GlowMode : Mode("Glow") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
     }
 
-    object OutlineMode : Choice("Outline") {
-        override val parent: ChoiceConfigurable<Choice>
+    object OutlineMode : Mode("Outline") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
     }
 
@@ -213,5 +220,12 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         }
     }
 
-    fun getColor() = this.colorMode.activeChoice.getColor(null)
+    fun getColor(): Color4b {
+        if(GlobalSettingsColorTheme.enabled && colorMode.activeMode is GenericStaticColorMode) {
+            val transparency = if(AdaptiveA.enabled) itemESP else a
+            return currentColors[accentColor.num].toColor4b(transparency)
+        } else {
+            return this.colorMode.activeMode.getColor(null)
+        }
+    }
 }

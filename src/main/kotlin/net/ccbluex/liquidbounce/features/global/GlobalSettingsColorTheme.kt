@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams.u
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.toHex
 
-object ModuleColorTheme : ToggleableValueGroup(
+object GlobalSettingsColorTheme : ToggleableValueGroup(
     name = "ColorTheme",
     enabled = true,
     aliases = listOf("Palette")
@@ -69,7 +69,7 @@ object ModuleColorTheme : ToggleableValueGroup(
     object Transparency : ValueGroup("Transparency") {
         val a by int("Value", 255, 0..255).onChanged { uboDirty = true }
         // Unique transparency for every module
-        object AdaptiveA : ToggleableValueGroup(this@ModuleColorTheme, "AdaptiveList", true) {
+        object AdaptiveA : ToggleableValueGroup(this@GlobalSettingsColorTheme, "AdaptiveList", true) {
             val breadCrumbs by int("Breadcrumbs", 75, 0..255)
             val blockOutline by int("BlockOutline", 125, 0..255)
             val esp by int("ESP", 125, 0..255)
@@ -102,7 +102,7 @@ object ModuleColorTheme : ToggleableValueGroup(
         return if (colors == Palette.CUSTOM) {
             arrayOf(CustomPalette.firstColor.toHex(), CustomPalette.secondColor.toHex())
         } else {
-            color
+            colors.colors
         }
     }
 }

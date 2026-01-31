@@ -30,12 +30,12 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA.breadCrumbs
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA.breadCrumbs
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
@@ -89,7 +89,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         val matrixStack = event.matrixStack
         val color =
             if (colorRainbow) { rainbow()
-            } else if (ModuleColorTheme.enabled) {
+            } else if (GlobalSettingsColorTheme.enabled) {
                 currentColors[accentColor.num].toColor4b(a)
             } else {
                 color

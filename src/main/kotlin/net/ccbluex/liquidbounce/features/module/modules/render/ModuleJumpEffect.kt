@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA.jumpcircle
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA.jumpcircle
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawGradientCircle
@@ -61,8 +61,10 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
         val transparency = if(AdaptiveA.enabled) jumpcircle else a
-        val currOuterColor = if(ModuleColorTheme.enabled) currentColors[0].toColor4b(transparency) else outerColor
-        val currInnerColor = if(ModuleColorTheme.enabled) currentColors[1].toColor4b(transparency) else innerColor
+        val currOuterColor =
+            if(GlobalSettingsColorTheme.enabled) currentColors[0].toColor4b(transparency) else outerColor
+        val currInnerColor =
+            if(GlobalSettingsColorTheme.enabled) currentColors[1].toColor4b(transparency) else innerColor
 
         renderEnvironmentForWorld(matrixStack) {
             circles.forEach {

@@ -19,12 +19,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.esp
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA.esp
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA.esp
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -85,7 +85,7 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
             return Color4b.RED
         }
 
-        if(ModuleColorTheme.enabled && colorModes.activeMode is GenericStaticColorMode) {
+        if(GlobalSettingsColorTheme.enabled && colorModes.activeMode is GenericStaticColorMode) {
             val transparency = if(AdaptiveA.enabled) esp else a
             return currentColors[accentColor.num].toColor4b(transparency)
         }

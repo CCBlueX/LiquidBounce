@@ -27,11 +27,11 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.AdaptiveA
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.accentColor
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.AdaptiveA
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.accentColor
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -243,7 +243,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
 
                 val transparency = if(AdaptiveA.enabled) AdaptiveA.particles else a
 
-                val renderColor = if(ModuleColorTheme.enabled) {
+                val renderColor = if(GlobalSettingsColorTheme.enabled) {
                     currentColors[accentColor.num].toColor4b(transparency).alpha(
                         Mth.clamp(
                             (alpha * transparency.toFloat()).toInt(),

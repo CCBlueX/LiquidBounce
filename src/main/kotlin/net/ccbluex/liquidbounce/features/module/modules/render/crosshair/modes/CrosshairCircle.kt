@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render.crosshair.modes
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.Transparency.a
-import net.ccbluex.liquidbounce.features.global.ModuleColorTheme.currentColors
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.Transparency.a
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsColorTheme.currentColors
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.CrosshairColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.CrosshairMode
 import net.ccbluex.liquidbounce.render.drawCircle
@@ -47,11 +47,11 @@ object CrosshairCircle : CrosshairMode("Circle") {
         val multiplier = dynamicCrosshair(Radius.dynamicRadiusMultiplier)
         val innerRadius = Radius.radius.start + multiplier
         val outerRadius = Radius.radius.endInclusive + multiplier
-        val firstColor = if(ModuleColorTheme.enabled) { currentColors[0].toColor4b(a) }
+        val firstColor = if(GlobalSettingsColorTheme.enabled) { currentColors[0].toColor4b(a) }
         else { color.firstColor }
-        val secondColor = if(ModuleColorTheme.enabled) { currentColors[1].toColor4b(a) }
+        val secondColor = if(GlobalSettingsColorTheme.enabled) { currentColors[1].toColor4b(a) }
         else { color.secondColor }
-        val syncColors = if(ModuleColorTheme.enabled) false else color.syncColors
+        val syncColors = if(GlobalSettingsColorTheme.enabled) false else color.syncColors
 
         context.drawCircle(
             x = 0f, y = 0f,

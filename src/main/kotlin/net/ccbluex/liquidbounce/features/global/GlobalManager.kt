@@ -40,6 +40,7 @@ object GlobalManager : Config("Settings") {
         tree(GlobalBrowserSettings)
         tree(GlobalSettingsClientChat)
         tree(GlobalSettingsRichPresence)
+        tree(GlobalSettingsColorTheme)
     }
 
 }
