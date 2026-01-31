@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -31,11 +31,6 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoLeave
@@ -96,6 +91,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDete
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoChatGame
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoConfig
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoPearl
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBookBot
@@ -190,7 +186,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInven
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockOutline
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCrystalView
@@ -229,6 +224,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleVoidESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom
+import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats
@@ -273,7 +269,7 @@ private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
  */
 object ModuleManager : EventListener, Collection<ClientModule> by modules {
 
-    val modulesConfigurable = ConfigSystem.root("modules", modules)
+    val modulesConfig = ConfigSystem.root("modules", modules)
 
     /**
      * Handles keystrokes for module binds.
@@ -345,7 +341,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
         }
 
         // Store modules configuration after world change, happens on disconnect as well
-        ConfigSystem.store(modulesConfigurable)
+        ConfigSystem.store(modulesConfig)
     }
 
     /**
@@ -434,6 +430,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleVomit,
 
             // Misc
+            ModuleAutoConfig,
             ModuleGUICloser,
             ModuleBookBot,
             ModuleAntiBot,
@@ -608,13 +605,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSurround,
             ModulePacketMine,
             ModuleHoleFiller,
-
-            // Client
-            ModuleAutoConfig,
-            ModuleRichPresence,
-            ModuleTargets,
-            ModuleTranslation,
-            ModuleLiquidChat
         )
 
         builtin.forEach { module ->
@@ -628,7 +618,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
         if (!modules.add(module)) {
             error("Module '${module.name}' is already registered.")
         }
-        module.initConfigurable()
+        module.walkInit()
         module.onRegistration()
     }
 
@@ -651,7 +641,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
      */
     @JvmName("getCategories")
     @ScriptApiRequired
-    fun getCategories() = ModuleCategories.entries.mapToArray { it.choiceName }
+    fun getCategories() = ModuleCategories.entries.mapToArray { it.tag }
 
     @JvmName("getModules")
     @ScriptApiRequired
