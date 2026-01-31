@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEven
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
@@ -55,6 +56,14 @@ class ClickGuiValueChangeEvent(val valueGroup: ValueGroup) : Event(), WebSocketE
 
 @Tag("spaceSeperatedNamesChange")
 class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
+
+@Tag("themeColorChanged")
+class ThemeColorChangedEvent(
+    val themeId: String,
+    val cssName: String,
+    val renderName: String,
+    val value: Color4b,
+) : Event(), WebSocketEvent
 
 @Tag("clientStart")
 object ClientStartEvent : Event()

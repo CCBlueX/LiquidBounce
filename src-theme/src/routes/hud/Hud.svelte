@@ -7,9 +7,9 @@
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Scoreboard from "./elements/Scoreboard.svelte";
     import {onMount} from "svelte";
-    import {getClientInfo, getComponents, getGameWindow, getMetadata} from "../../integration/rest";
+    import {getClientInfo, getComponents, getGameWindow} from "../../integration/rest";
     import {listen} from "../../integration/ws";
-    import type {HudComponent, Metadata} from "../../integration/types";
+    import type {HudComponent, ThemeMetadata} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
     import type {ComponentsUpdateEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
@@ -20,9 +20,10 @@
     import KeyBinds from "./elements/KeyBinds.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
     import {os} from "../clickgui/clickgui_store";
+    import {loadThemeMetadata} from "../../theme/theme_config";
 
     let zoom = 100;
-    let metadata: Metadata;
+    let metadata: ThemeMetadata;
     let components: HudComponent[] = [];
 
     onMount(async () => {
@@ -31,7 +32,7 @@
         const gameWindow = await getGameWindow();
         zoom = gameWindow.scaleFactor * 50;
 
-        metadata = await getMetadata();
+        metadata = await loadThemeMetadata();
         components = await getComponents(metadata.id);
     });
 

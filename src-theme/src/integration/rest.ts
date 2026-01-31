@@ -12,7 +12,7 @@ import type {
     GeneratorResult,
     HitResult,
     HudComponent,
-    Metadata,
+    ThemeMetadata,
     MinecraftKeybind,
     Module,
     PersistentStorageItem,
@@ -32,9 +32,9 @@ import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
-export async function getMetadata(): Promise<Metadata> {
+export async function getMetadata(): Promise<ThemeMetadata> {
     const response = await fetch(`metadata.json`);
-    const data: Metadata = await response.json();
+    const data: ThemeMetadata = await response.json();
 
     return data;
 }

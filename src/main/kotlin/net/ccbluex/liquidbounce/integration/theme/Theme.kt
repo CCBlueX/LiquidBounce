@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.integration.theme
 import com.mojang.blaze3d.platform.NativeImage
 import io.netty.handler.codec.http.HttpHeaderNames
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -30,7 +32,12 @@ import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.eventListenerScope
+import net.ccbluex.liquidbounce.event.events.ThemeColorChangedEvent
+import net.ccbluex.liquidbounce.event.removeEventListenerScope
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
@@ -63,7 +70,7 @@ class Theme private constructor(val origin: Origin, url: String) :
                 "${AuthMiddleware.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}"
             )
             .build()
-    ), Closeable, ResourceManagerReloadListener {
+    ), Closeable, ResourceManagerReloadListener, EventListener {
 
     enum class Origin(override val tag: String, val external: Boolean) : Tagged {
         RESOURCE("resource", false),
@@ -117,6 +124,24 @@ class Theme private constructor(val origin: Origin, url: String) :
             metadata.values?.let { values ->
                 for (value in values) {
                     json(value)
+                }
+            }
+            metadata.colors?.associateWith { colorDefine ->
+                color(colorDefine.renderName, colorDefine.default)
+            }?.let { map ->
+                eventListenerScope.launch(Dispatchers.IO) {
+                    // FIXME: wait until frontend is ready to receive WS event
+                    while (!BrowserBackendManager.isInitialized) {
+                        delay(100L)
+                    }
+
+                    for ((colorDefine, colorValue) in map) {
+                        colorValue.asStateFlow().collect {
+                            EventManager.callEvent(
+                                ThemeColorChangedEvent(metadata.id, colorDefine.cssName, colorDefine.renderName, it)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -238,6 +263,8 @@ class Theme private constructor(val origin: Origin, url: String) :
         backgroundShader?.close()
         backgroundImage?.close()
         _components?.forEach { EventManager.unregisterEventHandler(it) }
+        EventManager.unregisterEventHandler(this)
+        removeEventListenerScope()
     }
 
     override fun toString() = "Theme(name=${metadata.name}, origin=${origin.tag}, url=$baseUrl)"

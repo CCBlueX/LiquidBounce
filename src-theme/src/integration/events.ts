@@ -20,6 +20,7 @@ export interface EventMap {
     clickGuiScaleChange: ClickGuiScaleChangeEvent;
     clickGuiValueChange: ClickGuiValueChangeEvent;
     spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
+    themeColorChanged: ThemeColorChangedEvent;
     clientLanguageChanged: void;
     valueChanged: ValueChangedEvent;
     moduleActivation: ModuleActivationEvent;
@@ -192,6 +193,13 @@ export interface ProxyCheckResultEvent {
 
 export interface SpaceSeperatedNamesChangeEvent {
     value: boolean;
+}
+
+export interface ThemeColorChangedEvent {
+    themeId: string;
+    cssName: string;
+    renderName: string;
+    value: number;
 }
 
 export interface BrowserUrlChangeEvent {

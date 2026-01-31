@@ -1,5 +1,5 @@
 
-export interface Metadata {
+export interface ThemeMetadata {
     id: string;
     name: string;
     version: string;
@@ -8,6 +8,11 @@ export interface Metadata {
     overlays: string[];
     components: string[];
     fonts: string[];
+    colors: {
+        cssName: string;
+        renderName: string;
+        default: number;
+    };
     backgrounds: {
         name: string;
         types: string[];

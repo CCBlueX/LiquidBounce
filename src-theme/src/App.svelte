@@ -16,6 +16,8 @@
     import Disconnected from "./routes/menu/disconnected/Disconnected.svelte";
     import Browser from "./routes/browser/Browser.svelte";
     import TabbedClickGui from "./routes/clickgui/TabbedClickGui.svelte";
+    import {loadThemeMetadata} from "./theme/theme_config";
+    import {argbIntToRgbValue} from "./util/color_utils";
 
     const routes = {
         "/clickgui": TabbedClickGui,
@@ -36,6 +38,11 @@
         console.log(`[Router] Redirecting to ${name}`);
         await push(`/${name}`);
     }
+
+    listenAlways("themeColorChanged", async e => {
+        if (e.themeId !== (await loadThemeMetadata()).id) return;
+        document.documentElement.style.setProperty(e.cssName, argbIntToRgbValue(e.value));
+    });
 
     onMount(async () => {
         await insertPersistentData();

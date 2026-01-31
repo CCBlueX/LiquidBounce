@@ -56,5 +56,22 @@
       "types": ["frag", "png"]
     }
   ],
+  "colors": [
+    {
+      "cssName": "--accent-color",
+      "renderName": "AccentColor",
+      "default": "#4677ff"
+    },
+    {
+      "cssName": "--primary-text-color",
+      "renderName": "PrimaryTextColor",
+      "default": "#ffffff"
+    },
+    {
+      "cssName": "--primary-background-color",
+      "renderName": "PrimaryBackgroundColor",
+      "default": "#000000"
+    }
+  ],
   "values": []
 }

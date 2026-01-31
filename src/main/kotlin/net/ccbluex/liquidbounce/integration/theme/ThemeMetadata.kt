@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.theme
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 
 @JvmRecord
 data class ThemeMetadata(
@@ -32,7 +33,8 @@ data class ThemeMetadata(
     val components: List<String>,
     val fonts: List<String>,
     val backgrounds: List<Background>,
-    val values: List<JsonObject>? = null
+    val colors: List<ColorDefine>?,
+    val values: List<JsonObject>? = null,
 ) {
     @Suppress("RedundantRequireNotNullCall")
     fun checkNotNull() {
@@ -47,6 +49,13 @@ data class ThemeMetadata(
         checkNotNull(backgrounds)
     }
 }
+
+@JvmRecord
+data class ColorDefine(
+    val cssName: String,
+    val renderName: String,
+    val default: Color4b,
+)
 
 @JvmRecord
 data class Background(
