@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -63,6 +64,7 @@ open class Clicker<T>(
         private const val TICKS_IN_A_SECOND = 20
         private const val DEFAULT_CYCLE_LENGTH_MS = (TICKS_IN_A_SECOND * TICK_DURATION_MS).toInt()
         private const val DEFAULT_CURVE_WINDOW_SECONDS = 10f
+        private const val CLICK_TOLERANCE_MS = 5L
     }
 
     private val cps: IntRange by intRange("CPS", 11..14, 1..maxCps, "clicks").onChanged {
@@ -119,6 +121,10 @@ open class Clicker<T>(
     private var currentCps = cps.random()
     private var nextClickDelayMs = sampleIntervalMs()
 
+    // Clicks that are possible by the next tick
+    var possibleClicks: Int = 0
+        private set
+
     // Clicks that were executed by [click] in the current tick
     var clickAmount: Int? = null
         private set
@@ -128,7 +134,7 @@ open class Clicker<T>(
         get() = timeUntilNextClickMs(0) <= 0
 
     // todo: find better name
-    fun willClickAt(tick: Int = 1) = timeUntilNextClickMs(tick) <= 0
+    fun willClickAt(tick: Int = 1) = timeUntilNextClickMs(1 + tick) <= 0
 
     /**
      * Clicks on a curve-driven schedule per tick. If the cooldown is not passed, it will not click.
@@ -136,26 +142,28 @@ open class Clicker<T>(
      */
     fun click(block: () -> Boolean): Boolean {
         debugParameter("Current CPS") { currentCps }
-        debugParameter("Time Since Last Press") { keyBinding.timeSinceLastPress }
+        debugParameter("Time Since Last Click") { timeSinceLastClickMs() }
         debugParameter("Time Since Combo Start") { keyBinding.timeSinceComboStart }
-        debugParameter("Time Until Next Click") { timeUntilNextClickMs(1) }
+        debugParameter("Time Until Next Click") { timeUntilNextClickMs(0) }
         debugParameter("Miss Cooldown") { mc.missTime }
         debugParameter("Item Cooldown") { itemCooldown?.cooldownProgress() ?: 0.0f }
 
         var clicks = 0
+        var elapsedMs = timeSinceLastClickMs()
         // todo: make double clicking work
-        while (timeUntilNextClickMs(1) <= 0) {
-            if (!passesMissCooldown) {
-                break
-            }
-
-            if (itemCooldown?.isCooldownPassed() == false) {
-                break
-            }
+        while (pauseTicks <= 0 && elapsedMs + CLICK_TOLERANCE_MS >= nextClickDelayMs) {
+//            if (!passesMissCooldown) {
+//                break
+//            }
+//
+//            if (itemCooldown?.isCooldownPassed() == false) {
+//                break
+//            }
 
             if (block()) {
                 itemCooldown?.newCooldown()
                 updateInputPress(keyBinding.key)
+                elapsedMs -= nextClickDelayMs
                 nextClickDelayMs = sampleIntervalMs()
                 clicks++
             } else {
@@ -166,6 +174,7 @@ open class Clicker<T>(
         this.clickAmount = clicks
         debugParameter("Next Click Delay") { nextClickDelayMs }
         debugParameter("Current Clicks") { clicks }
+        debugParameter("Time Until Next Click (Post)") { timeUntilNextClickMs(0) }
 
         return clicks > 0
     }
@@ -182,6 +191,11 @@ open class Clicker<T>(
         }
     }
 
+    @Suppress("handler")
+    private val renderHandler = handler<GameRenderEvent> {
+
+    }
+
     @Suppress("unused")
     private val gameHandler = handler<GameTickEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) {
         clickAmount = null
@@ -196,7 +210,7 @@ open class Clicker<T>(
     private fun timeUntilNextClickMs(tickOffset: Int): Long {
         val timeSince = timeSinceLastClickMs()
         val offsetMs = tickOffset * TICK_DURATION_MS
-        val baseRemainingMs = nextClickDelayMs.toLong() - (timeSince + offsetMs)
+        val baseRemainingMs = nextClickDelayMs.toLong() - (timeSince + offsetMs) - CLICK_TOLERANCE_MS
         val pauseRemainingMs = (pauseTicks - tickOffset).coerceAtLeast(0) * TICK_DURATION_MS
         return if (pauseRemainingMs > 0) pauseRemainingMs else baseRemainingMs
     }
