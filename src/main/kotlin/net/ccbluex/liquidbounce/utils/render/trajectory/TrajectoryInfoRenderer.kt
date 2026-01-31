@@ -19,13 +19,12 @@
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
-import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.drawLineStripAsLines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -40,9 +39,9 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.move
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.scaleMut
 import net.ccbluex.liquidbounce.utils.math.set
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
 import net.minecraft.core.BlockPos
@@ -285,14 +284,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         // Don't use LineStrip because in batch mode
         matrixStack.pushPose()
         matrixStack.translate(renderOffset - camera.position())
-        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
-            positions.forEachIndexed { index, pos ->
-                if (index != 0 && index != positions.lastIndex) {
-                    addVertex(pose, pos).setColor(argb)
-                }
-                addVertex(pose, pos).setColor(argb)
-            }
-        }
+        drawLineStripAsLines(argb, positions = positions.mapToArray { it.toVec3f() })
         matrixStack.popPose()
     }
 

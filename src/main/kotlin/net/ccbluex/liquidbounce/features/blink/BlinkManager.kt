@@ -207,7 +207,6 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
         val matrixStack = event.matrixStack
         if (lineColor.a > 0) {
             renderEnvironmentForWorld(matrixStack) {
-                // Use LiquidBounce accent color
                 drawLineStrip(
                     argb = lineColor.argb,
                     positions = positions.mapToArray { vec3d -> Vec3f(relativeToCamera(vec3d)) },

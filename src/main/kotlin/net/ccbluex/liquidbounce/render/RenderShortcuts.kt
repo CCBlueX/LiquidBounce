@@ -272,11 +272,13 @@ fun WorldRenderEnvironment.drawLine(p1: Vec3f, p2: Vec3f, argb: Int) =
  * @param lines The vectors representing the lines.
  */
 fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3f) {
-    drawLines(
-        lines,
-        pipeline = ClientRenderPipelines.Lines,
-        argb = argb,
-    )
+    if (lines.isEmpty()) return
+
+    drawCustomMesh(pipeline = ClientRenderPipelines.Lines) { pose ->
+        for (line in lines) {
+            addVertex(pose, line).setColor(argb)
+        }
+    }
 }
 
 /**
@@ -285,32 +287,30 @@ fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3f) {
  * @param positions The vectors representing the line strip.
  */
 fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3f) {
-    drawLines(
-        positions,
-        pipeline = ClientRenderPipelines.LineStrip,
-        argb = argb,
-    )
+    if (positions.isEmpty()) return
+
+    drawCustomMesh(pipeline = ClientRenderPipelines.LineStrip) { pose ->
+        for (pos in positions) {
+            addVertex(pose, pos).setColor(argb)
+        }
+    }
 }
 
 /**
- * Helper function to draw lines using the specified [lines] vectors and [pipeline].
+ * Function to draw a 'line strip' using the specified [positions] vectors,
+ * actual pipeline is [ClientRenderPipelines.Lines].
  *
- * @param lines The vectors representing the lines.
- * @param pipeline The render pipeline for the lines.
+ * @param positions The vectors representing the line strip.
  */
-private fun WorldRenderEnvironment.drawLines(
-    lines: Array<out Vec3f>,
-    pipeline: RenderPipeline,
-    argb: Int,
-) {
-    // If the array of lines is empty, we don't need to draw anything
-    if (lines.isEmpty()) {
-        return
-    }
+fun WorldRenderEnvironment.drawLineStripAsLines(argb: Int, vararg positions: Vec3f) {
+    if (positions.isEmpty()) return
 
-    drawCustomMesh(pipeline) { matrix ->
-        lines.forEach {
-            addVertex(matrix, it).setColor(argb)
+    drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+        positions.forEachIndexed { index, pos ->
+            if (index != 0 && index != positions.lastIndex) {
+                addVertex(pose, pos).setColor(argb)
+            }
+            addVertex(pose, pos).setColor(argb)
         }
     }
 }

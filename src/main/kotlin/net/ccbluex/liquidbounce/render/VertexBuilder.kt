@@ -34,8 +34,11 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4fc
 import org.joml.Vector3fc
 
+inline fun VertexConsumer.addVertex(pose: Matrix4fc, x: Double, y: Double, z: Double): VertexConsumer =
+    addVertex(pose, x.toFloat(), y.toFloat(), z.toFloat())
+
 inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vec3): VertexConsumer =
-    addVertex(pose, pos.x.toFloat(), pos.y.toFloat(), pos.z.toFloat())
+    addVertex(pose, pos.x, pos.y, pos.z)
 
 inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vec3f): VertexConsumer =
     addVertex(pose, pos.x, pos.y, pos.z)
@@ -58,7 +61,7 @@ fun VertexConsumer.addBoxOutlines(
             return@forEachOutlineVertex
         }
 
-        addVertex(pose, x.toFloat(), y.toFloat(), z.toFloat())
+        addVertex(pose, x, y, z)
         if (color != null) setColor(color.argb)
     }
 }
@@ -76,7 +79,7 @@ fun VertexConsumer.addBoxFaces(
             return@forEachFaceVertex
         }
 
-        addVertex(pose, x.toFloat(), y.toFloat(), z.toFloat())
+        addVertex(pose, x, y, z)
         if (color != null) setColor(color.argb)
     }
 }
