@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.Vec3
+import kotlin.math.sqrt
 
 @JvmRecord
 data class Vec3f(val x: Float, val y: Float, val z: Float) {
@@ -65,6 +66,14 @@ data class Vec3f(val x: Float, val y: Float, val z: Float) {
 
         return Vec3f(d0, d1, d2)
     }
+
+    fun lengthSqr(): Float = x * x + y * y + z * z
+
+    fun length(): Float = sqrt(lengthSqr())
+
+    fun normalized(): Vec3f = this * (1f / length())
+
+    operator fun unaryMinus(): Vec3f = Vec3f(-this.x, -this.y, -this.z)
 
     fun toVec3d() = Vec3(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
 

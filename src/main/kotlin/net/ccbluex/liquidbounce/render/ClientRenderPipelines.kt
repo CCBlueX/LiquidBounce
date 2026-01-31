@@ -172,6 +172,16 @@ object ClientRenderPipelines {
         fun triangles(cull: Boolean) = if (cull) Triangles else TrianglesNoCull
     }
 
+    /**
+     * @see RenderPipelines.LINES_TRANSLUCENT
+     */
+    @JvmField
+    val LinesWithWidth = newPipeline("lines_with_width") {
+        withSnippet(RenderPipelines.LINES_SNIPPET)
+        withDepthWrite(false)
+        forWorldRender()
+    }
+
     @JvmField
     val Lines = newPipeline("lines") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
