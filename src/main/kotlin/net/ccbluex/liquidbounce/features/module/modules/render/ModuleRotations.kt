@@ -116,8 +116,8 @@ object ModuleRotations : ClientModule("Rotations", ModuleCategories.RENDER) {
             )
 
             val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotatePitch((-Math.toRadians(camera.xRot().toDouble())).toFloat())
-                .rotateYaw((-Math.toRadians(camera.yRot().toDouble())).toFloat())
+                .rotateX((-Math.toRadians(camera.xRot().toDouble())).toFloat())
+                .rotateY((-Math.toRadians(camera.yRot().toDouble())).toFloat())
 
             if (drawVectorLine) {
                 renderEnvironmentForWorld(matrixStack) {

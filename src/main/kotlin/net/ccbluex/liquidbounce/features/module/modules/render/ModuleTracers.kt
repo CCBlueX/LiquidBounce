@@ -79,8 +79,8 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
 
         renderEnvironmentForWorld(matrixStack) {
             val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotatePitch(-camera.xRot().toRadians())
-                .rotateYaw(-camera.yRot().toRadians())
+                .rotateX(-camera.xRot().toRadians())
+                .rotateY(-camera.yRot().toRadians())
 
             longLines {
                 startBatch()
