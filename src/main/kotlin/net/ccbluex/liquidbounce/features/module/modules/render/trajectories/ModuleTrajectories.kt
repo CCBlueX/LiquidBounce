@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -118,12 +119,12 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     /**
      * Draws the trajectory for an item in the player's hand
      */
-    private fun drawHypotheticalTrajectory(
+    private fun WorldRenderEnvironment.drawHypotheticalTrajectory(
         otherPlayer: Player,
         event: WorldRenderEvent
     ) {
         val (trajectoryInfoTyped, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
-            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack, this.alwaysShowBow)?.let {
+            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack, alwaysShowBow)?.let {
                 it to stack
             }
         } ?: return
@@ -148,17 +149,13 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             partialTicks = event.partialTicks
         )
 
-        renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
-            simulationResults += renderer to renderer.drawTrajectoryForProjectile(
-                maxSimulatedTicks,
-                event.partialTicks,
-                trajectoryColor = Color4b.WHITE,
-                blockHitColor = Color4b(0, 160, 255, 150),
-                entityHitColor = Color4b(255, 0, 0, 100),
-            )
-            commitBatch()
-        }
+        simulationResults += renderer to renderer.drawTrajectoryForProjectile(
+            maxSimulatedTicks,
+            event.partialTicks,
+            trajectoryColor = Color4b.WHITE,
+            blockHitColor = Color4b(0, 160, 255, 150),
+            entityHitColor = Color4b(255, 0, 0, 100),
+        )
     }
 
     private enum class Show(
