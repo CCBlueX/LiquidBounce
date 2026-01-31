@@ -24,8 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsColorSet
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.addVertex
-import net.ccbluex.liquidbounce.render.color
+import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.util.Mth
@@ -98,12 +97,12 @@ internal object HatsStar : HatsMode("Star") {
 
                 for (innerI in 0 until innerSegments) {
                     val pos = innerI(innerSegments, angles, radiuses, innerI)
-                    addVertex(matrix, pos.p1).color(color)
-                    addVertex(matrix, pos.p2).color(color)
-                    addVertex(matrix, pos.p3).color(color)
-                    addVertex(matrix, pos.p2).color(color)
-                    addVertex(matrix, pos.p4).color(color)
-                    addVertex(matrix, pos.p3).color(color)
+                    addVertex(matrix, pos.p1).setColor(color)
+                    addVertex(matrix, pos.p2).setColor(color)
+                    addVertex(matrix, pos.p3).setColor(color)
+                    addVertex(matrix, pos.p2).setColor(color)
+                    addVertex(matrix, pos.p4).setColor(color)
+                    addVertex(matrix, pos.p3).setColor(color)
                 }
             }
         }

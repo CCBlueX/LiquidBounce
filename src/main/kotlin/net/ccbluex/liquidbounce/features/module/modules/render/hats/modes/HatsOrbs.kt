@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.color
+import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.fastCos
@@ -94,32 +94,32 @@ internal object HatsOrbs : HatsMode("Orbs") {
 
                 val color = if (!isHurt) color else Color4b(255, 0, 0, color.a)
                 // Rendering of the top part of the rhombus (4 faces/8 triangles).
-                addVertex(matrix, x, top, z).color(color)
-                addVertex(matrix, dx, y, dz).color(color)
-                addVertex(matrix, ax, y, az).color(color)
-                addVertex(matrix, x, top, z).color(color)
-                addVertex(matrix, ax, y, az).color(color)
-                addVertex(matrix, bx, y, bz).color(color)
-                addVertex(matrix, x, top, z).color(color)
-                addVertex(matrix, bx, y, bz).color(color)
-                addVertex(matrix, cx, y, cz).color(color)
-                addVertex(matrix, x, top, z).color(color)
-                addVertex(matrix, cx, y, cz).color(color)
-                addVertex(matrix, dx, y, dz).color(color)
+                addVertex(matrix, x, top, z).setColor(color)
+                addVertex(matrix, dx, y, dz).setColor(color)
+                addVertex(matrix, ax, y, az).setColor(color)
+                addVertex(matrix, x, top, z).setColor(color)
+                addVertex(matrix, ax, y, az).setColor(color)
+                addVertex(matrix, bx, y, bz).setColor(color)
+                addVertex(matrix, x, top, z).setColor(color)
+                addVertex(matrix, bx, y, bz).setColor(color)
+                addVertex(matrix, cx, y, cz).setColor(color)
+                addVertex(matrix, x, top, z).setColor(color)
+                addVertex(matrix, cx, y, cz).setColor(color)
+                addVertex(matrix, dx, y, dz).setColor(color)
 
                 // Rendering of the bottom part of the rhombus (4 faces/8 triangles).
-                addVertex(matrix, x, bottom, z).color(color)
-                addVertex(matrix, dx, y, dz).color(color)
-                addVertex(matrix, ax, y, az).color(color)
-                addVertex(matrix, x, bottom, z).color(color)
-                addVertex(matrix, ax, y, az).color(color)
-                addVertex(matrix, bx, y, bz).color(color)
-                addVertex(matrix, x, bottom, z).color(color)
-                addVertex(matrix, bx, y, bz).color(color)
-                addVertex(matrix, cx, y, cz).color(color)
-                addVertex(matrix, x, bottom, z).color(color)
-                addVertex(matrix, cx, y, cz).color(color)
-                addVertex(matrix, dx, y, dz).color(color)
+                addVertex(matrix, x, bottom, z).setColor(color)
+                addVertex(matrix, dx, y, dz).setColor(color)
+                addVertex(matrix, ax, y, az).setColor(color)
+                addVertex(matrix, x, bottom, z).setColor(color)
+                addVertex(matrix, ax, y, az).setColor(color)
+                addVertex(matrix, bx, y, bz).setColor(color)
+                addVertex(matrix, x, bottom, z).setColor(color)
+                addVertex(matrix, bx, y, bz).setColor(color)
+                addVertex(matrix, cx, y, cz).setColor(color)
+                addVertex(matrix, x, bottom, z).setColor(color)
+                addVertex(matrix, cx, y, cz).setColor(color)
+                addVertex(matrix, dx, y, dz).setColor(color)
             }
         }
     }

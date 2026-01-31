@@ -37,16 +37,31 @@ import org.joml.Vector3fc
 inline fun VertexConsumer.addVertex(pose: Matrix4fc, x: Double, y: Double, z: Double): VertexConsumer =
     addVertex(pose, x.toFloat(), y.toFloat(), z.toFloat())
 
+inline fun VertexConsumer.addVertex(pose: PoseStack.Pose, x: Double, y: Double, z: Double): VertexConsumer =
+    addVertex(pose.pose(), x, y, z)
+
 inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vec3): VertexConsumer =
+    addVertex(pose, pos.x, pos.y, pos.z)
+
+inline fun VertexConsumer.addVertex(pose: PoseStack.Pose, pos: Vec3): VertexConsumer =
     addVertex(pose, pos.x, pos.y, pos.z)
 
 inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vec3f): VertexConsumer =
     addVertex(pose, pos.x, pos.y, pos.z)
 
+inline fun VertexConsumer.addVertex(pose: PoseStack.Pose, pos: Vec3f): VertexConsumer =
+    addVertex(pose, pos.x, pos.y, pos.z)
+
 inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vector3fc): VertexConsumer =
     addVertex(pose, pos.x(), pos.y(), pos.z())
 
-inline fun VertexConsumer.color(color: Color4b): VertexConsumer = setColor(color.argb)
+inline fun VertexConsumer.addVertex(pose: PoseStack.Pose, pos: Vector3fc): VertexConsumer =
+    addVertex(pose, pos.x(), pos.y(), pos.z())
+
+inline fun VertexConsumer.setNormal(pose: PoseStack.Pose, normalVector: Vec3f): VertexConsumer =
+    setNormal(pose, normalVector.x, normalVector.y, normalVector.z)
+
+inline fun VertexConsumer.setColor(color: Color4b): VertexConsumer = setColor(color.argb)
 
 fun VertexConsumer.addBoxOutlines(
     pose: Matrix4fc,

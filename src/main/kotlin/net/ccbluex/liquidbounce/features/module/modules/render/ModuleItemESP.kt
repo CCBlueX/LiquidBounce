@@ -103,8 +103,8 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         renderEnvironmentForWorld(event.matrixStack) {
             // We calculate the gaze vector (where the camera is looking)
             val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotatePitch(-camera.xRot().toRadians())
-                .rotateYaw(-camera.yRot().toRadians())
+                .rotateX(-camera.xRot().toRadians())
+                .rotateY(-camera.yRot().toRadians())
 
             longLines {
                 startBatch()
