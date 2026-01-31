@@ -61,7 +61,7 @@ enum class ValueType(
     // todo: rename to CHOICE_LIST
     CHOOSE(completer = AutoCompletionProvider.choiceListCompleter),
     // todo: rename to MULTI_CHOICE_LIST
-    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer, AutoCompletionProvider.multiChooseCompleter),
+    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer, AutoCompletionProvider.multiChoiceCompleter),
     MUTABLE_LIST,
     NAMED_ITEM_LIST,
     REGISTRY_LIST,
