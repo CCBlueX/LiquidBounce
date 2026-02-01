@@ -169,4 +169,22 @@ object ModuleClickGui :
         standaloneScreen?.sync()
     }
 
+    fun invalidate() {
+        val standaloneScreen = standaloneScreen ?: return
+        val wasOpen = mc.screen == standaloneScreen
+
+        // Close and invalidate old cache
+        if (wasOpen) {
+            mc.setScreen(null)
+        }
+        standaloneScreen.close()
+        this.standaloneScreen = null
+        
+        // Only bother updating now if it was open before.
+        if (wasOpen) {
+            updateStandaloneScreen()
+            mc.setScreen(this.standaloneScreen ?: CustomSharedMinecraftScreen(CustomScreenType.CLICK_GUI))
+        }
+    }
+
 }
