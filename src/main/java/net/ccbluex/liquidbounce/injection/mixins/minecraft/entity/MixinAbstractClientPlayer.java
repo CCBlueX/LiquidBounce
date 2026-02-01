@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.authlib.GameProfile;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerVulcanScaffold;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
 import net.minecraft.client.Minecraft;
@@ -43,6 +46,14 @@ public abstract class MixinAbstractClientPlayer extends Player {
     private float injectFovMultiplier(float original) {
         if (ModuleNoFov.INSTANCE.getRunning()) {
             return ModuleNoFov.INSTANCE.getFovMultiplier(original);
+        }
+        return original;
+    }
+
+    @ModifyExpressionValue(method = "getFieldOfViewModifier", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;getAttributeValue(Lnet/minecraft/core/Holder;)D"))
+    private double injectAlwaysSprint(double original) {
+        if (ModuleDisabler.INSTANCE.getRunning() && DisablerVulcanScaffold.INSTANCE.getRunning()) {
+            return 0.10000000149011612D;
         }
         return original;
     }
