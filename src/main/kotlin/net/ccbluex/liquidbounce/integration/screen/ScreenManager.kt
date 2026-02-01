@@ -204,7 +204,7 @@ object ScreenManager : EventListener {
         }
 
         try {
-            ModuleClickGui.sync()
+            ModuleClickGui.invalidate()
         } catch (e: Exception) {
             logger.error("Failed to restart ClickGUI browser integration.", e)
         }
