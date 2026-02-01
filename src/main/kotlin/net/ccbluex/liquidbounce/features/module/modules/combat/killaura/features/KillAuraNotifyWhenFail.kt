@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
 import com.mojang.blaze3d.vertex.PoseStack
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectLongMutablePair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
@@ -42,7 +43,7 @@ import net.minecraft.world.phys.Vec3
 
 internal object KillAuraNotifyWhenFail {
 
-    internal val failedHits = ArrayDeque<ObjectLongMutablePair<Vec3>>()
+    internal val failedHits = ObjectArrayList<ObjectLongMutablePair<Vec3>>()
     var failedHitsIncrement = 0
 
     object Box : Mode("Box") {
@@ -95,15 +96,13 @@ internal object KillAuraNotifyWhenFail {
             return
         }
 
-        with(failedHits.iterator()) {
-            while (hasNext()) {
-                val pair = next()
-                val newValue = pair.valueLong() + 1L
-                if (newValue >= boxFadeSeconds) {
-                    remove()
-                    continue
-                }
+        failedHits.removeIf { pair ->
+            val newValue = pair.valueLong() + 1L
+            if (newValue >= boxFadeSeconds) {
+                true
+            } else {
                 pair.value(newValue)
+                false
             }
         }
 

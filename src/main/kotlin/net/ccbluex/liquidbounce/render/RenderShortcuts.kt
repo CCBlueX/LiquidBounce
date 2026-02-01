@@ -100,6 +100,13 @@ inline fun renderEnvironmentForWorld(
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRenderEnvironment.() -> Unit) {
+    matrixStack.withPush {
+        translate(camera.position().reverse())
+        draw()
+    }
+}
+
 /**
  * Shorthand for `withPosition(relativeToCamera(pos))`
  */
@@ -123,7 +130,7 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw:
 /**
  * Disables [GL11C.GL_LINE_SMOOTH] if [HAS_AMD_VEGA_APU].
  */
-inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) {
+inline fun WorldRenderEnvironment.longLines(draw: WorldRenderEnvironment.() -> Unit) {
     if (HAS_AMD_VEGA_APU) GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
     try {
         draw()
@@ -184,7 +191,7 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
 
     if (!isBatchMode) {
         buffer.build()?.let {
-            draw(pipeline, it)
+            draw(pipeline, it, emptyMap())
         }
     }
 }
@@ -195,7 +202,7 @@ private fun getVbo(vertexFormat: VertexFormat): GrowableMappableRingBuffer =
         GrowableMappableRingBuffer(
             "${LiquidBounce.CLIENT_NAME} Shared VBO for $it",
             GpuBuffer.USAGE_VERTEX,
-            GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 11)
+            GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 13)
         )
     }
 

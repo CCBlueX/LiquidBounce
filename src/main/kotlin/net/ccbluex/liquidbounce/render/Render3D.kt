@@ -27,11 +27,11 @@ import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.Tesselator
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.texture.AbstractTexture
@@ -71,21 +71,23 @@ inline fun Tesselator.begin(pipeline: RenderPipeline): BufferBuilder =
  *
  * @param renderTarget The render target framebuffer.
  */
-sealed class RenderEnvironment(val renderTarget: RenderTarget) {
+class WorldRenderEnvironment(
+    val renderTarget: RenderTarget,
+    val matrixStack: PoseStack,
+    val camera: Camera = mc.gameRenderer.mainCamera,
+) {
 
-    val shaderTextures = Object2ObjectArrayMap<String, AbstractTexture>(1)
+    fun relativeToCamera(pos: Vec3f): Vec3 = pos.relativeTo(camera)
+
+    fun relativeToCamera(pos: Position): Vec3 = pos.relativeTo(camera)
+
+    fun relativeToCamera(pos: Vec3i): Vec3 = pos.relativeTo(camera)
+
     var shaderColor = Color4b.WHITE
 
     var isBatchMode: Boolean = false
         private set
 
-    fun sampler0(texture: AbstractTexture?) {
-        if (texture != null) {
-            shaderTextures["Sampler0"] = texture
-        } else {
-            shaderTextures.remove("Sampler0")
-        }
-    }
 
     fun getOrCreateBuffer(texture: AbstractTexture): BufferBuilder {
         return if (isBatchMode) {
@@ -118,7 +120,7 @@ sealed class RenderEnvironment(val renderTarget: RenderTarget) {
 
         batchBuffer.fastIterator().forEach { (pipeline, bufferBuilder) ->
             bufferBuilder.build()?.let {
-                draw(pipeline, it)
+                draw(pipeline, it, emptyMap())
                 ClientTesselator.allocator(pipeline).clear()
             }
         }
@@ -133,11 +135,10 @@ sealed class RenderEnvironment(val renderTarget: RenderTarget) {
         texQuadsBatchBuffer.clear()
     }
 
-    @JvmOverloads
     fun draw(
         pipeline: RenderPipeline,
         meshData: MeshData,
-        shaderTextureProvider: Map<String, AbstractTexture> = this.shaderTextures,
+        shaderTextureProvider: Map<String, AbstractTexture>,
     ) = drawMesh(
         pipeline,
         meshData,
@@ -160,37 +161,25 @@ sealed class RenderEnvironment(val renderTarget: RenderTarget) {
     }
 }
 
-class WorldRenderEnvironment(
-    renderTarget: RenderTarget,
-    val matrixStack: PoseStack,
-    val camera: Camera,
-) : RenderEnvironment(renderTarget) {
-    fun relativeToCamera(pos: Vec3f): Vec3 = pos.relativeTo(camera)
-
-    fun relativeToCamera(pos: Position): Vec3 = pos.relativeTo(camera)
-
-    fun relativeToCamera(pos: Vec3i): Vec3 = pos.relativeTo(camera)
-}
-
-fun Vec3f.relativeTo(camera: Camera): Vec3 = Vec3(
+private fun Vec3f.relativeTo(camera: Camera): Vec3 = Vec3(
     x - camera.position().x,
     y - camera.position().y,
     z - camera.position().z,
 )
 
-fun Position.relativeTo(camera: Camera): Vec3 = Vec3(
+private fun Position.relativeTo(camera: Camera): Vec3 = Vec3(
     x() - camera.position().x,
     y() - camera.position().y,
     z() - camera.position().z,
 )
 
-fun Vec3i.relativeTo(camera: Camera): Vec3 = Vec3(
+private fun Vec3i.relativeTo(camera: Camera): Vec3 = Vec3(
     x.toDouble() - camera.position().x,
     y.toDouble() - camera.position().y,
     z.toDouble() - camera.position().z,
 )
 
-fun Vector3fc.relativeTo(camera: Camera): Vec3 = Vec3(
+private fun Vector3fc.relativeTo(camera: Camera): Vec3 = Vec3(
     x() - camera.position().x,
     y() - camera.position().y,
     z() - camera.position().z,
