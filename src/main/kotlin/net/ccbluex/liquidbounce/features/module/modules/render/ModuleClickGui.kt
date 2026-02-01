@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiValueChangeEvent
-import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -137,11 +136,6 @@ object ModuleClickGui :
     private val disconnectHandler = handler<DisconnectEvent> {
         standaloneScreen?.close()
         standaloneScreen = null
-    }
-
-    @Suppress("unused")
-    private val clientLanguageChangedHandler = handler<ClientLanguageChangedEvent> {
-        standaloneScreen?.sync()
     }
 
     @Suppress("unused")
