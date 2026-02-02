@@ -98,12 +98,12 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
                 && !ModuleCriticals.wouldDoCriticalHit()
             ) {
                 if (player.isSprinting) {
-                    sendStopSprinting()
+                    network.sendStopSprinting()
                 }
 
-                sendStartSprinting()
-                sendStopSprinting()
-                sendStartSprinting()
+                network.sendStartSprinting()
+                network.sendStopSprinting()
+                network.sendStartSprinting()
 
                 player.isSprinting = true
                 player.wasSprinting = true

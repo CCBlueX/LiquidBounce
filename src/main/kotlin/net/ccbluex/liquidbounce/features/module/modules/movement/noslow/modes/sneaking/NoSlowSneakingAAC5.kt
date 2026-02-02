@@ -23,19 +23,34 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
+import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_6
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 
 internal class NoSlowSneakingAAC5(override val parent: ModeValueGroup<*>) : Mode("AAC5") {
     private val timingMode by enumChoice("Timing", TimingMode.PRE_POST)
+
+    override fun enable() {
+        if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) {
+            notification(
+                "Protocol Error",
+                "This mode can only be used on server with version earlier than 1.21.6.",
+                NotificationEvent.Severity.ERROR,
+            )
+        }
+        super.enable()
+    }
 
     @Suppress("unused", "ComplexCondition")
     private val networkTickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
         if (timingMode == TimingMode.PRE_POST
             || event.state == EventState.PRE && timingMode == TimingMode.PRE_TICK
             || event.state == EventState.POST && timingMode == TimingMode.POST_TICK) {
-            sendStartSneaking()
+            network.send1_21_5StartSneaking()
         }
     }
 

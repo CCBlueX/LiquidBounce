@@ -85,7 +85,7 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
             priority = CRITICAL_MODIFICATION
         ) { event ->
             if (stopSprinting == StopSprintingMode.ON_ATTACK && player.wasSprinting) {
-                sendStopSprinting()
+                network.sendStopSprinting()
                 player.wasSprinting = false
             }
         }

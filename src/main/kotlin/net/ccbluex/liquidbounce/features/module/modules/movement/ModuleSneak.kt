@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_6
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
-import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
+import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
+import net.ccbluex.liquidbounce.utils.client.send1_21_5StopSneaking
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
@@ -125,14 +125,14 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
             when (event.state) {
                 EventState.PRE -> {
                     if (networkSneaking) {
-                        sendStopSneaking()
+                        network.send1_21_5StopSneaking()
                         networkSneaking = false
                     }
                 }
 
                 EventState.POST -> {
                     if (!networkSneaking) {
-                        sendStartSneaking()
+                        network.send1_21_5StartSneaking()
                         networkSneaking = true
                     }
                 }
@@ -141,7 +141,7 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
 
         override fun disable() {
             if (networkSneaking) {
-                sendStopSneaking()
+                network.send1_21_5StopSneaking()
                 networkSneaking = false
             }
         }
