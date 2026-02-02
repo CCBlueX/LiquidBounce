@@ -6,7 +6,7 @@
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import BindDisplay from "./BindDisplay.svelte";
     import SwitchBindAction from "./SwitchBindAction.svelte";
-    import {isClickGuiScreen, UNKNOWN_KEY} from "../../../../util/keybind_utils";
+    import {isClickGuiScreen, UNKNOWN_KEY} from "../../../../util/utils";
 
     /**
      * https://www.glfw.org/docs/3.3/group__keys.html
