@@ -34,24 +34,25 @@ import net.minecraft.client.renderer.LightTexture
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import java.util.function.Supplier
 
 @JvmRecord
 data class BlinkEspData(val entity: Entity, val pos: Vec3, val rotation: Rotation)
 
 sealed class BlinkEspMode(
     name: String,
-    protected val getEspData: () -> BlinkEspData?
+    protected val getEspData: Supplier<BlinkEspData?>,
 ) : Mode(name)
 
 class BlinkEspBox(
     override val parent: ModeValueGroup<*>,
-    getEspData: () -> BlinkEspData?,
+    getEspData: Supplier<BlinkEspData?>,
 ) : BlinkEspMode("Box", getEspData) {
     private val color by color("Color", Color4b(36, 32, 147, 87))
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val (entity, pos, rotation) = this.getEspData() ?: return@handler
+        val (entity, pos, rotation) = this.getEspData.get() ?: return@handler
 
         val dimensions = entity.getDimensions(entity.pose)
         val d = dimensions.width.toDouble() / 2.0
@@ -68,13 +69,13 @@ class BlinkEspBox(
 
 class BlinkEspModel(
     override val parent: ModeValueGroup<*>,
-    getEspData: () -> BlinkEspData?,
+    getEspData: Supplier<BlinkEspData?>,
 ) : BlinkEspMode("Model", getEspData) {
     private val lightAmount by float("LightAmount", 0.3f, 0.01f..1f)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val (entity, pos, rotation) = this.getEspData() ?: return@handler
+        val (entity, pos, rotation) = this.getEspData.get() ?: return@handler
 
         val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
 
@@ -107,14 +108,14 @@ class BlinkEspModel(
 
 class BlinkEspWireframe(
     override val parent: ModeValueGroup<*>,
-    getEspData: () -> BlinkEspData?,
+    getEspData: Supplier<BlinkEspData?>,
 ) : BlinkEspMode("Wireframe", getEspData) {
     private val color by color("Color", Color4b(36, 32, 147, 87))
     private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> {
-        val (entity, pos, rotation) = this.getEspData() ?: return@handler
+        val (entity, pos, rotation) = this.getEspData.get() ?: return@handler
 
         val wireframePlayer = WireframePlayer(pos, rotation.yaw, rotation.pitch)
         wireframePlayer.render(it, color, outlineColor)
