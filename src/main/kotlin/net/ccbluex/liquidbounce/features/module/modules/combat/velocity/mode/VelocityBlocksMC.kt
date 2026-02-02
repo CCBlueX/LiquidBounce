@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
-import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
+import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
+import net.ccbluex.liquidbounce.utils.client.send1_21_5StopSneaking
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
@@ -37,8 +37,8 @@ internal object VelocityBlocksMC : VelocityMode("BlocksMC") {
         // Check if this is a regular velocity update
         if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
             event.cancelEvent()
-            sendStartSneaking()
-            sendStopSneaking()
+            network.send1_21_5StartSneaking()
+            network.send1_21_5StopSneaking()
         }
     }
 

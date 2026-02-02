@@ -48,8 +48,8 @@ object ModuleAutoLeave : ClientModule("AutoLeave", ModuleCategories.COMBAT) {
             }
 
             // Player can heal himself
-            if (player.mainHandItem.components.has(DataComponents.DEATH_PROTECTION)
-                || player.offhandItem.components.has(DataComponents.DEATH_PROTECTION)
+            if (player.mainHandItem.has(DataComponents.DEATH_PROTECTION)
+                || player.offhandItem.has(DataComponents.DEATH_PROTECTION)
             ) {
                 return@tickConditional true
             }

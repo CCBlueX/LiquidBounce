@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
+import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
@@ -43,9 +44,7 @@ import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Item
@@ -224,13 +223,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             if (selectedSlot != targetSlot) {
                 network.send(ServerboundSetCarriedItemPacket(targetSlot))
             }
-            network.send(
-                ServerboundPlayerActionPacket(
-                    ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND,
-                    BlockPos.ZERO,
-                    Direction.DOWN
-                )
-            )
+            network.sendSwapItemWithOffhand()
             if (selectedSlot != targetSlot) {
                 network.send(ServerboundSetCarriedItemPacket(selectedSlot))
             }
@@ -253,7 +246,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         private val item: Predicate<ItemStack>? = null,
         private val fallBackItem: Predicate<ItemStack>? = null,
     ) {
-        TOTEM("Totem", Items.TOTEM_OF_UNDYING) {
+        TOTEM("Totem", Predicate { it.has(DataComponents.DEATH_PROTECTION) }) {
             override fun shouldEquip() = Totem.shouldEquip()
 
             override fun getDelay() = Totem.switchDelay

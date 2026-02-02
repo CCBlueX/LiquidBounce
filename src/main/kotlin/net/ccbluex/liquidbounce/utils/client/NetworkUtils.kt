@@ -29,11 +29,15 @@ import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
+import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.client.player.LocalPlayer
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
@@ -41,31 +45,41 @@ import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.GameType
 import net.minecraft.world.phys.BlockHitResult
 import org.apache.commons.lang3.mutable.MutableObject
-import java.util.Objects
 
-internal fun sendStartSneaking() {
+@Suppress("FunctionName")
+fun ClientCommonPacketListenerImpl.send1_21_5StartSneaking() {
     if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return
 
-    network.sendPacket(PlayerSneakPacket.START)
+    sendPacket(PlayerSneakPacket.START)
 }
 
-internal fun sendStopSneaking() {
+@Suppress("FunctionName")
+fun ClientCommonPacketListenerImpl.send1_21_5StopSneaking() {
     if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return
 
-    network.sendPacket(PlayerSneakPacket.STOP)
+    sendPacket(PlayerSneakPacket.STOP)
 }
 
-fun sendStartSprinting() {
-    network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING))
+fun ClientCommonPacketListenerImpl.sendStartSprinting() {
+    send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING))
 }
 
-fun sendStopSprinting() {
-    network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
+fun ClientCommonPacketListenerImpl.sendStopSprinting() {
+    send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
+}
+
+fun ClientCommonPacketListenerImpl.sendSwapItemWithOffhand() {
+    send(
+        ServerboundPlayerActionPacket(
+            ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND,
+            BlockPos.ZERO,
+            Direction.DOWN,
+        )
+    )
 }
 
 @Suppress("LongParameterList")
@@ -155,9 +169,7 @@ fun MultiPlayerGameMode.interactItem(
 
         val typedActionResult = itemStack.use(world, player, hand)
         val itemStack2 = if (typedActionResult is InteractionResult.Success) {
-            Objects.requireNonNullElseGet<ItemStack>(
-                typedActionResult.heldItemTransformedTo()
-            ) { player.getItemInHand(hand) } as ItemStack
+            typedActionResult.heldItemTransformedTo() ?: player.getItemInHand(hand)
         } else {
             player.getItemInHand(hand)
         }
