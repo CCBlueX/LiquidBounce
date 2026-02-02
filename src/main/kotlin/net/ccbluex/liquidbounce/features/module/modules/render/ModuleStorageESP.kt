@@ -73,6 +73,7 @@ import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity
 import net.minecraft.world.level.block.entity.DispenserBlockEntity
 import net.minecraft.world.level.block.entity.EnderChestBlockEntity
 import net.minecraft.world.level.block.entity.HopperBlockEntity
+import net.minecraft.world.level.block.entity.ShelfBlockEntity
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
@@ -111,6 +112,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         object Hopper : ChestType("Hopper", Color4b(Color.GRAY))
         object ShulkerBox : ChestType("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
         object Pot : ChestType("Pot", Color4b(209, 134, 0))
+        object Shelf : ChestType("Shelf", Color4b(160, 82, 45))
     }
 
     private val allTypes = arrayOf(
@@ -122,6 +124,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         ChestType.Hopper,
         ChestType.ShulkerBox,
         ChestType.Pot,
+        ChestType.Shelf,
     )
 
     init {
@@ -381,6 +384,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             is HopperBlockEntity -> ChestType.Hopper
             is ShulkerBoxBlockEntity -> ChestType.ShulkerBox
             is DecoratedPotBlockEntity -> ChestType.Pot
+            is ShelfBlockEntity -> ChestType.Shelf
             else -> null
         }
     }
