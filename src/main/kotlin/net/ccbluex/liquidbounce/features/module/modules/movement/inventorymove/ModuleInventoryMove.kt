@@ -37,9 +37,10 @@ import net.ccbluex.liquidbounce.utils.entity.any
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.closeInventorySilently
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.client.gui.screens.Screen
@@ -48,11 +49,6 @@ import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
-import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
-import net.minecraft.network.protocol.game.ServerboundContainerSlotStateChangedPacket
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.world.item.CreativeModeTabs
 import org.lwjgl.glfw.GLFW
 
@@ -91,7 +87,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
      * Restricts user from clicking while moving in inventory.
      */
     val doNotAllowClicking
-        get() = behavior == Behaviour.SAFE && movementKeys.fastIterable().any {
+        get() = behavior === Behaviour.SAFE && movementKeys.fastIterable().any {
             it.booleanValue && shouldHandleInputs(it.key)
         }
 
@@ -114,9 +110,9 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
         }
 
         // If we are in a handled screen, we should handle the inputs only if the undetectable option is not enabled
-        return behavior == Behaviour.NORMAL || screen !is AbstractContainerScreen<*>
-            || behavior == Behaviour.SAFE && screen is InventoryScreen
-            || behavior == Behaviour.STOP_ON_ACTION
+        return behavior === Behaviour.NORMAL || screen !is AbstractContainerScreen<*>
+            || behavior === Behaviour.SAFE && screen is InventoryScreen
+            || behavior === Behaviour.STOP_ON_ACTION
     }
 
     private val delayedContainerPackets = mutableListOf<Packet<*>>()
@@ -127,9 +123,9 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     }
 
     @Suppress("unused")
-    private val movementInputHandler = handler<MovementInputEvent>(READ_FINAL_STATE) {
+    private val movementInputHandler = handler<MovementInputEvent>(FINAL_DECISION) {
         if (delayedContainerPackets.isEmpty() ||
-            behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
+            behavior !== Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
             return@handler
         }
 
@@ -144,13 +140,13 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(FIRST_PRIORITY) { event ->
-        if (behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
+        if (behavior !== Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
             return@handler
         }
 
         val packet = event.packet
 
-        if (isContainerPacket(packet) && player.input.keyPresses.any) {
+        if (packet.isC2SContainerPacket() && player.input.keyPresses.any) {
             event.cancelEvent()
             // Here only be called from render thread because [packet] is c2s
             delayedContainerPackets += packet
@@ -164,7 +160,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
         val pressed = shouldHandleInputs(key) && event.action != GLFW.GLFW_RELEASE
         movementKeys.put(key, pressed)
 
-        if (behavior == Behaviour.SAFE && isInInventoryScreen && InventoryManager.isInventoryOpenServerSide
+        if (behavior === Behaviour.SAFE && isInInventoryScreen && InventoryManager.isInventoryOpenServerSide
             && pressed) {
             closeInventorySilently()
         }
@@ -176,12 +172,5 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     private fun Screen.isInCreativeSearchField() =
         this is CreativeModeInventoryScreen &&
             CreativeModeInventoryScreen.selectedTab == CreativeModeTabs.searchTab()
-
-    internal fun isContainerPacket(packet: Packet<*>?) =
-        packet is ServerboundContainerClickPacket ||
-        packet is ServerboundContainerButtonClickPacket ||
-        packet is ServerboundSetCreativeModeSlotPacket ||
-        packet is ServerboundContainerSlotStateChangedPacket ||
-        packet is ServerboundContainerClosePacket
 
 }
