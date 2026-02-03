@@ -333,14 +333,15 @@ fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3f) {
  * Function to draw a 'line strip' using the specified [positions] vectors,
  * actual pipeline is [ClientRenderPipelines.Lines].
  *
- * @param positions The vectors representing the line strip.
+ * @param positions The vectors representing the line strip, the size should be even.
  */
-fun WorldRenderEnvironment.drawLineStripAsLines(argb: Int, vararg positions: Vec3f) {
+fun WorldRenderEnvironment.drawLineStripAsLines(argb: Int, positions: Collection<Vec3>) {
     if (positions.isEmpty()) return
+    require(positions.size and 1 == 0)
 
     drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
         positions.forEachIndexed { index, pos ->
-            if (index != 0 && index != positions.lastIndex) {
+            if (index != 0 && index != positions.size - 1) {
                 addVertex(pose, pos).setColor(argb)
             }
             addVertex(pose, pos).setColor(argb)
