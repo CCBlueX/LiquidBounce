@@ -22,11 +22,11 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspBox
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -199,26 +200,25 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
 
     @Suppress("unused")
     private val tickPacketProcessHandler = handler<TickPacketProcessEvent> {
+        if (!inGame) {
+            clear(clearOnly = true)
+            return@handler
+        }
+
         val hadQueuedIncoming = hasQueuedIncoming()
 
-        if (running && shouldCancelPackets()) {
+        if (shouldCancelPackets()) {
             val now = System.currentTimeMillis()
             BlinkManager.flush { snapshot ->
                 snapshot.origin == TransferOrigin.INCOMING && snapshot.timestamp <= now - currentDelay
             }
         } else if (hadQueuedIncoming) {
             BlinkManager.flush(TransferOrigin.INCOMING)
+            clear()
         }
 
         if (!hasQueuedIncoming()) {
             currentDelay = delay.random()
-        }
-    }
-
-    private fun getTargetEntity(): Entity? {
-        return when (targetMode) {
-            Mode.ATTACK -> null // the attack handler will handle this
-            Mode.RANGE -> world.findEnemy(range)
         }
     }
 
@@ -236,13 +236,14 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     }
 
     @Suppress("unused")
-    private val rangeTargetHandler = tickHandler {
-        if (targetMode != Mode.RANGE) return@tickHandler
+    private val rangeTargetHandler = handler<GameTickEvent> {
+        if (targetMode != Mode.RANGE) return@handler
 
-        val enemy = getTargetEntity()
+        val enemy = world.findEnemy(range)
+
         if (enemy == null) {
             clear()
-            return@tickHandler
+            return@handler
         }
 
         processTarget(enemy)
@@ -274,7 +275,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         clear(true)
     }
 
-    fun clear(handlePackets: Boolean = true, clearOnly: Boolean = false, resetChronometer: Boolean = true) {
+    private fun clear(handlePackets: Boolean = true, clearOnly: Boolean = false, resetChronometer: Boolean = true) {
         if (handlePackets && !clearOnly) {
             BlinkManager.flush(TransferOrigin.INCOMING)
         } else if (clearOnly) {
