@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
@@ -36,12 +35,12 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.move
 import net.ccbluex.liquidbounce.utils.math.scaleMut
 import net.ccbluex.liquidbounce.utils.math.set
-import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
 import net.minecraft.core.BlockPos
@@ -284,7 +283,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         // Don't use LineStrip because in batch mode
         matrixStack.pushPose()
         matrixStack.translate(renderOffset - camera.position())
-        drawLineStripAsLines(argb, positions = positions.mapToArray { it.toVec3f() })
+        drawLineStripAsLines(argb, if (positions.size and 1 != 0) positions.subList(1) else positions)
         matrixStack.popPose()
     }
 
