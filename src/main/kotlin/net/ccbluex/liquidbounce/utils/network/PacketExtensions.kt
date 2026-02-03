@@ -25,13 +25,25 @@ import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
+import net.minecraft.network.protocol.game.ServerboundContainerSlotStateChangedPacket
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 
-fun Packet<*>.isLocalPlayerDamage(): Boolean {
+fun Packet<*>?.isC2SContainerPacket() =
+    this is ServerboundContainerClickPacket ||
+        this is ServerboundContainerButtonClickPacket ||
+        this is ServerboundSetCreativeModeSlotPacket ||
+        this is ServerboundContainerSlotStateChangedPacket ||
+        this is ServerboundContainerClosePacket
+
+fun Packet<*>?.isLocalPlayerDamage(): Boolean {
     return this is ClientboundDamageEventPacket && this.entityId == mc.player?.id
 }
 
 @JvmOverloads
-fun Packet<*>.isLocalPlayerVelocity(considerExplosion: Boolean = true): Boolean {
+fun Packet<*>?.isLocalPlayerVelocity(considerExplosion: Boolean = true): Boolean {
     return when (this) {
         is ClientboundSetEntityMotionPacket -> this.id == mc.player?.id
         is ClientboundExplodePacket -> this.playerKnockback.isPresent && considerExplosion

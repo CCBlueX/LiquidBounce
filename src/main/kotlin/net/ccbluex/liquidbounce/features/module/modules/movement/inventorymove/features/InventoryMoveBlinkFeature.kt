@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
+import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.formatAsTime
@@ -48,7 +49,7 @@ object InventoryMoveBlinkFeature : ToggleableValueGroup(ModuleInventoryMove, "Bl
 
         if (mc.screen is AbstractContainerScreen<*> && event.origin == TransferOrigin.OUTGOING) {
             event.action = when {
-                ModuleInventoryMove.isContainerPacket(packet) -> BlinkManager.Action.PASS
+                packet.isC2SContainerPacket() -> BlinkManager.Action.PASS
                 else -> BlinkManager.Action.QUEUE
             }
         }
