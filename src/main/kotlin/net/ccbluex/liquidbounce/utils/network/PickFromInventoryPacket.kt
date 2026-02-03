@@ -23,11 +23,11 @@ import com.viaversion.viaversion.api.type.Types
 import com.viaversion.viaversion.protocols.v1_21_2to1_21_4.Protocol1_21_2To1_21_4
 import com.viaversion.viaversion.protocols.v1_21to1_21_2.packet.ServerboundPackets1_21_2
 
-class PickFromInventoryPacket(val slot: Int): LegacyPacket {
+data class PickFromInventoryPacket(val slot: Int): LegacyPacket {
 
-    override val protocol = Protocol1_21_2To1_21_4::class.java
+    override val protocol get() = Protocol1_21_2To1_21_4::class.java
 
-    override val packetType = ServerboundPackets1_21_2.PICK_ITEM
+    override val packetType get() = ServerboundPackets1_21_2.PICK_ITEM
 
     override fun write(packetWrapper: PacketWrapper) {
         packetWrapper.write(Types.VAR_INT, slot)
