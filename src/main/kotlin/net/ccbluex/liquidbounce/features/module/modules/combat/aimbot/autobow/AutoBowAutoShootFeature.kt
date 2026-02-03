@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.inventory.interactItem
+import net.ccbluex.liquidbounce.utils.inventory.useItem
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.minecraft.client.player.AbstractClientPlayer
@@ -145,7 +145,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
         if (usingItemStack.item is CrossbowItem) {
             val isChargedNow = usingItemStack.isChargedCrossbow
             if (isChargedNow) {
-                interactItem(usingItemHand)
+                useItem(usingItemHand)
                 ModuleAutoBow.lastShotTimer.reset()
             } else {
                 forceUncharged = true

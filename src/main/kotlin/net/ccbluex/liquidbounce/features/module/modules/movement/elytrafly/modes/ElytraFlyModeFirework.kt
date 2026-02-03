@@ -74,7 +74,7 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
         } else {
             val actions = listOf<InventoryAction>(
                 InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
-                InventoryAction.UseItem(OffHandSlot),
+                InventoryAction.UseItem(OffHandSlot, this),
                 InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
             )
             event.schedule(ConsiderInventory.constraints, actions)

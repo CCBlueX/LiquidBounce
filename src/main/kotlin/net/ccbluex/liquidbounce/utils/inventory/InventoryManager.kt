@@ -35,7 +35,10 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_11_1
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.send1_11_1OpenInventory
+import net.ccbluex.liquidbounce.utils.client.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
@@ -159,7 +162,7 @@ object InventoryManager : EventListener {
                     val requiresPlayerInventory = action.requiresPlayerInventoryOpen()
                     if (requiresPlayerInventory) {
                         if (!isInventoryOpen) {
-                            openInventorySilently()
+                            network.send1_11_1OpenInventory()
                             waitTicks(constraints.startDelay.random())
                             cycles = 0
                         }
@@ -168,7 +171,7 @@ object InventoryManager : EventListener {
                         if (isInventoryOpen) {
                             waitTicks(constraints.closeDelay.random())
                             cycles = 0
-                            closeInventorySilently()
+                            network.sendCloseInventory()
                         }
                     }
 
@@ -209,7 +212,7 @@ object InventoryManager : EventListener {
         // When all scheduled actions are done, we can close the inventory
         if (isInventoryOpen && canCloseMainInventory) {
             waitTicks(maximumCloseDelay)
-            closeInventorySilently()
+            network.sendCloseInventory()
         }
 
         lastClickedSlot = -1

@@ -117,8 +117,8 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
 
         useHotbarSlotOrOffhand(
             slot,
-            yaw = rotation.yaw,
-            pitch = rotation.pitch,
+            yRot = rotation.yaw,
+            xRot = rotation.pitch,
         )
 
         when (ModuleAutoBuff.Rotations.rotationTiming) {

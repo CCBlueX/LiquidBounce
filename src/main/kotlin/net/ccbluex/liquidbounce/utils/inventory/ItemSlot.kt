@@ -173,7 +173,7 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
     open val isSelected: Boolean
         get() = hotbarSlotForServer == player.inventory.selectedSlot
 
-    open val useHand = InteractionHand.MAIN_HAND
+    open val useHand get() = InteractionHand.MAIN_HAND
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Int? {
         return if (screen == null) 36 + hotbarSlot else screen.itemCount() - 9 + this.hotbarSlot
@@ -280,7 +280,7 @@ data object OffHandSlot : HotbarItemSlot(-1) {
     override val isSelected: Boolean
         get() = true
 
-    override val useHand = InteractionHand.OFF_HAND
+    override val useHand get() = InteractionHand.OFF_HAND
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?) = if (screen == null) 45 else null
 }

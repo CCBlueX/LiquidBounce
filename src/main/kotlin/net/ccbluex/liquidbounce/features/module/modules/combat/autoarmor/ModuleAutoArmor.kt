@@ -120,7 +120,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
             !InventoryManager.isInventoryOpen && (!isInArmorSlot || UseHotbar.canSwapArmor)
 
         if (inventorySlot is HotbarItemSlot && canTryHotbarMove) {
-            return InventoryAction.UseItem(inventorySlot)
+            return InventoryAction.UseItem(inventorySlot, this)
         }
 
         // Should the item be just thrown out of the inventory

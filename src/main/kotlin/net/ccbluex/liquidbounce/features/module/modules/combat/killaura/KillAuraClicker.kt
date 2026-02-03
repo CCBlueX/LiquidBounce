@@ -36,13 +36,13 @@ import net.ccbluex.liquidbounce.utils.clicking.ItemCooldown
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.send1_11_1OpenInventory
+import net.ccbluex.liquidbounce.utils.client.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.openInventorySilently
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
 import kotlin.math.round
 
@@ -135,7 +135,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
         @Suppress("CognitiveComplexMethod")
         suspend fun prepare(): Boolean {
             if (simulateInventoryClosing && isInInventoryScreen) {
-                network.send(ServerboundContainerClosePacket(0))
+                network.sendCloseInventory()
             }
 
             if (player.isBlockAction) {
@@ -177,7 +177,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
             }
 
             if (simulateInventoryClosing && isInInventoryScreen) {
-                openInventorySilently()
+                network.send1_11_1OpenInventory()
             }
 
             // If the player was blocking before, we start blocking again after the attack if the tick on is 0

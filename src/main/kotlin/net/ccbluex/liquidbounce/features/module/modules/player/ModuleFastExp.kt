@@ -231,7 +231,7 @@ object ModuleFastExp : ClientModule(
             useHotbarSlotOrOffhand(
                 slot,
                 slotResetDelay.random(),
-                pitch = pitch
+                xRot = pitch
             )
         }
 
