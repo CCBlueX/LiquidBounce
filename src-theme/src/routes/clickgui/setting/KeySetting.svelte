@@ -5,7 +5,7 @@
     import {createEventDispatcher} from "svelte";
     import {listen} from "../../../integration/ws";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
-    import {isClickGuiScreen, UNKNOWN_KEY} from "../../../util/keybind_utils";
+    import {isClickGuiScreen, UNKNOWN_KEY} from "../../../util/utils";
 
     export let setting: ModuleSetting;
 

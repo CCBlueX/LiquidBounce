@@ -22,6 +22,7 @@ import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.Protocol
 import com.viaversion.viaversion.api.protocol.packet.PacketType
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl
 
@@ -84,7 +85,7 @@ inline fun ClientCommonPacketListenerImpl.sendPacket(
                 onSuccess()
             }.onFailure {
                 onFailure()
-                it.printStackTrace()
+                logger.error("Failed to send legacy packet $packet", it)
             }
         }
     }

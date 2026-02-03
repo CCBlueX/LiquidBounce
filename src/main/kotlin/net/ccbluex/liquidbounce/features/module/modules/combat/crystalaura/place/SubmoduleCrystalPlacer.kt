@@ -165,8 +165,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
                 return@rotate
             }
 
-            clickBlockWithSlot(
-                player,
+            player.clickBlockWithSlot(
                 blockHitResult?.withDirection(side) ?: return@rotate,
                 getSlot() ?: return@rotate,
                 swingMode,

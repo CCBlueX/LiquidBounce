@@ -26,14 +26,21 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
+import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
+import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.client.player.LocalPlayer
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
@@ -41,41 +48,68 @@ import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.GameType
 import net.minecraft.world.phys.BlockHitResult
-import org.apache.commons.lang3.mutable.MutableObject
-import java.util.Objects
 
-internal fun sendStartSneaking() {
-    if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return
+@Suppress("FunctionName")
+fun ClientCommonPacketListenerImpl.send1_21_5StartSneaking() {
+    if (!usesViaFabricPlus) return
 
-    network.sendPacket(PlayerSneakPacket.START)
+    sendPacket(PlayerSneakPacket.START)
 }
 
-internal fun sendStopSneaking() {
-    if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return
+@Suppress("FunctionName")
+fun ClientCommonPacketListenerImpl.send1_21_5StopSneaking() {
+    if (!usesViaFabricPlus) return
 
-    network.sendPacket(PlayerSneakPacket.STOP)
+    sendPacket(PlayerSneakPacket.STOP)
 }
 
-fun sendStartSprinting() {
-    network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING))
+/**
+ * Sends an open inventory packet with the help of ViaFabricPlus. This is only for older versions. (<= 1.11.2)
+ */
+@Suppress("FunctionName")
+fun ClientCommonPacketListenerImpl.send1_11_1OpenInventory() {
+    if (InventoryManager.isInventoryOpenServerSide || !usesViaFabricPlus) {
+        return
+    }
+
+    sendPacket(
+        OpenInventorySilentlyPacket,
+        onSuccess = { InventoryManager.isInventoryOpenServerSide = true },
+        onFailure = { chat(markAsError("Failed to open inventory using ViaFabricPlus, report to developers!")) }
+    )
 }
 
-fun sendStopSprinting() {
-    network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
+fun ClientCommonPacketListenerImpl.sendStartSprinting() {
+    send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING))
 }
 
-@Suppress("LongParameterList")
-fun clickBlockWithSlot(
-    player: LocalPlayer,
+fun ClientCommonPacketListenerImpl.sendStopSprinting() {
+    send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
+}
+
+fun ClientCommonPacketListenerImpl.sendSwapItemWithOffhand() {
+    send(
+        ServerboundPlayerActionPacket(
+            ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND,
+            BlockPos.ZERO,
+            Direction.DOWN,
+        )
+    )
+}
+
+fun ClientCommonPacketListenerImpl.sendCloseInventory() {
+    send(ServerboundContainerClosePacket(0))
+}
+
+fun LocalPlayer.clickBlockWithSlot(
     rayTraceResult: BlockHitResult,
     slot: Int,
     swingMode: SwingMode,
     switchMode: SwitchMode = SwitchMode.SILENT,
-    sequenced: Boolean = true
+    sequenced: Boolean = true,
 ) {
     val hand = if (slot == OffHandSlot.hotbarSlotForServer) {
         InteractionHand.OFF_HAND
@@ -83,17 +117,17 @@ fun clickBlockWithSlot(
         InteractionHand.MAIN_HAND
     }
 
-    val prevHotbarSlot = player.inventory.selectedSlot
+    val prevHotbarSlot = this.inventory.selectedSlot
     if (hand == InteractionHand.MAIN_HAND) {
         if (switchMode == SwitchMode.NONE && slot != prevHotbarSlot) {
             // the slot is not selected and we can't switch
             return
         }
 
-        player.inventory.selectedSlot = slot
+        this.inventory.selectedSlot = slot
 
         if (slot != prevHotbarSlot) {
-            player.connection.send(ServerboundSetCarriedItemPacket(slot))
+            connection.send(ServerboundSetCarriedItemPacket(slot))
         }
     }
 
@@ -102,16 +136,16 @@ fun clickBlockWithSlot(
             ServerboundUseItemOnPacket(hand, rayTraceResult, sequence)
         }
     } else {
-        network.send(ServerboundUseItemOnPacket(hand, rayTraceResult, 0))
+        connection.send(ServerboundUseItemOnPacket(hand, rayTraceResult, 0))
     }
 
-    val itemUsageContext = UseOnContext(player, hand, rayTraceResult)
+    val itemUsageContext = UseOnContext(this, hand, rayTraceResult)
 
-    val itemStack = player.inventory.getItem(slot)
+    val itemStack = this.inventory.getItem(slot)
 
     val actionResult: InteractionResult
 
-    if (player.isCreative) {
+    if (this.isCreative) {
         val i = itemStack.count
         actionResult = itemStack.useOn(itemUsageContext)
         itemStack.count = i
@@ -124,53 +158,51 @@ fun clickBlockWithSlot(
     }
 
     if (slot != prevHotbarSlot && hand == InteractionHand.MAIN_HAND && switchMode == SwitchMode.SILENT) {
-        player.connection.send(ServerboundSetCarriedItemPacket(prevHotbarSlot))
+        connection.send(ServerboundSetCarriedItemPacket(prevHotbarSlot))
     }
 
-    player.inventory.selectedSlot = prevHotbarSlot
+    this.inventory.selectedSlot = prevHotbarSlot
 }
 
 /**
- * [MultiPlayerGameMode.interactItem] but with custom rotations.
+ * [MultiPlayerGameMode.useItem] but with custom rotations.
  */
-fun MultiPlayerGameMode.interactItem(
+fun MultiPlayerGameMode.useItem(
     player: Player,
     hand: InteractionHand,
-    yaw: Float,
-    pitch: Float
+    yRot: Float,
+    xRot: Float,
 ): InteractionResult {
     if (localPlayerMode == GameType.SPECTATOR) {
         return InteractionResult.PASS
     }
 
     this.ensureHasSentCarriedItem()
-    val mutableObject = MutableObject<InteractionResult>()
+    var interactionResult: InteractionResult = InteractionResult.PASS
     this.startPrediction(world) { sequence ->
-        val playerInteractItemC2SPacket = ServerboundUseItemPacket(hand, sequence, yaw, pitch)
+        val playerInteractItemC2SPacket = ServerboundUseItemPacket(hand, sequence, yRot, xRot)
         val itemStack = player.getItemInHand(hand)
         if (player.cooldowns.isOnCooldown(itemStack)) {
-            mutableObject.value = InteractionResult.PASS
+            interactionResult = InteractionResult.PASS
             return@startPrediction playerInteractItemC2SPacket
         }
 
-        val typedActionResult = itemStack.use(world, player, hand)
-        val itemStack2 = if (typedActionResult is InteractionResult.Success) {
-            Objects.requireNonNullElseGet<ItemStack>(
-                typedActionResult.heldItemTransformedTo()
-            ) { player.getItemInHand(hand) } as ItemStack
+        val useResult = itemStack.use(world, player, hand)
+        val result = if (useResult is InteractionResult.Success) {
+            useResult.heldItemTransformedTo() ?: player.getItemInHand(hand)
         } else {
             player.getItemInHand(hand)
         }
 
-        if (itemStack2 != itemStack) {
-            player.setItemInHand(hand, itemStack2)
+        if (result !== itemStack) {
+            player.setItemInHand(hand, result)
         }
 
-        mutableObject.value = typedActionResult
+        interactionResult = useResult
         return@startPrediction playerInteractItemC2SPacket
     }
 
-    return mutableObject.get()
+    return interactionResult
 }
 
 fun handlePacket(packet: Packet<*>) =

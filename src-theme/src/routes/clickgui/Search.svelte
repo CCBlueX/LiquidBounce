@@ -6,6 +6,7 @@
     import {highlightModuleName} from "./clickgui_store";
     import {onMount} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
+    import {isClickGuiScreen} from "../../util/utils";
 
     export let modules: Module[];
 
@@ -39,8 +40,7 @@
     }
 
     async function handleKeyDown(e: KeyboardKeyEvent) {
-        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
-            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
+        if (!isClickGuiScreen(e.screen)) {
             return;
         }
 

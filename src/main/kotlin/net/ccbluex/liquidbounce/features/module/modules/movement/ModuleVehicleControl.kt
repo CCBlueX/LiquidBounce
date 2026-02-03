@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
+import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
@@ -44,12 +44,12 @@ import net.minecraft.world.InteractionHand
  */
 object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MOVEMENT, aliases = listOf("BoatFly")) {
 
-    object BaseSpeed : ValueGroup("BaseSpeed") {
+    private object BaseSpeed : ValueGroup("BaseSpeed") {
         val horizontalSpeed by float("Horizontal", 0.5f, 0.1f..10f)
         val verticalSpeed by float("Vertical", 0.35f, 0.1f..10f)
     }
 
-    object SprintSpeed : ToggleableValueGroup(this, "SprintSpeed", true) {
+    private object SprintSpeed : ToggleableValueGroup(this, "SprintSpeed", true) {
         val horizontalSpeed by float("Horizontal", 5f, 0.1f..10f)
         val verticalSpeed by float("Vertical", 2f, 0.1f..10f)
     }
@@ -174,7 +174,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
 
                 waitTicks(unhookAfter)
                 vehicleId = player.controlledVehicle?.id ?: return@tickHandler
-                sendStartSneaking()
+                network.send1_21_5StartSneaking()
                 player.stopRiding()
                 waitTicks(hookAfter - 1)
             }

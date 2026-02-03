@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiValueChangeEvent
-import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -140,11 +139,6 @@ object ModuleClickGui :
     }
 
     @Suppress("unused")
-    private val clientLanguageChangedHandler = handler<ClientLanguageChangedEvent> {
-        standaloneScreen?.sync()
-    }
-
-    @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         // For some reason, we actually need this.
         standaloneScreen?.browser?.visible = mc.screen == standaloneScreen
@@ -173,6 +167,24 @@ object ModuleClickGui :
         }
 
         standaloneScreen?.sync()
+    }
+
+    fun invalidate() {
+        val standaloneScreen = standaloneScreen ?: return
+        val wasOpen = mc.screen == standaloneScreen
+
+        // Close and invalidate old cache
+        if (wasOpen) {
+            mc.setScreen(null)
+        }
+        standaloneScreen.close()
+        this.standaloneScreen = null
+        
+        // Only bother updating now if it was open before.
+        if (wasOpen) {
+            updateStandaloneScreen()
+            mc.setScreen(this.standaloneScreen ?: CustomSharedMinecraftScreen(CustomScreenType.CLICK_GUI))
+        }
     }
 
 }

@@ -59,7 +59,7 @@ object ThemeManager : Config("theme") {
         mc.execute {
             ScreenManager.update()
             ModuleHud.reopen()
-            ModuleClickGui.sync()
+            ModuleClickGui.invalidate()
         }
     }
 
@@ -163,7 +163,7 @@ object ThemeManager : Config("theme") {
         if (LiquidBounce.isInitialized) {
             ScreenManager.update()
             ModuleHud.reopen()
-            ModuleClickGui.sync()
+            ModuleClickGui.invalidate()
         }
     }
 

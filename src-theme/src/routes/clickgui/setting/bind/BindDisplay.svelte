@@ -2,7 +2,7 @@
     import type {BindModifier} from "../../../../integration/types";
     import {os} from "../../clickgui_store";
     import {getPrintableKeyName} from "../../../../integration/rest";
-    import {UNKNOWN_KEY} from "../../../../util/keybind_utils";
+    import {UNKNOWN_KEY} from "../../../../util/utils";
 
     export let boundKey: string | undefined;
     export let modifiers: Iterable<BindModifier> = [];

@@ -41,13 +41,9 @@ import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.util.FormattedCharSequence
 import java.util.*
 import java.util.function.Function
-import java.util.regex.Pattern
 
-private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
-
-fun String.stripMinecraftColorCodes(): String {
-    return COLOR_PATTERN.matcher(this).replaceAll("")
-}
+inline fun String.stripMinecraftColorCodes(): String =
+    ChatFormatting.stripFormatting(this)!!
 
 inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(this)
 

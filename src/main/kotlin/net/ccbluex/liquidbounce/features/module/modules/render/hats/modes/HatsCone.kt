@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsColorSet
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.color
+import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.util.Mth
@@ -67,8 +67,8 @@ internal object HatsCone : HatsMode("Cone") {
                     cosine * HatConeSettings.RadiusSettings.outerRadius,
                     0f,
                     sine * HatConeSettings.RadiusSettings.outerRadius
-                ).color(color)
-                addVertex(matrix, 0f, HatConeSettings.peak, 0f).color(color)
+                ).setColor(color)
+                addVertex(matrix, 0f, HatConeSettings.peak, 0f).setColor(color)
             }
         }
     }

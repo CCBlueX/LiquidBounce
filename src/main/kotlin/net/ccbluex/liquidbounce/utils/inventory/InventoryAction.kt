@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -164,15 +165,17 @@ sealed interface InventoryAction {
     }
 
     @JvmRecord
-    data class UseItem(
+    data class UseItem @JvmOverloads constructor(
         val hotbarItemSlot: HotbarItemSlot,
+        val requester: Any? = null,
     ) : InventoryAction {
 
         override fun canPerformAction(inventoryConstraints: InventoryConstraints) =
             !InventoryManager.isInventoryOpen && !isInContainerScreen && !isInInventoryScreen
 
         override fun performAction(): Boolean {
-            useHotbarSlotOrOffhand(hotbarItemSlot)
+            SilentHotbar.selectSlotSilently(requester, hotbarItemSlot, 1)
+            useItem(hotbarItemSlot.useHand)
             return true
         }
 
