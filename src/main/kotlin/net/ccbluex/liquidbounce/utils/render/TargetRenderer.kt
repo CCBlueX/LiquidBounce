@@ -232,7 +232,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val texture by file("File").toTextureProperty(owner)
             private val scale by vec2f("Scale", Vector2f(1f, 1f))
             private val color by color("ColorModulator", Color4b.WHITE)
-            private val rotation = tree(object : AnimatedValueGroup("Rotation") {
+            private val rotate = tree(object : AnimatedValueGroup("Rotate") {
                 override val curve = curve("Curve") {
                     "Progress" x 0f..1f
                     "Degrees" y -180f..180f
@@ -262,7 +262,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     matrixStack.mulPose(camera.rotation())
                     matrixStack.mulPose(
                         quaternion.scaling(1f)
-                            .rotateLocalZ(rotation.current().toRadians())
+                            .rotateLocalZ(rotate.current().toRadians())
                     )
                     matrixStack.last().scale(scale.x(), scale.y(), 1f)
                     drawTexQuad(texture, color.argb)
