@@ -53,8 +53,6 @@ abstract class HatsMode(name: String) : Mode(name) {
     // --- Settings ---
     private val followRotation by boolean("FollowRotation", false)
 
-    protected val height by float("HeightOffset", 0.2f, 0f..2f)
-
     private class EquipOffset : ValueGroup("EquipmentOffset") {
         val equipmentOffset by float("ArmorOffset", 0.1f, 0f..1f)
     }
@@ -95,6 +93,7 @@ abstract class HatsMode(name: String) : Mode(name) {
                 val pos = entity.interpolateCurrentPosition(it.partialTicks)
                 val rotation = entity.interpolateCurrentRotation(it.partialTicks)
 
+                val height = ModuleHats.HeightOffset.getNow()
                 val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
                     equipOffset.equipmentOffset
                 } else {

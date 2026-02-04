@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsCone
@@ -27,11 +28,30 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsHa
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsImage
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsOrbs
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsStar
+import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
+import org.joml.Vector2f
 
 /**
  * @author minecrrrr
  */
 object ModuleHats : ClientModule("Hats", ModuleCategories.RENDER) {
+
+    object HeightOffset : ValueGroup("HeightOffset") {
+        private val curve = curve("Height") {
+            "Progress" x 0f..1f
+            "Offset" y 0f..2f
+            points(Vector2f(0f, 0.2f), Vector2f(1f, 0.2f))
+        }
+
+        private val period by int("Period", 1000, 10..20000, "ms")
+
+        fun getNow(): Float =
+            curve.transform((clientStartDurationMs % period) / period.toFloat())
+    }
+
+    init {
+        tree(HeightOffset)
+    }
 
     val modes = choices("Mode", 0) {
         arrayOf(
