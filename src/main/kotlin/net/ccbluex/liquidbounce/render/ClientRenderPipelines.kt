@@ -54,7 +54,7 @@ object ClientRenderPipelines {
         SourceFactor.ONE, DestFactor.ZERO,
     )
 
-    private inline fun newPipeline(
+    internal inline fun newPipeline(
         name: String,
         builderAction: RenderPipeline.Builder.() -> Unit,
     ): RenderPipeline {

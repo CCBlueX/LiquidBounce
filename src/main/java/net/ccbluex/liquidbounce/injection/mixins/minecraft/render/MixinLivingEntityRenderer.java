@@ -41,24 +41,23 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import org.jspecify.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static org.lwjgl.opengl.GL11C.*;
-
+@NullMarked
 @Mixin(LivingEntityRenderer.class)
 public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>> {
 
@@ -69,7 +68,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     public abstract Identifier getTextureLocation(S state);
 
     @Unique
-    private Tuple<Rotation, Rotation> getOverwriteRotation(ModuleRotations.BodyPart bodyPart) {
+    private @Nullable Tuple<Rotation, Rotation> getOverwriteRotation(ModuleRotations.BodyPart bodyPart) {
         if (ModuleRotations.INSTANCE.getRunning() && ModuleRotations.INSTANCE.isPartAllowed(bodyPart)) {
             var rotation = ModuleRotations.INSTANCE.getModelRotation();
             var prevRotation = ModuleRotations.INSTANCE.getPrevModelRotation();
@@ -131,7 +130,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
     @WrapOperation(method = "submit(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V"))
     private void injectTrueSight(
-        SubmitNodeCollector instance, Model model,
+        SubmitNodeCollector instance, Model<M> model,
         Object o, PoseStack matrixStack,
         RenderType renderLayer, int light,
         int overlay, int tintedColor,
@@ -181,37 +180,46 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     }
 
     // Chams
-    @Unique
-    private boolean liquid_bounce$isRenderingChams = false;
 
-    @Inject(method = "submit(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V", at = @At("HEAD"))
-    private void render_Chams_Begin(S state, PoseStack matrixStack, SubmitNodeCollector orderedRenderCommandQueue, CameraRenderState arg, CallbackInfo ci) {
+    @ModifyExpressionValue(
+        method = "getRenderType",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/EntityModel;renderType(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/client/renderer/rendertype/RenderType;")
+    )
+    private @Nullable RenderType render_Chams(
+        @Nullable RenderType original,
+        @Local(argsOnly = true) S state,
+        @Local Identifier identifier
+    ) {
+        if (original == null) return null;
+
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
 
         if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity)) {
-            glEnable(GL_POLYGON_OFFSET_FILL);
-            glPolygonOffset(1f, -1000000F);
+            RenderSetup renderSetup = ((MixinRenderTypeAccessor) original).getState();
+            boolean affectsOutline = ((MixinRenderSetupAccessor) (Object) renderSetup).getOutlineProperty() == RenderSetup.OutlineProperty.AFFECTS_OUTLINE;
 
-            this.liquid_bounce$isRenderingChams = true;
+            switch (((MixinRenderTypeAccessor) original).getName()) {
+                case "entity_translucent" -> {
+                    return ModuleChams.ENTITY_TRANSLUCENT.apply(identifier, affectsOutline);
+                }
+                case "entity_cutout" -> {
+                    return ModuleChams.ENTITY_CUTOUT.apply(identifier);
+                }
+                case "entity_cutout_no_cull" -> {
+                    return ModuleChams.ENTITY_CUTOUT_NO_CULL.apply(identifier, affectsOutline);
+                }
+                default -> {
+                    return original;
+                }
+            }
         }
+
+        return original;
     }
-
-    @Inject(method = "submit(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V", at = @At("RETURN"))
-    private void render_Chams_End(S state, PoseStack matrixStack, SubmitNodeCollector orderedRenderCommandQueue, CameraRenderState arg, CallbackInfo ci) {
-        var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
-
-        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity) && this.liquid_bounce$isRenderingChams) {
-            glPolygonOffset(1f, 1000000F);
-            glDisable(GL_POLYGON_OFFSET_FILL);
-
-            this.liquid_bounce$isRenderingChams = false;
-        }
-    }
-    // Chams END
 
     // FreeCam
     @ModifyExpressionValue(method = "shouldShowName(Lnet/minecraft/world/entity/LivingEntity;D)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getCameraEntity()Lnet/minecraft/world/entity/Entity;"))
-    private Entity hasLabelGetCameraEntityProxy(Entity cameraEntity) {
+    private @Nullable Entity hasLabelGetCameraEntityProxy(@Nullable Entity cameraEntity) {
         return ModuleFreeCam.INSTANCE.getRunning() ? null : cameraEntity;
     }
 }
