@@ -23,6 +23,7 @@ import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.DeathEvent
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -99,13 +100,17 @@ object ModuleAutoDisable : ClientModule("AutoDisable", ModuleCategories.WORLD) {
         if (DisableOn.WORLD_CHANGE in disableOn) disableAndNotify("world change")
     }
 
+    @Suppress("unused")
+    private val disconnectHandler = handler<DisconnectEvent> {
+        if (DisableOn.DISCONNECT in disableOn) disableAndNotify("disconnection")
+    }
+
     private fun disableAndNotify(reason: String) {
-        val anyDisabled = modules.any { module ->
+        var anyDisabled = false
+        for (module in modules) {
             if (module.enabled) {
                 module.enabled = false
-                true
-            } else {
-                false
+                anyDisabled = true
             }
         }
 
@@ -118,5 +123,6 @@ object ModuleAutoDisable : ClientModule("AutoDisable", ModuleCategories.WORLD) {
         FLAG("Flag"),
         DEATH("Death"),
         WORLD_CHANGE("WorldChange"),
+        DISCONNECT("Disconnect"),
     }
 }
