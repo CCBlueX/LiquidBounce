@@ -18,80 +18,158 @@
  */
 package net.ccbluex.liquidbounce.config.gson.adapter
 
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
+import com.google.gson.TypeAdapter
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector2f
 import org.joml.Vector2fc
-import java.lang.reflect.Type
 
 /**
  * Please use [Vec3i] instead of [BlockPos] for serialization.
  */
-object Vec3iAdapter : JsonSerializer<Vec3i>, JsonDeserializer<Vec3i> {
+object Vec3iAdapter : TypeAdapter<Vec3i>() {
 
-    override fun serialize(src: Vec3i, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
-        addProperty("x", src.x)
-        addProperty("y", src.y)
-        addProperty("z", src.z)
+    override fun write(out: JsonWriter, value: Vec3i?) {
+        if (value == null) {
+            out.nullValue()
+            return
+        }
+        out.beginObject()
+        out.name("x").value(value.x)
+        out.name("y").value(value.y)
+        out.name("z").value(value.z)
+        out.endObject()
     }
 
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?) = Vec3i(
-        json.asJsonObject["x"].asInt,
-        json.asJsonObject["y"].asInt,
-        json.asJsonObject["z"].asInt
-    )
+    override fun read(reader: JsonReader): Vec3i? {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull()
+            return null
+        }
+        var x = 0
+        var y = 0
+        var z = 0
+        reader.beginObject()
+        while (reader.hasNext()) {
+            when (reader.nextName()) {
+                "x" -> x = reader.nextInt()
+                "y" -> y = reader.nextInt()
+                "z" -> z = reader.nextInt()
+                else -> reader.skipValue()
+            }
+        }
+        reader.endObject()
+        return Vec3i(x, y, z)
+    }
 
 }
 
-object Vec3dAdapter : JsonSerializer<Vec3>, JsonDeserializer<Vec3> {
+object Vec3dAdapter : TypeAdapter<Vec3>() {
 
-    override fun serialize(src: Vec3, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
-        addProperty("x", src.x)
-        addProperty("y", src.y)
-        addProperty("z", src.z)
+    override fun write(out: JsonWriter, value: Vec3?) {
+        if (value == null) {
+            out.nullValue()
+            return
+        }
+        out.beginObject()
+        out.name("x").value(value.x)
+        out.name("y").value(value.y)
+        out.name("z").value(value.z)
+        out.endObject()
     }
 
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?) = Vec3(
-        json.asJsonObject["x"].asDouble,
-        json.asJsonObject["y"].asDouble,
-        json.asJsonObject["z"].asDouble
-    )
+    override fun read(reader: JsonReader): Vec3? {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull()
+            return null
+        }
+        var x = 0.0
+        var y = 0.0
+        var z = 0.0
+        reader.beginObject()
+        while (reader.hasNext()) {
+            when (reader.nextName()) {
+                "x" -> x = reader.nextDouble()
+                "y" -> y = reader.nextDouble()
+                "z" -> z = reader.nextDouble()
+                else -> reader.skipValue()
+            }
+        }
+        reader.endObject()
+        return Vec3(x, y, z)
+    }
 
 }
 
-object Vec2fAdapter : JsonSerializer<Vec2>, JsonDeserializer<Vec2> {
+object Vec2fAdapter : TypeAdapter<Vec2>() {
 
-    override fun serialize(src: Vec2, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
-        addProperty("x", src.x)
-        addProperty("y", src.y)
+    override fun write(out: JsonWriter, value: Vec2?) {
+        if (value == null) {
+            out.nullValue()
+            return
+        }
+        out.beginObject()
+        out.name("x").value(value.x)
+        out.name("y").value(value.y)
+        out.endObject()
     }
 
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?) = Vec2(
-        json.asJsonObject["x"].asFloat,
-        json.asJsonObject["y"].asFloat
-    )
+    override fun read(reader: JsonReader): Vec2? {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull()
+            return null
+        }
+        var x = 0f
+        var y = 0f
+        reader.beginObject()
+        while (reader.hasNext()) {
+            when (reader.nextName()) {
+                "x" -> x = reader.nextDouble().toFloat()
+                "y" -> y = reader.nextDouble().toFloat()
+                else -> reader.skipValue()
+            }
+        }
+        reader.endObject()
+        return Vec2(x, y)
+    }
 
 }
 
-object Vector2fcAdapter : JsonSerializer<Vector2fc>, JsonDeserializer<Vector2fc> {
+object Vector2fcAdapter : TypeAdapter<Vector2fc>() {
 
-    override fun serialize(src: Vector2fc, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
-        addProperty("x", src.x())
-        addProperty("y", src.y())
+    override fun write(out: JsonWriter, value: Vector2fc?) {
+        if (value == null) {
+            out.nullValue()
+            return
+        }
+        out.beginObject()
+        out.name("x").value(value.x())
+        out.name("y").value(value.y())
+        out.endObject()
     }
 
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?) = Vector2f(
-        json.asJsonObject["x"].asFloat,
-        json.asJsonObject["y"].asFloat
-    )
+    override fun read(reader: JsonReader): Vector2fc? {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull()
+            return null
+        }
+        var x = 0f
+        var y = 0f
+        reader.beginObject()
+        while (reader.hasNext()) {
+            when (reader.nextName()) {
+                "x" -> x = reader.nextDouble().toFloat()
+                "y" -> y = reader.nextDouble().toFloat()
+                else -> reader.skipValue()
+            }
+        }
+        reader.endObject()
+        return Vector2f(x, y)
+    }
 
 }
-

@@ -93,7 +93,7 @@ abstract class HatsMode(name: String) : Mode(name) {
                 val pos = entity.interpolateCurrentPosition(it.partialTicks)
                 val rotation = entity.interpolateCurrentRotation(it.partialTicks)
 
-                val height = ModuleHats.HeightOffset.getNow()
+                val height = ModuleHats.HeightOffset.current()
                 val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
                     equipOffset.equipmentOffset
                 } else {

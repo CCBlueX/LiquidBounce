@@ -137,3 +137,6 @@ value class JsonObjectBuilder(private val backend: JsonObject) {
 inline fun jsonObject(
     builderAction: JsonObjectBuilder.() -> Unit
 ) = JsonObjectBuilder(JsonObject()).apply(builderAction).build()
+
+inline fun JsonArray.getOrNull(index: Int): JsonElement? =
+    if (index in 0 until this.size()) this[index] else null

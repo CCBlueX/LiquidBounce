@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
@@ -98,8 +99,8 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
 
     private fun calculatePulse(range: Float): Float {
         return if (pulseAnimation) {
-            val time = System.currentTimeMillis() / 1000.0 * pulseSpeed
-            sin(time * Mth.TWO_PI).toFloat() * pulseIntensity * range
+            val time = clientStartDurationMs / 1000.0F * pulseSpeed
+            sin(time * Mth.TWO_PI) * pulseIntensity * range
         } else {
             0f
         }
@@ -119,7 +120,7 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
             } else {
                 wallRangeColor
             }
-            drawRangeCircle(ModuleKillAura.range.interactionThroughWallsRange.toFloat() + pulseOffset * 0.5f, color, 80)
+            drawRangeCircle(ModuleKillAura.range.interactionThroughWallsRange + pulseOffset * 0.5f, color, 80)
         }
 
         if (scanRangeColor.a > 0) {
@@ -142,7 +143,7 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
     private fun WorldRenderEnvironment.drawRangeCircle(radius: Float, color: Color4b, outlineAlpha: Int = 255) {
         drawGradientCircle(radius, 0f, color, Color4b.TRANSPARENT)
         if (outline) {
-            drawCircleOutline(radius, outlineColor.with(a = outlineAlpha))
+            drawCircleOutline(radius, outlineColor.alpha(outlineAlpha))
         }
     }
 
@@ -163,5 +164,4 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
         ColorMode.STATIC -> idleColor.interpolateTo(activeColor, colorFactor.toDouble())
     }
 
-    private fun Color4b.fade(factor: Float) = with(a = (a * factor).toInt().coerceAtMost(255))
 }

@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 import net.ccbluex.liquidbounce.config.types.toTextureProperty
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.drawCustomMeshTextured
+import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.minecraft.util.Mth
@@ -49,13 +49,7 @@ internal object HatsImage : HatsMode("Image") {
             )
             scale(scale.x(), scale.y(), 1f)
 
-            drawCustomMeshTextured(texture) { pose ->
-                val color = colorModulator.argb
-                addVertex(pose, -0.5f, -0.5f, 0f).setUv(0f, 0f).setColor(color)
-                addVertex(pose, -0.5f, 0.5f, 0f).setUv(0f, 1f).setColor(color)
-                addVertex(pose, 0.5f, 0.5f, 0f).setUv(1f, 1f).setColor(color)
-                addVertex(pose, 0.5f, -0.5f, 0f).setUv(1f, 0f).setColor(color)
-            }
+            drawTexQuad(texture, colorModulator.argb)
         }
     }
 }

@@ -349,6 +349,18 @@ fun WorldRenderEnvironment.drawLineStripAsLines(argb: Int, positions: Collection
     }
 }
 
+fun WorldRenderEnvironment.drawTexQuad(
+    sampler0: AbstractTexture,
+    argb: Int,
+) {
+    drawCustomMeshTextured(sampler0) { pose ->
+        addVertex(pose, -0.5f, -0.5f, 0f).setUv(0f, 0f).setColor(argb)
+        addVertex(pose, -0.5f, 0.5f, 0f).setUv(0f, 1f).setColor(argb)
+        addVertex(pose, 0.5f, 0.5f, 0f).setUv(1f, 1f).setColor(argb)
+        addVertex(pose, 0.5f, -0.5f, 0f).setUv(1f, 0f).setColor(argb)
+    }
+}
+
 fun WorldRenderEnvironment.drawSquareTexture(
     sampler0: AbstractTexture,
     size: Float,
