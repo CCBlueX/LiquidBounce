@@ -498,6 +498,7 @@
   "liquidbounce.module.antiVoid.description": "保护你免于落入虚空。",
   "liquidbounce.module.cameraClip.description": "允许你在第三人称视角下让视野穿过墙壁。",
   "liquidbounce.module.capeTransfer.description": "自动将你的捐赠者披风转移到当前账号。在 https://liquidbounce.net/donate 捐赠",
+  "liquidbounce.module.chestCleaner.description": "自动从箱子里扔掉不想要的物品。",
   "liquidbounce.module.chestStealer.description": "自动拿走箱子里的物品。",
   "liquidbounce.module.clickGUI.description": "显示一个易于使用的菜单，用于开关或配置模块。",
   "liquidbounce.module.clientSpoofer.description": "将你的游戏客户端标识伪装为另一个。",

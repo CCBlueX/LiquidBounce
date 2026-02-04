@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
-import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeConfigurable
-import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleConfigurable
+import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeValueGroup
+import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleValueGroup
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.findItemsInContainer
@@ -48,8 +48,8 @@ object ModuleChestCleaner : ClientModule(
     private val autoClose by boolean("AutoClose", true)
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
-    private val checkScreenHandlerType = tree(CheckScreenHandlerTypeConfigurable(this))
-    private val checkScreenTitle = tree(CheckScreenTitleConfigurable(this))
+    private val checkScreenHandlerType = tree(CheckScreenHandlerTypeValueGroup(this))
+    private val checkScreenTitle = tree(CheckScreenTitleValueGroup(this))
 
     @Suppress("unused")
     private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
@@ -60,11 +60,13 @@ object ModuleChestCleaner : ClientModule(
         val slots = screen.findItemsInContainer()
         val selectedSlots = slots.filter { !it.itemStack.isEmpty && filter(it.itemStack.item, itemsList) }
 
-        val actions = selectedSlots.map { slot -> InventoryAction.Click.performThrow(screen, slot) }
-        event.schedule(inventoryConstraints, actions)
-
-        if (autoClose && selectedSlots.isEmpty()) {
-            event.schedule(inventoryConstraints, InventoryAction.CloseScreen(screen))
+        if (selectedSlots.isEmpty()) {
+            if (autoClose) {
+                event.schedule(inventoryConstraints, InventoryAction.CloseScreen(screen))
+            }
+        } else {
+            val actions = selectedSlots.map { slot -> InventoryAction.Click.performThrow(screen, slot) }
+            event.schedule(inventoryConstraints, actions)
         }
     }
 }
