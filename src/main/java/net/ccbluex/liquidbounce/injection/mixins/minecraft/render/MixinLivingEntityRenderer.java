@@ -160,12 +160,12 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     @ModifyReturnValue(method = "getRenderType", at = @At("RETURN"))
     private RenderType injectTrueSight(RenderType original, S state, boolean showBody, boolean translucent, boolean showOutline) {
         if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
-            return RenderTypes.itemEntityTranslucentCull(this.getTextureLocation(state));
+            return RenderTypes.entityTranslucentCullItemTarget(this.getTextureLocation(state));
         }
 
         if (ModuleTrueSight.canRenderEntities(state) && !showBody && !translucent && !showOutline) {
             state.isInvisible = false;
-            return RenderTypes.itemEntityTranslucentCull(this.getTextureLocation(state));
+            return RenderTypes.entityTranslucentCullItemTarget(this.getTextureLocation(state));
         }
         return original;
     }

@@ -106,6 +106,9 @@ object ItemImageAtlas : EventListener {
     }
 }
 
+/**
+ * @see net.minecraft.client.gui.render.GuiItemAtlas
+ */
 private class ItemTextureRenderer(
     val items: Registry<Item>,
     val count: Int,
@@ -200,7 +203,7 @@ private class ItemTextureRenderer(
     }
 
     /**
-     * @see net.minecraft.client.gui.render.GuiRenderer.renderItemToAtlas
+     * @see net.minecraft.client.gui.render.GuiItemAtlas.drawToSlot
      */
     private fun renderItemToAtlas(
         state: TrackingItemStackRenderState,
