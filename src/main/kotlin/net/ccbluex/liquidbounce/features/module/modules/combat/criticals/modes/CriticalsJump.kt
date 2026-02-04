@@ -60,6 +60,7 @@ object CriticalsJump : Mode("Jump") {
     private val checkKillaura by boolean("CheckKillaura", false)
     private val checkAutoClicker by boolean("CheckAutoClicker", false)
     private val canBeSeen by boolean("CanBeSeen", true)
+    private val onlyOnJumpKey by boolean("OnlyOnJumpKey", false)
 
     /**
      * Should the upwards velocity be set to the `height`-value on next jump?
@@ -75,6 +76,17 @@ object CriticalsJump : Mode("Jump") {
             return@handler
         }
 
+        val enemies = world.findEnemies(0f..range)
+            .filter { (entity, _) -> !canBeSeen || player.hasLineOfSight(entity) }
+
+        if (enemies.isEmpty()) {
+            return@handler
+        }
+
+        if (onlyOnJumpKey) {
+            event.jump = false
+        }
+
         if (!allowsCriticalHit(true)) {
             return@handler
         }
@@ -83,14 +95,10 @@ object CriticalsJump : Mode("Jump") {
             return@handler
         }
 
-        val enemies = world.findEnemies(0f..range)
-            .filter { (entity, _) -> !canBeSeen || player.hasLineOfSight(entity) }
-
-        // Change the jump motion only if the jump is a normal jump (small jumps, i.e. honey blocks
-        // are not affected) and currently.
-        if (enemies.isNotEmpty() && player.onGround()) {
-            event.jump = true
-            adjustNextJump = true
+        // Allow jumping when on ground and conditions are met
+        if (player.onGround()) {
+            event.jump = !onlyOnJumpKey || mc.options.keyJump.isDown
+            adjustNextJump = event.jump
         }
     }
 
