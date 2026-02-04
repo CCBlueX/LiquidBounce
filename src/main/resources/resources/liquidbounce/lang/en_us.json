@@ -500,6 +500,7 @@
   "liquidbounce.module.antiVoid.description": "Protects you from falling into the void.",
   "liquidbounce.module.cameraClip.description": "Allows you to clip the camera through walls in third person mode.",
   "liquidbounce.module.capeTransfer.description": "Automatically transfers your donator cape to the current account. Donate at liquidbounce.net/donate.",
+  "liquidbounce.module.chestCleaner.description": "Automatically drops unwanted items from a chest.",
   "liquidbounce.module.chestStealer.description": "Automatically steals all items from a chest.",
   "liquidbounce.module.clickGUI.description": "Shows you an easy to use menu to toggle and configure modules.",
   "liquidbounce.module.clientSpoofer.description": "Spoofs your game client brand to another.",
