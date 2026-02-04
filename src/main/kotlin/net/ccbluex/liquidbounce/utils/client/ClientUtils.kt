@@ -29,6 +29,9 @@ val logger: Logger = LogManager.getLogger(CLIENT_NAME)
 val inGame: Boolean
     get() = Minecraft.getInstance()?.let { mc -> mc.player != null && mc.level != null } == true
 
+inline val clientStartDurationMs: Long
+    get() = System.currentTimeMillis() - mc.clientStartTimeMs
+
 /**
  * Open uri in browser
  */
