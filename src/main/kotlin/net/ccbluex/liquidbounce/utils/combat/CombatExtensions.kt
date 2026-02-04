@@ -164,7 +164,7 @@ fun Entity.shouldBeShown(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.visu
     enemyConf.shouldShow(this)
 
 @JvmOverloads
-fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat) =
+fun Entity?.shouldBeAttacked(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat) =
     this is Attackable && enemyConf.shouldAttack(this)
 
 /**
