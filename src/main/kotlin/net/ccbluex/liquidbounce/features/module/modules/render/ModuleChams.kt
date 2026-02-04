@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.rendertype.RenderSetup
+import net.minecraft.client.renderer.rendertype.RenderSetup.OutlineProperty
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
@@ -79,7 +80,7 @@ object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER) {
                 .useOverlay()
                 .affectsCrumbling()
                 .sortOnUpload()
-                .setOutline(if (affectsOutline) RenderSetup.OutlineProperty.AFFECTS_OUTLINE else RenderSetup.OutlineProperty.NONE)
+                .setOutline(if (affectsOutline) OutlineProperty.AFFECTS_OUTLINE else OutlineProperty.NONE)
                 .createRenderSetup()
             RenderType.create("entity_translucent", renderSetup)
         }
@@ -92,7 +93,7 @@ object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER) {
                 .useLightmap()
                 .useOverlay()
                 .affectsCrumbling()
-                .setOutline(RenderSetup.OutlineProperty.AFFECTS_OUTLINE)
+                .setOutline(OutlineProperty.AFFECTS_OUTLINE)
                 .createRenderSetup()
             RenderType.create("entity_cutout", renderSetup)
         }
@@ -105,7 +106,7 @@ object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER) {
                 .useLightmap()
                 .useOverlay()
                 .affectsCrumbling()
-                .setOutline(if (affectsOutline) RenderSetup.OutlineProperty.AFFECTS_OUTLINE else RenderSetup.OutlineProperty.NONE)
+                .setOutline(if (affectsOutline) OutlineProperty.AFFECTS_OUTLINE else OutlineProperty.NONE)
                 .createRenderSetup()
             RenderType.create("entity_cutout_no_cull", renderSetup)
         }
