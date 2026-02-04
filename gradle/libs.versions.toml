@@ -23,7 +23,7 @@ djl = "0.36.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 okhttp = "5.3.2"
 
-httpServer = "2.5.2"
+httpServer = "2.5.4"
 discordIpc = "4.0.1"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
