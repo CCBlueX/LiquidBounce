@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.DoorBlock
@@ -154,6 +156,8 @@ object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategorie
             }
 
             if (shouldRightButtonDoubleClick) {
+                KeyMapping.click(mc.options.keyUse.key)
+                waitTicks(1)
                 KeyMapping.click(mc.options.keyUse.key)
                 shouldRightButtonDoubleClick = false
             }
