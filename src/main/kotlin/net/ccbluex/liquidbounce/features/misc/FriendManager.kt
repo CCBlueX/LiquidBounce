@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.world.entity.Entity
@@ -32,10 +33,19 @@ object FriendManager : Config("Friends"), EventListener {
 
     val friends by list(name, TreeSet<Friend>(), valueType = ValueType.FRIEND)
 
+    private val cancelAttack by boolean("CancelAttack", false)
+
     @Suppress("unused")
     private val tagEntityEvent = handler<TagEntityEvent> {
         if (isFriend(it.entity)) {
             it.assumeFriend()
+        }
+    }
+
+    @Suppress("unused")
+    private val onAttack = handler<AttackEntityEvent> {
+        if (cancelAttack && isFriend(it.entity)) {
+            it.cancelEvent()
         }
     }
 

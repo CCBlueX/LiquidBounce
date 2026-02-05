@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.event.events
 
 import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.combat.EntityTargetClassification
@@ -32,7 +33,7 @@ import net.minecraft.world.entity.LivingEntity
 @Tag("attack")
 class AttackEntityEvent(
     val entity: Entity
-) : Event()
+) : CancellableEvent()
 
 @Tag("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
