@@ -359,10 +359,6 @@ public abstract class MixinMinecraft {
         if (ModuleDoubleClickMacro.INSTANCE.getRunning() && ModuleDoubleClickMacro.INSTANCE.getShouldLeftButtonDoubleClick()) {
             return 0;
         }
-        if (ModuleDoubleClickMacro.INSTANCE.getRunning() && ModuleDoubleClickMacro.INSTANCE.getShouldRightButtonDoubleClick()) {
-            return 0;
-        }
-
         return original;
     }
 
