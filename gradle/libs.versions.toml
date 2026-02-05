@@ -30,7 +30,7 @@ ahocorasick = "0.6.3"
 fastutil4k = "0.2.6"
 
 # Recommended mods
-modmenu = "17.0.0-beta.1"
+modmenu = "17.0.0-beta.2"
 exploit_preventer_api = "0.0.1"
 exploit_preventer_mod = "0.1.10"
 sodium = "mc1.21.11-0.8.2-fabric"
