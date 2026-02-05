@@ -115,6 +115,7 @@ object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategorie
             if (chance < (1..100).random()) {
                 return@run
             }
+
             if (shouldLeftButtonDoubleClick) {
                 KeyMapping.click(mc.options.keyAttack.key)
                 shouldLeftButtonDoubleClick = false
@@ -151,6 +152,7 @@ object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategorie
             if (chance < (1..100).random()) {
                 return@run
             }
+
             if (shouldRightButtonDoubleClick) {
                 KeyMapping.click(mc.options.keyUse.key)
                 shouldRightButtonDoubleClick = false
