@@ -76,27 +76,20 @@ object CriticalsJump : Mode("Jump") {
             return@handler
         }
 
-        val enemies = world.findEnemies(0f..range)
-            .filter { (entity, _) -> !canBeSeen || player.hasLineOfSight(entity) }
-
-        if (enemies.isEmpty()) {
-            return@handler
-        }
-
-        if (onlyOnJumpKey) {
-            event.jump = false
-        }
-
         if (!allowsCriticalHit(true)) {
             return@handler
         }
 
         if (optimizeForCooldown && shouldWaitForJump()) {
+            event.jump = false
             return@handler
         }
 
+        val enemies = world.findEnemies(0f..range)
+            .filter { (entity, _) -> !canBeSeen || player.hasLineOfSight(entity) }
+
         // Allow jumping when on ground and conditions are met
-        if (player.onGround()) {
+        if (enemies.isNotEmpty() && player.onGround()) {
             event.jump = !onlyOnJumpKey || mc.options.keyJump.isDown
             adjustNextJump = event.jump
         }
