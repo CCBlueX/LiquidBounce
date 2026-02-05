@@ -30,9 +30,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.network.chat.Component
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.DoorBlock
@@ -104,7 +104,7 @@ object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategorie
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = tickHandler{
         AttackButton.run {
             if (!enabled || !mc.options.keyAttack.isPressedOnAny) {
                 return@run
@@ -115,6 +115,10 @@ object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategorie
             }
 
             if (chance < (1..100).random()) {
+                return@run
+            }
+
+            if (isInContainerScreen) {
                 return@run
             }
 
@@ -152,6 +156,10 @@ object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategorie
             }
 
             if (chance < (1..100).random()) {
+                return@run
+            }
+
+            if (isInContainerScreen) {
                 return@run
             }
 
