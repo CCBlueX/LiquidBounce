@@ -356,7 +356,7 @@ public abstract class MixinMinecraft {
             }
         }
 
-        if (ModuleDoubleClickMacro.INSTANCE.getRunning() && ModuleDoubleClickMacro.INSTANCE.getShouldLeftButtonDoubleClick()) {
+        if (ModuleDoubleClickMacro.INSTANCE.getEnabled()) {
             return 0;
         }
         return original;
