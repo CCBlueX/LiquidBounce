@@ -615,7 +615,7 @@
   "liquidbounce.module.killAura.messages.badCooldown": "冷却时间至少应为 1.0，否则无法正确造成暴击伤害。",
   "liquidbounce.module.noMissCooldown.description": "禁用1.8攻击冷却时间或完全取消未击中的攻击。",
   "liquidbounce.module.maceKill.description": "使用重锤时一击击杀",
-  "liquidbounce.module.mouseMacro.description": "允许你的鼠标多倍点击",
+  "liquidbounce.module.mouseMacro.description": "允许你的鼠标双倍点击",
   "liquidbounce.module.liquidWalk.description": "允许你在水面上行走。",
   "liquidbounce.module.longJump.description": "允许你跳的更远。",
   "liquidbounce.module.mobOwners.description": "允许你看到已驯养生物和弹射物属于哪个玩家。",
