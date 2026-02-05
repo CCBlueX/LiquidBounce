@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import com.github.gradle.node.npm.task.NpmTask
+import com.github.gradle.node.pnpm.task.PnpmTask
 import com.github.gradle.node.task.NodeTask
 import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
@@ -223,18 +223,18 @@ node {
     version = file("src-theme/.nvmrc").readText().trim().removePrefix("v")
 }
 
-tasks.register<NpmTask>("npmInstallTheme") {
+tasks.register<PnpmTask>("pnpmInstallTheme") {
     workingDir = file("src-theme")
     args.set(listOf("i"))
     doLast {
         logger.info("Successfully installed dependencies for theme")
     }
-    inputs.files("src-theme/package.json", "src-theme/package-lock.json")
+    inputs.files("src-theme/package.json", "src-theme/pnpm-lock.yaml")
     outputs.dir("src-theme/node_modules")
 }
 
-tasks.register<NpmTask>("buildTheme") {
-    dependsOn("npmInstallTheme")
+tasks.register<PnpmTask>("buildTheme") {
+    dependsOn("pnpmInstallTheme")
     workingDir = file("src-theme")
     args.set(listOf("run", "build"))
     doLast {
@@ -243,7 +243,7 @@ tasks.register<NpmTask>("buildTheme") {
 
     inputs.files(
         "src-theme/package.json",
-        "src-theme/package-lock.json",
+        "src-theme/pnpm-lock.yaml",
         "src-theme/bundle.cjs",
         "src-theme/rollup.config.js"
     )
@@ -262,7 +262,7 @@ tasks.register<NodeTask>("bundleTheme") {
     // Incremental stuff
     inputs.files(
         "src-theme/package.json",
-        "src-theme/package-lock.json",
+        "src-theme/pnpm-lock.yaml",
         "src-theme/bundle.cjs",
         "src-theme/rollup.config.js"
     )
