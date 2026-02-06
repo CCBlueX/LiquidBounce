@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
+import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -144,16 +145,12 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             return
         }
 
-        val blockHand = InteractionHand.entries.first {
-            player.getItemInHand(it).has(BLOCKS_ATTACKS)
-        }
-
-        val itemStack = player.getItemInHand(blockHand)
-
-        // We do not want to block if the item is disabled.
-        if (!itemStack.isItemEnabled(world.enabledFeatures())) {
-            return
-        }
+        val blockHand = InteractionHand.entries.find {
+            val itemStack = player.getItemInHand(it)
+            itemStack.has(BLOCKS_ATTACKS)
+                && itemStack.isItemEnabled(world.enabledFeatures())
+                && !player.cooldowns.isOnCooldown(itemStack)
+        } ?: return
 
         when (blockMode) {
             BlockMode.HYPIXEL -> {
@@ -268,13 +265,20 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 blockingStateEnforced = false
                 true
             }
-            UnblockMode.NONE if !pauses -> {
+            UnblockMode.SWAP_HAND -> {
+                network.sendSwapItemWithOffhand()
+                network.sendSwapItemWithOffhand()
+                blockingStateEnforced = false
+                true
+            }
+            UnblockMode.NONE -> if (!pauses) {
                 interaction.releaseUsingItem(player)
 
                 blockingStateEnforced = false
                 true
+            } else {
+                false
             }
-            else -> false
         }
     }
 
@@ -349,7 +353,8 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     enum class UnblockMode(override val tag: String) : Tagged {
         STOP_USING_ITEM("StopUsingItem"),
         CHANGE_SLOT("ChangeSlot"),
-        NONE("None")
+        SWAP_HAND("SwapHand"),
+        NONE("None"),
     }
 
 }
