@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
-import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.item.BlockItem
@@ -114,11 +113,11 @@ object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategorie
                 return@run
             }
 
-            if (chance < (1..100).random()) {
+            if (mc.screen?.title?.contents != null){
                 return@run
             }
 
-            if (isInContainerScreen) {
+            if (chance < (1..100).random()) {
                 return@run
             }
 
@@ -155,11 +154,11 @@ object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategorie
                 }
             }
 
-            if (chance < (1..100).random()) {
+            if (mc.screen?.title?.contents != null){
                 return@run
             }
 
-            if (isInContainerScreen) {
+            if (chance < (1..100).random()) {
                 return@run
             }
 
