@@ -227,6 +227,7 @@ internal fun drawMesh(
     colorModulator: Color4b = Color4b.WHITE,
     renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
     shaderTextures: Map<String, AbstractTexture> = emptyMap(),
+    uniforms: Map<String, GpuBufferSlice> = emptyMap(),
 ) = meshData.use { meshData ->
     val dynamicTransforms = getDynamicTransformsUniform(colorModulator = colorModulator)
 
@@ -259,6 +260,7 @@ internal fun drawMesh(
         renderPass.bindDefaultUniforms()
         renderPass.bindDynamicTransformsUniform(dynamicTransforms)
         renderPass.bindTextures(shaderTextures)
+        renderPass.setUniforms(uniforms)
 
         renderPass.bindAndDraw(vertexSlice, indexSlice, pipeline.vertexFormat, indexType, indexCount)
     }

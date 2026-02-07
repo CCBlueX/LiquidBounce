@@ -41,16 +41,17 @@ private val RENDER_LEFT_ARM: AABB = LIMB.move(-2 * LIMB.maxX, LIMB.maxY, 0.0)
 private val RENDER_RIGHT_ARM: AABB = LIMB.move(BODY.maxX - LIMB.maxX, LIMB.maxY, 0.0)
 private val RENDER_HEAD: AABB = HEAD.move(-LIMB.maxX, LIMB.maxY * 2, -HEAD.maxZ * 0.25)
 
-data class WireframePlayer(private var pos: Vec3, private var yaw: Float, private var pitch: Float) {
+data class WireframePlayer(private var pos: Vec3, private var yRot: Float, private var xRot: Float) {
+    private val quaternion = Quaternionf()
 
     fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b) {
         renderEnvironmentForWorld(event.matrixStack) {
             startBatch()
             withPositionRelativeToCamera(pos) {
-                val matrix = matrixStack.last().pose()
-                val yRot = -Mth.wrapDegrees(yaw)
-                matrix.rotate(Quaternionf().rotationY(yRot.toRadians()))
-                matrix.scale(1.9f)
+                val pose = matrixStack.last().pose()
+                val yRot = -Mth.wrapDegrees(yRot)
+                pose.rotate(quaternion.scaling(1f).rotationY(yRot.toRadians()))
+                pose.scale(1.9f)
 
                 drawBox(RENDER_LEFT_LEG, color, outlineColor)
                 drawBox(RENDER_RIGHT_LEG, color, outlineColor)
@@ -58,9 +59,9 @@ data class WireframePlayer(private var pos: Vec3, private var yaw: Float, privat
                 drawBox(RENDER_LEFT_ARM, color, outlineColor)
                 drawBox(RENDER_RIGHT_ARM, color, outlineColor)
 
-                matrix.translate(0f, RENDER_HEAD.minY.toFloat(), 0f)
-                matrix.rotate(Quaternionf().rotationX(pitch.toRadians()))
-                matrix.translate(0f, -RENDER_HEAD.minY.toFloat(), 0f)
+                pose.translate(0f, RENDER_HEAD.minY.toFloat(), 0f)
+                pose.rotate(quaternion.scaling(1f).rotationX(xRot.toRadians()))
+                pose.translate(0f, -RENDER_HEAD.minY.toFloat(), 0f)
 
                 drawBox(RENDER_HEAD, color, outlineColor)
             }
@@ -68,10 +69,10 @@ data class WireframePlayer(private var pos: Vec3, private var yaw: Float, privat
         }
     }
 
-    fun setPosRot(x: Double, y: Double, z: Double, yaw: Float, pitch: Float) {
+    fun setPosRot(x: Double, y: Double, z: Double, yRot: Float, xRot: Float) {
         this.pos = Vec3(x, y, z)
-        this.yaw = yaw
-        this.pitch = pitch
+        this.yRot = yRot
+        this.xRot = xRot
     }
 
 }
