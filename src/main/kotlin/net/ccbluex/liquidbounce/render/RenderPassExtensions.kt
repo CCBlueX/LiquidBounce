@@ -42,6 +42,9 @@ inline fun RenderPass.bindTextures(textures: Map<String, AbstractTexture?>) =
 inline fun RenderPass.bindTexture(name: String, texture: AbstractTexture?) =
     bindTexture(name, texture?.textureView, texture?.sampler)
 
+inline fun RenderPass.setUniforms(uniforms: Map<String, GpuBufferSlice>) =
+    uniforms.forEach { setUniform(it.key, it.value) }
+
 inline fun RenderPass.bindDefaultUniforms() = RenderSystem.bindDefaultUniforms(this)
 
 inline fun RenderPass.bindProjectionUniform() {
