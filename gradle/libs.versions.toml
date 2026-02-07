@@ -34,7 +34,7 @@ modmenu = "17.0.0-beta.2"
 exploit_preventer_api = "0.0.1"
 exploit_preventer_mod = "0.1.10"
 sodium = "mc1.21.11-0.8.2-fabric"
-lithium = "mc1.21.11-0.21.2-fabric"
+lithium = "mc1.21.11-0.21.3-fabric"
 viafabricplus = "4.4.5"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.14.1+1.21.11-fabric"
@@ -43,11 +43,11 @@ waygl = "xN3H7oME"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
-kotlin = "2.2.10"
+kotlin = "2.3.10"
 # https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test/overview
 kotlinx-coroutines = "1.10.2"
 # https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
-fabric-kotlin = "1.13.5+kotlin.2.2.10"
+fabric-kotlin = "1.13.9+kotlin.2.3.10"
 
 # Netty, should be sync with game version
 # https://mvnrepository.com/artifact/io.netty/netty-all
