@@ -67,6 +67,7 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
             "Slots",
             enumSetOf(EquipmentSlotChoice.HEAD),
             EquipmentSlotChoice.allHumanoidArmor(),
+            canBeNone = false,
         )
 
         override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
