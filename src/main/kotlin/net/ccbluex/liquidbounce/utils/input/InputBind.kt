@@ -25,6 +25,7 @@ import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
@@ -197,7 +198,7 @@ data class InputBind(
 
         companion object {
             @JvmStatic
-            private val LOOKUP_TABLE = Tagged.makeLookupTable<Modifier>()
+            private val LOOKUP_TABLE = Modifier.entries.makeLookupTable()
 
             @JvmStatic
             private val KEY_CODE_LOOKUP: Int2ReferenceMap<Modifier> = run {

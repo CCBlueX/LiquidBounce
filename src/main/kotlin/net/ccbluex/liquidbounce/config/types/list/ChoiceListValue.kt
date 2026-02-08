@@ -24,8 +24,10 @@ import com.google.gson.JsonElement
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import java.util.SortedMap
 
@@ -40,6 +42,9 @@ class ChoiceListValue<T : Tagged>(
         require(defaultValue in choices) { "default value must be in [${choices}]" }
     }
 
+    @Exclude @ProtocolExclude
+    private val choiceByName = choices.makeLookupTable()
+
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val name = element.asString
 
@@ -47,14 +52,10 @@ class ChoiceListValue<T : Tagged>(
     }
 
     override fun setByString(string: String) {
-        val newValue = choices.firstOrNull { it.tag == string }
-
-        if (newValue == null) {
-            throw IllegalArgumentException(
-                "ChoiceListValue `${this.name}` has no option named $string" +
-                    " (available options are ${this.choices.joinToString { it.tag }})"
-            )
-        }
+        val newValue = choiceByName[string] ?: throw IllegalArgumentException(
+            "ChoiceListValue `${this.name}` has no option named $string" +
+                " (available options are ${this.choices.joinToString { it.tag }})"
+        )
 
         set(newValue)
     }
@@ -69,11 +70,24 @@ class ChoiceListValue<T : Tagged>(
 interface Tagged {
     val tag: String
 
+    val tagAliases: List<String> get() = emptyList()
+
     companion object {
-        inline fun <reified T> makeLookupTable(): SortedMap<String, T> where T : Tagged, T : Enum<T> =
-            T::class.java.enumConstants.associateByTo(
-                Object2ObjectRBTreeMap<String, T>(String.CASE_INSENSITIVE_ORDER)
-            ) { it.tag }
+        @JvmStatic
+        fun <T : Tagged> Iterable<T>.makeLookupTable(): SortedMap<String, T> {
+            val map = Object2ObjectRBTreeMap<String, T>(String.CASE_INSENSITIVE_ORDER)
+            for (item in this) {
+                if (map.put(item.tag, item) != null) {
+                    throw IllegalArgumentException("Duplicate tag: ${item.tag}")
+                }
+                for (alias in item.tagAliases) {
+                    if (map.put(alias, item) != null) {
+                        throw IllegalArgumentException("Duplicate alias: $alias")
+                    }
+                }
+            }
+            return map
+        }
 
         @JvmName("of")
         @JvmStatic

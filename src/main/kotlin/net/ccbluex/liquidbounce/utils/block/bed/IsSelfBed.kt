@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.bed
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
@@ -30,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
+import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
@@ -61,12 +62,18 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
     }
 
     class Color(parent: ModeValueGroup<*>) : IsSelfBedMode("Color", parent) {
+
+        private val slots by multiEnumChoice(
+            "Slots",
+            enumSetOf(EquipmentSlotChoice.HEAD),
+            EquipmentSlotChoice.allHumanoidArmor(),
+            canBeNone = false,
+        )
+
         override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
             val color = block.color
             val colorRgb = color.textureDiffuseColor
-            val (_, armorColor) = getArmorColor() ?: return false
-
-            return armorColor == colorRgb
+            return slots.any { it.getArmorColor(player) == colorRgb }
         }
     }
 

@@ -110,6 +110,9 @@ abstract class Mode(
     final override val tag: String
         get() = this.name
 
+    final override val tagAliases: List<String>
+        get() = this.aliases
+
     abstract val parent: ModeValueGroup<*>
 
     open fun enable() { }

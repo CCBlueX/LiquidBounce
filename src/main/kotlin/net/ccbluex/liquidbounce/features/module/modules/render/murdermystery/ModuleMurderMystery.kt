@@ -102,11 +102,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
 
             packet.slots
                 .filter {
-                    !it.second.isEmpty && it.first in
-                        arrayOf(
-                            EquipmentSlot.MAINHAND,
-                            EquipmentSlot.OFFHAND,
-                        )
+                    !it.second.isEmpty && it.first.type == EquipmentSlot.Type.HAND
                 }
                 .forEach {
                     val itemStack = it.second

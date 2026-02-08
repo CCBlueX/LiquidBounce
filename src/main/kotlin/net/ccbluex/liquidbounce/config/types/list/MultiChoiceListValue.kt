@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import java.util.SequencedSet
 import java.util.TreeMap
 
@@ -78,9 +79,7 @@ class MultiChoiceListValue<T : Tagged>(
     }
 
     @Exclude @ProtocolExclude
-    private val choiceByName = choices.associateByTo(TreeMap(String.CASE_INSENSITIVE_ORDER)) {
-        it.tag
-    }
+    private val choiceByName = choices.makeLookupTable()
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val active = get()
