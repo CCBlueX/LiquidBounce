@@ -23,7 +23,6 @@ import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.platform.Lighting
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
@@ -43,13 +42,13 @@ import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer
-import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import net.minecraft.client.renderer.item.TrackingItemStackRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
 import net.minecraft.world.item.Item
@@ -109,7 +108,7 @@ object ItemImageAtlas : EventListener {
 }
 
 private class ItemTextureRenderer(
-    val items: Iterable<Item>,
+    val items: Registry<Item>,
     val count: Int,
     val scale: Int,
 ) : MinecraftShortcuts {
@@ -123,14 +122,13 @@ private class ItemTextureRenderer(
         textureSize,
         true,
     )
-    private val bufferAllocator = ByteBufferBuilder(0xC0000)
-    private val vertexConsumers = MultiBufferSource.immediate(this.bufferAllocator)
-    private val commandQueue = SubmitNodeStorage()
+    private val submitNodeCollector = SubmitNodeStorage()
+    private val bufferSource = mc.gameRenderer.renderBuffers.bufferSource()
     // Note: no operation -> use shared one or skip it
-    private val renderDispatcher = FeatureRenderDispatcher(
-        this.commandQueue,
+    private val featureRenderDispatcher = FeatureRenderDispatcher(
+        this.submitNodeCollector,
         mc.blockRenderer, // No operation
-        vertexConsumers,
+        bufferSource,
         mc.atlasManager, // No operation
         mc.gameRenderer.renderBuffers.outlineBufferSource(), // No operation
         mc.gameRenderer.renderBuffers.crumblingBufferSource(), // No operation
@@ -141,10 +139,9 @@ private class ItemTextureRenderer(
 
     private fun close() {
         itemsProjectionMatrix.close()
-        bufferAllocator.close()
         itemAtlasFramebuffer.destroyBuffers()
-        commandQueue.clear()
-        renderDispatcher.close()
+        submitNodeCollector.clear()
+        featureRenderDispatcher.close()
     }
 
     /**
@@ -163,7 +160,7 @@ private class ItemTextureRenderer(
         withOutputTextureOverride(itemAtlasFramebuffer.colorTextureView, itemAtlasFramebuffer.depthTextureView) {
             val matrixStack = Pools.MatStack.borrow()
             val keyedItemRenderState = TrackingItemStackRenderState()
-            items.forEachIndexed { idx, item ->
+            for ((idx, item) in items.withIndex()) {
                 val x = (idx % itemsPerDimension) * itemPixelSize
                 val y = (idx / itemsPerDimension) * itemPixelSize
                 if (item !== Items.AIR) {
@@ -177,7 +174,7 @@ private class ItemTextureRenderer(
                         0
                     )
 
-                    this.prepareItemInitially(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
+                    this.renderItemToAtlas(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
                 }
                 itemMap[item] = Rect2i(x, y, itemPixelSize, itemPixelSize)
             }
@@ -205,7 +202,7 @@ private class ItemTextureRenderer(
     /**
      * @see GuiRenderer.renderItemToAtlas
      */
-    private fun prepareItemInitially(
+    private fun renderItemToAtlas(
         state: TrackingItemStackRenderState,
         matrices: PoseStack,
         scaledX: Int,
@@ -226,9 +223,9 @@ private class ItemTextureRenderer(
         RenderSystem.enableScissorForRenderTypeDraws(
             scaledX, textureSize - scaledY - itemPixelSize, itemPixelSize, itemPixelSize
         )
-        state.submit(matrices, this.commandQueue, 0xf000f0, OverlayTexture.NO_OVERLAY, 0)
-        renderDispatcher.renderAllFeatures()
-        vertexConsumers.endBatch()
+        state.submit(matrices, this.submitNodeCollector, 0xf000f0, OverlayTexture.NO_OVERLAY, 0)
+        featureRenderDispatcher.renderAllFeatures()
+        bufferSource.endBatch()
         RenderSystem.disableScissorForRenderTypeDraws()
         matrices.popPose()
     }

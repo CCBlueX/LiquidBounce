@@ -26,11 +26,8 @@ import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_HORIZONTAL
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.tags.BlockTags
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
-import net.minecraft.world.level.block.FarmBlock
-import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.world.level.block.state.BlockState
 
 sealed interface AutoFarmTrackedState {
@@ -38,23 +35,23 @@ sealed interface AutoFarmTrackedState {
         override val tag: String,
         val items: Collection<Item>,
     ) : AutoFarmTrackedState, Tagged {
-        FARM(
+        FARMLAND(
             "Farmland",
             objectArraySetOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO),
         ) {
-            override fun isBlockMatches(state: BlockState): Boolean = state.block is FarmBlock
+            override fun isBlockMatches(state: BlockState): Boolean = state.supportsCrops
         },
         SOUL_SAND(
             "SoulSand",
             setOf(Items.NETHER_WART),
         ) {
-            override fun isBlockMatches(state: BlockState): Boolean = state.block is SoulSandBlock
+            override fun isBlockMatches(state: BlockState): Boolean = state.supportsNetherWart
         },
         JUNGLE_LOGS(
             "JungleLogs",
             setOf(Items.COCOA_BEANS),
         ) {
-            override fun isBlockMatches(state: BlockState): Boolean = state.`is`(BlockTags.JUNGLE_LOGS)
+            override fun isBlockMatches(state: BlockState): Boolean = state.supportsCocoa
 
             override fun findPlantableNeighbors0(pos: BlockPos, state: BlockState): Collection<Direction> {
                 val result = enumSetOf<Direction>()

@@ -113,15 +113,17 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
     private val extraElements = arrayOf(
         ExtraElement("Compass", 16F) { ctx ->
-            ctx.renderItem(COMPASS, 0, 0)
+            val stack = player.inventory.nonEquipmentItems.find { it.item === Items.COMPASS } ?: COMPASS
+            ctx.renderItem(stack, 0, 0)
         },
         ExtraElement("Clock", 16F) { ctx ->
-            ctx.renderItem(CLOCK, 0, 0)
+            val stack = player.inventory.nonEquipmentItems.find { it.item === Items.CLOCK } ?: CLOCK
+            ctx.renderItem(stack, 0, 0)
         },
     )
 
-    private val COMPASS = Items.COMPASS.defaultInstance
-    private val CLOCK = Items.CLOCK.defaultInstance
+    private val COMPASS by lazy(LazyThreadSafetyMode.NONE) { Items.COMPASS.defaultInstance }
+    private val CLOCK by lazy(LazyThreadSafetyMode.NONE) { Items.CLOCK.defaultInstance }
 
     init {
         tree(TextureValueGroup)

@@ -20,18 +20,18 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.multiplayer.ClientLevel
+import java.util.function.Consumer
 
 /**
  * A special [FakePlayer] that moves following a recorded path
  * of [PosPoseSnapshot].
  */
-class MovingFakePlayer(
+class MovingFakePlayer @JvmOverloads constructor(
     private vararg val snapshots: PosPoseSnapshot,
-    clientWorld: ClientLevel,
+    level: ClientLevel,
     gameProfile: GameProfile,
-) : FakePlayer(
-    clientWorld, gameProfile,
-) {
+    onRemoval: Consumer<in FakePlayer>? = null,
+) : FakePlayer(level, gameProfile, onRemoval) {
 
     private var index: Int = 0
 
