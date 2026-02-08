@@ -44,9 +44,12 @@ public abstract class MixinMultiPlayerGameMode {
     /**
      * Hook attacking entity
      */
-    @Inject(method = "attack", at = @At("HEAD"))
+    @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
     private void hookAttack(Player player, Entity target, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new AttackEntityEvent(target));
+        var event = EventManager.INSTANCE.callEvent(new AttackEntityEvent(target));
+        if (event.isCancelled()) {
+            callbackInfo.cancel();
+        }
     }
 
     /**
