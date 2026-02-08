@@ -18,8 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
+import com.google.common.base.Suppliers
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.rawInput
@@ -45,27 +46,28 @@ import net.minecraft.core.Direction
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.Vec3
+import java.util.function.Supplier
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.round
 import kotlin.math.sin
-import kotlin.random.Random
 
 object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedgeExtension {
 
-    private enum class Mode(override val tag: String) : Tagged {
-        JUMP("Jump"),
-        SNEAK("Sneak"),
+    private enum class Mode(override val tag: String, val creator: Supplier<LedgeAction>) : Tagged {
+        JUMP("Jump", LedgeAction(jump = true)),
+        SNEAK("Sneak", { LedgeAction(sneakTime = sneakTime.random()) }),
         /**
          * Might not be as consistent as the other modes.
          */
-        STOP_INPUT("StopInput"),
-        BACKWARDS("Backwards"),
-        RANDOM("Random")
+        STOP_INPUT("StopInput", LedgeAction(stopInput = true)),
+        BACKWARDS("Backwards", LedgeAction(stepBack = true));
+
+        constructor(tag: String, ledgeAction: LedgeAction) : this(tag, Suppliers.ofInstance(ledgeAction))
     }
 
-    private var mode by enumChoice("Mode", Mode.JUMP)
-    private var forceSneakBelowCount by int("ForceSneakBelowCount", 3, 0..10)
+    private val modes by multiEnumChoice("Modes", Mode.JUMP, canBeNone = false)
+    private val forceSneakBelowCount by int("ForceSneakBelowCount", 3, 0..10)
     private val sneakTime by intRange("SneakTime", 1..1, 1..10)
 
     override fun ledge(
@@ -83,7 +85,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
         // but we hope it does not. :)
         val snapshotOne = simulatedPlayerCache.getSnapshotAt(1)
 
-        ModuleDebug.debugParameter(this, "Snapshot Ledged", snapshotOne.clipLedged)
+        debugParameter("Snapshot Ledged") { snapshotOne.clipLedged }
 
         return if (snapshotOne.clipLedged) {
             val cameraPosition = snapshotOne.pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
@@ -96,8 +98,8 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             val targetFulfillsRequirements = target.doesCrosshairTargetMatchRequirements(currentCrosshairTarget)
             val isValidCrosshairTarget = ModuleScaffold.isValidCrosshairTarget(currentCrosshairTarget)
 
-            ModuleDebug.debugParameter(this, "targetFulfillsRequirements", targetFulfillsRequirements.toString())
-            ModuleDebug.debugParameter(this, "isValidCrosshairTarget", isValidCrosshairTarget.toString())
+            debugParameter("targetFulfillsRequirements") { targetFulfillsRequirements }
+            debugParameter("isValidCrosshairTarget") { isValidCrosshairTarget }
 
             // Does the crosshair target meet the requirements?
             if (targetFulfillsRequirements && isValidCrosshairTarget) {
@@ -106,20 +108,9 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
 
             // If the crosshair target does not meet the requirements,
             // we need to prevent the player from falling off the ledge e.g. by jumping or sneaking.
-            when {
-                ModuleScaffold.blockCount < forceSneakBelowCount -> {
-                    LedgeAction(sneakTime = sneakTime.random())
-                }
-                mode == Mode.JUMP -> LedgeAction(jump = true)
-                mode == Mode.SNEAK -> LedgeAction(sneakTime = sneakTime.random())
-                mode == Mode.STOP_INPUT -> LedgeAction(stopInput = true)
-                mode == Mode.BACKWARDS -> LedgeAction(stepBack = true)
-                mode == Mode.RANDOM -> if (Random.nextBoolean()) {
-                    LedgeAction(jump = true, sneakTime = 0)
-                } else {
-                    LedgeAction(jump = false, sneakTime = sneakTime.random())
-                }
-                else -> LedgeAction.NO_LEDGE
+            val currentMode = if (ModuleScaffold.blockCount < forceSneakBelowCount) Mode.SNEAK else modes.random()
+            currentMode.creator.get().also {
+                debugParameter("LastLedgeAction") { it }
             }
         } else {
             LedgeAction.NO_LEDGE
