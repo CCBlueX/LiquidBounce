@@ -40,7 +40,7 @@ val Window.scaledDimension
     get() = intArrayOf(guiScaledWidth, guiScaledHeight)
 
 val mc: Minecraft
-    inline get() = Minecraft.getInstance()!!
+    inline get() = Minecraft.getInstance()
 val player: LocalPlayer
     inline get() = mc.player!!
 val world: ClientLevel

@@ -25,18 +25,35 @@ import net.minecraft.client.GuiMessageTag
 import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.network.chat.Component
 
+private val SYSTEM_TEXT: Component = Component.translatable("chat.tag.system")
+private val SYSTEM_TEXT_SINGLE_PLAYER: Component = Component.translatable("chat.tag.system_single_player")
+
+private val SYSTEM = GuiMessageTag(13684944, null, SYSTEM_TEXT, "System")
+private val SYSTEM_SINGLE_PLAYER = GuiMessageTag(13684944, null, SYSTEM_TEXT_SINGLE_PLAYER, "System")
+
+/**
+ * Note: I don't know why these static methods will return null, but they do,
+ * so we have to use the constants instead.
+ */
+private fun getTag() = if (mc.isSingleplayer) {
+    GuiMessageTag.systemSinglePlayer() ?: SYSTEM_SINGLE_PLAYER
+} else {
+    GuiMessageTag.system() ?: SYSTEM
+}
+
 /**
  * Adds a message and assigns the ID to it.
+ *
+ * @see ChatComponent.addMessage
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
 fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.execute {
-    val indicator = if (mc.isSingleplayer) GuiMessageTag.systemSinglePlayer() else GuiMessageTag.system()
-    val chatHudLine = GuiMessage(mc.gui.guiTicks, message, null, indicator)
-    (chatHudLine as GuiMessageLineAddition).`liquid_bounce$setId`(id)
-    (chatHudLine as GuiMessageAddition).`liquid_bounce$setCount`(count)
-    this.logChatMessage(chatHudLine)
-    this.addMessageToDisplayQueue(chatHudLine)
-    this.addMessageToQueue(chatHudLine)
+    val guiMessage = GuiMessage(mc.gui.guiTicks, message, null, getTag())
+    (guiMessage as GuiMessageLineAddition).`liquid_bounce$setId`(id)
+    (guiMessage as GuiMessageAddition).`liquid_bounce$setCount`(count)
+    this.logChatMessage(guiMessage)
+    this.addMessageToDisplayQueue(guiMessage)
+    this.addMessageToQueue(guiMessage)
 }
 
 /**
