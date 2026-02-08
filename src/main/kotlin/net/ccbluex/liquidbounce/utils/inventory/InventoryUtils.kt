@@ -31,15 +31,11 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.tags.ItemTags
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.MenuType
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.component.DyedItemColor
 import net.minecraft.world.level.block.Block
 import java.util.SortedSet
 
@@ -105,28 +101,5 @@ internal fun findBlocksEndingWith(vararg targets: String): SortedSet<Block> =
         targets.any { BuiltInRegistries.BLOCK.getKey(block).path.endsWith(it.lowercase()) }
     }
 
-/**
- * Get the color of the armor on the player
- */
-fun getArmorColor() = Slots.Armor.firstNotNullOfOrNull { slot ->
-    val itemStack = slot.itemStack
-    val color = itemStack.getArmorColor() ?: return@firstNotNullOfOrNull null
-
-    Pair(slot, color)
-}
-
-/**
- * Get the color of the armor on the item stack
- *
- * @see [HumanoidArmorLayer.renderArmorPiece]
- */
-fun ItemStack.getArmorColor(): Int? {
-    return if (`is`(ItemTags.DYEABLE)) {
-        DyedItemColor.getOrDefault(this, DyedItemColor.LEATHER_COLOR) // #FFA06540
-    } else {
-        null
-    }
-}
-
 val AbstractContainerMenu.typeOrNull: MenuType<*>?
-    get() = runCatching { type }.getOrNull()
+    get() = try { type } catch (_: UnsupportedOperationException) { null }

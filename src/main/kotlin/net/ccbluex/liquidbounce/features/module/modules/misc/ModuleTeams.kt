@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
-import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
@@ -148,8 +148,8 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
 
             // returns false if the armor is not dyeable (e.g., iron armor)
             // to avoid a false positive from `null == null`
-            val ownColor = ownStack.getArmorColor() ?: return false
-            val otherColor = otherStack.getArmorColor() ?: return false
+            val ownColor = ownStack[DataComponents.DYED_COLOR]?.rgb ?: return false
+            val otherColor = otherStack[DataComponents.DYED_COLOR]?.rgb ?: return false
 
             return ownColor == otherColor
         }

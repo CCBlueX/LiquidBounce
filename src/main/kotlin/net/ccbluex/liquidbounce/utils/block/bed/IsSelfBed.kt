@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.block.bed
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -30,14 +31,17 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
+import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.util.ARGB.opaque
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.level.block.BedBlock
 import org.joml.Vector3d
 import org.lwjgl.glfw.GLFW
@@ -61,12 +65,25 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
     }
 
     class Color(parent: ModeValueGroup<*>) : IsSelfBedMode("Color", parent) {
+
+        private val slots by multiEnumChoice("Slots", Slot.entries)
+
+        private enum class Slot(override val tag: String, val equipmentSlot: EquipmentSlot) : Tagged {
+            HEAD("Head", EquipmentSlot.HEAD),
+            CHEST("Chest", EquipmentSlot.CHEST),
+            LEGS("Legs", EquipmentSlot.LEGS),
+            FEET("Feet", EquipmentSlot.FEET);
+
+            fun getLocalPlayerArmorColor(): Int? {
+                val itemStack = player.getItemBySlot(equipmentSlot)
+                return itemStack[DataComponents.DYED_COLOR]?.rgb?.let { opaque(it) }
+            }
+        }
+
         override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
             val color = block.color
             val colorRgb = color.textureDiffuseColor
-            val (_, armorColor) = getArmorColor() ?: return false
-
-            return armorColor == colorRgb
+            return slots.any { it.getLocalPlayerArmorColor() == colorRgb }
         }
     }
 
