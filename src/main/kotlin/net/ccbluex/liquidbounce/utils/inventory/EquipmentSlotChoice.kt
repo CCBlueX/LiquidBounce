@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render.nametags
+package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.minecraft.world.entity.EquipmentSlot
