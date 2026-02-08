@@ -34,7 +34,6 @@
     "minecraft.client.MixinMouseHandler",
     "minecraft.client.MixinMouseHandlerAccessor",
     "minecraft.client.MixinOptions",
-    "minecraft.client.MixinPerspectiveProjectionMatrixBuffer",
     "minecraft.client.MixinStringSplitter",
     "minecraft.client.MixinWindow",
     "minecraft.client.MixinWorldBorderRenderer",

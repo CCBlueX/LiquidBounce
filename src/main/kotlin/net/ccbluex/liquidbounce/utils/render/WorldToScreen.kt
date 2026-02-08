@@ -18,15 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.sub
@@ -34,38 +29,23 @@ import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
+import org.joml.Matrix4fc
 import org.joml.Vector3f
 import java.text.NumberFormat
 
 /**
  * This util should only be called from main thread
  */
-object WorldToScreen : MinecraftShortcuts, EventListener {
+object WorldToScreen {
 
-    private val mvpMatrix = Matrix4f()
-    private val projectionMatrix = Matrix4f()
+    private val projModelViewMatrix = Matrix4f()
 
-    private val cacheMatrix = Matrix4f()
+    private val cacheMat4f = Matrix4f()
     private val cacheVec3f = Vector3f()
 
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent>(priority = READ_FINAL_STATE) { event ->
-        val matrixStack = event.matrixStack
-
-        this.mvpMatrix.set(matrixStack.last().pose())
-
-        // Important: here we need this buffer to be USAGE_MAP_READ, so add mixins at all sources.
-        // Usages (2025/11/09, 1.21.6):
-        // - PostEffectPass
-        // - CubeMapRenderer
-        // - GuiRenderer
-        // - SpecialGuiElementRenderer
-        // - GameRenderer -> renderWorld (we need this within event callback) (@see MixinRawProjectionMatrix)
-        val projMat = RenderSystem.getProjectionMatrixBuffer() ?: return@handler
-
-        projMat.mapBuffer(read = true, write = false).use {
-            this.projectionMatrix.set(it.data())
-        }
+    @JvmStatic
+    fun setMatrices(projectionMatrix: Matrix4fc, modelViewMatrix: Matrix4fc) {
+        this.projModelViewMatrix.set(projectionMatrix).mul(modelViewMatrix)
     }
 
     @JvmStatic
@@ -75,7 +55,7 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
         cameraPos: Vec3 = mc.gameRenderer.mainCamera.position(),
     ): Vec3f? {
         val transformedPos = cacheVec3f.set(pos).sub(cameraPos)
-            .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix))
+            .mulProject(this.projModelViewMatrix)
 
         val scaleFactor = mc.window.guiScale
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
@@ -101,7 +81,7 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
         ).sub(1.0F, 1.0F, 0.0F).mul(1.0F, -1.0F, 1.0F)
 
         val relativePos = cacheVec3f.set(transformedPos)
-            .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix).invert())
+            .mulProject(this.projModelViewMatrix.invert(cacheMat4f))
 
         ModuleProjectileAimbot.debugParameter("s2w") {
             relativePos.toString(NumberFormat.getInstance())

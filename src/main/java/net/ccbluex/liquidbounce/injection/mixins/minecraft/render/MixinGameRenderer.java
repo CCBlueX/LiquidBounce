@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDron
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.DeltaTracker;
@@ -92,10 +93,17 @@ public abstract class MixinGameRenderer {
      * Hook world render event
      */
     @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isSleeping()Z"))
-    public void hookWorldRender(DeltaTracker tickCounter, CallbackInfo ci, @Local(ordinal = 1) Matrix4f matrix4f2) {
+    public void hookWorldRender(
+        DeltaTracker deltaTracker,
+        CallbackInfo ci,
+        @Local(ordinal = 0) Matrix4f projectionMatrix,
+        @Local(ordinal = 1) Matrix4f modelViewMatrix
+    ) {
+        WorldToScreen.setMatrices(projectionMatrix, modelViewMatrix);
+
         var newMatStack = Pools.MatStack.borrow();
-        newMatStack.mulPose(matrix4f2);
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.mainCamera, tickCounter.getGameTimeDeltaPartialTick(false)));
+        newMatStack.mulPose(modelViewMatrix);
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.mainCamera, deltaTracker.getGameTimeDeltaPartialTick(false)));
         Pools.MatStack.recycle(newMatStack);
     }
 
