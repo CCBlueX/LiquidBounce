@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuad
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBlitOnCurrentLayer
 import net.ccbluex.liquidbounce.render.drawTexQuad
+import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.asTexture
@@ -137,7 +138,7 @@ sealed interface ThemeBackground : Closeable {
             ubo.rotate()
             val uboSlice = ubo.currentBuffer().slice()
             uboSlice.writeStd140 {
-                putFloat((System.currentTimeMillis() - mc.clientStartTimeMs) / 1000F)
+                putFloat(clientStartDurationMs / 1000F)
                 putVec2(mouseX.toFloat(), mouseY.toFloat())
                 putVec2(framebufferWidth.toFloat(), framebufferHeight.toFloat())
             }

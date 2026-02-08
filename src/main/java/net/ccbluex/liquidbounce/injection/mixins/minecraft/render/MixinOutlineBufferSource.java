@@ -24,10 +24,13 @@ import net.ccbluex.liquidbounce.interfaces.OutlineBufferSourceSingleDrawAddition
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderType;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+@NullMarked
 @Mixin(OutlineBufferSource.class)
 public abstract class MixinOutlineBufferSource implements OutlineBufferSourceSingleDrawAddition {
     @Shadow
@@ -37,7 +40,8 @@ public abstract class MixinOutlineBufferSource implements OutlineBufferSourceSin
     @Shadow
     private int outlineColor;
 
-    public VertexConsumer liquid_bounce_getSingleDrawBuffers(RenderType layer) {
+    @Override
+    public @Nullable VertexConsumer liquid_bounce_getSingleDrawBuffers(RenderType layer) {
         var affectedOutline = layer.outline();
 
         if (affectedOutline.isEmpty()) {
