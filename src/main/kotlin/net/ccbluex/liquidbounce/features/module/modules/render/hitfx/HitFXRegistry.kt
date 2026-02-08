@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hitfx
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.core.Registry
@@ -54,7 +55,7 @@ object HitFXRegistry {
         logger.info("HitFXRegistry initialized")
     }
 
-    fun register(vararg ids: String) = ids.map { id ->
+    private fun register(vararg ids: String) = ids.mapToArray { id ->
         val soundId = LiquidBounce.identifier(id)
 
         Registry.register(
@@ -62,6 +63,6 @@ object HitFXRegistry {
             soundId,
             SoundEvent.createVariableRangeEvent(soundId)
         )
-    }.toTypedArray()
+    }
 
 }

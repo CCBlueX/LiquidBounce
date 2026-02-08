@@ -31,7 +31,7 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 
 class SimulatedArrow(
-    val world: ClientLevel,
+    val level: ClientLevel,
     var pos: Vec3,
     var velocity: Vec3,
     private val collideEntities: Boolean = true
@@ -69,10 +69,10 @@ class SimulatedArrow(
 
     @Suppress("CognitiveComplexMethod")
     private fun updateCollision(pos: Vec3, newPos: Vec3): HitResult? {
-        val world = this.world
+        val world = this.level
 
         val arrowEntity = Arrow(
-            this.world, this.pos.x, this.pos.y, this.pos.z,
+            this.level, this.pos.x, this.pos.y, this.pos.z,
             Items.ARROW.defaultInstance, null
         )
 
@@ -92,7 +92,7 @@ class SimulatedArrow(
             val size = 0.45
 
             val entityHitResult = ProjectileUtil.getEntityHitResult(
-                this.world,
+                this.level,
                 arrowEntity,
                 pos,
                 newPos,

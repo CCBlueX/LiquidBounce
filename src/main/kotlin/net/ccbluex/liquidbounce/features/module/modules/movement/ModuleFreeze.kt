@@ -126,8 +126,8 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         )
 
         // Alter the simulated player's yaw and pitch to match the camera
-        simulatedPlayer.yaw = event.camera.yRot()
-        simulatedPlayer.pitch = event.camera.xRot()
+        simulatedPlayer.yRot = event.camera.yRot()
+        simulatedPlayer.xRot = event.camera.xRot()
 
         // Create a cache for the simulated player
         val simulatedPlayerCache = SimulatedPlayerCache(simulatedPlayer)

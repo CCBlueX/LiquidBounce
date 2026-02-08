@@ -190,7 +190,7 @@ data class SimulatedPlayerSnapshot(
     constructor(s: SimulatedPlayer): this(
         s.pos,
         s.fallDistance,
-        s.velocity,
+        s.deltaMovement,
         s.onGround,
         s.clipLedged
     )
