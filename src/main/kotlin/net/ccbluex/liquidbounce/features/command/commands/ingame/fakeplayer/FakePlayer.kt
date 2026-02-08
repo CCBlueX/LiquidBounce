@@ -28,6 +28,7 @@ import net.minecraft.client.player.RemotePlayer
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
+import java.util.function.Consumer
 
 /**
  * This class represents a Fake Player implementing
@@ -35,14 +36,10 @@ import net.minecraft.world.effect.MobEffects
  * into [RemotePlayer].
  */
 open class FakePlayer(
-    clientWorld: ClientLevel,
+    level: ClientLevel,
     gameProfile: GameProfile,
-) : RemotePlayer(
-    clientWorld,
-    gameProfile
-), MinecraftShortcuts {
-
-    var onRemoval: Runnable? = null
+    var onRemoval: Consumer<in FakePlayer>? = null,
+) : RemotePlayer(level, gameProfile), MinecraftShortcuts {
 
     /**
      * Loads the attributes from the player into the fake player.
@@ -94,7 +91,7 @@ open class FakePlayer(
      */
     override fun tick() {
         if (removalReason != null) {
-            onRemoval?.run()
+            onRemoval?.accept(this)
         }
 
         super.tick()
