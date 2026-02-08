@@ -235,7 +235,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
                 }
             }
 
-            if (player.startedUsingItem) {
+            if (player.isUsingItem) {
                 val encounterItemUse = encounterItemUse()
 
                 if (encounterItemUse) {

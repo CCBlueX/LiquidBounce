@@ -124,6 +124,7 @@ private class ItemTextureRenderer(
     )
     private val submitNodeCollector = SubmitNodeStorage()
     private val bufferSource = mc.gameRenderer.renderBuffers.bufferSource()
+
     // Note: no operation -> use shared one or skip it
     private val featureRenderDispatcher = FeatureRenderDispatcher(
         this.submitNodeCollector,
