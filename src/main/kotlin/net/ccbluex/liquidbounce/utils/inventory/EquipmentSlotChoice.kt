@@ -29,7 +29,7 @@ import net.minecraft.world.entity.LivingEntity
 enum class EquipmentSlotChoice(
     override val tag: String,
     val slot: EquipmentSlot,
-    override val aliases: List<String> = emptyList(),
+    override val tagAliases: List<String> = emptyList(),
 ) : Tagged {
     MAINHAND("Mainhand", EquipmentSlot.MAINHAND),
     OFFHAND("Offhand", EquipmentSlot.OFFHAND),

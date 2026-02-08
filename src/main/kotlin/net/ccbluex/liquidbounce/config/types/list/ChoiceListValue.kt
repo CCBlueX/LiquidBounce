@@ -70,7 +70,7 @@ class ChoiceListValue<T : Tagged>(
 interface Tagged {
     val tag: String
 
-    val aliases: List<String> get() = emptyList()
+    val tagAliases: List<String> get() = emptyList()
 
     companion object {
         @JvmStatic
@@ -80,7 +80,7 @@ interface Tagged {
                 if (map.put(item.tag, item) != null) {
                     throw IllegalArgumentException("Duplicate tag: ${item.tag}")
                 }
-                for (alias in item.aliases) {
+                for (alias in item.tagAliases) {
                     if (map.put(alias, item) != null) {
                         throw IllegalArgumentException("Duplicate alias: $alias")
                     }
