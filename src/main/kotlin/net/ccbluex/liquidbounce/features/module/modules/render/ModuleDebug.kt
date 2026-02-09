@@ -183,14 +183,11 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
         if (!geometry) {
             return@handler
         }
 
-
-        renderEnvironmentForWorld(matrixStack) {
+        renderEnvironmentForWorld(event.matrixStack) {
             startBatch()
             debuggedGeometry.values.forEach { geometry ->
                 geometry.render()

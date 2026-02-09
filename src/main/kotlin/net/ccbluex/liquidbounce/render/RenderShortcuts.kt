@@ -504,23 +504,6 @@ fun WorldRenderEnvironment.drawPlane(
 }
 
 /**
- * Function to render a gradient quad using specified [vertices] and [colors]
- *
- * @param vertices The four vectors to draw the quad
- * @param colors The colors for the vertices
- */
-private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3f>, colors: Array<Color4b>) {
-    require(vertices.size == colors.size) { "there must be a color for every vertex" }
-    require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
-    drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
-        vertices.forEachIndexed { index, pos ->
-            val color4b = colors[index]
-            addVertex(matrix, pos).setColor(color4b.argb)
-        }
-    }
-}
-
-/**
  * Function to draw a circle of the size [outerRadius] with a cutout of size [innerRadius]
  *
  * @param outerRadius The radius of the circle
@@ -535,19 +518,15 @@ fun WorldRenderEnvironment.drawGradientCircle(
     innerColor: Color4b,
     innerOffset: Vector3fc = Vector3f(),
 ) {
-    if (outerRadius == innerRadius && outerColor == innerColor && innerOffset.lengthSquared() == 0f) {
-        drawCircle(outerRadius, outerColor)
-    } else {
-        drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
-            val innerP = Vector3f()
-            val outerP = Vector3f()
-            UnitCircle.forEach { cosine, sine ->
-                outerP.set(cosine * outerRadius, 0f, sine * outerRadius)
-                innerP.set(cosine * innerRadius, 0f, sine * innerRadius).add(innerOffset)
+    drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
+        val innerP = Vector3f()
+        val outerP = Vector3f()
+        UnitCircle.forEach { cosine, sine ->
+            outerP.set(cosine * outerRadius, 0f, sine * outerRadius)
+            innerP.set(cosine * innerRadius, 0f, sine * innerRadius).add(innerOffset)
 
-                addVertex(matrix, outerP).setColor(outerColor.argb)
-                addVertex(matrix, innerP).setColor(innerColor.argb)
-            }
+            addVertex(matrix, outerP).setColor(outerColor.argb)
+            addVertex(matrix, innerP).setColor(innerColor.argb)
         }
     }
 }
@@ -607,7 +586,6 @@ fun WorldRenderEnvironment.drawCircle(
     }
 }
 
-
 /**
  * Function to draw the outline of a circle of the size [radius]
  *
@@ -629,48 +607,25 @@ fun WorldRenderEnvironment.drawGradientSides(
         return
     }
 
-    val vertexColors =
-        arrayOf(
-            baseColor,
-            topColor,
-            topColor,
-            baseColor
-        )
+    drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+        addVertex(pose, box.minX, 0.0, box.minZ).setColor(baseColor)
+        addVertex(pose, box.minX, height, box.minZ).setColor(topColor)
+        addVertex(pose, box.maxX, height, box.minZ).setColor(topColor)
+        addVertex(pose, box.maxX, 0.0, box.minZ).setColor(baseColor)
 
-    drawGradientQuad(
-        arrayOf(
-            Vec3f(box.minX, 0.0, box.minZ),
-            Vec3f(box.minX, height, box.minZ),
-            Vec3f(box.maxX, height, box.minZ),
-            Vec3f(box.maxX, 0.0, box.minZ),
-        ),
-        vertexColors
-    )
-    drawGradientQuad(
-        arrayOf(
-            Vec3f(box.maxX, 0.0, box.minZ),
-            Vec3f(box.maxX, height, box.minZ),
-            Vec3f(box.maxX, height, box.maxZ),
-            Vec3f(box.maxX, 0.0, box.maxZ),
-        ),
-        vertexColors
-    )
-    drawGradientQuad(
-        arrayOf(
-            Vec3f(box.maxX, 0.0, box.maxZ),
-            Vec3f(box.maxX, height, box.maxZ),
-            Vec3f(box.minX, height, box.maxZ),
-            Vec3f(box.minX, 0.0, box.maxZ),
-        ),
-        vertexColors
-    )
-    drawGradientQuad(
-        arrayOf(
-            Vec3f(box.minX, 0.0, box.maxZ),
-            Vec3f(box.minX, height, box.maxZ),
-            Vec3f(box.minX, height, box.minZ),
-            Vec3f(box.minX, 0.0, box.minZ),
-        ),
-        vertexColors
-    )
+        addVertex(pose, box.maxX, 0.0, box.minZ).setColor(baseColor)
+        addVertex(pose, box.maxX, height, box.minZ).setColor(topColor)
+        addVertex(pose, box.maxX, height, box.maxZ).setColor(topColor)
+        addVertex(pose, box.maxX, 0.0, box.maxZ).setColor(baseColor)
+
+        addVertex(pose, box.maxX, 0.0, box.maxZ).setColor(baseColor)
+        addVertex(pose, box.maxX, height, box.maxZ).setColor(topColor)
+        addVertex(pose, box.minX, height, box.maxZ).setColor(topColor)
+        addVertex(pose, box.minX, 0.0, box.maxZ).setColor(baseColor)
+
+        addVertex(pose, box.minX, 0.0, box.maxZ).setColor(baseColor)
+        addVertex(pose, box.minX, height, box.maxZ).setColor(topColor)
+        addVertex(pose, box.minX, height, box.minZ).setColor(topColor)
+        addVertex(pose, box.minX, 0.0, box.minZ).setColor(baseColor)
+    }
 }
