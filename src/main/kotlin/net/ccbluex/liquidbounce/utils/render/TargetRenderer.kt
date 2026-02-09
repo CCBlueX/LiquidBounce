@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawCircleOutline
-import net.ccbluex.liquidbounce.render.drawCircleXZ
+import net.ccbluex.liquidbounce.render.drawCircle
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.drawTexQuad
@@ -345,7 +345,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                         Vector3f(0f, glowHeight.toFloat(), 0f)
                     )
 
-                    drawCircleXZ(radius, color)
+                    drawCircle(radius, color)
 
                     if (!outlineColor.isTransparent) {
                         drawCircleOutline(radius, outlineColor)

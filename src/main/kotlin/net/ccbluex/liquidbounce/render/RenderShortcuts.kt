@@ -38,9 +38,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
-import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
@@ -76,7 +74,7 @@ val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 val EMPTY_BOX = AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
-    val slice = gpuDevice.createUbo { vec2 + float }.slice()
+    val slice = ClientUniformDefine.ROUNDED_RECT.createSingleBuffer()
     slice.writeStd140 {
         putVec2(1f, 1f)
         putFloat(2f)
@@ -85,7 +83,7 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
 }
 
 private val ROUNDED_RECT_AS_FILLED_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
-    val slice = gpuDevice.createUbo { vec2 + float }.slice()
+    val slice = ClientUniformDefine.ROUNDED_RECT.createSingleBuffer()
     slice.writeStd140 {
         putVec2(1f, 1f)
         putFloat(0f)
@@ -538,7 +536,7 @@ fun WorldRenderEnvironment.drawGradientCircle(
     innerOffset: Vector3fc = Vector3f(),
 ) {
     if (outerRadius == innerRadius && outerColor == innerColor && innerOffset.lengthSquared() == 0f) {
-        drawCircleXZ(outerRadius, outerColor)
+        drawCircle(outerRadius, outerColor)
     } else {
         drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
             val innerP = Vector3f()
@@ -563,25 +561,25 @@ private fun WorldRenderEnvironment.drawCircleXZNoUniform(radius: Float, argb: In
     }
 }
 
-fun WorldRenderEnvironment.drawCircleXZ(
+fun WorldRenderEnvironment.drawCircle(
     radius: Float,
     color: Color4b,
 ) {
-    uniform("u_RoundedRect", ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
+    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
     drawCircleXZNoUniform(radius, color.argb)
 }
 
-fun WorldRenderEnvironment.drawCircleXZ(
+fun WorldRenderEnvironment.drawCircle(
     radius: Float,
     innerColor: Color4b,
     outerColor: Color4b,
 ) {
     if (innerColor == outerColor) {
-        drawCircleXZ(radius, color = innerColor)
+        drawCircle(radius, color = innerColor)
         return
     }
 
-    uniform("u_RoundedRect", ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
+    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
     drawCustomMesh(ClientRenderPipelines.RoundedRect) { pose ->
         // Quad 1 (NW)
         addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(outerColor)
@@ -617,7 +615,7 @@ fun WorldRenderEnvironment.drawCircleXZ(
  * @param color The color
  */
 fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b) {
-    uniform("u_RoundedRect", ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO)
+    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO)
     drawCircleXZNoUniform(radius, color.argb)
 }
 

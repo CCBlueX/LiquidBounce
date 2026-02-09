@@ -22,8 +22,7 @@ package net.ccbluex.liquidbounce.render.utils
 import com.mojang.blaze3d.systems.RenderPass
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
-import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import net.ccbluex.liquidbounce.utils.render.createUbo
+import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 
 class DistanceFadeUniformValueGroup : ValueGroup("DistanceFade") {
@@ -41,7 +40,7 @@ class DistanceFadeUniformValueGroup : ValueGroup("DistanceFade") {
         maxOf(farStart, it)
     }.markDirtyOnChanged()
 
-    private val ubo = gpuDevice.createUbo({ "DistanceFade Uniform" }) { vec4 }.slice()
+    private val ubo = ClientUniformDefine.DISTANCE_FADE.createSingleBuffer()
 
     private var uboDirty = true
     private fun <T : Any> Value<T>.markDirtyOnChanged() = onChanged { uboDirty = true }
@@ -56,11 +55,7 @@ class DistanceFadeUniformValueGroup : ValueGroup("DistanceFade") {
     }
 
     fun bindUniform(pass: RenderPass) {
-        pass.setUniform(UNIFORM_NAME, ubo)
-    }
-
-    companion object {
-        const val UNIFORM_NAME = "u_DistanceFade"
+        pass.setUniform(ClientUniformDefine.DISTANCE_FADE.uboName, ubo)
     }
 
 }
