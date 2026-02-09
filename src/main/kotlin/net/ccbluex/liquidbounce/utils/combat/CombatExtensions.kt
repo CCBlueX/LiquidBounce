@@ -219,7 +219,9 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) 
         return
     }
 
-    EventManager.callEvent(AttackEntityEvent(entity))
+    if (EventManager.callEvent(AttackEntityEvent(entity)).isCancelled) {
+        return
+    }
 
     with(player) {
         // Swing before attacking (on 1.8)

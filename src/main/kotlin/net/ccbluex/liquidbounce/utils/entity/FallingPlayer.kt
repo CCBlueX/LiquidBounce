@@ -40,9 +40,10 @@ class FallingPlayer(
     private var motionX: Double,
     private var motionY: Double,
     private var motionZ: Double,
-    private val yaw: Float
+    private val yRot: Float
 ) {
     companion object {
+        @JvmStatic
         fun fromPlayer(player: LocalPlayer): FallingPlayer {
             return FallingPlayer(
                 player,
@@ -102,7 +103,7 @@ class FallingPlayer(
                     this.player.input.movementForward.toDouble() * 0.98
                 ),
                 0.02F,
-                yaw
+                yRot
             )
         )
 

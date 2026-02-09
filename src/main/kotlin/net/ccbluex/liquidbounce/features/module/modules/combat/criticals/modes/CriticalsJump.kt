@@ -196,7 +196,7 @@ object CriticalsJump : Mode("Jump") {
         for (i in 0 until ticks) {
             // Rotate to the target after some time
             if (i == reactionTime) {
-                simulatedPlayer.yaw = Rotation.lookingAt(point = target.position(), from = simulatedPlayer.pos).yaw
+                simulatedPlayer.yRot = Rotation.lookingAt(point = target.position(), from = simulatedPlayer.pos).yRot
             }
 
             simulatedPlayer.tick()

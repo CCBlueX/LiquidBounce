@@ -19,8 +19,10 @@
 
 package net.ccbluex.liquidbounce.features.blink.esp
 
+import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.drawBox
@@ -28,9 +30,9 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
-import net.minecraft.client.renderer.LightTexture
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -49,6 +51,7 @@ class BlinkEspBox(
     getEspData: Supplier<BlinkEspData?>,
 ) : BlinkEspMode("Box", getEspData) {
     private val color by color("Color", Color4b(36, 32, 147, 87))
+    private val outlineColor by color("Color", Color4b(36, 32, 147, 255))
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -61,7 +64,7 @@ class BlinkEspBox(
 
         renderEnvironmentForWorld(event.matrixStack) {
             withPositionRelativeToCamera(pos) {
-                drawBox(box, color)
+                drawBox(box, color, outlineColor)
             }
         }
     }
@@ -71,36 +74,36 @@ class BlinkEspModel(
     override val parent: ModeValueGroup<*>,
     getEspData: Supplier<BlinkEspData?>,
 ) : BlinkEspMode("Model", getEspData) {
-    private val lightAmount by float("LightAmount", 0.3f, 0.01f..1f)
+
+    private val poseStack = PoseStack()
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> { event ->
+    private val renderHandler = handler<GameRenderEvent> { event ->
         val (entity, pos, rotation) = this.getEspData.get() ?: return@handler
 
         val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
 
-        val rs = entityRenderer.createRenderState(entity, event.partialTicks)
+        val rs = entityRenderer.createRenderState(entity, 0F)
 
-        val originalBlockLight = LightTexture.block(rs.lightCoords)
-        val originalSkyLight = LightTexture.sky(rs.lightCoords)
-        rs.lightCoords = LightTexture.pack(
-            (originalBlockLight * lightAmount).floorToInt(),
-            (originalSkyLight * lightAmount).floorToInt(),
-        )
         rs.x = pos.x
         rs.y = pos.y
         rs.z = pos.z
         val cameraState = mc.gameRenderer.levelRenderState.cameraRenderState
         rs.distanceToCameraSq = pos.distanceToSqr(cameraState.pos)
 
-        // TODO(1.21.10-port): position & light incorrect
+        if (rs is LivingEntityRenderState) {
+            rs.bodyRot = rotation.yRot
+            rs.yRot = Mth.wrapDegrees(rotation.yRot - rs.bodyRot)
+            rs.xRot = rotation.xRot
+        }
+
         mc.entityRenderDispatcher.submit(
             rs,
             cameraState,
             rs.x - cameraState.pos.x,
             rs.y - cameraState.pos.y,
             rs.z - cameraState.pos.z,
-            event.matrixStack,
+            poseStack,
             mc.gameRenderer.submitNodeStorage,
         )
     }

@@ -249,19 +249,17 @@ object CommandFakePlayer : Command.Factory, EventListener {
                     UUID.randomUUID(),
                     nameArg
                 ),
-            ).apply {
-                onRemoval = Runnable { fakePlayers.remove(this) }
-            }
+                fakePlayers::remove,
+            )
         } else {
             fakePlayer = FakePlayer(
                 world,
                 GameProfile(
                     UUID.randomUUID(),
                     nameArg
-                )
-            ).apply {
-                onRemoval = Runnable { fakePlayers.remove(this) }
-            }
+                ),
+                fakePlayers::remove,
+            )
         }
 
         fakePlayer.id = fakePlayerId

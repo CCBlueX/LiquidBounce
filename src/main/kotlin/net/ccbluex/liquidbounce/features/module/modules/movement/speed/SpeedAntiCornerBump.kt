@@ -89,7 +89,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
             if (simulatedPlayer.horizontalCollision) {
                 // If we hit the wall while going upwards, it doesn't make sense to delay, since we will hit the block
                 // anyway.
-                if (jumpCount == 1 && simulatedPlayer.velocity.y > 0.0) {
+                if (jumpCount == 1 && simulatedPlayer.deltaMovement.y > 0.0) {
                     return null
                 }
 

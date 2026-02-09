@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.core.BlockPos
+import net.minecraft.tags.BlockTags
 import net.minecraft.world.level.block.BambooStalkBlock
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
@@ -29,9 +30,11 @@ import net.minecraft.world.level.block.BonemealableBlock
 import net.minecraft.world.level.block.CactusBlock
 import net.minecraft.world.level.block.CocoaBlock
 import net.minecraft.world.level.block.CropBlock
+import net.minecraft.world.level.block.FarmBlock
 import net.minecraft.world.level.block.KelpPlantBlock
 import net.minecraft.world.level.block.NetherWartBlock
 import net.minecraft.world.level.block.PumpkinBlock
+import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.world.level.block.StemBlock
 import net.minecraft.world.level.block.SugarCaneBlock
 import net.minecraft.world.level.block.SweetBerryBushBlock
@@ -93,3 +96,9 @@ fun BlockPos.readyForHarvest(state: BlockState): Boolean {
         else -> false
     }
 }
+
+inline val BlockState.supportsCrops: Boolean get() = block is FarmBlock
+
+inline val BlockState.supportsCocoa: Boolean get() = `is`(BlockTags.JUNGLE_LOGS)
+
+inline val BlockState.supportsNetherWart: Boolean get() = block is SoulSandBlock

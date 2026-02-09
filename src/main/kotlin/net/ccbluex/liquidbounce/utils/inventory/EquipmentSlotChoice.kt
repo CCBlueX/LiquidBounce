@@ -17,21 +17,36 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render.nametags
+package net.ccbluex.liquidbounce.utils.inventory
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.minecraft.core.component.DataComponents
+import net.minecraft.util.ARGB.opaque
 import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.LivingEntity
 
 enum class EquipmentSlotChoice(
     override val tag: String,
     val slot: EquipmentSlot,
+    override val tagAliases: List<String> = emptyList(),
 ) : Tagged {
     MAINHAND("Mainhand", EquipmentSlot.MAINHAND),
     OFFHAND("Offhand", EquipmentSlot.OFFHAND),
-    FEET("Feet", EquipmentSlot.FEET),
-    LEGS("Legs", EquipmentSlot.LEGS),
-    CHEST("Chest", EquipmentSlot.CHEST),
-    HEAD("Head", EquipmentSlot.HEAD),
+    FEET("Feet", EquipmentSlot.FEET, listOf("Boots")),
+    LEGS("Legs", EquipmentSlot.LEGS, listOf("Pants")),
+    CHEST("Chest", EquipmentSlot.CHEST, listOf("Chestplate")),
+    HEAD("Head", EquipmentSlot.HEAD, listOf("Helmet")),
     BODY("Body", EquipmentSlot.BODY),
-    SADDLE("Saddle", EquipmentSlot.SADDLE),
+    SADDLE("Saddle", EquipmentSlot.SADDLE);
+
+    fun getArmorColor(entity: LivingEntity): Int? {
+        val itemStack = entity.getItemBySlot(this.slot)
+        return itemStack[DataComponents.DYED_COLOR]?.rgb?.let { opaque(it) }
+    }
+
+    companion object {
+        @JvmStatic
+        fun allHumanoidArmor() = enumSetOf(FEET, LEGS, CHEST, HEAD)
+    }
 }

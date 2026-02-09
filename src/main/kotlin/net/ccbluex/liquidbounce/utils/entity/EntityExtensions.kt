@@ -216,7 +216,7 @@ fun LocalPlayer.isCloseToEdge(
     simulatedPlayer.pos = pos
     simulatedPlayer.tick()
 
-    val nextVelocity = simulatedPlayer.velocity
+    val nextVelocity = simulatedPlayer.deltaMovement
     val direction = if (nextVelocity.horizontalDistanceSqr() > 0.003 * 0.003) {
         nextVelocity.multiply(1.0, 0.0, 1.0).normalize()
     } else {

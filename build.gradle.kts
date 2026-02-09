@@ -172,6 +172,7 @@ dependencies {
 //    testImplementation(libs.fabric.loader.junit)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
+
 addResolvedDependencies(jij, "compileOnly", "include", "api")
 
 tasks.processResources {
@@ -351,7 +352,7 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(libs.versions.jdk.get().toInt())
-        freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
+        freeCompilerArgs.add("-Xexplicit-backing-fields")
         freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
