@@ -100,7 +100,7 @@ dependencies {
     api(libs.fabric.kotlin)
 
     // Mod menu
-    compileOnlyApi(libs.modmenu)
+    api(libs.modmenu)
 
     // Recommended mods (on IDE)
 //    api(libs.sodium)
