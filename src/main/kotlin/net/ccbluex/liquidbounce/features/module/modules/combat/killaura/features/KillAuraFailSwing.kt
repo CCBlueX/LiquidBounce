@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.attack
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.canAttackNow
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.canAttackTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.additionalRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Box
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Sound
@@ -64,7 +64,7 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
     }
 
     suspend fun dealWithFakeSwing(target: Entity?) {
-        if (!enabled || !canAttackNow()) {
+        if (!enabled || !canAttackTarget()) {
             return
         }
 

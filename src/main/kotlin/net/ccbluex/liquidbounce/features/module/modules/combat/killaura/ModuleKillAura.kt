@@ -60,21 +60,24 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
-import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
 import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.raytracing.attackableSelector
+import net.ccbluex.liquidbounce.utils.raytracing.entitySelector
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
-import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.EntityHitResult
+import net.minecraft.world.phys.HitResult
 
 /**
  * KillAura module
@@ -152,7 +155,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     @Suppress("unused")
-    private val gameHandler = tickHandler {
+    private val attackHandler = tickHandler {
         if (player.isDeadOrDying || player.isSpectator) {
             return@tickHandler
         }
@@ -183,30 +186,54 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             return@tickHandler
         }
 
+        // todo: prepare exact rotation beforehand
         val rotation = (if (rotations.rotationTiming == ON_TICK) {
             findRotation(target, range.interactionRange, range.interactionThroughWallsRange)?.rotation
         } else {
             null
         } ?: RotationManager.currentRotation ?: player.rotation).normalize()
 
-        val crosshairTarget = when {
-            raycast != TRACE_NONE -> {
-                findEntityInCrosshair(range.interactionRange.toDouble(), rotation, predicate = {
-                    when (raycast) {
-                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                        TRACE_ALL -> true
-                        else -> false
-                    }
-                })?.entity ?: target
+        debugParameter("Rotation") { rotation }
+
+        val selector = when (raycast) {
+            // We only care about our own entity.
+            TRACE_NONE -> entitySelector(target)
+            // We care about all attackable entities.
+            TRACE_ONLYENEMY -> attackableSelector()
+            // We care about everyone.
+            TRACE_ALL -> null
+        }
+
+        // Either we find our entity in crosshair, or we trace a block.
+        val hitResult = findEntityInCrosshair(
+            range = range.interactionRange.toDouble(),
+            throughWallsRange = range.interactionThroughWallsRange.toDouble(),
+            rotation = rotation,
+            predicate = selector
+        ) ?: traceFromPlayer(rotation = rotation)
+
+        debugParameter("Hit Result") { hitResult }
+
+        KillAuraAutoBlock.makeSeemBlock()
+        if (!startAttack(hitResult, rotation)) {
+            if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.onScanRange &&
+                player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()
+            ) {
+                KillAuraAutoBlock.startBlocking()
+                return@tickHandler
             }
-            else -> target
-        }
 
-        if (crosshairTarget is LivingEntity && crosshairTarget.shouldBeAttacked() && crosshairTarget != target) {
-            targetTracker.target = crosshairTarget
-        }
+            val hasUnblocked = KillAuraAutoBlock.stopBlocking()
 
-        attackTarget(crosshairTarget, rotation)
+            // Deal with fake swing
+            if (KillAuraFailSwing.enabled) {
+                if (hasUnblocked) {
+                    waitTicks(KillAuraAutoBlock.currentTickOff)
+                }
+
+                dealWithFakeSwing(target)
+            }
+        }
     }
 
     val shouldBlockSprinting
@@ -221,80 +248,61 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         }
     }
 
-    @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod")
-    private suspend fun attackTarget(target: Entity, rotation: Rotation) {
-        // Make it seem like we are blocking
-        KillAuraAutoBlock.makeSeemBlock()
-
-        debugParameter("Rotation") { rotation }
-        debugParameter("Target") { target.scoreboardName }
-
-        val attackHitResult = isLookingAtEntity(
-            toEntity = target,
-            rotation = rotation,
-            range = range.interactionRange.toDouble(),
-            throughWallsRange = range.interactionThroughWallsRange.toDouble()
-        )
-
-        debugParameter("Target Hit Result") { attackHitResult?.location }
-
-        val isInRange = ModuleElytraTarget.canIgnoreKillAuraRotations ||
-            attackHitResult != null && range.isInRange(pos = attackHitResult.location)
-        debugParameter("Is In Range") { isInRange }
-
-        // Check if our target is in range, otherwise deal with auto block
-        if (!isInRange) {
-            if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.onScanRange &&
-                player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()
-            ) {
-                KillAuraAutoBlock.startBlocking()
-                return
-            }
-
-            // Make sure we are not blocking
-            val hasUnblocked = KillAuraAutoBlock.stopBlocking()
-
-            // Deal with fake swing
-            if (KillAuraFailSwing.enabled) {
-                if (hasUnblocked) {
-                    waitTicks(KillAuraAutoBlock.currentTickOff)
-                }
-
-                dealWithFakeSwing(target)
-            }
-            return
+    @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod", "ReturnCount")
+    private suspend fun startAttack(hitResult: HitResult, rotation: Rotation): Boolean {
+        if (player.isHandsBusy || !clicker.isClickTick) {
+            return false
         }
 
-        debugParameter("Valid Rotation") { rotation }
+        val itemStack = player.mainHandItem
+        if (!canAttackWithItemStack(itemStack)) {
+            return false
+        }
 
-        val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
+        when (hitResult) {
+            is EntityHitResult if (hitResult.type == HitResult.Type.ENTITY) -> {
+                val target = hitResult.entity
 
-        // Attack enemy, according to the attack scheduler
-        if (clicker.isClickTick && canAttackNow(target, itemStack)) {
-            clicker.attack(rotation) {
-                // On each click, we check if we are still ready to attack
-                if (!canAttackNow(target, itemStack)) {
-                    return@attack false
+                val isInRange = ModuleElytraTarget.canIgnoreKillAuraRotations ||
+                    range.isInRange(pos = hitResult.location)
+                debugParameter("Is In Range") { isInRange }
+                if (!isInRange) {
+                    return false
                 }
 
-                // Attack enemy
-                attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint && !shouldBlockSprinting)
-                range.update()
-                KillAuraNotifyWhenFail.failedHitsIncrement = 0
+                if (canAttackTarget(target)) {
+                    return false
+                }
 
-                GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
-                    add("player", GenericDebugRecorder.debugObject(player))
-                    add("targetPos", GenericDebugRecorder.debugObject(target))
-                })
+                clicker.attack(rotation) {
+                    // On each click, we check if we are still ready to attack
+                    if (!canAttackTarget(target)) {
+                        return@attack false
+                    }
 
-                true
+                    // Attack enemy
+                    attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint && !shouldBlockSprinting)
+                    range.update()
+                    KillAuraNotifyWhenFail.failedHitsIncrement = 0
+
+                    GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
+                        add("player", GenericDebugRecorder.debugObject(player))
+                        add("targetPos", GenericDebugRecorder.debugObject(target))
+                    })
+                    true
+                }
+                return true
             }
-        } else if (KillAuraAutoBlock.currentTickOff > 0 && clicker.willClickAt(KillAuraAutoBlock.currentTickOff)
-            && KillAuraAutoBlock.shouldUnblockToHit) {
-            KillAuraAutoBlock.stopBlocking(pauses = true)
-        } else {
-            KillAuraAutoBlock.startBlocking()
+            is BlockHitResult if (hitResult.type == HitResult.Type.BLOCK) -> {
+                // todo: handle block hit
+            }
+            else -> {
+                // todo: set misstime and reset strength ticket
+                return false
+            }
         }
+
+        return false
     }
 
     private fun updateTarget() {
@@ -421,18 +429,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     /**
      * Check if we can attack the target at the current moment
      */
-    internal fun canAttackNow(
-        target: Entity? = null,
-        itemStack: ItemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
-    ): Boolean {
-        if (!itemStack.isItemEnabled(world.enabledFeatures())) {
-            return false
-        }
-
-        if (player.cannotAttackWithItem(itemStack, 0)) {
-            return false
-        }
-
+    internal fun canAttackTarget(target: Entity? = null): Boolean {
         val criticalHitAllowed = target == null || player.isFallFlying || criticalsSelectionMode.isCriticalHit(target)
         if (!criticalHitAllowed) {
             return false
@@ -441,6 +438,18 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val isInventoryBlockingAttack = (isInventoryOpen || isInContainerScreen) &&
             !ignoreOpenInventory && !simulateInventoryClosing
         return !isInventoryBlockingAttack
+    }
+
+    internal fun canAttackWithItemStack(itemStack: ItemStack): Boolean {
+        if (!itemStack.isItemEnabled(world.enabledFeatures())) {
+            return false
+        }
+
+        if (player.cannotAttackWithItem(itemStack, 0)) {
+            return false
+        }
+
+        return true
     }
 
     enum class RaycastMode(override val tag: String) : Tagged {
