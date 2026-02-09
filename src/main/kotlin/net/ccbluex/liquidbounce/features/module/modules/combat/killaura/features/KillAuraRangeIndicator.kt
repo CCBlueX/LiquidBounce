@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
@@ -66,6 +67,8 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
     private val hideInVehicle by boolean("HideInVehicle", false)
     private val respectInventorySetting by boolean("RespectInventorySetting", true)
 
+    private val canBeCovered by boolean("CanBeCovered", false)
+
     private var colorFactor = 0f
 
     private enum class ColorMode(override val tag: String) : Tagged {
@@ -84,7 +87,8 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
 
     private fun renderIndicator(env: WorldRenderEnvironment, partialTicks: Float, target: LivingEntity?) {
         val range = ModuleKillAura.range.interactionRange
-        val pos = player.interpolateCurrentPosition(partialTicks.coerceIn(0f, 1f))
+        val pos = player.interpolateCurrentPosition(partialTicks)
+            .add(0.0, 0.001, 0.0) // Prevent z-fighting with the ground
         val pulseOffset = calculatePulse(range)
         val distance = target?.let { sqrt(player.squaredBoxedDistanceTo(it)).toFloat() }
 
@@ -141,9 +145,12 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
     }
 
     private fun WorldRenderEnvironment.drawRangeCircle(radius: Float, color: Color4b, outlineAlpha: Int = 255) {
-        drawGradientCircle(radius, 0f, color, Color4b.TRANSPARENT)
+        drawGradientCircle(radius, 0f, color, Color4b.TRANSPARENT, noDepthTest = !canBeCovered)
         if (outline) {
-            drawCircleOutline(radius, outlineColor.alpha(outlineAlpha))
+            matrixStack.withPush {
+                translate(0.0, 0.001, 0.0) // Slightly above the filled circle to prevent z-fighting
+                drawCircleOutline(radius, outlineColor.alpha(outlineAlpha), noDepthTest = !canBeCovered)
+            }
         }
     }
 

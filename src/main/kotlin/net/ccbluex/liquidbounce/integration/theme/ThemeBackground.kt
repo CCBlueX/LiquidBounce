@@ -27,7 +27,7 @@ import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuad
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuadSnippet
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.withUniformBuffer
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
@@ -214,7 +214,7 @@ sealed interface ThemeBackground : Closeable {
 
                 val pipeline = RenderPipeline.Builder()
                     .withLocation(LiquidBounce.identifier("pipeline/theme-bg-$themeName"))
-                    .screenQuad()
+                    .screenQuadSnippet()
                     .withFragmentShader(fshId)
                     .withUniformBuffer(ClientUniformDefine.THEME_BACKGROUND)
                     .withoutBlend()

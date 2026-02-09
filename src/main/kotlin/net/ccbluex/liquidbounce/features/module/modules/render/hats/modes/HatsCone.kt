@@ -53,7 +53,7 @@ internal object HatsCone : HatsMode("Cone") {
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
-        drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.triangleStrip(noDepthTest = true)) { matrix ->
             val segments = 600
             for (i in 0..segments) {
                 val angle = (i.toFloat() / segments) * Mth.TWO_PI

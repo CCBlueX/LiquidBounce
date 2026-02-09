@@ -517,8 +517,9 @@ fun WorldRenderEnvironment.drawGradientCircle(
     outerColor: Color4b,
     innerColor: Color4b,
     innerOffset: Vector3fc = Vector3f(),
+    noDepthTest: Boolean = true,
 ) {
-    drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
+    drawCustomMesh(ClientRenderPipelines.triangleStrip(noDepthTest)) { matrix ->
         val innerP = Vector3f()
         val outerP = Vector3f()
         UnitCircle.forEach { cosine, sine ->
@@ -531,8 +532,8 @@ fun WorldRenderEnvironment.drawGradientCircle(
     }
 }
 
-private fun WorldRenderEnvironment.drawCircleXZNoUniform(radius: Float, argb: Int) {
-    drawCustomMesh(ClientRenderPipelines.RoundedRect) { pose ->
+private fun WorldRenderEnvironment.drawCircleXZNoUniform(radius: Float, argb: Int, noDepthTest: Boolean) {
+    drawCustomMesh(ClientRenderPipelines.roundedRect(noDepthTest)) { pose ->
         addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(argb)
         addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(argb)
         addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(argb)
@@ -545,7 +546,7 @@ fun WorldRenderEnvironment.drawCircle(
     color: Color4b,
 ) {
     uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
-    drawCircleXZNoUniform(radius, color.argb)
+    drawCircleXZNoUniform(radius, color.argb, noDepthTest = true)
 }
 
 fun WorldRenderEnvironment.drawCircle(
@@ -559,7 +560,7 @@ fun WorldRenderEnvironment.drawCircle(
     }
 
     uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
-    drawCustomMesh(ClientRenderPipelines.RoundedRect) { pose ->
+    drawCustomMesh(ClientRenderPipelines.roundedRect(noDepthTest = true)) { pose ->
         // Quad 1 (NW)
         addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(outerColor)
         addVertex(pose, -radius, 0f, 0f).setUv(0f, 0.5f).setColor(outerColor)
@@ -592,9 +593,10 @@ fun WorldRenderEnvironment.drawCircle(
  * @param radius The radius
  * @param color The color
  */
-fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b) {
+@JvmOverloads
+fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b, noDepthTest: Boolean = true) {
     uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO)
-    drawCircleXZNoUniform(radius, color.argb)
+    drawCircleXZNoUniform(radius, color.argb, noDepthTest)
 }
 
 fun WorldRenderEnvironment.drawGradientSides(
