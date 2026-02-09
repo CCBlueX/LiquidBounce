@@ -284,6 +284,16 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
+    @JvmField
+    val RoundedRect = newPipeline("rounded_rect") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withVertexShader(ClientShaders.Vertex.Circle)
+        withFragmentShader(ClientShaders.Fragment.RoundedRect)
+        withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+        withUniform("u_RoundedRect", UniformType.UNIFORM_BUFFER)
+        forWorldRender()
+    }
+
     // Special
 
     /**

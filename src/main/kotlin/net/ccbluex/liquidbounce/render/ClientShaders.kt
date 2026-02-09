@@ -23,14 +23,16 @@ import com.mojang.blaze3d.shaders.ShaderSource
 import com.mojang.blaze3d.shaders.ShaderType
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.resources.Identifier
 
-object ClientShaders : ShaderSource {
+sealed class ClientShaders(val type: ShaderType) : ShaderSource {
 
     private val shaders = Object2ObjectOpenHashMap<Identifier, String>()
 
-    object Vertex {
+    protected operator fun String.invoke(path: String): Identifier = newShader("${type.getName()}/${this}", path = path)
+
+    object Vertex : ClientShaders(ShaderType.VERTEX) {
+
         @JvmField
         val PlainPosTex = "plain_pos_tex"("shaders/position_tex.vert")
 
@@ -46,10 +48,13 @@ object ClientShaders : ShaderSource {
         @JvmField
         val PlainProjection = "plane_projection"("shaders/plane_projection.vert")
 
-        private operator fun String.invoke(path: String): Identifier = newShader("vsh/${this}", path = path)
+        @JvmField
+        val Circle = "circle"("shaders/circle/circle.vsh")
+
     }
 
-    object Fragment {
+    object Fragment : ClientShaders(ShaderType.FRAGMENT) {
+
         @JvmField
         val BgraPosTex = "bgra_pos_tex_color"("shaders/bgra_position_tex_color.frag")
 
@@ -71,14 +76,9 @@ object ClientShaders : ShaderSource {
         @JvmField
         val EntityOutline = "outline"("shaders/outline/entity_outline.frag")
 
-        private operator fun String.invoke(path: String): Identifier = newShader("fsh/${this}", path = path)
-    }
+        @JvmField
+        val RoundedRect = "rounded_rect"("shaders/circle/rounded_rect.fsh")
 
-    init {
-        Vertex
-        Fragment
-
-        logger.info("Loaded ${shaders.size} client shaders.")
     }
 
     private fun newShader(id: String, path: String): Identifier {
@@ -90,8 +90,16 @@ object ClientShaders : ShaderSource {
         return k
     }
 
-    override fun get(identifier: Identifier, type: ShaderType): String {
-        return shaders[identifier] ?: error("Unknown identifier: $identifier")
+    override fun get(identifier: Identifier, type: ShaderType): String? {
+        if (type != this.type) return null
+        return shaders[identifier]
+    }
+
+    companion object : ShaderSource {
+        override fun get(identifier: Identifier, shaderType: ShaderType): String? = when (shaderType) {
+            ShaderType.VERTEX -> Vertex[identifier, shaderType]
+            ShaderType.FRAGMENT -> Fragment[identifier, shaderType]
+        }
     }
 
 }

@@ -29,6 +29,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.utils.render.begin
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4fc
@@ -111,11 +112,7 @@ inline fun RenderPassRenderState.buildMesh(
     clearStates()
 
     val byteBufferBuilder = ClientTesselator.allocator(pipeline)
-    val bufferBuilder = BufferBuilder(
-        byteBufferBuilder,
-        pipeline.vertexFormatMode,
-        pipeline.vertexFormat
-    )
+    val bufferBuilder = byteBufferBuilder.begin(pipeline)
     usePoseStack {
         bufferBuilder.block(this)
     }

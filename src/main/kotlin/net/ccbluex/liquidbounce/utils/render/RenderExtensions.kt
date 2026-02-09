@@ -27,6 +27,7 @@ import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.buffers.Std140SizeCalculator
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.GpuDevice
@@ -34,7 +35,10 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuSampler
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.blaze3d.vertex.BufferBuilder
+import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.vertex.Tesselator
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -55,6 +59,12 @@ fun PoseStack.reset() {
     while (!isEmpty) popPose()
     setIdentity()
 }
+
+inline fun Tesselator.begin(pipeline: RenderPipeline): BufferBuilder =
+    begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
+
+inline fun ByteBufferBuilder.begin(pipeline: RenderPipeline): BufferBuilder =
+    BufferBuilder(this, pipeline.vertexFormatMode, pipeline.vertexFormat)
 
 inline fun withOutputTextureOverride(
     color: GpuTextureView? = null,

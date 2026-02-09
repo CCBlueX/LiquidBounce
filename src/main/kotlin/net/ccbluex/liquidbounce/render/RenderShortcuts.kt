@@ -38,7 +38,10 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.createUbo
+import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
@@ -71,6 +74,12 @@ val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
 @JvmField
 val EMPTY_BOX = AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+private val ROUNDED_RECT_AS_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
+    val slice = gpuDevice.createUbo { vec2 }.slice()
+    slice.writeStd140 { putVec2(1f, 1f) }
+    slice
+}
 
 /**
  * Helper function to render an environment with the specified [matrixStack] and [draw] block.
@@ -249,7 +258,7 @@ internal fun drawMesh(
         indexSlice = shapeIndexBuffer.getBuffer(indexCount)
             .slice(0L, indexCount.toLong() * indexType.bytes)
     } else {
-        indexType = meshData.drawState().indexType()
+        indexType = meshData.drawState().indexType
         indexSlice = getIbo(indexType).upload(rawIndices)
     }
 
@@ -516,18 +525,74 @@ fun WorldRenderEnvironment.drawGradientCircle(
     innerColor: Color4b,
     innerOffset: Vector3fc = Vector3f(),
 ) {
-    drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
-        val innerP = Vector3f()
-        val outerP = Vector3f()
-        UnitCircle.forEach { cosine, sine ->
-            outerP.set(cosine * outerRadius, 0f, sine * outerRadius)
-            innerP.set(cosine * innerRadius, 0f, sine * innerRadius).add(innerOffset)
+    if (outerRadius == innerRadius && outerColor == innerColor && innerOffset.lengthSquared() == 0f) {
+        drawCircleXZ(outerRadius, outerColor)
+    } else {
+        drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
+            val innerP = Vector3f()
+            val outerP = Vector3f()
+            UnitCircle.forEach { cosine, sine ->
+                outerP.set(cosine * outerRadius, 0f, sine * outerRadius)
+                innerP.set(cosine * innerRadius, 0f, sine * innerRadius).add(innerOffset)
 
-            addVertex(matrix, outerP).setColor(outerColor.argb)
-            addVertex(matrix, innerP).setColor(innerColor.argb)
+                addVertex(matrix, outerP).setColor(outerColor.argb)
+                addVertex(matrix, innerP).setColor(innerColor.argb)
+            }
         }
     }
 }
+
+fun WorldRenderEnvironment.drawCircleXZ(
+    radius: Float,
+    color: Color4b,
+) {
+    uniform("u_RoundedRect", ROUNDED_RECT_AS_CIRCLE_UBO)
+    drawCustomMesh(ClientRenderPipelines.RoundedRect) { pose ->
+        addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(color)
+        addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(color)
+        addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(color)
+        addVertex(pose, radius, 0f, -radius).setUv(1f, 0f).setColor(color)
+    }
+}
+
+fun WorldRenderEnvironment.drawCircleXZ(
+    radius: Float,
+    innerColor: Color4b,
+    outerColor: Color4b,
+) {
+    if (innerColor == outerColor) {
+        drawCircleXZ(radius, color = innerColor)
+        return
+    }
+
+    uniform("u_RoundedRect", ROUNDED_RECT_AS_CIRCLE_UBO)
+    drawCustomMesh(ClientRenderPipelines.RoundedRect) { pose ->
+        // Quad 1 (NW)
+        addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(outerColor)
+        addVertex(pose, -radius, 0f, 0f).setUv(0f, 0.5f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
+        addVertex(pose, 0f, 0f, -radius).setUv(0.5f, 0f).setColor(outerColor)
+
+        // Quad 2 (NE)
+        addVertex(pose, radius, 0f, -radius).setUv(1f, 0f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, -radius).setUv(0.5f, 0f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
+        addVertex(pose, radius, 0f, 0f).setUv(1f, 0.5f).setColor(outerColor)
+
+        // Quad 3 (SE)
+        addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(outerColor)
+        addVertex(pose, radius, 0f, 0f).setUv(1f, 0.5f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
+        addVertex(pose, 0f, 0f, radius).setUv(0.5f, 1f).setColor(outerColor)
+
+        // Quad 4 (SW)
+        addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, radius).setUv(0.5f, 1f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
+        addVertex(pose, -radius, 0f, 0f).setUv(0f, 0.5f).setColor(outerColor)
+    }
+}
+
 
 /**
  * Function to draw the outline of a circle of the size [radius]
