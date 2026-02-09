@@ -75,9 +75,21 @@ val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 @JvmField
 val EMPTY_BOX = AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
-private val ROUNDED_RECT_AS_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
-    val slice = gpuDevice.createUbo { vec2 }.slice()
-    slice.writeStd140 { putVec2(1f, 1f) }
+private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
+    val slice = gpuDevice.createUbo { vec2 + float }.slice()
+    slice.writeStd140 {
+        putVec2(1f, 1f)
+        putFloat(2f)
+    }
+    slice
+}
+
+private val ROUNDED_RECT_AS_FILLED_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
+    val slice = gpuDevice.createUbo { vec2 + float }.slice()
+    slice.writeStd140 {
+        putVec2(1f, 1f)
+        putFloat(0f)
+    }
     slice
 }
 
@@ -542,17 +554,21 @@ fun WorldRenderEnvironment.drawGradientCircle(
     }
 }
 
+private fun WorldRenderEnvironment.drawCircleXZNoUniform(radius: Float, argb: Int) {
+    drawCustomMesh(ClientRenderPipelines.RoundedRect) { pose ->
+        addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(argb)
+        addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(argb)
+        addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(argb)
+        addVertex(pose, radius, 0f, -radius).setUv(1f, 0f).setColor(argb)
+    }
+}
+
 fun WorldRenderEnvironment.drawCircleXZ(
     radius: Float,
     color: Color4b,
 ) {
-    uniform("u_RoundedRect", ROUNDED_RECT_AS_CIRCLE_UBO)
-    drawCustomMesh(ClientRenderPipelines.RoundedRect) { pose ->
-        addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(color)
-        addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(color)
-        addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(color)
-        addVertex(pose, radius, 0f, -radius).setUv(1f, 0f).setColor(color)
-    }
+    uniform("u_RoundedRect", ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
+    drawCircleXZNoUniform(radius, color.argb)
 }
 
 fun WorldRenderEnvironment.drawCircleXZ(
@@ -565,7 +581,7 @@ fun WorldRenderEnvironment.drawCircleXZ(
         return
     }
 
-    uniform("u_RoundedRect", ROUNDED_RECT_AS_CIRCLE_UBO)
+    uniform("u_RoundedRect", ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
     drawCustomMesh(ClientRenderPipelines.RoundedRect) { pose ->
         // Quad 1 (NW)
         addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(outerColor)
@@ -598,14 +614,12 @@ fun WorldRenderEnvironment.drawCircleXZ(
  * Function to draw the outline of a circle of the size [radius]
  *
  * @param radius The radius
- * @param color4b The color
+ * @param color The color
  */
-fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) =
-    drawCustomMesh(ClientRenderPipelines.LineStrip) { matrix ->
-        UnitCircle.forEach(radius) { x, z ->
-            addVertex(matrix, x, 0f, z).setColor(color4b.argb)
-        }
-    }
+fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b) {
+    uniform("u_RoundedRect", ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO)
+    drawCircleXZNoUniform(radius, color.argb)
+}
 
 fun WorldRenderEnvironment.drawGradientSides(
     height: Double,
