@@ -31,7 +31,6 @@ import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.renderer.RenderPipelines
@@ -79,6 +78,9 @@ object ClientRenderPipelines {
         withVertexShader("core/screenquad")
         withVertexFormat(DefaultVertexFormat.EMPTY, VertexFormat.Mode.TRIANGLES)
     }
+
+    inline fun RenderPipeline.Builder.withUniformBuffer(define: ClientUniformDefine) =
+        withUniform(define.uboName, UniformType.UNIFORM_BUFFER)
 
     private inline fun RenderPipeline.Builder.forWorldRender() {
         withCull(false)
@@ -192,14 +194,14 @@ object ClientRenderPipelines {
     private val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         relativePosColor(VertexFormat.Mode.DEBUG_LINES)
-        withUniform(DistanceFadeUniformValueGroup.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
+        withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
 
     private val LinesRelativeToCameraNoColor = newPipeline("lines_relative_to_camera_no_color") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         relativePosColor(VertexFormat.Mode.DEBUG_LINES)
-        withUniform(DistanceFadeUniformValueGroup.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
+        withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
 
@@ -237,14 +239,14 @@ object ClientRenderPipelines {
     private val QuadsRelativeToCamera = newPipeline("quads_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         relativePosColor(VertexFormat.Mode.QUADS)
-        withUniform(DistanceFadeUniformValueGroup.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
+        withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
 
     private val QuadsRelativeToCameraNoColor = newPipeline("quads_relative_to_camera_no_color") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         relativePos(VertexFormat.Mode.QUADS)
-        withUniform(DistanceFadeUniformValueGroup.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
+        withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
 
@@ -260,7 +262,7 @@ object ClientRenderPipelines {
         withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
         withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
-        withUniform(DistanceFadeUniformValueGroup.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
+        withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         withBlend(COVERING_BLEND)
     }
 
@@ -270,7 +272,7 @@ object ClientRenderPipelines {
         withVertexShader(ClientShaders.Vertex.PosRelativeToCamera)
         withFragmentShader(ClientShaders.Fragment.PosRelativeToCamera)
         withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
-        withUniform(DistanceFadeUniformValueGroup.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
+        withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         withBlend(COVERING_BLEND)
     }
 
@@ -281,6 +283,16 @@ object ClientRenderPipelines {
     val TexQuads = newPipeline("tex_quads") {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
         withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+        forWorldRender()
+    }
+
+    @JvmField
+    val RoundedRect = newPipeline("rounded_rect") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withVertexShader(ClientShaders.Vertex.Circle)
+        withFragmentShader(ClientShaders.Fragment.RoundedRect)
+        withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+        withUniformBuffer(ClientUniformDefine.ROUNDED_RECT)
         forWorldRender()
     }
 
@@ -306,7 +318,7 @@ object ClientRenderPipelines {
         withFragmentShader(ClientShaders.Fragment.Glow)
         withSampler("texture0")
         withSampler("image")
-        withUniform("ItemChamsData", UniformType.UNIFORM_BUFFER)
+        withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
         withDepthWrite(false)
@@ -318,7 +330,7 @@ object ClientRenderPipelines {
         withFragmentShader(ClientShaders.Fragment.GuiBlur)
         withSampler("texture0")
         withSampler("overlay")
-        withUniform("BlurData", UniformType.UNIFORM_BUFFER)
+        withUniformBuffer(ClientUniformDefine.GUI_BLUR)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
         withDepthWrite(false)
@@ -330,7 +342,7 @@ object ClientRenderPipelines {
         withFragmentShader(ClientShaders.Fragment.Blend)
         withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.TRIANGLES)
         withSampler("texture0")
-        withUniform("BlendData", UniformType.UNIFORM_BUFFER)
+        withUniformBuffer(ClientUniformDefine.BLEND)
         withoutBlend()
     }
 

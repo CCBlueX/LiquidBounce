@@ -21,12 +21,14 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.Tesselator
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -63,9 +65,6 @@ inline fun PoseStack.withPush(block: PoseStack.() -> Unit) {
 inline fun PoseStack.translate(vec3i: Vec3i) =
     translate(vec3i.x.toFloat(), vec3i.y.toFloat(), vec3i.z.toFloat())
 
-inline fun Tesselator.begin(pipeline: RenderPipeline): BufferBuilder =
-    begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
-
 /**
  * Context representing the rendering environment.
  *
@@ -88,6 +87,9 @@ class WorldRenderEnvironment(
     var isBatchMode: Boolean = false
         private set
 
+    fun uniform(name: String, value: GpuBufferSlice) {
+        uniforms[name] = value
+    }
 
     fun getOrCreateBuffer(texture: AbstractTexture): BufferBuilder {
         return if (isBatchMode) {
@@ -133,6 +135,8 @@ class WorldRenderEnvironment(
             }
         }
         texQuadsBatchBuffer.clear()
+
+        uniforms.clear()
     }
 
     fun draw(
@@ -145,6 +149,7 @@ class WorldRenderEnvironment(
         this.renderTarget,
         colorModulator = shaderColor,
         shaderTextures = shaderTextureProvider,
+        uniforms = uniforms,
     )
 
     companion object {
@@ -158,6 +163,9 @@ class WorldRenderEnvironment(
         @JvmStatic
         private val texQuadsBatchBuffer =
             Reference2ReferenceOpenHashMap<AbstractTexture, BufferBuilder>()
+
+        @JvmStatic
+        private val uniforms = Object2ObjectOpenHashMap<String, GpuBufferSlice>()
     }
 }
 

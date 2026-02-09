@@ -28,12 +28,12 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.ccbluex.liquidbounce.utils.render.copyFrom
-import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.renderer.LightTexture
@@ -66,18 +66,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         16, 16, 1, 1,
     )
 
-    private val UBO = gpuDevice.createUbo(
-        labelGetter = { "$name UBO" },
-        std140Size = {
-            int
-            float
-            vec4
-            float
-            vec4
-            float
-            int
-        },
-    ).slice()
+    private val UBO = ClientUniformDefine.HAND_ITEM_LIGHTMAP.createSingleBuffer()
 
     private var uboDirty = true
     private fun <T : Any> Value<T>.markDirtyOnChanged() = onChanged { uboDirty = true }
@@ -110,7 +99,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
             pass.bindTexture("texture0", textureView, sampler)
             pass.bindTexture("image", textureView, sampler)
-            pass.setUniform("ItemChamsData", UBO)
+            pass.setUniform(ClientUniformDefine.HAND_ITEM_LIGHTMAP.uboName, UBO)
 
             pass.draw(0, 3)
         }

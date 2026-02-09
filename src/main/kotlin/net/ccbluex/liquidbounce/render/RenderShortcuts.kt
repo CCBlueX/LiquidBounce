@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
@@ -71,6 +72,24 @@ val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
 @JvmField
 val EMPTY_BOX = AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
+    val slice = ClientUniformDefine.ROUNDED_RECT.createSingleBuffer()
+    slice.writeStd140 {
+        putVec2(1f, 1f)
+        putFloat(2f)
+    }
+    slice
+}
+
+private val ROUNDED_RECT_AS_FILLED_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
+    val slice = ClientUniformDefine.ROUNDED_RECT.createSingleBuffer()
+    slice.writeStd140 {
+        putVec2(1f, 1f)
+        putFloat(0f)
+    }
+    slice
+}
 
 /**
  * Helper function to render an environment with the specified [matrixStack] and [draw] block.
@@ -249,7 +268,7 @@ internal fun drawMesh(
         indexSlice = shapeIndexBuffer.getBuffer(indexCount)
             .slice(0L, indexCount.toLong() * indexType.bytes)
     } else {
-        indexType = meshData.drawState().indexType()
+        indexType = meshData.drawState().indexType
         indexSlice = getIbo(indexType).upload(rawIndices)
     }
 
@@ -485,23 +504,6 @@ fun WorldRenderEnvironment.drawPlane(
 }
 
 /**
- * Function to render a gradient quad using specified [vertices] and [colors]
- *
- * @param vertices The four vectors to draw the quad
- * @param colors The colors for the vertices
- */
-private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3f>, colors: Array<Color4b>) {
-    require(vertices.size == colors.size) { "there must be a color for every vertex" }
-    require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
-    drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
-        vertices.forEachIndexed { index, pos ->
-            val color4b = colors[index]
-            addVertex(matrix, pos).setColor(color4b.argb)
-        }
-    }
-}
-
-/**
  * Function to draw a circle of the size [outerRadius] with a cutout of size [innerRadius]
  *
  * @param outerRadius The radius of the circle
@@ -529,18 +531,71 @@ fun WorldRenderEnvironment.drawGradientCircle(
     }
 }
 
+private fun WorldRenderEnvironment.drawCircleXZNoUniform(radius: Float, argb: Int) {
+    drawCustomMesh(ClientRenderPipelines.RoundedRect) { pose ->
+        addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(argb)
+        addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(argb)
+        addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(argb)
+        addVertex(pose, radius, 0f, -radius).setUv(1f, 0f).setColor(argb)
+    }
+}
+
+fun WorldRenderEnvironment.drawCircle(
+    radius: Float,
+    color: Color4b,
+) {
+    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
+    drawCircleXZNoUniform(radius, color.argb)
+}
+
+fun WorldRenderEnvironment.drawCircle(
+    radius: Float,
+    innerColor: Color4b,
+    outerColor: Color4b,
+) {
+    if (innerColor == outerColor) {
+        drawCircle(radius, color = innerColor)
+        return
+    }
+
+    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
+    drawCustomMesh(ClientRenderPipelines.RoundedRect) { pose ->
+        // Quad 1 (NW)
+        addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(outerColor)
+        addVertex(pose, -radius, 0f, 0f).setUv(0f, 0.5f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
+        addVertex(pose, 0f, 0f, -radius).setUv(0.5f, 0f).setColor(outerColor)
+
+        // Quad 2 (NE)
+        addVertex(pose, radius, 0f, -radius).setUv(1f, 0f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, -radius).setUv(0.5f, 0f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
+        addVertex(pose, radius, 0f, 0f).setUv(1f, 0.5f).setColor(outerColor)
+
+        // Quad 3 (SE)
+        addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(outerColor)
+        addVertex(pose, radius, 0f, 0f).setUv(1f, 0.5f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
+        addVertex(pose, 0f, 0f, radius).setUv(0.5f, 1f).setColor(outerColor)
+
+        // Quad 4 (SW)
+        addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, radius).setUv(0.5f, 1f).setColor(outerColor)
+        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
+        addVertex(pose, -radius, 0f, 0f).setUv(0f, 0.5f).setColor(outerColor)
+    }
+}
+
 /**
  * Function to draw the outline of a circle of the size [radius]
  *
  * @param radius The radius
- * @param color4b The color
+ * @param color The color
  */
-fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) =
-    drawCustomMesh(ClientRenderPipelines.LineStrip) { matrix ->
-        UnitCircle.forEach(radius) { x, z ->
-            addVertex(matrix, x, 0f, z).setColor(color4b.argb)
-        }
-    }
+fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b) {
+    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO)
+    drawCircleXZNoUniform(radius, color.argb)
+}
 
 fun WorldRenderEnvironment.drawGradientSides(
     height: Double,
@@ -552,48 +607,25 @@ fun WorldRenderEnvironment.drawGradientSides(
         return
     }
 
-    val vertexColors =
-        arrayOf(
-            baseColor,
-            topColor,
-            topColor,
-            baseColor
-        )
+    drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+        addVertex(pose, box.minX, 0.0, box.minZ).setColor(baseColor)
+        addVertex(pose, box.minX, height, box.minZ).setColor(topColor)
+        addVertex(pose, box.maxX, height, box.minZ).setColor(topColor)
+        addVertex(pose, box.maxX, 0.0, box.minZ).setColor(baseColor)
 
-    drawGradientQuad(
-        arrayOf(
-            Vec3f(box.minX, 0.0, box.minZ),
-            Vec3f(box.minX, height, box.minZ),
-            Vec3f(box.maxX, height, box.minZ),
-            Vec3f(box.maxX, 0.0, box.minZ),
-        ),
-        vertexColors
-    )
-    drawGradientQuad(
-        arrayOf(
-            Vec3f(box.maxX, 0.0, box.minZ),
-            Vec3f(box.maxX, height, box.minZ),
-            Vec3f(box.maxX, height, box.maxZ),
-            Vec3f(box.maxX, 0.0, box.maxZ),
-        ),
-        vertexColors
-    )
-    drawGradientQuad(
-        arrayOf(
-            Vec3f(box.maxX, 0.0, box.maxZ),
-            Vec3f(box.maxX, height, box.maxZ),
-            Vec3f(box.minX, height, box.maxZ),
-            Vec3f(box.minX, 0.0, box.maxZ),
-        ),
-        vertexColors
-    )
-    drawGradientQuad(
-        arrayOf(
-            Vec3f(box.minX, 0.0, box.maxZ),
-            Vec3f(box.minX, height, box.maxZ),
-            Vec3f(box.minX, height, box.minZ),
-            Vec3f(box.minX, 0.0, box.minZ),
-        ),
-        vertexColors
-    )
+        addVertex(pose, box.maxX, 0.0, box.minZ).setColor(baseColor)
+        addVertex(pose, box.maxX, height, box.minZ).setColor(topColor)
+        addVertex(pose, box.maxX, height, box.maxZ).setColor(topColor)
+        addVertex(pose, box.maxX, 0.0, box.maxZ).setColor(baseColor)
+
+        addVertex(pose, box.maxX, 0.0, box.maxZ).setColor(baseColor)
+        addVertex(pose, box.maxX, height, box.maxZ).setColor(topColor)
+        addVertex(pose, box.minX, height, box.maxZ).setColor(topColor)
+        addVertex(pose, box.minX, 0.0, box.maxZ).setColor(baseColor)
+
+        addVertex(pose, box.minX, 0.0, box.maxZ).setColor(baseColor)
+        addVertex(pose, box.minX, height, box.maxZ).setColor(topColor)
+        addVertex(pose, box.minX, height, box.minZ).setColor(topColor)
+        addVertex(pose, box.minX, 0.0, box.minZ).setColor(baseColor)
+    }
 }

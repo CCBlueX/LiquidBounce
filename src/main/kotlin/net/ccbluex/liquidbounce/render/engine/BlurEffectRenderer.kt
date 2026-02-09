@@ -29,12 +29,12 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
-import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gui.screens.ChatScreen
 
@@ -75,10 +75,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
     }
 
-    private val GUI_BLUR_UNIFORM_BUFFER = gpuDevice.createUbo(
-        labelGetter = { "GUI blur UBO" },
-        std140Size = { float + float + float },
-    ).slice()
+    private val GUI_BLUR_UNIFORM_BUFFER = ClientUniformDefine.GUI_BLUR.createSingleBuffer()
 
     private var lastBlurRadius = Float.MIN_VALUE
     private var lastAlphaBlendRange = 0f..1f
@@ -115,7 +112,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
                 pass.setPipeline(ClientRenderPipelines.GuiBlur)
                 pass.bindTexture("texture0", mc.mainRenderTarget.colorTextureView, overlaySampler)
                 pass.bindTexture("overlay", overlayFramebuffer.colorTextureView, overlaySampler)
-                pass.setUniform("BlurData", GUI_BLUR_UNIFORM_BUFFER)
+                pass.setUniform(ClientUniformDefine.GUI_BLUR.uboName, GUI_BLUR_UNIFORM_BUFFER)
                 pass.draw(0, 3)
             }
 

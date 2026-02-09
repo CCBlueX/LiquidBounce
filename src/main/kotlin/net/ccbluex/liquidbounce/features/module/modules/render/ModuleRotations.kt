@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations.smooth
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -121,9 +121,9 @@ object ModuleRotations : ClientModule("Rotations", ModuleCategories.RENDER) {
 
             if (drawVectorLine) {
                 renderEnvironmentForWorld(matrixStack) {
-                    drawLineStrip(
+                    drawLine(
+                        eyeVector, eyeVector + Vec3f(interpolatedRotationVec * 100.0),
                         vectorLine.argb,
-                        eyeVector, eyeVector + Vec3f(interpolatedRotationVec * 100.0)
                     )
                 }
             }
