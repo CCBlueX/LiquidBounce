@@ -43,12 +43,7 @@ object ModuleMaceKill : ClientModule("MaceKill", ModuleCategories.COMBAT) {
         // Check if player is holding a mace
         val mainHandStack = player.mainHandItem
 
-        if (mainHandStack.item != Items.MACE) {
-            // Auto Select Mace
-            val maceIndex = Slots.Hotbar.findClosestSlot(Items.MACE) ?: return@handler
-
-            SilentHotbar.selectSlotSilently(this, maceIndex, 1)
-        }
+        if (mainHandStack.item != Items.MACE) return@handler
 
         val height = determineHeight()
 
