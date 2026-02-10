@@ -61,6 +61,16 @@ object CoroutineTicker : EventListener {
 }
 
 /**
+ * Schedule a task to run at next [GameTickEvent], before all event handlers.
+ */
+fun nextTick(runnable: Runnable) {
+    CoroutineTicker.register {
+        runnable.run()
+        true
+    }
+}
+
+/**
  * Ticks with [stopAt] until it returns true.
  * The elapsed ticks (starting from 1) will be passed to [stopAt].
  *

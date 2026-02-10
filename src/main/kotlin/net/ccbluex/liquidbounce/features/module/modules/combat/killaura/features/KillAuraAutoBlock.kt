@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.event.CoroutineTicker
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -40,6 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
+import net.ccbluex.liquidbounce.utils.client.releaseUsingItemNextTick
 import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -117,6 +117,11 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     val blockImmediate
         get() = currentTickOn == 0 || blockMode == BlockMode.HYPIXEL
 
+    override fun onDisabled() {
+        this.stopBlocking()
+        super.onDisabled()
+    }
+
     /**
      * Make it seem like the player is blocking.
      */
@@ -142,7 +147,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         if (onlyWhenInDanger && !isInDanger()) {
-            stopBlocking()
+            this.stopBlocking()
             return
         }
 
@@ -185,19 +190,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         blockVisual = true
         blockingStateEnforced = true
-    }
-
-    private fun nextTick(runnable: Runnable) {
-        CoroutineTicker.register {
-            runnable.run()
-            true
-        }
-    }
-
-    private fun unblock() {
-        nextTick {
-            interaction.releaseUsingItem(player)
-        }
     }
 
     private var flushTicks = 0
@@ -257,7 +249,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         // We do not want the player to stop eating or else. Only when he blocks.
-        if (!player.isBlockAction) {
+        if (!player.isBlocking) {
             return false
         }
 
@@ -265,11 +257,11 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         return when (unblockMode) {
             UnblockMode.STOP_USING_ITEM -> {
-                unblock()
-
+                interaction.releaseUsingItemNextTick()
                 blockingStateEnforced = false
                 true
             }
+            // Not working when blocking with offhand
             UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 8
@@ -278,6 +270,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 blockingStateEnforced = false
                 true
             }
+            // Not working when server doesn't have offhand
             UnblockMode.SWAP_HAND -> {
                 network.sendSwapItemWithOffhand()
                 network.sendSwapItemWithOffhand()
@@ -285,8 +278,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 true
             }
             UnblockMode.NONE -> if (!pauses) {
-                unblock()
-
+                interaction.releaseUsingItemNextTick()
                 blockingStateEnforced = false
                 true
             } else {

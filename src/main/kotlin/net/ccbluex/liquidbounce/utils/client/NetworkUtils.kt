@@ -16,11 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("FunctionName", "TooManyFunctions")
+
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.event.nextTick
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -52,14 +55,12 @@ import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.GameType
 import net.minecraft.world.phys.BlockHitResult
 
-@Suppress("FunctionName")
 fun ClientCommonPacketListenerImpl.send1_21_5StartSneaking() {
     if (!usesViaFabricPlus) return
 
     sendPacket(PlayerSneakPacket.START)
 }
 
-@Suppress("FunctionName")
 fun ClientCommonPacketListenerImpl.send1_21_5StopSneaking() {
     if (!usesViaFabricPlus) return
 
@@ -69,7 +70,6 @@ fun ClientCommonPacketListenerImpl.send1_21_5StopSneaking() {
 /**
  * Sends an open inventory packet with the help of ViaFabricPlus. This is only for older versions. (<= 1.11.2)
  */
-@Suppress("FunctionName")
 fun ClientCommonPacketListenerImpl.send1_11_1OpenInventory() {
     if (InventoryManager.isInventoryOpenServerSide || !usesViaFabricPlus) {
         return
@@ -166,6 +166,10 @@ fun LocalPlayer.clickBlockWithSlot(
     }
 
     this.inventory.selectedSlot = prevHotbarSlot
+}
+
+fun MultiPlayerGameMode.releaseUsingItemNextTick() = nextTick {
+    this.releaseUsingItem(player)
 }
 
 /**
