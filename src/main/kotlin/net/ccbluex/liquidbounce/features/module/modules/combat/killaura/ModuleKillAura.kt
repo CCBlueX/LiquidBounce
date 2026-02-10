@@ -71,7 +71,6 @@ import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
@@ -120,7 +119,6 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     override fun onDisabled() {
         targetTracker.reset()
         failedHits.clear()
-        KillAuraAutoBlock.stopBlocking()
         KillAuraNotifyWhenFail.failedHitsIncrement = 0
     }
 
@@ -267,13 +265,13 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         debugParameter("Valid Rotation") { rotation }
 
-        val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
+        val mainHandStack = player.mainHandItem
 
         // Attack enemy, according to the attack scheduler
-        if (clicker.isClickTick && canAttackNow(target, itemStack)) {
+        if (clicker.isClickTick && canAttackNow(target, mainHandStack)) {
             clicker.attack(rotation) {
                 // On each click, we check if we are still ready to attack
-                if (!canAttackNow(target, itemStack)) {
+                if (!canAttackNow(target, mainHandStack)) {
                     return@attack false
                 }
 
@@ -423,7 +421,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      */
     internal fun canAttackNow(
         target: Entity? = null,
-        itemStack: ItemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
+        itemStack: ItemStack = player.mainHandItem,
     ): Boolean {
         if (!itemStack.isItemEnabled(world.enabledFeatures())) {
             return false

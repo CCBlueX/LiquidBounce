@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.client.send1_11_1OpenInventory
 import net.ccbluex.liquidbounce.utils.client.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
-import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
@@ -127,18 +126,22 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
     /**
      * Prepare the scene for e.g. attacking an entity.
      */
+    @JvmRecord
     private data class InteractiveScene(
         val rotation: Rotation?,
         val isInInventoryScreen: Boolean = InventoryManager.isInventoryOpen,
     ) {
 
+        /**
+         * @return if we can't attack.
+         */
         @Suppress("CognitiveComplexMethod")
         suspend fun prepare(): Boolean {
             if (simulateInventoryClosing && isInInventoryScreen) {
                 network.sendCloseInventory()
             }
 
-            if (player.isBlockAction) {
+            if (player.isBlocking) {
                 if (!KillAuraAutoBlock.enabled && !ModuleMultiActions.mayAttackWhileUsing()) {
                     return true
                 }

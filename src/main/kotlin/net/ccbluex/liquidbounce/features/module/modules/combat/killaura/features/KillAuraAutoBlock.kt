@@ -37,9 +37,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
+import net.ccbluex.liquidbounce.utils.client.releaseUsingItemNextTick
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
@@ -107,14 +108,19 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      * @see ItemInHandRenderer.renderArmWithItem
      */
     var blockVisual = false
-        get() = field && super.running &&
-            (isOlderThanOrEqual1_8 || isNewerThanOrEquals1_21_5 || ModuleSwordBlock.running)
+        get() = field && running &&
+            (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
 
     val shouldUnblockToHit
         get() = unblockMode != UnblockMode.NONE
 
     val blockImmediate
         get() = currentTickOn == 0 || blockMode == BlockMode.HYPIXEL
+
+    override fun onDisabled() {
+        this.stopBlocking()
+        super.onDisabled()
+    }
 
     /**
      * Make it seem like the player is blocking.
@@ -141,7 +147,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         if (onlyWhenInDanger && !isInDanger()) {
-            stopBlocking()
+            this.stopBlocking()
             return
         }
 
@@ -161,16 +167,15 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 } else {
                     interaction.interact(player, target, InteractionHand.MAIN_HAND)
                 }
+
+                interactWithFront()
             }
+            BlockMode.INTERACT -> interactWithFront()
             BlockMode.FAKE -> {
                 blockVisual = true
                 return
             }
             else -> { }
-        }
-
-        if (blockMode == BlockMode.INTERACT || blockMode == BlockMode.HYPIXEL) {
-            interactWithFront()
         }
 
         // Interact with the item in the block hand
@@ -244,7 +249,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         // We do not want the player to stop eating or else. Only when he blocks.
-        if (!player.isBlockAction) {
+        if (!player.isBlocking) {
             return false
         }
 
@@ -252,19 +257,20 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         return when (unblockMode) {
             UnblockMode.STOP_USING_ITEM -> {
-                interaction.releaseUsingItem(player)
-
+                interaction.releaseUsingItemNextTick()
                 blockingStateEnforced = false
                 true
             }
+            // Not working when blocking with offhand
             UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 8
-                network.send(ServerboundSetCarriedItemPacket(nextSlot))
-                network.send(ServerboundSetCarriedItemPacket(currentSlot))
+                network.sendHeldItemChange(nextSlot)
+                network.sendHeldItemChange(currentSlot)
                 blockingStateEnforced = false
                 true
             }
+            // Not working when server doesn't have offhand
             UnblockMode.SWAP_HAND -> {
                 network.sendSwapItemWithOffhand()
                 network.sendSwapItemWithOffhand()
@@ -272,8 +278,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 true
             }
             UnblockMode.NONE -> if (!pauses) {
-                interaction.releaseUsingItem(player)
-
+                interaction.releaseUsingItemNextTick()
                 blockingStateEnforced = false
                 true
             } else {

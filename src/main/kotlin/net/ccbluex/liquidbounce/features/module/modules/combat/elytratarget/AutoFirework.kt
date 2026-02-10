@@ -24,13 +24,13 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.item.Items
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura as KillAura
@@ -117,7 +117,7 @@ internal object AutoFirework : ToggleableValueGroup(ModuleElytraTarget, "AutoFir
 
                 if (slotUpdateFlag) {
                     player.inventory.selectedSlot = slot.hotbarSlotForServer
-                    network.send(ServerboundSetCarriedItemPacket(slot.hotbarSlotForServer))
+                    network.sendHeldItemChange(slot.hotbarSlotForServer)
                 }
 
                 interaction.startPrediction(world) { sequence ->
@@ -126,7 +126,7 @@ internal object AutoFirework : ToggleableValueGroup(ModuleElytraTarget, "AutoFir
 
                 if (slotUpdateFlag) {
                     player.inventory.selectedSlot = curSlot
-                    network.send(ServerboundSetCarriedItemPacket(curSlot))
+                    network.sendHeldItemChange(curSlot)
                 }
             }
         };

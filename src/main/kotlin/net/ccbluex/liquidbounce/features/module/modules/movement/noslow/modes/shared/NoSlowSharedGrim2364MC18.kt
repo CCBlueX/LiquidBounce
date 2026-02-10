@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 
 /**
  * @anticheat Grim
@@ -39,9 +39,9 @@ internal class NoSlowSharedGrim2364MC18(override val parent: ModeValueGroup<*>) 
             // Introduced with https://github.com/GrimAnticheat/Grim/issues/874
             untracked {
                 val slot = player.inventory.selectedSlot
-                network.send(ServerboundSetCarriedItemPacket(slot % 8 + 1))
-                network.send(ServerboundSetCarriedItemPacket(slot % 7 + 2))
-                network.send(ServerboundSetCarriedItemPacket(slot))
+                network.sendHeldItemChange(slot % 8 + 1)
+                network.sendHeldItemChange(slot % 7 + 2)
+                network.sendHeldItemChange(slot)
             }
         }
     }

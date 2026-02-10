@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 
@@ -49,9 +49,9 @@ internal class NoSlowSharedGrim2360(override val parent: ModeValueGroup<*>) : Mo
                 // Switch slots (based on 1.8 grim switch noslow)
                 untracked {
                     val slot = player.inventory.selectedSlot
-                    network.send(ServerboundSetCarriedItemPacket(slot % 8 + 1))
-                    network.send(ServerboundSetCarriedItemPacket(slot % 7 + 2))
-                    network.send(ServerboundSetCarriedItemPacket(slot))
+                    network.sendHeldItemChange(slot % 8 + 1)
+                    network.sendHeldItemChange(slot % 7 + 2)
+                    network.sendHeldItemChange(slot)
                 }
             }
         }

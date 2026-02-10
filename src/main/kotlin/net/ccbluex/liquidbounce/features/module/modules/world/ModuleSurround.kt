@@ -341,7 +341,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
 
         val maxX = getMax(bb, Direction.Axis.X)
         val maxZ = getMax(bb, Direction.Axis.Z)
-        val hole = setOf(
+        val hole = listOf(
             BlockPos.containing(bb.minX, y, bb.minZ),
             BlockPos.containing(bb.minX, y, maxZ),
             BlockPos.containing(maxX, y, bb.minZ),
@@ -352,7 +352,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
 
         val directions = if (down) DIRECTIONS_EXCLUDING_UP else Direction.BY_2D_DATA
         hole.forEach {
-            directions.forEach { direction ->
+            for (direction in directions) {
                 val pos = it.relative(direction)
 
                 if (it !in blocked) {

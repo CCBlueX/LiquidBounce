@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.releaseUsingItemNextTick
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -208,7 +209,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     override fun onDisabled() {
         targetTracker.reset()
         fishingBobberEntity?.let {
-            interaction.releaseUsingItem(player)
+            interaction.releaseUsingItemNextTick()
             fishingBobberEntity = null
         }
         availableRodSlot = null
