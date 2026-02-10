@@ -54,6 +54,7 @@ import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
@@ -88,6 +89,8 @@ class TargetRenderer(
             TargetRenderAppearance.World.Image(owner, it),
             TargetRenderAppearance.World.GlowingCircle(owner, it),
             TargetRenderAppearance.World.Ghost(it),
+            TargetRenderAppearance.World.Marker(it),
+            TargetRenderAppearance.World.Marker2(it),
             TargetRenderAppearance.Gui.Text(owner, it),
             TargetRenderAppearance.Gui.Arrow(it),
         )
@@ -354,6 +357,25 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             }
 
         }
+
+        abstract class AbstractMarker(name: String, private val texture: AbstractTexture) : World(name) {
+            private val color by color("Color", Color4b.WHITE)
+            private val size by float("Size", 1.5f, 0.1f..5f)
+
+            override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
+                val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, entity.bbHeight / 2.0, 0.0)
+
+                withPositionRelativeToCamera(pos) {
+                    matrixStack.mulPose(camera.rotation())
+                    matrixStack.mulPose(Axis.ZP.rotationDegrees(System.currentTimeMillis() % 3600 / 5f))
+                    matrixStack.last().scale(size, size, 1f)
+                    drawTexQuad(texture, color.argb)
+                }
+            }
+        }
+
+        class Marker(override val parent: ModeValueGroup<*>) : AbstractMarker("Marker", markerTexture)
+        class Marker2(override val parent: ModeValueGroup<*>) : AbstractMarker("Marker2", marker2Texture)
     }
 
     sealed class Gui(name: String) : TargetRenderAppearance<GuiGraphics>(name) {
@@ -428,6 +450,12 @@ private val defaultColor = Color4b.LIQUID_BOUNCE.alpha(100)
 
 private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
     .toNativeImage().asTexture { "TargetRenderer Ghost" }
+
+private val markerTexture = LiquidBounce.resource("targetesp/target.png")
+    .toNativeImage().asTexture { "TargetRenderer Marker" }
+
+private val marker2Texture = LiquidBounce.resource("targetesp/target2.png")
+    .toNativeImage().asTexture { "TargetRenderer Marker2" }
 
 private sealed class HeightMode(name: String) : Mode(name) {
     abstract fun getHeight(entity: Entity, partialTicks: Float): Double

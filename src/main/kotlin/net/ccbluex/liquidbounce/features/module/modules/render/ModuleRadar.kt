@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
+import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
@@ -41,9 +43,13 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.unaryMinus
+import net.ccbluex.liquidbounce.utils.render.asTexture
+import net.ccbluex.liquidbounce.utils.render.textureSetup
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.CameraType
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.player.Player
 import org.joml.Matrix3x2f
 import org.joml.Vector2f
 import kotlin.math.atan2
@@ -96,8 +102,10 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
 
     private val radius by float("Radius", 40f, 2f..200f)
 
+    private val onlyPlayers by boolean("OnlyPlayers", false)
+
     private val pointerModes = choices("PointerMode", 0) {
-        arrayOf(PointerMode.Triangle)
+        arrayOf(PointerMode.Triangle, PointerMode.Image, PointerMode.Image2)
     }
 
     private sealed class PointerMode(name: String) : Mode(name) {
@@ -142,6 +150,29 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 }
             }
         }
+
+        private abstract class ImageMode(name: String) : PointerMode(name) {
+            private val size by float("Size", 10f, 1f..100f)
+            abstract val texture: net.minecraft.client.renderer.texture.AbstractTexture
+
+            context(ctx: GuiGraphics)
+            override fun draw(color: Color4b) {
+                ctx.drawTexQuad(
+                    texture.textureSetup,
+                    -size / 2f, 0f, size / 2f, size,
+                    u1 = 1f, v1 = 1f, u2 = 0f, v2 = 0f,
+                    argb = color.argb
+                )
+            }
+        }
+
+        object Image : ImageMode("Image") {
+            override val texture get() = triangleTexture
+        }
+
+        object Image2 : ImageMode("Image2") {
+            override val texture get() = triangle2Texture
+        }
     }
 
     private val colorModes = choices("ColorMode", 0) {
@@ -170,6 +201,12 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         super.onDisabled()
     }
 
+    private val triangleTexture = LiquidBounce.resource("junk/triangle.png")
+        .toNativeImage().asTexture { "Radar triangle" }
+
+    private val triangle2Texture = LiquidBounce.resource("junk/triangle2.png")
+        .toNativeImage().asTexture { "Radar triangle2" }
+
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> {
         with(it.context) {
@@ -189,7 +226,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 rotate(-yawRad)
 
                 for (entity in RenderedEntities) {
-                    if (entity === player) continue
+                    if (entity === player || (onlyPlayers && entity !is Player)) continue
                     val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
 
                     val cameraDistance = entityPos.cameraDistance().toFloat()

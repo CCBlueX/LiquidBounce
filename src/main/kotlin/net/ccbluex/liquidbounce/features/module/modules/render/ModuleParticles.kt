@@ -158,7 +158,16 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
          * Original: https://www.svgrepo.com/svg/487288/dollar?edit=true
          * Modified: @sqlerrorthing
          */
-        DOLLAR("Dollar", LiquidBounce.resource("particles/dollar.png").toNativeImage());
+        DOLLAR("Dollar", LiquidBounce.resource("particles/dollar.png").toNativeImage()),
+
+        CROWN("Crown", LiquidBounce.resource("particles/crown.png").toNativeImage()),
+        HEART("Heart", LiquidBounce.resource("particles/heart.png").toNativeImage()),
+        LIGHTNING("Lightning", LiquidBounce.resource("particles/lightning.png").toNativeImage()),
+        LINE("Line", LiquidBounce.resource("particles/line.png").toNativeImage()),
+        POINT("Point", LiquidBounce.resource("particles/point.png").toNativeImage()),
+        RHOMBUS("Rhombus", LiquidBounce.resource("particles/rhombus.png").toNativeImage()),
+        SNOWFLAKE("Snowflake", LiquidBounce.resource("particles/snowflake.png").toNativeImage()),
+        SPARK("Spark", LiquidBounce.resource("particles/spark.png").toNativeImage());
 
         val texture = this.image.asTexture { this@ParticleImage.tag }
     }
