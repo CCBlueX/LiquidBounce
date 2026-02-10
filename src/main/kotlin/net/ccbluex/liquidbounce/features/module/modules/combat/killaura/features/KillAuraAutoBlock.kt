@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.CoroutineTicker
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -37,9 +38,9 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
@@ -107,8 +108,8 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      * @see ItemInHandRenderer.renderArmWithItem
      */
     var blockVisual = false
-        get() = field && super.running &&
-            (isOlderThanOrEqual1_8 || isNewerThanOrEquals1_21_5 || ModuleSwordBlock.running)
+        get() = field && running &&
+            (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
 
     val shouldUnblockToHit
         get() = unblockMode != UnblockMode.NONE
@@ -161,16 +162,15 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 } else {
                     interaction.interact(player, target, InteractionHand.MAIN_HAND)
                 }
+
+                interactWithFront()
             }
+            BlockMode.INTERACT -> interactWithFront()
             BlockMode.FAKE -> {
                 blockVisual = true
                 return
             }
             else -> { }
-        }
-
-        if (blockMode == BlockMode.INTERACT || blockMode == BlockMode.HYPIXEL) {
-            interactWithFront()
         }
 
         // Interact with the item in the block hand
@@ -185,6 +185,19 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         blockVisual = true
         blockingStateEnforced = true
+    }
+
+    private fun nextTick(runnable: Runnable) {
+        CoroutineTicker.register {
+            runnable.run()
+            true
+        }
+    }
+
+    private fun unblock() {
+        nextTick {
+            interaction.releaseUsingItem(player)
+        }
     }
 
     private var flushTicks = 0
@@ -252,7 +265,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         return when (unblockMode) {
             UnblockMode.STOP_USING_ITEM -> {
-                interaction.releaseUsingItem(player)
+                unblock()
 
                 blockingStateEnforced = false
                 true
@@ -260,8 +273,8 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 8
-                network.send(ServerboundSetCarriedItemPacket(nextSlot))
-                network.send(ServerboundSetCarriedItemPacket(currentSlot))
+                network.sendHeldItemChange(nextSlot)
+                network.sendHeldItemChange(currentSlot)
                 blockingStateEnforced = false
                 true
             }
@@ -272,7 +285,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 true
             }
             UnblockMode.NONE -> if (!pauses) {
-                interaction.releaseUsingItem(player)
+                unblock()
 
                 blockingStateEnforced = false
                 true

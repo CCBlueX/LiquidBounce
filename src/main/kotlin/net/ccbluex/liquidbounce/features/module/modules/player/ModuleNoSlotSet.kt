@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 
 object ModuleNoSlotSet : ClientModule("NoSlotSet", ModuleCategories.PLAYER) {
     @Suppress("unused")
@@ -35,6 +35,6 @@ object ModuleNoSlotSet : ClientModule("NoSlotSet", ModuleCategories.PLAYER) {
         }
 
         event.cancelEvent()
-        player.connection.send(ServerboundSetCarriedItemPacket(SilentHotbar.serversideSlot))
+        player.connection.sendHeldItemChange(SilentHotbar.serversideSlot)
     }
 }

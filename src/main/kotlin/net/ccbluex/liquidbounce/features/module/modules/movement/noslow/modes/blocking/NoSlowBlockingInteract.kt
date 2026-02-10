@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.blockingHand
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 
 internal object NoSlowBlockingInteract : Mode("Interact") {
@@ -40,7 +40,7 @@ internal object NoSlowBlockingInteract : Mode("Interact") {
         blockingHand?.let { blockingHand ->
             if (event.state == EventState.POST) {
                 untracked {
-                    network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
+                    network.sendHeldItemChange(player.inventory.selectedSlot)
                     interaction.startPrediction(world) { sequence ->
                         ServerboundUseItemPacket(blockingHand, sequence, player.yRot, player.xRot)
                     }

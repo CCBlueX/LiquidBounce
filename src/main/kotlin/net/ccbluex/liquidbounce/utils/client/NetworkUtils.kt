@@ -100,6 +100,10 @@ fun ClientCommonPacketListenerImpl.sendSwapItemWithOffhand() {
     )
 }
 
+fun ClientCommonPacketListenerImpl.sendHeldItemChange(slot: Int) {
+    send(ServerboundSetCarriedItemPacket(slot))
+}
+
 fun ClientCommonPacketListenerImpl.sendCloseInventory() {
     send(ServerboundContainerClosePacket(0))
 }
@@ -127,7 +131,7 @@ fun LocalPlayer.clickBlockWithSlot(
         this.inventory.selectedSlot = slot
 
         if (slot != prevHotbarSlot) {
-            connection.send(ServerboundSetCarriedItemPacket(slot))
+            connection.sendHeldItemChange(slot)
         }
     }
 
@@ -158,7 +162,7 @@ fun LocalPlayer.clickBlockWithSlot(
     }
 
     if (slot != prevHotbarSlot && hand == InteractionHand.MAIN_HAND && switchMode == SwitchMode.SILENT) {
-        connection.send(ServerboundSetCarriedItemPacket(prevHotbarSlot))
+        connection.sendHeldItemChange(prevHotbarSlot)
     }
 
     this.inventory.selectedSlot = prevHotbarSlot

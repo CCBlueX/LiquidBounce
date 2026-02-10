@@ -188,8 +188,7 @@ public abstract class MixinItemInHandRenderer {
     private static boolean liquid_bounce$shouldAnimate(Player player) {
         return ModuleSwordBlock.INSTANCE.getRunning()
             && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player.getOffhandItem(), player.getMainHandItem())
-            && player.isUsingItem()
-            || KillAuraAutoBlock.INSTANCE.getBlockVisual();
+            && (player.isUsingItem() || KillAuraAutoBlock.INSTANCE.getBlockVisual());
     }
 
     @ModifyExpressionValue(method = "renderArmWithItem", at = @At(
@@ -215,7 +214,7 @@ public abstract class MixinItemInHandRenderer {
             return true;
         }
 
-        return entity.isUsingItem();
+        return original;
     }
 
     @ModifyExpressionValue(method = "renderArmWithItem", at = @At(

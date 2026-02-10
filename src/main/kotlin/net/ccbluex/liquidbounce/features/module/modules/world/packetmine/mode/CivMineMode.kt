@@ -23,11 +23,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool.findBestToolToMineBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
@@ -90,7 +90,7 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
         } else if (shouldSwitch) {
             val slot1 = Slots.Hotbar.findBestToolToMineBlock(state)?.hotbarSlot
             if (slot1 != null && slot1 != oldSlot) {
-                network.send(ServerboundSetCarriedItemPacket(slot1))
+                network.sendHeldItemChange(slot1)
             } else {
                 shouldSwitch = false
             }
@@ -108,7 +108,7 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
         }
 
         if (shouldSwitch) {
-            network.send(ServerboundSetCarriedItemPacket(oldSlot))
+            network.sendHeldItemChange(oldSlot)
         }
 
         return false
