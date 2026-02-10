@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.fastutil.forEachFloat
@@ -176,22 +177,20 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     @JvmRecord
     private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
 
-    private val debugParameters = hashMapOf<DebuggedKey, ParameterCapture>()
+    private val debugParameters = Object2ObjectOpenHashMap<DebuggedKey, ParameterCapture>()
 
-    private val debuggedGeometry = hashMapOf<DebuggedKey, DebuggedGeometry>()
+    private val debuggedGeometry = Object2ObjectOpenHashMap<DebuggedKey, DebuggedGeometry>()
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
         if (!geometry) {
             return@handler
         }
 
-        renderEnvironmentForWorld(matrixStack) {
+        renderEnvironmentForWorld(event.matrixStack) {
             startBatch()
             debuggedGeometry.values.forEach { geometry ->
-                geometry.render(this)
+                geometry.render()
             }
             commitBatch()
         }
@@ -348,15 +347,15 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
     fun getArrayEntryColor(idx: Int, length: Int): Color4b {
         val hue = idx.toFloat() / length.toFloat()
-        return Color4b.ofHSB(hue, 1f, 1f).with(a = 32)
+        return Color4b.ofHSB(hue, 1f, 1f, alpha = 32f / 255f)
     }
 
-    sealed interface DebuggedGeometry {
-        val color: Color4b
-        fun render(env: WorldRenderEnvironment)
+    fun interface DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        fun render()
     }
 
-    class DebuggedLine(line: Line, override val color: Color4b) : DebuggedGeometry {
+    class DebuggedLine(line: Line, val color: Color4b) : DebuggedGeometry {
         val from: Vec3
         val to: Vec3
 
@@ -367,7 +366,8 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
             this.to = line.position.add(normalizedDirection.scale(100.0))
         }
 
-        override fun render(env: WorldRenderEnvironment) {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
             env.drawLine(
                 env.relativeToCamera(from).toVec3f(),
                 env.relativeToCamera(to).toVec3f(),
@@ -380,9 +380,10 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         val p1: Vec3,
         val p2: Vec3,
         val p3: Vec3,
-        override val color: Color4b,
+        val color: Color4b,
     ) : DebuggedGeometry {
-        override fun render(env: WorldRenderEnvironment) {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
             env.drawTriangle(
                 p1 = env.relativeToCamera(p1).toVec3f(),
                 p2 = env.relativeToCamera(p2).toVec3f(),
@@ -392,8 +393,9 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         }
     }
 
-    class DebuggedLineSegment(val from: Vec3, val to: Vec3, override val color: Color4b) : DebuggedGeometry {
-        override fun render(env: WorldRenderEnvironment) {
+    class DebuggedLineSegment(val from: Vec3, val to: Vec3, val color: Color4b) : DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
             env.drawLine(
                 env.relativeToCamera(from).toVec3f(),
                 env.relativeToCamera(to).toVec3f(),
@@ -402,8 +404,9 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         }
     }
 
-    open class DebuggedBox(val box: AABB, override val color: Color4b) : DebuggedGeometry {
-        override fun render(env: WorldRenderEnvironment) {
+    open class DebuggedBox(val box: AABB, val color: Color4b) : DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
             env.drawBox(box.move(env.camera.position().reverse()), color)
         }
     }
@@ -414,9 +417,9 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     )
 
     class DebugCollection(val geometry: Collection<DebuggedGeometry>) : DebuggedGeometry {
-        override val color: Color4b get() = Color4b.WHITE
-        override fun render(env: WorldRenderEnvironment) {
-            this.geometry.forEach { it.render(env) }
+        context(env: WorldRenderEnvironment)
+        override fun render() {
+            this.geometry.forEach { it.render() }
         }
     }
 

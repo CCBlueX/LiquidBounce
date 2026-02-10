@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawCircleOutline
+import net.ccbluex.liquidbounce.render.drawCircle
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.drawTexQuad
@@ -43,12 +44,14 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.AnimatedValueGroup
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.plus
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
+import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.network.chat.Style
@@ -123,8 +126,6 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
         class Ghost(override val parent: ModeValueGroup<*>) : World("Ghost") {
 
-            private var lastTime = System.currentTimeMillis()
-
             private val color by color("Color", Color4b.BLUE)
             private val size by float("Size", 0.5f, 0.4f..0.7f)
             private val length by int("Length", 25, 15..40)
@@ -132,31 +133,27 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
                 matrixStack.pushPose()
 
-                matrixStack.translate(mc.gameRenderer.mainCamera.position().reverse())
-
                 val interpolated = entity.lastRenderPos().lerp(entity.position(), partialTicks.toDouble())
                     .add(0.2, 1.25, 0.0)
 
-                matrixStack.translate(interpolated)
+                matrixStack.translate(interpolated - mc.gameRenderer.mainCamera.position())
 
-                with(this) {
-                    startBatch()
-                    drawParticle(
-                        { sin, cos -> Vec3(sin, cos, -cos) },
-                        { sin, cos -> Vec3(-sin, -cos, cos) }
-                    )
+                startBatch()
+                drawParticle(
+                    { sin, cos -> Vec3(sin, cos, -cos) },
+                    { sin, cos -> Vec3(-sin, -cos, cos) }
+                )
 
-                    drawParticle(
-                        { sin, cos -> Vec3(-sin, sin, -cos) },
-                        { sin, cos -> Vec3(sin, -sin, cos) }
-                    )
+                drawParticle(
+                    { sin, cos -> Vec3(-sin, sin, -cos) },
+                    { sin, cos -> Vec3(sin, -sin, cos) }
+                )
 
-                    drawParticle(
-                        { sin, cos -> Vec3(-sin, -sin, cos) },
-                        { sin, cos -> Vec3(sin, sin, -cos) }
-                    )
-                    commitBatch()
-                }
+                drawParticle(
+                    { sin, cos -> Vec3(-sin, -sin, cos) },
+                    { sin, cos -> Vec3(sin, sin, -cos) }
+                )
+                commitBatch()
 
                 matrixStack.popPose()
             }
@@ -170,7 +167,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val alphaFactor = 15
 
                 for (i in 0..<length) {
-                    val angle: Double = 0.15f * (System.currentTimeMillis() - lastTime - (i * distance)) / (30)
+                    val angle: Double = 0.15f * (clientStartDurationMs - (i * distance)) / (30)
                     val sin = sin(angle) * radius
                     val cos = cos(angle) * radius
 
@@ -219,10 +216,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val pos = entity.interpolateCurrentPosition(partialTicks)
                     .add(0.0, entity.bbHeight.toDouble() + extraYOffset.toDouble(), 0.0)
 
-                with(this) {
-                    withPositionRelativeToCamera(pos) {
-                        drawBox(box, color)
-                    }
+                withPositionRelativeToCamera(pos) {
+                    drawBox(box, color)
                 }
             }
         }
@@ -295,16 +290,14 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val height = heightMode.activeMode.getHeight(entity, partialTicks)
                 val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
-                with(this) {
-                    startBatch()
-                    withPositionRelativeToCamera(pos) {
-                        drawGradientCircle(radius, innerRadius, outerColor, innerColor)
-                        if (!outlineColor.isTransparent) {
-                            drawCircleOutline(radius, outlineColor)
-                        }
+                startBatch()
+                withPositionRelativeToCamera(pos) {
+                    drawGradientCircle(radius, innerRadius, outerColor, innerColor)
+                    if (!outlineColor.isTransparent) {
+                        drawCircleOutline(radius, outlineColor)
                     }
-                    commitBatch()
                 }
+                commitBatch()
             }
 
         }
@@ -342,27 +335,20 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     glowHeightSetting.toDouble()
                 }
 
-                with(this) {
-                    withPositionRelativeToCamera(pos) {
-                        // Don't use batch mode because `drawGradientCircle` uses TRIANGLE_STRIP
-                        drawGradientCircle(
-                            radius,
-                            radius,
-                            color,
-                            glowColor,
-                            Vector3f(0f, glowHeight.toFloat(), 0f)
-                        )
+                withPositionRelativeToCamera(pos) {
+                    // Don't use batch mode because `drawGradientCircle` uses TRIANGLE_STRIP
+                    drawGradientCircle(
+                        radius,
+                        radius,
+                        color,
+                        glowColor,
+                        Vector3f(0f, glowHeight.toFloat(), 0f)
+                    )
 
-                        drawGradientCircle(
-                            radius,
-                            0f,
-                            color,
-                            color
-                        )
+                    drawCircle(radius, color)
 
-                        if (!outlineColor.isTransparent) {
-                            drawCircleOutline(radius, outlineColor)
-                        }
+                    if (!outlineColor.isTransparent) {
+                        drawCircleOutline(radius, outlineColor)
                     }
                 }
             }

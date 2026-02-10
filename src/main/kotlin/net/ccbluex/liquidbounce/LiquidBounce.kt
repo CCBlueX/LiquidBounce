@@ -316,10 +316,6 @@ object LiquidBounce : EventListener {
 
         supervisorScope {
             launch {
-                // Load shaders as string
-                ClientShaders
-            }
-            launch {
                 // Load translations
                 LanguageManager.loadDefault()
             }
