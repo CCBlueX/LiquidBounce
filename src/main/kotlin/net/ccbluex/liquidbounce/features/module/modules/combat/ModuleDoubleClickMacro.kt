@@ -163,9 +163,14 @@ object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategorie
             }
 
             if (shouldRightButtonDoubleClick) {
-                KeyMapping.click(mc.options.keyUse.key)
-                waitTicks(1)
-                KeyMapping.click(mc.options.keyUse.key)
+                if (mainHandStack.item is BlockItem) {
+                    KeyMapping.click(mc.options.keyUse.key)
+                    waitTicks(1)
+                    KeyMapping.click(mc.options.keyUse.key)
+                }
+                else {
+                    KeyMapping.click(mc.options.keyUse.key)
+                }
                 shouldRightButtonDoubleClick = false
             }
         }
