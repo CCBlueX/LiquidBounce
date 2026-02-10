@@ -20,6 +20,7 @@
     "minecraft.block.MixinSlimeBlock",
     "minecraft.block.MixinWebBlock",
     "minecraft.client.MinecraftAccessor",
+    "minecraft.client.MixinAddressCheck",
     "minecraft.client.MixinClientInput",
     "minecraft.client.MixinClientLevel",
     "minecraft.client.MixinClientLevelData",
