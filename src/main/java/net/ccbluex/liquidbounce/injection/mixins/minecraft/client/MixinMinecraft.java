@@ -24,6 +24,7 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.platform.Window;
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.event.CoroutineTicker;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
@@ -300,6 +301,7 @@ public abstract class MixinMinecraft {
      */
     @Inject(method = "tick", at = @At("HEAD"))
     private void hookTickEvent(CallbackInfo callbackInfo) {
+        CoroutineTicker.INSTANCE.tick();
         EventManager.INSTANCE.callEvent(GameTickEvent.INSTANCE);
     }
 
