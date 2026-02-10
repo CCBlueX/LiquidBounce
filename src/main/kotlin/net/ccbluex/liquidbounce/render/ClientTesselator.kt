@@ -24,6 +24,7 @@ import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
+import net.ccbluex.liquidbounce.utils.render.begin
 
 object ClientTesselator {
 
@@ -43,11 +44,7 @@ object ClientTesselator {
 
     @JvmStatic
     fun begin(pipeline: RenderPipeline): BufferBuilder =
-        BufferBuilder(
-            allocator(pipeline),
-            pipeline.vertexFormatMode,
-            pipeline.vertexFormat
-        )
+        allocator(pipeline).begin(pipeline)
 
     @JvmStatic
     fun allocator(texture: GpuTextureView): ByteBufferBuilder =
@@ -55,10 +52,6 @@ object ClientTesselator {
 
     @JvmStatic
     fun begin(texture: GpuTextureView): BufferBuilder =
-        BufferBuilder(
-            allocator(texture),
-            ClientRenderPipelines.TexQuads.vertexFormatMode,
-            ClientRenderPipelines.TexQuads.vertexFormat
-        )
+        allocator(texture).begin(ClientRenderPipelines.TexQuads)
 
 }

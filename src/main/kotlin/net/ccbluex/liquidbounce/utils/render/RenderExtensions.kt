@@ -29,6 +29,7 @@ import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.buffers.Std140SizeCalculator
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
@@ -310,7 +311,7 @@ fun NativeImage.asTexture(
 val AbstractTexture.textureSetup: TextureSetup
     get() = TextureSetup.singleTexture(textureView, sampler)
 
-inline fun GpuTextureView.asTextureSetup(sampler: GpuSampler) =
+inline fun GpuTextureView.asTextureSetup(sampler: GpuSampler): TextureSetup =
     TextureSetup.singleTexture(this, sampler)
 
 inline fun ByteBuffer.toGpuBuffer(
