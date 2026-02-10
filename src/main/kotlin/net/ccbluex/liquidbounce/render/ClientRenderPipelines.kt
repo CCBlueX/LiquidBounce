@@ -339,8 +339,9 @@ object ClientRenderPipelines {
         withSampler("texture0")
         withSampler("overlay")
         withUniformBuffer(ClientUniformDefine.GUI_BLUR)
+        withCull(false)
         withoutBlend()
-        withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
         withDepthWrite(false)
     }
 

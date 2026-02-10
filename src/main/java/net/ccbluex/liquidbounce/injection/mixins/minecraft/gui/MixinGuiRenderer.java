@@ -31,11 +31,13 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.render.GuiRenderer;
+import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@NullMarked
 @Mixin(GuiRenderer.class)
 public abstract class MixinGuiRenderer {
 
@@ -85,7 +87,7 @@ public abstract class MixinGuiRenderer {
         BlurEffectRenderer blurEffectRenderer = BlurEffectRenderer.INSTANCE;
         if (blurEffectRenderer.shouldDrawBlur()) {
             blurEffectRenderer.setDrawingHudFramebuffer(true);
-            return blurEffectRenderer.getOverlayFramebuffer();
+            return blurEffectRenderer.getOverlayRenderTargetHolder().initAndGet();
         }
         return original.call(instance);
     }
