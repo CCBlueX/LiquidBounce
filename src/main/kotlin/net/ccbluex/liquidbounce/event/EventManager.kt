@@ -285,10 +285,6 @@ object EventManager {
             Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
         ) { MutableSharedFlow(replay = 0, extraBufferCapacity = 0) }
 
-    init {
-        CoroutineTicker
-    }
-
     /**
      * Used by handler methods
      */
