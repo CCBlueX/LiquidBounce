@@ -40,8 +40,10 @@ import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
+import net.minecraft.client.gui.render.GuiRenderer
+import net.minecraft.client.renderer.Projection
+import net.minecraft.client.renderer.ProjectionMatrixBuffer
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
@@ -138,10 +140,11 @@ private class ItemTextureRenderer(
         mc.font, // No operation
     )
 
-    private val itemsProjectionMatrix = CachedOrthoProjectionMatrixBuffer("items", -1000.0F, 1000.0F, true)
+    private val projection = Projection()
+    private val projectionMatrixBuffer = ProjectionMatrixBuffer("items")
 
     private fun close() {
-        itemsProjectionMatrix.close()
+        projectionMatrixBuffer.close()
         itemAtlasFramebuffer.destroyBuffers()
         submitNodeCollector.clear()
         featureRenderDispatcher.close()
@@ -154,8 +157,9 @@ private class ItemTextureRenderer(
     fun render(): CompletableFuture<Atlas> {
         itemAtlasFramebuffer.clearColorAndDepth()
         RenderSystem.backupProjectionMatrix()
+        this.projection.setupOrtho(-1000.0F, 1000.0F, this.textureSize.toFloat(), this.textureSize.toFloat(), true)
         RenderSystem.setProjectionMatrix(
-            this.itemsProjectionMatrix.getBuffer(textureSize.toFloat(), textureSize.toFloat()),
+            this.projectionMatrixBuffer.getBuffer(this.projection),
             ProjectionType.ORTHOGRAPHIC,
         )
         val itemMap = Reference2ObjectOpenHashMap<Item, Rect2i>(count)

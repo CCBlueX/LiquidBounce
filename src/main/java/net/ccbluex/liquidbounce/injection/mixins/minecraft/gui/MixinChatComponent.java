@@ -23,11 +23,11 @@ import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.interfaces.ChatComponentAddition;
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition;
-import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.util.ArrayListDeque;
 import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.*;
@@ -84,7 +84,7 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
      * }
      * </pre>
      */
-    @ModifyExpressionValue(method = "addMessageToQueue(Lnet/minecraft/client/GuiMessage;)V", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", ordinal = 0, remap = false))
+    @ModifyExpressionValue(method = "addMessageToQueue", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", ordinal = 0, remap = false))
     public int hookGetSize2(int original) {
         var betterChat = ModuleBetterChat.INSTANCE;
         if (betterChat.getRunning() && betterChat.getInfiniteLength()) {
@@ -112,7 +112,7 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
     @Inject(method = "addMessageToDisplayQueue", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;isChatFocused()Z", shift = At.Shift.BEFORE), cancellable = true)
     public void hookAddVisibleMessage(GuiMessage message, CallbackInfo ci, @Local List<FormattedCharSequence> list) {
         var focused = isChatFocused();
-        var removable = GuiMessageLineAddition.class.cast(message);
+        var removable = ((GuiMessageLineAddition) (Object) message);
         //noinspection DataFlowIssue
         var id = removable.liquid_bounce$getId();
 
@@ -125,7 +125,7 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
 
             boolean last = j == list.size() - 1;
             //noinspection DataFlowIssue
-            var visible = new GuiMessage.Line(message.addedTime(), orderedText, message.tag(), last);
+            var visible = new GuiMessage.Line(message, orderedText, last);
             ((GuiMessageLineAddition) (Object) visible).liquid_bounce$setId(id);
             trimmedMessages.addFirst(visible);
         }
