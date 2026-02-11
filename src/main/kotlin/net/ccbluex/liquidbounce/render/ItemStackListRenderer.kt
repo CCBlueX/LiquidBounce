@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.gui.screens.achievement.StatsScreen
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
@@ -46,8 +47,11 @@ import org.joml.Vector2fc
 import org.joml.Vector2i
 import kotlin.math.abs
 
+/**
+ * @see StatsScreen.ItemStatisticsList.SLOT_BG_SIZE
+ */
 private const val SLOT_SIZE = 18
-private const val ITEM_SIZE = 16
+private const val ITEM_SIZE = GuiRenderer.DEFAULT_ITEM_SIZE
 
 /**
  * @see StatsScreen.SLOT_SPRITE

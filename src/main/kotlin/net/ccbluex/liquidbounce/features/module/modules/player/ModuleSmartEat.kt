@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import net.minecraft.world.InteractionResult
@@ -136,7 +137,7 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
                 val scaledHeight = dc.guiHeight()
                 val i: Int = scaledWidth / 2
                 val x = i - 91 - 26 - offset
-                val y = scaledHeight - 16 - 3
+                val y = scaledHeight - GuiRenderer.DEFAULT_ITEM_SIZE - 3
                 dc.renderItemDecorations(mc.font, currentFood.itemStack, x, y)
                 dc.renderItem(currentFood.itemStack, x, y)
                 dc.blitSprite(
