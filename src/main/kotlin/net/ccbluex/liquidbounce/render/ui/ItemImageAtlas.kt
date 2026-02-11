@@ -59,7 +59,7 @@ import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import kotlin.math.sqrt
 
-private const val NATIVE_ITEM_SIZE: Int = 16
+private const val NATIVE_ITEM_SIZE: Int = GuiRenderer.DEFAULT_ITEM_SIZE
 
 private class Atlas(
     val map: Map<Item, Rect2i>,

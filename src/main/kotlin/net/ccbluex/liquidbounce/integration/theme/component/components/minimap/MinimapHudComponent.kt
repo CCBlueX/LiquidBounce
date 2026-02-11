@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.navigation.ScreenRectangle
+import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
@@ -112,11 +113,11 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     }
 
     private val extraElements = arrayOf(
-        ExtraElement("Compass", 16F) { ctx ->
+        ExtraElement("Compass", GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()) { ctx ->
             val stack = player.inventory.nonEquipmentItems.find { it.item === Items.COMPASS } ?: COMPASS
             ctx.renderItem(stack, 0, 0)
         },
-        ExtraElement("Clock", 16F) { ctx ->
+        ExtraElement("Clock", GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()) { ctx ->
             val stack = player.inventory.nonEquipmentItems.find { it.item === Items.CLOCK } ?: CLOCK
             ctx.renderItem(stack, 0, 0)
         },
