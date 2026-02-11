@@ -78,7 +78,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
     }
 
     private val color by color("Color", Color4b.RED)
-    private val builtinParticleImages by multiEnumChoice("Particle", enumSetOf(BuiltinParticle.STAR), canBeNone = false)
+    private val builtinParticles by multiEnumChoice("Particle", enumSetOf(BuiltinParticle.STAR), canBeNone = false)
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
 
@@ -120,7 +120,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
         val pos = player.eyePosition.add(directionVector * player.distanceTo(event.entity).toDouble())
 
         repeat(count.random()) {
-            particles.add(Particle(pos, builtinParticleImages.random()))
+            particles.add(Particle(pos, builtinParticles.random()))
         }
     }
 

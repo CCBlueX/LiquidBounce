@@ -20,11 +20,12 @@ package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
+import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.config.types.toTextureProperty
+import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -54,7 +55,6 @@ import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
 import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
@@ -89,8 +89,6 @@ class TargetRenderer(
             TargetRenderAppearance.World.Image(owner, it),
             TargetRenderAppearance.World.GlowingCircle(owner, it),
             TargetRenderAppearance.World.Ghost(it),
-            TargetRenderAppearance.World.Marker(it),
-            TargetRenderAppearance.World.Marker2(it),
             TargetRenderAppearance.Gui.Text(owner, it),
             TargetRenderAppearance.Gui.Arrow(it),
         )
@@ -227,7 +225,12 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
         class Image(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) : World("Image") {
 
-            private val texture by file("File").toTextureProperty(owner)
+            private val textureMode = modes("Source", 0) {
+                arrayOf(
+                    TextureMode.Custom(it),
+                    TextureMode.Builtin(it, PresetTexture.MARKER1, PresetTexture.entries.toEnumSet())
+                )
+            }
             private val scale by vec2f("Scale", Vector2f(1f, 1f))
             private val color by color("ColorModulator", Color4b.WHITE)
             private val rotate = tree(object : AnimatedValueGroup("Rotate") {
@@ -248,10 +251,18 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 )
             }
 
+            private enum class PresetTexture(override val tag: String, val path: String) : TextureMode.Builtin.Preset {
+                MARKER1("Marker1", "target_renderer/target.png"),
+                MARKER2("Marker2", "target_renderer/target2.png");
+
+                override val texture = LiquidBounce.resource(this.path)
+                    .toNativeImage().asTexture { "TargetRenderer Image $tag" }
+            }
+
             private val quaternion = Quaternionf()
 
             override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
-                val texture = texture ?: return
+                val texture = textureMode.activeMode.texture ?: return
 
                 val height = heightMode.activeMode.getHeight(entity, partialTicks)
                 val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
@@ -358,24 +369,6 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
         }
 
-        abstract class AbstractMarker(name: String, private val texture: AbstractTexture) : World(name) {
-            private val color by color("Color", Color4b.WHITE)
-            private val size by float("Size", 1.5f, 0.1f..5f)
-
-            override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
-                val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, entity.bbHeight / 2.0, 0.0)
-
-                withPositionRelativeToCamera(pos) {
-                    matrixStack.mulPose(camera.rotation())
-                    matrixStack.mulPose(Axis.ZP.rotationDegrees(System.currentTimeMillis() % 3600 / 5f))
-                    matrixStack.last().scale(size, size, 1f)
-                    drawTexQuad(texture, color.argb)
-                }
-            }
-        }
-
-        class Marker(override val parent: ModeValueGroup<*>) : AbstractMarker("Marker", markerTexture)
-        class Marker2(override val parent: ModeValueGroup<*>) : AbstractMarker("Marker2", marker2Texture)
     }
 
     sealed class Gui(name: String) : TargetRenderAppearance<GuiGraphics>(name) {
@@ -450,12 +443,6 @@ private val defaultColor = Color4b.LIQUID_BOUNCE.alpha(100)
 
 private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
     .toNativeImage().asTexture { "TargetRenderer Ghost" }
-
-private val markerTexture = LiquidBounce.resource("targetesp/target.png")
-    .toNativeImage().asTexture { "TargetRenderer Marker" }
-
-private val marker2Texture = LiquidBounce.resource("targetesp/target2.png")
-    .toNativeImage().asTexture { "TargetRenderer Marker2" }
 
 private sealed class HeightMode(name: String) : Mode(name) {
     abstract fun getHeight(entity: Entity, partialTicks: Float): Double
