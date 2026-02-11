@@ -28,8 +28,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.core.component.DataComponents
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import java.util.function.Predicate
@@ -41,28 +39,36 @@ import java.util.function.Predicate
  */
 object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
 
-    private val matches by multiEnumChoice("Matches",
-        Matches.SCOREBOARD_TEAM,
-        Matches.NAME_COLOR
+    private val matches by multiEnumChoice(
+        "Matches",
+        enumSetOf(Matches.SCOREBOARD_TEAM, Matches.NAME_COLOR),
     )
 
-    private val armorColor by multiEnumChoice(
+    private val armorColorSlots by multiEnumChoice(
         "ArmorColor",
         enumSetOf(EquipmentSlotChoice.HEAD),
         EquipmentSlotChoice.allHumanoidArmor(),
     )
 
+    private val setColorFromArmor by boolean("SetColorFromArmor", true)
+
     @Suppress("unused")
-    val entityTagEvent = handler<TagEntityEvent> {
-        val entity = it.entity
+    private val entityTagEvent = handler<TagEntityEvent> { event ->
+        val entity = event.entity
 
         if (entity is LivingEntity && isInClientPlayersTeam(entity)) {
-            it.dontTarget()
+            event.dontTarget()
         }
 
-        getTeamColor(entity)?.let { color ->
-            it.color(color, Priority.IMPORTANT_FOR_USAGE_1)
-        }
+        // Team color
+        val color = entity.team?.color?.color
+            ?: if (entity is LivingEntity && setColorFromArmor && armorColorSlots.isNotEmpty()) {
+                armorColorSlots.firstNotNullOfOrNull { it.getArmorColor(entity) }
+            } else {
+                null
+            }
+
+        event.color(Color4b.fullAlpha(color ?: return@handler), Priority.IMPORTANT_FOR_USAGE_1)
     }
 
     /**
@@ -76,13 +82,7 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
      * Checks if the color of any armor piece matches.
      */
     private fun checkArmor(entity: LivingEntity) =
-        entity is Player && armorColor.any { it.matchesArmorColor(entity) }
-
-    /**
-     * Returns the team color of the [entity] or null if the entity is not in a team.
-     */
-    private fun getTeamColor(entity: Entity) =
-        entity.displayName?.style?.color?.value?.let { Color4b(it) }
+        entity is Player && armorColorSlots.any { it.matchesArmorColor(entity) }
 
     @Suppress("unused")
     private enum class Matches(
@@ -134,7 +134,6 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
      * Checks if the color of the item in the [EquipmentSlotChoice.slot] of
      * the [player] matches the user's armor color in the same slot.
      */
-    @Suppress("ReturnCount")
     private fun EquipmentSlotChoice.matchesArmorColor(suspected: Player): Boolean {
         // returns false if the armor is not dyeable (e.g., iron armor)
         // to avoid a false positive from `null == null`
