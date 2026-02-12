@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.math.multiply
  *
  * @author larryngton
  */
-class SpeedIntave14Fast(override val parent: ModeValueGroup<*>) : SpeedBHopBase("Intave14Fast", parent) {
+class SpeedIntave14Fast(parent: ModeValueGroup<*>) : SpeedBHopBase("Intave14Fast", parent) {
     private val timer by boolean("Timer", true)
 
     @Suppress("unused")

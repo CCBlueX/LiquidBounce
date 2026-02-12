@@ -38,7 +38,7 @@ import net.minecraft.world.entity.MoverType
  * @anticheatVersion b3882
  * @testedOn eu.anticheat-test.com
  */
-class SpeedVerusB3882(override val parent: ModeValueGroup<*>) : SpeedBHopBase("VerusB3882", parent) {
+class SpeedVerusB3882(parent: ModeValueGroup<*>) : SpeedBHopBase("VerusB3882", parent) {
 
     @Suppress("unused")
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {

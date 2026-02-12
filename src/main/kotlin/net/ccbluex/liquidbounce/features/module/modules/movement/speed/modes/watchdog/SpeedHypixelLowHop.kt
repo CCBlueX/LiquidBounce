@@ -34,7 +34,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * @anticheatVersion 25.01.25
  * @testedOn hypixel.net
  */
-class SpeedHypixelLowHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelLowHop", parent) {
+class SpeedHypixelLowHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelLowHop", parent) {
 
     companion object {
         var shouldStrafe = false

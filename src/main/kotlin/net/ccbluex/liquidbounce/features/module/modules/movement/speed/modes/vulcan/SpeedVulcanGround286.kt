@@ -36,7 +36,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * @testedOn anticheat-test.com, eu.loyisa.cn
  * @note flags on specific blocks such as fences
  */
-class SpeedVulcanGround286(override val parent: ModeValueGroup<*>) : SpeedBHopBase("VulcanGround286", parent) {
+class SpeedVulcanGround286(parent: ModeValueGroup<*>) : SpeedBHopBase("VulcanGround286", parent) {
 
     @Suppress("unused")
     private val afterJumpHandler = tickHandler {

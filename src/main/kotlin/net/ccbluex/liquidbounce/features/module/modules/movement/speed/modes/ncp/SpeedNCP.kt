@@ -39,7 +39,7 @@ import net.minecraft.world.effect.MobEffects
  * tested on anticheat.test.com and eu.loyisa.cn
  * made for ncp, works on uncp and other anticheats by changing some options
  */
-class SpeedNCP(override val parent: ModeValueGroup<*>) : SpeedBHopBase("NCP", parent) {
+class SpeedNCP(parent: ModeValueGroup<*>) : SpeedBHopBase("NCP", parent) {
 
     private inner class PullDown(parent: EventListener?) : ToggleableValueGroup(parent, "PullDown", true) {
 

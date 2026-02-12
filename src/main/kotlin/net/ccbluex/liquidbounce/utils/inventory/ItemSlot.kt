@@ -21,8 +21,9 @@ package net.ccbluex.liquidbounce.utils.inventory
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.item.ItemStackHolder
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
-import net.ccbluex.liquidbounce.utils.item.asItemSlotComparator
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EquipmentSlot
@@ -33,8 +34,8 @@ import kotlin.math.abs
 /**
  * Represents an inventory slot (e.g. Hotbar Slot 0, OffHand, Chestslot 5, etc.)
  */
-sealed interface ItemSlot {
-    val itemStack: ItemStack
+sealed interface ItemSlot : ItemStackHolder {
+    override val itemStack: ItemStack
     val slotType: Type
 
     /**
@@ -55,7 +56,7 @@ sealed interface ItemSlot {
          * current hand -> offhand -> other hotbar slots -> other slots
          */
         @JvmField
-        val PREFER_NEARBY: Comparator<ItemSlot> = Comparator<ItemSlot> { left, right ->
+        val PREFER_NEARBY: Comparator<ItemSlot> = Comparator { left, right ->
             val leftIsHotbar = left is HotbarItemSlot
             val rightIsHotbar = right is HotbarItemSlot
             when {
@@ -67,10 +68,10 @@ sealed interface ItemSlot {
         }
 
         @JvmField
-        val PREFER_FEWER_ITEM: Comparator<ItemSlot> = PreferStackSize.PREFER_FEWER.asItemSlotComparator()
+        val PREFER_FEWER_ITEM: Comparator<in ItemSlot> = PreferStackSize.PREFER_FEWER.asHolderComparator()
 
         @JvmField
-        val PREFER_MORE_ITEM: Comparator<ItemSlot> = PreferStackSize.PREFER_MORE.asItemSlotComparator()
+        val PREFER_MORE_ITEM: Comparator<in ItemSlot> = PreferStackSize.PREFER_MORE.asHolderComparator()
     }
 
     enum class Type {

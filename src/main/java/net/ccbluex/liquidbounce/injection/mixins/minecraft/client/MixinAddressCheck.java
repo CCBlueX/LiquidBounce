@@ -50,7 +50,7 @@ public interface MixinAddressCheck {
     ) {
         try {
             return operation.call(instance, collector);
-        } catch (NoClassDefFoundError error) {
+        } catch (NoClassDefFoundError | ExceptionInInitializerError error) {
             return ImmutableList.of();
         }
     }

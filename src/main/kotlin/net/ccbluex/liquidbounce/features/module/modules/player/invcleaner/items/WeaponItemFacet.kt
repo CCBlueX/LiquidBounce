@@ -24,14 +24,13 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFu
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
-import net.ccbluex.liquidbounce.utils.item.asItemFacetComparator
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.core.component.DataComponents
 import net.minecraft.world.item.enchantment.Enchantments
 import kotlin.math.ceil
 import kotlin.math.pow
@@ -49,10 +48,11 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 // Knockback deals no damage, but it allows us to deal more damage because we don't get hit as often.
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.2f),
             )
-        private val SECONDARY_VALUE_ESTIMATOR =
+        internal val SECONDARY_VALUE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, 0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING_EDGE, 0.2f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.25f),
@@ -60,10 +60,10 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         private val COMPARATOR =
             ComparatorChain<WeaponItemFacet>(
                 Comparator.comparingDouble(::estimateDamage),
-                SECONDARY_VALUE_ESTIMATOR.asItemFacetComparator(),
+                SECONDARY_VALUE_ESTIMATOR.asHolderComparator(),
                 compareByCondition { it.itemStack.isSword },
                 PREFER_BETTER_DURABILITY,
-                Comparator.comparingInt { it.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
+                PREFER_ENCHANTABLE,
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
