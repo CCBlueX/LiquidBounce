@@ -55,7 +55,6 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
         if (menu is InventoryMenu && !allowInventoryCrafting) return@handler
 
         if (++timer < delay.random()) return@handler
-        timer = 0
 
         val context = SlotDisplayContext.fromLevel(mc.level ?: return@handler)
         val recipeBook = player.recipeBook
@@ -94,6 +93,7 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
                     player
                 )
             }
+            timer = 0
             if (craftSequentially) return@handler
         }
     }
