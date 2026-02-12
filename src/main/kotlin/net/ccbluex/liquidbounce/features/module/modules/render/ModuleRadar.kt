@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.platform.NativeImage
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.Mode
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
@@ -48,6 +50,7 @@ import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.CameraType
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player
 import org.joml.Matrix3x2f
@@ -105,7 +108,11 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
     private val onlyPlayers by boolean("OnlyPlayers", false)
 
     private val pointerModes = choices("PointerMode", 0) {
-        arrayOf(PointerMode.Triangle, PointerMode.Image, PointerMode.Image2)
+        arrayOf(
+            PointerMode.Triangle,
+            PointerMode.ImageMode("Image1", LiquidBounce.resource("misc/triangle1.png").toNativeImage()),
+            PointerMode.ImageMode("Image2", LiquidBounce.resource("misc/triangle2.png").toNativeImage()),
+        )
     }
 
     private sealed class PointerMode(name: String) : Mode(name) {
@@ -151,9 +158,10 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
             }
         }
 
-        private abstract class ImageMode(name: String) : PointerMode(name) {
+        class ImageMode(name: String, val texture: AbstractTexture) : PointerMode(name) {
+            constructor(name: String, nativeImage: NativeImage) : this(name, nativeImage.asTexture { "Radar $name" })
+
             private val size by float("Size", 10f, 1f..100f)
-            abstract val texture: net.minecraft.client.renderer.texture.AbstractTexture
 
             context(ctx: GuiGraphics)
             override fun draw(color: Color4b) {
@@ -161,17 +169,10 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                     texture.textureSetup,
                     -size / 2f, 0f, size / 2f, size,
                     u1 = 1f, v1 = 1f, u2 = 0f, v2 = 0f,
-                    argb = color.argb
+                    argb = color.argb,
+                    pipeline = ClientRenderPipelines.GUI.TexQuadNoCull,
                 )
             }
-        }
-
-        object Image : ImageMode("Image") {
-            override val texture get() = triangleTexture
-        }
-
-        object Image2 : ImageMode("Image2") {
-            override val texture get() = triangle2Texture
         }
     }
 
@@ -200,12 +201,6 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         RenderedEntities.unsubscribe(this)
         super.onDisabled()
     }
-
-    private val triangleTexture = LiquidBounce.resource("junk/triangle.png")
-        .toNativeImage().asTexture { "Radar triangle" }
-
-    private val triangle2Texture = LiquidBounce.resource("junk/triangle2.png")
-        .toNativeImage().asTexture { "Radar triangle2" }
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> {
