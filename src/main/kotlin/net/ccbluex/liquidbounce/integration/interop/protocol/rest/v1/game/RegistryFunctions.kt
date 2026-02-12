@@ -205,14 +205,14 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
     return when (registryName.lowercase(Locale.ENGLISH)) {
         "blocks", "block" -> {
             BuiltInRegistries.BLOCK.buildOutput(
-                name = { _, it -> it.name.string },
+                name = { _, id -> id.name.string },
                 iconUrl = ::itemIconUrl,
             )
         }
 
         "items", "item" -> {
             BuiltInRegistries.ITEM.buildOutput(
-                name = { _, it -> it.name.string },
+                name = { _, id -> id.name.string },
                 iconUrl = ::itemIconUrl,
             )
         }
@@ -222,13 +222,13 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
             val icon = itemIconUrl(soundDiscId)
 
             BuiltInRegistries.SOUND_EVENT.buildOutput(
-                name =  { _, it -> it.location.toName() },
+                name =  { _, id -> id.location.toName() },
             ) { icon }
         }
 
         "mob_effect" -> {
             BuiltInRegistries.MOB_EFFECT.buildOutput(
-                name =  { _, it -> it.displayName.string },
+                name =  { _, id -> id.displayName.string },
                 iconUrl = ::effectTextureUrl,
             )
         }
@@ -236,7 +236,7 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
         "enchantment" -> {
             val registry = Registries.ENCHANTMENT.getOrNull()
                 ?: return httpServiceUnavailable("Registry not loaded")
-            registry.buildOutput(name = { _, it -> it.description.string })
+            registry.buildOutput(name = { _, id -> id.description.string })
         }
 
         "c2s_packet" -> {
@@ -252,7 +252,7 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
         }
 
         "entity_type" -> {
-            BuiltInRegistries.ENTITY_TYPE.buildOutput(name = { _, it -> it.description.string })
+            BuiltInRegistries.ENTITY_TYPE.buildOutput(name = { _, id -> id.description.string })
         }
 
         "screen_handler", "menu" -> {

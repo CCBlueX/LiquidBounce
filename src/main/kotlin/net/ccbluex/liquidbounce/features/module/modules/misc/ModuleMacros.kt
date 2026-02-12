@@ -41,18 +41,21 @@ import net.minecraft.world.phys.BlockHitResult
 /**
  * Macros module
  *
- * Quick actions with key bind.
+ * Lets you execute chat messages or item actions using custom keybinds.
  */
 object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
+
+    /** We don't have mutable value group list yet */
+    private const val COUNT = 5
 
     private val macros: List<Macro>
 
     init {
         val macros = ArrayList<Macro>()
-        repeat(5) {
+        repeat(COUNT) {
             macros += tree(Macro.Chat("Chat-${it + 1}"))
         }
-        repeat(5) {
+        repeat(COUNT) {
             macros += tree(Macro.UseItem("Item-${it + 1}"))
         }
         this.macros = macros
