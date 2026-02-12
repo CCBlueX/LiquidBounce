@@ -781,6 +781,7 @@
   "liquidbounce.module.yggdrasilSignatureFix.description": "Disables Authlib Yggdrasil signature check, may fix missing skins on some servers.",
   "liquidbounce.module.reportHelper.description": "Automatically starts a report and confirms it for you.",
   "liquidbounce.module.protectionZones.description": "Allows you to see areas protected by protection blocks and suggests optimal placement spots.",
+  "liquidbounce.module.macros.description": "Lets you execute chat messages or item actions using custom keybinds.",
   "liquidbounce.module.newChunks.description": "Highlights chunks that are likely newly generated."
 
 }

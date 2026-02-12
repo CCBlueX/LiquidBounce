@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 
-import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.AutoQueueItemMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.AutoQueueTriggerItem.mode
+import net.ccbluex.liquidbounce.utils.inventory.SingleItemStackPickMode
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 
 /**
@@ -36,7 +36,7 @@ object AutoQueueTriggerItem : AutoQueueTrigger("Item") {
      * and only contains the text.
      */
     private val mode = modes("Mode", 0) {
-        arrayOf(AutoQueueItemMode.ByName(it), AutoQueueItemMode.ByItem(it))
+        arrayOf(SingleItemStackPickMode.ByName(it), SingleItemStackPickMode.ByItem(it))
     }
 
     override val isTriggered: Boolean

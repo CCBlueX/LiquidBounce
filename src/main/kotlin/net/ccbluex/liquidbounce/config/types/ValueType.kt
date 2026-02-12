@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.utils.AutoCompletionProvider
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer.registryItemDeserializer
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.Registries
 
 enum class ValueType(
     val deserializer: HumanInputDeserializer.StringDeserializer<*>? = null,
@@ -41,6 +42,7 @@ enum class ValueType(
     // Registry Types
     BLOCK(registryItemDeserializer(BuiltInRegistries.BLOCK)),
     ITEM(registryItemDeserializer(BuiltInRegistries.ITEM)),
+    ENCHANTMENT(registryItemDeserializer(Registries.ENCHANTMENT)),
     SOUND_EVENT(registryItemDeserializer(BuiltInRegistries.SOUND_EVENT)),
     MOB_EFFECT(registryItemDeserializer(BuiltInRegistries.MOB_EFFECT)),
     MENU(registryItemDeserializer(BuiltInRegistries.MENU)),

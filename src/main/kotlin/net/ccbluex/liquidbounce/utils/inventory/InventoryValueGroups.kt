@@ -23,6 +23,8 @@ import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -31,12 +33,16 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
+import net.ccbluex.liquidbounce.utils.text.StringMatchMode
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import java.util.EnumSet
 import java.util.function.Predicate
 
@@ -178,4 +184,29 @@ class CheckScreenTitleValueGroup(
         CHEST_MINECART("ChestMinecart", "entity.minecraft.chest_minecart"),
         HOPPER_MINECART("HopperMinecart", "entity.minecraft.hopper_minecart"),
     }
+}
+
+sealed class SingleItemStackPickMode(
+    final override val parent: ModeValueGroup<*>,
+    name: String,
+) : Mode(name), Predicate<ItemStack> {
+
+    abstract override fun test(itemStack: ItemStack): Boolean
+
+    class ByName(parent: ModeValueGroup<*>) : SingleItemStackPickMode(parent, "Name") {
+        private val names by textList("Names", objectRBTreeSetOf("Paper"))
+        private val mode by enumChoice("Mode", StringMatchMode.EQUALS)
+
+        override fun test(itemStack: ItemStack): Boolean {
+            val string = itemStack.hoverName.string
+            return names.any { mode.test(string, it) }
+        }
+    }
+
+    class ByItem(parent: ModeValueGroup<*>) : SingleItemStackPickMode(parent, "Item") {
+        private val items by items("Items", itemSortedSetOf(Items.PAPER))
+
+        override fun test(itemStack: ItemStack): Boolean = itemStack.item in items
+    }
+
 }

@@ -20,24 +20,28 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
 
 import kotlinx.coroutines.delay
+import net.ccbluex.liquidbounce.utils.client.sendChatOrCommand
 
 object AutoQueueActionChat : AutoQueueAction("Chat") {
-    private val startDelay by intRange("StartDelay", 0..0, 0..2000, "ms")
-    private val messageDelay by intRange("MessageDelay", 0..0, 0..2000, "ms")
+    private val startDelay by intRange("StartDelay", 0..0, 0..5000, "ms")
+    private val messageDelay by intRange("MessageDelay", 0..0, 0..5000, "ms")
 
-    private val messages by textList("Messages", mutableListOf("/play solo_normal"))
+    private val messages by textList("Messages", arrayListOf("/play solo_normal"))
 
     override suspend fun execute() {
-        delay(startDelay.random().toLong())
+        var flag = true
 
-        messages.forEach { message ->
-            if (message.startsWith("/")) {
-                network.sendCommand(message.substring(1))
+        for (message in messages) {
+            val delayMs = if (flag) {
+                flag = false
+                startDelay.random().toLong()
             } else {
-                network.sendChat(message)
+                messageDelay.random().toLong()
             }
 
-            delay(messageDelay.random().toLong())
+            delay(delayMs)
+
+            network.sendChatOrCommand(message)
         }
     }
 }

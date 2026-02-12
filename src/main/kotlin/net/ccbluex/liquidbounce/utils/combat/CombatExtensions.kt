@@ -206,6 +206,9 @@ inline fun ClientLevel.getEntitiesBoxInRange(
     return getEntitiesInCuboid(midPos, range) { predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared }
 }
 
+/**
+ * @see net.minecraft.client.Minecraft.startAttack
+ */
 @Suppress("CognitiveComplexMethod", "NestedBlockDepth", "MagicNumber")
 fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) {
     val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)

@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl
+import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
@@ -107,6 +108,13 @@ fun ClientCommonPacketListenerImpl.sendHeldItemChange(slot: Int) {
 fun ClientCommonPacketListenerImpl.sendCloseInventory() {
     send(ServerboundContainerClosePacket(0))
 }
+
+fun ClientPacketListener.sendChatOrCommand(message: String) =
+    if (message.startsWith('/')) {
+        sendCommand(message.substring(1))
+    } else {
+        sendChat(message)
+    }
 
 fun LocalPlayer.clickBlockWithSlot(
     rayTraceResult: BlockHitResult,

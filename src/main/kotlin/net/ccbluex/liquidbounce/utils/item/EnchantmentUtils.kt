@@ -26,7 +26,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper
 import net.minecraft.world.item.enchantment.ItemEnchantments
 
 private val ItemStack.componentTypeForEnchantment
-    get() = EnchantmentHelper.getComponentType(this)
+    inline get() = EnchantmentHelper.getComponentType(this)
 
 fun ItemStack.removeEnchantment(enchantment: Holder<Enchantment>) {
     EnchantmentHelper.updateEnchantments(this) { it.set(enchantment, 0) }

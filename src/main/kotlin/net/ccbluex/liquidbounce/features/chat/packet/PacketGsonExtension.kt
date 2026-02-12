@@ -21,13 +21,15 @@ package net.ccbluex.liquidbounce.features.chat.packet
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.config.gson.publicGson
-import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.config.gson.util.jsonObject
 import java.lang.reflect.Type
+
+private val EMPTY_JSON_OBJECT = JsonObject()
 
 /**
  * Packet Serializer
@@ -118,7 +120,7 @@ class PacketDeserializer : JsonDeserializer<AxochatPacket> {
 
         if (!packetRegistry.containsKey(packetName)) return null
 
-        if (!packetObject.has("c")) packetObject.add("c", emptyJsonObject())
+        if (!packetObject.has("c")) packetObject.add("c", EMPTY_JSON_OBJECT)
 
         return publicGson.fromJson(packetObject.get("c"), packetRegistry[packetName])
 
