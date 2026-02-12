@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.blockingHand
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 
@@ -53,7 +54,7 @@ internal object NoSlowBlockingSwitch : Mode("Switch") {
                                 ServerboundSetCarriedItemPacket(
                                 (player.inventory.selectedSlot + 1) % 8)
                             )
-                            network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
+                            network.sendHeldItemChange(player.inventory.selectedSlot)
 
                             // For some reason we do not have to re-interact with the item to start blocking again.
                             // The server will still think we are blocking.
@@ -67,7 +68,7 @@ internal object NoSlowBlockingSwitch : Mode("Switch") {
                                 ServerboundSetCarriedItemPacket(
                                 (player.inventory.selectedSlot + 1) % 8)
                             )
-                            network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
+                            network.sendHeldItemChange(player.inventory.selectedSlot)
 
                             // For some reason we do not have to re-interact with the item to start blocking again.
                             // The server will still think we are blocking.
@@ -92,7 +93,7 @@ internal object NoSlowBlockingSwitch : Mode("Switch") {
 
                         EventState.POST -> {
                             untracked {
-                                network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
+                                network.sendHeldItemChange(player.inventory.selectedSlot)
                                 interaction.startPrediction(world) { sequence ->
                                     ServerboundUseItemPacket(blockingHand, sequence, player.yRot, player.xRot)
                                 }

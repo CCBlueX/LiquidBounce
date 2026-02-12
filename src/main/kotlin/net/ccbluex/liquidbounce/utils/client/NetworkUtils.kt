@@ -16,11 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("FunctionName", "TooManyFunctions")
+
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.event.nextTick
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -32,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl
+import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
@@ -52,14 +56,12 @@ import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.GameType
 import net.minecraft.world.phys.BlockHitResult
 
-@Suppress("FunctionName")
 fun ClientCommonPacketListenerImpl.send1_21_5StartSneaking() {
     if (!usesViaFabricPlus) return
 
     sendPacket(PlayerSneakPacket.START)
 }
 
-@Suppress("FunctionName")
 fun ClientCommonPacketListenerImpl.send1_21_5StopSneaking() {
     if (!usesViaFabricPlus) return
 
@@ -69,7 +71,6 @@ fun ClientCommonPacketListenerImpl.send1_21_5StopSneaking() {
 /**
  * Sends an open inventory packet with the help of ViaFabricPlus. This is only for older versions. (<= 1.11.2)
  */
-@Suppress("FunctionName")
 fun ClientCommonPacketListenerImpl.send1_11_1OpenInventory() {
     if (InventoryManager.isInventoryOpenServerSide || !usesViaFabricPlus) {
         return
@@ -100,9 +101,20 @@ fun ClientCommonPacketListenerImpl.sendSwapItemWithOffhand() {
     )
 }
 
+fun ClientCommonPacketListenerImpl.sendHeldItemChange(slot: Int) {
+    send(ServerboundSetCarriedItemPacket(slot))
+}
+
 fun ClientCommonPacketListenerImpl.sendCloseInventory() {
     send(ServerboundContainerClosePacket(0))
 }
+
+fun ClientPacketListener.sendChatOrCommand(message: String) =
+    if (message.startsWith('/')) {
+        sendCommand(message.substring(1))
+    } else {
+        sendChat(message)
+    }
 
 fun LocalPlayer.clickBlockWithSlot(
     rayTraceResult: BlockHitResult,
@@ -127,7 +139,7 @@ fun LocalPlayer.clickBlockWithSlot(
         this.inventory.selectedSlot = slot
 
         if (slot != prevHotbarSlot) {
-            connection.send(ServerboundSetCarriedItemPacket(slot))
+            connection.sendHeldItemChange(slot)
         }
     }
 
@@ -158,10 +170,14 @@ fun LocalPlayer.clickBlockWithSlot(
     }
 
     if (slot != prevHotbarSlot && hand == InteractionHand.MAIN_HAND && switchMode == SwitchMode.SILENT) {
-        connection.send(ServerboundSetCarriedItemPacket(prevHotbarSlot))
+        connection.sendHeldItemChange(prevHotbarSlot)
     }
 
     this.inventory.selectedSlot = prevHotbarSlot
+}
+
+fun MultiPlayerGameMode.releaseUsingItemNextTick() = nextTick {
+    this.releaseUsingItem(player)
 }
 
 /**

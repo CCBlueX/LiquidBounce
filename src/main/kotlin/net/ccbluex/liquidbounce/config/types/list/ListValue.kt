@@ -169,6 +169,7 @@ private val VALUE_TYPE_TO_REGISTRY_NAME = enumMapOf(
     ValueType.C2S_PACKET, "c2s_packet",
     ValueType.S2C_PACKET, "s2c_packet",
     ValueType.ENTITY_TYPE, "entity_type",
+    ValueType.ENCHANTMENT, "enchantment",
     ValueType.MENU, "menu",
     ValueType.CLIENT_MODULE, "client_module",
 )

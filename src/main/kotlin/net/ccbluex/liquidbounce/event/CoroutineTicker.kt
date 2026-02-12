@@ -49,17 +49,25 @@ object CoroutineTicker : EventListener {
     }
 
     /**
-     * We want it to run before everything else, so we set the priority to [FIRST_PRIORITY]
-     * This is because we want to tick the existing tasks before new ones are added and might be ticked
-     * in the same tick
+     * We want it to run before everything else, this is because we want to tick the existing tasks before
+     * new ones are added and might be ticked in the same tick
      */
-    @Suppress("unused")
-    private val taskTicker = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+    fun tick() {
         runningList.addAll(pendingList)
         pendingList.clear()
         runningList.removeIf(Predicate(BooleanSupplier::getAsBoolean))
     }
 
+}
+
+/**
+ * Schedule a task to run at next [GameTickEvent], before all event handlers.
+ */
+fun nextTick(runnable: Runnable) {
+    CoroutineTicker.register {
+        runnable.run()
+        true
+    }
 }
 
 /**

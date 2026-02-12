@@ -23,18 +23,25 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.common.base.CaseFormat
 import com.google.gson.JsonObject
+import io.netty.handler.codec.http.FullHttpResponse
+import net.ccbluex.fastutil.objectObjectHashMapOf
+import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
+import net.ccbluex.liquidbounce.utils.item.getOrNull
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.util.httpServiceUnavailable
 import net.minecraft.core.BlockPos
 import net.minecraft.core.DefaultedRegistry
+import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.Registries
 import net.minecraft.network.protocol.PacketFlow
 import net.minecraft.resources.Identifier
 import net.minecraft.tags.BlockTags
@@ -169,112 +176,99 @@ private fun <T : Any> constructMap(
     return map
 }
 
+private inline fun <T : Any> Registry<T>.buildOutput(
+    name: (Identifier, T) -> String,
+    iconUrl: (Identifier) -> String? = { null },
+): Map<String, RegistryItemOutput> {
+    val obj = objectObjectHashMapOf<String, RegistryItemOutput>()
+    for (item in this) {
+        val id = this.getKey(item) ?: continue
+        obj[id.toString()] = RegistryItemOutput(name(id, item), iconUrl(id))
+    }
+    return obj
+}
+
+@JvmRecord
+private data class RegistryItemOutput(val name: String, val icon: String?)
+
 // GET /api/v1/client/registry/:name
 @Suppress("UNUSED_PARAMETER")
-fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    fun iconUrl(id: Identifier) =
+fun getRegistry(requestObject: RequestObject): FullHttpResponse {
+    fun itemIconUrl(id: Identifier) =
         "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id"
+    fun effectTextureUrl(id: Identifier) =
+        "${ClientInteropServer.url}/api/v1/client/resource/effectTexture?id=$id"
 
     val registryName = requestObject.params["name"]
         ?: return httpForbidden("Missing registry name parameter")
-    when (registryName.lowercase(Locale.ENGLISH)) {
+
+    return when (registryName.lowercase(Locale.ENGLISH)) {
         "blocks", "block" -> {
-            BuiltInRegistries.BLOCK.forEach { block ->
-                val id = BuiltInRegistries.BLOCK.getKey(block)
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", block.name.string)
-                    addProperty("icon", iconUrl(id))
-                })
-            }
+            BuiltInRegistries.BLOCK.buildOutput(
+                name = { _, id -> id.name.string },
+                iconUrl = ::itemIconUrl,
+            )
         }
 
         "items", "item" -> {
-            BuiltInRegistries.ITEM.forEach { item ->
-                val id = BuiltInRegistries.ITEM.getKey(item)
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", item.name.string)
-                    addProperty("icon", iconUrl(id))
-                })
-            }
+            BuiltInRegistries.ITEM.buildOutput(
+                name = { _, id -> id.name.string },
+                iconUrl = ::itemIconUrl,
+            )
         }
 
         "sounds", "sound_event" -> {
             val soundDiscId = BuiltInRegistries.ITEM.getKey(Items.MUSIC_DISC_13)
+            val icon = itemIconUrl(soundDiscId)
 
-            BuiltInRegistries.SOUND_EVENT.forEach { soundEvent ->
-                val id = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent)
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", soundEvent.location.toName())
-                    addProperty("icon", iconUrl(soundDiscId))
-                })
+            BuiltInRegistries.SOUND_EVENT.buildOutput(
+                name =  { _, id -> id.location.toName() },
+            ) { icon }
+        }
+
+        "mob_effect" -> {
+            BuiltInRegistries.MOB_EFFECT.buildOutput(
+                name =  { _, id -> id.displayName.string },
+                iconUrl = ::effectTextureUrl,
+            )
+        }
+
+        "enchantment" -> {
+            val registry = Registries.ENCHANTMENT.getOrNull()
+                ?: return httpServiceUnavailable("Registry not loaded")
+            registry.buildOutput(name = { _, id -> id.description.string })
+        }
+
+        "c2s_packet" -> {
+            packetRegistry[PacketFlow.SERVERBOUND]!!.associate {
+                it.toString() to RegistryItemOutput(it.toName(), null)
             }
         }
 
-        "statuseffects", "mob_effect" -> {
-            val potionId = BuiltInRegistries.ITEM.getKey(Items.POTION)
-
-            BuiltInRegistries.MOB_EFFECT.forEach { effect ->
-                val id = BuiltInRegistries.MOB_EFFECT.getKey(effect)
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", effect.displayName.string)
-                    addProperty("icon", iconUrl(potionId))
-                })
-            }
-        }
-
-        "clientpackets", "c2s_packet" -> {
-            val iconId = BuiltInRegistries.ITEM.getKey(Items.PAPER)
-
-            packetRegistry[PacketFlow.SERVERBOUND]?.forEach { packetId ->
-                add(packetId.toString(), JsonObject().apply {
-                    addProperty("name", packetId.toName())
-                    addProperty("icon", iconUrl(iconId))
-                })
-            }
-        }
-
-        "serverpackets", "s2c_packet" -> {
-            val iconId = BuiltInRegistries.ITEM.getKey(Items.PAPER)
-
-            packetRegistry[PacketFlow.CLIENTBOUND]?.forEach { packetId ->
-                add(packetId.toString(), JsonObject().apply {
-                    addProperty("name", packetId.toName())
-                    addProperty("icon", iconUrl(iconId))
-                })
+        "s2c_packet" -> {
+            packetRegistry[PacketFlow.CLIENTBOUND]!!.associate {
+                it.toString() to RegistryItemOutput(it.toName(), null)
             }
         }
 
         "entity_type" -> {
-            BuiltInRegistries.ENTITY_TYPE.forEach { entityType ->
-                val id = BuiltInRegistries.ENTITY_TYPE.getKey(entityType)
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", entityType.description.string)
-                    addProperty("icon", iconUrl(id)) // TODO: fix icon
-                })
-            }
+            BuiltInRegistries.ENTITY_TYPE.buildOutput(name = { _, id -> id.description.string })
         }
 
         "screen_handler", "menu" -> {
             val converter = CaseFormat.LOWER_UNDERSCORE.converterTo(CaseFormat.UPPER_CAMEL)
-            BuiltInRegistries.MENU.forEach { screenHandlerType ->
-                val id = BuiltInRegistries.MENU.getKey(screenHandlerType) ?: return@forEach
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", converter.convert(id.toName()))
-                })
-            }
+            BuiltInRegistries.MENU.buildOutput(name = { id, _ -> converter.convert(id.toName())!! })
         }
 
         "client_module" -> {
-            ModuleManager.forEach { module ->
-                add(module.name, JsonObject().apply {
-                    addProperty("name", module.name)
-                })
+            ModuleManager.associate {
+                it.name to RegistryItemOutput(it.name, null)
             }
         }
 
         else -> return httpForbidden("Invalid registry name: $registryName")
-    }
-})
+    }.let { httpOk(it, interopGson) }
+}
 
 
 // GET /api/v1/client/registry/:name/groups

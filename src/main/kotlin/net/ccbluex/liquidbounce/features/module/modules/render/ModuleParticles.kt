@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.platform.NativeImage
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -78,7 +78,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
     }
 
     private val color by color("Color", Color4b.RED)
-    private val particleImages by multiEnumChoice("Particle", ParticleImage.STAR, canBeNone = false)
+    private val builtinParticles by multiEnumChoice("Particle", enumSetOf(BuiltinParticle.STAR), canBeNone = false)
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
 
@@ -120,7 +120,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
         val pos = player.eyePosition.add(directionVector * player.distanceTo(event.entity).toDouble())
 
         repeat(count.random()) {
-            particles.add(Particle(pos, particleImages.random()))
+            particles.add(Particle(pos, builtinParticles.random()))
         }
     }
 
@@ -137,33 +137,42 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
         }
     }
 
-
     @Suppress("UNUSED")
-    private enum class ParticleImage(
+    private enum class BuiltinParticle(
         override val tag: String,
-        val image: NativeImage,
+        fileName: String,
     ) : Tagged {
         /**
          * Original: IDK (first: https://github.com/CCBlueX/LiquidBounce/pull/4976)
          */
-        ORBIZ("Orbiz", LiquidBounce.resource("particles/glow.png").toNativeImage()),
+        ORBIZ("Orbiz", "glow"),
 
         /**
          * Original: https://www.svgrepo.com/svg/528677/stars-minimalistic
          * Modified: @sqlerrorthing
          */
-        STAR("Star", LiquidBounce.resource("particles/star.png").toNativeImage()),
+        STAR("Star", "star"),
 
         /**
          * Original: https://www.svgrepo.com/svg/487288/dollar?edit=true
          * Modified: @sqlerrorthing
          */
-        DOLLAR("Dollar", LiquidBounce.resource("particles/dollar.png").toNativeImage());
+        DOLLAR("Dollar", "dollar"),
 
-        val texture = this.image.asTexture { this@ParticleImage.tag }
+        CROWN("Crown", "crown"),
+        HEART("Heart", "heart"),
+        LIGHTNING("Lightning", "lightning"),
+        LINE("Line", "line"),
+        POINT("Point", "point"),
+        RHOMBUS("Rhombus", "rhombus"),
+        SNOWFLAKE("Snowflake", "snowflake"),
+        SPARK("Spark", "spark");
+
+        val image = LiquidBounce.resource("particles/$fileName.png").toNativeImage()
+        val texture = this.image.asTexture { "Builtin Particle $tag" }
     }
 
-    private class Particle(var pos: Vec3, val particleImage: ParticleImage) {
+    private class Particle(var pos: Vec3, val builtinParticle: BuiltinParticle) {
         private var prevPos = pos
         private var velocity = Vec3(
             (-0.01..0.01).random(),
@@ -242,7 +251,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
                     )
                 )
 
-                drawSquareTexture(particleImage.texture, size, renderColor.argb)
+                drawSquareTexture(builtinParticle.texture, size, renderColor.argb)
             }
         }
     }

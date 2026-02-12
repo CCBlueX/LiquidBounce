@@ -270,12 +270,17 @@ fun Long.formatAsCapacity(): String {
 }
 
 fun String.hideSensitiveAddress(): String {
+    val idx = lastIndexOf(':')
+    val host = if (idx == -1) this else substring(0, idx)
+
     // Hide possibly sensitive information from LiquidProxy
-    return when {
-        this.endsWith(".liquidbounce.net") -> "<redacted>.liquidbounce.net"
-        this.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
-        else -> this
+    val newHost = when {
+        host.endsWith(".liquidbounce.net") -> "<redacted>.liquidbounce.net"
+        host.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
+        else -> host
     }
+
+    return if (idx == -1) newHost else newHost + substring(idx)
 }
 
 @JvmRecord
