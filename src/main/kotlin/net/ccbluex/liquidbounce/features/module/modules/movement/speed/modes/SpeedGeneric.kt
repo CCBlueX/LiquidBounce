@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
+import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.core.component.DataComponents
@@ -85,6 +86,7 @@ class SpeedPiercingAttack(parent: ModeValueGroup<*>) : SpeedBHopBase("PiercingAt
     private val onGround by boolean("OnGround", true)
     private val ignoreHunger by boolean("IgnoreHunger", false)
     private val waitForCooldown by boolean("WaitForCooldown", true)
+    private val minimumDurability by int("MinimumDurability", 1, 0..20)
 
     /**
      * @see net.minecraft.client.Minecraft.startAttack
@@ -94,8 +96,9 @@ class SpeedPiercingAttack(parent: ModeValueGroup<*>) : SpeedBHopBase("PiercingAt
     private val tickHandler = tickHandler {
         if (!onGround && player.onGround()
             || interaction.isSpectator
-            || !ignoreHunger && player.foodData.foodLevel < 6
-            ) return@tickHandler
+            || !ignoreHunger && player.foodData.foodLevel < 6) {
+            return@tickHandler
+        }
 
         val slot = Slots.Hotbar
             .filter {
@@ -104,6 +107,7 @@ class SpeedPiercingAttack(parent: ModeValueGroup<*>) : SpeedBHopBase("PiercingAt
                     && itemStack.isItemEnabled(world.enabledFeatures())
                     && !player.cannotAttackWithItem(itemStack, 0)
                     && itemStack.getEnchantment(Enchantments.LUNGE) > 0
+                    && itemStack.durability >= minimumDurability
             }
             .maxWithOrNull(COMPARING_LUNGE_AND_SPEED) ?: return@tickHandler
         val piercingWeapon = slot.itemStack[DataComponents.PIERCING_WEAPON]!!
