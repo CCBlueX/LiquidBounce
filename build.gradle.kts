@@ -244,6 +244,7 @@ tasks.register<NpmTask>("buildTheme") {
         "src-theme/rollup.config.js"
     )
     inputs.dir("src-theme/src")
+    inputs.dir("src-theme/public")
     outputs.dir("src-theme/dist")
 }
 

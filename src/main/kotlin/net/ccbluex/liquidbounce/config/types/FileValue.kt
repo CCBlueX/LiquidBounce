@@ -22,6 +22,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.tinyfd.TinyFileDialogs
@@ -40,8 +41,8 @@ import java.io.File
 class FileValue(
     name: String,
     default: File?,
-    val dialogMode: FileDialogMode,
-    val supportedExtensions: Set<String>?,
+    @Exclude val dialogMode: FileDialogMode,
+    @Exclude val supportedExtensions: Set<String>?,
 ) : Value<File>(
     name,
     defaultValue = normalizeToClientFolder(default ?: ConfigSystem.rootFolder),

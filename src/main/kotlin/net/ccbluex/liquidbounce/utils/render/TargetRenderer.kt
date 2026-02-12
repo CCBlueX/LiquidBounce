@@ -20,11 +20,12 @@ package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
+import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.config.types.toTextureProperty
+import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -224,7 +225,12 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
         class Image(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) : World("Image") {
 
-            private val texture by file("File").toTextureProperty(owner)
+            private val textureMode = modes("Source", 0) {
+                arrayOf(
+                    TextureMode.Custom(it),
+                    TextureMode.Builtin(it, PresetTexture.MARKER1, PresetTexture.entries.toEnumSet())
+                )
+            }
             private val scale by vec2f("Scale", Vector2f(1f, 1f))
             private val color by color("ColorModulator", Color4b.WHITE)
             private val rotate = tree(object : AnimatedValueGroup("Rotate") {
@@ -245,10 +251,18 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 )
             }
 
+            private enum class PresetTexture(override val tag: String, val path: String) : TextureMode.Builtin.Preset {
+                MARKER1("Marker1", "target_renderer/target.png"),
+                MARKER2("Marker2", "target_renderer/target2.png");
+
+                override val texture = LiquidBounce.resource(this.path)
+                    .toNativeImage().asTexture { "TargetRenderer Image $tag" }
+            }
+
             private val quaternion = Quaternionf()
 
             override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
-                val texture = texture ?: return
+                val texture = textureMode.activeMode.texture ?: return
 
                 val height = heightMode.activeMode.getHeight(entity, partialTicks)
                 val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
@@ -354,6 +368,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             }
 
         }
+
     }
 
     sealed class Gui(name: String) : TargetRenderAppearance<GuiGraphics>(name) {
