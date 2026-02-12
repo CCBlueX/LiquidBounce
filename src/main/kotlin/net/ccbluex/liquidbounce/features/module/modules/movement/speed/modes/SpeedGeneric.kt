@@ -20,16 +20,26 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.doOptimizationsPreventJump
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SpearItemFacet.Companion.COMPARING_LUNGE_LEVEL
+import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.copy
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.item.enchantment.Enchantments
 
-class SpeedSpeedYPort(override val parent: ModeValueGroup<*>) : SpeedBHopBase("YPort", parent) {
+class SpeedSpeedYPort(parent: ModeValueGroup<*>) : SpeedBHopBase("YPort", parent) {
 
     private val speed by float("Speed", 0.4f, 0.1f..1f)
 
@@ -47,9 +57,9 @@ class SpeedSpeedYPort(override val parent: ModeValueGroup<*>) : SpeedBHopBase("Y
 
 }
 
-class SpeedLegitHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase("LegitHop", parent)
+class SpeedLegitHop(parent: ModeValueGroup<*>) : SpeedBHopBase("LegitHop", parent)
 
-open class SpeedBHopBase(name: String, override val parent: ModeValueGroup<*>) : Mode(name) {
+abstract class SpeedBHopBase(name: String, override val parent: ModeValueGroup<*>) : Mode(name) {
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
@@ -62,6 +72,38 @@ open class SpeedBHopBase(name: String, override val parent: ModeValueGroup<*>) :
         }
 
         event.jump = true
+    }
+
+}
+
+class SpeedPiercingAttack(parent: ModeValueGroup<*>) : SpeedBHopBase("PiercingAttack", parent) {
+
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
+    private val holdTime by intRange("HoldTime", 1..1, 1..20, "ticks")
+    private val onGround by boolean("OnGround", true)
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        if (!onGround && player.onGround()) return@handler
+
+        val slot = Slots.Hotbar
+            .filter {
+                val itemStack = it.itemStack
+                itemStack[DataComponents.PIERCING_WEAPON] != null
+                    && !player.cannotAttackWithItem(itemStack, 0)
+                    && itemStack.getEnchantment(Enchantments.LUNGE) > 0
+            }
+            .maxWithOrNull(COMPARING_LUNGE_LEVEL) ?: return@handler
+        val piercingWeapon = slot.itemStack[DataComponents.PIERCING_WEAPON]!!
+
+        SilentHotbar.selectSlotSilently(this, slot, ticksUntilReset = holdTime.random())
+        interaction.piercingAttack(piercingWeapon)
+        swingMode.swing(InteractionHand.MAIN_HAND)
+    }
+
+    override fun disable() {
+        SilentHotbar.resetSlot(this)
+        super.disable()
     }
 
 }

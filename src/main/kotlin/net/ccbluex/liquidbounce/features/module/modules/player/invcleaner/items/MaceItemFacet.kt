@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.core.component.DataComponents
 import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.enchantment.Enchantments
 import kotlin.math.ceil
@@ -64,7 +63,7 @@ class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
                 Comparator.comparingDouble(this::estimateDamage),
                 compareByCondition { it.itemStack.item is MaceItem },
                 PREFER_BETTER_DURABILITY,
-                Comparator.comparingInt { it.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
+                PREFER_ENCHANTABLE,
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )

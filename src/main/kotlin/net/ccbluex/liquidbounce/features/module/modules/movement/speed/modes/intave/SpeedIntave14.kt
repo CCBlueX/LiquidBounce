@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.math.multiply
  *
  * @author larryngton
  */
-class SpeedIntave14(override val parent: ModeValueGroup<*>) : SpeedBHopBase("Intave14", parent) {
+class SpeedIntave14(parent: ModeValueGroup<*>) : SpeedBHopBase("Intave14", parent) {
     companion object {
         private const val BOOST_CONSTANT = 0.003
     }
