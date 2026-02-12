@@ -32,7 +32,7 @@ import java.util.function.ToIntFunction
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
-fun Comparator<ItemStack>.asHolderComparator(): Comparator<in ItemStackHolder> =
+fun Comparator<ItemStack>.asHolderComparator(): Comparator<ItemStackHolder> =
     Comparator { a, b -> this.compare(a.itemStack, b.itemStack) }
 
 fun comparingEnchantmentLevel(key: ResourceKey<Enchantment>): Comparator<ItemStack> =

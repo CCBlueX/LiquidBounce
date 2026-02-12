@@ -20,24 +20,26 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.doOptimizationsPreventJump
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SpearItemFacet.Companion.COMPARING_LUNGE_LEVEL
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SpearItemFacet.Companion.COMPARING_LUNGE_AND_SPEED
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.enchantment.Enchantments
+import kotlin.math.roundToInt
 
 class SpeedSpeedYPort(parent: ModeValueGroup<*>) : SpeedBHopBase("YPort", parent) {
 
@@ -81,24 +83,38 @@ class SpeedPiercingAttack(parent: ModeValueGroup<*>) : SpeedBHopBase("PiercingAt
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val holdTime by intRange("HoldTime", 1..1, 1..20, "ticks")
     private val onGround by boolean("OnGround", true)
+    private val ignoreHunger by boolean("IgnoreHunger", false)
+    private val waitForCooldown by boolean("WaitForCooldown", true)
 
+    /**
+     * @see net.minecraft.client.Minecraft.startAttack
+     * @see net.minecraft.world.entity.player.Player.getCurrentItemAttackStrengthDelay
+     */
     @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        if (!onGround && player.onGround()) return@handler
+    private val tickHandler = tickHandler {
+        if (!onGround && player.onGround()
+            || interaction.isSpectator
+            || !ignoreHunger && player.foodData.foodLevel < 6
+            ) return@tickHandler
 
         val slot = Slots.Hotbar
             .filter {
                 val itemStack = it.itemStack
                 itemStack[DataComponents.PIERCING_WEAPON] != null
+                    && itemStack.isItemEnabled(world.enabledFeatures())
                     && !player.cannotAttackWithItem(itemStack, 0)
                     && itemStack.getEnchantment(Enchantments.LUNGE) > 0
             }
-            .maxWithOrNull(COMPARING_LUNGE_LEVEL) ?: return@handler
+            .maxWithOrNull(COMPARING_LUNGE_AND_SPEED) ?: return@tickHandler
         val piercingWeapon = slot.itemStack[DataComponents.PIERCING_WEAPON]!!
 
         SilentHotbar.selectSlotSilently(this, slot, ticksUntilReset = holdTime.random())
         interaction.piercingAttack(piercingWeapon)
         swingMode.swing(InteractionHand.MAIN_HAND)
+
+        if (waitForCooldown) {
+            waitTicks((20.0 / slot.itemStack.attackSpeed).roundToInt())
+        }
     }
 
     override fun disable() {

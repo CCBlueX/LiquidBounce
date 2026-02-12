@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
+import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.comparingEnchantmentLevel
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.item.enchantment.Enchantments
@@ -33,11 +34,12 @@ import net.minecraft.world.item.enchantment.Enchantments
  */
 class SpearItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
     companion object {
-        internal val COMPARING_LUNGE_LEVEL = comparingEnchantmentLevel(Enchantments.LUNGE).asHolderComparator()
+        internal val COMPARING_LUNGE_AND_SPEED = comparingEnchantmentLevel(Enchantments.LUNGE).asHolderComparator()
+            .thenComparingDouble { it.itemStack.attackSpeed }
 
         private val COMPARATOR_FOR_PIERCING_ATTACK =
             ComparatorChain<SpearItemFacet>(
-                COMPARING_LUNGE_LEVEL.reversed(),
+                COMPARING_LUNGE_AND_SPEED.reversed(),
                 SECONDARY_VALUE_ESTIMATOR.asHolderComparator(),
                 PREFER_BETTER_DURABILITY,
                 PREFER_ENCHANTABLE,
