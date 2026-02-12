@@ -33,6 +33,7 @@ import net.minecraft.commands.arguments.item.ItemInput
 import net.minecraft.commands.arguments.item.ItemParser
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
+import net.minecraft.core.Registry
 import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.Registries
@@ -76,10 +77,8 @@ import net.minecraft.world.item.WindChargeItem
 import net.minecraft.world.item.WritableBookItem
 import net.minecraft.world.item.WrittenBookItem
 import net.minecraft.world.item.alchemy.PotionContents
-import net.minecraft.world.item.component.ItemAttributeModifiers
 import net.minecraft.world.item.component.UseEffects
 import net.minecraft.world.item.enchantment.Enchantment
-import net.minecraft.world.item.enchantment.EnchantmentHelper
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Block
 import org.apache.commons.lang3.function.Consumers
@@ -167,9 +166,11 @@ fun DataComponentGetter.getAttributeValue(attribute: Holder<Attribute>, slot: Eq
     return attribInstance.value
 }
 
-fun ResourceKey<Enchantment>.toRegistryEntryOrNull(): Holder<Enchantment>? {
-    return mc.level?.registryAccess()?.lookup(Registries.ENCHANTMENT)?.getOrNull()?.get(this)?.getOrNull()
-}
+fun <E : Any> ResourceKey<Registry<E>>.getOrNull(): Registry<E>? =
+    mc.level?.registryAccess()?.lookup(this)?.getOrNull()
+
+fun ResourceKey<Enchantment>.toRegistryEntryOrNull(): Holder<Enchantment>? =
+    Registries.ENCHANTMENT.getOrNull()?.get(this)?.getOrNull()
 
 /**
  * Get [Block] of inner item if it is [BlockItem], or null if not

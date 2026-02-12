@@ -64,13 +64,6 @@ inline fun <reified T> Reader.readJson(gson: Gson = publicGson): T = use {
 
 inline fun JsonReader.parseTree(): JsonElement = JsonParser.parseReader(this)
 
-// Never add elements to it!
-private val EMPTY_JSON_ARRAY = JsonArray(0)
-private val EMPTY_JSON_OBJECT = JsonObject()
-
-internal fun emptyJsonArray(): JsonArray = EMPTY_JSON_ARRAY
-internal fun emptyJsonObject(): JsonObject = EMPTY_JSON_OBJECT
-
 inline fun <reified T> JsonDeserializationContext.deserialize(json: JsonElement): T =
     deserialize(json, object : TypeToken<T>() {}.type)
 
@@ -114,6 +107,10 @@ value class JsonObjectBuilder(private val backend: JsonObject) {
 
     operator fun String.invoke(value: Boolean?) {
         backend.addProperty(this, value)
+    }
+
+    inline operator fun String.invoke(builderAction: JsonObjectBuilder.() -> Unit) {
+        invoke(jsonObject(builderAction))
     }
 
     /**

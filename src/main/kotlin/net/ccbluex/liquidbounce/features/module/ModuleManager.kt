@@ -101,6 +101,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFlagCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleGUICloser
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleInventoryTracker
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleItemScroller
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMacros
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAction
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNotifier
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
@@ -440,6 +441,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleItemScroller,
             ModuleBetterChat,
             ModuleElytraTarget,
+            ModuleMacros,
             ModuleMiddleClickAction,
             ModuleInventoryTracker,
             ModuleNameProtect,
