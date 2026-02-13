@@ -104,6 +104,7 @@ object ModuleAutoBuff : ClientModule(
 
     internal val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val notDuringCombat by boolean("NotDuringCombat", false)
+    internal val ignoreInventoryOpen by boolean("IgnoreInventoryOpen", false)
 
     internal val activeFeatures
         get() = features.filter { it.enabled }

@@ -35,7 +35,7 @@ abstract class Buff(
 ) : ToggleableValueGroup(ModuleAutoBuff, name, true) {
 
     internal open val passesRequirements: Boolean
-        get() = enabled && !InventoryManager.isInventoryOpen
+        get() = enabled && (ModuleAutoBuff.ignoreInventoryOpen || !InventoryManager.isInventoryOpen)
 
     /**
      * Try to run feature if possible, otherwise return false
