@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
+import net.ccbluex.fastutil.asObjectList
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import org.joml.Vector2f
 import org.joml.Vector2fc
 import org.joml.component1
@@ -27,18 +29,112 @@ import org.joml.component2
 /**
  * Chart.js spline interpolation
  */
+@Suppress("TooManyFunctions")
 object CurveUtil {
 
-    /**
-     * Find Y position at a given X using spline interpolation
-     * Handles out-of-bounds X values by clamping to the nearest endpoint
-     */
-    fun transform(data: List<Vector2fc>, xPos: Float, tension: Float): Float {
-        return when {
-            xPos <= data.first().x() -> data.first().y()
-            xPos >= data.last().x() -> data.last().y()
-            else -> interpolateSpline(data, xPos, tension)
+    enum class OnOutOfBounds(override val tag: String) : Tagged {
+        CLAMP("Clamp"),
+        EXTEND("Extend");
+
+        internal fun resolveOutOfBoundsY(
+            data: List<Vector2fc>,
+            xPos: Float,
+            isLeftSide: Boolean
+        ): Float {
+            return when (this) {
+                CLAMP -> if (isLeftSide) data.first().y() else data.last().y()
+                EXTEND -> extrapolateLinear(data, xPos, isLeftSide)
+            }
         }
+    }
+
+    /**
+     * Find Y position at a given X using spline interpolation.
+     *
+     * @param data List of 2D points representing the curve
+     * @param xPos X position to sample
+     * @param tension Spline tension in range [0, 1] (out-of-range values are normalized)
+     * @param onOutOfBounds Behavior for X values outside the curve domain, defaults to [OnOutOfBounds.CLAMP]
+     */
+    @JvmOverloads
+    @JvmStatic
+    fun transform(
+        data: List<Vector2fc>,
+        xPos: Float,
+        tension: Float,
+        onOutOfBounds: OnOutOfBounds = OnOutOfBounds.CLAMP,
+    ): Float {
+        require(data.isNotEmpty()) { "Curve data must not be empty" }
+
+        if (data.size == 1) {
+            return data[0].y()
+        }
+
+        val normalizedData = sortAndDeduplicateByX(data)
+        val normalizedTension = normalizeTension(tension)
+
+        return transformNormalized(normalizedData, xPos, normalizedTension, onOutOfBounds)
+    }
+
+    @JvmStatic
+    internal fun transformNormalized(
+        data: List<Vector2fc>,
+        xPos: Float,
+        tension: Float,
+        onOutOfBounds: OnOutOfBounds,
+    ): Float {
+        if (data.size == 1) {
+            return data[0].y()
+        }
+
+        val firstPoint = data.first()
+        val lastPoint = data.last()
+
+        return when {
+            xPos < firstPoint.x() -> onOutOfBounds.resolveOutOfBoundsY(data, xPos, isLeftSide = true)
+            xPos > lastPoint.x() -> onOutOfBounds.resolveOutOfBoundsY(data, xPos, isLeftSide = false)
+            xPos == firstPoint.x() -> firstPoint.y()
+            xPos == lastPoint.x() -> lastPoint.y()
+            data.size == 2 -> interpolateLinear(data[0], data[1], xPos)
+            else -> findYByExactX(data, xPos) ?: interpolateSpline(data, xPos, tension)
+        }
+    }
+
+    /**
+     * Normalize data by sorting points by X and removing duplicates.
+     */
+    private fun sortAndDeduplicateByX(data: List<Vector2fc>): List<Vector2fc> {
+        if (data.size <= 1) {
+            return data
+        }
+
+        val points = data.toTypedArray()
+        points.sortBy(Vector2fc::x)
+
+        var keptSize = 0
+        for (index in points.indices) {
+            val point = points[index]
+            if (keptSize == 0 || points[keptSize - 1].x() != point.x()) {
+                points[keptSize++] = point
+            } else {
+                points[keptSize - 1] = point
+            }
+        }
+
+        return points.asObjectList(0, keptSize)
+    }
+
+    private fun normalizeTension(tension: Float): Float {
+        return if (tension.isInfinite() || tension.isNaN()) 0f else tension.coerceIn(0f, 1f)
+    }
+
+    private fun findYByExactX(data: List<Vector2fc>, xPos: Float): Float? =
+        data.find { it.x() == xPos }?.y()
+
+    private fun extrapolateLinear(data: List<Vector2fc>, xPos: Float, isLeftSide: Boolean): Float {
+        val p0 = if (isLeftSide) data[0] else data[data.lastIndex - 1]
+        val p1 = if (isLeftSide) data[1] else data[data.lastIndex]
+        return interpolateLinear(p0, p1, xPos)
     }
 
     private fun interpolateSpline(data: List<Vector2fc>, xPos: Float, tension: Float): Float {
@@ -67,8 +163,18 @@ object CurveUtil {
         )
     }
 
-    private fun calculateT(xPos: Float, leftX: Float, rightX: Float): Float =
-        if (xPos == rightX) 1f else ((xPos - leftX) / (rightX - leftX)).coerceIn(0f, 1f)
+    private fun calculateT(xPos: Float, leftX: Float, rightX: Float): Float {
+        if (xPos == rightX) {
+            return 1f
+        }
+
+        val delta = rightX - leftX
+        if (delta == 0f) {
+            return 0f
+        }
+
+        return ((xPos - leftX) / delta).coerceIn(0f, 1f)
+    }
 
     private fun createSplineCurve(
         prev: Vector2fc,
@@ -101,6 +207,18 @@ object CurveUtil {
 
         val (prev, point, next) = findControlPoints(data, segment.x() + diff)
         return createSplineCurve(prev, point, next, tension).first
+    }
+
+    private fun interpolateLinear(p0: Vector2fc, p1: Vector2fc, xPos: Float): Float {
+        val (x0, y0) = p0
+        val (x1, y1) = p1
+        val deltaX = x1 - x0
+        if (deltaX == 0f) {
+            return y0
+        }
+
+        val t = (xPos - x0) / deltaX
+        return y0 + (y1 - y0) * t
     }
 
     private fun calculateBezierY(t: Float, p0: Vector2fc, p1: Vector2fc, p2: Vector2fc, p3: Vector2fc): Float {
