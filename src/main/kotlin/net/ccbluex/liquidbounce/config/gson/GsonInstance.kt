@@ -82,7 +82,6 @@ import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector2fc
 import java.io.File
-import java.nio.file.Path
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime

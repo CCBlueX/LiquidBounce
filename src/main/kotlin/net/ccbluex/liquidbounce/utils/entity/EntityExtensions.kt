@@ -36,12 +36,12 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.client.player.ClientInput
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.core.component.DataComponents
@@ -263,26 +263,21 @@ fun LocalPlayer.canStep(height: Double = 1.0): Boolean {
 }
 
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
-    val forwards = input.forwards && !input.backwards
-    val backwards = input.backwards && !input.forwards
-    val left = input.left && !input.right
-    val right = input.right && !input.left
-
     var actualYaw = facingYaw
-    var forward = 1f
-
-    if (backwards) {
-        actualYaw += 180f
-        forward = -0.5f
-    } else if (forwards) {
-        forward = 0.5f
+    val forwardMultiplier = when {
+        input.backwards && !input.forwards -> {
+            actualYaw += 180f
+            -0.5f
+        }
+        input.forwards && !input.backwards -> 0.5f
+        else -> 1f
     }
 
-    if (left) {
-        actualYaw -= 90f * forward
+    if (input.left && !input.right) {
+        actualYaw -= 90f * forwardMultiplier
     }
-    if (right) {
-        actualYaw += 90f * forward
+    if (input.right && !input.left) {
+        actualYaw += 90f * forwardMultiplier
     }
 
     return actualYaw
@@ -301,14 +296,16 @@ fun Vec3.withStrafe(
         return Vec3(0.0, y, 0.0)
     }
 
-    val prevX = x * (1.0 - strength)
-    val prevZ = z * (1.0 - strength)
-    val useSpeed = speed * strength
+    val oneMinusStrength = 1.0 - strength
+    val prevX = x * oneMinusStrength
+    val prevZ = z * oneMinusStrength
+    val usedSpeed = speed * strength
 
     val angle = Math.toRadians(yaw.toDouble())
-    val x = (-sin(angle) * useSpeed) + prevX
-    val z = (cos(angle) * useSpeed) + prevZ
-    return Vec3(x, y, z)
+    val newX = prevX - sin(angle) * usedSpeed
+    val newZ = prevZ + cos(angle) * usedSpeed
+
+    return Vec3(newX, y, newZ)
 }
 
 val Entity.lastPos: Vec3
@@ -350,12 +347,6 @@ fun Entity.squareBoxedDistanceTo(entity: Entity, offsetPos: Vec3): Double {
     return this.box.move(offsetPos - this.position()).squaredBoxedDistanceTo(entity.eyePosition)
 }
 
-fun AABB.squaredBoxedDistanceTo(otherPos: Vec3): Double {
-    val pos = getNearestPoint(otherPos)
-
-    return pos.distanceToSqr(otherPos)
-}
-
 fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
     if (this.tickCount == 0) {
         return this.position()
@@ -377,38 +368,6 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
         yRotO + (this.yRot - yRotO) * tickDelta,
         xRotO + (this.xRot - xRotO) * tickDelta,
     )
-}
-
-/**
- * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
- */
-fun AABB.getNearestPoint(from: Position): Vec3 {
-    return Vec3(
-        from.x().coerceIn(minX, maxX),
-        from.y().coerceIn(minY, maxY),
-        from.z().coerceIn(minZ, maxZ),
-    )
-}
-
-fun getNearestPointOnSide(from: Vec3, box: AABB, side: Direction): Vec3 {
-    val nearestPointInBlock = box.getNearestPoint(from)
-
-    val x = nearestPointInBlock.x
-    val y = nearestPointInBlock.y
-    val z = nearestPointInBlock.z
-
-    val nearestPointOnSide =
-        when (side) {
-            Direction.DOWN -> Vec3(x, box.minY, z)
-            Direction.UP -> Vec3(x, box.maxY, z)
-            Direction.NORTH -> Vec3(x, y, box.minZ)
-            Direction.SOUTH -> Vec3(x, y, box.maxZ)
-            Direction.WEST -> Vec3(box.maxX, y, z)
-            Direction.EAST -> Vec3(box.minX, y, z)
-        }
-
-    return nearestPointOnSide
-
 }
 
 /**

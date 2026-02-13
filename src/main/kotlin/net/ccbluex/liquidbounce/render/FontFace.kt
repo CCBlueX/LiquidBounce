@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
-import kotlin.jvm.Volatile
 
 class FontFace(
     val name: String,

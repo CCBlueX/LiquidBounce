@@ -39,7 +39,7 @@ import net.minecraft.network.chat.TextColor
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.util.FormattedCharSequence
-import java.util.*
+import java.util.Optional
 import java.util.function.Function
 
 inline fun String.stripMinecraftColorCodes(): String =

@@ -35,10 +35,10 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspBox
-import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
-import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
-import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f

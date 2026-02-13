@@ -29,10 +29,10 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspBox
-import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
-import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
-import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer

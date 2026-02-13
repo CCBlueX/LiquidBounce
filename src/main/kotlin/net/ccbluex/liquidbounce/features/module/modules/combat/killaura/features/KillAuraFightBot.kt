@@ -32,12 +32,12 @@ import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
-import kotlin.math.pow
 
 /**
  * Data class holding combat-related context
@@ -87,7 +87,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
 
     fun updateTarget() {
         targetTracker.select { entity ->
-            if (player.squaredBoxedDistanceTo(entity) > TargetFilter.range.pow(2)) {
+            if (player.squaredBoxedDistanceTo(entity) > TargetFilter.range.sq()) {
                 return@select null
             }
 

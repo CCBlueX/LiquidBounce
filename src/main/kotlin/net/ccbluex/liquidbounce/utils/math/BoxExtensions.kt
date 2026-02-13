@@ -44,13 +44,17 @@ inline operator fun AABB.minus(offset: Vec3i): AABB =
     this.move(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
 
 fun AABB.centerPointOf(side: Direction): Vec3 {
+    val cx = minX + xsize * 0.5
+    val cy = minY + ysize * 0.5
+    val cz = minZ + zsize * 0.5
+
     return when (side) {
-        Direction.DOWN -> Vec3(minX + xsize * 0.5, minY, minZ + zsize * 0.5)
-        Direction.UP -> Vec3(minX + xsize * 0.5, maxY, minZ + zsize * 0.5)
-        Direction.NORTH -> Vec3(minX + xsize * 0.5, minY + ysize * 0.5, minZ)
-        Direction.SOUTH -> Vec3(minX + xsize * 0.5, minY + ysize * 0.5, maxZ)
-        Direction.WEST -> Vec3(minX, minY + ysize * 0.5, minZ + zsize * 0.5)
-        Direction.EAST -> Vec3(maxX, minY + ysize * 0.5, minZ + zsize * 0.5)
+        Direction.DOWN -> Vec3(cx, minY, cz)
+        Direction.UP -> Vec3(cx, maxY, cz)
+        Direction.NORTH -> Vec3(cx, cy, minZ)
+        Direction.SOUTH -> Vec3(cx, cy, maxZ)
+        Direction.WEST -> Vec3(minX, cy, cz)
+        Direction.EAST -> Vec3(maxX, cy, cz)
     }
 }
 
@@ -63,50 +67,74 @@ fun AABB.isHitByLine(start: Vec3, p: Vec3): Boolean {
     var tEntry = Double.NEGATIVE_INFINITY
     var tExit = Double.POSITIVE_INFINITY
 
-    fun AABB.checkSide(axis: Direction.Axis, start: Vec3, d: Vec3): Boolean {
+    fun checkSide(axis: Direction.Axis): Boolean {
         val d1 = axis.choose(d.x, d.y, d.z)
         val min = min(axis)
         val max = max(axis)
         val p0 = axis.choose(start.x, start.y, start.z)
 
         // parallel and outside, no need to check anything else
-        if (d1 == 0.0 && (p0 !in min..max)) {
-            return true
+        if (d1 == 0.0) {
+            if (p0 < min || p0 > max) {
+                return true
+            }
+            return false
         }
 
         val t1 = (min - p0) / d1
         val t2 = (max - p0) / d1
-        val tMin = min(t1, t2)
-        val tMax = max(t1, t2)
-
-        tEntry = maxOf(tEntry, tMin)
-        tExit = minOf(tExit, tMax)
+        tEntry = maxOf(tEntry, min(t1, t2))
+        tExit = minOf(tExit, max(t1, t2))
 
         return tEntry > tExit
     }
 
-    if (checkSide(Direction.Axis.X, start, d) ||
-        checkSide(Direction.Axis.Y, start, d) ||
-        checkSide(Direction.Axis.Z, start, d)) {
+    if (checkSide(Direction.Axis.X) ||
+        checkSide(Direction.Axis.Y) ||
+        checkSide(Direction.Axis.Z)
+    ) {
         return false
     }
 
     return tEntry <= tExit
 }
 
-fun AABB.getCoordinate(direction: Direction): Double {
-    return if (direction.axisDirection == Direction.AxisDirection.POSITIVE) {
-        this.max(direction.axis)
-    } else {
-        this.min(direction.axis)
-    }
-}
+fun AABB.getCoordinate(direction: Direction): Double =
+    if (direction.axisDirection == Direction.AxisDirection.POSITIVE) max(direction.axis) else min(direction.axis)
 
 /** Ray–AABB first hit point (entry or exit). */
-fun AABB.firstHit(from: Vec3, to: Vec3): Vec3? {
-    return if (contains(from)) {
-        clip(to, from).getOrNull()
-    } else {
-        clip(from, to).getOrNull()
+fun AABB.firstHit(from: Vec3, to: Vec3): Vec3? =
+    if (contains(from)) clip(to, from).getOrNull() else clip(from, to).getOrNull()
+
+fun AABB.squaredBoxedDistanceTo(otherPos: Vec3): Double {
+    val pos = getNearestPoint(otherPos)
+
+    return pos.distanceToSqr(otherPos)
+}
+
+/**
+ * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
+ */
+fun AABB.getNearestPoint(from: Position): Vec3 {
+    return Vec3(
+        from.x().coerceIn(minX, maxX),
+        from.y().coerceIn(minY, maxY),
+        from.z().coerceIn(minZ, maxZ),
+    )
+}
+
+fun getNearestPointOnSide(from: Vec3, box: AABB, side: Direction): Vec3 {
+    val nearest = box.getNearestPoint(from)
+    val x = nearest.x
+    val y = nearest.y
+    val z = nearest.z
+
+    return when (side) {
+        Direction.DOWN -> Vec3(x, box.minY, z)
+        Direction.UP -> Vec3(x, box.maxY, z)
+        Direction.NORTH -> Vec3(x, y, box.minZ)
+        Direction.SOUTH -> Vec3(x, y, box.maxZ)
+        Direction.WEST -> Vec3(box.maxX, y, z)
+        Direction.EAST -> Vec3(box.minX, y, z)
     }
 }
