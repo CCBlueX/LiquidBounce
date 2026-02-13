@@ -81,8 +81,9 @@ object CrosshairCS2 : CrosshairMode("CS2") {
     }
 
     private fun OverlayRenderEvent.dynamicCrosshair(multiplier: Float): Float {
-        return if (Mth.equal(0f, multiplier)) 0f
-        else {
+        return if (Mth.equal(0f, multiplier)) {
+            0f
+        } else {
             val cooldown = player.getAttackStrengthScale(tickDelta)
             multiplier * (1f - cooldown)
         }
