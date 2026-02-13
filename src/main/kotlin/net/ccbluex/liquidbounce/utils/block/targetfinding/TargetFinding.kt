@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.math.centerPointOf
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.squaredBoxedDistanceTo
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
@@ -77,12 +78,21 @@ class BlockPlacementTargetFindingOptions(
         }
 
         @JvmStatic
-        fun leastBlockDistanceOfLine(optimalLine: Line): Comparator<Vec3i> =
+        fun leastBlockDistanceToLine(optimalLine: Line): Comparator<Vec3i> =
             compareBy { vec ->
                 val blockPos = vec.toBlockPos()
                 val blockState = world.getBlockState(blockPos)
                 val box = blockState.outlineBox(blockPos)
                 -optimalLine.distanceToSqr(box)
+            }
+
+        @JvmStatic
+        fun leastBlockDistanceToPos(pos: Vec3): Comparator<Vec3i> =
+            compareBy { vec ->
+                val blockPos = vec.toBlockPos()
+                val blockState = world.getBlockState(blockPos)
+                val box = blockState.outlineBox(blockPos)
+                -box.squaredBoxedDistanceTo(pos)
             }
     }
 }
@@ -101,7 +111,7 @@ class BlockOffsetOptions(
     companion object {
         @JvmField
         val Default = BlockOffsetOptions(
-            listOf(Vec3i.ZERO),
+            BlockPosOffsets.SINGLE,
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
         )
     }
