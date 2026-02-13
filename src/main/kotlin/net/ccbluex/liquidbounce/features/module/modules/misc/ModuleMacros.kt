@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -51,6 +52,8 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
     private val macros: List<Macro>
 
     init {
+        doNotIncludeAlways()
+
         val macros = ArrayList<Macro>()
         repeat(COUNT) {
             macros += tree(Macro.Chat("Chat-${it + 1}"))
@@ -91,9 +94,16 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
 
             private val messages by textList("Messages", ArrayList())
 
+            private val useClientCommand by boolean("UseClientCommand", false)
+
             override suspend fun execute() {
                 for (message in messages) {
-                    network.sendChatOrCommand(message)
+                    if (useClientCommand && message.startsWith(CommandManager.GlobalSettings.prefix)) {
+                        CommandManager.execute(message.substring(CommandManager.GlobalSettings.prefix.length))
+                    } else {
+                        network.sendChatOrCommand(message)
+                    }
+
                     delay(delay.random().toLong())
                 }
             }
