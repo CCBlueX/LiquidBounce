@@ -88,7 +88,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
     ): BlockPlacementTarget? {
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityComparator: Comparator<Vec3i> = if (optimalLine != null) {
-            compareByDescending { vec -> optimalLine.squaredDistanceTo(Vec3.atCenterOf(vec)) }
+            BlockPlacementTargetFindingOptions.leastBlockDistanceOfLine(optimalLine)
         } else {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
