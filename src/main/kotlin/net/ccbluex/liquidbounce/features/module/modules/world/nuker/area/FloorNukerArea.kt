@@ -20,12 +20,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.area
 
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.rangeTo
+import net.ccbluex.liquidbounce.utils.math.squaredBoxedDistanceTo
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.world.level.block.state.BlockState

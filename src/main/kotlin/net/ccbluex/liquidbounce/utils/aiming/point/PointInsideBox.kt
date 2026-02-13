@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.point
 
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.core.Position

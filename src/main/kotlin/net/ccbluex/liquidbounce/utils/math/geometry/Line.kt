@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.doubles.DoubleDoublePair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.utils.math.getCoordinate
+import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -56,8 +57,15 @@ open class Line(val position: Vec3, val direction: Vec3) {
         return plane.intersection(this) ?: point
     }
 
-    fun squaredDistanceTo(point: Vec3): Double {
+    fun distanceToSqr(point: Vec3): Double {
         return this.getNearestPointTo(point).distanceToSqr(point)
+    }
+
+    fun distanceToSqr(box: AABB): Double {
+        val pointOnLine = getNearestPointTo(box)
+        val pointOnBox = box.getNearestPoint(pointOnLine)
+
+        return pointOnLine.distanceToSqr(pointOnBox)
     }
 
     open fun getPositionChecked(phi: Double): Vec3? {
@@ -91,6 +99,176 @@ open class Line(val position: Vec3, val direction: Vec3) {
         val (phi1, phi2) = getNearestPhisTo(other) ?: return null
 
         return Pair(this.getPosition(phi1), other.getPosition(phi2))
+    }
+
+    /**
+     * Returns the point on this line that minimizes squared distance to the given axis-aligned box.
+     */
+    @Suppress("CognitiveComplexMethod", "LongMethod")
+    fun getNearestPointTo(box: AABB): Vec3 {
+        val px = position.x
+        val py = position.y
+        val pz = position.z
+
+        val dx = direction.x
+        val dy = direction.y
+        val dz = direction.z
+
+        val minX = box.minX
+        val minY = box.minY
+        val minZ = box.minZ
+        val maxX = box.maxX
+        val maxY = box.maxY
+        val maxZ = box.maxZ
+
+        fun distanceSq(phi: Double): Double {
+            val x = px + dx * phi
+            val y = py + dy * phi
+            val z = pz + dz * phi
+
+            val xDiff = when {
+                x < minX -> minX - x
+                x > maxX -> x - maxX
+                else -> 0.0
+            }
+            val yDiff = when {
+                y < minY -> minY - y
+                y > maxY -> y - maxY
+                else -> 0.0
+            }
+            val zDiff = when {
+                z < minZ -> minZ - z
+                z > maxZ -> z - maxZ
+                else -> 0.0
+            }
+
+            return xDiff * xDiff + yDiff * yDiff + zDiff * zDiff
+        }
+
+        val breakpoints = DoubleArray(6)
+        var breakpointCount = 0
+
+        fun addBreakpoint(value: Double) {
+            breakpoints[breakpointCount++] = value
+        }
+
+        if (dx != 0.0) {
+            addBreakpoint((minX - px) / dx)
+            addBreakpoint((maxX - px) / dx)
+        }
+        if (dy != 0.0) {
+            addBreakpoint((minY - py) / dy)
+            addBreakpoint((maxY - py) / dy)
+        }
+        if (dz != 0.0) {
+            addBreakpoint((minZ - pz) / dz)
+            addBreakpoint((maxZ - pz) / dz)
+        }
+
+        for (i in 1 until breakpointCount) {
+            val current = breakpoints[i]
+            var j = i - 1
+            while (j >= 0 && breakpoints[j] > current) {
+                breakpoints[j + 1] = breakpoints[j]
+                j--
+            }
+            breakpoints[j + 1] = current
+        }
+
+        var bestPhi = 0.0
+        var bestPoint = getPositionChecked(0.0)
+        var bestDistance = bestPoint?.let { distanceSq(0.0) } ?: Double.POSITIVE_INFINITY
+
+        fun evaluate(phi: Double) {
+            val checked = getPositionChecked(phi) ?: return
+            val dist = distanceSq(phi)
+            if (dist < bestDistance) {
+                bestDistance = dist
+                bestPhi = phi
+                bestPoint = checked
+            }
+        }
+
+        for (i in 0 until breakpointCount) {
+            evaluate(breakpoints[i])
+        }
+
+        fun evaluateInterval(start: Double, end: Double, sample: Double) {
+            val sx = px + dx * sample
+            val sy = py + dy * sample
+            val sz = pz + dz * sample
+
+            var quadraticA = 0.0
+            var quadraticB = 0.0
+
+            fun addAxis(sampleCoord: Double, min: Double, max: Double, dir: Double, pos: Double) {
+                if (sampleCoord < min) {
+                    quadraticA += dir * dir
+                    quadraticB += dir * (pos - min)
+                } else if (sampleCoord > max) {
+                    quadraticA += dir * dir
+                    quadraticB += dir * (pos - max)
+                }
+            }
+
+            addAxis(sx, minX, maxX, dx, px)
+            addAxis(sy, minY, maxY, dy, py)
+            addAxis(sz, minZ, maxZ, dz, pz)
+
+            if (quadraticA == 0.0) {
+                evaluate(sample)
+                return
+            }
+
+            val root = -quadraticB / quadraticA
+            val inInterval = when {
+                start == Double.NEGATIVE_INFINITY -> root <= end
+                end == Double.POSITIVE_INFINITY -> root >= start
+                else -> root in start..end
+            }
+
+            if (inInterval) {
+                evaluate(root)
+            }
+        }
+
+        if (breakpointCount == 0) {
+            return bestPoint ?: if (this is LineSegment) {
+                val startPoint = getPosition(phiRange.start)
+                val endPoint = getPosition(phiRange.endInclusive)
+                if (distanceSq(phiRange.start) <= distanceSq(phiRange.endInclusive)) startPoint else endPoint
+            } else {
+                getPosition(0.0)
+            }
+        }
+
+        evaluateInterval(
+            Double.NEGATIVE_INFINITY,
+            breakpoints[0],
+            breakpoints[0] - 1.0
+        )
+
+        for (i in 0 until breakpointCount - 1) {
+            val start = breakpoints[i]
+            val end = breakpoints[i + 1]
+            if (start < end) {
+                evaluateInterval(start, end, (start + end) * 0.5)
+            }
+        }
+
+        evaluateInterval(
+            breakpoints[breakpointCount - 1],
+            Double.POSITIVE_INFINITY,
+            breakpoints[breakpointCount - 1] + 1.0
+        )
+
+        return bestPoint ?: if (this is LineSegment) {
+            val startPoint = getPosition(phiRange.start)
+            val endPoint = getPosition(phiRange.endInclusive)
+            if (distanceSq(phiRange.start) <= distanceSq(phiRange.endInclusive)) startPoint else endPoint
+        } else {
+            getPosition(bestPhi)
+        }
     }
 
     private fun getNearestPhisTo(other: Line): DoubleDoublePair? {
