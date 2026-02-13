@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine
 
-import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
 import net.ccbluex.liquidbounce.event.events.BlockAttackEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -44,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
@@ -52,7 +52,6 @@ import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
@@ -87,7 +86,8 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
     }
 
     val swingMode by enumChoice("Swing", SwingMode.HIDE_CLIENT)
-    val switchMode = choices("Switch",
+    val switchMode = choices(
+        "Switch",
         OnStopToolMode,
         arrayOf(AlwaysToolMode, PostStartToolMode, OnStopToolMode, NeverToolMode)
     )
@@ -247,7 +247,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
         switchMode.getSwitchingMethod().reset()
     }
 
-    private fun startBreaking(slot: IntObjectImmutablePair<ItemStack>?, mineTarget: MineTarget) {
+    private fun startBreaking(slot: HotbarItemSlot?, mineTarget: MineTarget) {
         switch(slot, mineTarget)
         if (switchMode.activeMode.syncOnStart) {
             interaction.ensureHasSentCarriedItem()
@@ -257,12 +257,12 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
         mineTarget.started = true
     }
 
-    private fun updateBreakingProgress(mineTarget: MineTarget, slot: IntObjectImmutablePair<ItemStack>?) {
+    private fun updateBreakingProgress(mineTarget: MineTarget, slot: HotbarItemSlot?) {
         val switchMode = switchMode.activeMode
         mineTarget.progress += switchMode.getBlockBreakingDelta(
             mineTarget.targetPos,
             mineTarget.blockState,
-            slot?.second()
+            slot?.itemStack
         )
 
         switch(slot, mineTarget)
@@ -271,10 +271,9 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
         }
 
         val f = if (breakDamage > 0f) {
-            val breakDamageD = breakDamage.toDouble()
-            mineTarget.progress.toDouble().coerceIn(0.0..breakDamageD) / breakDamageD / 2.0
+            mineTarget.progress.coerceIn(0f, breakDamage) / breakDamage * 0.5f
         } else {
-            0.5
+            0.5f
         }
 
         val box = mineTarget.targetPos.outlineBox
@@ -284,14 +283,14 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
         targetRenderer.updateBox(
             mineTarget.targetPos,
             box.inflate(
-                -(lengthX / 2) + lengthX * f,
-                -(lengthY / 2) + lengthY * f,
-                -(lengthZ / 2) + lengthZ * f
+                lengthX * (f - 0.5f),
+                lengthY * (f - 0.5f),
+                lengthZ * (f - 0.5f),
             )
         )
     }
 
-    fun switch(slot: IntObjectImmutablePair<ItemStack>?, mineTarget: MineTarget) {
+    fun switch(slot: HotbarItemSlot?, mineTarget: MineTarget) {
         if (slot == null) {
             return
         }
@@ -352,12 +351,12 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
         when (val packet = it.packet) {
             is ClientboundBlockUpdatePacket -> {
-                mc.submit { updatePosOnChange(packet.pos, packet.blockState) }
+                mc.execute { updatePosOnChange(packet.pos, packet.blockState) }
             }
 
             is ClientboundSectionBlocksUpdatePacket -> {
-                mc.submit {
-                    packet.runUpdates { pos, state -> updatePosOnChange(pos, state) }
+                mc.execute {
+                    packet.runUpdates(::updatePosOnChange)
                 }
             }
         }

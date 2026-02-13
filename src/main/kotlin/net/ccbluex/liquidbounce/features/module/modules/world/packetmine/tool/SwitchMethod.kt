@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool
 
-import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
@@ -29,23 +28,23 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.warning
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.network.PickFromInventoryPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
-import net.minecraft.world.item.ItemStack
 
 enum class SwitchMethod(override val tag: String, val shouldSync: Boolean) : Tagged, MinecraftShortcuts {
 
     NORMAL("Normal", true) {
 
-        override fun switch(slot: IntObjectImmutablePair<ItemStack>, mineTarget: MineTarget) {
+        override fun switch(slot: HotbarItemSlot, mineTarget: MineTarget) {
             if (ModuleAutoTool.running) {
                 ModuleAutoTool.switchToBreakBlock(mineTarget.targetPos)
                 return
             }
 
-            SilentHotbar.selectSlotSilently(ModulePacketMine, slot.firstInt(), 1)
+            SilentHotbar.selectSlotSilently(ModulePacketMine, slot.hotbarSlot, 1)
         }
 
         override fun switchBack() {
@@ -57,13 +56,12 @@ enum class SwitchMethod(override val tag: String, val shouldSync: Boolean) : Tag
     @Suppress("unused")
     SWAP("Swap", false) {
 
-        override fun switch(slot: IntObjectImmutablePair<ItemStack>, mineTarget: MineTarget) {
+        override fun switch(slot: HotbarItemSlot, mineTarget: MineTarget) {
             val selectedSlot = SilentHotbar.serversideSlot
-            val desiredSlot = slot.firstInt()
+            val desiredSlot = slot.hotbarSlot
             if (selectedSlot == desiredSlot) {
                 return
             }
-
 
             exchanged = desiredSlot
             InventoryAction.Click.performSwap(
@@ -90,16 +88,16 @@ enum class SwitchMethod(override val tag: String, val shouldSync: Boolean) : Tag
     @Suppress("unused")
     PICK("Pick", false) {
 
-        override fun switch(slot: IntObjectImmutablePair<ItemStack>, mineTarget: MineTarget) {
+        override fun switch(slot: HotbarItemSlot, mineTarget: MineTarget) {
             if (!usesViaFabricPlus) {
                 chat(warning(ModulePacketMine.message("noVfp")))
                 ModulePacketMine.onDisabled()
                 return
             }
 
-            exchanged = slot.firstInt()
+            exchanged = slot.hotbarSlot
             network.sendPacket(
-                PickFromInventoryPacket(slot.firstInt() - 1),
+                PickFromInventoryPacket(slot.hotbarSlot - 1),
                 onFailure = {
                     chat(
                         markAsError(
@@ -125,7 +123,7 @@ enum class SwitchMethod(override val tag: String, val shouldSync: Boolean) : Tag
 
     var exchanged: Int? = null
 
-    abstract fun switch(slot: IntObjectImmutablePair<ItemStack>, mineTarget: MineTarget)
+    abstract fun switch(slot: HotbarItemSlot, mineTarget: MineTarget)
 
     abstract fun switchBack()
 

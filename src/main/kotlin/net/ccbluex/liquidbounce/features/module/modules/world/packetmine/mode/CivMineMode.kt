@@ -18,18 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode
 
-import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool.findBestToolToMineBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
 
 object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
@@ -75,7 +74,7 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
         mineTarget.finished = true
     }
 
-    override fun shouldUpdate(mineTarget: MineTarget, slot: IntObjectImmutablePair<ItemStack>?): Boolean {
+    override fun shouldUpdate(mineTarget: MineTarget, slot: HotbarItemSlot?): Boolean {
         if (!mineTarget.finished) {
             return true
         }
