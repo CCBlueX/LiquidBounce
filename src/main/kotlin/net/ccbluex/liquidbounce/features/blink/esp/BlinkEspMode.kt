@@ -117,11 +117,14 @@ class BlinkEspWireframe(
     private val color by color("Color", Color4b(36, 32, 147, 87))
     private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
 
+    private val wireframePlayer = WireframePlayer()
+
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> {
         val (entity, pos, rotation) = this.getEspData.get() ?: return@handler
 
-        val wireframePlayer = WireframePlayer(pos, rotation.yaw, rotation.pitch)
+        wireframePlayer.pos = pos
+        wireframePlayer.setRotation(rotation)
         wireframePlayer.render(it, color, outlineColor)
     }
 }

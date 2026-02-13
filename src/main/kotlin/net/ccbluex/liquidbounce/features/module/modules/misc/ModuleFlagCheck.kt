@@ -75,7 +75,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
         private var color by color("Color", Color4b.RED.with(a = 100).darker())
         private var outlineColor by color("OutlineColor", Color4b.RED.darker())
 
-        val wireframePlayer = WireframePlayer(Vec3.ZERO, 0f, 0f)
+        val wireframePlayer = WireframePlayer()
         var creationTime = 0L
         var finished = true
 
