@@ -52,6 +52,8 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
     private val macros: List<Macro>
 
     init {
+        doNotIncludeAlways()
+
         val macros = ArrayList<Macro>()
         repeat(COUNT) {
             macros += tree(Macro.Chat("Chat-${it + 1}"))
