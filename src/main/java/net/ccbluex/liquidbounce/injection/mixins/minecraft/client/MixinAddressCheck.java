@@ -27,6 +27,7 @@ import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+import java.util.ServiceConfigurationError;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -50,7 +51,7 @@ public interface MixinAddressCheck {
     ) {
         try {
             return operation.call(instance, collector);
-        } catch (NoClassDefFoundError | ExceptionInInitializerError error) {
+        } catch (NoClassDefFoundError | ServiceConfigurationError | ExceptionInInitializerError error) {
             return ImmutableList.of();
         }
     }

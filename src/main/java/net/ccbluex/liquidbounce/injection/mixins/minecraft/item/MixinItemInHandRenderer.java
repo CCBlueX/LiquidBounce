@@ -187,8 +187,7 @@ public abstract class MixinItemInHandRenderer {
     @Unique
     private static boolean liquid_bounce$shouldAnimate(Player player) {
         return ModuleSwordBlock.INSTANCE.getRunning()
-            && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player.getOffhandItem(), player.getMainHandItem())
-            && (player.isUsingItem() || KillAuraAutoBlock.INSTANCE.getBlockVisual());
+            && (ModuleSwordBlock.isBlockingWithOffhandShield(player) || KillAuraAutoBlock.INSTANCE.getBlockVisual());
     }
 
     @ModifyExpressionValue(method = "renderArmWithItem", at = @At(
