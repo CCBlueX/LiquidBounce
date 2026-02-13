@@ -31,8 +31,9 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
+import net.ccbluex.liquidbounce.utils.render.setPosition
+import net.ccbluex.liquidbounce.utils.render.setRotation
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -75,6 +76,8 @@ class BlinkEspModel(
     getEspData: Supplier<BlinkEspData?>,
 ) : BlinkEspMode("Model", getEspData) {
 
+    private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 0))
+
     private val poseStack = PoseStack()
 
     @Suppress("unused")
@@ -85,18 +88,16 @@ class BlinkEspModel(
 
         val rs = entityRenderer.createRenderState(entity, 0F)
 
-        rs.x = pos.x
-        rs.y = pos.y
-        rs.z = pos.z
-        val cameraState = mc.gameRenderer.levelRenderState.cameraRenderState
-        rs.distanceToCameraSq = pos.distanceToSqr(cameraState.pos)
-
-        if (rs is LivingEntityRenderState) {
-            rs.bodyRot = rotation.yRot
-            rs.yRot = Mth.wrapDegrees(rotation.yRot - rs.bodyRot)
-            rs.xRot = rotation.xRot
+        if (!outlineColor.isTransparent) {
+            rs.outlineColor = outlineColor.argb
         }
 
+        rs.setPosition(pos)
+        if (rs is LivingEntityRenderState) {
+            rs.setRotation(rotation)
+        }
+
+        val cameraState = mc.gameRenderer.levelRenderState.cameraRenderState
         mc.entityRenderDispatcher.submit(
             rs,
             cameraState,
