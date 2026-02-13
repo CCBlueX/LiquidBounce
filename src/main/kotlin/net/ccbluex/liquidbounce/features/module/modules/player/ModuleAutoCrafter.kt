@@ -37,8 +37,7 @@ import net.minecraft.world.item.crafting.display.SlotDisplayContext
 object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) {
 
     private val targetItems by itemList(
-        "TargetItems",
-        mutableListOf(
+        "TargetItems", mutableListOf(
             Items.POLISHED_DEEPSLATE, Items.DEEPSLATE_BRICKS, Items.DEEPSLATE_TILES
         )
     )
@@ -53,44 +52,34 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
     private val tickHandler = handler<GameTickEvent> {
         val menu = player.containerMenu as? AbstractCraftingMenu ?: return@handler
         if (menu is InventoryMenu && !allowInventoryCrafting) return@handler
-
         if (++timer < delay.random()) return@handler
 
         val context = SlotDisplayContext.fromLevel(mc.level ?: return@handler)
-        val recipeBook = player.recipeBook
-        val collections = recipeBook.collections
+        val collections = player.recipeBook.collections
 
         for ((index, item) in targetItems.withIndex()) {
-            //prevent crafting loops like ingots -> blocks -> ingots
-            val ignoredIngredients = targetItems.subList(index + 1, targetItems.size)
+            val itemsToCraftLater = targetItems.drop(index + 1)
 
-            val (_, recipe) = collections.asSequence()
-                .flatMap { collection -> collection.recipes.asSequence().map { collection to it } }
-                .firstOrNull { (collection, recipe) ->
-                    val resultMatches = recipe.resultItems(context).any { it.item == item }
-
-                    val ingredientsValid = recipe.craftingRequirements.map { requirements ->
-                        requirements.none { req ->
-                            ignoredIngredients.any { ignored -> req.test(ItemStack(ignored)) }
-                        }
-                    }.orElse(true)
-                    recipeBook.add(recipe)
-                    resultMatches && ingredientsValid && collection.isCraftable(recipe.id)
-                } ?: continue
-
-
+            val recipe = collections.firstNotNullOfOrNull { collection ->
+                collection.recipes.firstOrNull { recipe ->
+                    recipe.resultItems(context).any { it.item == item } &&
+                        collection.isCraftable(recipe.id) &&
+                        // Prevent crafting loops (ingot->block->ingot) by rejecting recipes that use items crafted later
+                        recipe.craftingRequirements.map { requirements ->
+                            requirements.none { req -> itemsToCraftLater.any { req.test(ItemStack(it)) } }
+                        }.orElse(true)
+                }
+            } ?: continue
 
             val resultSlot = menu.getSlot(0)
             if (resultSlot.item.isEmpty) {
                 interaction.handlePlaceRecipe(menu.containerId, recipe.id(), craftInStacks)
             } else {
                 val hasSpace = player.inventory.freeSlot != -1
+                val clickType = if (hasSpace) ClickType.QUICK_MOVE else ClickType.THROW
+                val mouseButton = if (hasSpace) 0 else 1
                 interaction.handleInventoryMouseClick(
-                    menu.containerId,
-                    0,
-                    if (hasSpace) 0 else 1,
-                    if (hasSpace) ClickType.QUICK_MOVE else ClickType.THROW,
-                    player
+                    menu.containerId, 0, mouseButton, clickType, player
                 )
             }
             timer = 0
