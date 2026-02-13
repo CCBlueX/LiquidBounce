@@ -30,7 +30,7 @@ object CrosshairCS2 : CrosshairMode("CS2") {
         val thickness = CrosshairSettings.thickness
         val gap = CrosshairSettings.gap + multiplier
 
-        // 获取颜色并转换成 Color4b
+        // to Color4b
         val argb = color.getCurrentStepColor(
             color.firstColor,
             color.secondColor,
@@ -46,25 +46,24 @@ object CrosshairCS2 : CrosshairMode("CS2") {
             (argb shr 24) and 0xFF   // Alpha
         )
 
-        // 上线
         context.drawQuad(
             -thickness / 2f, -gap - length,
             thickness / 2f, -gap,
             fillColor = color4b
         )
-        // 下线
+
         context.drawQuad(
             -thickness / 2f, gap,
             thickness / 2f, gap + length,
             fillColor = color4b
         )
-        // 左线
+
         context.drawQuad(
             -gap - length, -thickness / 2f,
             -gap, thickness / 2f,
             fillColor = color4b
         )
-        // 右线
+
         context.drawQuad(
             gap, -thickness / 2f,
             gap + length, thickness / 2f,
