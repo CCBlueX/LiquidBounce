@@ -33,8 +33,10 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputListener
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
+import net.minecraft.util.Util
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.lwjgl.glfw.GLFW
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -237,19 +239,208 @@ class CefBrowser(
         browserApi.sendMouseWheel(scaledX, scaledY, delta)
     }
 
+    /**
+     * Normalizes keyboard modifiers for macOS to ensure cross-platform compatibility with CEF.
+     *
+     * On macOS, the Command key (⌘) is mapped to GLFW_MOD_SUPER, while Windows/Linux use
+     * GLFW_MOD_CONTROL for system shortcuts. This function ensures both modifiers are sent
+     * to CEF when either is pressed, providing maximum compatibility with the browser engine's
+     * internal shortcut handling.
+     */
+    private fun normalizeModifiersForPlatform(modifiers: Int): Int {
+        if (Util.getPlatform() != Util.OS.OSX) {
+            return modifiers
+        }
+
+        val hasSuper = (modifiers and GLFW.GLFW_MOD_SUPER) != 0
+        val hasControl = (modifiers and GLFW.GLFW_MOD_CONTROL) != 0
+
+        if (hasSuper || hasControl) {
+            return modifiers or GLFW.GLFW_MOD_SUPER or GLFW.GLFW_MOD_CONTROL
+        }
+
+        return modifiers
+    }
+
+    /**
+     * Executes clipboard copy operation via JavaScript.
+     *
+     * Uses the modern Clipboard API (navigator.clipboard.writeText) for browser-based copy operations.
+     * Supports both text inputs/textareas and general page selections.
+     */
+    private fun executeCopyScript() {
+        val script = """
+            (function() {
+                var text = '';
+                var activeEl = document.activeElement;
+                if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                    var start = activeEl.selectionStart;
+                    var end = activeEl.selectionEnd;
+                    if (start !== end) {
+                        text = activeEl.value.substring(start, end);
+                    }
+                } else {
+                    text = window.getSelection().toString();
+                }
+                if (text && navigator.clipboard) {
+                    navigator.clipboard.writeText(text);
+                }
+            })()
+        """.trimIndent()
+        browserApi.executeJavaScript(script, "", 1)
+    }
+
+    /**
+     * Executes clipboard paste operation by injecting text from system clipboard into focused element.
+     *
+     * Reads from native system clipboard via GLFW and programmatically inserts into the active
+     * input element. This approach is necessary because CEF's clipboard integration has
+     * limitations on macOS with keyboard shortcut handling.
+     */
+    private fun executePasteScript(clipboard: String) {
+        val escaped = clipboard
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+
+        val script = """
+            (function() {
+                var text = "$escaped";
+                var activeEl = document.activeElement;
+                if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                    var start = activeEl.selectionStart || 0;
+                    var end = activeEl.selectionEnd || 0;
+                    var value = activeEl.value || '';
+                    activeEl.value = value.substring(0, start) + text + value.substring(end);
+                    activeEl.selectionStart = activeEl.selectionEnd = start + text.length;
+                    activeEl.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            })()
+        """.trimIndent()
+        browserApi.executeJavaScript(script, "", 1)
+    }
+
+    /**
+     * Executes clipboard cut operation via JavaScript.
+     *
+     * Removes selected text from the active element and copies it to the clipboard using
+     * the modern Clipboard API.
+     */
+    private fun executeCutScript() {
+        val script = """
+            (function() {
+                var text = '';
+                var activeEl = document.activeElement;
+                if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                    var start = activeEl.selectionStart;
+                    var end = activeEl.selectionEnd;
+                    if (start !== end) {
+                        text = activeEl.value.substring(start, end);
+                        activeEl.value = activeEl.value.substring(0, start) + activeEl.value.substring(end);
+                        activeEl.selectionStart = activeEl.selectionEnd = start;
+                        activeEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                } else {
+                    text = window.getSelection().toString();
+                    if (text) { document.execCommand('delete'); }
+                }
+                if (text && navigator.clipboard) {
+                    navigator.clipboard.writeText(text);
+                }
+            })()
+        """.trimIndent()
+        browserApi.executeJavaScript(script, "", 1)
+    }
+
+    /**
+     * Executes select all operation for the focused element or document.
+     *
+     * Uses element-specific selection for inputs/textareas for better reliability.
+     */
+    private fun executeSelectAllScript() {
+        val script = """
+            (function() {
+                var activeEl = document.activeElement;
+                if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                    activeEl.select();
+                } else {
+                    document.execCommand('selectAll');
+                }
+            })()
+        """.trimIndent()
+        browserApi.executeJavaScript(script, "", 1)
+    }
+
+    /**
+     * Handles macOS-specific keyboard shortcuts for clipboard operations.
+     *
+     * On macOS, CEF/JCEF has known issues with properly handling system keyboard shortcuts
+     * (Command+C/V/X/A) due to modifier key mapping differences between the OS and the browser.
+     * This method intercepts these shortcuts and implements them via JavaScript and native
+     * clipboard access, ensuring consistent behavior across platforms.
+     *
+     * This is a platform-specific optimization for macOS where the Command key (GLFW_MOD_SUPER)
+     * is the standard modifier for system shortcuts, unlike Windows/Linux which use Control.
+     */
+    private fun handleMacShortcut(keyCode: Int, modifiers: Int): Boolean {
+        if (Util.getPlatform() != Util.OS.OSX) {
+            return false
+        }
+
+        val hasCommandOrControl = (modifiers and GLFW.GLFW_MOD_SUPER) != 0 ||
+                                   (modifiers and GLFW.GLFW_MOD_CONTROL) != 0
+
+        if (!hasCommandOrControl) {
+            return false
+        }
+
+        return when (keyCode) {
+            GLFW.GLFW_KEY_C -> {
+                executeCopyScript()
+                true
+            }
+            GLFW.GLFW_KEY_V -> {
+                val clipboard = GLFW.glfwGetClipboardString(mc.window.handle()) ?: ""
+                if (clipboard.isNotEmpty()) {
+                    executePasteScript(clipboard)
+                }
+                true
+            }
+            GLFW.GLFW_KEY_X -> {
+                executeCutScript()
+                true
+            }
+            GLFW.GLFW_KEY_A -> {
+                executeSelectAllScript()
+                true
+            }
+            else -> false
+        }
+    }
+
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyPress(keyCode, scanCode.toLong(), modifiers)
+
+        if (handleMacShortcut(keyCode, modifiers)) {
+            return
+        }
+
+        val normalizedModifiers = normalizeModifiersForPlatform(modifiers)
+        browserApi.sendKeyPress(keyCode, scanCode.toLong(), normalizedModifiers)
     }
 
     override fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
+        val normalizedModifiers = normalizeModifiersForPlatform(modifiers)
+        browserApi.sendKeyRelease(keyCode, scanCode.toLong(), normalizedModifiers)
     }
 
     override fun charTyped(char: Char, modifiers: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyTyped(char, modifiers)
+        val normalizedModifiers = normalizeModifiersForPlatform(modifiers)
+        browserApi.sendKeyTyped(char, normalizedModifiers)
     }
 
     private fun comparePaintWithViewpoint(width: Int, height: Int) {
