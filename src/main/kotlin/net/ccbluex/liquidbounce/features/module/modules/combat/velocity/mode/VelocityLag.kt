@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * Lag mode. It delays some ticks of knockback.
@@ -41,6 +41,7 @@ internal object VelocityLag : VelocityMode("Lag") {
 
     private val lagTime by intRange("LagTime", 5..5, 1..20, "ticks")
     private val jumpReset by boolean("JumpReset", false)
+    private val considerExplosion by boolean("ConsiderExplosion", true)
 
     private var shouldLag = false
     private var lagTicks = 0
@@ -50,7 +51,7 @@ internal object VelocityLag : VelocityMode("Lag") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+        if (packet.isLocalPlayerVelocity(considerExplosion)) {
             shouldLag = true
             lagTicks = lagTime.random()
         }
