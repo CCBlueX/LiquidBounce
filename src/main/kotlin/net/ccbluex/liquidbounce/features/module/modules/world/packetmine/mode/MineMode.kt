@@ -18,18 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode
 
-import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.block.isBreakable
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.minecraft.core.BlockPos
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
 
-abstract class MineMode(
+sealed class MineMode(
     name: String,
     val canManuallyChange: Boolean = true,
     val canAbort: Boolean = true,
@@ -52,10 +51,10 @@ abstract class MineMode(
 
     abstract fun shouldUpdate(
         mineTarget: MineTarget,
-        slot: IntObjectImmutablePair<ItemStack>?
+        slot: HotbarItemSlot?
     ): Boolean
 
-    override val parent: ModeValueGroup<*>
+    final override val parent: ModeValueGroup<*>
         get() = ModulePacketMine.mode
 
 }
