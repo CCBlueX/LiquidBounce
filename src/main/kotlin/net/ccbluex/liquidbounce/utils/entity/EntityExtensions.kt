@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.client.player.ClientInput
@@ -340,11 +339,11 @@ fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
 }
 
 fun Entity.squaredBoxedDistanceTo(otherPos: Vec3): Double {
-    return this.box.squaredBoxedDistanceTo(otherPos)
+    return box.distanceToSqr(otherPos)
 }
 
 fun Entity.squareBoxedDistanceTo(entity: Entity, offsetPos: Vec3): Double {
-    return this.box.move(offsetPos - this.position()).squaredBoxedDistanceTo(entity.eyePosition)
+    return box.move(offsetPos - position()).distanceToSqr(entity.eyePosition)
 }
 
 fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {

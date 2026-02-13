@@ -20,19 +20,19 @@
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.core.Vec3i
+import net.minecraft.core.BlockPos
 
-private fun commonOffsetToInvestigate(vararg xzOffsets: Int): List<Vec3i> = buildList(xzOffsets.size.sq() * 2) {
+private fun commonOffsetToInvestigate(vararg xzOffsets: Int): List<BlockPos> = buildList(xzOffsets.size.sq() * 2) {
     for (x in xzOffsets) {
         for (z in xzOffsets) {
-            add(Vec3i(x, 0, z))
-            add(Vec3i(x, -1, z))
+            add(BlockPos(x, 0, z))
+            add(BlockPos(x, -1, z))
         }
     }
 }
 
-enum class BlockPosOffsets(val list: List<Vec3i>): List<Vec3i> by list {
-    SINGLE(listOf(Vec3i.ZERO)),
+enum class BlockPosOffsets(val list: List<BlockPos>): List<BlockPos> by list {
+    NO_OFFSET(listOf(BlockPos.ZERO)),
     NORMAL(commonOffsetToInvestigate(0, -1, 1)),
     DOWN(commonOffsetToInvestigate(0, -1, -1, -2, 2)),
     FULL(commonOffsetToInvestigate(0, -1, 1, -2, 2, -3, 3, -4, -4)),
