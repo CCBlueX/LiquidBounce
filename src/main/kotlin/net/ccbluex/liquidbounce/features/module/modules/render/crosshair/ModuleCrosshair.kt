@@ -29,7 +29,7 @@ object ModuleCrosshair : ClientModule("Crosshair", ModuleCategories.RENDER) {
         choices("Mode", 0) {
             arrayOf(
                 CrosshairCircle,
-                CrosshairCS2
+                CrosshairCS2,
             )
         }.apply { tagBy(this) }
 }
