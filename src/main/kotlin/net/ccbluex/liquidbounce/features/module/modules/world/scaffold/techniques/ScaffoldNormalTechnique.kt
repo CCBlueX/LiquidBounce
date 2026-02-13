@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.AngleYawTargetPosition
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.DiagonalYawTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.EdgePointTargetPositionFactory
@@ -88,17 +89,17 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
     ): BlockPlacementTarget? {
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityComparator: Comparator<Vec3i> = if (optimalLine != null) {
-            BlockPlacementTargetFindingOptions.leastBlockDistanceOfLine(optimalLine)
+            BlockPlacementTargetFindingOptions.leastBlockDistanceToLine(optimalLine)
         } else {
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+            BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos)
         }
 
         val offsets = if (ModuleFreeze.running) {
-            FULL_INVESTIGATION_OFFSETS
+            BlockPosOffsets.FULL.offsets
         } else if (ScaffoldDownFeature.shouldGoDown) {
-            INVESTIGATE_DOWN_OFFSETS
+            BlockPosOffsets.DOWN.offsets
         } else {
-            NORMAL_INVESTIGATION_OFFSETS
+            BlockPosOffsets.NORMAL.offsets
         }
 
         // Face position factory for current config

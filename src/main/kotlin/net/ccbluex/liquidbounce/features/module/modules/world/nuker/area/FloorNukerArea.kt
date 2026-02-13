@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.rangeTo
-import net.ccbluex.liquidbounce.utils.math.squaredBoxedDistanceTo
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.world.level.block.state.BlockState
@@ -55,7 +54,7 @@ object FloorNukerArea : NukerArea("Floor") {
         // Check if the box is within the radius
         val eyesPos = player.eyePosition
         val rangeSquared = (radius * radius).toDouble()
-        if (box.squaredBoxedDistanceTo(eyesPos) > rangeSquared) {
+        if (box.distanceToSqr(eyesPos) > rangeSquared) {
             // Return empty list if not
             return emptyList()
         }

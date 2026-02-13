@@ -40,6 +40,7 @@ import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.SupportType
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
@@ -76,12 +77,21 @@ class BlockPlacementTargetFindingOptions(
         }
 
         @JvmStatic
-        fun leastBlockDistanceOfLine(optimalLine: Line): Comparator<Vec3i> =
+        fun leastBlockDistanceToLine(optimalLine: Line): Comparator<Vec3i> =
             compareBy { vec ->
                 val blockPos = vec.toBlockPos()
                 val blockState = world.getBlockState(blockPos)
                 val box = blockState.outlineBox(blockPos)
                 -optimalLine.distanceToSqr(box)
+            }
+
+        @JvmStatic
+        fun leastBlockDistanceToPos(pos: Vec3): Comparator<Vec3i> =
+            compareBy { vec ->
+                val blockPos = vec.toBlockPos()
+                val blockState = world.getBlockState(blockPos)
+                val box = blockState.outlineBox(blockPos)
+                -box.distanceToSqr(pos)
             }
     }
 }
@@ -100,7 +110,7 @@ class BlockOffsetOptions(
     companion object {
         @JvmField
         val Default = BlockOffsetOptions(
-            listOf(Vec3i.ZERO),
+            BlockPosOffsets.NO_OFFSET.offsets,
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
         )
     }
@@ -147,15 +157,12 @@ data class BlockTargetPlan(
     val interactionDirection: Direction,
 ) {
     /**
-     * The closest center of the target block face (outline shape)
+     * The center on the target block face
      *
      * Note: no check for raycast!
      */
-    val targetPositionOnBlock: Vec3
-        get() {
-            val outlineBox = world.getBlockState(blockPosToInteractWith).outlineBox(blockPosToInteractWith)
-            return outlineBox.centerPointOf(interactionDirection)
-        }
+    val targetPositionOnBlock: Vec3 =
+        AABB(blockPosToInteractWith).centerPointOf(interactionDirection)
 
     /**
      * cosine of the angle between the expected player's eye position and the normal of the targeted face.
@@ -383,4 +390,3 @@ class PlacementPlan(
             && (!sideMustMatch || rayTraceResult.direction == this.placementTarget.direction)
     }
 }
-

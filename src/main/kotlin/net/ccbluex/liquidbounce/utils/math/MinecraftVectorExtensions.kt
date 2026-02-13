@@ -54,6 +54,13 @@ inline operator fun Vec3i.minus(other: Vec3i): Vec3i = subtract(other)
 
 inline operator fun Vec3i.times(scalar: Int): Vec3i = multiply(scalar)
 
+fun Vec3i.lengthSqr(): Long {
+    val x1 = x.toLong()
+    val y1 = y.toLong()
+    val z1 = z.toLong()
+    return x1 * x1 + y1 * y1 + z1 * z1
+}
+
 inline operator fun Vec3.plus(other: Position): Vec3 = add(other.x(), other.y(), other.z())
 
 inline operator fun Vec3.plus(other: Vec3i): Vec3 = add(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())

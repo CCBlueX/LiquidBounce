@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.move
 import net.ccbluex.liquidbounce.utils.math.scaleMut
 import net.ccbluex.liquidbounce.utils.math.set
-import net.ccbluex.liquidbounce.utils.math.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
 import net.minecraft.core.BlockPos
@@ -339,7 +338,7 @@ private fun WorldRenderEnvironment.renderHitBlockFace(blockHitResult: BlockHitRe
 
     val bestBox = currState.getShape(world, currPos, CollisionContext.of(player)).toAabbs()
         .filter { blockHitResult.location in it.inflate(0.01).move(currPos) }
-        .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.location) }
+        .minByOrNull { it.distanceToSqr(blockHitResult.location) }
 
     if (bestBox != null) {
         withPositionRelativeToCamera(currPos) {

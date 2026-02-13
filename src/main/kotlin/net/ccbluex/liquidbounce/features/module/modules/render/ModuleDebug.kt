@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
@@ -55,9 +54,7 @@ import net.ccbluex.liquidbounce.utils.client.underline
 import net.ccbluex.liquidbounce.utils.client.vector2f
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
@@ -197,38 +194,6 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     }
 
     @Suppress("unused")
-    private val scaffoldDebugging = handler<GameTickEvent> {
-        if (!ModuleScaffold.running) {
-            return@handler
-        }
-
-        val pos0 = Vec3(77.0, 75.0, -52.0)
-        val face = AlignedFace(pos0, pos0.add(1.0, 1.0, 0.0))
-
-        debugGeometry(
-            ModuleScaffold,
-            "targetFace",
-            DebuggedBox(AABB(face.from, face.to), Color4b(255, 0, 0, 64))
-        )
-
-        val line = LineSegment(player.eyePosition, player.lookAngle, 0.0..10.0)
-
-        debugGeometry(
-            ModuleScaffold,
-            "daLine",
-            DebuggedLineSegment(line.endPoints.first, line.endPoints.second, Color4b(0, 0, 255, 255))
-        )
-
-        val pointTo = face.nearestPointTo(line)
-
-        debugGeometry(
-            ModuleScaffold,
-            "targetPoint",
-            DebuggedPoint(pointTo, Color4b(0, 0, 255, 255), size = 0.05)
-        )
-    }
-
-    @Suppress("unused")
     private val expireHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         val earliest = System.currentTimeMillis() - expireTime * 1000
 
@@ -312,16 +277,20 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         }
     }
 
-    fun debugGeometry(owner: DebuggedOwner, name: String, geometry: DebuggedGeometry) {
+    fun debugGeometry(owner: DebuggedOwner, name: String, geometry: DebuggedGeometry?) {
         // Do not take any new debugging while the module is off
         if (!running) {
             return
         }
 
-        debuggedGeometry[DebuggedKey(owner, name)] = geometry
+        if (geometry != null) {
+            debuggedGeometry[DebuggedKey(owner, name)] = geometry
+        } else {
+            debuggedGeometry.remove(DebuggedKey(owner, name))
+        }
     }
 
-    inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
+    inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry?) {
         if (!running) {
             return
         }

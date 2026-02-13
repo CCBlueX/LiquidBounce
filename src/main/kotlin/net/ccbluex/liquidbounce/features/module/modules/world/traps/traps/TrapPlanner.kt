@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeI
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockIntentProvider
 import net.ccbluex.liquidbounce.utils.block.collidingRegion
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
@@ -66,19 +67,17 @@ abstract class TrapPlanner<T>(
         val blockPos = pos.toBlockPos()
         val normalizedStartBB =
             dims.makeBoundingBox(pos).move(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -pos.z.toInt().toDouble())
-        val normalizedEnddBB = normalizedStartBB.move(
+        val normalizedEndBB = normalizedStartBB.move(
             velocity.x * ticksToLookAhead,
             0.0,
             velocity.z * ticksToLookAhead
         )
 
-        val searchBB = normalizedEnddBB
-
-        if (searchBB.size > 30) {
-            return listOf(BlockPos.ZERO)
+        if (normalizedEndBB.size > 30) {
+            return BlockPosOffsets.NO_OFFSET.offsets
         }
 
-        return findOffsetsBetween(normalizedStartBB, normalizedEnddBB, blockPos, mustBeOnGround)
+        return findOffsetsBetween(normalizedStartBB, normalizedEndBB, blockPos, mustBeOnGround)
     }
 
     private fun findOffsetsBetween(

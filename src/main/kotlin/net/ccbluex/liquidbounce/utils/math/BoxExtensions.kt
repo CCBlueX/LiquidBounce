@@ -106,12 +106,6 @@ fun AABB.getCoordinate(direction: Direction): Double =
 fun AABB.firstHit(from: Vec3, to: Vec3): Vec3? =
     if (contains(from)) clip(to, from).getOrNull() else clip(from, to).getOrNull()
 
-fun AABB.squaredBoxedDistanceTo(otherPos: Vec3): Double {
-    val pos = getNearestPoint(otherPos)
-
-    return pos.distanceToSqr(otherPos)
-}
-
 /**
  * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
  */
