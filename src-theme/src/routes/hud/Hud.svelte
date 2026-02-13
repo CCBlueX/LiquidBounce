@@ -20,6 +20,7 @@
     import KeyBinds from "./elements/KeyBinds.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
     import {os} from "../clickgui/clickgui_store";
+    import BedPlatesView from "./elements/BedPlatesView.svelte";
 
     let zoom = 100;
     let metadata: Metadata;
@@ -67,6 +68,8 @@
                     <TargetHud/>
                 {:else if c.name === "BlockCounter"}
                     <BlockCounter settings={c.settings}/>
+                {:else if c.name === "BedPlatesView"}
+                    <BedPlatesView settings={c.settings}/>
                 {:else if c.name === "Hotbar"}
                     <HotBar/>
                 {:else if c.name === "Scoreboard"}
