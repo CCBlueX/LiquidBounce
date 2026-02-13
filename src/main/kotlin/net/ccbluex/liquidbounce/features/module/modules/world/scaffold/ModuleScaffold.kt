@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -328,6 +329,10 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     }
 
     override fun onDisabled() {
+        reset()
+    }
+
+    private fun reset() {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
@@ -335,6 +340,11 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         updateRenderCount(null)
         forceSneak = 0
         renderer.clearSilently()
+    }
+
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        reset()
     }
 
     private fun updateRenderCount(count: Int?) {
@@ -368,7 +378,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             }
 
         debugGeometry("predictedPos") {
-            ModuleDebug.DebuggedPoint(predictedPos, Color4b(0, 255, 0, 255), size = 0.1)
+            ModuleDebug.DebuggedPoint(predictedPos, Color4b.GREEN, size = 0.1)
         }
 
         val technique = if (isTowering) {
@@ -380,19 +390,17 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         val target = technique.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
             .also { this.currentTarget = it }
 
-        if (optimalLine != null && target != null) {
-            debugGeometry("lineToBlock") {
-                // Debug stuff
-                val b = target.placedBlock.toVec3d(0.5, 1.0, 0.5)
-                val a = optimalLine.getNearestPointTo(b)
+        debugGeometry("lineToBlock") {
+            // Debug stuff
+            val b = target?.placedBlock?.toVec3d(0.5, 1.0, 0.5) ?: return@debugGeometry null
+            val a = optimalLine?.getNearestPointTo(b)  ?: return@debugGeometry null
 
-                // Debug the line a-b
-                ModuleDebug.DebuggedLineSegment(
-                    from = a,
-                    to = b,
-                    Color4b(255, 0, 0, 255),
-                )
-            }
+            // Debug the line a-b
+            ModuleDebug.DebuggedLineSegment(
+                from = a,
+                to = b,
+                Color4b.RED,
+            )
         }
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it

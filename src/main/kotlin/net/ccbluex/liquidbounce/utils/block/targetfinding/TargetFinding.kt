@@ -40,6 +40,7 @@ import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.SupportType
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
@@ -147,15 +148,12 @@ data class BlockTargetPlan(
     val interactionDirection: Direction,
 ) {
     /**
-     * The closest center of the target block face (outline shape)
+     * The center on the target block face
      *
      * Note: no check for raycast!
      */
-    val targetPositionOnBlock: Vec3
-        get() {
-            val outlineBox = world.getBlockState(blockPosToInteractWith).outlineBox(blockPosToInteractWith)
-            return outlineBox.centerPointOf(interactionDirection)
-        }
+    val targetPositionOnBlock: Vec3 =
+        AABB(blockPosToInteractWith).centerPointOf(interactionDirection)
 
     /**
      * cosine of the angle between the expected player's eye position and the normal of the targeted face.
