@@ -95,11 +95,11 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         }
 
         val offsets = if (ModuleFreeze.running) {
-            BlockPosOffsets.FULL
+            BlockPosOffsets.FULL.offsets
         } else if (ScaffoldDownFeature.shouldGoDown) {
-            BlockPosOffsets.DOWN
+            BlockPosOffsets.DOWN.offsets
         } else {
-            BlockPosOffsets.NORMAL
+            BlockPosOffsets.NORMAL.offsets
         }
 
         // Face position factory for current config

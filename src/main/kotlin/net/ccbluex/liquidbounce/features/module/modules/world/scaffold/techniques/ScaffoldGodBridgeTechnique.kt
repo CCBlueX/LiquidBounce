@@ -128,7 +128,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
     ): BlockPlacementTarget? {
         val searchOptions = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
-                BlockPosOffsets.NORMAL,
+                BlockPosOffsets.NORMAL.offsets,
                 BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos),
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),

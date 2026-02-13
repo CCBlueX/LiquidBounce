@@ -19,22 +19,40 @@
 
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
-import net.ccbluex.liquidbounce.utils.math.sq
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.utils.math.lengthSqr
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
 
-private fun commonOffsetToInvestigate(vararg xzOffsets: Int): List<BlockPos> = buildList(xzOffsets.size.sq() * 2) {
-    for (x in xzOffsets) {
-        for (z in xzOffsets) {
-            add(BlockPos(x, 0, z))
-            add(BlockPos(x, -1, z))
+private val COMPARATOR: Comparator<in Vec3i> =
+    Comparator.comparingLong(Vec3i::lengthSqr)
+        .thenComparingInt(Vec3i::getY)
+        .thenComparingInt(Vec3i::getX)
+        .thenComparingInt(Vec3i::getZ)
+
+private fun generateScaffoldOffsets(vararg xzValues: Int): List<BlockPos> {
+    val longs = LongOpenHashSet(xzValues.size * xzValues.size * 2)
+    for (x in xzValues) {
+        for (z in xzValues) {
+            longs.add(BlockPos.asLong(x, 0, z))
+            longs.add(BlockPos.asLong(x, -1, z))
         }
     }
+
+    val result = longs.mapToArray(BlockPos::of)
+    result.sortWith(COMPARATOR)
+
+    return result.asList()
 }
 
-enum class BlockPosOffsets(val list: List<BlockPos>): List<BlockPos> by list {
+enum class BlockPosOffsets(val offsets: List<BlockPos>) {
     NO_OFFSET(listOf(BlockPos.ZERO)),
-    NORMAL(commonOffsetToInvestigate(0, -1, 1)),
-    DOWN(commonOffsetToInvestigate(0, -1, -1, -2, 2)),
-    FULL(commonOffsetToInvestigate(0, -1, 1, -2, 2, -3, 3, -4, -4)),
+    NORMAL(generateScaffoldOffsets(0, -1, 1)),
+    DOWN(generateScaffoldOffsets(0, -1, 1, -2, 2)),
+    FULL(generateScaffoldOffsets(0, -1, 1, -2, 2, -3, 3, -4, 4)),
     ;
+
+    fun containsOffset(x: Int, y: Int, z: Int): Boolean = offsets.contains(BlockPos(x, y, z))
+
 }

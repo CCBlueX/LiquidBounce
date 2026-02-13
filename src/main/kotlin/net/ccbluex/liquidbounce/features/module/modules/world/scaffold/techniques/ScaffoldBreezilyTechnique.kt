@@ -63,7 +63,7 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
     ): BlockPlacementTarget? {
         val searchOptions = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
-                BlockPosOffsets.NORMAL,
+                BlockPosOffsets.NORMAL.offsets,
                 BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos),
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),

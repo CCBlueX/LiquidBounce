@@ -110,7 +110,7 @@ class BlockOffsetOptions(
     companion object {
         @JvmField
         val Default = BlockOffsetOptions(
-            BlockPosOffsets.NO_OFFSET,
+            BlockPosOffsets.NO_OFFSET.offsets,
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
         )
     }
@@ -390,4 +390,3 @@ class PlacementPlan(
             && (!sideMustMatch || rayTraceResult.direction == this.placementTarget.direction)
     }
 }
-

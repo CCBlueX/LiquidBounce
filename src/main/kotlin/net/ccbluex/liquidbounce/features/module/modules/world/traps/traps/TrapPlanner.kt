@@ -74,7 +74,7 @@ abstract class TrapPlanner<T>(
         )
 
         if (normalizedEndBB.size > 30) {
-            return BlockPosOffsets.NO_OFFSET
+            return BlockPosOffsets.NO_OFFSET.offsets
         }
 
         return findOffsetsBetween(normalizedStartBB, normalizedEndBB, blockPos, mustBeOnGround)
