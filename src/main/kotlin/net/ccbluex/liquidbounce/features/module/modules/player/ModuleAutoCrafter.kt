@@ -64,7 +64,8 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
                 collection.recipes.firstOrNull { recipe ->
                     recipe.resultItems(context).any { it.item == item } &&
                         collection.isCraftable(recipe.id) &&
-                        // Prevent crafting loops (ingot->block->ingot) by rejecting recipes that use items crafted later
+                        // Prevent crafting loops (ingot->block->ingot)
+                        // by rejecting recipes that use items crafted later
                         recipe.craftingRequirements.map { requirements ->
                             requirements.none { req -> itemsToCraftLater.any { req.test(ItemStack(it)) } }
                         }.orElse(true)
