@@ -29,6 +29,8 @@
     let offsetY = 0;
 
     let scrollPositionSaveTimeout: number | undefined;
+    let restoreScrollInterval: number | undefined;
+    let restoreScrollTimeout: number | undefined;
 
     const panelConfig = loadPanelConfig();
 
@@ -131,9 +133,46 @@
         if (scrollPositionSaveTimeout !== undefined) {
             clearTimeout(scrollPositionSaveTimeout);
         }
-        scrollPositionSaveTimeout = setTimeout(() => {
-            savePanelConfig();
-        }, 500)
+        scrollPositionSaveTimeout = setTimeout(savePanelConfig, 500)
+    }
+
+    function stopRestoreScroll() {
+        if (restoreScrollInterval !== undefined) {
+            clearInterval(restoreScrollInterval);
+            restoreScrollInterval = undefined;
+        }
+        if (restoreScrollTimeout !== undefined) {
+            clearTimeout(restoreScrollTimeout);
+            restoreScrollTimeout = undefined;
+        }
+    }
+
+    function restoreScrollPosition() {
+        if (!modulesElement) {
+            return;
+        }
+
+        const targetScrollTop = panelConfig.scrollTop;
+        let stableHitCount = 0;
+
+        const tryRestore = () => {
+            modulesElement.scrollTop = targetScrollTop;
+
+            if (modulesElement.scrollTop === targetScrollTop) {
+                stableHitCount++;
+                if (stableHitCount >= 3) {
+                    stopRestoreScroll();
+                }
+            } else {
+                stableHitCount = 0;
+            }
+        };
+
+        tryRestore();
+
+        restoreScrollInterval = setInterval(tryRestore, 50);
+
+        restoreScrollTimeout = setTimeout(stopRestoreScroll, 1500);
     }
 
     highlightModuleName.subscribe((name) => {
@@ -163,10 +202,11 @@
             return;
         }
 
-        modulesElement.scrollTo({
-            top: panelConfig.scrollTop,
-            behavior: "smooth"
-        });
+        restoreScrollPosition();
+
+        return () => {
+            stopRestoreScroll();
+        };
     });
 
     function handleKeydown(e: KeyboardEvent) {
