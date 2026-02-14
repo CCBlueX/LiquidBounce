@@ -30,8 +30,8 @@ import net.minecraft.world.phys.Vec3
 /**
  * Calculates the shooting angle which hits the supplied target
  */
-abstract class ProjectileAngleCalculator {
-    abstract fun calculateAngleFor(
+fun interface ProjectileAngleCalculator {
+    fun calculateAngleFor(
         projectileInfo: TrajectoryInfo,
         sourcePos: Vec3,
         targetPosFunction: PositionExtrapolation,

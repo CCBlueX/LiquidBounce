@@ -44,6 +44,7 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
 
     val targetTracker = TargetTracker(TargetPriority.DISTANCE)
     private val rotations = RotationsValueGroup(this)
+    private val throughWalls by boolean("ThroughWalls", true)
 
     init {
         tree(targetTracker)
@@ -76,8 +77,13 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
         ) ?: return@handler
 
         var rotation: Rotation? = null
+        val calculator = if (throughWalls) {
+            SituationalProjectileAngleCalculator
+        } else {
+            SituationalProjectileAngleCalculator.VerifyHitResult
+        }
         targetTracker.selectFirst { enemy ->
-            rotation = SituationalProjectileAngleCalculator.calculateAngleForEntity(projectileInfo, enemy)
+            rotation = calculator.calculateAngleForEntity(projectileInfo, enemy)
             rotation != null
         } ?: return@handler
 

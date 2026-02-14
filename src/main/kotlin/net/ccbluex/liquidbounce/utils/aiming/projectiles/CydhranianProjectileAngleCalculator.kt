@@ -43,7 +43,7 @@ import kotlin.math.round
  * This is currently used as the flagship implementation. When the distance between the source and target pos is low,
  * this implementation often malfunctions. Use a backup calculator for low distances instead.
  */
-object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
+object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator {
     /**
      * @param sourcePos the position the projectile originates from (usually the player's eyePos)
      */
