@@ -105,10 +105,10 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             if (otherPlayers) {
                 for (otherPlayer in world.players()) {
                     // Including the user
-                    drawHypotheticalTrajectory(otherPlayer, event)
+                    drawHypotheticalTrajectory(otherPlayer, event.partialTicks)
                 }
             } else {
-                drawHypotheticalTrajectory(player, event)
+                drawHypotheticalTrajectory(player, event.partialTicks)
             }
             commitBatch()
         }
@@ -121,7 +121,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
      */
     private fun WorldRenderEnvironment.drawHypotheticalTrajectory(
         otherPlayer: Player,
-        event: WorldRenderEvent
+        partialTicks: Float,
     ) {
         val (trajectoryInfoTyped, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
             TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack, alwaysShowBow)?.let {
@@ -146,12 +146,12 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             trajectoryInfo = trajectoryInfoTyped.info,
             trajectoryType = trajectoryInfoTyped.type,
             rotation = rotation,
-            partialTicks = event.partialTicks
+            partialTicks = partialTicks
         )
 
         simulationResults += renderer to renderer.drawTrajectoryForProjectile(
             maxSimulatedTicks,
-            event.partialTicks,
+            partialTicks,
             trajectoryColor = Color4b.WHITE,
             blockHitColor = Color4b(0, 160, 255, 150),
             entityHitColor = Color4b(255, 0, 0, 100),

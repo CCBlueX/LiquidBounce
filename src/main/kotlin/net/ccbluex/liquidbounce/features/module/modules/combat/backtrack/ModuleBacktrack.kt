@@ -85,7 +85,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     private val espMode = choices("Esp", 2) {
         arrayOf(
             BlinkEspBox(it, ::getEspData),
-            BlinkEspModel(it, ::getEspData),
+            BlinkEspModel(it, getEspData = ::getEspData),
             BlinkEspWireframe(it, ::getEspData),
             BlinkEspNone(it),
         )

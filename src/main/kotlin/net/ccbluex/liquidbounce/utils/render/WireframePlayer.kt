@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
@@ -41,7 +42,11 @@ private val RENDER_LEFT_ARM: AABB = LIMB.move(-2 * LIMB.maxX, LIMB.maxY, 0.0)
 private val RENDER_RIGHT_ARM: AABB = LIMB.move(BODY.maxX - LIMB.maxX, LIMB.maxY, 0.0)
 private val RENDER_HEAD: AABB = HEAD.move(-LIMB.maxX, LIMB.maxY * 2, -HEAD.maxZ * 0.25)
 
-data class WireframePlayer(private var pos: Vec3, private var yRot: Float, private var xRot: Float) {
+class WireframePlayer {
+    var pos: Vec3 = Vec3.ZERO
+    var yRot: Float = 0F
+    var xRot: Float = 0F
+
     private val quaternion = Quaternionf()
 
     fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b) {
@@ -67,6 +72,11 @@ data class WireframePlayer(private var pos: Vec3, private var yRot: Float, priva
             }
             commitBatch()
         }
+    }
+
+    fun setRotation(rotation: Rotation) {
+        this.xRot = rotation.xRot
+        this.yRot = rotation.yRot
     }
 
     fun setPosRot(x: Double, y: Double, z: Double, yRot: Float, xRot: Float) {

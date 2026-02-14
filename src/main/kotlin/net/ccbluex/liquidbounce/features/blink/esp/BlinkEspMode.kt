@@ -30,10 +30,16 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
+import net.ccbluex.liquidbounce.utils.render.isCustom
+import net.ccbluex.liquidbounce.utils.render.scaleLightCoords
+import net.ccbluex.liquidbounce.utils.render.setPosition
+import net.ccbluex.liquidbounce.utils.render.setRotation
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
-import net.minecraft.util.Mth
+import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityAttachment
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.util.function.Supplier
@@ -72,31 +78,44 @@ class BlinkEspBox(
 
 class BlinkEspModel(
     override val parent: ModeValueGroup<*>,
+    val nametagOverride: Supplier<Component?> = Supplier { null },
     getEspData: Supplier<BlinkEspData?>,
 ) : BlinkEspMode("Model", getEspData) {
 
+    private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 0))
+    private val lightPercent by int("LightPercent", 60, 0..100, "%")
+
     private val poseStack = PoseStack()
 
+    /**
+     * @see net.minecraft.client.renderer.entity.EntityRenderer
+     * @see net.minecraft.client.renderer.entity.LivingEntityRenderer
+     */
     @Suppress("unused")
     private val renderHandler = handler<GameRenderEvent> { event ->
         val (entity, pos, rotation) = this.getEspData.get() ?: return@handler
+        val partialTicks = 0F
 
         val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
 
-        val rs = entityRenderer.createRenderState(entity, 0F)
+        val rs = entityRenderer.createRenderState(entity, partialTicks)
 
-        rs.x = pos.x
-        rs.y = pos.y
-        rs.z = pos.z
-        val cameraState = mc.gameRenderer.levelRenderState.cameraRenderState
-        rs.distanceToCameraSq = pos.distanceToSqr(cameraState.pos)
-
-        if (rs is LivingEntityRenderState) {
-            rs.bodyRot = rotation.yRot
-            rs.yRot = Mth.wrapDegrees(rotation.yRot - rs.bodyRot)
-            rs.xRot = rotation.xRot
+        if (!outlineColor.isTransparent) {
+            rs.outlineColor = outlineColor.argb
         }
 
+        rs.isCustom = true
+        this.nametagOverride.get()?.let {
+            rs.nameTag = it
+            rs.nameTagAttachment = entity.attachments[EntityAttachment.NAME_TAG, 0, entity.getYRot(partialTicks)]
+        }
+        rs.scaleLightCoords(lightPercent * 0.01f)
+        rs.setPosition(pos)
+        if (rs is LivingEntityRenderState) {
+            rs.setRotation(rotation)
+        }
+
+        val cameraState = mc.gameRenderer.levelRenderState.cameraRenderState
         mc.entityRenderDispatcher.submit(
             rs,
             cameraState,
@@ -116,11 +135,14 @@ class BlinkEspWireframe(
     private val color by color("Color", Color4b(36, 32, 147, 87))
     private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
 
+    private val wireframePlayer = WireframePlayer()
+
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> {
         val (entity, pos, rotation) = this.getEspData.get() ?: return@handler
 
-        val wireframePlayer = WireframePlayer(pos, rotation.yaw, rotation.pitch)
+        wireframePlayer.pos = pos
+        wireframePlayer.setRotation(rotation)
         wireframePlayer.render(it, color, outlineColor)
     }
 }

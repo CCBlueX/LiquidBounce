@@ -33,4 +33,8 @@ public interface EntityRenderStateAddition {
     @Nullable
     Entity liquid_bounce$getEntity();
 
+    boolean liquid_bounce$isCustom();
+
+    void liquid_bounce$setCustom(boolean custom);
+
 }

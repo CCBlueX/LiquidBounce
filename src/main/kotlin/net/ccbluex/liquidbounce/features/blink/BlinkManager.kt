@@ -87,7 +87,7 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     private val espMode = modes(this, "Esp", 2) {
         arrayOf(
             BlinkEspBox(it, ::getEspData),
-            BlinkEspModel(it, ::getEspData),
+            BlinkEspModel(it, getEspData = ::getEspData),
             BlinkEspWireframe(it, ::getEspData),
             BlinkEspNone(it),
         )
