@@ -21,10 +21,18 @@ package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.renderer.LightTexture
 import net.minecraft.client.renderer.entity.state.EntityRenderState
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
 import net.minecraft.core.Position
 import net.minecraft.util.Mth
+import kotlin.math.roundToInt
+
+fun EntityRenderState.scaleLightCoords(scale: Float) {
+    val block = (LightTexture.block(this.lightCoords) * scale).roundToInt().coerceIn(0, 15)
+    val sky = (LightTexture.sky(this.lightCoords) * scale).roundToInt().coerceIn(0, 15)
+    this.lightCoords = LightTexture.pack(block, sky)
+}
 
 fun EntityRenderState.setPosition(position: Position) {
     this.x = position.x()

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
+import net.ccbluex.liquidbounce.utils.render.scaleLightCoords
 import net.ccbluex.liquidbounce.utils.render.setPosition
 import net.ccbluex.liquidbounce.utils.render.setRotation
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
@@ -77,6 +78,7 @@ class BlinkEspModel(
 ) : BlinkEspMode("Model", getEspData) {
 
     private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 0))
+    private val lightPercent by int("LightPercent", 60, 0..100, "%")
 
     private val poseStack = PoseStack()
 
@@ -92,6 +94,7 @@ class BlinkEspModel(
             rs.outlineColor = outlineColor.argb
         }
 
+        rs.scaleLightCoords(lightPercent * 0.01f)
         rs.setPosition(pos)
         if (rs is LivingEntityRenderState) {
             rs.setRotation(rotation)
