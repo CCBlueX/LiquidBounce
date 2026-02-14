@@ -272,9 +272,14 @@ private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
 object ModuleManager : EventListener, Collection<ClientModule> by modules {
 
     val modulesConfig = ConfigSystem.root("modules", modules)
+
     private const val SMART_MOUSE_HOLD_THRESHOLD_MS = 200L
-    private val smartKeyboardPendingStates = hashMapOf<ClientModule, Boolean>()
-    private val smartKeyboardHoldModules = hashSetOf<ClientModule>()
+
+    private enum class SmartBindKeyboardState {
+        PENDING_ENABLED, PENDING_DISABLED, HOLDING,
+    }
+
+    private val smartKeyboardStates = hashMapOf<ClientModule, SmartBindKeyboardState>()
     private val smartMousePendingStates = hashMapOf<ClientModule, Boolean>()
     private val smartMousePressTimestamps = hashMapOf<ClientModule, Long>()
 
@@ -294,8 +299,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                         InputBind.BindAction.TOGGLE -> m.enabled = !m.enabled
                         InputBind.BindAction.HOLD -> m.enabled = true
                         InputBind.BindAction.SMART -> {
-                            smartKeyboardPendingStates[m] = m.enabled
-                            smartKeyboardHoldModules.remove(m)
+                            smartKeyboardStates[m] = if (m.enabled) SmartBindKeyboardState.PENDING_ENABLED else SmartBindKeyboardState.PENDING_DISABLED
                             m.enabled = true
                         }
                     }
@@ -305,10 +309,9 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                 filter { m ->
                     m.bind.action == InputBind.BindAction.SMART &&
                         m.bind.matchesKey(event.keyCode, event.scanCode) &&
-                        m in smartKeyboardPendingStates
+                        m in smartKeyboardStates
                 }.forEach { m ->
-                    smartKeyboardPendingStates.remove(m)
-                    smartKeyboardHoldModules.add(m)
+                    smartKeyboardStates[m] = SmartBindKeyboardState.HOLDING
                 }
             }
             GLFW.GLFW_RELEASE ->
@@ -319,30 +322,23 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                             if (!m.bind.matchesKeyRelease(event)) {
                                 false
                             } else {
-                                when {
-                                    m in smartKeyboardHoldModules -> true
-                                    m in smartKeyboardPendingStates -> true
-                                    else -> false
-                                }
+                                m in smartKeyboardStates
                             }
                         }
                         InputBind.BindAction.TOGGLE -> false
                     }
                 }.forEach { m ->
-                    when {
-                        m.bind.action == InputBind.BindAction.HOLD -> m.enabled = false
-                        m in smartKeyboardHoldModules -> {
-                            smartKeyboardHoldModules.remove(m)
-                            m.enabled = false
-                        }
-                        else -> {
-                            val stateBeforePress = smartKeyboardPendingStates.remove(m)
+                    when (m.bind.action) {
+                        InputBind.BindAction.HOLD -> m.enabled = false
+                        InputBind.BindAction.SMART -> {
+                            val stateBeforePress = smartKeyboardStates.remove(m)
                             if (stateBeforePress != null) {
-                                m.enabled = !stateBeforePress
+                                m.enabled = stateBeforePress == SmartBindKeyboardState.PENDING_DISABLED
                             } else {
                                 m.enabled = !m.enabled
                             }
                         }
+                        InputBind.BindAction.TOGGLE -> {}
                     }
                 }
         }
