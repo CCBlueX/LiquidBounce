@@ -109,7 +109,7 @@ object ModuleProjectilePuncher : ClientModule(
             val nextTickFireballPosition = entity.position() + entity.position() - entity.lastPos
 
             val entityBox = entity.dimensions.makeBoundingBox(nextTickFireballPosition)
-            val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyePosition)
+            val distanceSquared = entityBox.distanceToSqr(player.eyePosition)
 
             if (distanceSquared > rangeSquared) {
                 continue

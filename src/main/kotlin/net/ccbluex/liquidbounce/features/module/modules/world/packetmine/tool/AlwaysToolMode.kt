@@ -33,7 +33,7 @@ object AlwaysToolMode : MineToolMode("Always", syncOnStart = true) {
     private val cancelAutomaticSwitching by boolean("CancelAutomaticSwitching", true)
 
     @Suppress("unused")
-    private val packetHandler  = handler<PacketEvent> { event ->
+    private val packetHandler = handler<PacketEvent> { event ->
         mc.execute {
             val target = ModulePacketMine._target ?: return@execute
             if (!abortOnSwitch || !target.started) {
@@ -42,9 +42,9 @@ object AlwaysToolMode : MineToolMode("Always", syncOnStart = true) {
 
             val packet = event.packet
             val serverInitiatedSwitch = packet is ClientboundSetHeldSlotPacket &&
-                    packet.slot == getSlot(target.blockState)?.firstInt()
+                packet.slot == getSlot(target.blockState)?.hotbarSlot
             val clientInitiatedSwitch = packet is ServerboundSetCarriedItemPacket &&
-                    packet.slot == getSlot(target.blockState)?.firstInt()
+                packet.slot == getSlot(target.blockState)?.hotbarSlot
             if (serverInitiatedSwitch || clientInitiatedSwitch) {
                 ModulePacketMine._resetTarget()
             }
@@ -56,8 +56,8 @@ object AlwaysToolMode : MineToolMode("Always", syncOnStart = true) {
         val target = ModulePacketMine._target ?: return@handler
 
         val requester = event.requester
-        val fromPacketMine = requester == ModulePacketMine
-        val fromAutoTool = requester == ModuleAutoTool && event.slot == getSlot(target.blockState)?.firstInt()
+        val fromPacketMine = requester === ModulePacketMine
+        val fromAutoTool = requester === ModuleAutoTool && event.slot == getSlot(target.blockState)?.hotbarSlot
         if (cancelAutomaticSwitching && target.started && !fromPacketMine && !fromAutoTool) {
             event.cancelEvent()
         }

@@ -39,7 +39,7 @@ import net.minecraft.world.effect.MobEffects
  * @anticheatVersion 12.12.2023
  * @testedOn hypixel.net
  */
-class SpeedHypixelBHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelBHop", parent) {
+class SpeedHypixelBHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelBHop", parent) {
 
     private val horizontalAcceleration by boolean("HorizontalAcceleration", true)
     private val verticalAcceleration by boolean("VerticalAcceleration", true)

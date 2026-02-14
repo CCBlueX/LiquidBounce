@@ -18,24 +18,25 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.core.BlockPos
+import net.minecraft.resources.ResourceKey
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.level.block.Block
+import java.util.function.ToIntFunction
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
-fun Comparator<ItemStack>.asItemFacetComparator(): Comparator<ItemFacet> =
+fun Comparator<ItemStack>.asHolderComparator(): Comparator<ItemStackHolder> =
     Comparator { a, b -> this.compare(a.itemStack, b.itemStack) }
 
-fun Comparator<ItemStack>.asItemSlotComparator(): Comparator<ItemSlot> =
-    Comparator { a, b -> this.compare(a.itemStack, b.itemStack) }
+fun comparingEnchantmentLevel(key: ResourceKey<Enchantment>): Comparator<ItemStack> =
+    Comparator.comparingInt(ToIntFunction { it.getEnchantment(key) })
 
 object PreferFavourableBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {

@@ -16,25 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.world.entity.Entity;
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
+package net.ccbluex.liquidbounce.utils.item
 
-/**
- * Addition to {@link net.minecraft.client.renderer.entity.state.EntityRenderState}
- */
-@NullMarked
-public interface EntityRenderStateAddition {
+import net.minecraft.world.item.ItemStack
 
-    void liquid_bounce$setEntity(Entity entity);
-
-    @Nullable
-    Entity liquid_bounce$getEntity();
-
-    boolean liquid_bounce$isCustom();
-
-    void liquid_bounce$setCustom(boolean custom);
-
+interface ItemStackHolder {
+    val itemStack: ItemStack
 }

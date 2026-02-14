@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
-import net.ccbluex.liquidbounce.utils.item.asItemFacetComparator
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isHoe
 import net.ccbluex.liquidbounce.utils.item.isPickaxe
@@ -59,7 +59,7 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                         rule.correctForDrops.orElse(false)
                     }?.speed?.orElse(null) ?: toolComponent.defaultMiningSpeed
                 },
-                VALUE_ESTIMATOR.asItemFacetComparator(),
+                VALUE_ESTIMATOR.asHolderComparator(),
                 PREFER_BETTER_DURABILITY,
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,

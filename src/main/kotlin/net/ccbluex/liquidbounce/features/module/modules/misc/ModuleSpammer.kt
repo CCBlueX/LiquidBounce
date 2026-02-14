@@ -27,9 +27,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.longListOf
 import net.ccbluex.liquidbounce.api.core.ioScope
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat

@@ -29,14 +29,13 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
+import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 /**
  * Renders a circle around the player indicating the KillAura attack range.
@@ -90,7 +89,7 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
         val pos = player.interpolateCurrentPosition(partialTicks)
             .add(0.0, 0.001, 0.0) // Prevent z-fighting with the ground
         val pulseOffset = calculatePulse(range)
-        val distance = target?.let { sqrt(player.squaredBoxedDistanceTo(it)).toFloat() }
+        val distance = target?.let { player.boxedDistanceTo(it).toFloat() }
 
         with(env) {
             startBatch()

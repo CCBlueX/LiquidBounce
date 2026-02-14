@@ -126,13 +126,13 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
                 AABB(
                 face.from,
                 face.to
-            ).move(Vec3.atLowerCornerOf(targetPos)), Color4b(255, 0, 0, 255))
+            ).move(Vec3.atLowerCornerOf(targetPos)), Color4b.RED)
         }
 
         ModuleScaffold.debugGeometry("targetPoint") {
             ModuleDebug.DebuggedPoint(
                 pointOnFace + targetPos,
-                Color4b(0, 0, 255, 255),
+                Color4b.BLUE,
                 size = 0.05
             )
         }
@@ -142,7 +142,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
                 Line(
                     config.eyePos,
                     currentRotation.directionVector
-                ), Color4b(0, 0, 255, 255)
+                ), Color4b.BLUE
             )
         }
 

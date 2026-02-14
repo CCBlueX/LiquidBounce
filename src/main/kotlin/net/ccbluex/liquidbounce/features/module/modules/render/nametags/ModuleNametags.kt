@@ -24,13 +24,14 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.render.entity
+import net.ccbluex.liquidbounce.utils.render.isCustom
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.renderer.entity.state.EntityRenderState
 import org.joml.Vector2f
@@ -119,8 +120,7 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
     }
 
     fun shouldRenderVanillaNametag(state: EntityRenderState): Boolean {
-        return !running || !((state as EntityRenderStateAddition).`liquid_bounce$getEntity`()
-            ?: return true).shouldBeShown()
+        return !running || !(state.entity ?: return true).shouldBeShown() || state.isCustom
     }
 
 }

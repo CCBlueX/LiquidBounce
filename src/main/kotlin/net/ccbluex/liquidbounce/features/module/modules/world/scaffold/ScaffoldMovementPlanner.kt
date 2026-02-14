@@ -22,7 +22,6 @@ import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
@@ -55,7 +54,7 @@ object ScaffoldMovementPlanner {
         val direction =
             chooseDirection(
                 getMovementDirectionOfInput(
-                    RotationManager.currentRotation?.yRot ?: player.yRot,
+                    player.yRot,
                     directionalInput,
                 ),
             )
@@ -113,10 +112,10 @@ object ScaffoldMovementPlanner {
 
     private fun debugLastPlacedBlocks(lastPlacedBlocksToConsider: List<BlockPos>) {
         lastPlacedBlocksToConsider.forEachIndexed { idx, pos ->
-            val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 255.0).toInt()
+            val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 200.0).toInt()
 
             ModuleScaffold.debugGeometry("lastPlacedBlock$idx") {
-                ModuleDebug.DebuggedBox(AABB(pos), Color4b(alpha, alpha, 255, 127))
+                ModuleDebug.DebuggedBox(AABB(pos), Color4b(133, 155, 255, alpha))
             }
         }
     }

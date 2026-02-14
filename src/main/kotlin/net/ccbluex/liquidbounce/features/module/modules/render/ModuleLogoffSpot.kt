@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.render.entity
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
@@ -124,7 +124,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
     }
 
     fun isLogoffEntity(state: LivingEntityRenderState): Boolean {
-        return isLogoffEntity((state as EntityRenderStateAddition).`liquid_bounce$getEntity`()?.id ?: return false)
+        return isLogoffEntity(state.entity?.id ?: return false)
     }
 
     fun isLogoffEntity(entityId: Int) = this.running

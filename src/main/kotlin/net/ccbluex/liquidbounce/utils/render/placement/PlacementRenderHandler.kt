@@ -92,7 +92,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
 
                     drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
 
-                    if (time - value.startTime >= outTime) {
+                    if (time - value.startTime >= inTime) {
                         if (keep) {
                             currentList.put(pos, value.toCurrent())
                         } else {
@@ -191,7 +191,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     fun addBlock(pos: BlockPos, update: Boolean = true, box: AABB = FULL_BOX) {
         val longValue = pos.asLong()
         if (!currentList.containsKey(longValue) && !inList.containsKey(longValue)) {
-            inList.put(longValue, InOutBlockData(System.currentTimeMillis(), 0L, box))
+            inList.put(longValue, InOutBlockData(System.currentTimeMillis(), -1L, box))
             if (update) {
                 updateNeighbors(pos)
             }

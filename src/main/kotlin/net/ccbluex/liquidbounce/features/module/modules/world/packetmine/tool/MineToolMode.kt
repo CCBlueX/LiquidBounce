@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool
 
-import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -27,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTar
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
@@ -41,8 +41,7 @@ import net.minecraft.world.level.block.state.BlockState
 /**
  * Determines when to switch to a tool and calculates the breaking process delta.
  */
-@Suppress("unused")
-abstract class MineToolMode(
+sealed class MineToolMode(
     choiceName: String,
     val syncOnStart: Boolean = false,
     private val switchesNever: Boolean = false
@@ -60,17 +59,15 @@ abstract class MineToolMode(
         return calcBlockBreakingDelta(pos, state, itemStack)
     }
 
-    fun getSlot(state: BlockState): IntObjectImmutablePair<ItemStack>? {
+    fun getSlot(state: BlockState): HotbarItemSlot? {
         if (switchesNever) {
             return null
         }
 
-        return ModuleAutoTool.toolSelector.activeMode.getTool(state)?.let {
-            IntObjectImmutablePair(it.hotbarSlot, it.itemStack)
-        }
+        return ModuleAutoTool.toolSelector.activeMode.getTool(state)
     }
 
-    override val parent: ModeValueGroup<*>
+    final override val parent: ModeValueGroup<*>
         get() = ModulePacketMine.switchMode
 
 }

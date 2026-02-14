@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -339,7 +338,7 @@ private fun WorldRenderEnvironment.renderHitBlockFace(blockHitResult: BlockHitRe
 
     val bestBox = currState.getShape(world, currPos, CollisionContext.of(player)).toAabbs()
         .filter { blockHitResult.location in it.inflate(0.01).move(currPos) }
-        .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.location) }
+        .minByOrNull { it.distanceToSqr(blockHitResult.location) }
 
     if (bestBox != null) {
         withPositionRelativeToCamera(currPos) {
