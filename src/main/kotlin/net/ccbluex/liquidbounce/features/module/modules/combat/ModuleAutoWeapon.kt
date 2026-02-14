@@ -144,7 +144,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     // https://minecraft.wiki/w/Mace#Falling
     private val canMaceSmash
-        get() = !isOlderThanOrEqual1_8 && MaceItem.canSmashAttack(player)
+        get() = (!isOlderThanOrEqual1_8 && MaceItem.canSmashAttack(player)) || ModuleMaceKill.enabled
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
