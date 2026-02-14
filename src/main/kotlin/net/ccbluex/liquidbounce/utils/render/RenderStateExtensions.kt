@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.render
 
+import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.renderer.LightTexture
@@ -26,7 +27,15 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
 import net.minecraft.core.Position
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 import kotlin.math.roundToInt
+
+inline val EntityRenderState.entity: Entity?
+    get() = (this as EntityRenderStateAddition).`liquid_bounce$getEntity`()
+
+inline var EntityRenderState.isCustom: Boolean
+    get() = (this as EntityRenderStateAddition).`liquid_bounce$isCustom`()
+    set(value) = (this as EntityRenderStateAddition).`liquid_bounce$setCustom`(value)
 
 fun EntityRenderState.scaleLightCoords(scale: Float) {
     val block = (LightTexture.block(this.lightCoords) * scale).roundToInt().coerceIn(0, 15)
