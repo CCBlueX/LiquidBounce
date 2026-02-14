@@ -42,12 +42,16 @@ import com.mojang.blaze3d.vertex.Tesselator
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.io.ensurePngOrConvertJpeg
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
 import net.minecraft.util.Util
+import okio.BufferedSource
+import okio.buffer
+import okio.source
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
@@ -294,7 +298,13 @@ fun NativeImage.registerTexture(identifier: Identifier) {
     mc.textureManager.register(identifier, asTexture(identifier::toString))
 }
 
-inline fun InputStream.toNativeImage(): NativeImage = NativeImage.read(this)
+inline fun InputStream.readNativeImage(): NativeImage = NativeImage.read(this)
+
+fun BufferedSource.readNativeImage(): NativeImage =
+    this.ensurePngOrConvertJpeg().inputStream().readNativeImage()
+
+fun File.readNativeImage(): NativeImage =
+    this.source().buffer().readNativeImage()
 
 inline fun NativeImage.asTexture(
     name: String = "Texture NativeImage@${this.hashCode().toString(16)} (${this.width}x${this.height})",
