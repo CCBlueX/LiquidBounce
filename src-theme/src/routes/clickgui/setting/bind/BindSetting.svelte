@@ -153,7 +153,7 @@
         {#if cSetting.value.boundKey !== UNKNOWN_KEY}
             <div class="action">
                 <SwitchBindAction
-                        choices={["Toggle", "Hold"]}
+                        choices={["Toggle", "Hold", "Smart"]}
                         bind:chosen={cSetting.value.action}
                         onchange={handleChange}
                 />

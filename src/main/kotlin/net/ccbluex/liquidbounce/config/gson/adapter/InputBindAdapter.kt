@@ -67,9 +67,7 @@ object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind>
             jsonObject.get("boundKey"),
             InputConstants.Key::class.java
         )
-        val actionStr = jsonObject.string("action")
-        val action = InputBind.BindAction.entries.find { it.tag.equals(actionStr, ignoreCase = true) }
-            ?: InputBind.BindAction.TOGGLE
+        val action = InputBind.BindAction.of(jsonObject.string("action")) ?: InputBind.BindAction.TOGGLE
         val modifierSet = jsonObject.array("modifiers")?.mapNotNullTo(enumSetOf<InputBind.Modifier>()) { element ->
             InputBind.Modifier.of(element.asString)
         }.orEmpty()

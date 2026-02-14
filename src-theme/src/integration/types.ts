@@ -182,7 +182,7 @@ export interface InputBind {
     modifiers: BindModifier[];
 }
 
-export type BindAction = "Toggle" | "Hold";
+export type BindAction = "Toggle" | "Hold" | "Smart";
 
 export type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 

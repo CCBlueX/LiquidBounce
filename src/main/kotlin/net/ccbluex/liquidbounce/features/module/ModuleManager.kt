@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
@@ -258,11 +259,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModuleP
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.ccbluex.liquidbounce.utils.input.toModifierOrNull
 import org.lwjgl.glfw.GLFW
 
 private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
@@ -274,6 +275,16 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
 
     val modulesConfig = ConfigSystem.root("modules", modules)
 
+    private const val SMART_MOUSE_HOLD_THRESHOLD_MS = 200L
+
+    private enum class SmartBindKeyboardState {
+        PENDING_ENABLED, PENDING_DISABLED, HOLDING,
+    }
+    private class SmartBindMouseState(val pendingEnabled: Boolean, val pressTimestamp: Long)
+
+    private val smartKeyboardStates = Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>()
+    private val smartMouseStates = Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>()
+
     /**
      * Handles keystrokes for module binds.
      * This also runs in GUIs, so that if a GUI is opened while a key is pressed,
@@ -283,21 +294,57 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> { event ->
         when (event.action) {
             GLFW.GLFW_PRESS -> if (mc.screen == null) {
-                filter { m ->
-                    m.bind.matchesKey(event.keyCode, event.scanCode) && m.bind.matchesModifiers(event.mods)
-                }.forEach { m ->
-                    m.enabled = !m.enabled || m.bind.action == InputBind.BindAction.HOLD
+                for (m in modules) {
+                    if (!m.bind.matchesKeyPress(event)) {
+                        continue
+                    }
+
+                    when (m.bind.action) {
+                        InputBind.BindAction.TOGGLE -> m.enabled = !m.enabled
+                        InputBind.BindAction.HOLD -> m.enabled = true
+                        InputBind.BindAction.SMART -> {
+                            smartKeyboardStates[m] = if (m.enabled) {
+                                SmartBindKeyboardState.PENDING_ENABLED
+                            } else {
+                                SmartBindKeyboardState.PENDING_DISABLED
+                            }
+                            m.enabled = true
+                        }
+                    }
                 }
             }
-            GLFW.GLFW_RELEASE ->
-                filter { m ->
-                    m.bind.action == InputBind.BindAction.HOLD && (
-                        m.bind.matchesKey(event.keyCode, event.scanCode)
-                            || event.key.toModifierOrNull().let { it in m.bind.modifiers && !it!!.isAnyPressed }
-                        )
-                }.forEach { m ->
-                    m.enabled = false
+
+            GLFW.GLFW_REPEAT -> {
+                for (m in modules) {
+                    if (m.bind.action != InputBind.BindAction.SMART ||
+                        !m.bind.matchesKey(event.keyCode, event.scanCode) ||
+                        m !in smartKeyboardStates
+                    ) {
+                        continue
+                    }
+
+                    smartKeyboardStates[m] = SmartBindKeyboardState.HOLDING
                 }
+            }
+
+            GLFW.GLFW_RELEASE -> {
+                for (m in modules) {
+                    if (!m.bind.matchesKeyRelease(event)) {
+                        continue
+                    }
+
+                    when (m.bind.action) {
+                        InputBind.BindAction.HOLD -> m.enabled = false
+
+                        InputBind.BindAction.SMART -> {
+                            val stateBeforePress = smartKeyboardStates.remove(m) ?: continue
+                            m.enabled = stateBeforePress == SmartBindKeyboardState.PENDING_DISABLED
+                        }
+
+                        InputBind.BindAction.TOGGLE -> {}
+                    }
+                }
+            }
         }
     }
 
@@ -305,18 +352,51 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
         when (event.action) {
             GLFW.GLFW_PRESS -> if (mc.screen == null) {
-                filter { m -> m.bind.matchesMouse(event.button) && m.bind.matchesModifiers(event.mods) }
-                    .forEach { m ->
-                        m.enabled = !m.running || m.bind.action == InputBind.BindAction.HOLD
+                for (m in modules) {
+                    if (!m.bind.matchesMousePress(event)) {
+                        continue
                     }
+
+                    when (m.bind.action) {
+                        InputBind.BindAction.TOGGLE -> m.enabled = !m.enabled
+                        InputBind.BindAction.HOLD -> m.enabled = true
+                        InputBind.BindAction.SMART -> {
+                            smartMouseStates[m] = SmartBindMouseState(m.enabled, clientStartDurationMs)
+                            m.enabled = true
+                        }
+                    }
+                }
             }
-            GLFW.GLFW_RELEASE ->
-                filter { m ->
-                    m.bind.action == InputBind.BindAction.HOLD && (
-                        m.bind.matchesMouse(event.button)
-                            || event.key.toModifierOrNull().let { it in m.bind.modifiers && !it!!.isAnyPressed }
-                        )
-                }.forEach { m -> m.enabled = false }
+
+            GLFW.GLFW_RELEASE -> {
+                for (m in modules) {
+                    if (!m.bind.matchesMouseRelease(event)) {
+                        continue
+                    }
+
+                    when (m.bind.action) {
+                        InputBind.BindAction.HOLD -> m.enabled = false
+
+                        InputBind.BindAction.SMART -> {
+                            val state = smartMouseStates.remove(m) ?: continue
+
+                            // Mouse button events do not emit GLFW_REPEAT, so SMART falls back to:
+                            // - hold if the press was long enough
+                            // - toggle otherwise
+                            val shouldFallbackToHold =
+                                clientStartDurationMs - state.pressTimestamp >= SMART_MOUSE_HOLD_THRESHOLD_MS
+
+                            if (shouldFallbackToHold) {
+                                m.enabled = false
+                            } else {
+                                m.enabled = !state.pendingEnabled
+                            }
+                        }
+
+                        InputBind.BindAction.TOGGLE -> {}
+                    }
+                }
+            }
         }
     }
 
