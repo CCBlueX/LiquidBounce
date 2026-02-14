@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
@@ -281,8 +282,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     }
     private class SmartBindMouseState(val pendingEnabled: Boolean, val pressTimestamp: Long)
 
-    private val smartKeyboardStates = hashMapOf<ClientModule, SmartBindKeyboardState>()
-    private val smartMouseStates = hashMapOf<ClientModule, SmartBindMouseState>()
+    private val smartKeyboardStates = Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>()
+    private val smartMouseStates = Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>()
 
     /**
      * Handles keystrokes for module binds.

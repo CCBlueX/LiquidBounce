@@ -219,7 +219,15 @@ data class InputBind(
          * - toggle if release is received first
          * - toggle on unexpected fallback paths
          */
-        SMART("Smart"),
+        SMART("Smart");
+
+        companion object {
+            @JvmStatic
+            private val LOOKUP_TABLE = BindAction.entries.makeLookupTable()
+
+            @JvmStatic
+            fun of(string: String?): BindAction? = LOOKUP_TABLE[string]
+        }
     }
 
     enum class Modifier(override val tag: String, val bitMask: Int, vararg val keyCodes: Int): Tagged {
