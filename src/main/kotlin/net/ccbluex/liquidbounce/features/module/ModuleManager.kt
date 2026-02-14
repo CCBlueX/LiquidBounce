@@ -292,45 +292,54 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> { event ->
         when (event.action) {
             GLFW.GLFW_PRESS -> if (mc.screen == null) {
-                filter { m ->
-                    m.bind.matchesKeyPress(event)
-                }.forEach { m ->
+                for (m in modules) {
+                    if (!m.bind.matchesKeyPress(event)) {
+                        continue
+                    }
+
                     when (m.bind.action) {
                         InputBind.BindAction.TOGGLE -> m.enabled = !m.enabled
                         InputBind.BindAction.HOLD -> m.enabled = true
                         InputBind.BindAction.SMART -> {
-                            smartKeyboardStates[m] = if (m.enabled) SmartBindKeyboardState.PENDING_ENABLED else SmartBindKeyboardState.PENDING_DISABLED
+                            smartKeyboardStates[m] = if (m.enabled) {
+                                SmartBindKeyboardState.PENDING_ENABLED
+                            } else {
+                                SmartBindKeyboardState.PENDING_DISABLED
+                            }
                             m.enabled = true
                         }
                     }
                 }
             }
+
             GLFW.GLFW_REPEAT -> {
-                filter { m ->
-                    m.bind.action == InputBind.BindAction.SMART &&
-                        m.bind.matchesKey(event.keyCode, event.scanCode) &&
-                        m in smartKeyboardStates
-                }.forEach { m ->
+                for (m in modules) {
+                    if (m.bind.action != InputBind.BindAction.SMART ||
+                        !m.bind.matchesKey(event.keyCode, event.scanCode) ||
+                        m !in smartKeyboardStates
+                    ) {
+                        continue
+                    }
+
                     smartKeyboardStates[m] = SmartBindKeyboardState.HOLDING
                 }
             }
-            GLFW.GLFW_RELEASE ->
-                filter { m ->
+
+            GLFW.GLFW_RELEASE -> {
+                for (m in modules) {
                     when (m.bind.action) {
-                        InputBind.BindAction.HOLD -> m.bind.matchesKeyRelease(event)
-                        InputBind.BindAction.SMART -> {
+                        InputBind.BindAction.HOLD -> {
                             if (!m.bind.matchesKeyRelease(event)) {
-                                false
-                            } else {
-                                m in smartKeyboardStates
+                                continue
                             }
+                            m.enabled = false
                         }
-                        InputBind.BindAction.TOGGLE -> false
-                    }
-                }.forEach { m ->
-                    when (m.bind.action) {
-                        InputBind.BindAction.HOLD -> m.enabled = false
+
                         InputBind.BindAction.SMART -> {
+                            if (!m.bind.matchesKeyRelease(event) || m !in smartKeyboardStates) {
+                                continue
+                            }
+
                             val stateBeforePress = smartKeyboardStates.remove(m)
                             if (stateBeforePress != null) {
                                 m.enabled = stateBeforePress == SmartBindKeyboardState.PENDING_DISABLED
@@ -338,9 +347,11 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                                 m.enabled = !m.enabled
                             }
                         }
+
                         InputBind.BindAction.TOGGLE -> {}
                     }
                 }
+            }
         }
     }
 
@@ -348,31 +359,37 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
         when (event.action) {
             GLFW.GLFW_PRESS -> if (mc.screen == null) {
-                filter { m -> m.bind.matchesMousePress(event) }
-                    .forEach { m ->
-                        when (m.bind.action) {
-                            InputBind.BindAction.TOGGLE -> m.enabled = !m.enabled
-                            InputBind.BindAction.HOLD -> m.enabled = true
-                            InputBind.BindAction.SMART -> {
-                                smartMousePendingStates[m] = m.enabled
-                                smartMousePressTimestamps[m] = System.currentTimeMillis()
-                                m.enabled = true
-                            }
+                for (m in modules) {
+                    if (!m.bind.matchesMousePress(event)) {
+                        continue
+                    }
+
+                    when (m.bind.action) {
+                        InputBind.BindAction.TOGGLE -> m.enabled = !m.enabled
+                        InputBind.BindAction.HOLD -> m.enabled = true
+                        InputBind.BindAction.SMART -> {
+                            smartMousePendingStates[m] = m.enabled
+                            smartMousePressTimestamps[m] = System.currentTimeMillis()
+                            m.enabled = true
                         }
                     }
+                }
             }
-            GLFW.GLFW_RELEASE ->
-                filter { m ->
+
+            GLFW.GLFW_RELEASE -> {
+                for (m in modules) {
                     when (m.bind.action) {
-                        InputBind.BindAction.HOLD -> m.bind.matchesMouseRelease(event)
-                        InputBind.BindAction.SMART ->
-                            m.bind.matchesMouseRelease(event) && m in smartMousePendingStates
-                        InputBind.BindAction.TOGGLE -> false
-                    }
-                }.forEach { m ->
-                    when (m.bind.action) {
-                        InputBind.BindAction.HOLD -> m.enabled = false
+                        InputBind.BindAction.HOLD -> {
+                            if (!m.bind.matchesMouseRelease(event)) {
+                                continue
+                            }
+                            m.enabled = false
+                        }
                         InputBind.BindAction.SMART -> {
+                            if (!m.bind.matchesMouseRelease(event) || m !in smartMousePendingStates) {
+                                continue
+                            }
+
                             val pressTimestamp = smartMousePressTimestamps.remove(m)
                             val stateBeforePress = smartMousePendingStates.remove(m)
 
@@ -393,6 +410,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                         InputBind.BindAction.TOGGLE -> {}
                     }
                 }
+            }
         }
     }
 
