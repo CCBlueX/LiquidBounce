@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.ChatFormatting
 import net.minecraft.client.renderer.texture.DynamicTexture
 import kotlin.properties.ReadOnlyProperty
@@ -55,7 +55,7 @@ fun <V> FileValue.toTextureProperty(
             }
 
             try {
-                val nativeImage = file.inputStream().toNativeImage()
+                val nativeImage = file.readNativeImage()
                 withContext(Dispatchers.Minecraft) {
                     texture = nativeImage.asTexture("(${owner.name}) File texture: ${file.name}")
                 }

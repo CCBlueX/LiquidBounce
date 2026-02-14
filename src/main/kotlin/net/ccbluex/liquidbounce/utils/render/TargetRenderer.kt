@@ -256,7 +256,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 MARKER2("Marker2", "target_renderer/target2.png");
 
                 override val texture = LiquidBounce.resource(this.path)
-                    .toNativeImage().asTexture { "TargetRenderer Image $tag" }
+                    .readNativeImage().asTexture { "TargetRenderer Image $tag" }
             }
 
             private val quaternion = Quaternionf()
@@ -442,7 +442,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 private val defaultColor = Color4b.LIQUID_BOUNCE.alpha(100)
 
 private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
-    .toNativeImage().asTexture { "TargetRenderer Ghost" }
+    .readNativeImage().asTexture { "TargetRenderer Ghost" }
 
 private sealed class HeightMode(name: String) : Mode(name) {
     abstract fun getHeight(entity: Entity, partialTicks: Float): Double

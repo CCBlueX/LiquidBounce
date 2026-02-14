@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.ReportedException
 import net.minecraft.util.Util
 import okhttp3.Cache
@@ -237,7 +237,7 @@ inline fun <reified T> Response.parse(): T {
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
-        NativeImage::class.java -> body.byteStream().toNativeImage() as T
+        NativeImage::class.java -> body.source().readNativeImage() as T
         else -> body.charStream().readJson<T>()
     }
 }

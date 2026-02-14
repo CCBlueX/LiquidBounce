@@ -45,7 +45,7 @@ import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
@@ -168,7 +168,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
         SNOWFLAKE("Snowflake", "snowflake"),
         SPARK("Spark", "spark");
 
-        val image = LiquidBounce.resource("particles/$fileName.png").toNativeImage()
+        val image = LiquidBounce.resource("particles/$fileName.png").readNativeImage()
         val texture = this.image.asTexture { "Builtin Particle $tag" }
     }
 

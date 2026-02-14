@@ -47,7 +47,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.unaryMinus
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.textureSetup
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.client.CameraType
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.renderer.texture.AbstractTexture
@@ -110,8 +110,8 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
     private val pointerModes = choices("PointerMode", 0) {
         arrayOf(
             PointerMode.Triangle,
-            PointerMode.ImageMode("Image1", LiquidBounce.resource("misc/triangle1.png").toNativeImage()),
-            PointerMode.ImageMode("Image2", LiquidBounce.resource("misc/triangle2.png").toNativeImage()),
+            PointerMode.ImageMode("Image1", LiquidBounce.resource("misc/triangle1.png").readNativeImage()),
+            PointerMode.ImageMode("Image2", LiquidBounce.resource("misc/triangle2.png").readNativeImage()),
         )
     }
 
