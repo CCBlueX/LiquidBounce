@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -26,14 +27,18 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
-import net.ccbluex.liquidbounce.render.createBounds
+import net.ccbluex.liquidbounce.render.getBounds
 import net.ccbluex.liquidbounce.render.drawCustomElement
 import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.client.ceilToInt
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -47,10 +52,12 @@ import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.phys.Vec2
-import kotlin.math.ceil
+import kotlin.math.abs
+import kotlin.math.max
 
 object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     horizontalAlignment = Alignment.ScreenAxisX.LEFT,
@@ -59,24 +66,57 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     verticalOffset = 180,
 )) {
 
-    private val MINIMAP_ENTITY_ORDER = Comparator<Entity> { e1, e2 ->
-        when {
-            e1.y != e2.y -> e1.y.compareTo(e2.y)
-            e1.x != e2.x -> e1.x.compareTo(e2.x)
-            else -> e1.z.compareTo(e2.z)
-        }
-    }
-
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
     private val fixedDirection by boolean("FixedDirection", false)
 
     private object TextureValueGroup : ToggleableValueGroup(this, "Texture", true) {
         val vertexColor by color("VertexColor", Color4b.WHITE)
+
+        override fun onEnabled() {
+            ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+        }
+
+        override fun onDisabled() {
+            ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+            ChunkRenderer.unloadEverything()
+        }
     }
 
     private object EntityValueGroup : ToggleableValueGroup(this, "Entity", true) {
         val scale by float("Scale", 1f, 0.25F..4F)
+        val outOfBounds by enumChoice("OutOfBounds", OutOfBounds.NONE)
+
+        val entities = ReferenceArrayList<LivingEntity>()
+
+        private val MINIMAP_ENTITY_ORDER = Comparator<Entity> { e1, e2 ->
+            when {
+                e1.y != e2.y -> e1.y.compareTo(e2.y)
+                e1.x != e2.x -> e1.x.compareTo(e2.x)
+                else -> e1.z.compareTo(e2.z)
+            }
+        }
+
+        override fun onEnabled() {
+            RenderedEntities.subscribe(this)
+            RenderedEntities.onUpdated {
+                entities.clear()
+                entities.ensureCapacity(RenderedEntities.size)
+                RenderedEntities.filterTo(entities) { it !== player }
+                entities.sortWith(MINIMAP_ENTITY_ORDER)
+            }
+            super.onEnabled()
+        }
+
+        override fun onDisabled() {
+            RenderedEntities.unsubscribe(this)
+            super.onDisabled()
+        }
+
+        enum class OutOfBounds(override val tag: String) : Tagged {
+            NONE("None"),
+            ALL("All"),
+        }
     }
 
     private class ExtraElement(
@@ -134,17 +174,6 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         registerComponentListen(this)
     }
 
-    override fun onEnabled() {
-        RenderedEntities.subscribe(this)
-        ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
-    }
-
-    override fun onDisabled() {
-        RenderedEntities.unsubscribe(this)
-        ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
-        ChunkRenderer.unloadEverything()
-    }
-
     val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         if (HideAppearance.isHidingNow) {
             return@handler
@@ -168,27 +197,37 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         val playerOffX = (playerPos.x / 16.0) % 1.0
         val playerOffZ = (playerPos.z / 16.0) % 1.0
 
-        val chunksToRenderAround = ceil(Mth.SQRT_OF_TWO * (viewDistance + 1)).toInt()
+        val chunksToRenderAround = (Mth.SQRT_OF_TWO * (viewDistance + 1)).ceilToInt()
 
         val scale = minimapSize / (2.0F * viewDistance)
+        val mapRotation = if (!fixedDirection) -(playerRotation.yaw + 180.0F).toRadians() else 0F
 
         with(event.context) {
-            val bounds = createBounds(boundingBox)
+            val bounds = getBounds(boundingBox)
             scissorStack.withPush(bounds) {
                 pose().withPush {
-                    pose().translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)
-                    pose().scale(scale)
+                    translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)
+                    scale(scale)
 
-                    if (!fixedDirection) {
-                        pose().rotate(-(playerRotation.yaw + 180.0F).toRadians())
-                    }
-                    pose().translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
+                    if (mapRotation != 0F) rotate(mapRotation)
+                    translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
 
                     drawMinimapTexture(bounds, baseX, baseZ, chunksToRenderAround, viewDistance)
 
                     drawEntities(event.tickDelta, baseX.toFloat(), baseZ.toFloat())
                 }
             }
+
+            drawOutOfBoundsEntityMarkers(
+                tickDelta = event.tickDelta,
+                center = centerBB,
+                boundingBox = boundingBox,
+                playerPosX = playerPos.x.toFloat() / 16.0F,
+                playerPosZ = playerPos.z.toFloat() / 16.0F,
+                mapScale = scale,
+                viewDistance = viewDistance,
+                rotation = mapRotation,
+            )
 
             for (element in extraElements) {
                 element.render(this, boundingBox)
@@ -279,6 +318,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             textureSetup = ChunkRenderer.prepareRendering(),
             bounds = bounds,
         ) { pose ->
+            val color = TextureValueGroup.vertexColor.argb
             for (x in -chunksToRenderAround..chunksToRenderAround) {
                 for (z in -chunksToRenderAround..chunksToRenderAround) {
                     // Don't render too much
@@ -293,7 +333,6 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                     val fromY = z.toFloat()
                     val toX = fromX + 1F
                     val toY = fromY + 1F
-                    val color = TextureValueGroup.vertexColor.argb
 
                     addVertexWith2DPose(pose, fromX, fromY).setUv(texPosition.xMin, texPosition.yMin)
                         .setColor(color)
@@ -317,9 +356,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             return
         }
 
-        for (entity in RenderedEntities.sortedWith(MINIMAP_ENTITY_ORDER)) {
-            if (entity === player) continue
-
+        for (entity in EntityValueGroup.entities) {
             val color = ModuleESP.getColor(entity)
 
             val pos = entity.interpolateCurrentPosition(tickDelta)
@@ -357,6 +394,80 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             drawTriangle(p1, p2, p3, color)
 
             pose().popMatrix()
+        }
+    }
+
+    private fun GuiGraphics.drawOutOfBoundsEntityMarkers(
+        tickDelta: Float,
+        center: Vec2,
+        boundingBox: BoundingBox2f,
+        playerPosX: Float,
+        playerPosZ: Float,
+        mapScale: Float,
+        viewDistance: Float,
+        rotation: Float,
+    ) {
+        if (!EntityValueGroup.enabled || EntityValueGroup.outOfBounds == EntityValueGroup.OutOfBounds.NONE) {
+            return
+        }
+
+        val markerThickness = 2.0F
+        val markerLength = 4.0F
+        val markerHalf = markerLength * 0.5F
+        val sin = rotation.fastSin()
+        val cos = rotation.fastCos()
+
+        for (entity in EntityValueGroup.entities) {
+            val color = ModuleESP.getColor(entity)
+            val pos = entity.interpolateCurrentPosition(tickDelta)
+
+            val dx = pos.x.toFloat() / 16.0F - playerPosX
+            val dz = pos.z.toFloat() / 16.0F - playerPosZ
+
+            val rx = dx * cos - dz * sin
+            val rz = dx * sin + dz * cos
+
+            val maxAxis = max(abs(rx), abs(rz))
+            if (maxAxis <= viewDistance) {
+                continue
+            }
+
+            val edgeFactor = viewDistance / maxAxis
+            val edgeX = rx * edgeFactor
+            val edgeZ = rz * edgeFactor
+            val screenX = center.x + edgeX * mapScale
+            val screenY = center.y + edgeZ * mapScale
+
+            val x1: Float
+            val y1: Float
+            val x2: Float
+            val y2: Float
+
+            if (abs(edgeX) >= abs(edgeZ)) {
+                val clampedY = screenY.coerceIn(boundingBox.yMin + markerHalf, boundingBox.yMax - markerHalf)
+                y1 = clampedY - markerHalf
+                y2 = clampedY + markerHalf
+                if (edgeX > 0.0F) {
+                    x1 = boundingBox.xMax - markerThickness
+                    x2 = boundingBox.xMax
+                } else {
+                    x1 = boundingBox.xMin
+                    x2 = boundingBox.xMin + markerThickness
+                }
+            } else {
+                val clampedX = screenX.coerceIn(boundingBox.xMin + markerHalf, boundingBox.xMax - markerHalf)
+                x1 = clampedX - markerHalf
+                x2 = clampedX + markerHalf
+                if (edgeZ > 0.0F) {
+                    y1 = boundingBox.yMax - markerThickness
+                    y2 = boundingBox.yMax
+                } else {
+                    y1 = boundingBox.yMin
+                    y2 = boundingBox.yMin + markerThickness
+                }
+            }
+
+            drawQuad(x1, y1, x2, y2, color)
         }
     }
 
