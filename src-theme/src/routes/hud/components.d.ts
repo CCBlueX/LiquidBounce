@@ -27,6 +27,12 @@ interface HudArrayListSettings {
     order: "Ascending" | "Descending";
 }
 
+interface HudInventoryStatisticsSettings {
+    items: string[];
+    showEmpty: boolean;
+    rowLength: number;
+}
+
 interface HudBlockCounterSettings {
     iconPosition: "None" | "Left" | "Right" | "Top" | "Bottom";
 }

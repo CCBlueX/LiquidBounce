@@ -24,7 +24,7 @@
         </div>
     </div>
 
-    <div class="count" class:hidden={count === 0 || count === 1} style="color: {countColor}">
+    <div class="count" class:hidden={count === 1} style="color: {countColor}">
         {count}
     </div>
 </div>
