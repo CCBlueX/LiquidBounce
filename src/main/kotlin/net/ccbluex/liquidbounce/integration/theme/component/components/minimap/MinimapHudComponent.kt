@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -51,6 +52,7 @@ import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.phys.Vec2
@@ -64,29 +66,56 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     verticalOffset = 180,
 )) {
 
-    private val MINIMAP_ENTITY_ORDER = Comparator<Entity> { e1, e2 ->
-        when {
-            e1.y != e2.y -> e1.y.compareTo(e2.y)
-            e1.x != e2.x -> e1.x.compareTo(e2.x)
-            else -> e1.z.compareTo(e2.z)
-        }
-    }
-
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
     private val fixedDirection by boolean("FixedDirection", false)
 
     private object TextureValueGroup : ToggleableValueGroup(this, "Texture", true) {
         val vertexColor by color("VertexColor", Color4b.WHITE)
+
+        override fun onEnabled() {
+            ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+        }
+
+        override fun onDisabled() {
+            ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+            ChunkRenderer.unloadEverything()
+        }
     }
 
     private object EntityValueGroup : ToggleableValueGroup(this, "Entity", true) {
         val scale by float("Scale", 1f, 0.25F..4F)
-        val outOfBounds by enumChoice("OutOfBounds", OutOfBounds.HIDDEN)
+        val outOfBounds by enumChoice("OutOfBounds", OutOfBounds.NONE)
+
+        val entities = ReferenceArrayList<LivingEntity>()
+
+        private val MINIMAP_ENTITY_ORDER = Comparator<Entity> { e1, e2 ->
+            when {
+                e1.y != e2.y -> e1.y.compareTo(e2.y)
+                e1.x != e2.x -> e1.x.compareTo(e2.x)
+                else -> e1.z.compareTo(e2.z)
+            }
+        }
+
+        override fun onEnabled() {
+            RenderedEntities.subscribe(this)
+            RenderedEntities.onUpdated {
+                entities.clear()
+                entities.ensureCapacity(RenderedEntities.size)
+                RenderedEntities.filterTo(entities) { it !== player }
+                entities.sortWith(MINIMAP_ENTITY_ORDER)
+            }
+            super.onEnabled()
+        }
+
+        override fun onDisabled() {
+            RenderedEntities.unsubscribe(this)
+            super.onDisabled()
+        }
 
         enum class OutOfBounds(override val tag: String) : Tagged {
-            HIDDEN("Hidden"),
-            ALWAYS("Always"),
+            NONE("None"),
+            ALL("All"),
         }
     }
 
@@ -143,17 +172,6 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         extraElements.forEach(::tree)
         ChunkRenderer
         registerComponentListen(this)
-    }
-
-    override fun onEnabled() {
-        RenderedEntities.subscribe(this)
-        ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
-    }
-
-    override fun onDisabled() {
-        RenderedEntities.unsubscribe(this)
-        ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
-        ChunkRenderer.unloadEverything()
     }
 
     val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
@@ -338,9 +356,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             return
         }
 
-        for (entity in RenderedEntities.sortedWith(MINIMAP_ENTITY_ORDER)) {
-            if (entity === player) continue
-
+        for (entity in EntityValueGroup.entities) {
             val color = ModuleESP.getColor(entity)
 
             val pos = entity.interpolateCurrentPosition(tickDelta)
@@ -391,7 +407,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         viewDistance: Float,
         rotation: Float,
     ) {
-        if (!EntityValueGroup.enabled || EntityValueGroup.outOfBounds != EntityValueGroup.OutOfBounds.ALWAYS) {
+        if (!EntityValueGroup.enabled || EntityValueGroup.outOfBounds == EntityValueGroup.OutOfBounds.NONE) {
             return
         }
 
@@ -401,9 +417,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         val sin = rotation.fastSin()
         val cos = rotation.fastCos()
 
-        for (entity in RenderedEntities.sortedWith(MINIMAP_ENTITY_ORDER)) {
-            if (entity === player) continue
-
+        for (entity in EntityValueGroup.entities) {
             val color = ModuleESP.getColor(entity)
             val pos = entity.interpolateCurrentPosition(tickDelta)
 
@@ -431,28 +445,24 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
             if (abs(edgeX) >= abs(edgeZ)) {
                 val clampedY = screenY.coerceIn(boundingBox.yMin + markerHalf, boundingBox.yMax - markerHalf)
+                y1 = clampedY - markerHalf
+                y2 = clampedY + markerHalf
                 if (edgeX > 0.0F) {
                     x1 = boundingBox.xMax - markerThickness
-                    y1 = clampedY - markerHalf
                     x2 = boundingBox.xMax
-                    y2 = clampedY + markerHalf
                 } else {
                     x1 = boundingBox.xMin
-                    y1 = clampedY - markerHalf
                     x2 = boundingBox.xMin + markerThickness
-                    y2 = clampedY + markerHalf
                 }
             } else {
                 val clampedX = screenX.coerceIn(boundingBox.xMin + markerHalf, boundingBox.xMax - markerHalf)
+                x1 = clampedX - markerHalf
+                x2 = clampedX + markerHalf
                 if (edgeZ > 0.0F) {
-                    x1 = clampedX - markerHalf
                     y1 = boundingBox.yMax - markerThickness
-                    x2 = clampedX + markerHalf
                     y2 = boundingBox.yMax
                 } else {
-                    x1 = clampedX - markerHalf
                     y1 = boundingBox.yMin
-                    x2 = clampedX + markerHalf
                     y2 = boundingBox.yMin + markerThickness
                 }
             }
