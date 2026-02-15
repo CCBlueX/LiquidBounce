@@ -22,6 +22,9 @@ package net.ccbluex.liquidbounce.utils.io
 import java.io.IOException
 import java.io.RandomAccessFile
 import java.util.BitSet
+import javax.imageio.ImageIO
+import okio.Buffer
+import okio.BufferedSource
 
 /**
  * Skips the current line in the file.
@@ -62,4 +65,43 @@ val ILLEGAL_FILE_NAME_CHARS_WINDOWS = BitSet(128).apply {
     set('<'.code)
     set('>'.code)
     set('|'.code)
+}
+
+@Suppress("ThrowsCount")
+@Throws(IOException::class, IllegalArgumentException::class)
+fun BufferedSource.ensurePngOrConvertJpeg(): BufferedSource {
+    if (!request(3)) {
+        throw IllegalArgumentException("Unsupported image format: file is too short")
+    }
+
+    val sourceBuffer = buffer
+    val isPng = request(8) &&
+        sourceBuffer[0] == 0x89.toByte() &&
+        sourceBuffer[1] == 0x50.toByte() &&
+        sourceBuffer[2] == 0x4E.toByte() &&
+        sourceBuffer[3] == 0x47.toByte() &&
+        sourceBuffer[4] == 0x0D.toByte() &&
+        sourceBuffer[5] == 0x0A.toByte() &&
+        sourceBuffer[6] == 0x1A.toByte() &&
+        sourceBuffer[7] == 0x0A.toByte()
+
+    if (isPng) {
+        return this
+    }
+
+    val isJpeg = sourceBuffer[0] == 0xFF.toByte() &&
+        sourceBuffer[1] == 0xD8.toByte() &&
+        sourceBuffer[2] == 0xFF.toByte()
+
+    if (isJpeg) {
+        val image = ImageIO.read(inputStream())
+            ?: throw IllegalArgumentException("Failed to decode JPEG image")
+        val output = Buffer()
+        if (!ImageIO.write(image, "png", output.outputStream())) {
+            throw IllegalArgumentException("Failed to encode PNG image")
+        }
+        return output
+    }
+
+    throw IllegalArgumentException("Unsupported image format: only PNG and JPEG are allowed")
 }

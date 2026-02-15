@@ -27,6 +27,7 @@ import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.types.BindValue
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.CurveValue
@@ -49,6 +50,8 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.core.Vec3i
@@ -714,6 +717,32 @@ open class ValueGroup(
                 val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asTagged() }
 
                 multiEnumChoice(name, default = value, choices, canBeNone, isOrderSensitive)
+            }
+
+            ValueType.REGISTRY_LIST -> {
+                val innerValueType = enumValueOf<ValueType>(valueObject["innerValueType"].asString)
+                val normalizedValue = when (val value = valueObject["value"]) {
+                    is JsonArray -> value
+                    is JsonPrimitive -> listOf(value)
+                    null, is JsonNull -> emptyList()
+                    else -> error("Unexpected JSON value (${value.javaClass}): $value, should be Identifier list")
+                }
+
+                when (innerValueType) {
+                    ValueType.BLOCK -> {
+                        blocks(name, normalizedValue.mapTo(blockSortedSetOf()) {
+                            publicGson.fromJson(it, Block::class.java)
+                        })
+                    }
+
+                    ValueType.ITEM -> {
+                        items(name, normalizedValue.mapTo(itemSortedSetOf()) {
+                            publicGson.fromJson(it, Item::class.java)
+                        })
+                    }
+
+                    else -> error("Unsupported inner value type for ${ValueType.REGISTRY_LIST}: $innerValueType")
+                }
             }
 
             else -> error("Unsupported type: $type")

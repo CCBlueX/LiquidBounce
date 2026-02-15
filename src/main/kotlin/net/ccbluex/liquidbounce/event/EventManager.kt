@@ -270,6 +270,9 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     UserLoggedOutEvent::class.java,
 )
 
+inline fun <reified E : Event> eventFlow(): SharedFlow<E> =
+    EventManager.eventFlow(E::class.java)
+
 /**
  * A modern and fast event handler using lambda handlers
  */
@@ -369,7 +372,7 @@ object EventManager {
      * The flow receives the event instances after all [EventHook]s are executed.
      * So the [Event.isCompleted] will be true when the event is emitted.
      */
-    fun <T : Event> flowOf(eventClass: Class<T>): SharedFlow<T> {
+    fun <T : Event> eventFlow(eventClass: Class<T>): SharedFlow<T> {
         @Suppress("UNCHECKED_CAST")
         return flows[eventClass] as SharedFlow<T>
     }

@@ -182,7 +182,7 @@ export interface InputBind {
     modifiers: BindModifier[];
 }
 
-export type BindAction = "Toggle" | "Hold";
+export type BindAction = "Toggle" | "Hold" | "Smart";
 
 export type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 
@@ -258,10 +258,6 @@ export interface ItemStack {
     damage: number;
     maxDamage: number;
     displayName: TextComponent | string;
-    /**
-     * @deprecated use {@link enchantments} instead.
-     */
-    hasEnchantment: boolean;
     enchantments?: Record<string, number>;
 }
 

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.bold
@@ -131,6 +132,46 @@ data class InputBind(
     }
 
     /**
+     * Determines if a keyboard press event matches this bind key and required modifiers.
+     */
+    fun matchesKeyPress(event: KeyboardKeyEvent): Boolean {
+        return event.action == GLFW.GLFW_PRESS
+            && matchesKey(event.keyCode, event.scanCode)
+            && matchesModifiers(event.mods)
+    }
+
+    /**
+     * Determines if a keyboard release affects this bind key or one of its required modifiers.
+     */
+    fun matchesKeyRelease(event: KeyboardKeyEvent): Boolean {
+        if (event.action != GLFW.GLFW_RELEASE) return false
+        val keyReleased = matchesKey(event.keyCode, event.scanCode)
+        val modifierReleased = event.key.toModifierOrNull().let { it in modifiers && !it!!.isAnyPressed }
+
+        return keyReleased || modifierReleased
+    }
+
+    /**
+     * Determines if a mouse press event matches this bind button and required modifiers.
+     */
+    fun matchesMousePress(event: MouseButtonEvent): Boolean {
+        return event.action == GLFW.GLFW_PRESS
+            && matchesMouse(event.button)
+            && matchesModifiers(event.mods)
+    }
+
+    /**
+     * Determines if a mouse release affects this bind button or one of its required modifiers.
+     */
+    fun matchesMouseRelease(event: MouseButtonEvent): Boolean {
+        if (event.action != GLFW.GLFW_RELEASE) return false
+        val buttonReleased = matchesMouse(event.button)
+        val modifierReleased = event.key.toModifierOrNull().let { it in modifiers && !it!!.isAnyPressed }
+
+        return buttonReleased || modifierReleased
+    }
+
+    /**
      * Handles the event. Returns the new state, assumes the original state is `false`.
      *
      * @param event The [KeyboardKeyEvent] to handle.
@@ -144,21 +185,49 @@ data class InputBind(
 
         val eventAction = event.action
         return when (eventAction) {
-            GLFW.GLFW_PRESS if mc.screen == null -> !currentState || action == BindAction.HOLD
-            GLFW.GLFW_RELEASE -> false
+            GLFW.GLFW_PRESS if mc.screen == null -> when (action) {
+                BindAction.TOGGLE -> !currentState
+                BindAction.HOLD, BindAction.SMART -> true
+            }
+            GLFW.GLFW_RELEASE -> when (action) {
+                BindAction.HOLD -> false
+                BindAction.TOGGLE, BindAction.SMART -> currentState
+            }
             else -> currentState
         }
     }
 
     /**
-     * Enum representing the action associated with a key binding.
-     * It includes two actions: TOGGLE and HOLD.
+     * Action mode used to interpret bind input events.
      *
-     * @param tag The display name of the action.
+     * @param tag display name used in config/ui
      */
     enum class BindAction(override val tag: String) : Tagged {
+        /**
+         * Flip state when pressed.
+         */
         TOGGLE("Toggle"),
-        HOLD("Hold")
+
+        /**
+         * Stay enabled while key is held and disable on release.
+         */
+        HOLD("Hold"),
+
+        /**
+         * Start as enabled on press, then classify as:
+         * - hold if a repeat event is received before release
+         * - toggle if release is received first
+         * - toggle on unexpected fallback paths
+         */
+        SMART("Smart");
+
+        companion object {
+            @JvmStatic
+            private val LOOKUP_TABLE = BindAction.entries.makeLookupTable()
+
+            @JvmStatic
+            fun of(string: String?): BindAction? = LOOKUP_TABLE[string]
+        }
     }
 
     enum class Modifier(override val tag: String, val bitMask: Int, vararg val keyCodes: Int): Tagged {
