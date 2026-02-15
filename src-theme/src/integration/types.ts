@@ -258,10 +258,6 @@ export interface ItemStack {
     damage: number;
     maxDamage: number;
     displayName: TextComponent | string;
-    /**
-     * @deprecated use {@link enchantments} instead.
-     */
-    hasEnchantment: boolean;
     enchantments?: Record<string, number>;
 }
 

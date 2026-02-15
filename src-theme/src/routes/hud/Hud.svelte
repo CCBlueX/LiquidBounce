@@ -20,6 +20,7 @@
     import KeyBinds from "./elements/KeyBinds.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
     import {os} from "../clickgui/clickgui_store";
+    import InventoryStatistics from "./elements/inventory/InventoryStatistics.svelte";
 
     let zoom = 100;
     let metadata: Metadata;
@@ -78,6 +79,8 @@
                             gap="2px"
                             getRenderedStacks={it => Array.from(it.armor).reverse()}
                     />
+                {:else if c.name === "InventoryStatistics"}
+                    <InventoryStatistics settings={c.settings} />
                 {:else if c.name === "Inventory"}
                     <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.main.slice(9)} />
                 {:else if c.name === "CraftingInventory"}
