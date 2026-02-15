@@ -730,11 +730,15 @@ open class ValueGroup(
 
                 when (innerValueType) {
                     ValueType.BLOCK -> {
-                        blocks(name, normalizedValue.mapTo(blockSortedSetOf()) { publicGson.fromJson(it, Block::class.java) })
+                        blocks(name, normalizedValue.mapTo(blockSortedSetOf()) {
+                            publicGson.fromJson(it, Block::class.java)
+                        })
                     }
 
                     ValueType.ITEM -> {
-                        items(name, normalizedValue.mapTo(itemSortedSetOf()) { publicGson.fromJson(it, Item::class.java) })
+                        items(name, normalizedValue.mapTo(itemSortedSetOf()) {
+                            publicGson.fromJson(it, Item::class.java)
+                        })
                     }
 
                     else -> error("Unsupported inner value type for ${ValueType.REGISTRY_LIST}: $innerValueType")
