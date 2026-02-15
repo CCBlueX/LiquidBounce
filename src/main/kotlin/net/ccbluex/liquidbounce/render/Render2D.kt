@@ -43,6 +43,7 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.world.phys.Vec2
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
+import org.joml.Matrix3x2fc
 import org.joml.Vector2f
 
 private val LEFT_TOP = Vector2f()
@@ -53,39 +54,45 @@ private val RIGHT_BOTTOM = Vector2f()
 /**
  * Primitive version of [ScreenRectangle.transformMaxBounds]
  */
-private fun Matrix3x2f.transformEachVertex(
-    sameAxis: Int, otherAxis: Int, width: Int, height: Int,
+private fun Matrix3x2fc.transformMaxBounds(
+    left: Float,
+    top: Float,
+    right: Float,
+    bottom: Float,
 ): ScreenRectangle {
-    val left = sameAxis
-    val right = sameAxis + width
-    val top = otherAxis
-    val bottom = otherAxis + height
-
-    val v1 = transformPosition(left.toFloat(), top.toFloat(), LEFT_TOP)
-    val v2 = transformPosition(right.toFloat(), top.toFloat(), RIGHT_TOP)
-    val v3 = transformPosition(left.toFloat(), bottom.toFloat(), LEFT_BOTTOM)
-    val v4 = transformPosition(right.toFloat(), bottom.toFloat(), RIGHT_BOTTOM)
+    val v1 = transformPosition(left, top, LEFT_TOP)
+    val v2 = transformPosition(right, top, RIGHT_TOP)
+    val v3 = transformPosition(left, bottom, LEFT_BOTTOM)
+    val v4 = transformPosition(right, bottom, RIGHT_BOTTOM)
     val minX = minOf(v1.x, minOf(v3.x, v2.x, v4.x))
     val maxX = maxOf(v1.x, maxOf(v3.x, v2.x, v4.x))
     val minY = minOf(v1.y, minOf(v3.y, v2.y, v4.y))
     val maxY = maxOf(v1.y, maxOf(v3.y, v2.y, v4.y))
-    return ScreenRectangle(minX.floorToInt(), minY.floorToInt(), (maxX - minX).ceilToInt(), (maxY - minY).ceilToInt())
+    return ScreenRectangle(
+        minX.floorToInt(),
+        minY.floorToInt(),
+        (maxX - minX).ceilToInt(),
+        (maxY - minY).ceilToInt(),
+    )
 }
 
 /**
  * @see net.minecraft.client.gui.render.state.ColoredRectangleRenderState.getBounds
  */
-fun GuiGraphics.createBounds(x: Float, y: Float, w: Float, h: Float): ScreenRectangle {
-//    val rect = ScreenRect(x.floorToInt(), y.floorToInt(), w.ceilToInt(), h.ceilToInt())
-//        .transformEachVertex(this.matrices)
-    val rect = this.pose().transformEachVertex(
-        x.floorToInt(), y.floorToInt(), w.ceilToInt(), h.ceilToInt()
-    )
+fun GuiGraphics.getBounds(left: Float, top: Float, right: Float, bottom: Float): ScreenRectangle {
+    val rect = this.pose().transformMaxBounds(left, top, right, bottom)
     return this.scissorStack.peek()?.intersection(rect) ?: rect
 }
 
-fun GuiGraphics.createBounds(box: BoundingBox2f): ScreenRectangle =
-    createBounds(box.xMin, box.yMin, box.width, box.height)
+/**
+ * @see net.minecraft.client.gui.render.state.ColoredRectangleRenderState.getBounds
+ */
+fun GuiGraphics.getBoundsXYWH(x: Float, y: Float, w: Float, h: Float): ScreenRectangle {
+    return getBounds(x, y, x + w, y + h)
+}
+
+fun GuiGraphics.getBounds(box: BoundingBox2f): ScreenRectangle =
+    getBoundsXYWH(box.xMin, box.yMin, box.width, box.height)
 
 inline fun GuiGraphics.copyPose(): Matrix3x2f = Pools.Mat3x2f.borrow().set(this.pose())
 
@@ -155,7 +162,7 @@ fun GuiGraphics.drawQuad(
     val x21 = maxOf(x1, x2)
     val y21 = maxOf(y1, y2)
 
-    val bounds = createBounds(x11, y11, x21 - x11, y21 - y11)
+    val bounds = getBounds(x11, y11, x21, y21)
 
     if (fillColor != null && !fillColor.isTransparent) {
         this.guiRenderState.submitGuiElement(
@@ -191,6 +198,15 @@ fun GuiGraphics.drawQuad(
     }
 }
 
+inline fun GuiGraphics.drawQuadXYWH(
+    x: Float,
+    y: Float,
+    w: Float,
+    h: Float,
+    fillColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) = drawQuad(x, y, x + w, y + h, fillColor, outlineColor)
+
 /**
  * Float version of [GuiGraphics.drawHorizontalLine]
  */
@@ -216,7 +232,7 @@ fun GuiGraphics.drawTriangle(
     val minY = minOf(y0, y1, y2)
     val maxX = maxOf(x0, x1, x2)
     val maxY = maxOf(y0, y1, y2)
-    val bounds = createBounds(minX, minY, maxX - minX, maxY - minY)
+    val bounds = getBounds(minX, minY, maxX, maxY)
 
     if (fillColor != null && !fillColor.isTransparent) {
         this.guiRenderState.submitGuiElement(
@@ -319,7 +335,7 @@ inline fun GuiGraphics.drawTexQuad(
             textureSetup,
             copyPose(),
             this.scissorStack.peek(),
-            createBounds(x0, y0, x1 - x0, y1 - y0),
+            getBounds(x0, y0, x1, y1),
         )
     )
 }
@@ -366,7 +382,7 @@ fun GuiGraphics.drawCircle(
     segments: Int = 40,
     colorGetter: Float2IntFunction = Float2IntFunction { Color4b.WHITE.argb },
 ) {
-    val bounds = createBounds(x - radius, y - radius, radius * 2, radius * 2)
+    val bounds = getBoundsXYWH(x - radius, y - radius, radius * 2, radius * 2)
 
     this.guiRenderState.submitGuiElement(
         CircleGuiElementRenderState(
