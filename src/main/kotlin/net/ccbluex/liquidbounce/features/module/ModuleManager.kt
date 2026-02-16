@@ -15,6 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * IMPORTANT NOTE: This code is modified by Sprow (@sprow-dev on github)
+ * and is not the completely original code. However, this is mostly the
+ * work of CCBlueX still. Code will be commented with "TS[MMDDYY]" if it
+ * is not original.
  */
 package net.ccbluex.liquidbounce.features.module
 
@@ -272,7 +277,8 @@ private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
  * A fairly simple module manager
  */
 object ModuleManager : EventListener, Collection<ClientModule> by modules {
-
+    var lastActiveModule: ClientModule? = null // TS021526 We want to check for the last used module.
+    
     val modulesConfig = ConfigSystem.root("modules", modules)
 
     private const val SMART_MOUSE_HOLD_THRESHOLD_MS = 200L
@@ -285,6 +291,26 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val smartKeyboardStates = Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>()
     private val smartMouseStates = Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>()
 
+    /**
+    * Start TS021526
+    */
+    @EventTarget
+    fun onPacket(event: PacketEvent) {
+        val packet = event.packet // grab packet
+
+        // we only sniff packets that are 
+        if (packet is C03PacketPlayer || packet is C02PacketUseEntity || packet is C0BPacketEntityAction) {
+            val active = modules.find { it.state && it.category.name != "Visual" && it.category.name != "Misc" } // make sure we don't flag visual hacks
+            
+            if (active != null) {
+                lastActiveModule = active // if we have a module then set the var
+            }
+        }
+    }
+    /**
+    * End TS
+    */
+    
     /**
      * Handles keystrokes for module binds.
      * This also runs in GUIs, so that if a GUI is opened while a key is pressed,
@@ -307,7 +333,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                                 SmartBindKeyboardState.PENDING_ENABLED
                             } else {
                                 SmartBindKeyboardState.PENDING_DISABLED
-                            }
+                            }cod
                             m.enabled = true
                         }
                     }
