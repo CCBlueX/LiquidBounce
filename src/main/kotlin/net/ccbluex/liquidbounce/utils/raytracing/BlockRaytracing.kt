@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -72,18 +73,22 @@ fun raytraceBlock(
 /**
  * Allows you to check if a point is behind a wall
  */
-fun facingBlock(
-    eyes: Vec3,
-    vec3: Vec3,
+fun Entity.isFacingBlock(
+    eyes: Vec3 = this.eyePosition,
+    targetPoint: Vec3,
     blockPos: BlockPos,
     expectedSide: Direction? = null,
     expectedMaxRange: Double? = null,
 ): Boolean {
+    val dir = targetPoint.subtract(eyes).withLength(0.005)
+
     val searchedPos =
         mc.level?.clip(
-            ClipContext(
-                eyes, vec3, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player!!,
-            ),
+            from = eyes,
+            to = targetPoint.add(dir), // Prevent point on face -> miss
+            ClipContext.Block.OUTLINE,
+            ClipContext.Fluid.NONE,
+            this,
         ) ?: return false
 
     if (searchedPos.type != HitResult.Type.BLOCK || (expectedSide != null && searchedPos.direction != expectedSide)) {

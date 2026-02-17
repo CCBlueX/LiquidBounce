@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
@@ -108,8 +107,6 @@ import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.BooleanOp
-import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.Consumer
 import kotlin.math.ceil
@@ -157,6 +154,12 @@ val BlockPos.outlineBox: AABB
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
 
+/**
+ * Outline shape
+ */
+val BlockPos.shape: VoxelShape
+    get() = this.getState()!!.getShape(world, this)
+
 fun BlockState.outlineBox(blockPos: BlockPos): AABB {
     val outlineShape = this.getShape(world, blockPos)
 
@@ -164,64 +167,6 @@ fun BlockState.outlineBox(blockPos: BlockPos): AABB {
         FULL_BOX
     } else {
         outlineShape.bounds()
-    }
-}
-
-fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
-    var minDistanceSq = Double.MAX_VALUE
-    forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-        val nearestX = position.x().coerceIn(minX, maxX)
-        val nearestY = position.y().coerceIn(minY, maxY)
-        val nearestZ = position.z().coerceIn(minZ, maxZ)
-        val distanceSq = (position.x() - nearestX).sq() +
-            (position.y() - nearestY).sq() + (position.z() - nearestZ).sq()
-        if (distanceSq < minDistanceSq) {
-            minDistanceSq = distanceSq
-        }
-    }
-    return minDistanceSq
-}
-
-/**
- * Shrinks a VoxelShape by the specified amounts on selected axes.
- */
-@Suppress("CognitiveComplexMethod")
-fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelShape {
-    return when {
-        this.isEmpty -> Shapes.empty()
-        this == Shapes.block() -> Shapes.box(
-            x, y, z,
-            1.0 - x, 1.0 - y, 1.0 - z
-        )
-
-        else -> {
-            var shape = Shapes.empty()
-
-            this.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-                val width = maxX - minX
-                val height = maxY - minY
-                val depth = maxZ - minZ
-
-                val canShrinkX = x == 0.0 || width > x * 2
-                val canShrinkY = y == 0.0 || height > y * 2
-                val canShrinkZ = z == 0.0 || depth > z * 2
-
-                if (canShrinkX && canShrinkY && canShrinkZ) {
-                    val shrunkBox = Shapes.box(
-                        minX + (if (x > 0) x else 0.0),
-                        minY + (if (y > 0) y else 0.0),
-                        minZ + (if (z > 0) z else 0.0),
-                        maxX - (if (x > 0) x else 0.0),
-                        maxY - (if (y > 0) y else 0.0),
-                        maxZ - (if (z > 0) z else 0.0)
-                    )
-
-                    shape = Shapes.joinUnoptimized(shape, shrunkBox, BooleanOp.OR)
-                }
-            }
-
-            shape
-        }
     }
 }
 

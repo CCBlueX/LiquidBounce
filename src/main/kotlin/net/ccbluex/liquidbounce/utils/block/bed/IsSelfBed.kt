@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.anotherBedPartDirection
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
@@ -39,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.math.component3
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.block.BedBlock
 import org.joml.Vector3d
 import org.lwjgl.glfw.GLFW
@@ -70,10 +72,18 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
             canBeNone = false,
         )
 
+        private val loose by boolean("Loose", false)
+
         override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
-            val color = block.color
-            val colorRgb = color.textureDiffuseColor
-            return slots.any { it.getArmorColor(player) == colorRgb }
+            val blockColor = block.color
+            return slots.any {
+                val armorColor = it.getArmorColor(player) ?: return@any false
+                if (loose) {
+                    Color4b(armorColor).toClosestDyeColor(DyeColor::getTextureDiffuseColor) == blockColor
+                } else {
+                    armorColor == blockColor.textureDiffuseColor
+                }
+            }
         }
     }
 

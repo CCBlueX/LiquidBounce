@@ -20,10 +20,13 @@
 
 package net.ccbluex.liquidbounce.render.engine.type
 
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.network.chat.TextColor
 import net.minecraft.util.ARGB
+import net.minecraft.world.item.DyeColor
 import org.joml.Vector4f
 import java.awt.Color
+import java.util.function.ToIntFunction
 
 @JvmRecord
 data class Color4b(val argb: Int) {
@@ -222,6 +225,21 @@ data class Color4b(val argb: Int) {
     @JvmOverloads
     fun toHexString(format: HexFormat = HexFormat.Default): String =
         argb.toHexString(format)
+
+    /**
+     * Get closest [DyeColor] entry with RGB 3D distance (ignoring alpha)
+     */
+    fun toClosestDyeColor(toRgb: ToIntFunction<DyeColor>): DyeColor {
+        val r = this.r
+        val g = this.g
+        val b = this.b
+        return DyeColor.entries.minBy {
+            val rgb = toRgb.applyAsInt(it)
+            (ARGB.red(rgb) - r).sq() +
+                (ARGB.green(rgb) - g).sq() +
+                (ARGB.blue(rgb) - b).sq()
+        }
+    }
 
     @JvmOverloads
     fun toVector4f(dest: Vector4f = Vector4f()): Vector4f {
