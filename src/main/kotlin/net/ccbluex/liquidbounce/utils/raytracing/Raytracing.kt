@@ -16,6 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
+@file:Suppress("NOTHING_TO_INLINE")
+
 package net.ccbluex.liquidbounce.utils.raytracing
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -25,11 +28,29 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
 import kotlin.math.max
+
+inline fun BlockGetter.clip(
+    from: Vec3,
+    to: Vec3,
+    block: ClipContext.Block,
+    fluid: ClipContext.Fluid,
+    entity: Entity,
+): BlockHitResult = this.clip(ClipContext(from, to, block, fluid, entity))
+
+inline fun BlockGetter.clip(
+    from: Vec3,
+    to: Vec3,
+    block: ClipContext.Block,
+    fluid: ClipContext.Fluid,
+    collisionContext: CollisionContext,
+): BlockHitResult = this.clip(ClipContext(from, to, block, fluid, collisionContext))
 
 fun traceFromPlayer(
     rotation: Rotation = RotationManager.currentRotation ?: player.rotation,
@@ -58,13 +79,11 @@ fun traceFromPoint(
     val end = start.add(direction.x * range, direction.y * range, direction.z * range)
 
     return world.clip(
-        ClipContext(
-            start,
-            end,
-            block,
-            if (includeFluids) ClipContext.Fluid.ANY else ClipContext.Fluid.NONE,
-            entity,
-        ),
+        start,
+        end,
+        block,
+        if (includeFluids) ClipContext.Fluid.ANY else ClipContext.Fluid.NONE,
+        entity,
     )
 }
 
@@ -78,12 +97,10 @@ fun hasLineOfSight(
     vec3: Vec3,
 ): Boolean {
     return world.clip(
-        ClipContext(
-            eyes,
-            vec3,
-            ClipContext.Block.COLLIDER,
-            ClipContext.Fluid.NONE,
-            player,
-        ),
+        eyes,
+        vec3,
+        ClipContext.Block.COLLIDER,
+        ClipContext.Fluid.NONE,
+        player,
     ).type == HitResult.Type.MISS
 }
