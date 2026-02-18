@@ -56,11 +56,11 @@ fun getClientInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
 
 // GET /api/v1/client/update
 @Suppress("UNUSED_PARAMETER")
-fun getUpdateInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
+suspend fun getUpdateInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
     addProperty("development", LiquidBounce.IN_DEVELOPMENT)
     addProperty("commit", LiquidBounce.clientCommit)
 
-    val updateInfo = update ?: return@apply
+    val updateInfo = update.await() ?: return@apply
     add("update", JsonObject().apply {
         addProperty("buildId", updateInfo.buildId)
         addProperty("commitId", updateInfo.commitId.substring(0, 7))
