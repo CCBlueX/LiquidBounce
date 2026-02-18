@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.Event
 import net.minecraft.client.Camera
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.renderer.state.CameraRenderState
+import org.joml.Matrix4fc
 
 @Tag("gameRender")
 object GameRenderEvent : Event()
@@ -45,7 +47,7 @@ class WorldRenderEvent(val matrixStack: PoseStack, val camera: Camera, val parti
 class DrawOutlinesEvent(
     val renderTarget: RenderTarget,
     val pose: PoseStack,
-    val camera: Camera,
+    val cameraState: CameraRenderState,
     val partialTicks: Float,
     val type: OutlineType,
 ) : Event() {

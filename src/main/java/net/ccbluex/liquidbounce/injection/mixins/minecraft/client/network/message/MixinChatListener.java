@@ -51,7 +51,7 @@ public abstract class MixinChatListener {
         }
     }
 
-    @Inject(method = "showMessageToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/GuiMessageTag;)V", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
+    @Inject(method = "showMessageToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;addPlayerMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/multiplayer/chat/GuiMessageTag;)V", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
     private void injectChatMessage1(ChatType.Bound parameters, PlayerChatMessage message, Component decorated, GameProfile sender, boolean onlyShowSecureChat, Instant receptionTimestamp, CallbackInfoReturnable<Boolean> cir) {
         var result = liquid_bounce$emitChatEvent(null, decorated, ChatReceiveEvent.ChatType.CHAT_MESSAGE);
         if (result) {
@@ -60,7 +60,7 @@ public abstract class MixinChatListener {
         }
     }
 
-    @Inject(method = "showMessageToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/GuiMessageTag;)V", ordinal = 1, shift = At.Shift.BEFORE), cancellable = true)
+    @Inject(method = "showMessageToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;addPlayerMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/multiplayer/chat/GuiMessageTag;)V", ordinal = 1, shift = At.Shift.BEFORE), cancellable = true)
     private void injectChatMessage2(ChatType.Bound parameters, PlayerChatMessage message, Component decorated, GameProfile sender, boolean onlyShowSecureChat, Instant receptionTimestamp, CallbackInfoReturnable<Boolean> cir) {
         var result = liquid_bounce$emitChatEvent(parameters, decorated, ChatReceiveEvent.ChatType.CHAT_MESSAGE);
         if (result) {
