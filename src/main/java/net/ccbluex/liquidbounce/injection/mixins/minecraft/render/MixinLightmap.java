@@ -64,8 +64,7 @@ public abstract class MixinLightmap {
     )
     private void injectCustomClearColor(LightmapRenderState lightmapRenderState, CallbackInfo ci) {
         ModuleCustomAmbience.CustomLightmap customLightmap = ModuleCustomAmbience.CustomLightmap.INSTANCE;
-        if (customLightmap.getRunning()) {
-            customLightmap.edit(this.texture, lightmapRenderState);
+        if (customLightmap.getRunning() && customLightmap.getMode().getActiveMode().edit(this.texture, lightmapRenderState)) {
             ci.cancel();
         }
     }
