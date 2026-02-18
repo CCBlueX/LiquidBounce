@@ -212,7 +212,7 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
 
         "items", "item" -> {
             BuiltInRegistries.ITEM.buildOutput(
-                name = { _, id -> id.name.string },
+                name = { _, id -> id.defaultInstance.itemName.string },
                 iconUrl = ::itemIconUrl,
             )
         }

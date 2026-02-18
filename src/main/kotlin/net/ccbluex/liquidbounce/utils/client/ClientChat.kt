@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.text.RunnableClickEvent
 import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
-import net.minecraft.client.multiplayer.chat.ChatAbilities
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
@@ -163,9 +162,9 @@ fun MutableComponent.bypassNameProtection(): MutableComponent = withStyle {
  * Open a [ChatScreen] with given text,
  * or set the text of current [ChatScreen]
  */
-fun Minecraft.openChat(text: String, draft: Boolean = false) = schedule {
+fun Minecraft.openChat(text: String, draft: Boolean = false, closeOnSubmit: Boolean = true) = schedule {
     (screen as? MixinChatScreenAccessor)?.input?.setValue(text)
-        ?: setScreen(ChatScreen(text, draft, ChatAbilities.NO_RESTRICTIONS))
+        ?: setScreen(ChatScreen(text, draft, closeOnSubmit))
 }
 
 private val defaultMessageMetadata = MessageMetadata()

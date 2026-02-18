@@ -103,7 +103,6 @@ export interface MouseButtonEvent {
 
 export interface KeyboardCharEvent {
     codePoint: number;
-    modifiers: number;
 }
 
 export interface ScaleFactorChangeEvent {

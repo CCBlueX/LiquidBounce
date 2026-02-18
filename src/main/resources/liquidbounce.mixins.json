@@ -52,6 +52,7 @@
     "minecraft.entity.MixinCustomHeadLayer",
     "minecraft.entity.MixinEnchantTableRenderer",
     "minecraft.entity.MixinEntity",
+    "minecraft.entity.MixinEntityFluidInteraction",
     "minecraft.entity.MixinEntityRenderer",
     "minecraft.entity.MixinExperienceOrbAccessor",
     "minecraft.entity.MixinFoodData",

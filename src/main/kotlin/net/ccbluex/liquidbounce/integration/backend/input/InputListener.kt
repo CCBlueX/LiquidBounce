@@ -116,7 +116,7 @@ class InputListener(
             return@handler
         }
 
-        inputHandler.charTyped(ev.codePoint.toChar(), ev.modifiers)
+        inputHandler.charTyped(ev.codePoint)
     }
 
     override fun close() {

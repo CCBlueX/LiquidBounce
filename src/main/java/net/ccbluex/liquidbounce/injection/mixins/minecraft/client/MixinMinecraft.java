@@ -67,6 +67,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -354,7 +355,7 @@ public abstract class MixinMinecraft {
         rightClickDelay = useCooldownEvent.getCooldown();
     }
 
-    @Inject(method = "pickBlock", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "pickBlockOrEntity", at = @At("HEAD"), cancellable = true)
     private void hookItemPick(CallbackInfo ci) {
         if (ModuleMiddleClickAction.Pearl.INSTANCE.cancelPick()) {
             ci.cancel();
@@ -419,8 +420,8 @@ public abstract class MixinMinecraft {
         EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
     }
 
-    @Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I",
-            ordinal = 0, shift = At.Shift.AFTER))
+    @Inject(method = "renderFrame", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I",
+        ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTSTATIC))
     private void hookFpsChange(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new FpsChangeEvent(this.getFps()));
     }
