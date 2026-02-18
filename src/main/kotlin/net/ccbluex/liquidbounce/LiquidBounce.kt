@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
-import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
+import net.ccbluex.liquidbounce.api.services.client.ClientUpdate
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
@@ -320,7 +320,7 @@ object LiquidBounce : EventListener {
                 LanguageManager.loadDefault()
             }
             launch {
-                val update = update ?: return@launch
+                val update = ClientUpdate.update ?: return@launch
                 logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
             }
             launch {
@@ -362,7 +362,6 @@ object LiquidBounce : EventListener {
         }
 
         logger.info("API initialization done.")
-
     }
 
     /**

@@ -24,6 +24,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -38,10 +39,13 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.state.LevelRenderState;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -66,7 +70,7 @@ public abstract class MixinLevelRenderer {
 
     // After ModelViewMatrix setup
     @Inject(method = "renderLevel", at = @At(value = "NEW", target = "()Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;"))
-    private void onRender(GraphicsResourceAllocator allocator, DeltaTracker tickCounter, boolean renderBlockOutline, Camera camera, Matrix4f positionMatrix, Matrix4f matrix4f, Matrix4f projectionMatrix, GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
+    private void onRender(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4f modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
         OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
         if (!renderer.shouldRender()) {
             return;
@@ -76,8 +80,8 @@ public abstract class MixinLevelRenderer {
         var event = new DrawOutlinesEvent(
             renderer.prepareRenderTarget(),
             matrixStack,
-            camera,
-            tickCounter.getGameTimeDeltaPartialTick(false),
+            cameraState,
+            deltaTracker.getGameTimeDeltaPartialTick(false),
             DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE
         );
         EventManager.INSTANCE.callEvent(event);
@@ -107,10 +111,11 @@ public abstract class MixinLevelRenderer {
 
         var matrixStack = Pools.MatStack.borrow();
         entityOutlineFb.blitToScreen();
-        final var camera = this.minecraft.gameRenderer.getMainCamera();
+        final var cameraState = this.minecraft.gameRenderer.getLevelRenderState().cameraRenderState;
         var event = new DrawOutlinesEvent(
             entityOutlineFb, matrixStack,
-            camera, this.minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false),
+            cameraState,
+            this.minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false),
             DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
         );
         EventManager.INSTANCE.callEvent(event);
@@ -120,7 +125,8 @@ public abstract class MixinLevelRenderer {
 
     @WrapOperation(method = "renderLevel", at = @At(
         value = "FIELD",
-        target = "Lnet/minecraft/client/renderer/state/LevelRenderState;haveGlowingEntities:Z"
+        target = "Lnet/minecraft/client/renderer/state/LevelRenderState;haveGlowingEntities:Z",
+        opcode = Opcodes.GETFIELD
     ))
     private boolean modifyDrawOutline(LevelRenderState instance, Operation<Boolean> original) {
         var flag = OutlineFlag.drawOutline;
@@ -131,7 +137,7 @@ public abstract class MixinLevelRenderer {
         return original.call(instance);
     }
 
-    @ModifyArg(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;cullTerrain(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;Z)V"), index = 2)
+    @ModifyArg(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;cullTerrain(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;Z)V"), index = 2)
     private boolean renderSetupTerrainModifyArg(boolean spectator) {
         return ModuleFreeCam.INSTANCE.getRunning() || spectator;
     }
