@@ -28,6 +28,7 @@ import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -320,7 +321,7 @@ object LiquidBounce : EventListener {
                 LanguageManager.loadDefault()
             }
             launch {
-                val update = ClientUpdate.update ?: return@launch
+                val update = withTimeoutOrNull(8000) { ClientUpdate.update.await() } ?: return@launch
                 logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
             }
             launch {
