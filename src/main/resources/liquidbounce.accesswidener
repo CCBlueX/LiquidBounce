@@ -110,8 +110,7 @@ accessible method net/minecraft/world/entity/LivingEntity getDamageAfterMagicAbs
 accessible method net/minecraft/world/item/BlockItem getPlacementState (Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/level/block/state/BlockState;
 
 accessible field net/minecraft/world/entity/Entity dimensions Lnet/minecraft/world/entity/EntityDimensions;
-accessible field net/minecraft/world/entity/Entity fluidHeight Lit/unimi/dsi/fastutil/objects/Object2DoubleMap;
-accessible field net/minecraft/world/entity/Entity fluidOnEyes Ljava/util/Set;
+accessible field net/minecraft/world/entity/Entity fluidInteraction Lnet/minecraft/world/entity/EntityFluidInteraction;
 
 accessible field net/minecraft/network/protocol/game/VecDeltaCodec base Lnet/minecraft/world/phys/Vec3;
 

@@ -61,4 +61,4 @@ class KeyboardKeyEvent(
 ) : Event(), WebSocketEvent
 
 @Tag("keyboardChar")
-class KeyboardCharEvent(val codePoint: Int, val modifiers: Int) : Event(), WebSocketEvent
+class KeyboardCharEvent(val codePoint: Int) : Event(), WebSocketEvent

@@ -249,9 +249,9 @@ class CefBrowser(
         browserApi.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
     }
 
-    override fun charTyped(char: Char, modifiers: Int) {
+    override fun charTyped(codepoint: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyTyped(char, modifiers)
+        browserApi.sendKeyTyped(codepoint.toChar(), 0) // TODO: GLFW update removed modifiers here
     }
 
     private fun comparePaintWithViewpoint(width: Int, height: Int) {

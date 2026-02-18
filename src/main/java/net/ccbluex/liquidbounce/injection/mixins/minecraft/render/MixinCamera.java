@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook;
@@ -149,5 +150,51 @@ public abstract class MixinCamera {
             args.set(2, smoothPos.z);
         }
     }
+
+
+    /**
+     * <pre>
+     *     minecraft.options.fov.get().intValue();
+     * </pre>
+     */
+    @ModifyExpressionValue(method = {
+        "createProjectionMatrixForCulling",
+        "getFluidInCamera",
+        "calculateFov",
+    }, at = @At(value = "INVOKE", target = "Ljava/lang/Integer;intValue()I", remap = false))
+    private int hookGetFov(int original) {
+        int result;
+
+        if (ModuleZoom.INSTANCE.getRunning()) {
+            return ModuleZoom.INSTANCE.getFov(true, 0);
+        } else {
+            result = ModuleZoom.INSTANCE.getFov(false, original);
+        }
+
+        if (ModuleNoFov.INSTANCE.getRunning() && result == original) {
+            return ModuleNoFov.INSTANCE.getFov(result);
+        }
+
+        return result;
+    }
+
+    @ModifyReturnValue(method = "getFov", at = @At("RETURN"))
+    private float injectShit(float original) {
+        var screen = ModuleDroneControl.INSTANCE.getScreen();
+
+        if (screen != null) {
+            return Math.min(120f, original / screen.getZoomFactor());
+        }
+
+        return original;
+    }
+
+    @ModifyArgs(method = "createProjectionMatrixForCulling", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;perspective(FFFFZ)Lorg/joml/Matrix4f;", remap = false))
+    private void hookBasicProjectionMatrix(Args args) {
+        if (ModuleAspect.INSTANCE.getRunning()) {
+            args.set(1, (float) args.get(1) / ModuleAspect.getRatioMultiplier());
+        }
+    }
+
 }
 

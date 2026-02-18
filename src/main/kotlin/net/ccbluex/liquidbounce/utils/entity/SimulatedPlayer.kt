@@ -20,8 +20,6 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
-import it.unimi.dsi.fastutil.objects.Object2DoubleArrayMap
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
@@ -44,10 +42,12 @@ import net.minecraft.tags.BlockTags
 import net.minecraft.tags.FluidTags
 import net.minecraft.tags.TagKey
 import net.minecraft.util.Mth
+import net.minecraft.world.attribute.EnvironmentAttributes
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityFluidInteraction
 import net.minecraft.world.entity.MoverType
 import net.minecraft.world.entity.ai.attributes.Attribute
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -91,11 +91,11 @@ class SimulatedPlayer(
     private var wasTouchingWater: Boolean,
     private var isSwimming: Boolean,
     private var wasUnderwater: Boolean,
-    private var fluidHeight: Object2DoubleMap<TagKey<Fluid>>,
-    private var eyeFluidTags: HashSet<TagKey<Fluid>>
+    private val fluidInteraction: EntityFluidInteraction,
 ) : PlayerSimulation {
-    private val world: Level
-        get() = player.level()
+    private val level: Level get() = player.level()
+
+    private val firstTick = false
 
     companion object {
         @JvmStatic
@@ -122,8 +122,7 @@ class SimulatedPlayer(
                 player.isInWater,
                 player.isSwimming,
                 player.isUnderWater,
-                Object2DoubleArrayMap(player.fluidHeight),
-                HashSet(player.fluidOnEyes)
+                player.fluidInteraction, // FIXME: should use copy here
             )
         }
 
@@ -151,8 +150,7 @@ class SimulatedPlayer(
                 player.isInWater,
                 player.isSwimming,
                 player.isUnderWater,
-                Object2DoubleArrayMap(player.fluidHeight),
-                HashSet(player.fluidOnEyes)
+                player.fluidInteraction, // FIXME: should use copy here
             )
         }
     }
@@ -573,7 +571,7 @@ class SimulatedPlayer(
         return Vec3(d, g, e)
     }
     private fun applyWebSpeed(motion: Vec3): Vec3 {
-        val blockState = world.getBlockState(pos.toBlockPos())
+        val blockState = level.getBlockState(pos.toBlockPos())
         if (blockState.block != Blocks.COBWEB) {
             return motion
         }
@@ -620,7 +618,7 @@ class SimulatedPlayer(
             var d = movement.x
             var e = movement.z
             val f = 0.05
-            while (d != 0.0 && world.noCollision(
+            while (d != 0.0 && level.noCollision(
                     player,
                     boundingBox.move(d, -STEP_HEIGHT, 0.0)
                 )
@@ -635,7 +633,7 @@ class SimulatedPlayer(
                 }
                 d += 0.05
             }
-            while (e != 0.0 && world.noCollision(
+            while (e != 0.0 && level.noCollision(
                     player,
                     boundingBox.move(0.0, -STEP_HEIGHT, e)
                 )
@@ -650,7 +648,7 @@ class SimulatedPlayer(
                 }
                 e += 0.05
             }
-            while (d != 0.0 && e != 0.0 && world.noCollision(
+            while (d != 0.0 && e != 0.0 && level.noCollision(
                     player,
                     boundingBox.move(d, -STEP_HEIGHT, e)
                 )
@@ -684,7 +682,7 @@ class SimulatedPlayer(
     }
 
     private fun isAboveGround(): Boolean {
-        return onGround || this.fallDistance < STEP_HEIGHT && !world.noCollision(
+        return onGround || this.fallDistance < STEP_HEIGHT && !level.noCollision(
             player,
             boundingBox.move(0.0, this.fallDistance - STEP_HEIGHT, 0.0)
         )
@@ -742,28 +740,17 @@ class SimulatedPlayer(
         return if (player.eyeHeight.toDouble() < 0.4) 0.0 else 0.4
     }
 
-    private fun isTouchingWater(): Boolean = wasTouchingWater
-    private fun isInLava(): Boolean {
-        return this.fluidHeight.getDouble(FluidTags.LAVA) > 0.0
+    private fun isEyeInFluid(type: TagKey<Fluid>): Boolean {
+        return this.fluidInteraction.isEyeInFluid(type)
     }
 
+    private fun isTouchingWater(): Boolean = wasTouchingWater
+
     /**
-     * @see net.minecraft.world.entity.Entity.updateFluidInteraction()
+     * @see Entity.isInLava
      */
-    private fun updateFluidInteraction() {
-        val var2 = player.vehicle
-        if (var2 is Boat) {
-            if (!var2.isUnderWater) {
-                this.wasTouchingWater = false
-                return
-            }
-        }
-        if (updateMovementInFluid(FluidTags.WATER, 0.014)) {
-            onLanding()
-            this.wasTouchingWater = true
-        } else {
-            this.wasTouchingWater = false
-        }
+    private fun isInLava(): Boolean {
+        return this.fluidInteraction.isInFluid(FluidTags.LAVA)
     }
 
     /**
@@ -782,27 +769,38 @@ class SimulatedPlayer(
     }
 
     /**
-     * @see net.minecraft.world.entity.player.Player.updateIsUnderwater()
+     * FIXME:
      */
-    private fun updateIsUnderwater() {
-        wasUnderwater = this.eyeFluidTags.contains(FluidTags.WATER)
-        eyeFluidTags.clear()
-        val d: Double = this.getEyeY() - 0.1111111119389534
-        val entity = this.player.vehicle
-        if (entity is Boat) {
-            if (!entity.isUnderWater && entity.boundingBox.maxY >= d && entity.boundingBox.minY <= d) {
-                return
-            }
-        }
-        val blockPos = BlockPos.containing(this.pos.x, d, this.pos.z)
-        val fluidState: FluidState = this.player.level().getFluidState(blockPos)
-        val e = (blockPos.y.toFloat() + fluidState.getHeight(this.player.level(), blockPos)).toDouble()
-        if (e > d) {
-            fluidState.tags.forEach {
-                eyeFluidTags.add(it)
-            }
-        }
-    }
+//       private fun updateFluidInteraction(): Boolean {
+//          this.fluidInteraction.update(this.player, !this.player.isPushedByFluid)
+//          val inWater = this.fluidInteraction.isInFluid(FluidTags.WATER)
+//           val inLava = this.fluidInteraction.isInFluid(FluidTags.LAVA)
+//          if (inWater) {
+////             this.resetFallDistance()
+//             if (!this.wasTouchingWater && !this.firstTick) {
+////                this.doWaterSplashEffect()
+//             }
+//          }
+//
+//          this.wasTouchingWater = inWater
+//          if (this.player.isPushedByFluid()) {
+//             if (inWater) {
+////                this.fluidInteraction.applyCurrentTo(FluidTags.WATER, this.player, 0.014);
+//                 // FIXME: applyCurrentTo -> set deltaMovement
+//             }
+//
+//             if (inLava) {
+//                val lavaFlowScale = if (this.level.environmentAttributes().getDimensionValue(EnvironmentAttributes.FAST_LAVA)) {
+//                    0.007
+//                } else {
+//                    0.0023333333333333335
+//                }
+////                this.fluidInteraction.applyCurrentTo(FluidTags.LAVA, this, lavaFlowScale);
+//             }
+//          }
+//
+//          return inWater || inLava;
+//       }
 
     private fun getEyeY(): Double {
         return this.pos.y + this.player.eyeHeight.toDouble()
@@ -812,68 +810,17 @@ class SimulatedPlayer(
         return this.wasUnderwater && isTouchingWater()
     }
 
-    private fun getFluidHeight(tags: TagKey<Fluid>): Double = this.fluidHeight.getDouble(tags)
+    private fun getFluidHeight(tags: TagKey<Fluid>): Double =
+        this.fluidInteraction.getFluidHeight(tags)
 
-    private fun updateMovementInFluid(tag: TagKey<Fluid>, speed: Double): Boolean {
-        if (this.touchingUnloadedChunk()) {
-            return false
-        }
-        val box = this.boundingBox.deflate(0.001)
-        val i = Mth.floor(box.minX)
-        val j = Mth.ceil(box.maxX)
-        val k = Mth.floor(box.minY)
-        val l = Mth.ceil(box.maxY)
-        val m = Mth.floor(box.minZ)
-        val n = Mth.ceil(box.maxZ)
-        var d = 0.0
-        val bl = true // this.isPushedByFluids()
-        var bl2 = false
-        var vec3d = Vec3.ZERO
-        var o = 0
-        val mutable = BlockPos.MutableBlockPos()
-
-        for (p in i until j) {
-            for (q in k until l) {
-                for (r in m until n) {
-                    mutable[p, q] = r
-                    val fluidState: FluidState = this.player.level().getFluidState(mutable)
-                    if (fluidState.`is`(tag)) {
-                        val e = (q.toFloat() + fluidState.getHeight(this.player.level(), mutable)).toDouble()
-                        if (e >= box.minY) {
-                            bl2 = true
-                            d = max(e - box.minY, d)
-                            if (bl) {
-                                var vec3d2 = fluidState.getFlow(this.player.level(), mutable)
-                                if (d < 0.4) {
-                                    vec3d2 = vec3d2.scale(d)
-                                }
-                                vec3d = vec3d.add(vec3d2)
-                                ++o
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (vec3d.length() > 0.0) {
-            if (o > 0) {
-                vec3d = vec3d.scale(1.0 / o.toDouble())
-            }
-//            if (this !is Player) {
-//                vec3d = vec3d.normalize()
-//            }
-            val vec3d3: Vec3 = deltaMovement
-            vec3d = vec3d.scale(speed * 1.0)
-            val f = 0.003
-            if (abs(vec3d3.x) < 0.003 && abs(vec3d3.z) < 0.003 && vec3d.length() < 0.0045000000000000005) {
-                vec3d = vec3d.withLength(0.0045000000000000005)
-            }
-            deltaMovement += vec3d
-        }
-
-        this.fluidHeight.put(tag, d)
-        return bl2
+    /**
+     * @see Entity.getFluidInteractionBox
+     */
+    private fun getFluidInteractionBox(): AABB? {
+        val margin = 0.001
+        val box = this.boundingBox.deflate(margin)
+        // Skipped: vehicle
+        return box
     }
 
     private fun touchingUnloadedChunk(): Boolean {
@@ -943,8 +890,7 @@ class SimulatedPlayer(
             wasTouchingWater,
             isSwimming,
             wasUnderwater,
-            Object2DoubleArrayMap(fluidHeight),
-            HashSet(eyeFluidTags)
+            fluidInteraction, // FIXME: Copy here
         )
     }
 

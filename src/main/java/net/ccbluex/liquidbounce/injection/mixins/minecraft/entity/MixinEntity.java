@@ -29,8 +29,6 @@ import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
-import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.Minecraft;
 import net.minecraft.tags.TagKey;
@@ -62,9 +60,6 @@ public abstract class MixinEntity {
     public abstract boolean isPassenger();
 
     @Shadow
-    public abstract boolean isAlwaysTicking();
-
-    @Shadow
     public abstract Level level();
 
     @Shadow
@@ -91,16 +86,6 @@ public abstract class MixinEntity {
         EntityMarginEvent marginEvent = new EntityMarginEvent((Entity) (Object) this, callback.getReturnValue());
         EventManager.INSTANCE.callEvent(marginEvent);
         callback.setReturnValue(marginEvent.getMargin());
-    }
-
-    @ModifyExpressionValue(method = "updateFluidHeightAndDoFluidPushing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 hookNoPushInLiquids(Vec3 original) {
-        if ((Object) this != Minecraft.getInstance().player) {
-            return original;
-        }
-
-        return ModuleNoPush.canPush(NoPushBy.LIQUIDS)
-                ? original : Vec3.ZERO;
     }
 
     /**
@@ -173,17 +158,6 @@ public abstract class MixinEntity {
 
         if (isPassenger()) {
             ci.cancel();
-        }
-    }
-
-    @Inject(method = "updateFluidHeightAndDoFluidPushing", at = @At("HEAD"), cancellable = true)
-    private void hookFluidMovement(TagKey<Fluid> tag, double speed, CallbackInfoReturnable<Boolean> cir) {
-        if ((Object) this == Minecraft.getInstance().player) {
-            var event = EventManager.INSTANCE.callEvent(new PlayerFluidCollisionCheckEvent(tag));
-
-            if (event.isCancelled()) {
-                cir.setReturnValue(false);
-            }
         }
     }
 
