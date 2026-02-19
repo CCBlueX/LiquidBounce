@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.features.global
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CancelPrevious
 import net.ccbluex.liquidbounce.event.eventListenerScope
@@ -49,11 +51,20 @@ import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.plus
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.contents.ObjectContents
+import net.minecraft.network.chat.contents.objects.PlayerSprite
+import net.minecraft.world.item.component.ResolvableProfile
 import kotlin.time.Duration.Companion.seconds
 
 object GlobalSettingsClientChat : ToggleableValueGroup(
@@ -162,19 +173,40 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     @Suppress("unused")
     private val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
-        fun prefix(): MutableComponent = when (event.chatGroup) {
-            ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT ->
-                event.user.name.asText().withStyle(ChatFormatting.GRAY).copyable(copyContent = event.user.name)
-                    .append(" ▸ ".asPlainText(ChatFormatting.DARK_GRAY))
-            ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT ->
-                "[".asText().withStyle(ChatFormatting.DARK_GRAY)
-                    .append(
-                        event.user.name.asText().withStyle(ChatFormatting.BLUE).copyable(copyContent = event.message)
-                    )
-                    .append("] ".asPlainText(ChatFormatting.DARK_GRAY))
+        val resolvableProfile = ResolvableProfile.createUnresolved(event.user.uuid)
+        withTimeoutOrNull(5000L) {
+            resolvableProfile.resolveProfile(mc.services().profileResolver).await()
         }
 
-        writeChat(prefix().append(regular(event.message).copyable(copyContent = event.message)))
+        val playerSpritePart = MutableComponent.create(ObjectContents(PlayerSprite(resolvableProfile, false)))
+            .copyable(copyContent = event.user.uuid.toString())
+
+        fun namePart(formatting: ChatFormatting) =
+            event.user.name.asPlainText(
+                Style.EMPTY + formatting +
+                    ClickEvent.CopyToClipboard(event.user.name) +
+                    HoverEvent.ShowText(event.user.name.asPlainText())
+            )
+
+        val prefix = when (event.chatGroup) {
+            ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT ->
+                textOf(
+                    playerSpritePart,
+                    PlainText.SPACE,
+                    namePart(ChatFormatting.GRAY),
+                    " ▸ ".asPlainText(ChatFormatting.DARK_GRAY),
+                )
+            ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT ->
+                textOf(
+                    "[".asPlainText(ChatFormatting.DARK_GRAY),
+                    playerSpritePart,
+                    PlainText.SPACE,
+                    namePart(ChatFormatting.BLUE),
+                    "] ".asPlainText(ChatFormatting.DARK_GRAY),
+                )
+        }
+
+        writeChat(prefix, regular(event.message).copyable(copyContent = event.message))
 
         if (event.chatGroup !in autoTranslate) {
             return@suspendHandler
@@ -182,7 +214,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
         val result = GlobalSettingsAutoTranslate.translate(text = event.message)
         if (result.isValid) {
-            writeChat(prefix().append(result.toResultText()))
+            writeChat(prefix, result.toResultText())
         }
     }
 
@@ -238,11 +270,11 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         }
     }
 
-    private fun writeChat(message: Component) {
+    private fun writeChat(playerPrefix: Component, message: Component) {
         if (!inGame) {
-            logger.info("[Chat] $message")
+            logger.info("[Chat] ${playerPrefix.string} $message")
         } else {
-            chat(prefix, message, metadata = messageData)
+            chat(prefix, playerPrefix, message, metadata = messageData)
         }
     }
 

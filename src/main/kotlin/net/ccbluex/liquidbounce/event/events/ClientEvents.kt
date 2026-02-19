@@ -51,7 +51,7 @@ import net.minecraft.world.level.block.Block
 class ClickGuiScaleChangeEvent(val value: Float) : Event(), WebSocketEvent
 
 @Tag("clickGuiValueChange")
-class ClickGuiValueChangeEvent(val valueGroup: ValueGroup) : Event(), WebSocketEvent
+class ClickGuiValueChangeEvent(val configurable: ValueGroup) : Event(), WebSocketEvent
 
 @Tag("spaceSeperatedNamesChange")
 class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
