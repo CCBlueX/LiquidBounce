@@ -104,7 +104,7 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
     val modes = choices("Mode", 0, this::initializeSpeeds).apply(::tagBy)
 
-    private val notCondition by multiEnumChoice("Not", NotCondition.DURING_SCAFFOLD)
+    private val notCondition by multiEnumChoice("Not", NotCondition.SCAFFOLD)
 
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
 
@@ -131,7 +131,7 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
     private fun passesRequirements() = when {
         // DO NOT REMOVE - PLAYER COULD BE NULL!
         !inGame || isDestructed -> false
-        else -> notCondition.all { it.testCondition.asBoolean }
+        else -> !notCondition.any { it.condition.asBoolean }
     }
 
     private object OnlyInCombat : ToggleableValueGroup(this, "OnlyInCombat", false) {
@@ -196,16 +196,12 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
     @Suppress("unused")
     private enum class NotCondition(
         override val tag: String,
-        val testCondition: BooleanSupplier
+        val condition: BooleanSupplier
     ) : Tagged {
-        WHILE_USING_ITEM("WhileUsingItem", {
-            !player.isUsingItem
-        }),
-        DURING_SCAFFOLD("DuringScaffold", {
-            !(ModuleScaffold.running || ModuleFly.running)
-        }),
-        WHILE_SNEAKING("WhileSneaking", {
-            !player.isShiftKeyDown
-        })
+        USING_ITEM("WhileUsingItem", { player.isUsingItem }),
+        SCAFFOLD("DuringScaffold", { ModuleScaffold.running || ModuleFly.running }),
+        SNEAKING("WhileSneaking", { player.isShiftKeyDown }),
+        FALL_FLYING("IsFallFlying", { player.isFallFlying }),
+        IN_LIQUID("IsInLiquid", { player.isInLiquid }),
     }
 }
