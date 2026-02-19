@@ -70,8 +70,8 @@ export interface Setting<V> {
     valueType: string;
     name: string;
     value: V;
-    description: string;
-    key: string;
+    description: string | undefined;
+    key: string | undefined;
 }
 
 export interface FileSetting extends Setting<File> {
