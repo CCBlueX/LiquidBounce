@@ -134,7 +134,7 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableC
 /**
  * Creates text with a copy-to-clipboard click event
  *
- * @param this@copyable The text to make copyable
+ * @receiver The text to make copyable
  * @param copyContent The content to copy when clicked (defaults to text's string representation)
  * @param hover The hover event to apply (defaults to "Click to copy" tooltip)
  * @return Styled text with copy functionality
