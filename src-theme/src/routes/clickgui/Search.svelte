@@ -17,6 +17,7 @@
     let query: string;
     let filteredModules: Module[] = [];
     let selectedIndex = 0;
+    let hasFocus = false;
 
     function reset() {
         filteredModules = [];
@@ -88,9 +89,14 @@
     }
 
     function handleWindowClick(e: MouseEvent) {
-        if (!searchContainerElement.contains(e.target as Node)) {
+        if (!searchContainerElement.contains(e.target as Node) && !hasFocus) {
             reset();
         }
+    }
+
+    function handleMouseOut() {
+        hasFocus = false;
+        reset();
     }
 
     function handleWindowKeyDown() {
@@ -122,7 +128,9 @@
             return;
         }
         mod.enabled = e.enabled;
-        filteredModules = filteredModules;
+
+        // Refilter modules to update enabled state
+        filterModules();
     });
 
     listen("keyboardKey", handleKeyDown);
@@ -134,10 +142,14 @@
 
 <svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeyDown} on:contextmenu={handleWindowClick}/>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
         class="search"
         class:has-results={query}
+        class:has-focus={hasFocus}
         bind:this={searchContainerElement}
+        on:mouseenter={() => hasFocus = true}
+        on:mouseleave|stopPropagation={handleMouseOut}
 >
     <input
             type="text"
@@ -202,7 +214,7 @@
       border-radius: 10px;
     }
 
-    &:focus-within {
+    &.has-focus {
       z-index: 9999999999;
     }
   }
