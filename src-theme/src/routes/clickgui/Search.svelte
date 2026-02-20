@@ -25,13 +25,15 @@
         $highlightModuleName = null;
     }
 
-    function filterModules() {
+    function filterModules(resetIndex: boolean) {
         if (!query) {
             reset();
             return;
         }
 
-        selectedIndex = 0;
+        if (resetIndex) {
+            selectedIndex = 0;
+        }
 
         const pureQuery = query.toLowerCase().replaceAll(" ", "");
 
@@ -130,7 +132,7 @@
         mod.enabled = e.enabled;
 
         // Refilter modules to update enabled state
-        filterModules();
+        filterModules(false);
     });
 
     listen("keyboardKey", handleKeyDown);
@@ -149,7 +151,7 @@
         class:has-focus={hasFocus}
         bind:this={searchContainerElement}
         on:mouseenter={() => hasFocus = true}
-        on:mouseleave|stopPropagation={handleMouseOut}
+        on:mouseleave={handleMouseOut}
 >
     <input
             type="text"
@@ -158,7 +160,7 @@
             spellcheck="false"
             bind:value={query}
             bind:this={searchInputElement}
-            on:input={filterModules}
+            on:input={() => filterModules(true)}
             on:keydown={handleBrowserKeyDown}
             on:focusin={async () => await setTyping(true)}
             on:focusout={async () => await setTyping(false)}
@@ -214,6 +216,7 @@
       border-radius: 10px;
     }
 
+    &:focus-within,
     &.has-focus {
       z-index: 9999999999;
     }
