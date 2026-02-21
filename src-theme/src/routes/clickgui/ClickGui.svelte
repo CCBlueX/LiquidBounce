@@ -12,7 +12,7 @@
     let modules = $state<Module[]>([]);
 
     onMount(async () => {
-        modules = await getModules();
+        modules = (await getModules()).filter(m => m.name !== "HUD");
         categories = groupByCategory(modules);
     });
 </script>

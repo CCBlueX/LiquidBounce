@@ -19,8 +19,13 @@
 
 <script lang="ts">
     import {type Alignment, HorizontalAlignment, VerticalAlignment} from "../../../integration/types.js";
+    import {createEventDispatcher} from "svelte";
+    import {scaleFactor, snappingEnabled, gridSize, showGrid} from "../../clickgui/clickgui_store";
 
     export let alignment: Alignment;
+    export let interactive: boolean = false;
+
+    const dispatch = createEventDispatcher();
 
     $: styleString = generateStyleString(alignment);
 
@@ -67,18 +72,121 @@
 
         return style;
     }
+
+    let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let startHOffset = 0;
+    let startVOffset = 0;
+
+    function onMouseDown(e: MouseEvent) {
+        if (!interactive) return;
+        if (e.button !== 0) return;
+
+        dragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startHOffset = alignment.horizontalOffset;
+        startVOffset = alignment.verticalOffset;
+        
+        if ($snappingEnabled) {
+            $showGrid = true;
+        }
+
+        window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("mouseup", onMouseUp);
+    }
+
+    function snapToGrid(value: number): number {
+        if (!$snappingEnabled) return value;
+        return Math.round(value / $gridSize) * $gridSize;
+    }
+
+    function onMouseMove(e: MouseEvent) {
+        if (!dragging) return;
+
+        const scale = 2 / $scaleFactor;
+        const dx = (e.clientX - startX) * scale;
+        const dy = (e.clientY - startY) * scale;
+
+        let newHOffset = startHOffset;
+        let newVOffset = startVOffset;
+
+        if (alignment.horizontalAlignment === HorizontalAlignment.RIGHT) {
+            newHOffset -= dx;
+        } else {
+            newHOffset += dx;
+        }
+
+        if (alignment.verticalAlignment === VerticalAlignment.BOTTOM) {
+            newVOffset -= dy;
+        } else {
+            newVOffset += dy;
+        }
+        
+        newHOffset = snapToGrid(newHOffset);
+        newVOffset = snapToGrid(newVOffset);
+
+        alignment = {
+            ...alignment,
+            horizontalOffset: newHOffset,
+            verticalOffset: newVOffset
+        };
+        
+        dispatch("drag", alignment);
+    }
+
+    function onMouseUp(e: MouseEvent) {
+        if (!dragging) return;
+        dragging = false;
+        $showGrid = false;
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        
+        dispatch("change", alignment);
+    }
 </script>
 
-<div class="draggable-element" style={styleString}>
+<div class="draggable-element" 
+     style={styleString} 
+     class:interactive={interactive}
+     on:mousedown={onMouseDown}
+     role="button"
+     tabindex="0">
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="contained-element">
         <slot/>
     </div>
+    {#if interactive}
+        <div class="overlay"></div>
+    {/if}
 </div>
 
 <style lang="scss">
+  @use "../../../colors.scss" as *;
+
   .draggable-element {
     position: relative;
+    
+    &.interactive {
+        cursor: move;
+        user-select: none;
+        
+        &:hover .overlay {
+            background-color: rgba($clickgui-text-color, 0.2);
+            border: 1px solid rgba($clickgui-text-color, 0.5);
+        }
+    }
+  }
+
+  .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
   }
 
   .contained-element {
