@@ -207,6 +207,7 @@ inline fun GpuTexture.copyFrom(
 fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
     this.toNativeImage().thenAcceptAsync({ nativeImage ->
         nativeImage.writeToFile(file)
+        nativeImage.close()
     }, Dispatchers.IO.asExecutor())
 
 fun GpuBufferSlice.readNativeImageRGBA(
@@ -230,7 +231,6 @@ fun GpuBufferSlice.readNativeImageRGBA(
  */
 @JvmOverloads
 fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> {
-    val future = CompletableFuture<NativeImage>()
     val width = this.getWidth(mipLevel)
     val height = this.getHeight(mipLevel)
     val pixelSize = this.format.pixelSize()
@@ -239,6 +239,8 @@ fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> 
         GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
         width * height * pixelSize.toLong()
     )
+
+    val future = CompletableFuture<NativeImage>()
 
     this.copyTo(gpuBuffer, mipLevel = mipLevel) {
         future.complete(gpuBuffer.slice().readNativeImageRGBA(width, height))
@@ -250,7 +252,6 @@ fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> 
 
 @JvmOverloads
 fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedImage> {
-    val future = CompletableFuture<BufferedImage>()
     val width = this.getWidth(mipLevel)
     val height = this.getHeight(mipLevel)
     val pixelSize = this.format.pixelSize()
@@ -260,6 +261,7 @@ fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedIma
         width * height * pixelSize.toLong()
     )
 
+    val future = CompletableFuture<BufferedImage>()
     this.copyTo(gpuBuffer, mipLevel = mipLevel) {
         gpuBuffer.mapBuffer(read = true, write = false).use { mappedView ->
             val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
