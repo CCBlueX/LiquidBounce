@@ -35,10 +35,13 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuSampler
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.blaze3d.textures.TextureFormat
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.Tesselator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asExecutor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -48,7 +51,6 @@ import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
-import net.minecraft.util.Util
 import okio.BufferedSource
 import okio.buffer
 import okio.source
@@ -154,6 +156,20 @@ inline fun GpuTexture.copyTo(
     x, y, width, height,
 )
 
+fun GpuTexture.asyncCopyTo(
+    destination: GpuBuffer,
+    offset: Long = 0L,
+    mipLevel: Int = 0,
+    x: Int = 0,
+    y: Int = 0,
+    width: Int = getWidth(0),
+    height: Int = getHeight(0),
+): CompletableFuture<*> {
+    val future = CompletableFuture<Any?>()
+    copyTo(destination, offset, mipLevel, x, y, width, height) { future.complete(null) }
+    return future
+}
+
 @JvmOverloads
 fun GpuTexture.copyFully(
     labelGetter: Supplier<String>? = null,
@@ -191,7 +207,23 @@ inline fun GpuTexture.copyFrom(
 fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
     this.toNativeImage().thenAcceptAsync({ nativeImage ->
         nativeImage.writeToFile(file)
-    }, Util.ioPool())
+    }, Dispatchers.IO.asExecutor())
+
+fun GpuBufferSlice.readNativeImageRGBA(
+    width: Int,
+    height: Int,
+    destination: NativeImage = NativeImage(width, height, false),
+): NativeImage {
+    this.mapBuffer(read = true, write = false).use { mappedView ->
+        for (y in 0..<height) {
+            for (x in 0..<width) {
+                val abgr = mappedView.data().getInt((x + y * width) * TextureFormat.RGBA8.pixelSize())
+                destination.setPixelABGR(x, height - y - 1, abgr)
+            }
+        }
+    }
+    return destination
+}
 
 /**
  * @see net.minecraft.client.Screenshot.takeScreenshot
@@ -209,16 +241,7 @@ fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> 
     )
 
     this.copyTo(gpuBuffer, mipLevel = mipLevel) {
-        gpuBuffer.mapBuffer(read = true, write = false).use { mappedView ->
-            val nativeImage = NativeImage(width, height, false)
-            for (y in 0..<height) {
-                for (x in 0..<width) {
-                    val abgr = mappedView.data().getInt((x + y * width) * pixelSize)
-                    nativeImage.setPixelABGR(x, height - y - 1, abgr)
-                }
-            }
-            future.complete(nativeImage)
-        }
+        future.complete(gpuBuffer.slice().readNativeImageRGBA(width, height))
         gpuBuffer.close()
     }
 

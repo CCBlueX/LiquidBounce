@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.ReportedException
-import net.minecraft.util.Util
 import okhttp3.Cache
 import okhttp3.Call
 import okhttp3.Callback
@@ -58,6 +57,7 @@ import java.io.Reader
 import java.util.Locale
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
@@ -108,7 +108,13 @@ object HttpClient {
     }
 
     private val defaultClient = OkHttpClient.Builder()
-        .dispatcher(Dispatcher(Util.nonCriticalIoPool().service))
+        .dispatcher(
+            Dispatcher(
+                Executors.newThreadPerTaskExecutor(
+                    Thread.ofVirtual().name("OkHttpClient-Dispatcher-", 0L).factory()
+                )
+            )
+        )
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)
