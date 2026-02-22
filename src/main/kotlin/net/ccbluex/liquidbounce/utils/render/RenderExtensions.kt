@@ -207,6 +207,7 @@ inline fun GpuTexture.copyFrom(
 fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
     this.toNativeImage().thenAcceptAsync({ nativeImage ->
         nativeImage.writeToFile(file)
+        nativeImage.close()
     }, Dispatchers.IO.asExecutor())
 
 private fun GpuBufferSlice.readNativeImageRGBA(
