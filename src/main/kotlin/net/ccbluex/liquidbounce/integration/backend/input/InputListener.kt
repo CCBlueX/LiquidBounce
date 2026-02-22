@@ -29,6 +29,8 @@ import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.utils.client.mc
+import org.joml.component1
+import org.joml.component2
 import org.lwjgl.glfw.GLFW
 import java.lang.AutoCloseable
 
