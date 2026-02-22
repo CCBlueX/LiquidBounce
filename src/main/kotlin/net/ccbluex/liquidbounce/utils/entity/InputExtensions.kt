@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.utils.entity
 import net.minecraft.client.player.ClientInput
 import net.minecraft.world.entity.player.Input
 
-inline val Input.any: Boolean
+inline val Input.anyHorizontal: Boolean
     get() = forward || backward || left || right
 
 inline fun Input.copy(

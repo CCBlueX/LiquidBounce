@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.edgePoints
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.entity.any
+import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
@@ -229,7 +229,7 @@ abstract class BaseYawTargetPositionFactory(
         val trimmedFace = trimFace(face)
 
         // If the player is not moving, we can just aim at the nearest point
-        return if (!player.input.keyPresses.any) {
+        return if (!player.input.keyPresses.anyHorizontal) {
             return aimAtNearestPointToRotationLine(targetPos, trimmedFace)
         } else {
             aimAtNearestPointToYaw(targetPos, trimmedFace) ?: aimAtNearestPointToRotationLine(targetPos, trimmedFace)
@@ -360,7 +360,7 @@ class EdgePointTargetPositionFactory(
         val trimmedFace = trimFace(face)
 
         // If the player is not moving, we can just aim at the nearest point
-        return if (!player.input.keyPresses.any) {
+        return if (!player.input.keyPresses.anyHorizontal) {
             return aimAtNearestPointToRotationLine(targetPos, trimmedFace)
         } else {
             aimAtFurthestPointToPlayerPosition(targetPos, trimmedFace)
