@@ -74,7 +74,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -172,15 +171,6 @@ public abstract class MixinMinecraft {
             ordinal = 0, shift = At.Shift.AFTER))
     private void onSessionInit(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(new SessionEvent(getUser()));
-    }
-
-    @ModifyArg(
-        method = "<init>",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/ReentrantBlockableEventLoop;<init>(Ljava/lang/String;Z)V"),
-        index = 1
-    )
-    private static boolean noAsyncCrash(boolean propagatesCrashes) {
-        return false;
     }
 
     /**
