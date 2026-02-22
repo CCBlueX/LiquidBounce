@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
-import net.ccbluex.liquidbounce.utils.entity.any
+import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
@@ -58,7 +58,7 @@ internal object VelocityModify : VelocityMode("Modify") {
             is ClientboundSetEntityMotionPacket if packet.id == player.id -> {
                 if (chance != 100 && Random.nextInt(100) > chance) return@handler
                 if (!filter.condition.asBoolean) return@handler
-                if (onlyMove && !player.input.keyPresses.any) return@handler
+                if (onlyMove && !player.input.keyPresses.anyHorizontal) return@handler
 
                 // It should just block the packet
                 if (horizontal == 0f && vertical == 0f) {
@@ -94,7 +94,7 @@ internal object VelocityModify : VelocityMode("Modify") {
             is ClientboundExplodePacket if packet.playerKnockback.isPresent && considerExplosion -> {
                 if (chance != 100 && Random.nextInt(100) > chance) return@handler
                 if (!filter.condition.asBoolean) return@handler
-                if (onlyMove && !player.input.keyPresses.any) return@handler
+                if (onlyMove && !player.input.keyPresses.anyHorizontal) return@handler
 
                 // note: explosion packets are being used by hypixel to trick poorly made cheats.
 
