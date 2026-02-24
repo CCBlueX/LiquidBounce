@@ -157,7 +157,7 @@ class WorldRenderEnvironment(
                 pass.bindAndDraw(meshDraw)
             }
         }
-        draws.forEach { (pipeline, _) -> ClientTesselator.allocator(pipeline as RenderPipeline).clear() }
+        draws.forEach { (pipeline, _) -> ClientTesselator.clear(pipeline as RenderPipeline) }
         draws.clear()
     }
 
@@ -188,7 +188,7 @@ class WorldRenderEnvironment(
             }
         }
 
-        draws.forEach { (texture, _) -> ClientTesselator.allocator((texture as AbstractTexture).textureView).clear() }
+        draws.forEach { (texture, _) -> ClientTesselator.clear((texture as AbstractTexture).textureView) }
         draws.clear()
     }
 

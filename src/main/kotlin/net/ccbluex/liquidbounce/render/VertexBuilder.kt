@@ -110,19 +110,18 @@ inline fun RenderPassRenderState.buildMesh(
 ) {
     clearStates()
 
-    val byteBufferBuilder = ClientTesselator.allocator(pipeline)
-    val bufferBuilder = byteBufferBuilder.begin(pipeline)
+    val bufferBuilder = this.byteBufferBuilder.begin(pipeline)
     usePoseStack {
         bufferBuilder.block(this)
     }
 
     bufferBuilder.build()?.use { meshData ->
         if (pipeline.vertexFormatMode == VertexFormat.Mode.QUADS) {
-            meshData.sortQuads(byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
+            meshData.sortQuads(this.byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
         }
         this.uploadAndSet(meshData, pipeline, rotate)
         this.ready = true
     }
 
-    byteBufferBuilder.clear()
+    this.byteBufferBuilder.clear()
 }

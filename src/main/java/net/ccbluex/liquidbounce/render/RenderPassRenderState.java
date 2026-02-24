@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.render;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw;
 import org.joml.Matrix4f;
@@ -35,6 +36,7 @@ public final class RenderPassRenderState {
     static final Vector3f modelOffset = new Vector3f();
     static final Matrix4f textureMatrix = new Matrix4f();
 
+    public final ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(0xC0000);
     private final GrowableMappableRingBuffer vboStorage;
     private final GrowableMappableRingBuffer iboStorage;
 

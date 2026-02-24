@@ -38,7 +38,6 @@ import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
@@ -174,13 +173,11 @@ internal inline fun RenderTarget.drawGenericBlockESP(
 inline fun WorldRenderEnvironment.drawCustomMeshTextured(
     sampler0: AbstractTexture,
     pipeline: RenderPipeline = ClientRenderPipelines.TexQuads, // TODO: implement this
-    drawer: VertexConsumer.(Matrix4fc) -> Unit,
+    drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) {
-    val matrix = matrixStack.last().pose()
-
     val buffer = getOrCreateBuffer(sampler0)
 
-    drawer(buffer, matrix)
+    drawer(buffer, matrixStack.last())
 
     if (!isBatchMode) {
         buffer.build()?.let {
@@ -193,11 +190,9 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
     drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) {
-    val matrix = matrixStack.last()
-
     val buffer = getOrCreateBuffer(pipeline)
 
-    drawer(buffer, matrix)
+    drawer(buffer, matrixStack.last())
 
     if (!isBatchMode) {
         buffer.build()?.let {
