@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import java.util.Collections
+import java.util.function.Function
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
     when {
@@ -29,3 +30,6 @@ fun <T> Array<out T>?.unmodifiable(): List<T> =
         size == 1 -> Collections.singletonList(this[0])
         else -> ObjectImmutableList(this)
     }
+
+fun <K, V> memorizingFunction(map: MutableMap<K, V>, mappingFunction: Function<K, V>): Function<K, V> =
+    Function { key -> map.computeIfAbsent(key, mappingFunction) }
