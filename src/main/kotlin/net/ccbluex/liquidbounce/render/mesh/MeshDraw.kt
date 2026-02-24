@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.render.mesh
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.MeshData
@@ -33,22 +32,8 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.ClientTesselator
 import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer
 import net.ccbluex.liquidbounce.render.bindAndDraw
-import net.ccbluex.liquidbounce.render.bindDefaultUniforms
-import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
-import net.ccbluex.liquidbounce.render.bindTextures
-import net.ccbluex.liquidbounce.render.createRenderPass
-import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.bindAndDraw
-import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.toMeshDraw
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
-import net.ccbluex.liquidbounce.render.setUniforms
-import net.ccbluex.liquidbounce.render.setupRenderTypeScissor
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.memorizingFunction
-import net.minecraft.client.renderer.texture.AbstractTexture
 import java.util.function.Function
-import java.util.function.Supplier
-import kotlin.use
 
 @JvmRecord
 data class MeshDraw(
