@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
-import net.ccbluex.liquidbounce.render.engine.FontId
+import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
 import net.ccbluex.liquidbounce.render.engine.font.StaticGlyphPage.Companion.createGlyphPageWithFittingCharacters
 import net.ccbluex.liquidbounce.utils.client.logger

@@ -17,14 +17,25 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.engine
+package net.ccbluex.liquidbounce.render.utils
 
-import java.awt.Font
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 
-@JvmRecord
-data class FontId(
-    val style: Int,
-    val awtFont: Font,
-    val height: Float,
-    val ascent: Float
-)
+object RenderingDebug : DebuggedOwner {
+
+    var renderPassCount = 0
+        private set
+
+    @JvmStatic
+    fun increaseRenderPassCount() {
+        renderPassCount++
+    }
+
+    @JvmStatic
+    fun flipFrame() {
+        debugParameter("RenderPassCount") { renderPassCount }
+        renderPassCount = 0
+    }
+
+}

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine.font
 
-import net.ccbluex.liquidbounce.render.engine.FontId
+import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.minecraft.client.renderer.texture.DynamicTexture
 import org.lwjgl.opengl.GL11

@@ -26,7 +26,7 @@ import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.FontFace
-import net.ccbluex.liquidbounce.render.engine.FontId
+import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
 import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier

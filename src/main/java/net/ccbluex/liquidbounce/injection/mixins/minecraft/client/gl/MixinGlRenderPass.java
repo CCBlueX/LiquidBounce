@@ -23,6 +23,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.opengl.GlRenderPass;
 import com.mojang.blaze3d.textures.GpuTexture;
+import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -75,6 +76,7 @@ public abstract class MixinGlRenderPass {
         HASH_MAP.recycle(this.uniforms);
         HASH_MAP.recycle(this.samplers);
         HASH_SET.recycle((HashSet) this.dirtyUniforms);
+        RenderingDebug.increaseRenderPassCount();
     }
 
 
