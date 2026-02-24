@@ -112,7 +112,6 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
         val drawY = if (autoY) player.y - 100.0 else renderY.toDouble()
 
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
             for ((chunk, isNew) in chunks) {
                 val chunkX = chunk.minBlockX
                 val chunkZ = chunk.minBlockZ
@@ -149,7 +148,6 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
                     drawPlane(16f, 16f, color, color.darker())
                 }
             }
-            commitBatch()
         }
     }
 }

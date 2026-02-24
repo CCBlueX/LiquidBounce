@@ -102,7 +102,7 @@ abstract class HatsMode(name: String) : Mode(name) {
 
                 renderEnvironmentForWorld(it.matrixStack) {
                     withPositionRelativeToCamera(pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)) {
-                        matrixStack.withPush {
+                        poseStack.withPush {
                             if (followRotation) mulPose(rotation.toQuaternion(ROTATION))
                             translate(0F, entity.bbHeight - entity.eyeHeight + height + equipOffset, 0F)
                             drawHat(hurtMarked)

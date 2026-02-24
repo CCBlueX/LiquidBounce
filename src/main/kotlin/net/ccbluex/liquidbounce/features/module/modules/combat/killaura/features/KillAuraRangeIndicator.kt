@@ -92,11 +92,9 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
         val distance = target?.let { player.boxedDistanceTo(it).toFloat() }
 
         with(env) {
-            startBatch()
             withPositionRelativeToCamera(pos) {
                 renderCircles(range, pulseOffset, distance, target != null)
             }
-            commitBatch()
         }
     }
 
@@ -146,7 +144,7 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
     private fun WorldRenderEnvironment.drawRangeCircle(radius: Float, color: Color4b, outlineAlpha: Int = 255) {
         drawGradientCircle(radius, 0f, color, Color4b.TRANSPARENT, noDepthTest = !canBeCovered)
         if (outline) {
-            matrixStack.withPush {
+            poseStack.withPush {
                 translate(0.0, 0.001, 0.0) // Slightly above the filled circle to prevent z-fighting
                 drawCircleOutline(radius, outlineColor.alpha(outlineAlpha), noDepthTest = !canBeCovered)
             }

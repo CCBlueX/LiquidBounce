@@ -127,13 +127,11 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
             for (particle in particles) {
                 if (!particle.visible) continue
 
                 particle.render(event.partialTicks)
             }
-            commitBatch()
         }
     }
 
@@ -236,7 +234,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
                     90f
                 }
 
-                with(matrixStack) {
+                with(poseStack) {
                     translate(-size / 2.0, -size / 2.0, 0.0)
                     mulPose(mc.gameRenderer.mainCamera.rotation())
                     scale(-1.0f, 1.0f, -1.0f)

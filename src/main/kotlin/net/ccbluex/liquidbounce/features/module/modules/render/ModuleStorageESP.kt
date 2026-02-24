@@ -195,8 +195,6 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             val matrixStack = event.matrixStack
 
             renderEnvironmentForWorld(matrixStack) {
-                startBatch()
-
                 for ((entity, box, color) in entityBoxes) {
                     val baseColor = color.with(a = 50)
                     val outlineColor = if (outline) color.with(a = 100) else null
@@ -206,8 +204,6 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                         drawBox(box, baseColor, outlineColor)
                     }
                 }
-
-                commitBatch()
             }
         }
 
@@ -344,7 +340,6 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 .rotateX(-camera.xRot().toRadians())
                 .rotateY(-camera.yRot().toRadians())
 
-            startBatch()
             longLines {
                 for (type in types) {
                     for (blockPos in StorageScanner.iterate(type)) {
@@ -355,7 +350,6 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                     }
                 }
             }
-            commitBatch()
         }
     }
 

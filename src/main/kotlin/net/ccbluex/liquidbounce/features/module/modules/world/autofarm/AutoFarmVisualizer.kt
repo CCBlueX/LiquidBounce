@@ -89,8 +89,6 @@ object AutoFarmVisualizer : ToggleableValueGroup(ModuleAutoFarm, "Visualize", tr
             val fillColor = baseColor.with(a = 50)
 
             renderEnvironmentForWorld(matrixStack) {
-                startBatch()
-
                 CurrentTarget.render(this)
                 for ((pos, type) in AutoFarmBlockTracker.iterate()) {
                     if (hypot(pos.x - player.x, pos.z - player.z) > range) continue
@@ -121,8 +119,6 @@ object AutoFarmVisualizer : ToggleableValueGroup(ModuleAutoFarm, "Visualize", tr
                         }
                     }
                 }
-
-                commitBatch()
             }
         }
     }

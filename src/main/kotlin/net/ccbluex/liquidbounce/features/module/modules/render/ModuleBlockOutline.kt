@@ -107,8 +107,7 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
             finalPosition
         }
 
-        val translatedPosition = renderPosition - (mc.entityRenderDispatcher
-            .camera?.position() ?: return@handler)
+        val translatedPosition = renderPosition - event.camera.position()
 
         renderEnvironmentForWorld(event.matrixStack) {
             if (sideOnly) {
