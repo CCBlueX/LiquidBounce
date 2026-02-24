@@ -138,6 +138,7 @@ class WorldRenderEnvironment(
             bufferBuilder.build()?.use {
                 draws.add(pipeline to it.toMeshDraw(pipeline))
             }
+            ClientTesselator.clear(pipeline)
         }
         batchBuffer.clear()
 
@@ -157,7 +158,7 @@ class WorldRenderEnvironment(
                 pass.bindAndDraw(meshDraw)
             }
         }
-        draws.forEach { (pipeline, _) -> ClientTesselator.clear(pipeline as RenderPipeline) }
+
         draws.clear()
     }
 
@@ -167,6 +168,7 @@ class WorldRenderEnvironment(
             bufferBuilder.build()?.use {
                 draws.add(texture to it.toMeshDraw(pipeline))
             }
+            ClientTesselator.clear(texture.textureView)
         }
         texQuadsBatchBuffer.clear()
 
@@ -188,7 +190,6 @@ class WorldRenderEnvironment(
             }
         }
 
-        draws.forEach { (texture, _) -> ClientTesselator.clear((texture as AbstractTexture).textureView) }
         draws.clear()
     }
 
@@ -202,8 +203,7 @@ class WorldRenderEnvironment(
         textures: Map<String, AbstractTexture>,
     ) {
         val dynamicTransforms = getDynamicTransformsUniform(colorModulator = this.shaderColor)
-        val draw = meshData.toMeshDraw(pipeline)
-        meshData.close()
+        val draw = meshData.use { it.toMeshDraw(pipeline) }
 
         renderTarget.createRenderPass(
             { "WorldRenderEnvironment Immediate draw" },
