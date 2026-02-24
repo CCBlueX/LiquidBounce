@@ -21,19 +21,12 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
-import com.mojang.blaze3d.vertex.VertexFormat
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
-import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.fastutil.objectObjectMapOf
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
@@ -45,11 +38,9 @@ import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
-import java.util.function.Supplier
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -182,17 +173,15 @@ internal inline fun RenderTarget.drawGenericBlockESP(
 inline fun WorldRenderEnvironment.drawCustomMeshTextured(
     sampler0: AbstractTexture,
     pipeline: RenderPipeline = ClientRenderPipelines.TexQuads, // TODO: implement this
-    drawer: VertexConsumer.(Matrix4fc) -> Unit,
+    drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) {
-    val matrix = matrixStack.last().pose()
-
     val buffer = getOrCreateBuffer(sampler0)
 
-    drawer(buffer, matrix)
+    drawer(buffer, matrixStack.last())
 
     if (!isBatchMode) {
         buffer.build()?.let {
-            draw(pipeline, it, shaderTextureProvider = objectObjectMapOf("Sampler0", sampler0))
+            immediateDraw(pipeline, it, textures = objectObjectMapOf("Sampler0", sampler0))
         }
     }
 }
@@ -201,86 +190,14 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
     drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) {
-    val matrix = matrixStack.last()
-
     val buffer = getOrCreateBuffer(pipeline)
 
-    drawer(buffer, matrix)
+    drawer(buffer, matrixStack.last())
 
     if (!isBatchMode) {
         buffer.build()?.let {
-            draw(pipeline, it, emptyMap())
+            immediateDraw(pipeline, it, emptyMap())
         }
-    }
-}
-
-private val sharedVboMap = Object2ObjectArrayMap<VertexFormat, GrowableMappableRingBuffer>()
-private fun getVbo(vertexFormat: VertexFormat): GrowableMappableRingBuffer =
-    sharedVboMap.computeIfAbsent(vertexFormat) {
-        GrowableMappableRingBuffer(
-            "${LiquidBounce.CLIENT_NAME} Shared VBO for $it",
-            GpuBuffer.USAGE_VERTEX,
-            GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 13)
-        )
-    }
-
-private val sharedIboMap = enumMapOf<VertexFormat.IndexType, GrowableMappableRingBuffer>()
-private fun getIbo(indexType: VertexFormat.IndexType): GrowableMappableRingBuffer =
-    sharedIboMap.computeIfAbsent(indexType) {
-        GrowableMappableRingBuffer(
-            "${LiquidBounce.CLIENT_NAME} Shared IBO for $it",
-            GpuBuffer.USAGE_INDEX,
-        )
-    }
-
-/**
- * copied from RenderLayer.draw(BuiltBuffer) (1.21.5-10: RenderLayer.MultiPhase.draw)
- * @see net.minecraft.client.renderer.rendertype.RenderType.draw
- */
-@Suppress("detekt:all")
-internal fun drawMesh(
-    pipeline: RenderPipeline,
-    meshData: MeshData,
-    renderTarget: RenderTarget = mc.mainRenderTarget,
-    colorModulator: Color4b = Color4b.WHITE,
-    renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
-    shaderTextures: Map<String, AbstractTexture> = emptyMap(),
-    uniforms: Map<String, GpuBufferSlice> = emptyMap(),
-) = meshData.use { meshData ->
-    val dynamicTransforms = getDynamicTransformsUniform(colorModulator = colorModulator)
-
-    if (pipeline.vertexFormatMode == VertexFormat.Mode.QUADS) {
-        meshData.sortQuads(
-            ClientTesselator.Shared,
-            RenderSystem.getProjectionType().vertexSorting(),
-        )
-    }
-
-    val vertexSlice = getVbo(pipeline.vertexFormat).upload(meshData.vertexBuffer())
-
-    val rawIndices = meshData.indexBuffer()
-    val indexCount = meshData.drawState().indexCount
-    val indexSlice: GpuBufferSlice
-    val indexType: VertexFormat.IndexType
-    if (rawIndices == null) {
-        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.vertexFormatMode)
-        indexType = shapeIndexBuffer.type()
-        indexSlice = shapeIndexBuffer.getBuffer(indexCount)
-            .slice(0L, indexCount.toLong() * indexType.bytes)
-    } else {
-        indexType = meshData.drawState().indexType
-        indexSlice = getIbo(indexType).upload(rawIndices)
-    }
-
-    renderTarget.createRenderPass(renderPassLabelGetter, allowOverride = true).use { renderPass ->
-        renderPass.setPipeline(pipeline)
-        renderPass.setupRenderTypeScissor()
-        renderPass.bindDefaultUniforms()
-        renderPass.bindDynamicTransformsUniform(dynamicTransforms)
-        renderPass.bindTextures(shaderTextures)
-        renderPass.setUniforms(uniforms)
-
-        renderPass.bindAndDraw(vertexSlice, indexSlice, pipeline.vertexFormat, indexType, indexCount)
     }
 }
 

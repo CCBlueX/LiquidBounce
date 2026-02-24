@@ -38,8 +38,7 @@ object ClientTesselator {
     @JvmStatic
     internal val texQuadsSpecialAllocators = Reference2ReferenceOpenHashMap<GpuTextureView, ByteBufferBuilder>()
 
-    @JvmStatic
-    fun allocator(pipeline: RenderPipeline): ByteBufferBuilder =
+    private fun allocator(pipeline: RenderPipeline): ByteBufferBuilder =
         bufferAllocators.getOrPut(pipeline) { ByteBufferBuilder(BUFFER_SIZE) }
 
     @JvmStatic
@@ -47,11 +46,20 @@ object ClientTesselator {
         allocator(pipeline).begin(pipeline)
 
     @JvmStatic
-    fun allocator(texture: GpuTextureView): ByteBufferBuilder =
+    fun clear(pipeline: RenderPipeline) {
+        allocator(pipeline).clear()
+    }
+
+    private fun allocator(texture: GpuTextureView): ByteBufferBuilder =
         texQuadsSpecialAllocators.getOrPut(texture) { ByteBufferBuilder(BUFFER_SIZE) }
 
     @JvmStatic
     fun begin(texture: GpuTextureView): BufferBuilder =
         allocator(texture).begin(ClientRenderPipelines.TexQuads)
+
+    @JvmStatic
+    fun clear(texture: GpuTextureView) {
+        allocator(texture).clear()
+    }
 
 }

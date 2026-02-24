@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("detekt:TooManyFunctions")
+@file:Suppress("detekt:TooManyFunctions", "NOTHING_TO_INLINE")
 
 package net.ccbluex.liquidbounce.render
 
@@ -33,15 +33,18 @@ import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.mesh.MeshDraw
+import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.bindAndDraw
+import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.toMeshDraw
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.render.begin
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3fc
-import java.util.Collections.singletonMap
 import java.util.function.Function
 
 inline fun <T> usePoseStack(block: PoseStack.() -> T): T {
@@ -91,6 +94,9 @@ class WorldRenderEnvironment(
         uniforms[name] = value
     }
 
+    /**
+     * For texture `Sampler0`
+     */
     fun getOrCreateBuffer(texture: AbstractTexture): BufferBuilder {
         return if (isBatchMode) {
             texQuadsBatchBuffer.computeIfAbsent(texture) {
@@ -98,7 +104,7 @@ class WorldRenderEnvironment(
             }
         } else {
             val pipeline = ClientRenderPipelines.TexQuads
-            Tesselator.getInstance().begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
+            Tesselator.getInstance().begin(pipeline)
         }
     }
 
@@ -106,7 +112,7 @@ class WorldRenderEnvironment(
         return if (isBatchMode) {
             batchBuffer.computeIfAbsent(pipeline, Function(ClientTesselator::begin))
         } else {
-            Tesselator.getInstance().begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
+            Tesselator.getInstance().begin(pipeline)
         }
     }
 
@@ -120,37 +126,99 @@ class WorldRenderEnvironment(
             "Current environment is not in batch mode!"
         }
 
-        batchBuffer.fastIterator().forEach { (pipeline, bufferBuilder) ->
-            bufferBuilder.build()?.let {
-                draw(pipeline, it, emptyMap())
-                ClientTesselator.allocator(pipeline).clear()
-            }
-        }
-        batchBuffer.clear()
-
-        texQuadsBatchBuffer.fastIterator().forEach { (texture, bufferBuilder) ->
-            bufferBuilder.build()?.let {
-                draw(ClientRenderPipelines.TexQuads, it, singletonMap("Sampler0", texture))
-                ClientTesselator.allocator(texture.textureView).clear()
-            }
-        }
-        texQuadsBatchBuffer.clear()
+        val dynamicTransforms = getDynamicTransformsUniform(colorModulator = this.shaderColor)
+        commitPlainBatch(dynamicTransforms)
+        commitTexturedBatch(dynamicTransforms)
 
         uniforms.clear()
     }
 
-    fun draw(
+    private fun commitPlainBatch(dynamicTransforms: GpuBufferSlice) {
+        batchBuffer.fastIterator().forEach { (pipeline, bufferBuilder) ->
+            bufferBuilder.build()?.use {
+                draws.add(pipeline to it.toMeshDraw(pipeline))
+            }
+            ClientTesselator.clear(pipeline)
+        }
+        batchBuffer.clear()
+
+        if (draws.isEmpty()) return
+
+        renderTarget.createRenderPass(
+            { "WorldRenderEnvironment Batch draw" },
+            allowOverride = true,
+        ).use { pass ->
+            pass.setupRenderTypeScissor()
+            pass.bindDefaultUniforms()
+            pass.bindDynamicTransformsUniform(dynamicTransforms)
+            pass.setUniforms(uniforms)
+
+            draws.forEach { (pipeline, meshDraw) ->
+                pass.setPipeline(pipeline as RenderPipeline)
+                pass.bindAndDraw(meshDraw)
+            }
+        }
+
+        draws.clear()
+    }
+
+    private fun commitTexturedBatch(dynamicTransforms: GpuBufferSlice) {
+        val pipeline = ClientRenderPipelines.TexQuads
+        texQuadsBatchBuffer.fastIterator().forEach { (texture, bufferBuilder) ->
+            bufferBuilder.build()?.use {
+                draws.add(texture to it.toMeshDraw(pipeline))
+            }
+            ClientTesselator.clear(texture.textureView)
+        }
+        texQuadsBatchBuffer.clear()
+
+        if (draws.isEmpty()) return
+
+        renderTarget.createRenderPass(
+            { "WorldRenderEnvironment Batch draw" },
+            allowOverride = true,
+        ).use { pass ->
+            pass.setupRenderTypeScissor()
+            pass.bindDefaultUniforms()
+            pass.bindDynamicTransformsUniform(dynamicTransforms)
+            pass.setUniforms(uniforms)
+
+            pass.setPipeline(pipeline)
+            draws.forEach { (texture, meshDraw) ->
+                pass.bindTexture("Sampler0", texture as AbstractTexture)
+                pass.bindAndDraw(meshDraw)
+            }
+        }
+
+        draws.clear()
+    }
+
+    /**
+     * Reference: (1.21.5-10/Yarn: RenderLayer.MultiPhase.draw)
+     * @see net.minecraft.client.renderer.rendertype.RenderType.draw
+     */
+    fun immediateDraw(
         pipeline: RenderPipeline,
         meshData: MeshData,
-        shaderTextureProvider: Map<String, AbstractTexture>,
-    ) = drawMesh(
-        pipeline,
-        meshData,
-        this.renderTarget,
-        colorModulator = shaderColor,
-        shaderTextures = shaderTextureProvider,
-        uniforms = uniforms,
-    )
+        textures: Map<String, AbstractTexture>,
+    ) {
+        val dynamicTransforms = getDynamicTransformsUniform(colorModulator = this.shaderColor)
+        val draw = meshData.use { it.toMeshDraw(pipeline) }
+
+        renderTarget.createRenderPass(
+            { "WorldRenderEnvironment Immediate draw" },
+            allowOverride = true,
+        ).use { pass ->
+            pass.setupRenderTypeScissor()
+            pass.bindDefaultUniforms()
+            pass.bindDynamicTransformsUniform(dynamicTransforms)
+            pass.setUniforms(uniforms)
+
+            pass.setPipeline(pipeline)
+            pass.bindTextures(textures)
+            pass.bindAndDraw(draw)
+        }
+    }
 
     companion object {
         @JvmStatic
@@ -166,6 +234,9 @@ class WorldRenderEnvironment(
 
         @JvmStatic
         private val uniforms = Object2ObjectOpenHashMap<String, GpuBufferSlice>()
+
+        @JvmStatic
+        private val draws = ArrayList<Pair<Any, MeshDraw>>()
     }
 }
 
