@@ -22,10 +22,8 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
-import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.render.begin
@@ -116,9 +114,6 @@ inline fun RenderPassRenderState.buildMesh(
     }
 
     bufferBuilder.build()?.use { meshData ->
-        if (pipeline.vertexFormatMode == VertexFormat.Mode.QUADS) {
-            meshData.sortQuads(this.byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
-        }
         this.uploadAndSet(meshData, pipeline, rotate)
         this.ready = true
     }
