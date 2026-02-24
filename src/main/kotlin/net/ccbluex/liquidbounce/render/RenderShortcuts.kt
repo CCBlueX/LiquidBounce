@@ -21,19 +21,12 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
-import com.mojang.blaze3d.vertex.VertexFormat
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
-import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.fastutil.objectObjectMapOf
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
@@ -49,7 +42,6 @@ import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
-import java.util.function.Supplier
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -192,7 +184,7 @@ inline fun WorldRenderEnvironment.drawCustomMeshTextured(
 
     if (!isBatchMode) {
         buffer.build()?.let {
-            draw(pipeline, it, shaderTextureProvider = objectObjectMapOf("Sampler0", sampler0))
+            immediateDraw(pipeline, it, textures = objectObjectMapOf("Sampler0", sampler0))
         }
     }
 }
@@ -209,7 +201,7 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
 
     if (!isBatchMode) {
         buffer.build()?.let {
-            draw(pipeline, it, emptyMap())
+            immediateDraw(pipeline, it, emptyMap())
         }
     }
 }

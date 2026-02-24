@@ -139,33 +139,3 @@ data class MeshDraw(
 
     }
 }
-
-/**
- * Reference: (1.21.5-10/Yarn: RenderLayer.MultiPhase.draw)
- * @see net.minecraft.client.renderer.rendertype.RenderType.draw
- */
-@Suppress("detekt:all")
-internal fun drawMesh(
-    pipeline: RenderPipeline,
-    meshData: MeshData,
-    renderTarget: RenderTarget = mc.mainRenderTarget,
-    colorModulator: Color4b = Color4b.WHITE,
-    renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
-    shaderTextures: Map<String, AbstractTexture> = emptyMap(),
-    uniforms: Map<String, GpuBufferSlice> = emptyMap(),
-) = meshData.use { meshData ->
-    val dynamicTransforms = getDynamicTransformsUniform(colorModulator = colorModulator)
-
-    val meshDraw = meshData.toMeshDraw(pipeline)
-
-    renderTarget.createRenderPass(renderPassLabelGetter, allowOverride = true).use { pass ->
-        pass.setPipeline(pipeline)
-        pass.setupRenderTypeScissor()
-        pass.bindDefaultUniforms()
-        pass.bindDynamicTransformsUniform(dynamicTransforms)
-        pass.bindTextures(shaderTextures)
-        pass.setUniforms(uniforms)
-
-        pass.bindAndDraw(meshDraw)
-    }
-}
