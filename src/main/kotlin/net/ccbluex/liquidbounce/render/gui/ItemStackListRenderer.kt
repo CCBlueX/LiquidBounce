@@ -127,14 +127,14 @@ object ItemStackListRenderer : EventListener {
     }
 
     private fun fillBackground(
-        drawContext: GuiGraphics,
+        guiGraphics: GuiGraphics,
         width: Int,
         height: Int,
         color: Color4b,
         outlineColor: Color4b,
         margin: Float,
     ) {
-        drawContext.drawQuad(
+        guiGraphics.drawQuad(
             -margin,
             -margin,
             width + margin,
@@ -144,8 +144,8 @@ object ItemStackListRenderer : EventListener {
         )
     }
 
-    private fun drawSlotTexture(drawContext: GuiGraphics, x: Int, y: Int) {
-        drawContext.blitSprite(
+    private fun drawSlotTexture(guiGraphics: GuiGraphics, x: Int, y: Int) {
+        guiGraphics.blitSprite(
             RenderPipelines.GUI_TEXTURED,
             ID_SINGLE_SLOT,
             x,
@@ -162,10 +162,10 @@ object ItemStackListRenderer : EventListener {
         centerX: Float,
         centerY: Float,
     ) {
-        val drawContext = state.drawContext
+        val guiGraphics = state.guiGraphics
         val size = if (state.useTexture) SLOT_SIZE else ITEM_SIZE
 
-        drawContext.pose().withPush {
+        guiGraphics.pose().withPush {
             val width = dimensions.width
             val height = dimensions.height
 
@@ -175,7 +175,7 @@ object ItemStackListRenderer : EventListener {
 
             if (!state.useTexture) {
                 fillBackground(
-                    drawContext = drawContext,
+                    guiGraphics = guiGraphics,
                     width = width,
                     height = height,
                     color = state.backgroundColor,
@@ -185,7 +185,7 @@ object ItemStackListRenderer : EventListener {
             }
 
             state.title?.let { title ->
-                drawContext.drawCenteredString(textRenderer, title, width / 2, 0, state.titleColor)
+                guiGraphics.drawCenteredString(textRenderer, title, width / 2, 0, state.titleColor)
                 translate(0F, textRenderer.lineHeight + 2F)
             }
 
@@ -194,12 +194,12 @@ object ItemStackListRenderer : EventListener {
                 val leftX = i % state.rowLength * size
                 val topY = i / state.rowLength * size
                 if (state.useTexture) {
-                    drawSlotTexture(drawContext, leftX, topY)
+                    drawSlotTexture(guiGraphics, leftX, topY)
                 }
 
                 val diff = if (state.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
                 with(state.itemStackRenderer) {
-                    drawContext.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
+                    guiGraphics.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
                 }
             }
         }

@@ -26,7 +26,7 @@ import net.minecraft.world.item.ItemStack
 import org.joml.Vector2fc
 
 data class ItemStackListRenderState internal constructor(
-    internal val drawContext: GuiGraphics,
+    internal val guiGraphics: GuiGraphics,
     internal val stacks: List<ItemStack>,
     internal val title: Component? = null,
     internal val titleColor: Int = 0xffffffff.toInt(),
