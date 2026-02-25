@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
+import com.mojang.blaze3d.pipeline.ColorTargetState
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.asTextureSetup
 import net.ccbluex.liquidbounce.utils.render.asView
@@ -217,8 +218,8 @@ sealed interface ThemeBackground : Closeable {
                     .screenQuadSnippet()
                     .withFragmentShader(fshId)
                     .withUniformBuffer(ClientUniformDefine.THEME_BACKGROUND)
-                    .withoutBlend()
-                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+                    .withColorTargetState(ColorTargetState.DEFAULT)
+                    .withDepthStencilState(optional())
                     .build()
 
                 return Shader(metadata, pipeline, fshId, fragmentShader)

@@ -102,17 +102,6 @@ public abstract class MixinMinecraft {
     @Nullable
     public MultiPlayerGameMode gameMode;
 
-    @Inject(method = "useAmbientOcclusion()Z", at = @At("HEAD"), cancellable = true)
-    private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
-        ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning() || !module.getFullBright()) {
-            return;
-        }
-
-        callback.setReturnValue(false);
-        callback.cancel();
-    }
-
     @Shadow
     @Nullable
     public abstract ClientPacketListener getConnection();
