@@ -36,15 +36,12 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.gui.screens.achievement.StatsScreen
 import net.minecraft.client.renderer.RenderPipelines
-import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
-import org.joml.Vector2fc
-import org.joml.Vector2i
 import kotlin.math.abs
 
 /**
@@ -59,98 +56,93 @@ private const val ITEM_SIZE = GuiRenderer.DEFAULT_ITEM_SIZE
 private val ID_SINGLE_SLOT = Identifier.withDefaultNamespace("container/slot")
 
 @Suppress("TooManyFunctions")
-class ItemStackListRenderer private constructor(
-    private val drawContext: GuiGraphics,
-    private val stacks: List<ItemStack>,
-) {
-    private var title: Component? = null
-    private var titleColor: Int = 0xffffffff.toInt()
-    private var centerX = 0F
-    private var centerY = 0F
-    private var scale = 1.0F
-    private var rowLength = 9
-    private var backgroundColor = Color4b.DEFAULT_BG_COLOR
-    private var backgroundOutlineColor = Color4b.TRANSPARENT
-    private var backgroundMargin = 2.0F
-    private var useTexture = false
-    private var itemStackRenderer = SingleItemStackRenderer.All
+object ItemStackListRenderer : EventListener {
 
-    // Unscaled, without margin
-    private val dimensions = Vector2i()
+    private data class MeasuredDimensions(
+        val width: Int,
+        val height: Int,
+    )
+
+    private data class PlannedRender(
+        val state: ItemStackListRenderState,
+        val dimensions: MeasuredDimensions,
+        var centerX: Float = state.centerX,
+        var centerY: Float = state.centerY,
+    )
+
     private val textRenderer = mc.font
+    private val planned = ArrayList<PlannedRender>()
 
-    @JvmOverloads
-    fun title(title: Component?, color: Int = this.titleColor) = apply {
-        this.title = title
-        this.titleColor = color
+    // y -> x
+    private val comparator = Comparator<PlannedRender> { o1, o2 ->
+        when {
+            o1.centerY != o2.centerY -> o1.centerY.compareTo(o2.centerY)
+            else -> o1.centerX.compareTo(o2.centerX)
+        }
     }
 
-    fun centerX(centerX: Float) = apply {
-        this.centerX = centerX
+    private const val MAX_ITER = 16
+
+    @JvmStatic
+    @JvmName("create")
+    fun GuiGraphics.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderState {
+        return ItemStackListRenderState(this, stacks)
     }
 
-    fun centerY(centerY: Float) = apply {
-        this.centerY = centerY
+    @JvmStatic
+    @JvmName("create")
+    fun GuiGraphics.drawItemStackList(stacks: Array<ItemStack>): ItemStackListRenderState =
+        drawItemStackList(stacks.asList())
+
+    @JvmStatic
+    fun Block.createItemStackForRendering(count: Int): ItemStack {
+        return ItemStack(block2Item.getOrDefault(this, this.asItem()), count)
     }
 
-    fun center(center: Vector2fc) = apply {
-        this.centerX = center.x()
-        this.centerY = center.y()
-    }
+    internal fun draw(state: ItemStackListRenderState, rearrange: Boolean) {
+        if (state.stacks.isEmpty() && state.title == null) return
 
-    /**
-     * @param rowLength The maximum count of stack which can be placed in one row.
-     */
-    fun rowLength(rowLength: Int) = apply {
-        require(rowLength > 0) { "Row length must not be greater than zero." }
-        this.rowLength = rowLength
-    }
-
-    fun scale(scale: Float) = apply {
-        this.scale = scale
-    }
-
-    @JvmOverloads
-    fun rectBackground(
-        color: Color4b,
-        outlineColor: Color4b = Color4b.TRANSPARENT,
-        margin: Float = this.backgroundMargin,
-    ) = apply {
-        this.backgroundColor = color
-        this.backgroundOutlineColor = outlineColor
-        this.backgroundMargin = margin
-        this.useTexture = false
-    }
-
-    fun textureBackground() = apply {
-        this.useTexture = true
-        this.backgroundColor = Color4b.TRANSPARENT
-        this.backgroundOutlineColor = Color4b.TRANSPARENT
-        this.backgroundMargin = 0F
-    }
-
-    fun background(choice: BackgroundMode) =
-        when (choice) {
-            is BackgroundMode.Rect -> rectBackground(choice.fillColor, choice.outlineColor, choice.margin)
-            is BackgroundMode.Texture -> textureBackground()
+        val dimensions = measure(state)
+        if (!rearrange) {
+            drawNow(state, dimensions, state.centerX, state.centerY)
+            return
         }
 
-    fun itemStackRenderer(itemStackRenderer: SingleItemStackRenderer) = apply {
-        this.itemStackRenderer = itemStackRenderer
+        planned += PlannedRender(state, dimensions)
     }
 
-    private fun fillBackground(width: Int, height: Int) {
+    private fun measure(state: ItemStackListRenderState): MeasuredDimensions {
+        val size = if (state.useTexture) SLOT_SIZE else ITEM_SIZE
+        var width = size * minOf(state.stacks.size, state.rowLength)
+        var height = size * (state.stacks.size / state.rowLength + if (state.stacks.size % state.rowLength != 0) 1 else 0)
+
+        state.title?.let { title ->
+            width = maxOf(width, textRenderer.width(title))
+            height += textRenderer.lineHeight + (if (state.stacks.isEmpty()) 0 else 2)
+        }
+
+        return MeasuredDimensions(width, height)
+    }
+
+    private fun fillBackground(
+        drawContext: GuiGraphics,
+        width: Int,
+        height: Int,
+        color: Color4b,
+        outlineColor: Color4b,
+        margin: Float,
+    ) {
         drawContext.drawQuad(
-            -backgroundMargin,
-            -backgroundMargin,
-            width + backgroundMargin,
-            height + backgroundMargin,
-            backgroundColor,
-            backgroundOutlineColor,
+            -margin,
+            -margin,
+            width + margin,
+            height + margin,
+            color,
+            outlineColor,
         )
     }
 
-    private fun drawSlotTexture(x: Int, y: Int) {
+    private fun drawSlotTexture(drawContext: GuiGraphics, x: Int, y: Int) {
         drawContext.blitSprite(
             RenderPipelines.GUI_TEXTURED,
             ID_SINGLE_SLOT,
@@ -162,38 +154,49 @@ class ItemStackListRenderer private constructor(
     }
 
     @Suppress("CognitiveComplexMethod")
-    private fun drawNow() {
-        if (stacks.isEmpty() && title == null) return
-
-        val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
+    private fun drawNow(
+        state: ItemStackListRenderState,
+        dimensions: MeasuredDimensions,
+        centerX: Float,
+        centerY: Float,
+    ) {
+        val drawContext = state.drawContext
+        val size = if (state.useTexture) SLOT_SIZE else ITEM_SIZE
 
         drawContext.pose().withPush {
-            val width = dimensions.x
-            val height = dimensions.y
+            val width = dimensions.width
+            val height = dimensions.height
 
             translate(centerX, centerY)
-            scale(scale, scale)
+            scale(state.scale, state.scale)
             translate(-width * 0.5F, -height * 0.5F)
 
-            if (!useTexture) {
-                fillBackground(width, height)
+            if (!state.useTexture) {
+                fillBackground(
+                    drawContext = drawContext,
+                    width = width,
+                    height = height,
+                    color = state.backgroundColor,
+                    outlineColor = state.backgroundOutlineColor,
+                    margin = state.backgroundMargin,
+                )
             }
 
-            title?.let { title ->
-                drawContext.drawCenteredString(textRenderer, title, width / 2, 0, titleColor)
+            state.title?.let { title ->
+                drawContext.drawCenteredString(textRenderer, title, width / 2, 0, state.titleColor)
                 translate(0F, textRenderer.lineHeight + 2F)
             }
 
             // render stacks
-            for ((i, stack) in stacks.withIndex()) {
-                val leftX = i % rowLength * size
-                val topY = i / rowLength * size
-                if (useTexture) {
-                    drawSlotTexture(leftX, topY)
+            for ((i, stack) in state.stacks.withIndex()) {
+                val leftX = i % state.rowLength * size
+                val topY = i / state.rowLength * size
+                if (state.useTexture) {
+                    drawSlotTexture(drawContext, leftX, topY)
                 }
 
-                val diff = if (useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
-                with(itemStackRenderer) {
+                val diff = if (state.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
+                with(state.itemStackRenderer) {
                     drawContext.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
                 }
             }
@@ -201,121 +204,73 @@ class ItemStackListRenderer private constructor(
     }
 
     /**
-     * Add this render config to plan or draw immediately.
-     * All planned renderer will adjust their position to avoid overlapping.
-     * [drawNow] will be called later.
+     * Calculates overlap rectangles
      */
-    @JvmOverloads
-    fun draw(rearrange: Boolean = false) {
-        val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
-        var width = size * minOf(stacks.size, rowLength)
-        var height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
+    @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
+    private fun adjustPlannedPositions() {
+        var iter = 0
+        while (iter++ < MAX_ITER) {
+            var moved = false
 
-        title?.let { title ->
-            width = maxOf(width, textRenderer.width(title))
-            height += textRenderer.lineHeight + (if (stacks.isEmpty()) 0 else 2)
-        }
+            for (i in 0 until planned.size) {
+                for (j in i + 1 until planned.size) {
+                    val a = planned[i]
+                    val b = planned[j]
 
-        this.dimensions.set(width, height)
+                    val ax = a.centerX
+                    val ay = a.centerY
+                    val bx = b.centerX
+                    val by = b.centerY
+                    val aw = (a.dimensions.width + a.state.backgroundMargin * 2F) * a.state.scale
+                    val ah = (a.dimensions.height + a.state.backgroundMargin * 2F) * a.state.scale
+                    val bw = (b.dimensions.width + b.state.backgroundMargin * 2F) * b.state.scale
+                    val bh = (b.dimensions.height + b.state.backgroundMargin * 2F) * b.state.scale
+                    val dx = (aw + bw) / 2 - abs(ax - bx)
+                    val dy = (ah + bh) / 2 - abs(ay - by)
+                    if (dx > 0 && dy > 0) {
+                        if (dx < dy) {
+                            b.centerX = bx + (if (ax < bx) dx else -dx)
+                        } else {
+                            b.centerY = by + (if (ay < by) dy else -dy)
+                        }
+                        moved = true
+                    }
+                }
+            }
 
-        if (!rearrange) {
-            drawNow()
-        } else {
-            planned += this
+            if (!moved) {
+                break
+            }
         }
     }
 
-    companion object : EventListener {
-        private val planned = ArrayList<ItemStackListRenderer>()
+    @Suppress("unused")
+    private val overlayRenderHandler = handler<OverlayRenderEvent>(READ_FINAL_STATE) { _ ->
+        if (planned.isEmpty()) return@handler
 
-        // y -> x
-        private val comparator = Comparator<ItemStackListRenderer> { o1, o2 ->
-            when {
-                o1.centerY != o2.centerY -> o1.centerY.compareTo(o2.centerY)
-                else -> o1.centerX.compareTo(o2.centerX)
+        try {
+            if (planned.size > 1) {
+                planned.sortWith(comparator)
+                adjustPlannedPositions()
             }
-        }
 
-        private const val MAX_ITER = 100
-
-        /**
-         * Calculates overlap rectangles
-         */
-        @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
-        private fun adjustPlannedPositions() {
-            var iter = 0
-            var moved = false
-            while (iter++ < MAX_ITER) {
-                for (i in 0 until planned.size) {
-                    for (j in i + 1 until planned.size) {
-                        val a = planned[i]
-                        val b = planned[j]
-
-                        val ax = a.centerX
-                        val ay = a.centerY
-                        val bx = b.centerX
-                        val by = b.centerY
-                        val aw = (a.dimensions.x + a.backgroundMargin * 2) * a.scale
-                        val ah = (a.dimensions.y + a.backgroundMargin * 2) * a.scale
-                        val bw = (b.dimensions.x + b.backgroundMargin * 2) * b.scale
-                        val bh = (b.dimensions.y + b.backgroundMargin * 2) * b.scale
-                        val dx = (aw + bw) / 2 - abs(ax - bx)
-                        val dy = (ah + bh) / 2 - abs(ay - by)
-                        if (dx > 0 && dy > 0) {
-                            if (dx < dy) {
-                                b.centerX = bx + (if (ax < bx) dx else -dx)
-                            } else {
-                                b.centerY = by + (if (ay < by) dy else -dy)
-                            }
-                            moved = true
-                        }
-                    }
-                }
-                if (!moved) {
-                    break
-                }
+            planned.forEach { plannedRender ->
+                drawNow(
+                    state = plannedRender.state,
+                    dimensions = plannedRender.dimensions,
+                    centerX = plannedRender.centerX,
+                    centerY = plannedRender.centerY,
+                )
             }
+        } finally {
+            planned.clear()
         }
+    }
 
-        @Suppress("unused")
-        private val overlayRenderHandler = handler<OverlayRenderEvent>(READ_FINAL_STATE) { event ->
-            when (planned.size) {
-                0 -> return@handler
-                1 -> {
-                    planned[0].drawNow()
-                    planned.clear()
-                }
-
-                else -> {
-                    planned.sortWith(comparator)
-                    adjustPlannedPositions()
-                    planned.forEach { it.drawNow() }
-                    planned.clear()
-                }
-            }
-        }
-
-        @JvmStatic
-        private val block2Item = Reference2ReferenceOpenHashMap<Block, Item>().apply {
-            put(Blocks.WATER, Items.WATER_BUCKET)
-            put(Blocks.LAVA, Items.LAVA_BUCKET)
-        }
-
-        @JvmStatic
-        @JvmName("create")
-        fun GuiGraphics.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderer {
-            return ItemStackListRenderer(this, stacks)
-        }
-
-        @JvmStatic
-        @JvmName("create")
-        fun GuiGraphics.drawItemStackList(stacks: Array<ItemStack>): ItemStackListRenderer =
-            drawItemStackList(stacks.asList())
-
-        @JvmStatic
-        fun Block.createItemStackForRendering(count: Int): ItemStack {
-            return ItemStack(block2Item.getOrDefault(this, this.asItem()), count)
-        }
+    @JvmStatic
+    private val block2Item = Reference2ReferenceOpenHashMap<Block, Item>().apply {
+        put(Blocks.WATER, Items.WATER_BUCKET)
+        put(Blocks.LAVA, Items.LAVA_BUCKET)
     }
 
     sealed class BackgroundMode(name: String, override val parent: ModeValueGroup<*>) : Mode(name) {
@@ -361,7 +316,7 @@ class ItemStackListRenderer private constructor(
                 drawStackCount: Boolean = true,
                 drawCooldownProgress: Boolean = true,
             ): SingleItemStackRenderer {
-                return SingleItemStackRenderer { textRenderer, index, stack, x, y ->
+                return SingleItemStackRenderer { textRenderer, _, stack, x, y ->
                     if (stack.isEmpty) return@SingleItemStackRenderer
                     renderItem(stack, x, y)
                     pose().withPush {
@@ -373,5 +328,4 @@ class ItemStackListRenderer private constructor(
             }
         }
     }
-
 }
