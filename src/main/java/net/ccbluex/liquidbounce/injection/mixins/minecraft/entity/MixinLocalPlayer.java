@@ -426,12 +426,6 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return event.getSprint();
     }
 
-    // canStartSprinting calls canSprint(boolean) which then checks for blindness
-    @ModifyExpressionValue(method = "isSprintingPossible(Z)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isMobilityRestricted()Z"))
-    private boolean hookSprintIgnoreBlindness(boolean original) {
-        return !ModuleSprint.INSTANCE.getShouldIgnoreBlindness() && original;
-    }
-
     @ModifyExpressionValue(method = "shouldStopRunSprinting", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;horizontalCollision:Z"))
     private boolean hookSprintIgnoreCollision(boolean original) {
         return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
