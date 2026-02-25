@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.render.drawCustomElement
 import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
-import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner

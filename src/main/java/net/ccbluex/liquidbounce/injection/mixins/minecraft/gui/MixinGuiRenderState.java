@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.ccbluex.liquidbounce.utils.collection.Pools;
-import net.ccbluex.liquidbounce.utils.render.LiquidBounceGuiElementRenderState;
+import net.ccbluex.liquidbounce.render.gui.element.LiquidBounceGuiElementRenderState;
 import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.gui.render.state.ScreenArea;
 import org.spongepowered.asm.mixin.Final;

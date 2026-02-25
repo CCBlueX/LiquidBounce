@@ -17,14 +17,16 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.render
+package net.ccbluex.liquidbounce.render.gui.element;
 
-import com.mojang.blaze3d.vertex.VertexConsumer
-import org.joml.Matrix3x2f
+import net.minecraft.client.gui.render.state.GuiElementRenderState;
+import org.joml.Matrix3x2f;
 
-/**
- * @see net.ccbluex.liquidbounce.render.gui.element.LambdaSimpleGuiElementRenderState
- */
-fun interface VerticesSetupHandler {
-    fun VertexConsumer.setupVertices(pose: Matrix3x2f)
+public sealed interface LiquidBounceGuiElementRenderState
+    extends GuiElementRenderState
+    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState {
+    /**
+     * Recyclable pose matrix.
+     */
+    Matrix3x2f pose();
 }

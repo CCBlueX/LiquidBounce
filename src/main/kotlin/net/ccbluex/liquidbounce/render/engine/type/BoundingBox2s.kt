@@ -17,14 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.render
+package net.ccbluex.liquidbounce.render.engine.type
 
-import com.mojang.blaze3d.vertex.VertexConsumer
-import org.joml.Matrix3x2f
-
-/**
- * @see net.ccbluex.liquidbounce.render.gui.element.LambdaSimpleGuiElementRenderState
- */
-fun interface VerticesSetupHandler {
-    fun VertexConsumer.setupVertices(pose: Matrix3x2f)
+@JvmRecord
+data class BoundingBox2s(val min: UV2f, val max: UV2f) {
+    constructor(rect: BoundingBox2f) : this(
+        UV2f(
+            rect.xMin,
+            rect.yMin
+        ),
+        UV2f(
+            rect.xMax,
+            rect.yMax
+        )
+    )
 }

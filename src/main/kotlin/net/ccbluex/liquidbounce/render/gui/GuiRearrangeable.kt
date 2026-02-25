@@ -17,5 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@org.jspecify.annotations.NullMarked
-package net.ccbluex.liquidbounce.utils.render;
+package net.ccbluex.liquidbounce.render.gui
+
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
+
+interface GuiRearrangeable {
+    var bounds: BoundingBox2f
+}
