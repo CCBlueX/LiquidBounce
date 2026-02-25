@@ -42,7 +42,8 @@ internal object ItemStackListLayout {
         val textRenderer = mc.font
         val size = if (state.useTexture) ITEM_STACK_SLOT_SIZE else ITEM_STACK_ITEM_SIZE
         var width = size * minOf(state.stacks.size, state.rowLength)
-        var height = size * (state.stacks.size / state.rowLength + if (state.stacks.size % state.rowLength != 0) 1 else 0)
+        var height = size * (state.stacks.size / state.rowLength +
+            if (state.stacks.size % state.rowLength != 0) 1 else 0)
 
         state.title?.let { title ->
             width = maxOf(width, textRenderer.width(title))

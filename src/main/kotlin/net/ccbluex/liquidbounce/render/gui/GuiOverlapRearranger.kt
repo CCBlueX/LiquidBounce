@@ -28,6 +28,7 @@ class GuiOverlapRearranger(
         require(maxIter > 0) { "maxIter must be greater than zero." }
     }
 
+    @Suppress("NestedBlockDepth", "CognitiveComplexMethod")
     fun rearrange(elements: Collection<GuiRearrangeable>) {
         if (elements.size <= 1) {
             return
