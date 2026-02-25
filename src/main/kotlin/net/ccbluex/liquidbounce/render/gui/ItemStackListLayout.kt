@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.gui.screens.achievement.StatsScreen
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
-import net.minecraft.world.phys.Vec2
 
 /**
  * @see StatsScreen.ItemStatisticsList.SLOT_BG_SIZE
@@ -67,7 +66,4 @@ internal object ItemStackListLayout {
         )
     }
 
-    fun computeCenter(bounds: BoundingBox2f): Vec2 {
-        return Vec2(bounds.xCenter, bounds.yCenter)
-    }
 }

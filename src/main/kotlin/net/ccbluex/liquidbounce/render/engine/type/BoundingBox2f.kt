@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.type
 
+import net.minecraft.world.phys.Vec2
 import java.awt.geom.Rectangle2D
 
 @JvmRecord
@@ -50,6 +51,9 @@ data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val 
 
     val yCenter: Float
         get() = yMin + height * 0.5F
+
+    val centerVec: Vec2
+        get() = Vec2(xCenter, yCenter)
 
     infix fun intersects(other: BoundingBox2f): Boolean {
         return xMin < other.xMax && xMax > other.xMin && yMin < other.yMax && yMax > other.yMin
