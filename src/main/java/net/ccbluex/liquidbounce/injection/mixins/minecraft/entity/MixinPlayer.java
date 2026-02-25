@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint;
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX;
@@ -98,6 +99,13 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     private void injectReducedDebugInfo(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         if (ModuleAntiReducedDebugInfo.INSTANCE.getRunning()) {
             callbackInfoReturnable.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "isMobilityRestricted", at = @At("HEAD"), cancellable = true)
+    private void hookSprintIgnoreBlindness(CallbackInfoReturnable<Boolean> cir) {
+        if ((Object) this == Minecraft.getInstance().player && ModuleSprint.INSTANCE.getShouldIgnoreBlindness()) {
+            cir.setReturnValue(false);
         }
     }
 
