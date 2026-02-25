@@ -19,7 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.pipeline.BlendFunction
+import com.mojang.blaze3d.pipeline.ColorTargetState
+import com.mojang.blaze3d.pipeline.DepthStencilState
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.platform.CompareOp
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
@@ -37,9 +40,10 @@ import java.util.function.Function
  */
 object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER) {
 
+    private val depthStencilState = DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, 1F, -10000000F)
+
     private inline fun RenderPipeline.Builder.forChams() {
-//        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withDepthBias(1f, -10000000F)
+        withDepthStencilState(depthStencilState)
     }
 
     private val PIPELINE_ENTITY_TRANSLUCENT: RenderPipeline =
@@ -48,7 +52,7 @@ object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER) {
             withShaderDefine("ALPHA_CUTOUT", 0.1F)
             withShaderDefine("PER_FACE_LIGHTING")
             withSampler("Sampler1")
-            withBlend(BlendFunction.TRANSLUCENT)
+            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
             withCull(false)
             forChams()
         }
