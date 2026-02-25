@@ -76,6 +76,7 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -159,9 +160,11 @@ object LiquidBounce : EventListener {
 
     /**
      * Creates an [net.minecraft.resources.Identifier] starts with [CLIENT_NAME].
+     *
+     * Warning: Use [clientIdentifier] to prevent silent `<clinit>` invocation
      */
     @JvmStatic
-    fun identifier(path: String): Identifier = Identifier.fromNamespaceAndPath(CLIENT_NAME.lowercase(Locale.ROOT), path)
+    fun identifier(path: String): Identifier = clientIdentifier(path)
 
     /**
      * Gets client resource.

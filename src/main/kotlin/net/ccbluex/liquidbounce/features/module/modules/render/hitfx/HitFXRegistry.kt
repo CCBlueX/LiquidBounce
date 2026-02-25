@@ -21,48 +21,78 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hitfx
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundEvents
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 
-object HitFXRegistry {
-
-    val BONK = register("bonk")
-    val POP = register("pop")
-    val UWU = register("uwu")
-    val NYA = register("nya")
-    val TUNG = register("tung")
-    val MEOW = register("meow")
-    val BRING = register("bring")
-    val SOFT = register("soft")
-    val SQUASH = register("squash")
-    val MAGICSQUASH = register("magicsquash")
-
-    val CLICK = register("click-1", "click-2", "click-3")
-    val BOYKISSER = register(
+@Suppress("unused")
+enum class HitFXRegistry(
+    override val tag: String,
+    private val vanillaSounds: Array<SoundEvent> = emptyArray(),
+    private val customSoundIds: Array<String> = emptyArray()
+) : Tagged {
+    HIT("Hit", vanillaSounds = arrayOf(SoundEvents.ARROW_HIT)),
+    ORB("Orb", vanillaSounds = arrayOf(SoundEvents.EXPERIENCE_ORB_PICKUP)),
+    BONK("Bonk", customSoundIds = arrayOf("bonk")),
+    BOYKISSER("Boykisser", customSoundIds = arrayOf(
         "boykisser-1",
         "boykisser-2",
         "boykisser-3",
         "boykisser-4",
         "boykisser-5",
         "boykisser-6"
-    )
-    val GLASS = register("glass-1", "glass-2", "glass-3")
-    val MOAN = register("moan-1", "moan-2", "moan-3", "moan-4")
+    )),
+    BRING("Bring", customSoundIds = arrayOf("bring")),
+    GLASS("Glass", customSoundIds = arrayOf("glass-1", "glass-2", "glass-3")),
+    CLICK("Click", customSoundIds = arrayOf("click-1", "click-2", "click-3")),
+    MEOW("Meow", customSoundIds = arrayOf("meow")),
+    MOAN("Moan", customSoundIds = arrayOf("moan-1", "moan-2", "moan-3", "moan-4")),
+    MAGIC_SQUASH("MagicSquash", customSoundIds = arrayOf("magic_squash")),
+    NYA("NYA", customSoundIds = arrayOf("nya")),
+    POP("Pop", customSoundIds = arrayOf("pop")),
+    SOFT("Soft", customSoundIds = arrayOf("soft")),
+    SQUASH("Squash", customSoundIds = arrayOf("squash")),
+    TUNG("Tung", customSoundIds = arrayOf("tung")),
+    UWU("UWU", customSoundIds = arrayOf("uwu"));
 
-    fun init() {
-        logger.info("HitFXRegistry initialized")
+    var sounds: Array<SoundEvent> = vanillaSounds
+        private set
+
+    companion object {
+        private val customSounds = mutableListOf<SoundEvent>()
+
+        private var registered = false
+
+        @JvmStatic
+        fun registerAll() {
+            if (registered) {
+                return
+            }
+
+            for (type in entries) {
+                type.sounds = registerCustom(type.customSoundIds.ifEmpty { continue })
+            }
+
+            registered = true
+            logger.info("HitFXRegistry initialized ${customSounds.size} custom sounds.")
+        }
+
+        private fun registerCustom(ids: Array<out String>): Array<SoundEvent> = ids.mapToArray { id ->
+            val soundId = clientIdentifier(id)
+
+            Registry.register(
+                BuiltInRegistries.SOUND_EVENT,
+                soundId,
+                SoundEvent.createVariableRangeEvent(soundId)
+            ).also(customSounds::add)
+        }
     }
-
-    private fun register(vararg ids: String) = ids.mapToArray { id ->
-        val soundId = LiquidBounce.identifier(id)
-
-        Registry.register(
-            BuiltInRegistries.SOUND_EVENT,
-            soundId,
-            SoundEvent.createVariableRangeEvent(soundId)
-        )
-    }
-
 }
