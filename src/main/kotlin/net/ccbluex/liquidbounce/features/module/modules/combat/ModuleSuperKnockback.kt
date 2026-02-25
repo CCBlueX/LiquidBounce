@@ -132,7 +132,10 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
 
             this@SprintTap.debugParameter("State") { "Disallowing Sprint" }
             cancelSprint = true
-            tickUntil { !player.isSprinting && !player.wasSprinting }
+            tickUntil {
+                val player = mc.player ?: return@tickUntil true
+                !player.isSprinting && !player.wasSprinting
+            }
             this@SprintTap.debugParameter("State") { "Waiting for ReSprint" }
             waitTicks(reSprintTicks.random())
             this@SprintTap.debugParameter("State") { "Allowing Sprint" }

@@ -21,8 +21,11 @@ package net.ccbluex.liquidbounce.event
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.ReportedException
+import org.slf4j.LoggerFactory
 import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
 import java.util.function.Predicate
@@ -31,6 +34,8 @@ import kotlin.coroutines.resume
 typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
 
 object CoroutineTicker : EventListener {
+
+    private val logger = LoggerFactory.getLogger("$CLIENT_NAME/CoroutineTicker")
 
     // Running callbacks
     private val runningList = ReferenceArrayList<BooleanSupplier>()
@@ -54,7 +59,16 @@ object CoroutineTicker : EventListener {
     fun tick() {
         runningList.addAll(pendingList)
         pendingList.clear()
-        runningList.removeIf(Predicate(BooleanSupplier::getAsBoolean))
+        runningList.removeIf(Predicate {
+            try {
+                it.asBoolean
+            } catch (e: ReportedException) {
+                throw e
+            } catch (e: Throwable) {
+                logger.error("Unhandled exception thrown by callback", e)
+                false
+            }
+        })
     }
 
 }
