@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
+import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.netty.http.model.RequestObject
