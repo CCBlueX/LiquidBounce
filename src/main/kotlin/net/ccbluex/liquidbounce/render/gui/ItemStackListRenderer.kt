@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.gui.screens.achievement.StatsScreen
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -44,13 +43,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
-import kotlin.math.abs
-
-/**
- * @see StatsScreen.ItemStatisticsList.SLOT_BG_SIZE
- */
-private const val SLOT_SIZE = 18
-private const val ITEM_SIZE = GuiRenderer.DEFAULT_ITEM_SIZE
 
 /**
  * @see StatsScreen.SLOT_SPRITE
@@ -60,30 +52,9 @@ private val ID_SINGLE_SLOT = Identifier.withDefaultNamespace("container/slot")
 @Suppress("TooManyFunctions")
 object ItemStackListRenderer : EventListener {
 
-    private data class MeasuredDimensions(
-        val width: Int,
-        val height: Int,
-    )
-
-    private data class PlannedRender(
-        val state: ItemStackListRenderState,
-        val dimensions: MeasuredDimensions,
-        var centerX: Float = state.centerX,
-        var centerY: Float = state.centerY,
-    )
-
     private val textRenderer = mc.font
-    private val planned = ArrayList<PlannedRender>()
-
-    // y -> x
-    private val comparator = Comparator<PlannedRender> { o1, o2 ->
-        when {
-            o1.centerY != o2.centerY -> o1.centerY.compareTo(o2.centerY)
-            else -> o1.centerX.compareTo(o2.centerX)
-        }
-    }
-
-    private const val MAX_ITER = 16
+    private val planned = ArrayList<ItemStackListRenderState>()
+    private val overlapRearranger = GuiOverlapRearranger()
 
     @JvmStatic
     @JvmName("create")
@@ -104,26 +75,12 @@ object ItemStackListRenderer : EventListener {
     internal fun draw(state: ItemStackListRenderState, rearrange: Boolean) {
         if (state.stacks.isEmpty() && state.title == null) return
 
-        val dimensions = measure(state)
         if (!rearrange) {
-            drawNow(state, dimensions, state.centerX, state.centerY)
+            drawNow(state, state.bounds.xCenter, state.bounds.yCenter)
             return
         }
 
-        planned += PlannedRender(state, dimensions)
-    }
-
-    private fun measure(state: ItemStackListRenderState): MeasuredDimensions {
-        val size = if (state.useTexture) SLOT_SIZE else ITEM_SIZE
-        var width = size * minOf(state.stacks.size, state.rowLength)
-        var height = size * (state.stacks.size / state.rowLength + if (state.stacks.size % state.rowLength != 0) 1 else 0)
-
-        state.title?.let { title ->
-            width = maxOf(width, textRenderer.width(title))
-            height += textRenderer.lineHeight + (if (state.stacks.isEmpty()) 0 else 2)
-        }
-
-        return MeasuredDimensions(width, height)
+        planned += state.copy()
     }
 
     private fun fillBackground(
@@ -150,20 +107,20 @@ object ItemStackListRenderer : EventListener {
             ID_SINGLE_SLOT,
             x,
             y,
-            SLOT_SIZE,
-            SLOT_SIZE,
+            ITEM_STACK_SLOT_SIZE,
+            ITEM_STACK_SLOT_SIZE,
         )
     }
 
     @Suppress("CognitiveComplexMethod")
     private fun drawNow(
         state: ItemStackListRenderState,
-        dimensions: MeasuredDimensions,
         centerX: Float,
         centerY: Float,
     ) {
         val guiGraphics = state.guiGraphics
-        val size = if (state.useTexture) SLOT_SIZE else ITEM_SIZE
+        val size = if (state.useTexture) ITEM_STACK_SLOT_SIZE else ITEM_STACK_ITEM_SIZE
+        val dimensions = ItemStackListLayout.measureContent(state)
 
         guiGraphics.pose().withPush {
             val width = dimensions.width
@@ -189,7 +146,6 @@ object ItemStackListRenderer : EventListener {
                 translate(0F, textRenderer.lineHeight + 2F)
             }
 
-            // render stacks
             for ((i, stack) in state.stacks.withIndex()) {
                 val leftX = i % state.rowLength * size
                 val topY = i / state.rowLength * size
@@ -197,51 +153,10 @@ object ItemStackListRenderer : EventListener {
                     drawSlotTexture(guiGraphics, leftX, topY)
                 }
 
-                val diff = if (state.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
+                val diff = if (state.useTexture) (ITEM_STACK_SLOT_SIZE - ITEM_STACK_ITEM_SIZE) / 2 else 0
                 with(state.itemStackRenderer) {
                     guiGraphics.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
                 }
-            }
-        }
-    }
-
-    /**
-     * Calculates overlap rectangles
-     */
-    @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
-    private fun adjustPlannedPositions() {
-        var iter = 0
-        while (iter++ < MAX_ITER) {
-            var moved = false
-
-            for (i in 0 until planned.size) {
-                for (j in i + 1 until planned.size) {
-                    val a = planned[i]
-                    val b = planned[j]
-
-                    val ax = a.centerX
-                    val ay = a.centerY
-                    val bx = b.centerX
-                    val by = b.centerY
-                    val aw = (a.dimensions.width + a.state.backgroundMargin * 2F) * a.state.scale
-                    val ah = (a.dimensions.height + a.state.backgroundMargin * 2F) * a.state.scale
-                    val bw = (b.dimensions.width + b.state.backgroundMargin * 2F) * b.state.scale
-                    val bh = (b.dimensions.height + b.state.backgroundMargin * 2F) * b.state.scale
-                    val dx = (aw + bw) / 2 - abs(ax - bx)
-                    val dy = (ah + bh) / 2 - abs(ay - by)
-                    if (dx > 0 && dy > 0) {
-                        if (dx < dy) {
-                            b.centerX = bx + (if (ax < bx) dx else -dx)
-                        } else {
-                            b.centerY = by + (if (ay < by) dy else -dy)
-                        }
-                        moved = true
-                    }
-                }
-            }
-
-            if (!moved) {
-                break
             }
         }
     }
@@ -252,17 +167,11 @@ object ItemStackListRenderer : EventListener {
 
         try {
             if (planned.size > 1) {
-                planned.sortWith(comparator)
-                adjustPlannedPositions()
+                overlapRearranger.rearrange(planned)
             }
 
-            planned.forEach { plannedRender ->
-                drawNow(
-                    state = plannedRender.state,
-                    dimensions = plannedRender.dimensions,
-                    centerX = plannedRender.centerX,
-                    centerY = plannedRender.centerY,
-                )
+            planned.forEach { state ->
+                drawNow(state, state.bounds.xCenter, state.bounds.yCenter)
             }
         } finally {
             planned.clear()

@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import it.unimi.dsi.fastutil.floats.Float2IntFunction
-import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
@@ -92,7 +92,7 @@ fun GuiGraphics.getBoundsXYWH(x: Float, y: Float, w: Float, h: Float): ScreenRec
 }
 
 fun GuiGraphics.getBounds(box: BoundingBox2f): ScreenRectangle =
-    getBoundsXYWH(box.xMin, box.yMin, box.width, box.height)
+    getBounds(box.xMin, box.yMin, box.xMax, box.yMax)
 
 inline fun GuiGraphics.copyPose(): Matrix3x2f = Pools.Mat3x2f.borrow().set(this.pose())
 

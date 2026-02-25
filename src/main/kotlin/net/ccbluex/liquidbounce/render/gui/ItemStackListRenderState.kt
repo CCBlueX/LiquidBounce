@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.gui
 
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.network.chat.Component
@@ -40,7 +41,9 @@ data class ItemStackListRenderState internal constructor(
     internal val useTexture: Boolean = false,
     internal val itemStackRenderer: ItemStackListRenderer.SingleItemStackRenderer =
         ItemStackListRenderer.SingleItemStackRenderer.All,
-) {
+) : GuiRearrangeable {
+
+    override var bounds: BoundingBox2f = ItemStackListLayout.computeBounds(this)
 
     init {
         require(rowLength > 0) { "Row length must be greater than zero." }

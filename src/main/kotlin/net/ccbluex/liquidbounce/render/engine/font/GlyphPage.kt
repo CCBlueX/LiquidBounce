@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.render.engine.font
 
-import net.ccbluex.liquidbounce.render.engine.font.FontId
-import net.ccbluex.liquidbounce.render.engine.type.UV2f
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2s
 import net.minecraft.client.renderer.texture.DynamicTexture
 import org.lwjgl.opengl.GL11
 import java.awt.AlphaComposite
@@ -32,44 +32,9 @@ import java.awt.font.FontRenderContext
 import java.awt.font.GlyphMetrics
 import java.awt.font.LineMetrics
 import java.awt.geom.AffineTransform
-import java.awt.geom.Rectangle2D
 import java.awt.image.BufferedImage
 import kotlin.math.ceil
 import kotlin.math.max
-
-@JvmRecord
-data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val yMax: Float) {
-    constructor(rect: Rectangle2D) : this(
-        rect.minX.toFloat(),
-        rect.minY.toFloat(),
-        rect.maxX.toFloat(),
-        rect.maxY.toFloat()
-    )
-
-    fun contains(x: Float, y: Float): Boolean {
-        return x in xMin..xMax && y in yMin..yMax
-    }
-
-    val width: Float
-        get() = xMax - xMin
-
-    val height: Float
-        get() = yMax - yMin
-}
-
-@JvmRecord
-data class BoundingBox2s(val min: UV2f, val max: UV2f) {
-    constructor(rect: BoundingBox2f) : this(
-        UV2f(
-            rect.xMin,
-            rect.yMin
-        ),
-        UV2f(
-            rect.xMax,
-            rect.yMax
-        )
-    )
-}
 
 /**
  * Contains information about the placement of characters in a bitmap
