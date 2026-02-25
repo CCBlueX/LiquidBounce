@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.render
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.render.engine.FontId
+import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import java.awt.Font
 import java.awt.image.BufferedImage
