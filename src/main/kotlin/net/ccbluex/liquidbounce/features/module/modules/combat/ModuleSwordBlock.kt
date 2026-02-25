@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
@@ -39,13 +40,17 @@ import net.minecraft.world.item.ShieldItem
 object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, aliases = listOf("OldBlocking")) {
 
     val onlyVisual by boolean("OnlyVisual", false)
+    val fakeOnPressing by boolean("FakeOnPressing", false)
     val hideShieldSlot by boolean("HideShieldSlot", false).doNotIncludeAlways()
     val applyToThirdPersonView by boolean("ApplyToThirdPersonView", true).doNotIncludeAlways()
     private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
     @JvmStatic
-    val LivingEntity.isBlockingWithOffhandShield
-        get() = isUsingItem && offhandItem.item is ShieldItem && useItem === offhandItem
+    val LivingEntity.shouldApplySwordBlockAnimation
+        get() = when(fakeOnPressing) {
+            true -> mc.options.keyUse.isPressedOnAny
+            false -> isUsingItem && offhandItem.item is ShieldItem && useItem === offhandItem
+        }
 
     @JvmOverloads
     fun shouldHideOffhand(
