@@ -70,7 +70,6 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
             for (entity in world.entitiesForRendering()) {
                 val (trajectoryInfo, trajectoryType) = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
                     entity,
@@ -110,7 +109,6 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             } else {
                 drawHypotheticalTrajectory(player, event.partialTicks)
             }
-            commitBatch()
         }
 
         debugParameter("TrajectoryCount") { simulationResults.size }

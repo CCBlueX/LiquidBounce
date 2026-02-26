@@ -41,7 +41,7 @@ internal object HatsImage : HatsMode("Image") {
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         val texture = image ?: return
 
-        matrixStack.withPush {
+        poseStack.withPush {
             mulPose(
                 ROTATION.scaling(1f)
                     .rotateX(Mth.HALF_PI)

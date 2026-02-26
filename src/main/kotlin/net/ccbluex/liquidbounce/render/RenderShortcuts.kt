@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.writeStd140
+import net.minecraft.client.Camera
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
@@ -41,8 +42,6 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -83,34 +82,34 @@ private val ROUNDED_RECT_AS_FILLED_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE)
 }
 
 /**
- * Helper function to render an environment with the specified [matrixStack] and [draw] block.
+ * Helper function to render an environment with the specified [poseStack] and [draw] block.
  *
- * @param matrixStack The matrix stack for rendering.
+ * @param poseStack The matrix stack for rendering.
+ * @param mode The default draw mode for [draw].
  * @param draw The block of code to be executed in the rendering environment.
  */
-@OptIn(ExperimentalContracts::class)
 inline fun renderEnvironmentForWorld(
-    matrixStack: PoseStack,
-    framebuffer: RenderTarget = mc.mainRenderTarget,
+    poseStack: PoseStack,
+    renderTarget: RenderTarget = mc.mainRenderTarget,
+    mode: DrawMode = DrawMode.BATCH,
+    camera: Camera = mc.gameRenderer.mainCamera,
     draw: WorldRenderEnvironment.() -> Unit,
 ) {
-    contract {
-        callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
-    }
-
-    val camera = mc.entityRenderDispatcher.camera ?: return
-
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
-
-    val environment = WorldRenderEnvironment(framebuffer, matrixStack, camera)
-    draw(environment)
-    if (environment.isBatchMode) environment.commitBatch()
-
-    GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
+    val environment = WorldRenderEnvironment.create(renderTarget, poseStack, camera)
+    try {
+        when (mode) {
+            DrawMode.BATCH -> environment.batch(draw)
+            DrawMode.IMMEDIATE -> environment.immediate(draw)
+        }
+    } finally {
+        environment.flushBatchIfLocalEnvironment()
+        GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
+    }
 }
 
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRenderEnvironment.() -> Unit) {
-    matrixStack.withPush {
+    poseStack.withPush {
         translate(camera.position().reverse())
         draw()
     }
@@ -120,7 +119,7 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRender
  * Shorthand for `withPosition(relativeToCamera(pos))`
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) {
-    matrixStack.withPush {
+    poseStack.withPush {
         translate(relativeToCamera(pos))
         draw()
     }
@@ -130,7 +129,7 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: 
  * Shortcut of `withPositionRelativeToCamera(Vec3d.of(pos))`
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) {
-    matrixStack.withPush {
+    poseStack.withPush {
         translate(relativeToCamera(pos))
         draw()
     }
@@ -170,34 +169,40 @@ internal inline fun RenderTarget.drawGenericBlockESP(
     return true
 }
 
+/**
+ * Variant of [drawCustomMesh] that binds [sampler0] as `Sampler0`.
+ */
 inline fun WorldRenderEnvironment.drawCustomMeshTextured(
     sampler0: AbstractTexture,
-    pipeline: RenderPipeline = ClientRenderPipelines.TexQuads, // TODO: implement this
+    pipeline: RenderPipeline = ClientRenderPipelines.TexQuads,
+    uniforms: Map<String, GpuBufferSlice> = emptyMap(),
     drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
-) {
-    val buffer = getOrCreateBuffer(sampler0)
+) = drawCustomMesh(
+    pipeline = pipeline,
+    textures = objectObjectMapOf("Sampler0", sampler0),
+    uniforms = uniforms,
+    drawer = drawer,
+)
 
-    drawer(buffer, matrixStack.last())
-
-    if (!isBatchMode) {
-        buffer.build()?.let {
-            immediateDraw(pipeline, it, textures = objectObjectMapOf("Sampler0", sampler0))
-        }
-    }
-}
-
+/**
+ * Preferred mesh draw helper for world rendering code.
+ */
 inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
+    textures: Map<String, AbstractTexture> = emptyMap(),
+    uniforms: Map<String, GpuBufferSlice> = emptyMap(),
     drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) {
-    val buffer = getOrCreateBuffer(pipeline)
+    val buffer = start(
+        pipeline = pipeline,
+        textures = textures,
+        uniforms = uniforms,
+    )
 
-    drawer(buffer, matrixStack.last())
-
-    if (!isBatchMode) {
-        buffer.build()?.let {
-            immediateDraw(pipeline, it, emptyMap())
-        }
+    try {
+        drawer(buffer, poseStack.last())
+    } finally {
+        finish(buffer)
     }
 }
 
@@ -449,8 +454,16 @@ fun WorldRenderEnvironment.drawGradientCircle(
     }
 }
 
-private fun WorldRenderEnvironment.drawCircleXZNoUniform(radius: Float, argb: Int, noDepthTest: Boolean) {
-    drawCustomMesh(ClientRenderPipelines.roundedRect(noDepthTest)) { pose ->
+private fun WorldRenderEnvironment.drawCircleXZNoUniform(
+    radius: Float,
+    argb: Int,
+    noDepthTest: Boolean,
+    uniforms: Map<String, GpuBufferSlice>,
+) {
+    drawCustomMesh(
+        pipeline = ClientRenderPipelines.roundedRect(noDepthTest),
+        uniforms = uniforms,
+    ) { pose ->
         addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(argb)
         addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(argb)
         addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(argb)
@@ -462,8 +475,12 @@ fun WorldRenderEnvironment.drawCircle(
     radius: Float,
     color: Color4b,
 ) {
-    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
-    drawCircleXZNoUniform(radius, color.argb, noDepthTest = true)
+    drawCircleXZNoUniform(
+        radius = radius,
+        argb = color.argb,
+        noDepthTest = true,
+        uniforms = objectObjectMapOf(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO),
+    )
 }
 
 fun WorldRenderEnvironment.drawCircle(
@@ -476,8 +493,10 @@ fun WorldRenderEnvironment.drawCircle(
         return
     }
 
-    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
-    drawCustomMesh(ClientRenderPipelines.roundedRect(noDepthTest = true)) { pose ->
+    drawCustomMesh(
+        pipeline = ClientRenderPipelines.roundedRect(noDepthTest = true),
+        uniforms = objectObjectMapOf(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO),
+    ) { pose ->
         // Quad 1 (NW)
         addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(outerColor)
         addVertex(pose, -radius, 0f, 0f).setUv(0f, 0.5f).setColor(outerColor)
@@ -512,8 +531,12 @@ fun WorldRenderEnvironment.drawCircle(
  */
 @JvmOverloads
 fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b, noDepthTest: Boolean = true) {
-    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO)
-    drawCircleXZNoUniform(radius, color.argb, noDepthTest)
+    drawCircleXZNoUniform(
+        radius = radius,
+        argb = color.argb,
+        noDepthTest = noDepthTest,
+        uniforms = objectObjectMapOf(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO),
+    )
 }
 
 fun WorldRenderEnvironment.drawGradientSides(

@@ -111,7 +111,6 @@ internal object KillAuraNotifyWhenFail {
         val base = if (Box.colorRainbow) rainbow() else Box.color
 
         renderEnvironmentForWorld(matrixStack) {
-            startBatch()
             for ((pos, opacity) in markedBlocks) {
                 val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
 
@@ -126,7 +125,6 @@ internal object KillAuraNotifyWhenFail {
                     )
                 }
             }
-            commitBatch()
         }
     }
 

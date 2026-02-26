@@ -84,13 +84,11 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
         }
 
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
             world.entitiesForRendering().forEachIsInstance<ArmorStand> {
                 if (it.getItemBySlot(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
                     renderDroppedBowBox(event.partialTicks, it)
                 }
             }
-            commitBatch()
         }
     }
 

@@ -36,7 +36,6 @@ object EspBoxMode : EspMode("Box") {
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
             for (entity in RenderedEntities) {
                 val dimensions = entity.getDimensions(entity.pose)
                 val d = dimensions.width.toDouble() / 2.0
@@ -56,7 +55,6 @@ object EspBoxMode : EspMode("Box") {
                     )
                 }
             }
-            commitBatch()
         }
     }
 

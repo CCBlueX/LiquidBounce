@@ -132,14 +132,13 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val length by int("Length", 25, 15..40)
 
             override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
-                matrixStack.pushPose()
+                poseStack.pushPose()
 
                 val interpolated = entity.lastRenderPos().lerp(entity.position(), partialTicks.toDouble())
                     .add(0.2, 1.25, 0.0)
 
-                matrixStack.translate(interpolated - mc.gameRenderer.mainCamera.position())
+                poseStack.translate(interpolated - mc.gameRenderer.mainCamera.position())
 
-                startBatch()
                 drawParticle(
                     { sin, cos -> Vec3(sin, cos, -cos) },
                     { sin, cos -> Vec3(-sin, -cos, cos) }
@@ -154,9 +153,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     { sin, cos -> Vec3(-sin, -sin, cos) },
                     { sin, cos -> Vec3(sin, sin, -cos) }
                 )
-                commitBatch()
 
-                matrixStack.popPose()
+                poseStack.popPose()
             }
 
             private inline fun WorldRenderEnvironment.drawParticle(
@@ -172,7 +170,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     val sin = sin(angle) * radius
                     val cos = cos(angle) * radius
 
-                    with(matrixStack) {
+                    with(poseStack) {
                         translate(translationsBefore(sin, cos))
 
                         translate(-size / 2.0, -size / 2.0, 0.0)
@@ -186,7 +184,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                     drawSquareTexture(ghostModeTexture, size, renderColor.argb)
 
-                    with(matrixStack) {
+                    with(poseStack) {
                         translate(-size / 2.0, -size / 2.0, 0.0)
                         mulPose(Axis.XP.rotationDegrees(-camera.xRot()))
                         mulPose(Axis.YP.rotationDegrees(camera.yRot()))
@@ -268,12 +266,12 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
                 withPositionRelativeToCamera(pos) {
-                    matrixStack.mulPose(camera.rotation())
-                    matrixStack.mulPose(
+                    poseStack.mulPose(camera.rotation())
+                    poseStack.mulPose(
                         quaternion.scaling(1f)
                             .rotateLocalZ(rotate.current().toRadians())
                     )
-                    matrixStack.last().scale(scale.x(), scale.y(), 1f)
+                    poseStack.last().scale(scale.x(), scale.y(), 1f)
                     drawTexQuad(texture, color.argb)
                 }
             }
@@ -304,14 +302,12 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val height = heightMode.activeMode.getHeight(entity, partialTicks)
                 val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
-                startBatch()
                 withPositionRelativeToCamera(pos) {
                     drawGradientCircle(radius, innerRadius, outerColor, innerColor)
                     if (!outlineColor.isTransparent) {
                         drawCircleOutline(radius, outlineColor)
                     }
                 }
-                commitBatch()
             }
 
         }

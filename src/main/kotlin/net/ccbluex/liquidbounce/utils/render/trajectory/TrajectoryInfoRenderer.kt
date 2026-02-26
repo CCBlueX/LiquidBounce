@@ -280,10 +280,10 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
 
     private fun WorldRenderEnvironment.drawTrajectoryForProjectile(positions: List<Vec3>, argb: Int) {
         // Don't use LineStrip because in batch mode
-        matrixStack.pushPose()
-        matrixStack.translate(renderOffset - camera.position())
+        poseStack.pushPose()
+        poseStack.translate(renderOffset - camera.position())
         drawLineStripAsLines(argb, if (positions.size and 1 != 0) positions.subList(1) else positions)
-        matrixStack.popPose()
+        poseStack.popPose()
     }
 
     @JvmRecord

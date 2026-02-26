@@ -20,10 +20,9 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
+import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.utils.render.begin
 
 object ClientTesselator {
@@ -33,33 +32,24 @@ object ClientTesselator {
     @JvmField
     val Shared = ByteBufferBuilder(BUFFER_SIZE)
 
-    private val bufferAllocators = Reference2ReferenceOpenHashMap<RenderPipeline, ByteBufferBuilder>()
+    private val bufferAllocatorPool = Pool(
+        initializer = { ByteBufferBuilder(BUFFER_SIZE) },
+        finalizer = ByteBufferBuilder::clear,
+    )
 
     @JvmStatic
-    internal val texQuadsSpecialAllocators = Reference2ReferenceOpenHashMap<GpuTextureView, ByteBufferBuilder>()
-
-    private fun allocator(pipeline: RenderPipeline): ByteBufferBuilder =
-        bufferAllocators.getOrPut(pipeline) { ByteBufferBuilder(BUFFER_SIZE) }
-
-    @JvmStatic
-    fun begin(pipeline: RenderPipeline): BufferBuilder =
-        allocator(pipeline).begin(pipeline)
-
-    @JvmStatic
-    fun clear(pipeline: RenderPipeline) {
-        allocator(pipeline).clear()
+    fun begin(
+        pipeline: RenderPipeline,
+        allocatorInUse: MutableCollection<ByteBufferBuilder>,
+    ): BufferBuilder {
+        val allocator = bufferAllocatorPool.borrow()
+        allocatorInUse += allocator
+        return allocator.begin(pipeline)
     }
 
-    private fun allocator(texture: GpuTextureView): ByteBufferBuilder =
-        texQuadsSpecialAllocators.getOrPut(texture) { ByteBufferBuilder(BUFFER_SIZE) }
-
     @JvmStatic
-    fun begin(texture: GpuTextureView): BufferBuilder =
-        allocator(texture).begin(ClientRenderPipelines.TexQuads)
-
-    @JvmStatic
-    fun clear(texture: GpuTextureView) {
-        allocator(texture).clear()
+    fun recycleAll(allocatorInUse: Iterable<ByteBufferBuilder>) {
+        bufferAllocatorPool.recycleAll(allocatorInUse)
     }
 
 }
