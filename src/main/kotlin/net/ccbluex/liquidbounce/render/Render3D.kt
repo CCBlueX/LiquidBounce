@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.render.mesh.MeshDraw
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.bindAndDraw
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.toMeshDraw
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.kotlin.immutableCopy
 import net.ccbluex.liquidbounce.utils.kotlin.memorizingFunction
 import net.ccbluex.liquidbounce.utils.render.begin
 import net.ccbluex.liquidbounce.utils.render.reset
@@ -111,8 +112,8 @@ internal class BatchCollector {
 
         return RenderBufferKey(
             pipeline,
-            textures = snapshotMap(textures),
-            uniforms = snapshotMap(uniforms),
+            textures = textures.immutableCopy(),
+            uniforms = uniforms.immutableCopy(),
         )
     }
 
@@ -160,6 +161,7 @@ internal class BatchCollector {
             builtBuffers.clear()
             bufferBuilders.clear()
             ClientTesselator.recycleAll(bufferAllocatorInUse)
+            bufferAllocatorInUse.clear()
         }
     }
 
@@ -172,9 +174,6 @@ internal class BatchCollector {
         private val PAIR_COMPARATOR = Comparator.comparing(Function(Pair<RenderBufferKey, *>::first), KEY_COMPARATOR)
     }
 }
-
-private fun <K, V> snapshotMap(source: Map<K, V>): Map<K, V> =
-    if (source.isEmpty()) emptyMap() else Object2ObjectOpenHashMap(source)
 
 /**
  * Context representing the rendering environment.
@@ -309,6 +308,7 @@ class WorldRenderEnvironment internal constructor(
         )
 
         private val globalPoseStack = PoseStack()
+        private val globalBatchCollector = BatchCollector()
 
         private var activeWorldFrame: ActiveWorldFrame? = null
 
@@ -325,7 +325,7 @@ class WorldRenderEnvironment internal constructor(
                 renderTarget = renderTarget,
                 poseStack = globalPoseStack,
                 camera = camera,
-                collector = BatchCollector(),
+                collector = globalBatchCollector,
             )
         }
 
