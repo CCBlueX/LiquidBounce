@@ -32,6 +32,7 @@ import com.mojang.blaze3d.vertex.Tesselator
 import com.mojang.blaze3d.vertex.VertexConsumer
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.fastutil.Pool
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw
@@ -190,7 +191,7 @@ class WorldRenderEnvironment internal constructor(
     @PublishedApi
     internal var drawMode: DrawMode = DrawMode.IMMEDIATE
 
-    private val pendingImmediateDraws = IdentityHashMap<BufferBuilder, RenderBufferKey>()
+    private var pendingImmediateDraws: IdentityHashMap<BufferBuilder, RenderBufferKey>? = null
 
     /**
      * Converts a world-space position to the camera-relative coordinate system.
@@ -235,7 +236,10 @@ class WorldRenderEnvironment internal constructor(
         }
 
         val immediateBuilder = Tesselator.getInstance().begin(pipeline)
-        pendingImmediateDraws[immediateBuilder] = key
+        val pending = pendingImmediateDraws ?: immediateDrawMapPool.borrow().also {
+            pendingImmediateDraws = it
+        }
+        pending[immediateBuilder] = key
         return immediateBuilder
     }
 
@@ -246,7 +250,13 @@ class WorldRenderEnvironment internal constructor(
      */
     fun finish(consumer: VertexConsumer, submit: Boolean = true) {
         val builder = consumer as? BufferBuilder ?: return
-        val key = pendingImmediateDraws.remove(builder) ?: return
+        val pending = pendingImmediateDraws ?: return
+        val key = pending.remove(builder) ?: return
+
+        if (pending.isEmpty()) {
+            pendingImmediateDraws = null
+            immediateDrawMapPool.recycle(pending)
+        }
 
         if (submit) {
             builder.build()?.use { meshData ->
@@ -309,6 +319,10 @@ class WorldRenderEnvironment internal constructor(
 
         private val globalPoseStack = PoseStack()
         private val globalBatchCollector = BatchCollector()
+        private val immediateDrawMapPool = Pool(
+            initializer = ::IdentityHashMap,
+            finalizer = IdentityHashMap<BufferBuilder, RenderBufferKey>::clear,
+        )
 
         private var activeWorldFrame: ActiveWorldFrame? = null
 
