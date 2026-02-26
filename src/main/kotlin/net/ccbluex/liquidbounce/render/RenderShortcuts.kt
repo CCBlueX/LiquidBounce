@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.writeStd140
+import net.minecraft.client.Camera
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
@@ -91,10 +92,11 @@ inline fun renderEnvironmentForWorld(
     poseStack: PoseStack,
     renderTarget: RenderTarget = mc.mainRenderTarget,
     mode: DrawMode = DrawMode.BATCH,
+    camera: Camera = mc.gameRenderer.mainCamera,
     draw: WorldRenderEnvironment.() -> Unit,
 ) {
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
-    val environment = WorldRenderEnvironment.create(renderTarget, poseStack)
+    val environment = WorldRenderEnvironment.create(renderTarget, poseStack, camera)
     try {
         when (mode) {
             DrawMode.BATCH -> environment.batch(draw)
@@ -167,13 +169,24 @@ internal inline fun RenderTarget.drawGenericBlockESP(
     return true
 }
 
+/**
+ * Variant of [drawCustomMesh] that binds [sampler0] as `Sampler0`.
+ */
 inline fun WorldRenderEnvironment.drawCustomMeshTextured(
     sampler0: AbstractTexture,
     pipeline: RenderPipeline = ClientRenderPipelines.TexQuads,
     uniforms: Map<String, GpuBufferSlice> = emptyMap(),
     drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
-) = drawCustomMesh(pipeline, objectObjectMapOf("Sampler0", sampler0), uniforms, drawer)
+) = drawCustomMesh(
+    pipeline = pipeline,
+    textures = objectObjectMapOf("Sampler0", sampler0),
+    uniforms = uniforms,
+    drawer = drawer,
+)
 
+/**
+ * Preferred mesh draw helper for world rendering code.
+ */
 inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
     textures: Map<String, AbstractTexture> = emptyMap(),

@@ -105,7 +105,7 @@ public abstract class MixinGameRenderer {
         var newMatStack = Pools.MatStack.borrow();
         try {
             newMatStack.mulPose(modelViewMatrix);
-            WorldRenderEnvironment.beginWorldFrame(minecraft.getMainRenderTarget(), newMatStack);
+            WorldRenderEnvironment.beginWorldFrame(minecraft.getMainRenderTarget(), newMatStack, this.mainCamera);
             EventManager.INSTANCE.callEvent(
                 new WorldRenderEvent(newMatStack, this.mainCamera, deltaTracker.getGameTimeDeltaPartialTick(false))
             );

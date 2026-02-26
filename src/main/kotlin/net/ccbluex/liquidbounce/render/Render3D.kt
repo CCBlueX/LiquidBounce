@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.bindAndDraw
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.toMeshDraw
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.memorizingFunction
 import net.ccbluex.liquidbounce.utils.render.begin
@@ -73,11 +72,17 @@ inline fun PoseStack.withPush(block: PoseStack.() -> Unit) {
 inline fun PoseStack.translate(vec3i: Vec3i) =
     translate(vec3i.x.toFloat(), vec3i.y.toFloat(), vec3i.z.toFloat())
 
+/**
+ * Submission strategy for geometry started in [WorldRenderEnvironment].
+ */
 enum class DrawMode {
     IMMEDIATE,
     BATCH,
 }
 
+/**
+ * Buffer grouping key used by [BatchCollector].
+ */
 @JvmRecord
 data class RenderBufferKey(
     val pipeline: RenderPipeline,
@@ -179,27 +184,45 @@ private fun <K, V> snapshotMap(source: Map<K, V>): Map<K, V> =
 class WorldRenderEnvironment internal constructor(
     val renderTarget: RenderTarget,
     val poseStack: PoseStack,
+    val camera: Camera,
     private val batchCollector: BatchCollector,
     private val frameBoundCollector: Boolean,
 ) {
-
-    val camera: Camera get() = mc.gameRenderer.mainCamera
-
     @PublishedApi
     internal var drawMode: DrawMode = DrawMode.IMMEDIATE
 
     private val pendingImmediateDraws = IdentityHashMap<BufferBuilder, RenderBufferKey>()
 
+    /**
+     * Converts a world-space position to the camera-relative coordinate system.
+     */
     fun relativeToCamera(pos: Vec3f): Vec3 = pos.relativeTo(camera)
 
+    /**
+     * Converts a world-space position to the camera-relative coordinate system.
+     */
     fun relativeToCamera(pos: Position): Vec3 = pos.relativeTo(camera)
 
+    /**
+     * Converts a world-space position to the camera-relative coordinate system.
+     */
     fun relativeToCamera(pos: Vec3i): Vec3 = pos.relativeTo(camera)
 
+    /**
+     * Temporarily switches the environment to batch mode.
+     */
     inline fun batch(block: WorldRenderEnvironment.() -> Unit) = withMode(DrawMode.BATCH, block)
 
+    /**
+     * Temporarily switches the environment to immediate mode.
+     */
     inline fun immediate(block: WorldRenderEnvironment.() -> Unit) = withMode(DrawMode.IMMEDIATE, block)
 
+    /**
+     * Low-level draw entrypoint.
+     *
+     * Prefer [net.ccbluex.liquidbounce.render.drawCustomMesh] for regular use.
+     */
     fun start(
         pipeline: RenderPipeline,
         textures: Map<String, AbstractTexture> = emptyMap(),
@@ -217,8 +240,12 @@ class WorldRenderEnvironment internal constructor(
         return immediateBuilder
     }
 
-    @PublishedApi
-    internal fun finish(consumer: VertexConsumer, submit: Boolean = true) {
+    /**
+     * Low-level completion for a [VertexConsumer] obtained from [start].
+     *
+     * Prefer [net.ccbluex.liquidbounce.render.drawCustomMesh] for regular use.
+     */
+    fun finish(consumer: VertexConsumer, submit: Boolean = true) {
         val builder = consumer as? BufferBuilder ?: return
         val key = pendingImmediateDraws.remove(builder) ?: return
 
@@ -277,6 +304,7 @@ class WorldRenderEnvironment internal constructor(
         private data class ActiveWorldFrame(
             val renderTarget: RenderTarget,
             val poseStack: PoseStack,
+            val camera: Camera,
             val collector: BatchCollector,
         )
 
@@ -284,8 +312,11 @@ class WorldRenderEnvironment internal constructor(
 
         private var activeWorldFrame: ActiveWorldFrame? = null
 
+        /**
+         * Starts world-frame scoped rendering context.
+         */
         @JvmStatic
-        fun beginWorldFrame(renderTarget: RenderTarget, eventPoseStack: PoseStack) {
+        fun beginWorldFrame(renderTarget: RenderTarget, eventPoseStack: PoseStack, camera: Camera) {
             endWorldFrame()
 
             globalPoseStack.copyFrom(eventPoseStack)
@@ -293,10 +324,14 @@ class WorldRenderEnvironment internal constructor(
             activeWorldFrame = ActiveWorldFrame(
                 renderTarget = renderTarget,
                 poseStack = globalPoseStack,
+                camera = camera,
                 collector = BatchCollector(),
             )
         }
 
+        /**
+         * Flushes and clears world-frame scoped rendering context.
+         */
         @JvmStatic
         fun endWorldFrame() {
             val frame = activeWorldFrame ?: return
@@ -306,12 +341,13 @@ class WorldRenderEnvironment internal constructor(
 
         @PublishedApi
         @JvmStatic
-        internal fun create(renderTarget: RenderTarget, poseStack: PoseStack): WorldRenderEnvironment {
+        internal fun create(renderTarget: RenderTarget, poseStack: PoseStack, camera: Camera): WorldRenderEnvironment {
             val frame = activeWorldFrame
             if (frame != null && frame.renderTarget === renderTarget) {
                 return WorldRenderEnvironment(
                     renderTarget = renderTarget,
                     poseStack = frame.poseStack,
+                    camera = frame.camera,
                     batchCollector = frame.collector,
                     frameBoundCollector = true,
                 )
@@ -320,6 +356,7 @@ class WorldRenderEnvironment internal constructor(
             return WorldRenderEnvironment(
                 renderTarget = renderTarget,
                 poseStack = poseStack,
+                camera = camera,
                 batchCollector = BatchCollector(),
                 frameBoundCollector = false,
             )
