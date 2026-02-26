@@ -69,7 +69,7 @@ object InventoryManager : EventListener {
     var isInventoryOpenServerSide = false
         internal set(value) {
             if (!field && value) {
-                inventoryOpened()
+                onInventoryOpened()
             }
             field = value
         }
@@ -219,10 +219,12 @@ object InventoryManager : EventListener {
     }
 
     /**
-     * Called when a click occurred. Can be tracked by listening for [ServerboundContainerClickPacket]
+     * Called when a click occurs. Can be tracked by listening for [ServerboundContainerClickPacket]
+     *
+     * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinPacketWrapper
      */
     @JvmStatic
-    fun clickOccurred() {
+    fun onClickOccurs() {
         // Every click will require an update
         requiresUpdate = true
     }
@@ -231,7 +233,7 @@ object InventoryManager : EventListener {
      * Called when the inventory was opened. Can be tracked by listening for [ClientboundOpenScreenPacket]
      */
     @JvmStatic
-    fun inventoryOpened() {
+    fun onInventoryOpened() {
         recentInventoryOpen = true
     }
 
@@ -249,7 +251,7 @@ object InventoryManager : EventListener {
 
         // If we actually send a click packet, we can reset the click chronometer
         if (packet is ServerboundContainerClickPacket) {
-            clickOccurred()
+            onClickOccurs()
 
             if (packet.containerId == 0) {
                 isInventoryOpenServerSide = true
@@ -297,7 +299,7 @@ object InventoryManager : EventListener {
                 isInventoryOpenServerSide = true
             }
 
-            inventoryOpened()
+            onInventoryOpened()
         }
     }
 
