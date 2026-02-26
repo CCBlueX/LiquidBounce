@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFa
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallSpartan524Flag
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallSpoofGround
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallSpoofLanding
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallMount
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVerus
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVulcan
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVulcanTP
@@ -57,6 +58,7 @@ object ModuleNoFall : ClientModule("NoFall", ModuleCategories.PLAYER) {
             NoFallPacket,
             NoFallPacketJump,
             NoFallMLG,
+            NoFallMount,
             NoFallRettungsplatform,
             NoFallSpartan524Flag,
             NoFallVulcan,
