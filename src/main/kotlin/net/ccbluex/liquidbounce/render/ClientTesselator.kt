@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.utils.render.begin
 
@@ -41,7 +40,7 @@ object ClientTesselator {
     @JvmStatic
     fun begin(
         pipeline: RenderPipeline,
-        allocatorInUse: ObjectArrayList<ByteBufferBuilder>,
+        allocatorInUse: MutableCollection<ByteBufferBuilder>,
     ): BufferBuilder {
         val allocator = bufferAllocatorPool.borrow()
         allocatorInUse += allocator
@@ -49,7 +48,7 @@ object ClientTesselator {
     }
 
     @JvmStatic
-    fun recycleAll(allocatorInUse: ObjectArrayList<ByteBufferBuilder>) {
+    fun recycleAll(allocatorInUse: Iterable<ByteBufferBuilder>) {
         bufferAllocatorPool.recycleAll(allocatorInUse)
     }
 

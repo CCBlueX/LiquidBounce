@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.addVertex
+import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
@@ -85,7 +86,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         val lines = height == 0f
 
         renderEnvironmentForWorld(event.matrixStack) {
-            with(start(if (lines) ClientRenderPipelines.Lines else ClientRenderPipelines.Quads)) {
+            drawCustomMesh(if (lines) ClientRenderPipelines.Lines else ClientRenderPipelines.Quads) {
                 val renderData = RenderData(poseStack.last().pose(), this, colorF, lines)
                 trails.forEach { (entity, trail) ->
                     trail.verifyAndRenderTrail(renderData, event.camera.position(), entity, time)
