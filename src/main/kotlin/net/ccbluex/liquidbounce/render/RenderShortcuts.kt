@@ -37,6 +37,7 @@ import net.minecraft.client.Camera
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
@@ -68,15 +69,6 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
     slice.writeStd140 {
         putVec2(1f, 1f)
         putFloat(2f)
-    }
-    slice
-}
-
-private val ROUNDED_RECT_AS_FILLED_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
-    val slice = ClientUniformDefine.ROUNDED_RECT.createSingleBuffer()
-    slice.writeStd140 {
-        putVec2(1f, 1f)
-        putFloat(0f)
     }
     slice
 }
@@ -441,6 +433,17 @@ fun WorldRenderEnvironment.drawGradientCircle(
     innerOffset: Vector3fc = Vector3f(),
     noDepthTest: Boolean = true,
 ) {
+    if (outerRadius <= 0f) {
+        return
+    }
+
+    if (Mth.equal(innerOffset.lengthSquared(), 0f)) {
+        val innerRatio = (innerRadius / outerRadius).coerceIn(0f, 1f)
+
+        drawGradientCircleQuad(outerRadius, outerColor, innerColor, innerRatio, noDepthTest)
+        return
+    }
+
     drawCustomMesh(ClientRenderPipelines.triangleStrip(noDepthTest)) { matrix ->
         val innerP = Vector3f()
         val outerP = Vector3f()
@@ -454,15 +457,57 @@ fun WorldRenderEnvironment.drawGradientCircle(
     }
 }
 
-private fun WorldRenderEnvironment.drawCircleXZNoUniform(
+private fun WorldRenderEnvironment.drawGradientCircleQuad(
+    radius: Float,
+    outerColor: Color4b,
+    innerColor: Color4b,
+    innerRatio: Float,
+    noDepthTest: Boolean,
+) {
+    fun packColorRG(color: Color4b): Int =
+        ((color.r and 0xFF) shl 8) or (color.g and 0xFF)
+
+    fun packColorBA(color: Color4b): Int =
+        ((color.b and 0xFF) shl 8) or (color.a and 0xFF)
+
+    val outerRg = packColorRG(outerColor)
+    val outerBa = packColorBA(outerColor)
+    val innerRg = packColorRG(innerColor)
+    val innerBa = packColorBA(innerColor)
+
+    drawCustomMesh(ClientRenderPipelines.gradientCircle(noDepthTest)) { matrix ->
+        addVertex(matrix, -radius, 0f, -radius)
+            .setUv(0f, 0f)
+            .setUv1(outerRg, outerBa)
+            .setUv2(innerRg, innerBa)
+            .setLineWidth(innerRatio)
+        addVertex(matrix, -radius, 0f, radius)
+            .setUv(0f, 1f)
+            .setUv1(outerRg, outerBa)
+            .setUv2(innerRg, innerBa)
+            .setLineWidth(innerRatio)
+        addVertex(matrix, radius, 0f, radius)
+            .setUv(1f, 1f)
+            .setUv1(outerRg, outerBa)
+            .setUv2(innerRg, innerBa)
+            .setLineWidth(innerRatio)
+        addVertex(matrix, radius, 0f, -radius)
+            .setUv(1f, 0f)
+            .setUv1(outerRg, outerBa)
+            .setUv2(innerRg, innerBa)
+            .setLineWidth(innerRatio)
+    }
+}
+
+private fun WorldRenderEnvironment.drawRoundedRectQuad(
     radius: Float,
     argb: Int,
     noDepthTest: Boolean,
-    uniforms: Map<String, GpuBufferSlice>,
+    uniform: GpuBufferSlice,
 ) {
     drawCustomMesh(
         pipeline = ClientRenderPipelines.roundedRect(noDepthTest),
-        uniforms = uniforms,
+        uniforms = objectObjectMapOf(ClientUniformDefine.ROUNDED_RECT.uboName, uniform),
     ) { pose ->
         addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(argb)
         addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(argb)
@@ -475,52 +520,17 @@ fun WorldRenderEnvironment.drawCircle(
     radius: Float,
     color: Color4b,
 ) {
-    drawCircleXZNoUniform(
-        radius = radius,
-        argb = color.argb,
-        noDepthTest = true,
-        uniforms = objectObjectMapOf(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO),
-    )
-}
-
-fun WorldRenderEnvironment.drawCircle(
-    radius: Float,
-    innerColor: Color4b,
-    outerColor: Color4b,
-) {
-    if (innerColor == outerColor) {
-        drawCircle(radius, color = innerColor)
+    if (radius <= 0f) {
         return
     }
 
-    drawCustomMesh(
-        pipeline = ClientRenderPipelines.roundedRect(noDepthTest = true),
-        uniforms = objectObjectMapOf(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO),
-    ) { pose ->
-        // Quad 1 (NW)
-        addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(outerColor)
-        addVertex(pose, -radius, 0f, 0f).setUv(0f, 0.5f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
-        addVertex(pose, 0f, 0f, -radius).setUv(0.5f, 0f).setColor(outerColor)
-
-        // Quad 2 (NE)
-        addVertex(pose, radius, 0f, -radius).setUv(1f, 0f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, -radius).setUv(0.5f, 0f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
-        addVertex(pose, radius, 0f, 0f).setUv(1f, 0.5f).setColor(outerColor)
-
-        // Quad 3 (SE)
-        addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(outerColor)
-        addVertex(pose, radius, 0f, 0f).setUv(1f, 0.5f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
-        addVertex(pose, 0f, 0f, radius).setUv(0.5f, 1f).setColor(outerColor)
-
-        // Quad 4 (SW)
-        addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, radius).setUv(0.5f, 1f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
-        addVertex(pose, -radius, 0f, 0f).setUv(0f, 0.5f).setColor(outerColor)
-    }
+    drawGradientCircleQuad(
+        radius = radius,
+        outerColor = color,
+        innerColor = color,
+        innerRatio = 0f,
+        noDepthTest = true,
+    )
 }
 
 /**
@@ -531,11 +541,11 @@ fun WorldRenderEnvironment.drawCircle(
  */
 @JvmOverloads
 fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b, noDepthTest: Boolean = true) {
-    drawCircleXZNoUniform(
+    drawRoundedRectQuad(
         radius = radius,
         argb = color.argb,
         noDepthTest = noDepthTest,
-        uniforms = objectObjectMapOf(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO),
+        uniform = ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO,
     )
 }
 

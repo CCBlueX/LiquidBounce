@@ -346,7 +346,6 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 }
 
                 withPositionRelativeToCamera(pos) {
-                    // Don't use batch mode because `drawGradientCircle` uses TRIANGLE_STRIP
                     drawGradientCircle(
                         radius,
                         radius,
