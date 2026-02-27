@@ -25,6 +25,7 @@ import com.mojang.blaze3d.pipeline.RenderPipeline
 import it.unimi.dsi.fastutil.floats.Float2IntFunction
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.gui.GuiCircleLutAtlas
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.collection.Pools
@@ -379,9 +380,14 @@ fun GuiGraphics.drawCircle(
     y: Float,
     radius: Float,
     innerRadius: Float = 0f,
-    segments: Int = 40,
     colorGetter: Float2IntFunction = Float2IntFunction { Color4b.WHITE.argb },
 ) {
+    if (radius <= 0f) {
+        return
+    }
+
+    val lut = GuiCircleLutAtlas.allocate(colorGetter)
+    val innerRatio = (innerRadius / radius).coerceIn(0f, 1f)
     val bounds = getBoundsXYWH(x - radius, y - radius, radius * 2, radius * 2)
 
     this.guiRenderState.submitGuiElement(
@@ -389,10 +395,10 @@ fun GuiGraphics.drawCircle(
             x,
             y,
             radius,
-            innerRadius,
-            segments,
-            colorGetter,
-            ClientRenderPipelines.GUI.triangles(true),
+            innerRatio,
+            lut.row,
+            ClientRenderPipelines.GUI.circleLut(),
+            lut.textureSetup,
             copyPose(),
             this.scissorStack.peek(),
             bounds
