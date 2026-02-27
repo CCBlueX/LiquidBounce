@@ -785,6 +785,9 @@
   "liquidbounce.module.reportHelper.description": "自动开始举报并为您确认。",
   "liquidbounce.module.protectionZones.description": "允许您查看受保护方块保护的区域，并建议最佳放置位置。",
   "liquidbounce.module.macros.description": "允许你通过自定义按键快速执行聊天消息或物品操作。",
-  "liquidbounce.module.newChunks.description": "高亮显示可能是新生成的区块。"
+  "liquidbounce.module.newChunks.description": "高亮显示可能是新生成的区块。",
+  "liquidbounce.module.strongholdFinder.description": "跟踪末影之眼投掷并预测最可能的要塞区块候选。",
+  "liquidbounce.module.strongholdFinder.messages.sampleCaptured": "已采集样本（#%s）。",
+  "liquidbounce.module.strongholdFinder.messages.bestChunk": "最佳区块：%s, %s（p=%s%%）。"
 
 }
