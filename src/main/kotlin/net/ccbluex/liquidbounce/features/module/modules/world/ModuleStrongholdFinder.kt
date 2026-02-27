@@ -294,9 +294,10 @@ object ModuleStrongholdFinder : ClientModule(
         val bestChunk = best.toChunkPos()
 
         val lines = arrayOf(
-            "StrongholdFinder",
+            this.name,
             "Samples: ${snapshot.sampleCount} | Sigma: ${sigma.toFixed(3)}°",
-            "Best chunk: ${bestChunk.x}, ${bestChunk.z} (${(best.probability * 100.0).toFixed(1)}%)"
+            "Best chunk: ${bestChunk.x}, ${bestChunk.z} (${(best.probability * 100.0).toFixed(1)}%)",
+            "/tp ${bestChunk.middleBlockX} ~ ${bestChunk.middleBlockZ}",
         )
 
         val centerX = mc.window.guiScaledWidth / 2

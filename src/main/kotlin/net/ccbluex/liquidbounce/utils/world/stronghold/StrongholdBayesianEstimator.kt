@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.world.stronghold
 
+import it.unimi.dsi.fastutil.longs.LongDoubleImmutablePair
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.longDoubleHashMapOf
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.client.toDegrees
@@ -71,7 +74,7 @@ object StrongholdBayesianEstimator {
         }
 
         val sigmaSquared = sigmaDeg * sigmaDeg
-        val scoredHypotheses = ArrayList<Pair<Long, Double>>(hypotheses.size)
+        val scoredHypotheses = ArrayList<LongDoubleImmutablePair>(hypotheses.size)
 
         for (hypothesis in hypotheses) {
             var valid = true
@@ -118,14 +121,18 @@ object StrongholdBayesianEstimator {
                 continue
             }
 
-            scoredHypotheses += chunkPosAsLong(hypothesis.chunkX[chosenIndex], hypothesis.chunkZ[chosenIndex]) to logWeight
+            scoredHypotheses +=
+                LongDoubleImmutablePair(
+                    chunkPosAsLong(hypothesis.chunkX[chosenIndex], hypothesis.chunkZ[chosenIndex]),
+                    logWeight,
+                )
         }
 
         if (scoredHypotheses.isEmpty()) {
             return null
         }
 
-        val maxLogWeight = scoredHypotheses.maxOf { it.second }
+        val maxLogWeight = scoredHypotheses.maxOf { it.secondDouble() }
         var weightSum = 0.0
         val chunkWeights = longDoubleHashMapOf()
 
