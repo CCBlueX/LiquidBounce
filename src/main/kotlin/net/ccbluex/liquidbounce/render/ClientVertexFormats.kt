@@ -1,0 +1,41 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.render
+
+import com.mojang.blaze3d.vertex.VertexFormat
+import com.mojang.blaze3d.vertex.VertexFormatElement
+
+object ClientVertexFormats {
+
+    /**
+     * Vertex format for GUI circle LUT shader.
+     *
+     * - UV0: Quad-local UV (0..1). Shader remaps this to [-1,1] to evaluate circle SDF.
+     * - UV2.x: LUT row index in [net.ccbluex.liquidbounce.render.gui.GuiCircleLutAtlas].
+     * - UV2.y: Encoded inner radius ratio (0..32767 => 0..1).
+     */
+    @JvmField
+    val GUI_CIRCLE_LUT: VertexFormat = VertexFormat.builder()
+        .add("Position", VertexFormatElement.POSITION)
+        .add("UV0", VertexFormatElement.UV0)
+        .add("UV2", VertexFormatElement.UV2)
+        .build()
+}
+

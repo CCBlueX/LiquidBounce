@@ -22,83 +22,42 @@ package net.ccbluex.liquidbounce.render.gui.element;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import it.unimi.dsi.fastutil.floats.Float2IntFunction;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
-import org.joml.Matrix3x2fc;
 
-/**
- * @param colorGetter Angle to ARGB
- */
 public record CircleGuiElementRenderState(
     float x,
     float y,
     float radius,
-    float innerRadius,
-    int segments,
-    Float2IntFunction colorGetter,
+    float innerRatio,
+    int lutRow,
     RenderPipeline pipeline,
+    TextureSetup textureSetup,
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
     @Nullable ScreenRectangle bounds
 ) implements LiquidBounceGuiElementRenderState {
 
+    private static final int INNER_RATIO_SCALE = 32767;
+
     public CircleGuiElementRenderState {
-        assert pipeline.getVertexFormatMode() == VertexFormat.Mode.TRIANGLES;
+        assert pipeline.getVertexFormatMode() == VertexFormat.Mode.QUADS;
     }
 
     @Override
     public void buildVertices(VertexConsumer vertices) {
-        float step = Mth.TWO_PI / segments();
-        Matrix3x2fc pose = pose();
+        int encodedInnerRatio = Math.round(Mth.clamp(innerRatio(), 0.0f, 1.0f) * INNER_RATIO_SCALE);
+        float x0 = x() - radius();
+        float y0 = y() - radius();
+        float x1 = x() + radius();
+        float y1 = y() + radius();
 
-        // Initial state (i=0)
-        float cAngle = 0.0f;
-        int cColor = colorGetter().get(cAngle);
-        float sinC = Mth.sin(cAngle);
-        float cosC = Mth.cos(cAngle);
-
-        float innerCurrX = x() + sinC * innerRadius();
-        float innerCurrY = y() + cosC * innerRadius();
-        float outerCurrX = x() + sinC * radius();
-        float outerCurrY = y() + cosC * radius();
-
-        for (int i = 1; i <= segments(); ++i) {
-            // Calculate next state
-            float nAngle = step * i;
-            int nColor = colorGetter().get(nAngle);
-            float sinN = Mth.sin(nAngle);
-            float cosN = Mth.cos(nAngle);
-
-            float innerNextX = x() + sinN * innerRadius();
-            float innerNextY = y() + cosN * innerRadius();
-            float outerNextX = x() + sinN * radius();
-            float outerNextY = y() + cosN * radius();
-
-            // Draw triangles for the segment
-            vertices.addVertexWith2DPose(pose, innerCurrX, innerCurrY).setColor(cColor);
-            vertices.addVertexWith2DPose(pose, outerCurrX, outerCurrY).setColor(cColor);
-            vertices.addVertexWith2DPose(pose, outerNextX, outerNextY).setColor(cColor);
-
-            vertices.addVertexWith2DPose(pose, innerCurrX, innerCurrY).setColor(nColor);
-            vertices.addVertexWith2DPose(pose, outerNextX, outerNextY).setColor(nColor);
-            vertices.addVertexWith2DPose(pose, innerNextX, innerNextY).setColor(nColor);
-
-            // Update current state for next iteration
-            cAngle = nAngle;
-            cColor = nColor;
-            innerCurrX = innerNextX;
-            innerCurrY = innerNextY;
-            outerCurrX = outerNextX;
-            outerCurrY = outerNextY;
-        }
-    }
-
-    @Override
-    public TextureSetup textureSetup() {
-        return TextureSetup.noTexture();
+        vertices.addVertexWith2DPose(pose, x0, y0).setUv(0.0f, 0.0f).setUv2(lutRow(), encodedInnerRatio);
+        vertices.addVertexWith2DPose(pose, x0, y1).setUv(0.0f, 1.0f).setUv2(lutRow(), encodedInnerRatio);
+        vertices.addVertexWith2DPose(pose, x1, y1).setUv(1.0f, 1.0f).setUv2(lutRow(), encodedInnerRatio);
+        vertices.addVertexWith2DPose(pose, x1, y0).setUv(1.0f, 0.0f).setUv2(lutRow(), encodedInnerRatio);
     }
 }
