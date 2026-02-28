@@ -167,6 +167,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         return isLadderClimbState(currentState, pos.below().getState())
     }
 
+    @Suppress("CognitiveComplexMethod")
     private fun isHazardCollision(
         boundingBox: AABB,
         level: ClientLevel,
