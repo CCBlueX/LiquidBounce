@@ -28,7 +28,9 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleStrongholdFinder.PortalBlockType
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.drawPlane
@@ -36,10 +38,15 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toFixed
+import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.world.forEachBlock
+import net.ccbluex.liquidbounce.utils.world.sectionBottonY
 import net.ccbluex.liquidbounce.utils.world.stronghold.EyeMeasurement
 import net.ccbluex.liquidbounce.utils.world.stronghold.PosteriorCandidate
 import net.ccbluex.liquidbounce.utils.world.stronghold.PosteriorSnapshot
@@ -47,16 +54,24 @@ import net.ccbluex.liquidbounce.utils.world.stronghold.StrongholdBayesianEstimat
 import net.ccbluex.liquidbounce.utils.world.stronghold.StrongholdHypothesis
 import net.ccbluex.liquidbounce.utils.world.stronghold.StrongholdHypothesisGenerator
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
+import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.resources.ResourceKey
 import net.minecraft.util.Mth
+import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.projectile.EyeOfEnder
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.hypot
 import kotlin.math.sin
 
 private const val RAY_RENDER_LENGTH = 2048.0
@@ -107,6 +122,7 @@ object ModuleStrongholdFinder : ClientModule(
     private val measurements = mutableListOf<EyeMeasurement>()
     private var posterior: PosteriorSnapshot? = null
     private var lastAnnouncedCandidate: ChunkPos? = null
+    private val detectedPortalBlocks = linkedMapOf<BlockPos, PortalBlockType>()
 
     private var hypothesisCache: List<StrongholdHypothesis> = emptyList()
     private var cachedHypothesisCount = -1
@@ -153,31 +169,26 @@ object ModuleStrongholdFinder : ClientModule(
             return@handler
         }
 
-        val packet = event.packet as? ClientboundAddEntityPacket ?: return@handler
-        if (packet.type != EntityType.EYE_OF_ENDER) {
-            return@handler
+        when (val packet = event.packet) {
+            is ClientboundAddEntityPacket -> handleEyeSpawnPacket(packet)
+            is ClientboundBlockUpdatePacket -> mc.execute {
+                trackPortalBlock(packet.pos, packet.blockState.block)
+            }
+
+            is ClientboundSectionBlocksUpdatePacket -> mc.execute {
+                packet.runUpdates { pos, state ->
+                    trackPortalBlock(pos, state.block)
+                }
+            }
+
+            is ClientboundLevelChunkWithLightPacket -> mc.execute {
+                scanChunkForPortalBlocks(packet.x, packet.z)
+            }
+
+            is ClientboundForgetLevelChunkPacket -> mc.execute {
+                removePortalBlocksInChunk(packet.pos)
+            }
         }
-
-        val nowTick = player.tickCount
-        trimPendingThrows(nowTick)
-
-        val pending = pendingThrows
-            .filter { it.dimension == world.dimension() && nowTick - it.tick in 0..maxSampleAgeTicks }
-            .minWithOrNull(
-                compareBy<PendingThrow> { nowTick - it.tick }
-                    .thenBy {
-                        val dx = it.throwPosition.x - packet.x
-                        val dz = it.throwPosition.z - packet.z
-                        dx * dx + dz * dz
-                    }
-            ) ?: return@handler
-
-        pendingThrows.remove(pending)
-        trackedEyes[packet.id] = TrackedEye(
-            entityId = packet.id,
-            throwPosition = pending.throwPosition,
-            spawnTick = nowTick
-        )
     }
 
     @Suppress("unused")
@@ -237,6 +248,11 @@ object ModuleStrongholdFinder : ClientModule(
         }
 
         renderEnvironmentForWorld(event.matrixStack) {
+            if (detectedPortalBlocks.isNotEmpty()) {
+                renderDetectedPortalBlocks(event)
+                return@renderEnvironmentForWorld
+            }
+
             if (renderRays) {
                 withPositionRelativeToCamera {
                     longLines {
@@ -260,7 +276,7 @@ object ModuleStrongholdFinder : ClientModule(
             }
 
             val snapshot = posterior ?: return@renderEnvironmentForWorld
-            val drawY = player.y
+            val drawY = player.interpolateCurrentPosition(event.partialTicks).y
             val candidates = snapshot.candidates.take(showTopCandidates)
             candidates.forEachIndexed { index, candidate ->
                 val chunkPos = candidate.toChunkPos()
@@ -286,6 +302,10 @@ object ModuleStrongholdFinder : ClientModule(
     @Suppress("unused")
     private val renderOverlayHandler = handler<OverlayRenderEvent> { event ->
         if (!isOverworld()) {
+            return@handler
+        }
+
+        if (detectedPortalBlocks.isNotEmpty()) {
             return@handler
         }
 
@@ -357,12 +377,114 @@ object ModuleStrongholdFinder : ClientModule(
         }
     }
 
+    private fun handleEyeSpawnPacket(packet: ClientboundAddEntityPacket) {
+        if (packet.type != EntityType.EYE_OF_ENDER) {
+            return
+        }
+
+        val nowTick = player.tickCount
+        trimPendingThrows(nowTick)
+
+        val pending = pendingThrows
+            .filter { it.dimension == world.dimension() && nowTick - it.tick in 0..maxSampleAgeTicks }
+            .minWithOrNull(
+                compareBy<PendingThrow> { nowTick - it.tick }
+                    .thenBy {
+                        val dx = it.throwPosition.x - packet.x
+                        val dz = it.throwPosition.z - packet.z
+                        dx * dx + dz * dz
+                    }
+            ) ?: return
+
+        pendingThrows.remove(pending)
+        trackedEyes[packet.id] = TrackedEye(
+            entityId = packet.id,
+            throwPosition = pending.throwPosition,
+            spawnTick = nowTick
+        )
+    }
+
+    private fun trackPortalBlock(pos: BlockPos, block: net.minecraft.world.level.block.Block) {
+        val key = pos.immutable
+        when (block) {
+            Blocks.END_PORTAL -> detectedPortalBlocks[key] = PortalBlockType.Portal
+            Blocks.END_PORTAL_FRAME -> detectedPortalBlocks[key] = PortalBlockType.Frame
+            else -> detectedPortalBlocks.remove(key)
+        }
+    }
+
+    private fun scanChunkForPortalBlocks(chunkX: Int, chunkZ: Int) {
+        val chunk = world.getChunk(chunkX, chunkZ)
+        removePortalBlocksInChunk(chunk.pos)
+
+        val startX = chunk.pos.minBlockX
+        val startZ = chunk.pos.minBlockZ
+
+        for (sectionIndex in 0..chunk.highestFilledSectionIndex) {
+            val section = chunk.getSection(sectionIndex)
+            val startY = chunk.sectionBottonY(sectionIndex)
+
+            section.forEachBlock { localX, localY, localZ, state ->
+                when (state.block) {
+                    Blocks.END_PORTAL -> detectedPortalBlocks[BlockPos(startX or localX, startY or localY, startZ or localZ)] = PortalBlockType.Portal
+                    Blocks.END_PORTAL_FRAME -> detectedPortalBlocks[BlockPos(startX or localX, startY or localY, startZ or localZ)] = PortalBlockType.Frame
+                }
+            }
+        }
+    }
+
+    private fun removePortalBlocksInChunk(chunkPos: ChunkPos) {
+        detectedPortalBlocks.entries.removeIf { (pos, _) ->
+            chunkPos.contains(pos)
+        }
+    }
+
+    private fun WorldRenderEnvironment.renderDetectedPortalBlocks(event: WorldRenderEvent) {
+        detectedPortalBlocks.forEach { (pos, type) ->
+            withPositionRelativeToCamera(pos.toVec3d(yOffset = 0.01)) {
+                drawPlane(1f, 1f, type.color, type.color.darker())
+            }
+        }
+
+        val playerPos = player.interpolateCurrentPosition(event.partialTicks)
+        val closestPortalPos = detectedPortalBlocks.keys.minByOrNull { pos ->
+            pos.distToCenterSqr(playerPos)
+        } ?: return
+
+        val start = playerPos.add(0.0, 0.05, 0.0)
+        val target = closestPortalPos.center
+
+        withPositionRelativeToCamera {
+            longLines {
+                drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+                    val lineColor = Color4b(255, 80, 80, 220).argb
+                    addVertex(pose, start).setColor(lineColor)
+                    addVertex(pose, target).setColor(lineColor)
+
+                    val deltaX = target.x - start.x
+                    val deltaZ = target.z - start.z
+                    val horizontalLength = hypot(deltaX, deltaZ)
+                    if (horizontalLength > 1e-6) {
+                        val markerEnd = Vec3(
+                            start.x + deltaX / horizontalLength * 2.0,
+                            start.y,
+                            start.z + deltaZ / horizontalLength * 2.0
+                        )
+                        addVertex(pose, start).setColor(lineColor)
+                        addVertex(pose, markerEnd).setColor(lineColor)
+                    }
+                }
+            }
+        }
+    }
+
     private fun resetState() {
         pendingThrows.clear()
         trackedEyes.clear()
         measurements.clear()
         posterior = null
         lastAnnouncedCandidate = null
+        detectedPortalBlocks.clear()
     }
 
     private fun isOverworld(): Boolean {
@@ -388,4 +510,9 @@ object ModuleStrongholdFinder : ClientModule(
         val throwPosition: Vec3,
         val spawnTick: Int,
     )
+
+    private enum class PortalBlockType(val color: Color4b) {
+        Portal(Color4b(0, 220, 255, 170)),
+        Frame(Color4b(255, 215, 0, 170)),
+    }
 }

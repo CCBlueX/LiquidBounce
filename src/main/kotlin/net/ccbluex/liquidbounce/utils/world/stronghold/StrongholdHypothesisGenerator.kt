@@ -45,11 +45,13 @@ data class StrongholdHypothesis(
 
 object StrongholdHypothesisGenerator {
 
+    @JvmStatic
     fun generate(hypothesisCount: Int, seed: Long = HYPOTHESIS_SEED): List<StrongholdHypothesis> {
         require(hypothesisCount >= 1) { "Hypothesis count must be >= 1" }
         return List(hypothesisCount) { index -> generateSingle(seed + index) }
     }
 
+    @JvmStatic
     fun ringDistribution(
         spread: Int = SPREAD,
         count: Int = STRONGHOLD_COUNT,
