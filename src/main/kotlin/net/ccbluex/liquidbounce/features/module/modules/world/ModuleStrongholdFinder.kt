@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -28,7 +29,6 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleStrongholdFinder.PortalBlockType
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addVertex
@@ -45,8 +45,7 @@ import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.ccbluex.liquidbounce.utils.world.forEachBlock
-import net.ccbluex.liquidbounce.utils.world.sectionBottonY
+import net.ccbluex.liquidbounce.utils.world.forEachSectionBlock
 import net.ccbluex.liquidbounce.utils.world.stronghold.EyeMeasurement
 import net.ccbluex.liquidbounce.utils.world.stronghold.PosteriorCandidate
 import net.ccbluex.liquidbounce.utils.world.stronghold.PosteriorSnapshot
@@ -67,7 +66,7 @@ import net.minecraft.world.entity.projectile.EyeOfEnder
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.Level
-import net.minecraft.world.level.chunk.LevelChunk
+import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -84,6 +83,7 @@ private const val RAY_RENDER_LENGTH = 2048.0
  *
  * [Article](https://github.com/Ninjabrain1/Ninjabrain-Bot/blob/main/triangulation.pdf)
  */
+@Suppress("TooManyFunctions")
 object ModuleStrongholdFinder : ClientModule(
     "StrongholdFinder",
     ModuleCategories.WORLD,
@@ -118,7 +118,7 @@ object ModuleStrongholdFinder : ClientModule(
     private val resetOnWorldChange by boolean("ResetOnWorldChange", true)
 
     private val pendingThrows = ArrayDeque<PendingThrow>()
-    private val trackedEyes = linkedMapOf<Int, TrackedEye>()
+    private val trackedEyes = Int2ObjectLinkedOpenHashMap<TrackedEye>()
     private val measurements = mutableListOf<EyeMeasurement>()
     private var posterior: PosteriorSnapshot? = null
     private var lastAnnouncedCandidate: ChunkPos? = null
@@ -170,7 +170,10 @@ object ModuleStrongholdFinder : ClientModule(
         }
 
         when (val packet = event.packet) {
-            is ClientboundAddEntityPacket -> handleEyeSpawnPacket(packet)
+            is ClientboundAddEntityPacket -> mc.execute {
+                handleEyeSpawnPacket(packet)
+            }
+
             is ClientboundBlockUpdatePacket -> mc.execute {
                 trackPortalBlock(packet.pos, packet.blockState.block)
             }
@@ -200,9 +203,11 @@ object ModuleStrongholdFinder : ClientModule(
         val nowTick = player.tickCount
         trimPendingThrows(nowTick)
 
-        val trackedIterator = trackedEyes.iterator()
+        val trackedIterator = trackedEyes.int2ObjectEntrySet().iterator()
         while (trackedIterator.hasNext()) {
-            val (entityId, trackedEye) = trackedIterator.next()
+            val entry = trackedIterator.next()
+            val entityId = entry.intKey
+            val trackedEye = entry.value
 
             if (nowTick - trackedEye.spawnTick < sampleDelayTicks) {
                 continue
@@ -397,19 +402,19 @@ object ModuleStrongholdFinder : ClientModule(
             ) ?: return
 
         pendingThrows.remove(pending)
-        trackedEyes[packet.id] = TrackedEye(
+        val trackedEye = TrackedEye(
             entityId = packet.id,
             throwPosition = pending.throwPosition,
             spawnTick = nowTick
         )
+        trackedEyes.put(packet.id, trackedEye)
     }
 
-    private fun trackPortalBlock(pos: BlockPos, block: net.minecraft.world.level.block.Block) {
-        val key = pos.immutable
+    private fun trackPortalBlock(pos: BlockPos, block: Block) {
         when (block) {
-            Blocks.END_PORTAL -> detectedPortalBlocks[key] = PortalBlockType.Portal
-            Blocks.END_PORTAL_FRAME -> detectedPortalBlocks[key] = PortalBlockType.Frame
-            else -> detectedPortalBlocks.remove(key)
+            Blocks.END_PORTAL -> detectedPortalBlocks[pos.immutable] = PortalBlockType.Portal
+            Blocks.END_PORTAL_FRAME -> detectedPortalBlocks[pos.immutable] = PortalBlockType.Frame
+            else -> detectedPortalBlocks.remove(pos)
         }
     }
 
@@ -417,17 +422,11 @@ object ModuleStrongholdFinder : ClientModule(
         val chunk = world.getChunk(chunkX, chunkZ)
         removePortalBlocksInChunk(chunk.pos)
 
-        val startX = chunk.pos.minBlockX
-        val startZ = chunk.pos.minBlockZ
-
         for (sectionIndex in 0..chunk.highestFilledSectionIndex) {
-            val section = chunk.getSection(sectionIndex)
-            val startY = chunk.sectionBottonY(sectionIndex)
-
-            section.forEachBlock { localX, localY, localZ, state ->
+            chunk.forEachSectionBlock(sectionIndex) { pos, state ->
                 when (state.block) {
-                    Blocks.END_PORTAL -> detectedPortalBlocks[BlockPos(startX or localX, startY or localY, startZ or localZ)] = PortalBlockType.Portal
-                    Blocks.END_PORTAL_FRAME -> detectedPortalBlocks[BlockPos(startX or localX, startY or localY, startZ or localZ)] = PortalBlockType.Frame
+                    Blocks.END_PORTAL -> detectedPortalBlocks[pos.immutable] = PortalBlockType.Portal
+                    Blocks.END_PORTAL_FRAME -> detectedPortalBlocks[pos.immutable] = PortalBlockType.Frame
                 }
             }
         }

@@ -38,8 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.joinAll
-import net.ccbluex.liquidbounce.utils.world.forEachBlock
-import net.ccbluex.liquidbounce.utils.world.sectionBottonY
+import net.ccbluex.liquidbounce.utils.world.forEachSectionBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
@@ -164,16 +163,8 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     ) {
         Array(chunk.highestFilledSectionIndex + 1) { sectionIndex ->
             scope.launch {
-                val startX = chunk.pos.minBlockX
-                val startY = chunk.sectionBottonY(sectionIndex)
-                val startZ = chunk.pos.minBlockZ
-                val blockPos = threadLocalBlockPos.get()
-                val section = chunk.getSection(sectionIndex)
-
-                section.forEachBlock { localX, localY, localZ, state ->
-                    val pos = blockPos.set(startX or localX, startY or localY, startZ or localZ)
-                    action.accept(pos, state)
-                }
+                val mutable = threadLocalBlockPos.get()
+                chunk.forEachSectionBlock(sectionIndex, mutable, action::accept)
             }
         }.joinAll()
     }
