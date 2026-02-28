@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
+import net.ccbluex.liquidbounce.utils.block.collisionShape
+import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
@@ -34,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.math.iterateBottomLayerBlockPos
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -71,6 +74,7 @@ import net.minecraft.world.level.ExplosionDamageCalculator
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerExplosion
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.MagmaBlock
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
@@ -696,3 +700,20 @@ val LocalPlayer.immuneToMagmaBlocks
         || this.isCreative
         || this.isSpectator
         || this.getItemBySlot(EquipmentSlot.FEET).getEnchantment(Enchantments.FROST_WALKER) > 0
+
+/**
+ * @receiver the specific bounding box of a player, mob or even another block.
+ */
+fun AABB.isOnMagmaBlock(): Boolean {
+    // Blocks that are the height of a trapdoor or lower
+    // (such as snow layers, carpets, repeaters, or comparators)
+    // do not prevent a magma block from damaging mobs and players above it.
+    // Therefore, we expand the box downward by 0.2 blocks.
+    val expandedBox = inflate(0.0, 0.1, 0.0)
+        .move(0.0, -0.1, 0.0)
+
+    return expandedBox.iterateBottomLayerBlockPos().any {
+        it.getBlock() is MagmaBlock &&
+            expandedBox.intersects(it.collisionShape.bounds().move(it))
+    }
+}

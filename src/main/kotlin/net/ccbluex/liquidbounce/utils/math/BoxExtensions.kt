@@ -20,6 +20,9 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
+import net.ccbluex.liquidbounce.utils.client.ceilToInt
+import net.ccbluex.liquidbounce.utils.client.floorToInt
+import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
@@ -42,6 +45,22 @@ inline operator fun AABB.plus(offset: Vec3i): AABB =
 
 inline operator fun AABB.minus(offset: Vec3i): AABB =
     this.move(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
+
+fun AABB.iterateBlockPos(
+    minYInclusive: Int = minY.floorToInt(),
+    maxYInclusive: Int = maxY.ceilToInt(),
+): Iterable<BlockPos> =
+    BlockPos.betweenClosed(
+        minX.floorToInt(),
+        minYInclusive,
+        minZ.floorToInt(),
+        maxX.ceilToInt(),
+        maxYInclusive,
+        maxZ.ceilToInt(),
+    )
+
+fun AABB.iterateBottomLayerBlockPos(): Iterable<BlockPos> =
+    iterateBlockPos(maxYInclusive = minY.ceilToInt())
 
 fun AABB.centerPointOf(side: Direction): Vec3 {
     val cx = minX + xsize * 0.5
