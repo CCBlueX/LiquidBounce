@@ -44,6 +44,8 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionResult.Success
+import net.minecraft.world.InteractionResult.SwingSource
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.item.ItemStack
@@ -507,24 +509,28 @@ fun doPlacement(
     val stack = player.getItemInHand(hand)
     val count = stack.count
 
-    val interactionResult = interaction.useItemOn(player, hand, rayTraceResult)
+    val useItemOnResult = interaction.useItemOn(player, hand, rayTraceResult)
 
     when {
-        interactionResult == InteractionResult.FAIL -> {
+        useItemOnResult == InteractionResult.FAIL -> {
             return
         }
 
-        interactionResult == InteractionResult.PASS -> {
+        useItemOnResult == InteractionResult.PASS -> {
             // Ok, we cannot place on the block, so let's just use the item in the direction
             // without targeting a block (for buckets, etc.)
-            handlePass(hand, stack, onItemUseSuccess, swingMode)
-            return
+            if (!stack.isEmpty) {
+                val useItemResult = interaction.useItem(player, hand)
+                if (useItemResult.consumesAction()) {
+                    handleActionsOnAccept(hand, useItemResult, true, onItemUseSuccess, swingMode)
+                }
+            }
         }
 
-        interactionResult.consumesAction() -> {
+        useItemOnResult.consumesAction() -> {
             val wasStackUsed = !stack.isEmpty && (stack.count != count || player.isCreative)
 
-            handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess, swingMode)
+            handleActionsOnAccept(hand, useItemOnResult, wasStackUsed, onPlacementSuccess, swingMode)
         }
     }
 }
@@ -533,52 +539,26 @@ fun doPlacement(
  * Swings item, resets equip progress and hand swing progress
  *
  * @param wasStackUsed was an item consumed in order to place the block
- * @param onPlacementSuccess if result of the lambda is true, swing hand with [swingMode]
+ * @param shouldSwing if result of the lambda is true, swing hand with [swingMode]
  */
 private inline fun handleActionsOnAccept(
     hand: InteractionHand,
     interactionResult: InteractionResult,
     wasStackUsed: Boolean,
-    onPlacementSuccess: () -> Boolean,
-    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
+    shouldSwing: () -> Boolean,
+    swingMode: SwingMode,
 ) {
-    if (!interactionResult.shouldSwingHand()) {
+    if (interactionResult is Success && interactionResult.swingSource != SwingSource.CLIENT) {
         return
     }
 
-    if (onPlacementSuccess()) {
+    if (shouldSwing()) {
         swingMode.swing(hand)
     }
 
     if (wasStackUsed) {
         mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
     }
-
-    return
-}
-
-private fun InteractionResult.shouldSwingHand(): Boolean {
-    return this !is InteractionResult.Success ||
-        this.swingSource != InteractionResult.SwingSource.SERVER
-}
-
-
-/**
- * Just interacts with the item in the hand instead of using it on the block
- */
-private inline fun handlePass(
-    hand: InteractionHand,
-    stack: ItemStack,
-    onItemUseSuccess: () -> Boolean,
-    swingMode: SwingMode
-) {
-    if (stack.isEmpty) {
-        return
-    }
-
-    val actionResult = interaction.useItem(player, hand)
-
-    handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess, swingMode)
 }
 
 /**
