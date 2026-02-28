@@ -25,12 +25,14 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.AvoidHazardInputPlanner
+import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.isLadderClimbState
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
 import net.ccbluex.liquidbounce.utils.math.iterateBlockPos
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
@@ -123,13 +125,21 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput)
         simulatedPlayer.pos = player.position()
         var previousBoundingBox = simulatedPlayer.boundingBox
+        // Do not reject every candidate while already on a ladder. We only block
+        // transitions that newly enter climb-state.
+        val startedOnLadder = Avoid.LADDERS in avoidModes && wouldEnterLadderClimbState(simulatedPlayer)
 
         repeat(MOVEMENT_PREDICTION_TICKS) {
             simulatedPlayer.tick()
             val currentBoundingBox = simulatedPlayer.boundingBox
             val sweptBoundingBox = previousBoundingBox.minmax(currentBoundingBox)
+            val enteredLadder =
+                Avoid.LADDERS in avoidModes &&
+                    !startedOnLadder &&
+                    wouldEnterLadderClimbState(simulatedPlayer)
 
-            if (isHazardCollision(currentBoundingBox, level, avoidModes) ||
+            if (enteredLadder ||
+                isHazardCollision(currentBoundingBox, level, avoidModes) ||
                 isHazardCollision(sweptBoundingBox, level, avoidModes)
             ) {
                 return false
@@ -139,6 +149,22 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         }
 
         return true
+    }
+
+    /**
+     * Predict whether the simulated player would be in a vanilla climb-state
+     * after this movement step.
+     *
+     * @see net.minecraft.world.entity.LivingEntity.onClimbable
+     * @see isLadderClimbState
+     */
+    private fun wouldEnterLadderClimbState(simulatedPlayer: SimulatedPlayer): Boolean {
+        return isLadderClimbStateAt(simulatedPlayer.pos.toBlockPos())
+    }
+
+    private fun isLadderClimbStateAt(pos: BlockPos): Boolean {
+        val currentState = pos.getState() ?: return false
+        return isLadderClimbState(currentState, pos.below().getState())
     }
 
     private fun isHazardCollision(
@@ -210,6 +236,9 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         }),
         COBWEB("Cobwebs", test = { block, _, _ ->
             block is WebBlock
+        }),
+        LADDERS("Ladders", test = { _, _, pos ->
+            isLadderClimbStateAt(pos)
         }),
         PRESSURE_PLATES("PressurePlates", fullCube = false, test = { block, _, _ ->
             block is BasePressurePlateBlock
