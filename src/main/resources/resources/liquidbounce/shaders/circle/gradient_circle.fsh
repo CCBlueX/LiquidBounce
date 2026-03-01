@@ -14,9 +14,9 @@ in float vInnerRatio;
 
 out vec4 fragColor;
 
-vec4 unpackColor(ivec2 packed) {
-    int rg = packed.x & 0xFFFF;
-    int ba = packed.y & 0xFFFF;
+vec4 unpackColor(ivec2 packedColor) {
+    int rg = packedColor.x & 0xFFFF;
+    int ba = packedColor.y & 0xFFFF;
     return vec4(
         float((rg >> 8) & 0xFF),
         float(rg & 0xFF),
