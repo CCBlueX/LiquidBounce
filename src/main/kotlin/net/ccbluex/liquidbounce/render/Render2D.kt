@@ -23,17 +23,18 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import it.unimi.dsi.fastutil.floats.Float2IntFunction
-import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.gui.GuiCircleLutAtlas
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.ccbluex.liquidbounce.utils.render.CircleGuiElementRenderState
-import net.ccbluex.liquidbounce.utils.render.LambdaSimpleGuiElementRenderState
-import net.ccbluex.liquidbounce.utils.render.LineGuiElementRenderState
-import net.ccbluex.liquidbounce.utils.render.QuadGuiElementRenderState
-import net.ccbluex.liquidbounce.utils.render.TexQuadGuiElementRenderState
-import net.ccbluex.liquidbounce.utils.render.TriangleGuiElementRenderState
+import net.ccbluex.liquidbounce.render.gui.element.CircleGuiElementRenderState
+import net.ccbluex.liquidbounce.render.gui.element.LambdaSimpleGuiElementRenderState
+import net.ccbluex.liquidbounce.render.gui.element.LineGuiElementRenderState
+import net.ccbluex.liquidbounce.render.gui.element.QuadGuiElementRenderState
+import net.ccbluex.liquidbounce.render.gui.element.TexQuadGuiElementRenderState
+import net.ccbluex.liquidbounce.render.gui.element.TriangleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.navigation.ScreenRectangle
@@ -92,7 +93,7 @@ fun GuiGraphics.getBoundsXYWH(x: Float, y: Float, w: Float, h: Float): ScreenRec
 }
 
 fun GuiGraphics.getBounds(box: BoundingBox2f): ScreenRectangle =
-    getBoundsXYWH(box.xMin, box.yMin, box.width, box.height)
+    getBounds(box.xMin, box.yMin, box.xMax, box.yMax)
 
 inline fun GuiGraphics.copyPose(): Matrix3x2f = Pools.Mat3x2f.borrow().set(this.pose())
 
@@ -379,9 +380,14 @@ fun GuiGraphics.drawCircle(
     y: Float,
     radius: Float,
     innerRadius: Float = 0f,
-    segments: Int = 40,
     colorGetter: Float2IntFunction = Float2IntFunction { Color4b.WHITE.argb },
 ) {
+    if (radius <= 0f) {
+        return
+    }
+
+    val lut = GuiCircleLutAtlas.allocate(colorGetter)
+    val innerRatio = (innerRadius / radius).coerceIn(0f, 1f)
     val bounds = getBoundsXYWH(x - radius, y - radius, radius * 2, radius * 2)
 
     this.guiRenderState.submitGuiElement(
@@ -389,10 +395,10 @@ fun GuiGraphics.drawCircle(
             x,
             y,
             radius,
-            innerRadius,
-            segments,
-            colorGetter,
-            ClientRenderPipelines.GUI.triangles(true),
+            innerRatio,
+            lut.row,
+            ClientRenderPipelines.GUI.circleLut(),
+            lut.textureSetup,
             copyPose(),
             this.scissorStack.peek(),
             bounds

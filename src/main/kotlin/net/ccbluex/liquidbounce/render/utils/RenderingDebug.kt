@@ -17,25 +17,25 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.render;
+package net.ccbluex.liquidbounce.render.utils
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.TextureSetup;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix3x2f;
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 
-public record LambdaSimpleGuiElementRenderState(
-    RenderPipeline pipeline,
-    TextureSetup textureSetup,
-    Matrix3x2f pose,
-    @Nullable ScreenRectangle scissorArea,
-    @Nullable ScreenRectangle bounds,
-    VerticesSetupHandler verticesSetupHandler
-) implements LiquidBounceGuiElementRenderState {
-    @Override
-    public void buildVertices(VertexConsumer vertices) {
-        verticesSetupHandler.setupVertices(vertices, this.pose());
+object RenderingDebug : DebuggedOwner {
+
+    var renderPassCount = 0
+        private set
+
+    @JvmStatic
+    fun increaseRenderPassCount() {
+        renderPassCount++
     }
+
+    @JvmStatic
+    fun flipFrame() {
+        debugParameter("RenderPassCount") { renderPassCount }
+        renderPassCount = 0
+    }
+
 }

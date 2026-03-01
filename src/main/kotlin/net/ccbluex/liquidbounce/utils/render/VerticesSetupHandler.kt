@@ -23,7 +23,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer
 import org.joml.Matrix3x2f
 
 /**
- * @see LambdaSimpleGuiElementRenderState
+ * @see net.ccbluex.liquidbounce.render.gui.element.LambdaSimpleGuiElementRenderState
  */
 fun interface VerticesSetupHandler {
     fun VertexConsumer.setupVertices(pose: Matrix3x2f)

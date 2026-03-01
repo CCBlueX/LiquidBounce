@@ -17,16 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.render;
+package net.ccbluex.liquidbounce.render.gui
 
-import net.minecraft.client.gui.render.state.GuiElementRenderState;
-import org.joml.Matrix3x2f;
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 
-public sealed interface LiquidBounceGuiElementRenderState
-    extends GuiElementRenderState
-    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState {
-    /**
-     * Recyclable pose matrix.
-     */
-    Matrix3x2f pose();
+interface GuiRearrangeable {
+    var bounds: BoundingBox2f
 }

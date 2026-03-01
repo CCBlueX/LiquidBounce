@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.f
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
-import net.ccbluex.liquidbounce.utils.entity.any
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
@@ -49,6 +48,7 @@ import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.network.protocol.Packet
+import net.minecraft.world.entity.player.Input
 import net.minecraft.world.item.CreativeModeTabs
 import org.lwjgl.glfw.GLFW
 
@@ -125,7 +125,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent>(FINAL_DECISION) {
         if (delayedContainerPackets.isEmpty() ||
-            behavior !== Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
+            behavior !== Behaviour.STOP_ON_ACTION) {
             return@handler
         }
 
@@ -140,13 +140,13 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(FIRST_PRIORITY) { event ->
-        if (behavior !== Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
+        if (behavior !== Behaviour.STOP_ON_ACTION) {
             return@handler
         }
 
         val packet = event.packet
 
-        if (packet.isC2SContainerPacket() && player.input.keyPresses.any) {
+        if (packet.isC2SContainerPacket() && player.input.keyPresses != Input.EMPTY) {
             event.cancelEvent()
             // Here only be called from render thread because [packet] is c2s
             delayedContainerPackets += packet

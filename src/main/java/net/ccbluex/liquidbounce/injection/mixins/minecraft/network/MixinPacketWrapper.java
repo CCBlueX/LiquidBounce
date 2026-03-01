@@ -22,9 +22,10 @@ import com.viaversion.viaversion.api.protocol.Protocol;
 import com.viaversion.viaversion.api.protocol.packet.PacketType;
 import com.viaversion.viaversion.api.type.Type;
 import com.viaversion.viaversion.api.type.Types;
+import com.viaversion.viaversion.exception.InformativeException;
+import com.viaversion.viaversion.protocols.v1_16_1to1_16_2.packet.ServerboundPackets1_16_2;
+import com.viaversion.viaversion.protocols.v1_21_2to1_21_4.packet.ServerboundPackets1_21_4;
 import com.viaversion.viaversion.protocols.v1_9_1to1_9_3.packet.ServerboundPackets1_9_3;
-import net.ccbluex.liquidbounce.utils.client.ClientChat;
-import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,24 +43,34 @@ public abstract class MixinPacketWrapper {
     public abstract @Nullable PacketType getPacketType();
 
     @Shadow
-    public abstract <T> T get(Type<T> type, int index) throws Exception;
+    public abstract <T> T get(Type<T> type, int index) throws InformativeException;
 
-    /**
-     * An injection that prevents ViaFabricPlus from sending an inventory packet twice.
-     * <p>
-     * This can be caused when inventory-managing modules silently open inventory and the user tries to manually open
-     * their inventory, which results in the same packet being sent twice.
-     */
     @Inject(method = "scheduleSendToServer", at = @At("HEAD"), cancellable = true)
-    private void preventInventoryPacketDuplication(Class<? extends Protocol> protocol, boolean skipCurrentPipeline, CallbackInfo ci) {
-        try {
-            if (this.getPacketType() == ServerboundPackets1_9_3.CLIENT_COMMAND && this.get(Types.VAR_INT, 0) == 2 &&
-                    InventoryManager.INSTANCE.isInventoryOpenServerSide()) {
-                ci.cancel();
-            }
-        } catch (Exception e) {
-            ClientChat.chat("§cInventory packet duplication prevention check failed, report to developers!");
-            ClientUtilsKt.getLogger().error("Inventory packet duplication prevention check failed", e);
+    private void vfpSendPacketHandler(Class<? extends Protocol> protocol, boolean skipCurrentPipeline, CallbackInfo ci) {
+        PacketType packetType = this.getPacketType();
+
+        /*
+          An injection that prevents ViaFabricPlus from sending an inventory packet twice.
+          <p>
+          This can be caused when inventory-managing modules silently open inventory and the user tries to manually open
+          their inventory, which results in the same packet being sent twice.
+         */
+        if (packetType == ServerboundPackets1_9_3.CLIENT_COMMAND && this.get(Types.VAR_INT, 0) == 2 &&
+                InventoryManager.INSTANCE.isInventoryOpenServerSide()) {
+            ci.cancel();
+        }
+
+        /*
+          Handles old protocol version of {@link ServerboundContainerClickPacket} (containerId = 0)
+
+          https://github.com/ViaVersion/ViaFabricPlus/blob/e7a6c9d193e278120942a805f14201048ceb43ff/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/interaction/container_clicking/MixinMultiPlayerGameMode.java#L79
+         */
+        if (packetType == ServerboundPackets1_16_2.CONTAINER_CLICK && this.get(Types.BYTE, 0) == 0
+            || packetType == ServerboundPackets1_21_4.CONTAINER_CLICK && this.get(Types.VAR_INT, 0) == 0) {
+            // Note: this doesn't cover all handlers of PacketEvent
+            InventoryManager.onClickOccurs();
+            InventoryManager.INSTANCE.setInventoryOpenServerSide$liquidbounce(true);
         }
     }
+
 }

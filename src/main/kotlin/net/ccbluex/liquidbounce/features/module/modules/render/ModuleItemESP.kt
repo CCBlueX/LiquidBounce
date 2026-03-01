@@ -107,7 +107,6 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                 .rotateY(-camera.yRot().toRadians())
 
             longLines {
-                startBatch()
                 // Using entitiesForRendering() to get a list of entities around
                 val entities = world.entitiesForRendering()
                 for (entity in entities) {
@@ -125,7 +124,6 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                         p2 = pos,
                     )
                 }
-                commitBatch()
             }
         }
     }
@@ -161,7 +159,6 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
             val outlineColor = base.with(a = 100)
 
             renderEnvironmentForWorld(matrixStack) {
-                startBatch()
                 for (entity in entities) {
                     val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
@@ -169,7 +166,6 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                         drawBox(box, baseColor, outlineColor)
                     }
                 }
-                commitBatch()
             }
         }
     }

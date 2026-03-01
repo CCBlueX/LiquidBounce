@@ -57,7 +57,7 @@ class BlinkEspBox(
     getEspData: Supplier<BlinkEspData?>,
 ) : BlinkEspMode("Box", getEspData) {
     private val color by color("Color", Color4b(36, 32, 147, 87))
-    private val outlineColor by color("Color", Color4b(36, 32, 147, 255))
+    private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->

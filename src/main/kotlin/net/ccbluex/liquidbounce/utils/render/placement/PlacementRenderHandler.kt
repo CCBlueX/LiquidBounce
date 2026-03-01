@@ -67,7 +67,6 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
             val outlineColor = getOutlineColor(id)
 
             renderEnvironmentForWorld(matrixStack) {
-                startBatch()
                 fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: AABB, colorFactor: Float) {
                     withPositionRelativeToCamera(blockPos) {
                         drawBox(
@@ -131,7 +130,6 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     }
                 }
 
-                commitBatch()
             }
         }
     }

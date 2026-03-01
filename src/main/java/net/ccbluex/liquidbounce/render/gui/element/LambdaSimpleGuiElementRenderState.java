@@ -17,45 +17,26 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.render;
+package net.ccbluex.liquidbounce.render.gui.element;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.renderer.RenderPipelines;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
-/**
- * Float version of {@link net.minecraft.client.gui.render.state.ColoredRectangleRenderState}
- */
-public record QuadGuiElementRenderState(
-    float x0,
-    float y0,
-    float x1,
-    float y1,
-    int argb,
+public record LambdaSimpleGuiElementRenderState(
+    RenderPipeline pipeline,
+    TextureSetup textureSetup,
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
-    @Nullable ScreenRectangle bounds
+    @Nullable ScreenRectangle bounds,
+    VerticesSetupHandler verticesSetupHandler
 ) implements LiquidBounceGuiElementRenderState {
-
     @Override
     public void buildVertices(VertexConsumer vertices) {
-        vertices.addVertexWith2DPose(pose, x0, y0).setColor(argb);
-        vertices.addVertexWith2DPose(pose, x0, y1).setColor(argb);
-        vertices.addVertexWith2DPose(pose, x1, y1).setColor(argb);
-        vertices.addVertexWith2DPose(pose, x1, y0).setColor(argb);
-    }
-
-    @Override
-    public RenderPipeline pipeline() {
-        return RenderPipelines.GUI;
-    }
-
-    @Override
-    public TextureSetup textureSetup() {
-        return TextureSetup.noTexture();
+        verticesSetupHandler.setupVertices(vertices, this.pose());
     }
 }

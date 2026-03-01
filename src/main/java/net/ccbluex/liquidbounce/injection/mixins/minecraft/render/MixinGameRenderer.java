@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen;
 import net.minecraft.client.Camera;
@@ -102,9 +103,16 @@ public abstract class MixinGameRenderer {
         WorldToScreen.setMatrices(projectionMatrix, modelViewMatrix);
 
         var newMatStack = Pools.MatStack.borrow();
-        newMatStack.mulPose(modelViewMatrix);
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.mainCamera, deltaTracker.getGameTimeDeltaPartialTick(false)));
-        Pools.MatStack.recycle(newMatStack);
+        try {
+            newMatStack.mulPose(modelViewMatrix);
+            WorldRenderEnvironment.beginWorldFrame(minecraft.getMainRenderTarget(), newMatStack, this.mainCamera);
+            EventManager.INSTANCE.callEvent(
+                new WorldRenderEvent(newMatStack, this.mainCamera, deltaTracker.getGameTimeDeltaPartialTick(false))
+            );
+        } finally {
+            WorldRenderEnvironment.endWorldFrame();
+            Pools.MatStack.recycle(newMatStack);
+        }
     }
 
     @ModifyArg(

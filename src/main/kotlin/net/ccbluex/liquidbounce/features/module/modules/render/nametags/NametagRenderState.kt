@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.SingleItemStackRenderer
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.SingleItemStackRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition

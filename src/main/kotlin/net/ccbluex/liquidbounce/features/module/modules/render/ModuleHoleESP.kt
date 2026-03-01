@@ -86,7 +86,6 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
             val hDistance = horizontalDistance
 
             renderEnvironmentForWorld(event.matrixStack) {
-                startBatch()
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
@@ -107,7 +106,6 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
                         )
                     }
                 }
-                commitBatch()
             }
         }
     }

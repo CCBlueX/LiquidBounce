@@ -145,6 +145,14 @@ object ClientRenderPipelines {
             withVertexFormat(DefaultVertexFormat.POSITION_COLOR, mode)
         }
 
+        private val CircleLut = newPipeline("gui/circle_lut") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withVertexShader(ClientShaders.Vertex.GuiCircleLut)
+            withFragmentShader(ClientShaders.Fragment.GuiCircleLut)
+            withSampler("Sampler0")
+            withVertexFormat(ClientVertexFormats.GUI_CIRCLE_LUT, VertexFormat.Mode.QUADS)
+        }
+
         private val Lines = newPipeline("gui/lines") {
             guiPosColorSnippet(VertexFormat.Mode.DEBUG_LINES)
         }
@@ -174,6 +182,9 @@ object ClientRenderPipelines {
 
         @JvmStatic
         fun triangles(cull: Boolean) = if (cull) Triangles else TrianglesNoCull
+
+        @JvmStatic
+        fun circleLut() = CircleLut
     }
 
     /**
@@ -298,6 +309,13 @@ object ClientRenderPipelines {
         withUniformBuffer(ClientUniformDefine.ROUNDED_RECT)
     }
 
+    private fun RenderPipeline.Builder.gradientCircleSnippet() {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withVertexShader(ClientShaders.Vertex.GradientCircle)
+        withFragmentShader(ClientShaders.Fragment.GradientCircle)
+        withVertexFormat(ClientVertexFormats.GRADIENT_CIRCLE, VertexFormat.Mode.QUADS)
+    }
+
     private val RoundedRect = newPipeline("rounded_rect") {
         roundedRectSnippet()
         forWorldRender(noDepthTest = false)
@@ -309,6 +327,19 @@ object ClientRenderPipelines {
     }
 
     fun roundedRect(noDepthTest: Boolean) = if (noDepthTest) RoundedRectNoDepthTest else RoundedRect
+
+    private val GradientCircle = newPipeline("gradient_circle") {
+        gradientCircleSnippet()
+        forWorldRender(noDepthTest = false)
+    }
+
+    private val GradientCircleNoDepthTest = newPipeline("gradient_circle_no_depth_test") {
+        gradientCircleSnippet()
+        forWorldRender(noDepthTest = true)
+    }
+
+    fun gradientCircle(noDepthTest: Boolean) =
+        if (noDepthTest) GradientCircleNoDepthTest else GradientCircle
 
     // Special
 

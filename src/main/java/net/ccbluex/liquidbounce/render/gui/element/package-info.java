@@ -17,14 +17,5 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.engine
-
-import java.awt.Font
-
-@JvmRecord
-data class FontId(
-    val style: Int,
-    val awtFont: Font,
-    val height: Float,
-    val ascent: Float
-)
+@org.jspecify.annotations.NullMarked
+package net.ccbluex.liquidbounce.render.gui.element;

@@ -29,10 +29,6 @@ import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.block.collisionShape
-import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
-import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_6
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
@@ -40,13 +36,11 @@ import net.ccbluex.liquidbounce.utils.client.send1_21_5StopSneaking
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
+import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket
-import net.minecraft.world.level.block.MagmaBlock
-import net.minecraft.world.phys.AABB
 
 /**
  * Sneak module
@@ -158,38 +152,11 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
         simulatedPlayer.pos = player.position()
 
         simulatedPlayer.tick()
-        val isOnMagmaBlockAfterOneTick = isOnMagmaBlock(simulatedPlayer.boundingBox)
+        val isOnMagmaBlockAfterOneTick = simulatedPlayer.boundingBox.isOnMagmaBlock()
 
         simulatedPlayer.tick()
-        val isOnMagmaBlockAfterTwoTicks = isOnMagmaBlock(simulatedPlayer.boundingBox)
+        val isOnMagmaBlockAfterTwoTicks = simulatedPlayer.boundingBox.isOnMagmaBlock()
 
         return isOnMagmaBlockAfterOneTick || isOnMagmaBlockAfterTwoTicks
-    }
-
-    /**
-     * [boundingBox] - the specific bounding box of a player, mob or even another block.
-     */
-    private fun isOnMagmaBlock(boundingBox: AABB): Boolean {
-
-        // Blocks that are the height of a trapdoor or lower
-        // (such as snow layers, carpets, repeaters, or comparators)
-        // do not prevent a magma block from damaging mobs and players above it.
-
-        // Therefore, we expand the box downward by 0.2 blocks.
-        val expandedBox = boundingBox
-            .inflate(0.0, 0.1,0.0)
-            .move(0.0, -0.1, 0.0)
-
-        return BlockPos.betweenClosed(
-            expandedBox.minX.floorToInt(),
-            expandedBox.minY.floorToInt(),
-            expandedBox.minZ.floorToInt(),
-            expandedBox.maxX.ceilToInt(),
-            expandedBox.minY.ceilToInt(),
-            expandedBox.maxZ.ceilToInt(),
-        ).any {
-            it.getBlock() is MagmaBlock &&
-                expandedBox.intersects(it.collisionShape.bounds().move(it))
-        }
     }
 }

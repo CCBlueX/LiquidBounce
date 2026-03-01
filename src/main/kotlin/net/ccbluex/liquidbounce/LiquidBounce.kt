@@ -68,7 +68,7 @@ import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
-import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
+import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -76,6 +76,7 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -90,7 +91,6 @@ import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
 import java.io.InputStream
-import java.util.Locale
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import kotlin.time.measureTime
@@ -159,9 +159,11 @@ object LiquidBounce : EventListener {
 
     /**
      * Creates an [net.minecraft.resources.Identifier] starts with [CLIENT_NAME].
+     *
+     * Warning: Use [clientIdentifier] to prevent silent `<clinit>` invocation
      */
     @JvmStatic
-    fun identifier(path: String): Identifier = Identifier.fromNamespaceAndPath(CLIENT_NAME.lowercase(Locale.ROOT), path)
+    fun identifier(path: String): Identifier = clientIdentifier(path)
 
     /**
      * Gets client resource.

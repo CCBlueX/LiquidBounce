@@ -51,9 +51,8 @@ class WireframePlayer {
 
     fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b) {
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
             withPositionRelativeToCamera(pos) {
-                val pose = matrixStack.last().pose()
+                val pose = poseStack.last().pose()
                 val yRot = -Mth.wrapDegrees(yRot)
                 pose.rotate(quaternion.scaling(1f).rotationY(yRot.toRadians()))
                 pose.scale(1.9f)
@@ -70,7 +69,6 @@ class WireframePlayer {
 
                 drawBox(RENDER_HEAD, color, outlineColor)
             }
-            commitBatch()
         }
     }
 

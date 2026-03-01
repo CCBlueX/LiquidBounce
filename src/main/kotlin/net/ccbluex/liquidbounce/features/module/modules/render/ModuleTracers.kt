@@ -83,7 +83,6 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                 .rotateY(-camera.yRot().toRadians())
 
             longLines {
-                startBatch()
                 val maxDistanceSq = maximumDistance.sq()
                 for (entity in RenderedEntities) {
                     val distanceSq = entity.position().cameraDistanceSq().toFloat()
@@ -106,7 +105,6 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                         drawLinesWithWidth(color.argb, lineWidth, eyeVector, pos, pos, topPos)
                     }
                 }
-                commitBatch()
             }
         }
 

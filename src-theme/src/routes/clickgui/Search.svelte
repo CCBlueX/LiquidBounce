@@ -17,6 +17,7 @@
     let query: string;
     let filteredModules: Module[] = [];
     let selectedIndex = 0;
+    let hasFocus = false;
 
     function reset() {
         filteredModules = [];
@@ -24,13 +25,15 @@
         $highlightModuleName = null;
     }
 
-    function filterModules() {
+    function filterModules(resetIndex: boolean) {
         if (!query) {
             reset();
             return;
         }
 
-        selectedIndex = 0;
+        if (resetIndex) {
+            selectedIndex = 0;
+        }
 
         const pureQuery = query.toLowerCase().replaceAll(" ", "");
 
@@ -88,9 +91,14 @@
     }
 
     function handleWindowClick(e: MouseEvent) {
-        if (!searchContainerElement.contains(e.target as Node)) {
+        if (!searchContainerElement.contains(e.target as Node) && !hasFocus) {
             reset();
         }
+    }
+
+    function handleMouseOut() {
+        hasFocus = false;
+        reset();
     }
 
     function handleWindowKeyDown() {
@@ -122,7 +130,9 @@
             return;
         }
         mod.enabled = e.enabled;
-        filteredModules = filteredModules;
+
+        // Refilter modules to update enabled state
+        filterModules(false);
     });
 
     listen("keyboardKey", handleKeyDown);
@@ -134,10 +144,14 @@
 
 <svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeyDown} on:contextmenu={handleWindowClick}/>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
         class="search"
         class:has-results={query}
+        class:has-focus={hasFocus}
         bind:this={searchContainerElement}
+        on:mouseenter={() => hasFocus = true}
+        on:mouseleave={handleMouseOut}
 >
     <input
             type="text"
@@ -146,7 +160,7 @@
             spellcheck="false"
             bind:value={query}
             bind:this={searchInputElement}
-            on:input={filterModules}
+            on:input={() => filterModules(true)}
             on:keydown={handleBrowserKeyDown}
             on:focusin={async () => await setTyping(true)}
             on:focusout={async () => await setTyping(false)}
@@ -202,7 +216,8 @@
       border-radius: 10px;
     }
 
-    &:focus-within {
+    &:focus-within,
+    &.has-focus {
       z-index: 9999999999;
     }
   }

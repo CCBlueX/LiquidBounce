@@ -38,13 +38,13 @@ interface MinecraftShortcuts {
     val mc: Minecraft
         get() = net.ccbluex.liquidbounce.utils.client.mc
     val player: LocalPlayer
-        get() = mc.player!!
+        get() = requireNotNull(mc.player) { "mc.player is null" }
     val world: ClientLevel
-        get() = mc.level!!
+        get() = requireNotNull(mc.level) { "mc.level is null" }
     val network: ClientPacketListener
-        get() = mc.connection!!
+        get() = requireNotNull(mc.connection) { "mc.connection is null" }
     val interaction: MultiPlayerGameMode
-        get() = mc.gameMode!!
+        get() = requireNotNull(mc.gameMode) { "mc.gameMode is null" }
     val gpuDevice: GpuDevice
         get() = RenderSystem.getDevice()
 }

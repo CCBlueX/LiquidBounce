@@ -187,7 +187,6 @@ object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>
         val matrixStack = event.matrixStack
 
         renderEnvironmentForWorld(matrixStack) {
-            startBatch()
             targetTracker.targets().forEach { entity ->
                 val pos = entity.interpolateCurrentPosition(event.partialTicks)
                 val eyePos = pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)
@@ -216,7 +215,6 @@ object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>
                     )
                 }
             }
-            commitBatch()
         }
     }
 

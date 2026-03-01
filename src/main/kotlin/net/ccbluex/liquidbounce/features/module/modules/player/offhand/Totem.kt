@@ -284,7 +284,7 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
             return false
         }
 
-        InventoryManager.clickOccurred()
+        InventoryManager.onClickOccurs()
         actions.forEach { it.performAction() }
         return true
     }

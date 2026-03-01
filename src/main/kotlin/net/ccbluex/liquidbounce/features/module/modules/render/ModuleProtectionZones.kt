@@ -242,13 +242,11 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         val highlightIndex = findHighlightIndex(zones, playerPos = player.position())
 
         renderEnvironmentForWorld(e.matrixStack) {
-            startBatch()
             val camOffset = mc.entityRenderDispatcher.camera?.position()?.reverse() ?: return@handler
             drawZones(zones, centers, highlightIndex, camOffset)
             if (holdingProt) {
                 drawIndicator(centers, zones, camOffset)
             }
-            commitBatch()
         }
     }
 }
