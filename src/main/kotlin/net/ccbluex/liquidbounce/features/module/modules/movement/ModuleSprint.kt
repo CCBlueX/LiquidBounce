@@ -126,7 +126,8 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
     }
 
     private fun shouldPreventSprint(): Boolean {
-        if (StopOn.USING_ITEM in stopOn && player.isSlowDueToUsingItem) {
+        if (StopOn.USING_ITEM in stopOn && player.isSlowDueToUsingItem ||
+            StopOn.SNEAKING in stopOn && player.isShiftKeyDown) {
             return true
         }
 
@@ -151,6 +152,7 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
     private enum class StopOn(override val tag: String) : Tagged {
         GROUND("Ground"),
         AIR("Air"),
+        SNEAKING("Sneaking"),
         USING_ITEM("UsingItem"),
     }
 }
