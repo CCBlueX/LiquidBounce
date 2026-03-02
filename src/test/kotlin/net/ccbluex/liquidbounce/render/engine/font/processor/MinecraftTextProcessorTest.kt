@@ -19,6 +19,9 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
+import net.ccbluex.fastutil.asIntList
+import net.ccbluex.fastutil.intListOf
+import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
@@ -39,7 +42,10 @@ class MinecraftTextProcessorTest {
 
         val processed = MinecraftTextProcessor.process(text, Color4b(1, 2, 3, 4))
 
-        assertEquals(listOf(Font.PLAIN, Font.BOLD, Font.ITALIC, Font.BOLD or Font.ITALIC), processed.chars.map { it.font })
+        assertEquals(
+            intListOf(Font.PLAIN, Font.BOLD, Font.ITALIC, Font.BOLD or Font.ITALIC),
+            processed.chars.mapToIntArray { it.font }.asIntList(),
+        )
         assertEquals("pbix", processed.chars.joinToString("") { it.char.toString() })
     }
 
