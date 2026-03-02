@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.client.CameraType
+import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -275,7 +276,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
      * Modify the raycast position
      */
     fun modifyRaycast(original: Vec3, entity: Entity, tickDelta: Float): Vec3 {
-        if (!running || entity != mc.player || !CameraInteract.running || !PositionState.available) {
+        if (!running || entity !is LocalPlayer || !CameraInteract.running || !PositionState.available) {
             return original
         }
 
