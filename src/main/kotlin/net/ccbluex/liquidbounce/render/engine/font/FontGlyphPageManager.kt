@@ -98,7 +98,7 @@ class FontGlyphPageManager(
         return availableFonts[font] ?: error("Font $font is not registered")
     }
 
-    fun requestGlyph(font: FontFace, style: Int, ch: Char): GlyphDescriptor? {
+    fun requestGlyph(font: FontFace, style: @FontStyle Int, ch: Char): GlyphDescriptor? {
         val glyph = getFont(font).glyphs[style][ch]
 
         if (glyph == null) {

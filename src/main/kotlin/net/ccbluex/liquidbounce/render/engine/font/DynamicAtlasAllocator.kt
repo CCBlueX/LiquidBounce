@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import org.joml.Vector2i
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import java.awt.Dimension
 import java.awt.Point
 
@@ -34,9 +34,11 @@ class DynamicAtlasAllocator(
      */
     val minDimension: Dimension
 ) {
-    val availableSlices = HashSet<AtlasSlice>()
+    val availableSlices = ObjectOpenHashSet<AtlasSlice>()
 
     init {
+        require(verticalCutSize > 0) { "verticalCutSize must be > 0" }
+
         var currY = 0
 
         while (currY < dimension.height) {
@@ -91,12 +93,14 @@ class DynamicAtlasAllocator(
     }
 
     fun free(handle: AtlasSliceHandle) {
-        handle.setFreed()
+        handle.requireNotFreed()
 
         val slice = handle.internalSlice
 
-        assert(slice.isAllocated)
-        assert(slice.children.isEmpty())
+        check(slice.isAllocated) { "The slice is not allocated." }
+        check(slice.children.isEmpty()) { "Cannot free a non-leaf slice." }
+
+        handle.setFreed()
 
         slice.isAllocated = false
 
@@ -143,11 +147,11 @@ class DynamicAtlasAllocator(
      * The slice at index 0 is the slice with the given dimension
      */
     private fun tryCutSlice(slice: AtlasSlice, dimension: Dimension): List<AtlasSlice>? {
-        val brotherSlice = Vector2i(slice.width - dimension.width, slice.height - dimension.height)
+        val brotherSlice = Point(slice.width - dimension.width, slice.height - dimension.height)
 
         // All four slices are big enough
         when {
-            brotherSlice.x >= minDimension.height && brotherSlice.y >= minDimension.height -> {
+            brotherSlice.x >= minDimension.width && brotherSlice.y >= minDimension.height -> {
                 return listOf(
                     AtlasSlice(slice.x, slice.y, dimension.width, dimension.height),
                     AtlasSlice(slice.x + dimension.width, slice.y + dimension.height, brotherSlice.x, brotherSlice.y),

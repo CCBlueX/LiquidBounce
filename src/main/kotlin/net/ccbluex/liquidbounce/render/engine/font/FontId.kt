@@ -23,7 +23,7 @@ import java.awt.Font
 
 @JvmRecord
 data class FontId(
-    val style: Int,
+    val style: @FontStyle Int,
     val awtFont: Font,
     val height: Float,
     val ascent: Float

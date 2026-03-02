@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.fastutil.Pool
+import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style

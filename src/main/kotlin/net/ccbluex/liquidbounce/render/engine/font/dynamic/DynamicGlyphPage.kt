@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
 import net.ccbluex.liquidbounce.render.engine.font.GlyphRenderInfo
+import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import java.awt.Dimension
@@ -48,7 +49,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         Dimension(fontHeight / 3, fontHeight / 3)
     )
 
-    fun getGlyph(char: Char, style: Int): GlyphRenderInfo? {
+    fun getGlyph(char: Char, style: @FontStyle Int): GlyphRenderInfo? {
         return glyphMap[GlyphIdentifier.asLong(char, style)]?.first
     }
 
@@ -95,7 +96,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         return failed
     }
 
-    fun free(ch: Char, style: Int): GlyphRenderInfo? {
+    fun free(ch: Char, style: @FontStyle Int): GlyphRenderInfo? {
         val (renderInfo, sliceHandle) = this.glyphMap.remove(GlyphIdentifier.asLong(ch, style)) ?: return null
 
         this.allocator.free(sliceHandle)
