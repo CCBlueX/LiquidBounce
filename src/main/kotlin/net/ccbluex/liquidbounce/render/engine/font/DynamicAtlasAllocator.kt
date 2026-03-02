@@ -37,6 +37,8 @@ class DynamicAtlasAllocator(
     val availableSlices = ObjectOpenHashSet<AtlasSlice>()
 
     init {
+        require(verticalCutSize > 0) { "verticalCutSize must be > 0" }
+
         var currY = 0
 
         while (currY < dimension.height) {
@@ -91,12 +93,14 @@ class DynamicAtlasAllocator(
     }
 
     fun free(handle: AtlasSliceHandle) {
-        handle.setFreed()
+        handle.requireNotFreed()
 
         val slice = handle.internalSlice
 
-        assert(slice.isAllocated)
-        assert(slice.children.isEmpty())
+        check(slice.isAllocated) { "The slice is not allocated." }
+        check(slice.children.isEmpty()) { "Cannot free a non-leaf slice." }
+
+        handle.setFreed()
 
         slice.isAllocated = false
 
@@ -147,7 +151,7 @@ class DynamicAtlasAllocator(
 
         // All four slices are big enough
         when {
-            brotherSlice.x >= minDimension.height && brotherSlice.y >= minDimension.height -> {
+            brotherSlice.x >= minDimension.width && brotherSlice.y >= minDimension.height -> {
                 return listOf(
                     AtlasSlice(slice.x, slice.y, dimension.width, dimension.height),
                     AtlasSlice(slice.x + dimension.width, slice.y + dimension.height, brotherSlice.x, brotherSlice.y),
