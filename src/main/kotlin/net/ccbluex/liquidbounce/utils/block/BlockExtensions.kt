@@ -495,8 +495,13 @@ enum class SwingMode(
 
 val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.direction)
 
+/**
+ * Simulated [net.minecraft.world.phys.HitResult.Type.BLOCK] branch in vanilla
+ *
+ * @see net.minecraft.client.Minecraft.startUseItem
+ */
 fun doPlacement(
-    rayTraceResult: BlockHitResult,
+    hitResult: BlockHitResult,
     hand: InteractionHand = InteractionHand.MAIN_HAND,
     onPlacementSuccess: () -> Boolean = { true },
     onItemUseSuccess: () -> Boolean = { true },
@@ -505,7 +510,7 @@ fun doPlacement(
     val stack = player.getItemInHand(hand)
     val count = stack.count
 
-    val useItemOnResult = interaction.useItemOn(player, hand, rayTraceResult)
+    val useItemOnResult = interaction.useItemOn(player, hand, hitResult)
 
     when {
         useItemOnResult == InteractionResult.FAIL -> {

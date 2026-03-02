@@ -140,6 +140,18 @@ val isNewerThanOrEquals1_21_9: Boolean
         logger.error("Failed to check if the server is using 1.21.9+", it)
     }.getOrDefault(false)
 
+/**
+ * Since 26.1 [net.minecraft.network.protocol.game.ServerboundInteractPacket] has only one mode
+ * with entity and relative position (previous `INTERACT_AT`).
+ */
+val isOlderThanOrEquals1_21_11: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_11
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.11", it)
+    }.getOrDefault(false)
+
 val isOlderThanOrEqual1_11_1: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions

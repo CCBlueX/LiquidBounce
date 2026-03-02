@@ -37,12 +37,13 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.client.releaseUsingItemNextTick
 import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
@@ -315,13 +316,13 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         val entity = entityHitResult?.entity
 
         if (entity != null) {
-            // 1.7 players do not send INTERACT_AT
-            if (!isOlderThanOrEquals1_7_10) {
-                interaction.interactAt(player, entity, entityHitResult, InteractionHand.MAIN_HAND)
-            }
-
-            // INTERACT
-            interaction.interact(player, entity, InteractionHand.MAIN_HAND)
+            // Interact with entity
+            interactEntity(
+                entity,
+                entityHitResult,
+                InteractionHand.MAIN_HAND,
+                SwingMode.HIDE_BOTH, // Vanilla blocking action won't trigger swing
+            )
             return
         }
 

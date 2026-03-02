@@ -650,5 +650,6 @@
   "liquidbounce.module.replenish.description": "自動用物品欄中的物品填充快捷欄，使物品數量保持設定的閾值。",
   "liquidbounce.module.anchor.description": "讓你移動到水晶PvP的安全點里。",
   "liquidbounce.module.macros.description": "允許你透過自訂按鍵快速執行聊天訊息或物品操作。",
+  "liquidbounce.module.autoGolemRepair.description": "自動使用鐵錠修復附近受損的鐵魔像。",
   "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect 將嘗試在你下次加入任何伺服器/遊戲時，通過監控 ping 參數來檢測伺服器的反作弊系統。請注意，結果可能不準確，特別是當伺服器上有多個反作弊系統時。"
 }
