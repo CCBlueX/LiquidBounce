@@ -39,7 +39,7 @@ public record QuadGuiElementRenderState(
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
     @Nullable ScreenRectangle bounds
-) implements LiquidBounceGuiElementRenderState {
+) implements PoseReusableGuiElementRenderState {
 
     @Override
     public void buildVertices(VertexConsumer vertices) {

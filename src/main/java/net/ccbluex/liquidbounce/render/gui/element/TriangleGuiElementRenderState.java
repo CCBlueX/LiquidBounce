@@ -39,7 +39,7 @@ public record TriangleGuiElementRenderState(
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
     @Nullable ScreenRectangle bounds
-) implements LiquidBounceGuiElementRenderState {
+) implements PoseReusableGuiElementRenderState {
 
     public TriangleGuiElementRenderState {
         assert pipeline.getVertexFormatMode() == VertexFormat.Mode.TRIANGLES;

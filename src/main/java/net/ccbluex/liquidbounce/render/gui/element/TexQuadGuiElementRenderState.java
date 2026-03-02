@@ -44,7 +44,7 @@ public record TexQuadGuiElementRenderState(
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
     @Nullable ScreenRectangle bounds
-) implements LiquidBounceGuiElementRenderState {
+) implements PoseReusableGuiElementRenderState {
     @Override
     public void buildVertices(VertexConsumer vertices) {
         vertices.addVertexWith2DPose(pose, x0, y0).setUv(u1, v1).setColor(argb);
