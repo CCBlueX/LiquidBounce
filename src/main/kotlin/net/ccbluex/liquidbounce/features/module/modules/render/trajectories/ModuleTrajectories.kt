@@ -29,10 +29,12 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.world.entity.TraceableEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
@@ -45,6 +47,9 @@ import net.minecraft.world.phys.Vec3
 @Suppress("MagicNumber")
 object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER) {
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
+
+    private val trajectoryTypes by multiEnumChoice("TrajectoryTypes", TrajectoryType.entries, canBeNone = false)
+
     private val show by multiEnumChoice(
         "Show",
         Show.OTHER_PLAYERS,
@@ -76,6 +81,8 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     activeTrajectoryArrow,
                     activeTrajectoryOther
                 ) ?: continue
+
+                if (trajectoryType !in trajectoryTypes) continue
 
                 val trajectoryRenderer = TrajectoryInfoRenderer(
                     owner = (entity as? TraceableEntity)?.owner ?: entity,
@@ -126,6 +133,8 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                 it to stack
             }
         } ?: return
+
+        if (trajectoryInfoTyped.type !in trajectoryTypes) return
 
         val rotation = if (otherPlayer === player) {
             if (ModuleFreeCam.running) {
