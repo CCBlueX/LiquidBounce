@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
+import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
@@ -68,7 +69,7 @@ class FontFace(
     /**
      * Fills the font style at the given index.
      */
-    suspend fun fillStyle(font: Font, style: Int) {
+    suspend fun fillStyle(font: Font, style: @FontStyle Int) {
         if (style !in 0..3) {
             error("Illegal Style $style, should be PLAIN/BOLD/ITALIC/BOLD+ITALIC")
         }
