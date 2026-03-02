@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import org.joml.Vector2i
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import java.awt.Dimension
 import java.awt.Point
 
@@ -34,7 +34,7 @@ class DynamicAtlasAllocator(
      */
     val minDimension: Dimension
 ) {
-    val availableSlices = HashSet<AtlasSlice>()
+    val availableSlices = ObjectOpenHashSet<AtlasSlice>()
 
     init {
         var currY = 0
@@ -143,7 +143,7 @@ class DynamicAtlasAllocator(
      * The slice at index 0 is the slice with the given dimension
      */
     private fun tryCutSlice(slice: AtlasSlice, dimension: Dimension): List<AtlasSlice>? {
-        val brotherSlice = Vector2i(slice.width - dimension.width, slice.height - dimension.height)
+        val brotherSlice = Point(slice.width - dimension.width, slice.height - dimension.height)
 
         // All four slices are big enough
         when {
