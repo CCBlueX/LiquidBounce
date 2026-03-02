@@ -85,15 +85,17 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
     }
 
     private fun renderIndicator(env: WorldRenderEnvironment, partialTicks: Float, target: LivingEntity?) {
-        val range = ModuleKillAura.range.interactionRange
+        val range = ModuleKillAura.range.getAttackRange()
+        val maxRange = range.effectiveMaxRange(player)
+        val minRange = range.effectiveMinRange(player)
         val pos = player.interpolateCurrentPosition(partialTicks)
             .add(0.0, 0.001, 0.0) // Prevent z-fighting with the ground
-        val pulseOffset = calculatePulse(range)
+        val pulseOffset = calculatePulse(maxRange)
         val distance = target?.let { player.boxedDistanceTo(it).toFloat() }
 
         with(env) {
             withPositionRelativeToCamera(pos) {
-                renderCircles(range, pulseOffset, distance, target != null)
+                renderCircles(minRange, maxRange, pulseOffset, distance, target != null)
             }
         }
     }
@@ -108,14 +110,19 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
     }
 
     private fun WorldRenderEnvironment.renderCircles(
-        range: Float,
+        minRange: Float,
+        maxRange: Float,
         pulseOffset: Float,
         distance: Float?,
         hasTarget: Boolean
     ) {
-        drawRangeCircle(range + pulseOffset, getColor(distance, range))
+        drawRangeCircle(
+            radius = maxRange + pulseOffset,
+            color = getColor(distance, maxRange),
+            innerRadius = minRange
+        )
 
-        if (wallRangeColor.a > 0 && ModuleKillAura.range.interactionThroughWallsRange < range) {
+        if (wallRangeColor.a > 0 && ModuleKillAura.range.interactionThroughWallsRange < maxRange) {
             val color = if (hasTarget) {
                 wallRangeColor.fade(1.5f)
             } else {
@@ -125,7 +132,7 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
         }
 
         if (scanRangeColor.a > 0) {
-            drawRangeCircle(range + 2.5f, scanRangeColor, 60)
+            drawRangeCircle(ModuleKillAura.range.scanRange, scanRangeColor, 60)
         }
 
         if (opponentRangeColor.a > 0 && hasTarget) {
@@ -141,12 +148,34 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
                 (isInventoryOpen || mc.screen is ContainerScreen)))
     }
 
-    private fun WorldRenderEnvironment.drawRangeCircle(radius: Float, color: Color4b, outlineAlpha: Int = 255) {
-        drawGradientCircle(radius, 0f, color, Color4b.TRANSPARENT, noDepthTest = !canBeCovered)
+    private fun WorldRenderEnvironment.drawRangeCircle(
+        radius: Float,
+        color: Color4b,
+        outlineAlpha: Int = 255,
+        innerRadius: Float = 0f
+    ) {
+        val outerRadius = radius.coerceAtLeast(0f)
+        if (outerRadius <= 0f) {
+            return
+        }
+
+        val clampedInnerRadius = innerRadius.coerceIn(0f, outerRadius)
+
+        drawGradientCircle(
+            outerRadius,
+            clampedInnerRadius,
+            color,
+            Color4b.TRANSPARENT,
+            noDepthTest = !canBeCovered
+        )
         if (outline) {
             poseStack.withPush {
                 translate(0.0, 0.001, 0.0) // Slightly above the filled circle to prevent z-fighting
-                drawCircleOutline(radius, outlineColor.alpha(outlineAlpha), noDepthTest = !canBeCovered)
+                val outlineColor = outlineColor.alpha(outlineAlpha)
+                drawCircleOutline(outerRadius, outlineColor, noDepthTest = !canBeCovered)
+                if (clampedInnerRadius > 0f) {
+                    drawCircleOutline(clampedInnerRadius, outlineColor, noDepthTest = !canBeCovered)
+                }
             }
         }
     }
