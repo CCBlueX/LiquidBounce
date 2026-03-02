@@ -237,4 +237,41 @@ class DynamicAtlasAllocatorTest {
             handle.dimension
         }
     }
+
+    @Test
+    fun testInitRejectsNonPositiveVerticalCutSize() {
+        assertThrows(IllegalArgumentException::class.java) {
+            DynamicAtlasAllocator(Dimension(16, 16), 0, Dimension(4, 4))
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            DynamicAtlasAllocator(Dimension(16, 16), -1, Dimension(4, 4))
+        }
+    }
+
+    @Test
+    fun testFourSliceCutUsesMinWidthForHorizontalRemainder() {
+        val allocator = DynamicAtlasAllocator(Dimension(20, 20), 20, Dimension(10, 2))
+
+        val handle = allocator.allocate(Dimension(13, 13))
+        assertNotNull(handle)
+
+        // Horizontal remainder is 7 (< min width 10), so allocator must not use 4-way split.
+        assertEquals(20, handle!!.dimension.x)
+        assertEquals(13, handle.dimension.y)
+        assertEquals(1, allocator.availableSlices.size)
+        assertTrue(allocator.availableSlices.any { it.x == 0 && it.y == 13 && it.width == 20 && it.height == 7 })
+    }
+
+    @Test
+    fun testDoubleFreeThrows() {
+        val allocator = DynamicAtlasAllocator(Dimension(16, 16), 16, Dimension(4, 4))
+        val handle = allocator.allocate(Dimension(8, 8))
+        assertNotNull(handle)
+
+        allocator.free(handle!!)
+
+        assertThrows(IllegalStateException::class.java) {
+            allocator.free(handle)
+        }
+    }
 }
