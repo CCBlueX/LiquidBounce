@@ -34,7 +34,7 @@ public record LineGuiElementRenderState(
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
     @Nullable ScreenRectangle bounds
-) implements LiquidBounceGuiElementRenderState {
+) implements PoseReusableGuiElementRenderState {
 
     public LineGuiElementRenderState {
         if ((points.length & 1) != 0) {

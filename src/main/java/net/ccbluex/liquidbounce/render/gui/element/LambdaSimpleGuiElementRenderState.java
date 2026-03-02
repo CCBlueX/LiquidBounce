@@ -34,7 +34,7 @@ public record LambdaSimpleGuiElementRenderState(
     @Nullable ScreenRectangle scissorArea,
     @Nullable ScreenRectangle bounds,
     VerticesSetupHandler verticesSetupHandler
-) implements LiquidBounceGuiElementRenderState {
+) implements PoseReusableGuiElementRenderState {
     @Override
     public void buildVertices(VertexConsumer vertices) {
         verticesSetupHandler.setupVertices(vertices, this.pose());
