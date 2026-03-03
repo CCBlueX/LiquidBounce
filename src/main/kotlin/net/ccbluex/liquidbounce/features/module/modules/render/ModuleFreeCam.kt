@@ -24,6 +24,9 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.EventHook
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -32,8 +35,10 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam.CancelOn.Companion.updateCancelOnEventHooks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -54,6 +59,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import org.lwjgl.glfw.GLFW
+import kotlin.math.abs
 
 /**
  * FreeCam module
@@ -76,13 +82,28 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
      * This is useful for cancelling FreeCam on certain events.
      * For example, when the player takes damage.
      */
-    private enum class CancelOn(override val tag: String) : Tagged {
-        DAMAGE("Damage"),
-        MOVE("Move"),
-        LIQUID("Liquid"),
+    private enum class CancelOn(override val tag: String, val listener: EventHook<out Event>) : Tagged {
+        DAMAGE("Damage", newEventHook<HealthUpdateEvent> { event ->
+            if (event.health < event.previousHealth) this@ModuleFreeCam.enabled = false
+        }),
+        MOVE("Move", newEventHook<PlayerMoveEvent> { event ->
+            // Don't check movement.y because it's gravity / falling motion
+            if (abs(event.movement.x) > 0 || abs(event.movement.z) > 0) this@ModuleFreeCam.enabled = false
+        }),
+        LIQUID("Liquid", newEventHook<PlayerTickEvent> {
+            if (player.isInLiquid) this@ModuleFreeCam.enabled = false
+        });
+
+        companion object {
+            fun ModuleFreeCam.updateCancelOnEventHooks(selected: Set<CancelOn>, preState: Boolean = enabled) {
+                CancelOn.entries.forEach { EventManager.unregisterEventHook(it.listener) }
+                if (preState) selected.forEach { EventManager.registerEventHook(it.listener) }
+            }
+        }
     }
 
     private val cancelOn by multiEnumChoice("CancelOn", enumSetOf<CancelOn>())
+        .onChanged { updateCancelOnEventHooks(it) }
 
     /**
      * Navigation configuration for the FreeCam module
@@ -157,6 +178,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
     override fun onEnabled() {
         PositionState.available = true
         super.onEnabled()
+        updateCancelOnEventHooks(cancelOn, preState = true)
     }
 
     override fun onDisabled() {
@@ -167,6 +189,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         player.yRot = rotation.yaw
         player.xRot = rotation.pitch
         super.onDisabled()
+        updateCancelOnEventHooks(cancelOn, preState = false)
     }
 
     @Suppress("unused")
@@ -231,27 +254,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
     }
 
     @Suppress("unused")
-    private val healthHandler = handler<HealthUpdateEvent> { event ->
-        val tookDamage = event.health < event.previousHealth
-
-        if (CancelOn.DAMAGE in cancelOn && tookDamage) {
             this.enabled = false
-        }
-    }
-
-    @Suppress("unused")
-    private val moveHandler = handler<PlayerMoveEvent> { event ->
-        // Don't check movement.y because it's gravity / falling motion
-        if (CancelOn.MOVE in cancelOn && (event.movement.y > 0 || event.movement.z > 0)) {
-            this.enabled = false
-        }
-    }
-
-    @Suppress("unused")
-    private val tickHandler = handler<PlayerTickEvent> { event ->
-        if (CancelOn.LIQUID in cancelOn && player.isInLiquid) {
-            this.enabled = false
-        }
     }
 
     fun applyCameraPosition(entity: Entity, tickDelta: Float) {
