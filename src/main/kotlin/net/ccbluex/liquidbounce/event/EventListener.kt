@@ -25,6 +25,7 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 class EventHook<T : Event>(
+    val eventType: Class<T>,
     val handlerClass: EventListener,
     val priority: Short = 0,
     val handler: Consumer<T>,
@@ -69,16 +70,28 @@ interface EventListener : DebuggedOwner {
 
 }
 
-inline fun <E : Event> EventListener.newEventHook(
+inline fun <reified E : Event> EventListener.newEventHook(
     priority: Short = 0,
     handler: Consumer<E>,
-): EventHook<E> = EventHook(this, priority, handler)
+): EventHook<E> = EventHook(E::class.java, this, priority, handler)
 
-fun <T : Event> EventListener.handler(
+fun <E : Event> EventListener.newEventHookNoInline(
+    eventClass: Class<E>,
+    priority: Short = 0,
+    handler: Consumer<E>,
+): EventHook<E> = EventHook(eventClass, this, priority, handler)
+
+inline fun <reified T : Event> EventListener.handler(
     eventClass: Class<T>,
     priority: Short = 0,
     handler: Consumer<T>,
 ): EventHook<T> = EventManager.registerEventHook(eventClass, newEventHook(priority, handler))
+
+fun <T : Event> EventListener.handlerNoInline(
+    eventClass: Class<T>,
+    priority: Short = 0,
+    handler: Consumer<T>,
+): EventHook<T> = EventManager.registerEventHook(eventClass, newEventHookNoInline(eventClass, priority, handler))
 
 inline fun <reified T : Event> EventListener.handler(
     priority: Short = 0,

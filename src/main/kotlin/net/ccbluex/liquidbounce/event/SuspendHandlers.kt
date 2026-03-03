@@ -98,7 +98,7 @@ suspend fun <T : Event> EventListener.waitMatches(
             continuation.resumeWith(result)
         }
     }
-    eventHook = newEventHook(priority) { event ->
+    eventHook = newEventHookNoInline(eventClass, priority) { event ->
         try {
             if (predicate.test(event)) {
                 resumeAndUnregister(Result.success(event))

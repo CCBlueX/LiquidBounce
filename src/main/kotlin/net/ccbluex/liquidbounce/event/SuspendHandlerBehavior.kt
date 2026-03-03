@@ -51,7 +51,7 @@ sealed interface SuspendHandlerBehavior {
             wrappedContext: CoroutineContext,
             priority: Short,
             handler: SuspendableEventHandler<T>
-        ): EventHook<T> = handler(eventClass, priority) { event ->
+        ): EventHook<T> = handlerNoInline(eventClass, priority) { event ->
             eventListenerScope.launch(wrappedContext, start) {
                 handler(event)
             }.onCancellation(onCancellation)
@@ -75,7 +75,7 @@ sealed interface SuspendHandlerBehavior {
         ): EventHook<T> {
             val channelRef = atomic<Channel<T>?>(null)
 
-            return handler(eventClass, priority) { event ->
+            return handlerNoInline(eventClass, priority) { event ->
                 val channel = channelRef.updateAndGet { old ->
                     old ?: Channel<T>(
                         capacity = Channel.BUFFERED,
@@ -107,7 +107,7 @@ sealed interface SuspendHandlerBehavior {
             handler: SuspendableEventHandler<T>
         ): EventHook<T> {
             val jobRef = atomic<Job?>(null)
-            return handler(eventClass, priority) { event ->
+            return handlerNoInline(eventClass, priority) { event ->
                 jobRef.getAndSet(eventListenerScope.launch(wrappedContext) {
                     handler(event)
                 })?.cancel()
@@ -127,7 +127,7 @@ sealed interface SuspendHandlerBehavior {
             handler: SuspendableEventHandler<T>
         ): EventHook<T> {
             val jobRef = atomic<Job?>(null)
-            return handler(eventClass, priority) { event ->
+            return handlerNoInline(eventClass, priority) { event ->
                 var newJob: Job? = null
 
                 while (true) {
