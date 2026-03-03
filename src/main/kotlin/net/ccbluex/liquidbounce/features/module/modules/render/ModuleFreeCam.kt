@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
@@ -55,6 +56,7 @@ import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.client.CameraType
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
@@ -85,6 +87,10 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
     private enum class CancelOn(override val tag: String, val listener: EventHook<out Event>) : Tagged {
         DAMAGE("Damage", newEventHook<HealthUpdateEvent> { event ->
             if (event.health < event.previousHealth) this@ModuleFreeCam.enabled = false
+        }),
+        TELEPORT("Teleport", newEventHook<PacketEvent> { event ->
+            // ClientboundPlayerPositionPacket not trigger PlayerMoveEvent
+            if (event.packet is ClientboundPlayerPositionPacket) this@ModuleFreeCam.enabled = false
         }),
         MOVE("Move", newEventHook<PlayerMoveEvent> { event ->
             // Don't check movement.y because it's gravity / falling motion
