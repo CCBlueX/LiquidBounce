@@ -58,7 +58,7 @@ public abstract class MixinLightmap {
      * </pre>
      */
     @Inject(
-        method = "update(Lnet/minecraft/client/renderer/state/LightmapRenderState;)V",
+        method = "render(Lnet/minecraft/client/renderer/state/LightmapRenderState;)V",
         at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/LightmapRenderState;needsUpdate:Z", ordinal = 0, opcode = Opcodes.GETFIELD),
         cancellable = true
     )

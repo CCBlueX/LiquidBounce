@@ -39,8 +39,8 @@ import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.render.TextureSetup
-import net.minecraft.client.gui.render.state.BlitRenderState
 import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.renderer.state.gui.BlitRenderState
 import net.minecraft.world.phys.Vec2
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
@@ -361,7 +361,7 @@ inline fun GuiGraphics.drawBlitOnCurrentLayer(
         BlitRenderState(
             pipeline,
             textureSetup,
-            copyPosePooled(),
+            copyPose(),
             x0,
             y0,
             x1,

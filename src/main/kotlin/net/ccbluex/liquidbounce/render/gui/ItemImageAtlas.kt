@@ -138,6 +138,7 @@ private class ItemTextureRenderer(
         mc.gameRenderer.renderBuffers.outlineBufferSource(), // No operation
         mc.gameRenderer.renderBuffers.crumblingBufferSource(), // No operation
         mc.font, // No operation
+        mc.gameRenderer.gameRenderState, // No operation
     )
 
     private val projection = Projection()

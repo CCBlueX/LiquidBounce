@@ -35,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(EnchantTableRenderer.class)
 public abstract class MixinEnchantTableRenderer {
     @WrapWithCondition(
-            method = "submit(Lnet/minecraft/client/renderer/blockentity/state/EnchantTableRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V",
+            method = "submit(Lnet/minecraft/client/renderer/blockentity/state/EnchantTableRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V")
     ) private boolean hookRenderBook(SubmitNodeCollector instance, Model model, Object o, PoseStack matrixStack, RenderType renderLayer, int i, int i2, int i3, TextureAtlasSprite sprite, int i4, ModelFeatureRenderer.CrumblingOverlay crumblingOverlayCommand) {
         return ModuleAntiBlind.canRender(DoRender.ENCHANT_TABLE_BOOK);

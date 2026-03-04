@@ -136,19 +136,15 @@ public abstract class MixinMinecraft {
     public ClientLevel level;
 
     /**
-     * Entry point of our hacked client
-     *
-     * @param callback not needed
+     * Entry point
      */
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;resizeDisplay()V"))
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;resizeGui()V"))
     private void startClient(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(ClientStartEvent.INSTANCE);
     }
 
     /**
-     * Exit point of our hacked client
-     *
-     * @param callback not needed
+     * Exit point
      */
     @Inject(method = "destroy", at = @At("HEAD"))
     private void stopClient(CallbackInfo callback) {
@@ -156,8 +152,8 @@ public abstract class MixinMinecraft {
     }
 
     @Inject(method = "<init>", at = @At(value = "FIELD",
-            target = "Lnet/minecraft/client/Minecraft;profileKeyPairManager:Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;",
-            ordinal = 0, shift = At.Shift.AFTER))
+        target = "Lnet/minecraft/client/Minecraft;profileKeyPairManager:Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;",
+        ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void onSessionInit(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(new SessionEvent(getUser()));
     }
