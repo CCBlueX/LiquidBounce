@@ -303,21 +303,12 @@ object EventManager {
         return eventHook
     }
 
-    fun <E : Event> registerEventHook(eventHook: EventHook<E>) = registerEventHook(eventHook.eventType, eventHook)
-
     /**
      * Unregisters a handler.
      */
     fun <T : Event> unregisterEventHook(eventClass: Class<out Event>, eventHook: EventHook<T>) {
         @Suppress("UNCHECKED_CAST")
         registry[eventClass]?.remove(eventHook as EventHook<in Event>)
-    }
-
-    /**
-     * Unregisters a handler.
-     */
-    fun <T: Event> unregisterEventHook(eventHook: EventHook<T>) {
-        unregisterEventHook(eventHook.eventType, eventHook)
     }
 
     fun unregisterEventHandler(eventListener: EventListener) {
