@@ -40,8 +40,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
-import net.minecraft.client.renderer.state.CameraRenderState;
-import net.minecraft.client.renderer.state.LevelRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -111,7 +111,7 @@ public abstract class MixinLevelRenderer {
 
         var matrixStack = Pools.MatStack.borrow();
         entityOutlineFb.blitToScreen();
-        final var cameraState = this.minecraft.gameRenderer.getLevelRenderState().cameraRenderState;
+        final var cameraState = this.minecraft.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
         var event = new DrawOutlinesEvent(
             entityOutlineFb, matrixStack,
             cameraState,
@@ -125,7 +125,7 @@ public abstract class MixinLevelRenderer {
 
     @WrapOperation(method = "renderLevel", at = @At(
         value = "FIELD",
-        target = "Lnet/minecraft/client/renderer/state/LevelRenderState;haveGlowingEntities:Z",
+        target = "Lnet/minecraft/client/renderer/state/level/LevelRenderState;haveGlowingEntities:Z",
         opcode = Opcodes.GETFIELD
     ))
     private boolean modifyDrawOutline(LevelRenderState instance, Operation<Boolean> original) {

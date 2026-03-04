@@ -39,7 +39,7 @@ public abstract class MixinWeatherEffectRenderer {
         return original;
     }
 
-    @ModifyExpressionValue(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/WeatherRenderState;intensity:F"))
+    @ModifyExpressionValue(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/WeatherRenderState;intensity:F"))
     private float modifyPrecipitationGradient(float original) {
         var precipitation = ModuleCustomAmbience.Precipitation.INSTANCE;
         if (precipitation.getRunning() && original != 0f) {
