@@ -81,7 +81,8 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
     }
 
     private class CancelTrigger<E : Event>(val eventType: Class<E>, val predicate: Predicate<E>)
-    private inline fun <reified E : Event> CancelTrigger(predicate: Predicate<E>) = CancelTrigger(E::class.java, predicate)
+    private inline fun <reified E : Event> cancelTrigger(predicate: Predicate<E>) =
+        CancelTrigger(E::class.java, predicate)
 
     /**
      * This is useful for cancelling FreeCam on certain events.
@@ -91,18 +92,18 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         override val tag: String,
         private val trigger: CancelTrigger<out Event>,
     ) : Tagged {
-        DAMAGE("Damage", CancelTrigger<HealthUpdateEvent> { event ->
+        DAMAGE("Damage", cancelTrigger<HealthUpdateEvent> { event ->
             event.health < event.previousHealth
         }),
-        TELEPORT("Teleport", CancelTrigger<PacketEvent> { event ->
+        TELEPORT("Teleport", cancelTrigger<PacketEvent> { event ->
             // ClientboundPlayerPositionPacket not trigger PlayerMoveEvent
             event.packet is ClientboundPlayerPositionPacket
         }),
-        MOVE("Move", CancelTrigger<PlayerMoveEvent> { event ->
+        MOVE("Move", cancelTrigger<PlayerMoveEvent> { event ->
             // Don't check movement.y because it's gravity / falling motion
             abs(event.movement.x) > 0 || abs(event.movement.z) > 0
         }),
-        LIQUID("Liquid", CancelTrigger<PlayerTickEvent> {
+        LIQUID("Liquid", cancelTrigger<PlayerTickEvent> {
             player.isInLiquid
         });
 
@@ -141,7 +142,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         /**
          * Calculates the desired position to move towards
          *
-         * @return Target position as Vec3d
+         * @return Target position as [Vec3]
          */
         override fun calculateGoalPosition(context: Unit): Vec3? {
             return if (shouldBeGoing) {
