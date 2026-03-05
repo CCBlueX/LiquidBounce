@@ -26,7 +26,7 @@ import kotlin.reflect.KProperty
 
 class EventHook<T : Event>(
     val eventType: Class<T>,
-    val handlerClass: EventListener,
+    var handlerClass: EventListener,
     val priority: Short = 0,
     val handler: Consumer<T>,
 )

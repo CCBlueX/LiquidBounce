@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventHook
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
@@ -40,7 +41,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam.CancelOn.Companion.updateCancelOnEventHooks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -85,7 +85,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
      * This is useful for cancelling FreeCam on certain events.
      * For example, when the player takes damage.
      */
-    private enum class CancelOn(override val tag: String, val listener: EventHook<out Event>) : Tagged {
+    private enum class CancelOn(override val tag: String, val listener: EventHook<out Event>) : Tagged, EventListener {
         DAMAGE("Damage", newEventHook<HealthUpdateEvent> { event ->
             if (event.health < event.previousHealth) this@ModuleFreeCam.enabled = false
         }),
@@ -101,16 +101,21 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
             if (player.isInLiquid) this@ModuleFreeCam.enabled = false
         });
 
-        companion object {
-            fun ModuleFreeCam.updateCancelOnEventHooks(selected: Set<CancelOn>, preState: Boolean = enabled) {
-                CancelOn.entries.forEach { EventManager.unregisterEventHook(it.listener) }
-                if (preState) selected.forEach { EventManager.registerEventHook(it.listener) }
-            }
+        override val running: Boolean
+            get() = parent().let { it.running && it.cancelOn.contains(this) }
+        override fun parent() = ModuleFreeCam
+
+        fun registerEventHook() {
+            listener.handlerClass = this
+            EventManager.registerEventHook(listener)
         }
     }
 
+    init {
+        CancelOn.entries.forEach { it.registerEventHook() }
+    }
+
     private val cancelOn by multiEnumChoice("CancelOn", enumSetOf<CancelOn>())
-        .onChanged { updateCancelOnEventHooks(it) }
 
     /**
      * Navigation configuration for the FreeCam module
@@ -185,7 +190,6 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
     override fun onEnabled() {
         PositionState.available = true
         super.onEnabled()
-        updateCancelOnEventHooks(cancelOn, preState = true)
     }
 
     override fun onDisabled() {
@@ -196,7 +200,6 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         player.yRot = rotation.yaw
         player.xRot = rotation.pitch
         super.onDisabled()
-        updateCancelOnEventHooks(cancelOn, preState = false)
     }
 
     @Suppress("unused")
