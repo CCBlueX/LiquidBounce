@@ -25,8 +25,6 @@ import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.event.EventHook
-import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
@@ -62,6 +60,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import org.lwjgl.glfw.GLFW
+import java.util.function.Predicate
 import kotlin.math.abs
 
 /**
@@ -81,38 +80,43 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         val lookAt by boolean("LookAt", true)
     }
 
+    private class CancelTrigger<E : Event>(val eventType: Class<E>, val predicate: Predicate<E>)
+    private inline fun <reified E : Event> CancelTrigger(predicate: Predicate<E>) = CancelTrigger(E::class.java, predicate)
+
     /**
      * This is useful for cancelling FreeCam on certain events.
      * For example, when the player takes damage.
      */
-    private enum class CancelOn(override val tag: String, val listener: EventHook<out Event>) : Tagged, EventListener {
-        DAMAGE("Damage", newEventHook<HealthUpdateEvent> { event ->
-            if (event.health < event.previousHealth) this@ModuleFreeCam.enabled = false
+    private enum class CancelOn(
+        override val tag: String,
+        private val trigger: CancelTrigger<out Event>,
+    ) : Tagged {
+        DAMAGE("Damage", CancelTrigger<HealthUpdateEvent> { event ->
+            event.health < event.previousHealth
         }),
-        TELEPORT("Teleport", newEventHook<PacketEvent> { event ->
+        TELEPORT("Teleport", CancelTrigger<PacketEvent> { event ->
             // ClientboundPlayerPositionPacket not trigger PlayerMoveEvent
-            if (event.packet is ClientboundPlayerPositionPacket) this@ModuleFreeCam.enabled = false
+            event.packet is ClientboundPlayerPositionPacket
         }),
-        MOVE("Move", newEventHook<PlayerMoveEvent> { event ->
+        MOVE("Move", CancelTrigger<PlayerMoveEvent> { event ->
             // Don't check movement.y because it's gravity / falling motion
-            if (abs(event.movement.x) > 0 || abs(event.movement.z) > 0) this@ModuleFreeCam.enabled = false
+            abs(event.movement.x) > 0 || abs(event.movement.z) > 0
         }),
-        LIQUID("Liquid", newEventHook<PlayerTickEvent> {
-            if (player.isInLiquid) this@ModuleFreeCam.enabled = false
+        LIQUID("Liquid", CancelTrigger<PlayerTickEvent> {
+            player.isInLiquid
         });
 
-        override val running: Boolean
-            get() = parent().let { it.running && it.cancelOn.contains(this) }
-        override fun parent() = ModuleFreeCam
-
-        fun registerEventHook() {
-            listener.handlerClass = this
-            EventManager.registerEventHook(listener)
+        init {
+            EventManager.registerEventHook(
+                this.trigger.eventType,
+                @Suppress("UNCHECKED_CAST")
+                newEventHook { event ->
+                    if (this in cancelOn && (this.trigger.predicate as Predicate<Event>).test(event)) {
+                        ModuleFreeCam.enabled = false
+                    }
+                }
+            )
         }
-    }
-
-    init {
-        CancelOn.entries.forEach { it.registerEventHook() }
     }
 
     private val cancelOn by multiEnumChoice("CancelOn", enumSetOf<CancelOn>())
