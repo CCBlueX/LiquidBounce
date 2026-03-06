@@ -63,7 +63,7 @@ class StaticGlyphPage(
          */
         @JvmStatic
         fun createGlyphPageWithFittingCharacters(chars: List<FontGlyph>): Pair<StaticGlyphPage, List<FontGlyph>> {
-            val result: Pair<GlyphPlacementResult, List<FontGlyph>>? = tryCharacterPlacementWithShrinking(chars)
+            val result = tryCharacterPlacementWithShrinking(chars)
 
             val (res, remainingGlyphs) = result ?: error("Unable to create static atlas.")
 

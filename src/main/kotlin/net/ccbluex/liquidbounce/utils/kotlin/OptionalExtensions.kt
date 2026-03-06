@@ -24,6 +24,8 @@ import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.OptionalLong
 
+inline fun <T : Any> optional() = Optional.empty<T>()
+
 inline fun <T : Any> optional(value: T?) = Optional.ofNullable(value)
 
 inline fun <T : Any> optional(block: () -> T?) = Optional.ofNullable(block())

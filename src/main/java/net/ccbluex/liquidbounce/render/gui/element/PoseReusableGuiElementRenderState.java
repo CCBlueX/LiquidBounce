@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.render.gui.element;
 import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import org.joml.Matrix3x2f;
 
-public sealed interface LiquidBounceGuiElementRenderState
+public sealed interface PoseReusableGuiElementRenderState
     extends GuiElementRenderState
     permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState {
     /**

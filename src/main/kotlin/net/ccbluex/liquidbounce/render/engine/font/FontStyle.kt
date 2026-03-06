@@ -17,30 +17,24 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.engine.font.processor
+package net.ccbluex.liquidbounce.render.engine.font
 
-import it.unimi.dsi.fastutil.ints.IntList
-import net.ccbluex.liquidbounce.render.engine.font.FontStyle
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import org.intellij.lang.annotations.MagicConstant
+import java.awt.Font
 
-interface ProcessedText {
-    val chars: List<ProcessedChar>
-
-    /**
-     * Elements: start char index, to char index, ...
-     *
-     * Size should be even,
-     */
-    val underlines: IntList
-
-    /**
-     * Elements: start char index, to char index, ...
-     *
-     * Size should be even,
-     */
-    val strikeThroughs: IntList
-
-    @JvmRecord
-    data class ProcessedChar(val char: Char, val font: @FontStyle Int, val obfuscated: Boolean, val color: Color4b)
-
-}
+/**
+ * Marks an integer as a valid font style mask.
+ *
+ * Valid values are [Font.PLAIN], [Font.BOLD], [Font.ITALIC], and
+ * `Font.BOLD | Font.ITALIC`.
+ */
+@Retention(AnnotationRetention.BINARY)
+@Target(
+    AnnotationTarget.FIELD,
+    AnnotationTarget.VALUE_PARAMETER,
+    AnnotationTarget.LOCAL_VARIABLE,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.TYPE,
+)
+@MagicConstant(flags = [Font.PLAIN.toLong(), Font.BOLD.toLong(), Font.ITALIC.toLong()])
+annotation class FontStyle

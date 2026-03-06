@@ -19,36 +19,77 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.minecraft.network.chat.FormattedText.StyledContentConsumer
+import net.ccbluex.liquidbounce.utils.kotlin.optional
+import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.Component
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.util.Optional
 
 class LegacyTextSanitizerTest {
 
     @Test
-    fun test() {
-        assertEquals(listOf("This is a Test!" to Style.EMPTY), getResults("This is a Test!".asPlainText()))
+    fun testPassesThroughPlainText() {
+        val baseStyle = Style.EMPTY.withItalic(true)
+
+        assertEquals(
+            listOf("This is a Test!" to baseStyle),
+            sanitize(baseStyle, "This is a Test!")
+        )
     }
 
-    private fun getResults(text: Component): ArrayList<Pair<String, Style>> {
-        val visitor = TestVisitor()
+    @Test
+    fun testAppliesFormattingCodesAndReset() {
+        val baseStyle = Style.EMPTY.withItalic(true)
 
-        text.visit(visitor, Style.EMPTY)
+        val result = sanitize(baseStyle, "pre§cR§lB§rN")
 
-        return visitor.contents
+        assertEquals(4, result.size)
+        assertEquals("pre", result[0].first)
+        assertEquals(baseStyle, result[0].second)
+
+        assertEquals("R", result[1].first)
+        assertEquals(baseStyle.withColor(ChatFormatting.RED), result[1].second)
+
+        assertEquals("B", result[2].first)
+        assertEquals(baseStyle.withColor(ChatFormatting.RED).withBold(true), result[2].second)
+
+        assertEquals("N", result[3].first)
+        assertEquals(Style.EMPTY, result[3].second)
     }
 
-    private class TestVisitor : StyledContentConsumer<Unit> {
+    @Test
+    fun testUnknownFormattingCodeKeepsCurrentStyle() {
+        val baseStyle = Style.EMPTY.withUnderlined(true)
+
+        assertEquals(
+            listOf("A" to baseStyle, "B" to baseStyle),
+            sanitize(baseStyle, "A§xB")
+        )
+    }
+
+    @Test
+    fun testTrailingSectionSignIsPreservedAsText() {
+        assertEquals(
+            listOf("value§" to Style.EMPTY),
+            sanitize(Style.EMPTY, "value§")
+        )
+    }
+
+    @Test
+    fun testOnlyFormattingCodesProducesNoSegments() {
+        assertEquals(emptyList<Pair<String, Style>>(), sanitize(Style.EMPTY, "§a§l"))
+    }
+
+    private fun sanitize(style: Style, text: String): List<Pair<String, Style>> {
         val contents = ArrayList<Pair<String, Style>>()
-
-        override fun accept(style: Style, asString: String): Optional<Unit> {
-            contents.add(asString to style)
-
-            return Optional.empty()
+        val sanitizer = LegacyTextSanitizer { style, string ->
+            contents.add(string to style)
+            optional()
         }
+
+        sanitizer.accept(style, text)
+
+        return contents
     }
+
 }
