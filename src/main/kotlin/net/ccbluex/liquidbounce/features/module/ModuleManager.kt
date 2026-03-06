@@ -713,8 +713,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
         if (!modules.remove(module)) {
             error("Module '${module.name}' is not registered.")
         }
-        if (module.running) {
-            module.onDisabled()
+        if (module.enabled) {
+            module.enabled = false
         }
         module.unregister()
     }
