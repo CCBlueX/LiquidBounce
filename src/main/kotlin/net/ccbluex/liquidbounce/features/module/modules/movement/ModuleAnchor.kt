@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.fastutil.weightedMinByOrNullAtMost
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -89,9 +89,8 @@ object ModuleAnchor : ClientModule(
         // not in a hole and no valid goal means we need to search one
         goal = HoleTracker.holes
             .filter { hole -> hole.positions.maxY() + 1 <= playerPos.y }
-            .mapToArray { hole -> hole.positions.centerPointOf(Direction.DOWN) }
-            .filter { vec3d -> vec3d.distanceToSqr(playerPos) <= maxDistanceSq }
-            .minByOrNull { vec3d -> vec3d.distanceToSqr(playerPos) }
+            .map { hole -> hole.positions.centerPointOf(Direction.DOWN) }
+            .weightedMinByOrNullAtMost(maxDistanceSq.toDouble(), playerPos::distanceToSqr)
     }
 
     @Suppress("unused")

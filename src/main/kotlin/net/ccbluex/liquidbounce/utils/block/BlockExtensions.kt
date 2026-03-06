@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
+import net.ccbluex.fastutil.weightedFilterSortedByAtMost
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -109,6 +111,7 @@ import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.Consumer
 import kotlin.math.ceil
@@ -210,6 +213,23 @@ inline fun Vec3.searchBlocksInCuboid(
             null
         }
     }
+
+/**
+ * Scan blocks around the position in a cuboid, filtered and sorted by shape distance from this [Vec3].
+ * Distance calculation is based on outline shape:
+ * `state.getShape(world, pos, collisionContext).move(pos).distanceToSqr(eyesPos)`.
+ */
+inline fun Vec3.searchBlocksInCuboidByShapeDistance(
+    radius: Float,
+    maxDistanceSquared: Double = radius.sq().toDouble(),
+    collisionContext: CollisionContext = CollisionContext.of(player),
+    crossinline filter: (BlockPos, BlockState) -> Boolean,
+): List<Pair<BlockPos, BlockState>> = searchBlocksInCuboid(radius, filter).weightedFilterSortedByAtMost(maxDistanceSquared) {
+    (pos, state) ->
+    state.getShape(world, pos, collisionContext)
+        .move(pos)
+        .distanceToSqr(this)
+}
 
 /**
  * Search blocks around the position in a specific [radius]

@@ -34,9 +34,9 @@ data class PointInsideBox private constructor(val pos: Vec3, val box: AABB) : Po
 
     fun distanceTo(point: Vec3) = pos.distanceTo(point)
 
-    fun squaredDistanceTo(point: PointInsideBox) = pos.distanceToSqr(point.pos)
+    fun distanceToSqr(point: PointInsideBox) = pos.distanceToSqr(point.pos)
 
-    fun squaredDistanceTo(point: Vec3) = pos.distanceToSqr(point)
+    fun distanceToSqr(point: Vec3) = pos.distanceToSqr(point)
 
     operator fun plus(other: Position) = Companion(pos + other, box + other)
 

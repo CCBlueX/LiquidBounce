@@ -19,8 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
-import net.ccbluex.fastutil.WeightedSortedList
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
@@ -48,12 +46,12 @@ import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.block.outlineBox
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboidByShapeDistance
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.block.shape
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.clipAllBoxes
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.clip
@@ -258,17 +256,13 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
     }
 
     private fun searchPossibleTargetPositions(): List<BlockPos> {
-        return player.eyePosition.searchBlocksInCuboid(range + 1) { pos, state ->
+        return player.eyePosition.searchBlocksInCuboidByShapeDistance(range + 1, range.sq().toDouble()) { pos, state ->
             when (val block = state.block) {
                 !in targets -> false
                 is BedBlock if isSelfBedMode.activeMode.isSelfBed(block, pos) -> false
                 else -> true
             }
-        }.toCollection(WeightedSortedList(upperBound = range.sq().toDouble()) { (pos, state) ->
-            state.getShape(world, pos, CollisionContext.of(player))
-                .move(pos)
-                .distanceToSqr(player.eyePosition)
-        }).mapToArray { it.first }.unmodifiable()
+        }.map { it.first }
     }
 
     private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {

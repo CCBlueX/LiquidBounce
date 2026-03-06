@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboidByShapeDistance
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -49,7 +50,6 @@ import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.getNearestPointOnSide
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
@@ -213,7 +213,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         }
     }
 
-    private fun updateTarget(possible: Sequence<Pair<BlockPos, BlockState>>): Boolean {
+    private fun updateTarget(possible: Iterable<Pair<BlockPos, BlockState>>): Boolean {
         for ((pos, state) in possible) {
             val (rotation, _) = raytraceBlockRotation(
                 player.eyePosition,
@@ -240,10 +240,9 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
 
     /** Searches for any blocks within the radius that need to be destroyed, such as crops. */
     private fun updateTargetToHarvest(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
-        val blocksToBreak = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-            !state.isAir && pos.readyForHarvest(state) &&
-                AABB(pos).getNearestPoint(eyesPos).distanceToSqr(eyesPos) <= radiusSquared
-        }.sortedBy { it.first.getCenterDistanceSquared() }
+        val blocksToBreak = eyesPos.searchBlocksInCuboidByShapeDistance(radius, radiusSquared.toDouble()) { pos, state ->
+            !state.isAir && pos.readyForHarvest(state)
+        }
 
         return updateTarget(blocksToBreak)
     }
@@ -266,7 +265,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                 val sides =
                     allowedTypes.findPlantableSides(pos, state).takeUnless { it.isEmpty() } ?: return@mapNotNullTo null
                 sides.removeIf { side ->
-                    getNearestPointOnSide(eyesPos, AABB(pos), side)
+                    AABB(pos).getNearestPointOnSide(eyesPos, side)
                         .distanceToSqr(eyesPos) > radiusSquared
                 }
                 if (sides.isEmpty()) return@mapNotNullTo null
@@ -306,10 +305,9 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             return false
         }
 
-        val blocksToFertile = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-            !state.isAir && pos.canUseBoneMeal(state) &&
-                AABB(pos).getNearestPoint(eyesPos).distanceToSqr(eyesPos) <= radiusSquared
-        }.sortedBy { it.first.getCenterDistanceSquared() }
+        val blocksToFertile = eyesPos.searchBlocksInCuboidByShapeDistance(radius, radiusSquared.toDouble()) { pos, state ->
+            !state.isAir && pos.canUseBoneMeal(state)
+        }
 
         return updateTarget(blocksToFertile)
     }
