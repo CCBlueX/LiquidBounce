@@ -200,29 +200,6 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
         graphics.fill(left, top, right, bottom, 0x4422AAFF);
     }
 
-//    @Inject(method = "render(Lnet/minecraft/client/gui/hud/ChatHud$Backend;IIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;getLineHeight()I", ordinal = 0))
-//    public void hookStoreChatY(ChatHud.Backend drawer, int windowHeight, int currentTick, boolean expanded, CallbackInfo ci, @Local(ordinal = 7) int m) {
-//        this.chatY = m;
-//    }
-//
-//    @ModifyArgs(method = "render(Lnet/minecraft/client/gui/hud/ChatHud$Backend;IIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V", ordinal = 0))
-//    private void modifyArgs(
-//            Args args,
-//            @Local(ordinal = 1, argsOnly = true) int mouseX,
-//            @Local(ordinal = 2, argsOnly = true) int mouseY
-//    ) {
-//        if(!(ModuleBetterChat.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getHighlight())) {
-//            return;
-//        }
-//
-//        var hovering = mouseX >= 0 && mouseX <= ((int) args.get(2)) -4 &&
-//                mouseY >= ((int)args.get(1)+1) && mouseY <= ((int)args.get(3));
-//
-//        if (hovering) {
-//            args.set(4, 140 << 24);
-//        }
-//    }
-
     @Override
     public int liquidbounce_getChatY() {
         return chatY;
