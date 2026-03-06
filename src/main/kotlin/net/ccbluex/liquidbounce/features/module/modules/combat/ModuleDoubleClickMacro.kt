@@ -46,7 +46,8 @@ import org.lwjgl.glfw.GLFW
  * Allows you to double click with the mouse.
  */
 
-object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategories.COMBAT, aliases = listOf("DBCHelper")) {
+object ModuleDoubleClickMacro : ClientModule("DoubleClickMacro", ModuleCategories.COMBAT,
+    aliases = listOf("DBCHelper")) {
     var shouldLeftButtonDoubleClick = false
     var shouldRightButtonDoubleClick = false
 
