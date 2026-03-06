@@ -23,6 +23,7 @@ import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.fastutil.toEnumSet
@@ -530,7 +531,7 @@ open class ValueGroup(
     inline fun <reified T> multiEnumChoice(
         name: String,
         default: EnumSet<T> = enumSetOf(),
-        choices: EnumSet<T> = EnumSet.allOf(T::class.java),
+        choices: EnumSet<T> = enumSetAllOf(),
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : Tagged =
         multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = false)
@@ -538,7 +539,7 @@ open class ValueGroup(
     inline fun <reified T> multiEnumChoice(
         name: String,
         default: SequencedSet<T>,
-        choices: EnumSet<T> = EnumSet.allOf(T::class.java),
+        choices: EnumSet<T> = enumSetAllOf(),
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : Tagged =
         multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = true)
@@ -554,7 +555,7 @@ open class ValueGroup(
     }
 
     inline fun <reified T> enumChoice(name: String, default: T): ChoiceListValue<T>
-        where T : Enum<T>, T : Tagged = enumChoice(name, default, EnumSet.allOf(T::class.java))
+        where T : Enum<T>, T : Tagged = enumChoice(name, default, enumSetAllOf())
 
     fun <T : Tagged> enumChoice(name: String, default: T, choices: Set<T>): ChoiceListValue<T> =
         ChoiceListValue(name, defaultValue = default, choices = choices).apply { this@ValueGroup.inner.add(this) }

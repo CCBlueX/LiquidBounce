@@ -101,7 +101,7 @@ enum class Targets(override val tag: String) : Tagged {
     FRIENDS("Friends");
 }
 
-private fun EnumSet<Targets>.shouldAttack(entity: Entity): Boolean {
+private fun Set<Targets>.shouldAttack(entity: Entity): Boolean {
     val info = EntityTaggingManager.getTag(entity).targetingInfo
 
     return when {
@@ -111,7 +111,7 @@ private fun EnumSet<Targets>.shouldAttack(entity: Entity): Boolean {
     }
 }
 
-private fun EnumSet<Targets>.shouldShow(entity: Entity): Boolean {
+private fun Set<Targets>.shouldShow(entity: Entity): Boolean {
     if (entity === player) {
         return Targets.SELF in this &&
             (mc.options.cameraType !== CameraType.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled)
@@ -130,7 +130,7 @@ private fun EnumSet<Targets>.shouldShow(entity: Entity): Boolean {
  * Check if an entity is considered a target
  */
 @Suppress("CyclomaticComplexMethod", "ReturnCount")
-private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
+private fun Set<Targets>.isInteresting(suspect: Entity): Boolean {
     // Check if the enemy is living and not dead (or ignore being dead)
     if (suspect !is LivingEntity || !(Targets.DEAD in this || suspect.isAlive)) {
         return false
@@ -160,11 +160,11 @@ private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
 
 // Extensions
 @JvmOverloads
-fun Entity.shouldBeShown(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.visual) =
+fun Entity.shouldBeShown(enemyConf: Set<Targets> = GlobalSettingsTarget.visual) =
     enemyConf.shouldShow(this)
 
 @JvmOverloads
-fun Entity?.shouldBeAttacked(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat) =
+fun Entity?.shouldBeAttacked(enemyConf: Set<Targets> = GlobalSettingsTarget.combat) =
     this is Attackable && enemyConf.shouldAttack(this)
 
 /**
@@ -172,12 +172,12 @@ fun Entity?.shouldBeAttacked(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.
  */
 fun ClientLevel.findEnemy(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat
+    enemyConf: Set<Targets> = GlobalSettingsTarget.combat
 ) = findEnemies(range, enemyConf).minByOrNull { (_, distance) -> distance }?.key()
 
 fun ClientLevel.findEnemies(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat
+    enemyConf: Set<Targets> = GlobalSettingsTarget.combat
 ): List<ObjectDoublePair<Entity>> {
     val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
 
