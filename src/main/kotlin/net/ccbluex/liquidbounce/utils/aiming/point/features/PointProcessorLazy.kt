@@ -49,7 +49,7 @@ internal class PointProcessorLazy(parent: EventListener) : PointProcessor(parent
             return point
         }
 
-        val distance = point.squaredDistanceTo(currentPoint)
+        val distance = point.distanceToSqr(currentPoint)
         val currentThreshold = currentThreshold.sq()
         debugParameter("Threshold") { currentThreshold }
         debugParameter("Distance") { distance }

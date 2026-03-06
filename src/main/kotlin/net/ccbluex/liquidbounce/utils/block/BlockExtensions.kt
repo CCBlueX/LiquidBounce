@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
+import net.ccbluex.fastutil.weightedFilterSortedByAtMost
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
@@ -33,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
+import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -109,6 +110,7 @@ import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.Consumer
 import kotlin.math.ceil
@@ -181,11 +183,8 @@ val Block.mustBePlacedOnUpperSide: Boolean
         return this is SlabBlock || this is StairBlock
     }
 
-/**
- * Scan blocks around the position in a cuboid.
- */
-fun Vec3.searchBlocksInCuboid(radius: Float): BoundingBox =
-    BoundingBox(
+fun Vec3.searchBlocksInCuboid(radius: Float): Iterable<BlockPos> =
+    BlockPos.betweenClosed(
         floor(x - radius).toInt(),
         floor(y - radius).toInt(),
         floor(z - radius).toInt(),
@@ -212,27 +211,24 @@ inline fun Vec3.searchBlocksInCuboid(
     }
 
 /**
- * Search blocks around the position in a specific [radius]
+ * Scan blocks around the position in a cuboid, filtered and sorted by shape distance from this [Vec3].
+ * Distance calculation is based on outline shape:
+ * `shapeGetter.get(state, level, pos, collisionContext).move(pos).distanceToSqr(eyesPos)`.
+ *
+ * @return pairs of [BlockPos] and its [BlockState], sorted by distance to the center
  */
-inline fun Vec3.searchBlocksInRadius(
-    radius: Float,
+inline fun Vec3.searchBlocksInRangeSorted(
+    range: Float,
+    shapeGetter: ClipContext.ShapeGetter = ClipContext.Block.OUTLINE,
+    collisionContext: CollisionContext = CollisionContext.of(player),
     crossinline filter: (BlockPos, BlockState) -> Boolean,
-): Sequence<Pair<BlockPos, BlockState>> =
-    searchBlocksInCuboid(radius).iterator().asSequence().mapNotNull {
-        val state = it.getState() ?: return@mapNotNull null
-
-        if (it.distToCenterSqr(this@searchBlocksInRadius) <= radius.sq() && filter(it, state)) {
-            it.immutable() to state
-        } else {
-            null
+): List<Pair<BlockPos, BlockState>> =
+    searchBlocksInCuboid(range + 1, filter)
+        .weightedFilterSortedByAtMost(range.sq().toDouble()) { (pos, state) ->
+            shapeGetter.get(state, world, pos, collisionContext)
+                .move(pos)
+                .distanceToSqr(this)
         }
-    }
-
-/**
- * Scan blocks around the position in a cuboid.
- */
-fun BlockPos.searchBlocksInCuboid(radius: Int): BoundingBox =
-    this.expendToBlockBox(radius, radius, radius)
 
 /**
  * Scan blocks outwards from a bed

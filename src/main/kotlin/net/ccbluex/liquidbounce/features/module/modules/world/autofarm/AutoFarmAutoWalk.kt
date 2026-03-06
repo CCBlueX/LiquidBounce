@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.fastutil.objectHashSetOf
+import net.ccbluex.fastutil.weightedMinByOrNullAtMost
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -112,8 +113,10 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
     }
 
     private fun findWalkToItem(): Vec3? = world.entitiesForRendering().filter {
-        it is ItemEntity && toItems.shouldPickUp(it) && it.distanceToSqr(player) < toItems.rangeSquared
-    }.minByOrNull { it.distanceToSqr(player) }?.position()
+        it is ItemEntity && toItems.shouldPickUp(it)
+    }.weightedMinByOrNullAtMost(toItems.rangeSquared.toDouble()) {
+        it.distanceToSqr(player)
+    }?.position()
 
     @Suppress("EmptyFunctionBlock")
     override fun createNavigationContext(): Vec3? {

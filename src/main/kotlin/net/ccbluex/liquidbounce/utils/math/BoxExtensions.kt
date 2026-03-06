@@ -28,7 +28,6 @@ import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 import kotlin.math.min
 
@@ -123,7 +122,7 @@ fun AABB.getCoordinate(direction: Direction): Double =
 
 /** Ray–AABB first hit point (entry or exit). */
 fun AABB.firstHit(from: Vec3, to: Vec3): Vec3? =
-    if (contains(from)) clip(to, from).getOrNull() else clip(from, to).getOrNull()
+    if (contains(from)) clip(to, from).orElse(null) else clip(from, to).orElse(null)
 
 /**
  * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
@@ -136,18 +135,18 @@ fun AABB.getNearestPoint(from: Position): Vec3 {
     )
 }
 
-fun getNearestPointOnSide(from: Vec3, box: AABB, side: Direction): Vec3 {
-    val nearest = box.getNearestPoint(from)
+fun AABB.getNearestPointOnSide(from: Vec3, side: Direction): Vec3 {
+    val nearest = getNearestPoint(from)
     val x = nearest.x
     val y = nearest.y
     val z = nearest.z
 
     return when (side) {
-        Direction.DOWN -> Vec3(x, box.minY, z)
-        Direction.UP -> Vec3(x, box.maxY, z)
-        Direction.NORTH -> Vec3(x, y, box.minZ)
-        Direction.SOUTH -> Vec3(x, y, box.maxZ)
-        Direction.WEST -> Vec3(box.maxX, y, z)
-        Direction.EAST -> Vec3(box.minX, y, z)
+        Direction.DOWN -> Vec3(x, minY, z)
+        Direction.UP -> Vec3(x, maxY, z)
+        Direction.NORTH -> Vec3(x, y, minZ)
+        Direction.SOUTH -> Vec3(x, y, maxZ)
+        Direction.WEST -> Vec3(maxX, y, z)
+        Direction.EAST -> Vec3(minX, y, z)
     }
 }

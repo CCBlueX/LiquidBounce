@@ -133,9 +133,10 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
         } ?: return@handler
 
         val mutable = BlockPos.MutableBlockPos()
-        val placementPositions = blockPos.searchBedLayer(state, maxLayers).filter { (_, pos) ->
-            mutable.set(pos).center.distanceToSqr(eyesPos) <= rangeSq
-        }.toCollection(mutableListOf())
+        val placementPositions = blockPos.searchBedLayer(state, maxLayers)
+            .filterTo(mutableListOf()) { (_, pos) ->
+                mutable.set(pos).center.distanceToSqr(eyesPos) <= rangeSq
+            }
 
         if (placementPositions.isEmpty()) {
             return@handler

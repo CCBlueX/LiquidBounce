@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
+import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
 import net.ccbluex.liquidbounce.utils.math.from
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -116,7 +116,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
             return@handler
         }
 
-        val selfRegion = blockPos.expendToBlockBox(fillArea, fillArea, fillArea)
+        val selfRegion = blockPos.expandToBoundingBox(fillArea, fillArea, fillArea)
 
         val blocks = linkedSetOf<BlockPos>()
         val holeContext = HoleContext(holes, selfInHole, selfRegion, blocks)
@@ -197,7 +197,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         found: MutableSet<DoubleLongPair>
     ): Int {
         var remainingItems1 = remainingItems
-        val region = entity.blockPosition().expendToBlockBox(fillArea, fillArea, fillArea)
+        val region = entity.blockPosition().expandToBoundingBox(fillArea, fillArea, fillArea)
 
         holeContext.holes.forEach { hole ->
             if (hole in checkedHoles) {

@@ -32,9 +32,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
@@ -138,19 +137,15 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
             return !ChestBlock.isChestBlockedAt(world, pos.relative(state.anotherChestPartDirection() ?: return true))
         }
 
-        val searchRadius = interactionRange + 1
-        val searchRadiusSquared = searchRadius * searchRadius
-        val playerEyesPosition = player.eyePosition
-
         if (notDuringCombat && CombatManager.isInCombat) {
             currentTargetBlock = null
             return@handler
         }
 
         // Select blocks for processing within the search radius
-        val nearbyStorageBlocks = playerEyesPosition.searchBlocksInCuboid(searchRadius) { pos, state ->
+        val nearbyStorageBlocks = player.eyePosition.searchBlocksInRangeSorted(interactionRange) { pos, state ->
             pos !in interactedBlocksSet && state.block in validStorageBlocks && isUnblockedChestOrNotChest(state, pos)
-        }.sortedBy { it.first.getCenterDistanceSquaredEyes() }
+        }
 
         var nextTargetBlock: BlockPos? = null
 

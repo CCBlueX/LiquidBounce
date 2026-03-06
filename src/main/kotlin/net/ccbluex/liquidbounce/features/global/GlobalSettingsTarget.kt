@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.global
 
+import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.utils.combat.Targets
@@ -37,7 +38,7 @@ object GlobalSettingsTarget : ValueGroup(
             Targets.WATER_CREATURE,
             Targets.INVISIBLE,
         ),
-        choices = EnumSet.allOf(Targets::class.java).apply { remove(Targets.SELF) }
+        choices = enumSetAllOf<Targets>().apply { remove(Targets.SELF) },
     )
 
     val visualChoices = multiEnumChoice("Visual",
@@ -48,7 +49,7 @@ object GlobalSettingsTarget : ValueGroup(
             Targets.WATER_CREATURE,
             Targets.INVISIBLE,
         ),
-        choices = EnumSet.allOf(Targets::class.java)
+        choices = enumSetAllOf(),
     )
 
     inline val combat: EnumSet<Targets> get() = combatChoices.get() as EnumSet

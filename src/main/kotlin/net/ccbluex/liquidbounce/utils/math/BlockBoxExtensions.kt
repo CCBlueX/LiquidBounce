@@ -97,7 +97,7 @@ inline fun BoundingBox.copy(
 ): BoundingBox = BoundingBox(minX, minY, minZ, maxX, maxY, maxZ)
 
 @JvmSynthetic
-fun BlockPos.expendToBlockBox(
+fun BlockPos.expandToBoundingBox(
     offsetX: Int = 0,
     offsetY: Int = 0,
     offsetZ: Int = 0,
