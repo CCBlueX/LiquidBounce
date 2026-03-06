@@ -95,7 +95,9 @@ fun GuiGraphics.getBoundsXYWH(x: Float, y: Float, w: Float, h: Float): ScreenRec
 fun GuiGraphics.getBounds(box: BoundingBox2f): ScreenRectangle =
     getBounds(box.xMin, box.yMin, box.xMax, box.yMax)
 
-inline fun GuiGraphics.copyPose(): Matrix3x2f = Pools.Mat3x2f.borrow().set(this.pose())
+inline fun GuiGraphics.copyPosePooled(): Matrix3x2f = Pools.Mat3x2f.borrow().set(this.pose())
+
+inline fun GuiGraphics.copyPose(): Matrix3x2f = Matrix3x2f(this.pose())
 
 inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
     pushMatrix()
@@ -125,7 +127,7 @@ inline fun GuiGraphics.drawCustomElement(
     LambdaSimpleGuiElementRenderState(
         pipeline,
         textureSetup,
-        copyPose(),
+        copyPosePooled(),
         scissorArea,
         bounds,
         verticesSetupHandler
@@ -143,7 +145,7 @@ fun GuiGraphics.drawLines(
             points,
             argb,
             ClientRenderPipelines.GUI.lines(cull),
-            copyPose(),
+            copyPosePooled(),
             this.scissorStack.peek(),
             bounds,
         )
@@ -173,7 +175,7 @@ fun GuiGraphics.drawQuad(
                 x21,
                 y21,
                 fillColor.argb,
-                copyPose(),
+                copyPosePooled(),
                 this.scissorStack.peek(),
                 bounds,
             )
@@ -241,7 +243,7 @@ fun GuiGraphics.drawTriangle(
                 x0, y0, x1, y1, x2, y2,
                 fillColor.argb,
                 ClientRenderPipelines.GUI.triangles(cull),
-                copyPose(),
+                copyPosePooled(),
                 this.scissorStack.peek(),
                 bounds,
             )
@@ -300,7 +302,7 @@ inline fun GuiGraphics.drawGlyphOnCurrentLayer(
             argb,
             pipeline,
             textureSetup,
-            copyPose(),
+            copyPosePooled(),
             this.scissorStack.peek(),
             null,
         )
@@ -334,7 +336,7 @@ inline fun GuiGraphics.drawTexQuad(
             argb,
             pipeline,
             textureSetup,
-            copyPose(),
+            copyPosePooled(),
             this.scissorStack.peek(),
             getBounds(x0, y0, x1, y1),
         )
@@ -359,7 +361,7 @@ inline fun GuiGraphics.drawBlitOnCurrentLayer(
         BlitRenderState(
             pipeline,
             textureSetup,
-            copyPose(),
+            copyPosePooled(),
             x0,
             y0,
             x1,
@@ -399,7 +401,7 @@ fun GuiGraphics.drawCircle(
             lut.row,
             ClientRenderPipelines.GUI.circleLut(),
             lut.textureSetup,
-            copyPose(),
+            copyPosePooled(),
             this.scissorStack.peek(),
             bounds
         )

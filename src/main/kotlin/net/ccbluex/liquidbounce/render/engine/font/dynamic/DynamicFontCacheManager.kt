@@ -28,6 +28,7 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.FontFace
 import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
+import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
 import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -56,7 +57,7 @@ class DynamicFontCacheManager(
     private val requestsLock = ReentrantLock()
     private val hasRequest = requestsLock.newCondition()
 
-    fun requestGlyph(ch: Char, font: Int) {
+    fun requestGlyph(ch: Char, font: @FontStyle Int) {
         val glyphIdentifier = GlyphIdentifier(ch, font)
         val cacheObject = this.cacheData.computeIfAbsent(glyphIdentifier) { CharCacheData() }
 
@@ -236,7 +237,7 @@ class DynamicFontCacheManager(
 
     class ChangeOnAtlas(
         @JvmField val descriptor: GlyphDescriptor,
-        @JvmField val style: Int,
+        @JvmField val style: @FontStyle Int,
         @JvmField val removed: Boolean,
     )
 }
