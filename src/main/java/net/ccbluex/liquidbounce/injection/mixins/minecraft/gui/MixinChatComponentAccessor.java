@@ -45,4 +45,7 @@ public interface MixinChatComponentAccessor {
 
     @Accessor
     List<GuiMessage.Line> getTrimmedMessages();
+
+    @Accessor("chatScrollbarPos")
+    int getChatScrollbarPos();
 }
