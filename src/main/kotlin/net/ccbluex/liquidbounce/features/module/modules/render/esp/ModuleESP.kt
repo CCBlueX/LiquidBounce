@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.Esp2DMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspBoxMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspLegacy2DMode
 import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
@@ -49,6 +50,7 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
     val modes = choices("Mode", EspGlowMode, arrayOf(
         EspBoxMode,
         Esp2DMode,
+        EspLegacy2DMode,
 //        EspOutlineMode,
         EspGlowMode
     ))
