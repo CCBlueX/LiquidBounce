@@ -105,6 +105,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 && (ignoreDistance || entity.position().cameraDistanceSq() < distanceFade.farEnd.sq())
 
         object Chest : ChestType("Chest", Color4b(0, 100, 255))
+        object Barrel : ChestType("Barrel", Color4b(0xf6, 0x82, 0x1f))
         object EnderChest : ChestType("EnderChest", Color4b(Color.MAGENTA))
         object Furnace : ChestType("Furnace", Color4b(79, 79, 79))
         object BrewingStand : ChestType("BrewingStand", Color4b(139, 69, 19))
@@ -117,6 +118,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     private val allTypes = arrayOf(
         ChestType.Chest,
+        ChestType.Barrel,
         ChestType.EnderChest,
         ChestType.Furnace,
         ChestType.BrewingStand,
@@ -369,7 +371,8 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     @JvmStatic
     fun BlockEntity?.categorize(): ChestType? {
         return when (this) {
-            is ChestBlockEntity, is BarrelBlockEntity -> ChestType.Chest
+            is ChestBlockEntity -> ChestType.Chest
+            is BarrelBlockEntity -> ChestType.Barrel
             is EnderChestBlockEntity -> ChestType.EnderChest
             is AbstractFurnaceBlockEntity -> ChestType.Furnace
             is BrewingStandBlockEntity -> ChestType.BrewingStand
