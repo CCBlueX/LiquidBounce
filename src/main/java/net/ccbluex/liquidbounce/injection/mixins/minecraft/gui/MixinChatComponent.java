@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.interfaces.ChatComponentAddition;
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.util.ArrayListDeque;
 import net.minecraft.util.FormattedCharSequence;
@@ -37,6 +39,10 @@ import java.util.List;
 
 @Mixin(ChatComponent.class)
 public abstract class MixinChatComponent implements ChatComponentAddition {
+
+    @Shadow
+    @Final
+    private Minecraft minecraft;
 
     @Mutable
     @Shadow
@@ -59,9 +65,6 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
 
     @Shadow
     public abstract void scrollChat(int scroll);
-
-//    @Shadow
-//    protected abstract int getWidth();
 
     @Unique
     private int chatY = -1;
@@ -137,32 +140,68 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
         ci.cancel();
     }
 
-//    @Inject(method = "render(Lnet/minecraft/client/gui/hud/ChatHud$Backend;IIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;getLineHeight()I", ordinal = 0))
-//    public void hookStoreChatY(ChatHud.Backend drawer, int windowHeight, int currentTick, boolean expanded, CallbackInfo ci, @Local(ordinal = 7) int m) {
-//        this.chatY = m;
-//    }
-//
-//    @ModifyArgs(method = "render(Lnet/minecraft/client/gui/hud/ChatHud$Backend;IIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V", ordinal = 0))
-//    private void modifyArgs(
-//            Args args,
-//            @Local(ordinal = 1, argsOnly = true) int mouseX,
-//            @Local(ordinal = 2, argsOnly = true) int mouseY
-//    ) {
-//        if(!(ModuleBetterChat.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getHighlight())) {
-//            return;
-//        }
-//
-//        var hovering = mouseX >= 0 && mouseX <= ((int) args.get(2)) -4 &&
-//                mouseY >= ((int)args.get(1)+1) && mouseY <= ((int)args.get(3));
-//
-//        if (hovering) {
-//            args.set(4, 140 << 24);
-//        }
-//    }
+    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;IIIZZ)V", at = @At("TAIL"))
+    private void hookRenderCopyHighlight(
+        GuiGraphics graphics,
+        Font font,
+        int tickCount,
+        int globalMouseX,
+        int globalMouseY,
+        boolean focused,
+        boolean changeCursorOnInsertions,
+        CallbackInfo ci
+    ) {
+        if (!focused) {
+            return;
+        }
+
+        var betterChat = ModuleBetterChat.INSTANCE;
+        if (!(betterChat.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getHighlight())) {
+            return;
+        }
+
+        if (trimmedMessages.isEmpty()) {
+            return;
+        }
+
+        var accessor = (MixinChatComponentAccessor) this;
+        double chatScale = accessor.invokeGetScale();
+        if (chatScale <= 0.0) {
+            return;
+        }
+
+        int chatWidth = (int) Math.ceil(accessor.invokeGetWidth() / chatScale);
+        double localMouseX = globalMouseX / chatScale - 4.0;
+        if (localMouseX < 0.0 || localMouseX > chatWidth) {
+            return;
+        }
+
+        int lineHeight = accessor.invokeGetLineHeight();
+        if (lineHeight <= 0) {
+            return;
+        }
+
+        int guiHeight = minecraft.getWindow().getGuiScaledHeight();
+        int chatBottom = (int) Math.floor((guiHeight - 40) / chatScale);
+        int lineIndex = (int) Math.floor((chatBottom - globalMouseY / chatScale) / lineHeight);
+        if (lineIndex < 0) {
+            return;
+        }
+
+        int messageIndex = lineIndex + chatScrollbarPos;
+        if (messageIndex < 0 || messageIndex >= trimmedMessages.size()) {
+            return;
+        }
+
+        int left = (int) Math.floor(4.0 * chatScale);
+        int right = (int) Math.ceil((chatWidth + 4.0) * chatScale);
+        int top = (int) Math.floor((chatBottom - (lineIndex + 1) * lineHeight) * chatScale);
+        int bottom = (int) Math.ceil((chatBottom - lineIndex * lineHeight) * chatScale);
+        graphics.fill(left, top, right, bottom, 0x4422AAFF);
+    }
 
     @Override
     public int liquidbounce_getChatY() {
         return chatY;
     }
 }
-
