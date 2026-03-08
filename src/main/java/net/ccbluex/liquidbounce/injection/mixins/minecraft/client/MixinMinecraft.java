@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleDoubleClickMacro;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleDBCHelper;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions;
@@ -358,7 +358,7 @@ public abstract class MixinMinecraft {
             }
         }
 
-        if (ModuleDoubleClickMacro.INSTANCE.getEnabled()) {
+        if (ModuleDBCHelper.INSTANCE.getEnabled()) {
             return 0;
         }
         return original;
