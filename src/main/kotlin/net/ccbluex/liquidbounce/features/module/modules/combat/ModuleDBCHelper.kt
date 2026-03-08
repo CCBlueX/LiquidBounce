@@ -43,7 +43,7 @@ import org.lwjgl.glfw.GLFW
  * Allows you to double click with the mouse.
  */
 
-object ModuleDBCHelper : ClientModule("DoubleClickMacro", ModuleCategories.COMBAT) {
+object ModuleDBCHelper : ClientModule("DBCHelper", ModuleCategories.COMBAT) {
 
     object AttackButton : ToggleableValueGroup(this, "Attack", true) {
         internal var chance by int("Chance", 80, 1..100)
