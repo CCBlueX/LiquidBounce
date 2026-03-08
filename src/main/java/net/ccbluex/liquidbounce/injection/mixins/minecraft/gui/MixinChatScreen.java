@@ -64,14 +64,10 @@ public abstract class MixinChatScreen extends MixinScreen {
         var chatHud = (MixinChatComponentAccessor) this.minecraft.gui.getChat();
 
         var visibleMessages = chatHud.getTrimmedMessages();
-        var messageParts = new ArrayListDeque<GuiMessage.Line>();
-        messageParts.add(visibleMessages.get(activeMessage));
-
-        for (int index = activeMessage + 1; index < visibleMessages.size(); index++) {
-            if (visibleMessages.get(index).endOfEntry())
-                break;
-
-            messageParts.addFirst(visibleMessages.get(index));
+        var messageBounds = ModuleBetterChat.resolveMessageBounds(visibleMessages, activeMessage);
+        var messageParts = new ArrayListDeque<GuiMessage.Line>(messageBounds.getEndInclusive() - messageBounds.getStart() + 1);
+        for (int index = messageBounds.getEndInclusive(); index >= messageBounds.getStart(); index--) {
+            messageParts.addLast(visibleMessages.get(index));
         }
 
         if (messageParts.isEmpty())
@@ -106,8 +102,14 @@ public abstract class MixinChatScreen extends MixinScreen {
 
         int guiHeight = this.minecraft.getWindow().getGuiScaledHeight();
         int chatBottom = (int) Math.floor((guiHeight - 40) / chatScale);
-        int lineIndex = (int) Math.floor((chatBottom - click.y() / chatScale) / lineHeight);
-        if (lineIndex < 0) {
+        double localMouseY = chatBottom - click.y() / chatScale;
+        if (localMouseY < 0.0) {
+            return null;
+        }
+
+        int lineIndex = (int) Math.floor(localMouseY / lineHeight);
+        int visibleLineCount = Math.min(chatHud.invokeGetLinesPerPage(), visibleMessages.size() - chatHud.getChatScrollbarPos());
+        if (lineIndex < 0 || lineIndex >= visibleLineCount) {
             return null;
         }
 

@@ -43,6 +43,9 @@ public interface MixinChatComponentAccessor {
     @Invoker("getWidth")
     int invokeGetWidth();
 
+    @Invoker("getLinesPerPage")
+    int invokeGetLinesPerPage();
+
     @Accessor
     List<GuiMessage.Line> getTrimmedMessages();
 
