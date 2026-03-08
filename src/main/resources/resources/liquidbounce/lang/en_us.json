@@ -575,7 +575,7 @@
   "liquidbounce.module.middleClickAction.messages.addedFriend": "%s was successfully added to the friends list.",
   "liquidbounce.module.middleClickAction.description": "Allows you to perform actions with middle clicks.",
   "liquidbounce.module.middleClickAction.messages.removedFriend": "%s was successfully removed from the friends list.",
-  "liquidbounce.module.dbcHelper.description": "make your BC into DBC (by double-clicking)",
+  "liquidbounce.module.dBCHelper.description": "make your BC into DBC (by double-clicking)",
   "liquidbounce.module.fucker.description": "Destroys or interacts with selected blocks around you.",
   "liquidbounce.module.fullBright.description": "Makes the world a brighter place.",
   "liquidbounce.module.ghostHand.description": "Allows you to interact with selected blocks through walls.",
