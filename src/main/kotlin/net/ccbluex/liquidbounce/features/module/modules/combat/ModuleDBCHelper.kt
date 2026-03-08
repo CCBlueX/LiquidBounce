@@ -38,9 +38,9 @@ import net.minecraft.world.phys.BlockHitResult
 import org.lwjgl.glfw.GLFW
 
 /**
- * DoubleClickMacro module
+ * DBCHelper module
  *
- * Allows you to double click with the mouse.
+ * make your BC into DBC (by double-clicking)
  */
 
 object ModuleDBCHelper : ClientModule("DBCHelper", ModuleCategories.COMBAT) {
