@@ -266,9 +266,9 @@ fun raytraceBlockSide(
     eyes: Vec3,
     rangeSquared: Double,
     wallsRangeSquared: Double,
-    shapeContext: CollisionContext
+    collisionContext: CollisionContext,
 ): RotationWithVector? {
-    pos.getState()?.getShape(world, pos, shapeContext)?.let { shape ->
+    pos.getState()?.getShape(world, pos, collisionContext)?.let { shape ->
         val sortedShapes = shape.toAabbs().sortedByDescending { it.size }
         for (boxShape in sortedShapes) {
             val box = boxShape.move(pos)

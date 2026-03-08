@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -49,7 +50,6 @@ import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.getNearestPointOnSide
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
@@ -213,7 +213,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         }
     }
 
-    private fun updateTarget(possible: Sequence<Pair<BlockPos, BlockState>>): Boolean {
+    private fun updateTarget(possible: Iterable<Pair<BlockPos, BlockState>>): Boolean {
         for ((pos, state) in possible) {
             val (rotation, _) = raytraceBlockRotation(
                 player.eyePosition,
@@ -239,19 +239,19 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     }
 
     /** Searches for any blocks within the radius that need to be destroyed, such as crops. */
-    private fun updateTargetToHarvest(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
-        val blocksToBreak = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-            !state.isAir && pos.readyForHarvest(state) &&
-                AABB(pos).getNearestPoint(eyesPos).distanceToSqr(eyesPos) <= radiusSquared
-        }.sortedBy { it.first.getCenterDistanceSquared() }
+    private fun updateTargetToHarvest(radius: Float, eyesPos: Vec3): Boolean {
+        val blocksToBreak = eyesPos.searchBlocksInRangeSorted(radius) { pos, state ->
+            !state.isAir && pos.readyForHarvest(state)
+        }
 
         return updateTarget(blocksToBreak)
     }
 
     // Searches for any blocks suitable for placing crops or nether wart on
     // returns ture if it found a target
-    private fun updateTargetToPlantable(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
+    private fun updateTargetToPlantable(radius: Float, eyesPos: Vec3): Boolean {
         val hotbarItems = Slots.OffhandWithHotbar.items
+        val radiusSquared = radius * radius
 
         val allowedTypes = AutoFarmTrackedState.Plantable.entries.filter { type ->
             hotbarItems.any { it in type.items }
@@ -263,14 +263,16 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             eyesPos.searchBlocksInCuboid(radius) { _, state ->
                 !state.isAir && allowedTypes.any { it.isBlockMatches(state) }
             }.mapNotNullTo(mutableListOf()) { (pos, state) ->
-                val sides =
-                    allowedTypes.findPlantableSides(pos, state).takeUnless { it.isEmpty() } ?: return@mapNotNullTo null
+                val sides = allowedTypes.findPlantableSides(pos, state).ifEmpty { return@mapNotNullTo null }
+                val outlineShape = state.getShape(world, pos)
+
+                if (outlineShape.isEmpty) return@mapNotNullTo null
+                val box = outlineShape.bounds()
                 sides.removeIf { side ->
-                    getNearestPointOnSide(eyesPos, AABB(pos), side)
-                        .distanceToSqr(eyesPos) > radiusSquared
+                    box.getNearestPointOnSide(eyesPos, side).distanceToSqr(eyesPos) > radiusSquared
                 }
-                if (sides.isEmpty()) return@mapNotNullTo null
-                pos to sides
+
+                pos to sides.ifEmpty { return@mapNotNullTo null }
             }.sortedBy { it.first.getCenterDistanceSquared() }
 
         val collisionContext = CollisionContext.of(player)
@@ -301,15 +303,14 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         return false
     }
 
-    private fun updateTargetToFertilizable(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
+    private fun updateTargetToFertilizable(radius: Float, eyesPos: Vec3): Boolean {
         if (Slots.OffhandWithHotbar.none { it.itemStack.item is BoneMealItem }) {
             return false
         }
 
-        val blocksToFertile = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-            !state.isAir && pos.canUseBoneMeal(state) &&
-                AABB(pos).getNearestPoint(eyesPos).distanceToSqr(eyesPos) <= radiusSquared
-        }.sortedBy { it.first.getCenterDistanceSquared() }
+        val blocksToFertile = eyesPos.searchBlocksInRangeSorted(radius) { pos, state ->
+            !state.isAir && pos.canUseBoneMeal(state)
+        }
 
         return updateTarget(blocksToFertile)
     }
@@ -321,20 +322,19 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         currentTarget = null
 
         val radius = range
-        val radiusSquared = radius * radius
         val eyesPos = player.eyePosition
 
         // Can we find a breakable target?
-        if (updateTargetToHarvest(radius, radiusSquared, eyesPos)) {
+        if (updateTargetToHarvest(radius, eyesPos)) {
             return
         }
 
         // Can we find a placeable target?
-        if (AutoPlaceCrops.enabled && updateTargetToPlantable(radius, radiusSquared, eyesPos)) {
+        if (AutoPlaceCrops.enabled && updateTargetToPlantable(radius, eyesPos)) {
             return
         }
 
-        if (AutoUseBoneMeal.enabled && updateTargetToFertilizable(radius, radiusSquared, eyesPos)) {
+        if (AutoUseBoneMeal.enabled && updateTargetToFertilizable(radius, eyesPos)) {
             return
         }
     }
