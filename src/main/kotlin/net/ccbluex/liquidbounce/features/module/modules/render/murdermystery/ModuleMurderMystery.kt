@@ -52,6 +52,8 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
     var playHurt = false
     var playBow = false
 
+    private val setTeamPrefix by boolean("SetTeamPrefix", true)
+
     val modes =
         choices(
             "Mode",
@@ -140,18 +142,11 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
         val entity = it.entity
 
         val col = when (playerType) {
-            MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> {
-                entity.team?.setPlayerPrefix(playerType.prefix)
-                Color4b(0, 144, 255)
-            }
-
-            MurderMysteryMode.PlayerType.MURDERER -> {
-                entity.team?.setPlayerPrefix(playerType.prefix)
-                Color4b(203, 9, 9)
-            }
-
+            MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> Color4b(0, 144, 255)
+            MurderMysteryMode.PlayerType.MURDERER -> Color4b(203, 9, 9)
             MurderMysteryMode.PlayerType.NEUTRAL -> return@handler
         }
+        if (setTeamPrefix) entity.team?.setPlayerPrefix(playerType.prefix)
 
         it.color(col, Priority.IMPORTANT_FOR_USAGE_3)
     }
