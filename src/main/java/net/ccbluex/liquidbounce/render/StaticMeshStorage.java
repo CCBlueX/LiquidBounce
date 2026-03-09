@@ -40,7 +40,7 @@ public final class StaticMeshStorage {
     private final GrowableMappableRingBuffer vboStorage;
     private final GrowableMappableRingBuffer iboStorage;
 
-    public @Nullable MeshDraw meshDraw;
+    private @Nullable MeshDraw meshDraw;
 
     public final String label;
 
