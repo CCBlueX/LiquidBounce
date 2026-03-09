@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue.presets
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.world.item.Items
@@ -39,6 +40,10 @@ object AutoQueueHypixelSW : Mode("HypixelSW") {
         get() = Slots.Hotbar.findSlot(Items.PAPER) != null
 
     val repeatable = tickHandler {
+        if (ModuleAutoQueue.shouldPause) {
+            return@tickHandler
+        }
+
         // Check if we have paper in our hotbar
         if (!hasPaper) {
             return@tickHandler
