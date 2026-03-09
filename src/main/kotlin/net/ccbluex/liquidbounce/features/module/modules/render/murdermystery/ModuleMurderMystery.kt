@@ -166,11 +166,9 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
         val isSword = MurderMysterySwordDetection.isSword(itemStack)
         val isBow = itemStack.item is BowItem
 
-        val locationSkin = entity.skin.body.texturePath()
-
         when {
-            isSword -> currentMode.handleHasSword(entity, locationSkin)
-            isBow -> currentMode.handleHasBow(entity, locationSkin)
+            isSword -> currentMode.handleHasSword(entity)
+            isBow -> currentMode.handleHasBow(entity)
         }
     }
 

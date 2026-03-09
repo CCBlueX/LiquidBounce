@@ -21,21 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.minecraft.client.player.AbstractClientPlayer
-import net.minecraft.resources.Identifier
 
 sealed class MurderMysteryMode(name: String) : Mode(name) {
     final override val parent
         get() = ModuleMurderMystery.modes
 
-    abstract fun handleHasBow(
-        entity: AbstractClientPlayer,
-        locationSkin: Identifier,
-    )
+    abstract fun handleHasBow(entity: AbstractClientPlayer)
 
-    abstract fun handleHasSword(
-        entity: AbstractClientPlayer,
-        locationSkin: Identifier,
-    )
+    abstract fun handleHasSword(entity: AbstractClientPlayer)
 
     open fun disallowsArrowDodge(): Boolean = false
 
