@@ -25,28 +25,26 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 
-public final class RenderPassRenderState {
-
-    static final Vector4f colorModulator = new Vector4f(1F, 1F, 1F, 1F);
-    static final Vector3f modelOffset = new Vector3f();
-    static final Matrix4f textureMatrix = new Matrix4f();
+/**
+ * Storage for a reusable (static) mesh draw call.
+ *
+ * <p>Unlike the dynamic path that uploads per frame into shared buffers,
+ * this class keeps dedicated VBO/IBO storage and a cached {@link MeshDraw}
+ * so the same geometry can be rendered across multiple frames.</p>
+ */
+public final class StaticMeshStorage {
 
     public final ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(0xC0000);
     private final GrowableMappableRingBuffer vboStorage;
     private final GrowableMappableRingBuffer iboStorage;
 
-    public @Nullable MeshDraw meshDraw;
-
-    public boolean ready = false;
+    private @Nullable MeshDraw meshDraw;
 
     public final String label;
 
-    public RenderPassRenderState(String label) {
+    public StaticMeshStorage(String label) {
         this.vboStorage = new GrowableMappableRingBuffer(
             label + " VBO",
             GpuBuffer.USAGE_VERTEX
@@ -58,6 +56,17 @@ public final class RenderPassRenderState {
         this.label = label;
     }
 
+    public boolean isReady() {
+        return this.meshDraw != null;
+    }
+
+    /**
+     * Upload mesh data into this storage's dedicated buffers and refresh the draw state.
+     *
+     * @param meshData built mesh data to upload
+     * @param pipeline pipeline used to determine vertex/index layout
+     * @param rotate whether to rotate ring buffers before upload (recommended when rebuilding after a frame boundary)
+     */
     public void uploadAndSet(
         MeshData meshData,
         RenderPipeline pipeline,
@@ -71,12 +80,11 @@ public final class RenderPassRenderState {
         this.meshDraw = MeshDraw.create(meshData, pipeline, v -> this.vboStorage, i -> this.iboStorage);
     }
 
+    /**
+     * Draw the currently uploaded mesh if available.
+     */
     public void bindAndDraw(RenderPass pass) {
-        if (!ready) {
-            return;
-        }
-
-        assert this.meshDraw != null;
+        if (!this.isReady()) return;
         MeshDraw.bindAndDraw(pass, this.meshDraw);
     }
 
@@ -85,7 +93,6 @@ public final class RenderPassRenderState {
      */
     public void clearStates() {
         this.meshDraw = null;
-        this.ready = false;
     }
 
     public void clearBuffers() {

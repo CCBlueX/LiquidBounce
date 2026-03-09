@@ -140,12 +140,12 @@ inline fun WorldRenderEnvironment.longLines(draw: WorldRenderEnvironment.() -> U
 }
 
 internal inline fun RenderTarget.drawGenericBlockESP(
-    renderState: RenderPassRenderState,
+    renderState: StaticMeshStorage,
     pipeline: RenderPipeline,
     distanceFade: DistanceFadeUniformValueGroup,
     dynamicTransforms: () -> GpuBufferSlice = ::getDynamicTransformsUniform,
 ): Boolean {
-    if (!renderState.ready) return false
+    if (!renderState.isReady) return false
 
     distanceFade.updateIfDirty()
     val dynamicTransforms = dynamicTransforms()

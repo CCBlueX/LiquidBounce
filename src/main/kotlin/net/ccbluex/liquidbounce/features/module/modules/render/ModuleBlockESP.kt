@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.MapColorMode
-import net.ccbluex.liquidbounce.render.RenderPassRenderState
+import net.ccbluex.liquidbounce.render.StaticMeshStorage
 import net.ccbluex.liquidbounce.render.addBoxFaces
 import net.ccbluex.liquidbounce.render.addBoxOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
@@ -117,8 +117,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 outlinesRenderState.clearStates()
             }
         }
-        private val facesRenderState = RenderPassRenderState("${ModuleBlockESP.name} $name Faces")
-        private val outlinesRenderState = RenderPassRenderState("${ModuleBlockESP.name} $name Outlines")
+        private val facesRenderState = StaticMeshStorage("${ModuleBlockESP.name} $name Faces")
+        private val outlinesRenderState = StaticMeshStorage("${ModuleBlockESP.name} $name Outlines")
 
         override fun disable() {
             facesRenderState.clearStates()
@@ -199,7 +199,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     private class OutlineMode(name: String, type: DrawOutlinesEvent.OutlineType) : Mode(name) {
-        private val renderState = RenderPassRenderState("${ModuleBlockESP.name} $name")
+        private val renderState = StaticMeshStorage("${ModuleBlockESP.name} $name")
 
         override fun disable() {
             renderState.clearStates()
