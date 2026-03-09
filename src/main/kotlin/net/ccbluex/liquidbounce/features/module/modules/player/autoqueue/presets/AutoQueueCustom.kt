@@ -91,6 +91,10 @@ object AutoQueueCustom : Mode("Custom") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler(Dispatchers.Minecraft) {
+        if (ModuleAutoQueue.shouldPause) {
+            return@tickHandler
+        }
+
         val trigger = triggers.activeMode
 
         if (trigger.isTriggered) {
