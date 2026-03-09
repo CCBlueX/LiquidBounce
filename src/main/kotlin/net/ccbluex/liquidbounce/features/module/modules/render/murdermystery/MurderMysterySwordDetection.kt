@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import net.ccbluex.fastutil.referenceArraySetOf
+import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isHoe
 import net.ccbluex.liquidbounce.utils.item.isPickaxe
@@ -32,7 +34,7 @@ import net.minecraft.world.level.block.Blocks
 
 object MurderMysterySwordDetection {
     private val KNOWN_SWORD_ITEMS =
-        hashSetOf(
+        referenceHashSetOf(
             Items.GOLDEN_CARROT,
             Items.CARROT,
             Items.CARROT_ON_A_STICK,
@@ -81,12 +83,12 @@ object MurderMysterySwordDetection {
             Items.LEATHER,
         )
     private val KNOWN_NON_SWORD_ITEMS =
-        hashSetOf(
+        referenceArraySetOf(
             Items.WOODEN_SHOVEL,
             Items.GOLDEN_SHOVEL,
         )
     private val KNOWN_SWORD_BLOCKS =
-        hashSetOf(
+        referenceArraySetOf(
             Blocks.SPONGE,
             Blocks.DEAD_BUSH,
             Blocks.REDSTONE_TORCH,
