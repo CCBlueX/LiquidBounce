@@ -95,22 +95,22 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
     val packetHandler = handler<PacketEvent> { packetEvent ->
         val world = mc.level ?: return@handler
 
-        if (packetEvent.packet is ClientboundSetEquipmentPacket) {
-            val packet: ClientboundSetEquipmentPacket = packetEvent.packet
+        when (val packet = packetEvent.packet) {
+            is ClientboundSetEquipmentPacket -> {
+                val entity = world.getEntity(packet.entity)
 
-            packet.slots
-                .filter {
-                    !it.second.isEmpty && it.first.type == EquipmentSlot.Type.HAND
-                }
-                .forEach {
-                    val itemStack = it.second
-                    val entity = world.getEntity(packet.entity)
+                packet.slots
+                    .filter {
+                        !it.second.isEmpty && it.first.type == EquipmentSlot.Type.HAND
+                    }
+                    .forEach {
+                        handleItem(it.second, entity)
+                    }
+            }
 
-                    handleItem(itemStack, entity)
-                }
-        }
-        if (packetEvent.packet is ClientboundLoginPacket || packetEvent.packet is ClientboundRespawnPacket) {
-            this.reset()
+            is ClientboundLoginPacket, is ClientboundRespawnPacket -> {
+                this.reset()
+            }
         }
     }
 
