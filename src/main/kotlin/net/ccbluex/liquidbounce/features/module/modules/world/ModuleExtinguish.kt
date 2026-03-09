@@ -19,13 +19,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -93,7 +92,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
             target.placementTarget.rotation,
             valueGroup = rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-            provider = ModuleNoFall
+            provider = ModuleExtinguish
         )
     }
 
@@ -128,13 +127,13 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        val target = currentTarget ?: return@tickHandler
+    private val tickHandler = handler<GameTickEvent> {
+        val target = currentTarget ?: return@handler
 
         val rayTraceResult = traceFromPlayer()
 
         if (!target.doesCorrespondTo(rayTraceResult)) {
-            return@tickHandler
+            return@handler
         }
 
         SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)

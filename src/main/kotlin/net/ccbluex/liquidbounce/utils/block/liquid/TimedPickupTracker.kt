@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.block.liquid
 
 import net.minecraft.core.BlockPos
+import java.util.ArrayDeque
 import java.util.function.LongSupplier
 import java.util.function.Predicate
 
@@ -32,6 +33,10 @@ internal class TimedPickupTracker @JvmOverloads constructor(
     private val capacity: Int,
     private val nowProvider: LongSupplier = LongSupplier(System::currentTimeMillis)
 ) {
+    init {
+        require(capacity > 0) { "capacity must be positive." }
+    }
+
     @JvmRecord
     private data class TrackedPos(
         val pos: BlockPos,
