@@ -58,6 +58,12 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
             arrayOf(MurderMysteryClassicMode, MurderMysteryInfectionMode, MurderMysteryAssassinationMode),
         )
 
+    init {
+        modes.onChanged {
+            resetModeState()
+        }
+    }
+
     private val currentMode: MurderMysteryMode
         get() = this.modes.activeMode
 
@@ -66,7 +72,13 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
     }
 
     private fun reset() {
-        this.currentMode.reset()
+        playHurt = false
+        playBow = false
+        resetModeState()
+    }
+
+    private fun resetModeState() {
+        this.modes.modes.forEach(MurderMysteryMode::reset)
     }
 
     @Suppress("unused")
