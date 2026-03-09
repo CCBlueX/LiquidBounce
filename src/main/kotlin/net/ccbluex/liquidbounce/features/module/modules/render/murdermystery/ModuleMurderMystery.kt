@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -153,6 +154,10 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
         }
 
         it.color(col, Priority.IMPORTANT_FOR_USAGE_3)
+    }
+
+    val worldChangeHandler = handler<WorldChangeEvent> {
+        reset()
     }
 
     private fun handleItem(
