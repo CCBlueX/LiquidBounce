@@ -27,7 +27,7 @@ import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.Items
 
-object MurderMysteryInfectionMode : SkinBasedMurderMysteryMode("Infection") {
+object MurderMysteryInfectionMode : UuidBasedMurderMysteryMode("Infection") {
 
     val tickHandler = handler<GameTickEvent> {
         world.players()

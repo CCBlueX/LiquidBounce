@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
@@ -27,10 +28,10 @@ import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.Items
 import java.util.UUID
 
-sealed class SkinBasedMurderMysteryMode(name: String) : MurderMysteryMode(name) {
+sealed class UuidBasedMurderMysteryMode(name: String) : MurderMysteryMode(name) {
 
-    protected val bowPlayers = HashSet<UUID>()
-    protected val murdererPlayers = HashSet<UUID>()
+    protected val bowPlayers = ObjectOpenHashSet<UUID>()
+    protected val murdererPlayers = ObjectOpenHashSet<UUID>()
 
     /**
      * What is our current player doing? Is he murderer?
