@@ -101,7 +101,7 @@ fun VertexConsumer.addBoxFaces(
  * Build new mesh data and upload it.
  * This method is designed for lazy building so [rotate] defaults to true.
  */
-inline fun RenderPassRenderState.buildMesh(
+inline fun StaticMeshStorage.buildMesh(
     pipeline: RenderPipeline,
     rotate: Boolean = true,
     block: VertexConsumer.(pose: PoseStack) -> Unit,
@@ -115,7 +115,6 @@ inline fun RenderPassRenderState.buildMesh(
 
     bufferBuilder.build()?.use { meshData ->
         this.uploadAndSet(meshData, pipeline, rotate)
-        this.ready = true
     }
 
     this.byteBufferBuilder.clear()
