@@ -295,6 +295,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> { event ->
         when (event.action) {
             GLFW.GLFW_PRESS -> if (mc.screen == null) {
+                // Usually nobody actually wants a module to activate when they press the Minecraft debug key combo.
+                if (mc.options.keyDebugModifier.isDown) return@handler
                 for (m in modules) {
                     if (!m.bind.matchesKeyPress(event)) {
                         continue
