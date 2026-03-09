@@ -30,7 +30,6 @@ import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
-import net.minecraft.resources.Identifier
 import net.minecraft.world.item.MapItem
 import net.minecraft.world.level.saveddata.maps.MapId
 import java.util.Locale
@@ -131,17 +130,11 @@ object MurderMysteryAssassinationMode : MurderMysteryMode("Assassination") {
         }
     }
 
-    override fun handleHasBow(
-        entity: AbstractClientPlayer,
-        locationSkin: Identifier,
-    ) {
+    override fun handleHasBow(entity: AbstractClientPlayer) {
         // Nobody has a bow in this game mode
     }
 
-    override fun handleHasSword(
-        entity: AbstractClientPlayer,
-        locationSkin: Identifier,
-    ) {
+    override fun handleHasSword(entity: AbstractClientPlayer) {
         // Everyone has a sword in this game mode
     }
 

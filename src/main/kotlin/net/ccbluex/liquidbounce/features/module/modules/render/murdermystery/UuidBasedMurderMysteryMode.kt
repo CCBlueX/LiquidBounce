@@ -19,18 +19,19 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.minecraft.client.player.AbstractClientPlayer
-import net.minecraft.resources.Identifier
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.Items
+import java.util.UUID
 
-sealed class SkinBasedMurderMysteryMode(name: String) : MurderMysteryMode(name) {
+sealed class UuidBasedMurderMysteryMode(name: String) : MurderMysteryMode(name) {
 
-    protected val bowSkins = HashSet<String>()
-    protected val murdererSkins = HashSet<String>()
+    protected val bowPlayers = ObjectOpenHashSet<UUID>()
+    protected val murdererPlayers = ObjectOpenHashSet<UUID>()
 
     /**
      * What is our current player doing? Is he murderer?
@@ -49,15 +50,12 @@ sealed class SkinBasedMurderMysteryMode(name: String) : MurderMysteryMode(name) 
         }
 
     override fun reset() {
-        this.bowSkins.clear()
-        this.murdererSkins.clear()
+        this.bowPlayers.clear()
+        this.murdererPlayers.clear()
     }
 
-    override fun handleHasBow(
-        entity: AbstractClientPlayer,
-        locationSkin: Identifier,
-    ) {
-        if (bowSkins.add(locationSkin.path)) {
+    override fun handleHasBow(entity: AbstractClientPlayer) {
+        if (bowPlayers.add(entity.gameProfile.id)) {
             chat(entity.gameProfile.name + " has a bow.")
 
             ModuleMurderMystery.playBow = true
@@ -65,9 +63,9 @@ sealed class SkinBasedMurderMysteryMode(name: String) : MurderMysteryMode(name) 
     }
 
     override fun getPlayerType(player: AbstractClientPlayer): PlayerType {
-        return when (player.skin.body.texturePath().path) {
-            in murdererSkins -> PlayerType.MURDERER
-            in bowSkins -> PlayerType.DETECTIVE_LIKE
+        return when (player.gameProfile.id) {
+            in murdererPlayers -> PlayerType.MURDERER
+            in bowPlayers -> PlayerType.DETECTIVE_LIKE
             else -> PlayerType.NEUTRAL
         }
     }

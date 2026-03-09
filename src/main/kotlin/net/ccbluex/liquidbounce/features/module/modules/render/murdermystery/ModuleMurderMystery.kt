@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -51,12 +52,20 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
     var playHurt = false
     var playBow = false
 
+    private val setTeamPrefix by boolean("SetTeamPrefix", true)
+
     val modes =
         choices(
             "Mode",
             MurderMysteryClassicMode,
             arrayOf(MurderMysteryClassicMode, MurderMysteryInfectionMode, MurderMysteryAssassinationMode),
         )
+
+    init {
+        modes.onChanged {
+            resetModeState()
+        }
+    }
 
     private val currentMode: MurderMysteryMode
         get() = this.modes.activeMode
@@ -66,7 +75,13 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
     }
 
     private fun reset() {
-        this.currentMode.reset()
+        playHurt = false
+        playBow = false
+        resetModeState()
+    }
+
+    private fun resetModeState() {
+        this.modes.modes.forEach(MurderMysteryMode::reset)
     }
 
     @Suppress("unused")
@@ -95,22 +110,22 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
     val packetHandler = handler<PacketEvent> { packetEvent ->
         val world = mc.level ?: return@handler
 
-        if (packetEvent.packet is ClientboundSetEquipmentPacket) {
-            val packet: ClientboundSetEquipmentPacket = packetEvent.packet
+        when (val packet = packetEvent.packet) {
+            is ClientboundSetEquipmentPacket -> {
+                val entity = world.getEntity(packet.entity)
 
-            packet.slots
-                .filter {
-                    !it.second.isEmpty && it.first.type == EquipmentSlot.Type.HAND
-                }
-                .forEach {
-                    val itemStack = it.second
-                    val entity = world.getEntity(packet.entity)
+                packet.slots
+                    .filter {
+                        !it.second.isEmpty && it.first.type == EquipmentSlot.Type.HAND
+                    }
+                    .forEach {
+                        handleItem(it.second, entity)
+                    }
+            }
 
-                    handleItem(itemStack, entity)
-                }
-        }
-        if (packetEvent.packet is ClientboundLoginPacket || packetEvent.packet is ClientboundRespawnPacket) {
-            this.reset()
+            is ClientboundLoginPacket, is ClientboundRespawnPacket -> {
+                this.reset()
+            }
         }
     }
 
@@ -127,20 +142,17 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
         val entity = it.entity
 
         val col = when (playerType) {
-            MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> {
-                entity.team?.setPlayerPrefix("[BOW] ".asPlainText(ChatFormatting.AQUA))
-                Color4b(0, 144, 255)
-            }
-
-            MurderMysteryMode.PlayerType.MURDERER -> {
-                entity.team?.setPlayerPrefix("[MURD] ".asPlainText(ChatFormatting.RED))
-                Color4b(203, 9, 9)
-            }
-
+            MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> Color4b(0, 144, 255)
+            MurderMysteryMode.PlayerType.MURDERER -> Color4b(203, 9, 9)
             MurderMysteryMode.PlayerType.NEUTRAL -> return@handler
         }
+        if (setTeamPrefix) entity.team?.setPlayerPrefix(playerType.prefix)
 
         it.color(col, Priority.IMPORTANT_FOR_USAGE_3)
+    }
+
+    val worldChangeHandler = handler<WorldChangeEvent> {
+        reset()
     }
 
     private fun handleItem(
@@ -154,11 +166,9 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
         val isSword = MurderMysterySwordDetection.isSword(itemStack)
         val isBow = itemStack.item is BowItem
 
-        val locationSkin = entity.skin.body.texturePath()
-
         when {
-            isSword -> currentMode.handleHasSword(entity, locationSkin)
-            isBow -> currentMode.handleHasBow(entity, locationSkin)
+            isSword -> currentMode.handleHasSword(entity)
+            isBow -> currentMode.handleHasBow(entity)
         }
     }
 
