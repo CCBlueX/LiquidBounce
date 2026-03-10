@@ -43,6 +43,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import java.util.SortedSet
 import java.util.function.BiPredicate
+import java.util.function.ToDoubleFunction
 
 fun hasInventorySpace() = player.inventory.nonEquipmentItems.any { it.isEmpty }
 
@@ -122,15 +123,19 @@ fun <T : ItemSlot> Iterable<T>.findBestToolToMineBlock(
 ): T? {
     val player = mc.player ?: return null
 
-    val slot = filter {
+    val candidates = filter {
         val stack = it.itemStack
         val durabilityCheck = (ignoreDurability || (stack.durability > 2 || stack.maxDamage <= 0))
         !player.isCreative && durabilityCheck && predicate.test(stack, blockState)
-    }.maxWithOrNull(
-        Comparator.comparingDouble<T> {
-            it.itemStack.getDestroySpeedWithEnchantment(blockState).toDouble()
-        }.thenDescending(ItemSlot.PREFER_NEARBY)
-    ) ?: return null
+    }
 
-    return slot
+    if (candidates.size > 1) {
+        return candidates.maxWith(
+            Comparator.comparingDouble<T>(ToDoubleFunction {
+                it.itemStack.getDestroySpeedWithEnchantment(blockState).toDouble()
+            }).thenDescending(ItemSlot.PREFER_NEARBY)
+        )
+    }
+
+    return candidates.firstOrNull()
 }
