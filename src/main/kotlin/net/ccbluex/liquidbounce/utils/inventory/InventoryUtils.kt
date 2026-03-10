@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.useItem
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.item.durability
+import net.ccbluex.liquidbounce.utils.item.getDestroySpeedWithEnchantment
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.InteractionHand
@@ -127,7 +128,7 @@ fun <T : ItemSlot> Iterable<T>.findBestToolToMineBlock(
         !player.isCreative && durabilityCheck && predicate.test(stack, blockState)
     }.maxWithOrNull(
         Comparator.comparingDouble<T> {
-            it.itemStack.getDestroySpeed(blockState).toDouble()
+            it.itemStack.getDestroySpeedWithEnchantment(blockState).toDouble()
         }.thenDescending(ItemSlot.PREFER_NEARBY)
     ) ?: return null
 
