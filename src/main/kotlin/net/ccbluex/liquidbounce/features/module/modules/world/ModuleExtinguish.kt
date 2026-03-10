@@ -164,7 +164,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
 
     private fun planPickup(blockPos: BlockPos): PlacementPlan? {
         val bucket = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
-        return planPlacementAtPos(blockPos, bucket, player.position())
+        return planPlacementAtPos(blockPos, bucket)
     }
 
 }

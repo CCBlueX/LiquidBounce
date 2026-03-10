@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
+import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
@@ -50,15 +51,16 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
      */
     private var initiatedJump = false
 
+    private val UNWANTED_BLOCKS = referenceHashSetOf(
+        Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK,
+    )
+
     private val unwantedBlocksBelow: Boolean
         get() {
             val collision = FallingPlayer
                 .fromPlayer(player)
                 .findCollision(20)?.pos ?: return false
-            return collision.getBlock() in arrayOf(
-                Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK,
-                Blocks.SLIME_BLOCK
-            )
+            return collision.getBlock() in UNWANTED_BLOCKS
         }
 
     @Suppress("unused")

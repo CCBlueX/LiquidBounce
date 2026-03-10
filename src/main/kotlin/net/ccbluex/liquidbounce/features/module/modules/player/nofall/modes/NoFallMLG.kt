@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFa
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isFallDamageBlocking
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
@@ -42,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.world.item.Items
-import net.minecraft.world.level.block.Blocks
 
 internal object NoFallMLG : NoFallMode("MLG") {
     private const val PICKUP_TRACKER_CAPACITY = 8
@@ -168,12 +166,10 @@ internal object NoFallMLG : NoFallMode("MLG") {
         val bestPickupItem = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
 
         // Remove all time outed/invalid pickup targets from the list
-        pickupTracker.prune(PickupWater.pickupSpan.last.toLong()) { trackedPos ->
-            trackedPos.getState()?.block == Blocks.WATER
-        }
+        pickupTracker.prune(PickupWater.pickupSpan.last.toLong(), TimedPickupTracker.PickupFilter.WATER)
 
         val pickupPos = pickupTracker.firstEligible(PickupWater.pickupSpan.first.toLong()) ?: return null
-        return planPlacementAtPos(pickupPos, bestPickupItem, player.position())
+        return planPlacementAtPos(pickupPos, bestPickupItem)
     }
 
     /**
@@ -192,6 +188,6 @@ internal object NoFallMLG : NoFallMode("MLG") {
             return null
         }
 
-        return planPlacementAtPos(collision.above(), itemForMLG, player.position())
+        return planPlacementAtPos(collision.above(), itemForMLG)
     }
 }

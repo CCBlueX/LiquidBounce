@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
@@ -32,7 +33,7 @@ import net.minecraft.world.phys.Vec3
 internal fun planPlacementAtPos(
     pos: BlockPos,
     slot: HotbarItemSlot,
-    placementPlayerPos: Vec3,
+    placementPlayerPos: Vec3 = player.position(),
 ): PlacementPlan? {
     val options = BlockPlacementTargetFindingOptions(
         BlockOffsetOptions.Default,

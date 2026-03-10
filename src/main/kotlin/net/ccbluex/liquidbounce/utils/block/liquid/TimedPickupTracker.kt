@@ -18,7 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.block.liquid
 
+import com.google.common.base.Predicates
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.material.Fluids
 import java.util.ArrayDeque
 import java.util.function.LongSupplier
 import java.util.function.Predicate
@@ -61,7 +65,7 @@ internal class TimedPickupTracker @JvmOverloads constructor(
             return
         }
 
-        trackedPositions.addLast(TrackedPos(pos, nowProvider.asLong))
+        trackedPositions.addLast(TrackedPos(pos.immutable, nowProvider.asLong))
 
         while (trackedPositions.size > capacity) {
             trackedPositions.removeFirst()
@@ -79,12 +83,29 @@ internal class TimedPickupTracker @JvmOverloads constructor(
     }
 
     /**
-     * Returns the oldest tracked position whose age is strictly greater than [minDelayMs], or `null`.
+     * Returns the oldest tracked position whose age is strictly greater than [minDelayMs] and
+     * satisfies [predicate], or `null`.
      */
-    fun firstEligible(minDelayMs: Long): BlockPos? {
+    @JvmOverloads
+    fun firstEligible(minDelayMs: Long, predicate: Predicate<BlockPos> = Predicates.alwaysTrue()): BlockPos? {
         val now = nowProvider.asLong
         return trackedPositions.firstOrNull { trackedPos ->
-            now - trackedPos.timestamp > minDelayMs
+            now - trackedPos.timestamp > minDelayMs && predicate.test(trackedPos.pos)
         }?.pos
+    }
+
+    enum class PickupFilter : Predicate<BlockPos> {
+        WATER {
+            override fun test(pos: BlockPos): Boolean {
+                val state = pos.getState() ?: return false
+                return state.fluidState.`is`(Fluids.WATER) && state.fluidState.isSource
+            }
+        },
+        LAVA {
+            override fun test(pos: BlockPos): Boolean {
+                val state = pos.getState() ?: return false
+                return state.fluidState.`is`(Fluids.LAVA) && state.fluidState.isSource
+            }
+        },
     }
 }
