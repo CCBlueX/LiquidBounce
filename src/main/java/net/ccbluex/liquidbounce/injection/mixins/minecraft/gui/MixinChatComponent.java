@@ -140,18 +140,18 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
         ci.cancel();
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;IIIZZ)V", at = @At("TAIL"))
+    @Inject(method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;IIILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;Z)V", at = @At("TAIL"))
     private void hookRenderCopyHighlight(
         GuiGraphicsExtractor graphics,
         Font font,
         int tickCount,
         int globalMouseX,
         int globalMouseY,
-        boolean focused,
+        ChatComponent.DisplayMode displayMode,
         boolean changeCursorOnInsertions,
         CallbackInfo ci
     ) {
-        if (!focused) {
+        if (!displayMode.foreground) {
             return;
         }
 

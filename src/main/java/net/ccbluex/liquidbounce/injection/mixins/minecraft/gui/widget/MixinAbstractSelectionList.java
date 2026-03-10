@@ -36,8 +36,8 @@ public abstract class MixinAbstractSelectionList {
     @Final
     protected Minecraft minecraft;
 
-    @WrapWithCondition(method = "renderWidget",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;renderListSeparators(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"))
+    @WrapWithCondition(method = "extractWidgetRenderState",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;extractListSeparators(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"))
     private boolean renderBackground(AbstractSelectionList instance, GuiGraphicsExtractor context) {
         return this.minecraft.level != null || HideAppearance.INSTANCE.isHidingNow();
     }

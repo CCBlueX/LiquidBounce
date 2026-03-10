@@ -115,7 +115,6 @@
     "minecraft.network.MixinServerNameResolver",
     "minecraft.registry.MixinBuiltInRegistries",
     "minecraft.render.MixinBlockEntityRenderDispatcher",
-    "minecraft.render.MixinBlockRenderDispatcher",
     "minecraft.render.MixinCamera",
     "minecraft.render.MixinEndCrystalModel",
     "minecraft.render.MixinEndCrystalRenderer",

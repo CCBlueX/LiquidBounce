@@ -64,7 +64,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
     @Unique
     private ServerAddress serverAddress = null;
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;drawCenteredString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;centeredText(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
     private void injectRender(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, final CallbackInfo callback) {
         /*
          * Make a text demonstration of the connection status
@@ -85,7 +85,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
         }
 
         var connectionDetails = getConnectionDetails(clientConnection, serverAddress);
-        context.drawCenteredString(this.font, connectionDetails, this.width / 2,
+        context.centeredText(this.font, connectionDetails, this.width / 2,
             this.height / 2 - 60, -1);
     }
 
@@ -100,7 +100,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
         }
     }
 
-    @ModifyConstant(method = "render", constant = @Constant(intValue = 50))
+    @ModifyConstant(method = "extractRenderState", constant = @Constant(intValue = 50))
     private int modifyStatusY(int original) {
         return original + 30;
     }
