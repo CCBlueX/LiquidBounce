@@ -120,7 +120,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
                 }
 
                 if (item) {
-                    renderItem(renderer.icon, -8, 0)
+                    item(renderer.icon, -8, 0)
 
                     pose().pushMatrix()
                     pose().translate(0F, 16F)

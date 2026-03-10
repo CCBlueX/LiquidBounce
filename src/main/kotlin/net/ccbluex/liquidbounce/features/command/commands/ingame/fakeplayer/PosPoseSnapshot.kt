@@ -97,7 +97,7 @@ fun fromPlayerMotion(entity: AbstractClientPlayer): PosPoseSnapshot {
         entity.yHeadRot,
         entity.yHeadRotO,
         entity.pose,
-        entity.swingingArm,
+        entity.swingingArm ?: InteractionHand.MAIN_HAND,
         playerInventory,
         entity.walkAnimation.position
     )

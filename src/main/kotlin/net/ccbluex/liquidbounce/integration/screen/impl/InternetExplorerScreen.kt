@@ -59,7 +59,7 @@ class InternetExplorerScreen(val url: String, title: Component = PlainText.EMPTY
         browserBrowsers.forEach { browser -> browser.viewport = viewport }
     }
 
-    override fun render(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
         browserBrowser?.let { browser ->
             val currentUrl = browser.url
 

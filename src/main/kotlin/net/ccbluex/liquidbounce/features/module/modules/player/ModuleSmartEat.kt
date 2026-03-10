@@ -139,8 +139,8 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
                 val i: Int = scaledWidth / 2
                 val x = i - 91 - 26 - offset
                 val y = scaledHeight - GuiRenderer.DEFAULT_ITEM_SIZE - 3
-                dc.renderItemDecorations(mc.font, currentFood.itemStack, x, y)
-                dc.renderItem(currentFood.itemStack, x, y)
+                dc.itemDecorations(mc.font, currentFood.itemStack, x, y)
+                dc.item(currentFood.itemStack, x, y)
                 dc.blitSprite(
                     RenderPipelines.GUI_TEXTURED,
                     HOTBAR_OFFHAND_LEFT_TEXTURE, i - 91 - 29 - offset,

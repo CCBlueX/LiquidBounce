@@ -132,7 +132,7 @@ private class ItemTextureRenderer(
     // Note: no operation -> use shared one or skip it
     private val featureRenderDispatcher = FeatureRenderDispatcher(
         this.submitNodeCollector,
-        mc.blockRenderer, // No operation
+        mc.modelManager, // No operation
         bufferSource,
         mc.atlasManager, // No operation
         mc.gameRenderer.renderBuffers.outlineBufferSource(), // No operation
