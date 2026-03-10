@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.utils.render.textureSetup
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 import java.awt.Font
 
@@ -82,7 +82,7 @@ class FontRenderer(
         return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
     }
 
-    context(ctx: GuiGraphics)
+    context(ctx: GuiGraphicsExtractor)
     override fun draw(
         text: MinecraftTextProcessor.RecyclingProcessedText,
         parameters: DrawParameters,
@@ -140,7 +140,7 @@ class FontRenderer(
     }
 
     /**
-     * @param ctx [GuiGraphics] or [WorldRenderEnvironment]
+     * @param ctx [GuiGraphicsExtractor] or [WorldRenderEnvironment]
      * @param posZ if it's [Float.NaN], then use 2D rendering; or else use 3D rendering
      *
      * @return The resulting x value
@@ -257,7 +257,7 @@ class FontRenderer(
     ) {
         val y = if (through) y - this.height * 0.85f + this.ascent else y + 1f
         if (z.isNaN()) {
-            (ctx as GuiGraphics).drawHorizontalLine(x0, x1, y, 1f, color)
+            (ctx as GuiGraphicsExtractor).drawHorizontalLine(x0, x1, y, 1f, color)
         } else {
             (ctx as WorldRenderEnvironment).drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
                 val y0 = y
@@ -291,7 +291,7 @@ class FontRenderer(
             val argb = color.argb
 
             if (z.isNaN()) {
-                (ctx as GuiGraphics).drawGlyphOnCurrentLayer(
+                (ctx as GuiGraphicsExtractor).drawGlyphOnCurrentLayer(
                     glyph.page.texture.textureSetup,
                     x0 = x0, y0 = y0, x1 = x1, y1 = y1,
                     u1 = uv1.u, v1 = uv1.v, u2 = uv2.u, v2 = uv2.v, argb = argb,

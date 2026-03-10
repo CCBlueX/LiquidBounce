@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.interfaces.ChatComponentAddition;
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.util.ArrayListDeque;
@@ -140,9 +140,9 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
         ci.cancel();
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;IIIZZ)V", at = @At("TAIL"))
+    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;IIIZZ)V", at = @At("TAIL"))
     private void hookRenderCopyHighlight(
-        GuiGraphics graphics,
+        GuiGraphicsExtractor graphics,
         Font font,
         int tickCount,
         int globalMouseX,

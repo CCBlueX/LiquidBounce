@@ -77,7 +77,7 @@
     "minecraft.gui.MixinCommandSuggestions",
     "minecraft.gui.MixinGui",
     "minecraft.gui.MixinGuiAccessor",
-    "minecraft.gui.MixinGuiGraphics",
+    "minecraft.gui.MixinGuiGraphicsExtractor",
     "minecraft.gui.MixinGuiRenderer",
     "minecraft.gui.MixinGuiRenderState",
     "minecraft.gui.MixinGuiRenderStateLayer",

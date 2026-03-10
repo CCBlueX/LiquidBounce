@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
@@ -180,7 +180,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         return super.mouseReleased(click)
     }
 
-    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
         ModuleDroneControl.currentTarget = null
 
         this.focusedEntity?.let {
@@ -214,7 +214,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
     }
 
     @Suppress("detekt:EmptyFunctionBlock")
-    override fun renderBackground(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun renderBackground(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
 
     }
 

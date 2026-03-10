@@ -22,7 +22,7 @@ import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.text.PlainText
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.INVENTORY_LOCATION
@@ -49,7 +49,7 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
         y = (height - backgroundHeight) / 2
     }
 
-    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
         super.render(context, mouseX, mouseY, delta)
 
         val handler = handler ?: return
@@ -94,19 +94,19 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
         }
     }
 
-    override fun renderBackground(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun renderBackground(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
         renderTransparentBackground(context)
         drawBackground(context, mouseX, mouseY)
     }
 
-    private fun drawItem(context: GuiGraphics, stack: ItemStack, x: Int, y: Int) {
+    private fun drawItem(context: GuiGraphicsExtractor, stack: ItemStack, x: Int, y: Int) {
         context.pose().withPush {
             context.renderItem(stack, x, y)
             context.renderItemDecorations(font, stack, x, y, null)
         }
     }
 
-    private fun drawBackground(context: GuiGraphics, mouseX: Int, mouseY: Int) {
+    private fun drawBackground(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
         context.blit(
             RenderPipelines.GUI_TEXTURED, INVENTORY_LOCATION, x, y,
             0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256)
@@ -118,7 +118,7 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
         }
     }
 
-    private fun drawSlot(context: GuiGraphics, slot: Slot) {
+    private fun drawSlot(context: GuiGraphicsExtractor, slot: Slot) {
         var spriteDrawn = false
 
         context.pose().pushMatrix()

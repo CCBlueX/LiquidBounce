@@ -42,7 +42,7 @@ import net.ccbluex.liquidbounce.utils.render.asTextureSetup
 import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.writeStd140
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.resources.Identifier
 import java.io.Closeable
@@ -55,7 +55,7 @@ sealed interface ThemeBackground : Closeable {
      */
     object Minecraft : ThemeBackground {
         override fun draw(
-            context: GuiGraphics,
+            context: GuiGraphicsExtractor,
             width: Int,
             height: Int,
             mouseX: Int,
@@ -80,7 +80,7 @@ sealed interface ThemeBackground : Closeable {
         private val textureSetup = texture.textureSetup
 
         override fun draw(
-            context: GuiGraphics,
+            context: GuiGraphicsExtractor,
             width: Int,
             height: Int,
             mouseX: Int,
@@ -121,7 +121,7 @@ sealed interface ThemeBackground : Closeable {
         private var textureSetup: TextureSetup? = null
 
         override fun draw(
-            context: GuiGraphics,
+            context: GuiGraphicsExtractor,
             width: Int,
             height: Int,
             mouseX: Int,
@@ -239,7 +239,7 @@ sealed interface ThemeBackground : Closeable {
      */
     @Suppress("LongParameterList")
     fun draw(
-        context: GuiGraphics,
+        context: GuiGraphicsExtractor,
         width: Int,
         height: Int,
         mouseX: Int,
