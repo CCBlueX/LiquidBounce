@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.utils.block.targetfinding
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.edgePoints
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -49,6 +49,7 @@ data class PositionFactoryConfiguration(
     val randomNumber: Double
 )
 
+private object PositionFactoryDebug : DebuggedOwner
 
 sealed class FaceTargetPositionFactory {
 
@@ -121,7 +122,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 
         val pointOnFace = face.nearestPointTo(rotationLine)
 
-        ModuleScaffold.debugGeometry("targetFace") {
+        PositionFactoryDebug.debugGeometry("targetFace") {
             ModuleDebug.DebuggedBox(
                 AABB(
                 face.from,
@@ -129,7 +130,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
             ).move(Vec3.atLowerCornerOf(targetPos)), Color4b.RED)
         }
 
-        ModuleScaffold.debugGeometry("targetPoint") {
+        PositionFactoryDebug.debugGeometry("targetPoint") {
             ModuleDebug.DebuggedPoint(
                 pointOnFace + targetPos,
                 Color4b.BLUE,
@@ -137,7 +138,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
             )
         }
 
-        ModuleScaffold.debugGeometry("daLine") {
+        PositionFactoryDebug.debugGeometry("daLine") {
             ModuleDebug.DebuggedLine(
                 Line(
                     config.eyePos,
@@ -217,8 +218,6 @@ object CenterTargetPositionFactory : FaceTargetPositionFactory() {
     }
 }
 
-private object PositionFactoryDebug : DebuggedOwner
-
 abstract class BaseYawTargetPositionFactory(
     protected val config: PositionFactoryConfiguration,
     private val yawTolerance: Float = 5f
@@ -253,8 +252,8 @@ abstract class BaseYawTargetPositionFactory(
 
         val yaw = Mth.wrapDegrees(player.yRot)
         val angle = getAngle()
-        val highTargetYaw = Math.toRadians(Mth.wrapDegrees(yaw + angle).toDouble()).toFloat()
-        val lowTargetYaw = Math.toRadians(Mth.wrapDegrees(yaw - angle).toDouble()).toFloat()
+        val highTargetYaw = Mth.wrapDegrees(yaw + angle).toRadians()
+        val lowTargetYaw = Mth.wrapDegrees(yaw - angle).toRadians()
 
         ModuleDebug.debugParameter(PositionFactoryDebug, "PlayerYaw", yaw)
         ModuleDebug.debugParameter(PositionFactoryDebug, "Angle", angle)
@@ -361,7 +360,7 @@ class EdgePointTargetPositionFactory(
 
         // If the player is not moving, we can just aim at the nearest point
         return if (!player.input.keyPresses.anyHorizontal) {
-            return aimAtNearestPointToRotationLine(targetPos, trimmedFace)
+            aimAtNearestPointToRotationLine(targetPos, trimmedFace)
         } else {
             aimAtFurthestPointToPlayerPosition(targetPos, trimmedFace)
                 ?: aimAtNearestPointToRotationLine(targetPos, trimmedFace)
@@ -382,7 +381,7 @@ class EdgePointTargetPositionFactory(
             edge.distanceToSqr(player.position() - player.blockPosition())
         } ?: return null
 
-        ModuleScaffold.debugGeometry("Face") {
+        PositionFactoryDebug.debugGeometry("Face") {
             ModuleDebug.DebuggedBox(
                 AABB(
                     face.from,
@@ -391,7 +390,7 @@ class EdgePointTargetPositionFactory(
             )
         }
 
-        ModuleScaffold.debugGeometry("Edge") {
+        PositionFactoryDebug.debugGeometry("Edge") {
             ModuleDebug.DebuggedPoint(
                 edge + targetPos,
                 Color4b(0, 0, 255, 255),

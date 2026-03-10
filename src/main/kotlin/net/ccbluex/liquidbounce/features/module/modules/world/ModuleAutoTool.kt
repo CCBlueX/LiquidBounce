@@ -38,9 +38,8 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.item.durability
+import net.ccbluex.liquidbounce.utils.inventory.findBestToolToMineBlock
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
@@ -48,6 +47,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
+import java.util.function.BiPredicate
 
 /**
  * AutoTool module
@@ -129,9 +129,10 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
 
         override fun getToolSlot(blockState: BlockState): HotbarItemSlot? {
             if (!ConsiderInventory.running) {
-                return Slots.Hotbar.findBestToolToMineBlock(blockState, ignoreDurability)
+                return Slots.Hotbar.findBestToolToMineBlock(blockState, ignoreDurability, SilkTouchHandler)
             } else {
-                val slot = (Slots.Hotbar + Slots.Inventory).findBestToolToMineBlock(blockState, ignoreDurability)
+                val slot = (Slots.Hotbar + Slots.Inventory)
+                    .findBestToolToMineBlock(blockState, ignoreDurability, SilkTouchHandler)
 
                 ConsiderInventory.waitingTicks = 0
                 if (slot is HotbarItemSlot?) {
@@ -158,14 +159,14 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
 
     private object SilkTouchHandler : ToggleableValueGroup(
         this, "SilkTouchHandler", enabled = false
-    ) {
+    ), BiPredicate<ItemStack, BlockState> {
         private val filter by enumChoice("Filter", Filter.WHITELIST)
         private val blocks by blocks(
             "Blocks",
             blockSortedSetOf(Blocks.ENDER_CHEST, Blocks.GLOWSTONE, Blocks.SEA_LANTERN, Blocks.TURTLE_EGG),
         )
 
-        fun test(blockState: BlockState, itemStack: ItemStack): Boolean =
+        override fun test(itemStack: ItemStack, blockState: BlockState): Boolean =
             !running // If module AutoTool is disabled, this function returns true
                 || blockState.block !in blocks
                 || (filter == Filter.BLACKLIST) == (itemStack.getEnchantment(Enchantments.SILK_TOUCH) == 0)
@@ -221,23 +222,5 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
         SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
     }
 
-    fun <T : ItemSlot> SlotGroup<T>.findBestToolToMineBlock(
-        blockState: BlockState,
-        ignoreDurability: Boolean = true
-    ): T? {
-        val player = mc.player ?: return null
-
-        val slot = filter {
-            val stack = it.itemStack
-            val durabilityCheck = (ignoreDurability || (stack.durability > 2 || stack.maxDamage <= 0))
-            !player.isCreative && durabilityCheck && SilkTouchHandler.test(blockState, stack)
-        }.maxWithOrNull(
-            Comparator.comparingDouble<T> {
-                it.itemStack.getDestroySpeed(blockState).toDouble()
-            }.thenDescending(ItemSlot.PREFER_NEARBY)
-        ) ?: return null
-
-        return slot
-    }
 
 }

@@ -172,6 +172,10 @@ fun <E : Any> ResourceKey<Registry<E>>.getOrNull(): Registry<E>? =
 fun ResourceKey<Enchantment>.toRegistryEntryOrNull(): Holder<Enchantment>? =
     Registries.ENCHANTMENT.getOrNull()?.get(this)?.getOrNull()
 
+fun ItemStack.getDestroySpeedWithEnchantment() {
+
+}
+
 /**
  * Get [Block] of inner item if it is [BlockItem], or null if not
  */

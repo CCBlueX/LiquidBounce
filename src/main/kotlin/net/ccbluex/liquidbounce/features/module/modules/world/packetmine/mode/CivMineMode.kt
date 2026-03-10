@@ -19,16 +19,17 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode
 
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool.findBestToolToMineBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findBestToolToMineBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
 
 object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
@@ -87,7 +88,10 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
             ModuleAutoTool.switchToBreakBlock(mineTarget.targetPos)
             shouldSwitch = false
         } else if (shouldSwitch) {
-            val slot1 = Slots.Hotbar.findBestToolToMineBlock(state)?.hotbarSlot
+            val slot1 = Slots.Hotbar.findBestToolToMineBlock(
+                state,
+                predicate = ItemStack::isCorrectToolForDrops,
+            )?.hotbarSlot
             if (slot1 != null && slot1 != oldSlot) {
                 network.sendHeldItemChange(slot1)
             } else {
