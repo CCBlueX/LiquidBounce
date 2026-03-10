@@ -50,10 +50,11 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
     private val constraints = tree(PlayerInventoryConstraints())
     private val itemThreshold by int("ItemThreshold", 5, 0..63)
     private val delay by int("Delay", 40, 0..1000, "ms")
+    private val replenishEmpty by boolean("ReplenishEmpty", true)
     private val features by multiEnumChoice("Features", Features.CLEANUP)
     private val insideOf by multiEnumChoice<InsideOf>("InsideOf")
 
-    // 0..9 -> hotbar 10 -> offHand
+    // 0..8 -> hotbar, 9 -> offHand
     private val trackedHotbarItems = Array(10) { Items.AIR }
     private val chronometer = Chronometer()
 
@@ -88,13 +89,25 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
         Slots.OffhandWithHotbar.slots.forEach { slot ->
             val idx = if (slot is OffHandSlot) trackedHotbarItems.lastIndex else slot.hotbarSlot
 
-            // find the desired item
-            val itemStack = slot.itemStack.takeUnless { it.isEmpty } ?: ItemStack(trackedHotbarItems[idx], 0)
-            if (itemStack.isEmpty) {
+            val currentStack = slot.itemStack
+            val currentStackNotEmpty = !currentStack.isEmpty
+
+            if (!currentStackNotEmpty && !replenishEmpty) {
+                trackedHotbarItems[idx] = Items.AIR
                 return@forEach
             }
 
-            val currentStackNotEmpty = !itemStack.isEmpty
+            // find the desired item
+            val itemStack = if (currentStackNotEmpty) {
+                currentStack
+            } else {
+                val trackedItem = trackedHotbarItems[idx]
+                if (trackedItem == Items.AIR) {
+                    return@forEach
+                }
+
+                trackedItem.defaultInstance
+            }
 
             // check if the current stack, if not empty, is allowed to be refilled
             val unsupportedStackSize = itemStack.maxStackSize <= itemThreshold
