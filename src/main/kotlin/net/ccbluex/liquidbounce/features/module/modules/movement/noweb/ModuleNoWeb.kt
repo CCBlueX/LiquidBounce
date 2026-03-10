@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAvoidHaza
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebAir
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebGrimBreak
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebIntave14
+import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebPlaceWater
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebStrafe
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.core.BlockPos
@@ -44,6 +45,7 @@ object ModuleNoWeb : ClientModule("NoWeb", ModuleCategories.MOVEMENT) {
             NoWebAir,
             NoWebGrimBreak,
             NoWebIntave14,
+            NoWebPlaceWater,
             NoWebStrafe
         )
     ).apply { tagBy(this) }

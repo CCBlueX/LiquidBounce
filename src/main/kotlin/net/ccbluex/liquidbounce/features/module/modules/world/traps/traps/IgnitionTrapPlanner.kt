@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
-import it.unimi.dsi.fastutil.objects.ReferenceSet
+import net.ccbluex.fastutil.referenceArraySetOf
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
@@ -53,8 +52,8 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
     true
 ) {
 
-    override val trapItems: Set<Item> = ReferenceSet.of(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL)
-    override val trapWorthyBlocks: Set<Block> = ReferenceSet.of(Blocks.LAVA, Blocks.FIRE)
+    override val trapItems: Set<Item> = referenceArraySetOf(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL)
+    override val trapWorthyBlocks: Set<Block> = referenceArraySetOf(Blocks.LAVA, Blocks.FIRE)
 
     override fun plan(enemies: List<LivingEntity>): BlockChangeIntent<IgnitionIntentData>? {
         val slot = findSlotForTrap() ?: return null
@@ -71,10 +70,10 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
 
             targetTracker.target = target
             return BlockChangeIntent(
-                BlockChangeInfo.PlaceBlock(placementTarget ),
+                BlockChangeInfo.PlaceBlock(placementTarget),
                 slot,
                 IntentTiming.NEXT_PROPITIOUS_MOMENT,
-                IgnitionIntentData(target, target.getDimensions(Pose.STANDING).makeBoundingBox(targetPos)),
+                IgnitionIntentData(target, target.getDimensions(target.pose).makeBoundingBox(targetPos)),
                 this
             )
         }
@@ -95,7 +94,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
 
         val offsetsForTargets = findOffsetsForTarget(
             targetPos,
-            target.getDimensions(Pose.STANDING),
+            target.getDimensions(target.pose),
             target.position().subtract(target.lastPos),
             slot.itemStack.item == Items.FLINT_AND_STEEL
         )
