@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.utils.block.liquid
 
 import com.google.common.base.Predicates
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.immutable
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.material.Fluids
 import java.util.ArrayDeque
@@ -65,7 +64,7 @@ internal class TimedPickupTracker @JvmOverloads constructor(
             return
         }
 
-        trackedPositions.addLast(TrackedPos(pos.immutable, nowProvider.asLong))
+        trackedPositions.addLast(TrackedPos(pos.immutable(), nowProvider.asLong))
 
         while (trackedPositions.size > capacity) {
             trackedPositions.removeFirst()

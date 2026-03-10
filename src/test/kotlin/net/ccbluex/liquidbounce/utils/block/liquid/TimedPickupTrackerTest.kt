@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.block.liquid
 import net.minecraft.core.BlockPos
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class TimedPickupTrackerTest {
@@ -86,5 +87,49 @@ class TimedPickupTrackerTest {
         now = 2L
 
         assertEquals(second, tracker.firstEligible(0L))
+    }
+
+    @Test
+    fun `clear removes all tracked entries`() {
+        val tracker = TimedPickupTracker(capacity = 8, nowProvider = { now })
+        tracker.record(BlockPos(1, 64, 1))
+        tracker.record(BlockPos(2, 64, 2))
+
+        tracker.clear()
+        now = 100L
+
+        assertNull(tracker.firstEligible(0L))
+    }
+
+    @Test
+    fun `firstEligible respects predicate`() {
+        val tracker = TimedPickupTracker(capacity = 8, nowProvider = { now })
+        val first = BlockPos(1, 64, 1)
+        val second = BlockPos(2, 64, 2)
+        tracker.record(first)
+        now = 1L
+        tracker.record(second)
+
+        now = 10L
+        assertEquals(second, tracker.firstEligible(0L) { it == second })
+    }
+
+    @Test
+    fun `record snapshots mutable block positions`() {
+        val tracker = TimedPickupTracker(capacity = 8, nowProvider = { now })
+        val mutablePos = BlockPos.MutableBlockPos(1, 64, 1)
+        tracker.record(mutablePos)
+
+        mutablePos.set(9, 64, 9)
+        now = 10L
+
+        assertEquals(BlockPos(1, 64, 1), tracker.firstEligible(0L))
+    }
+
+    @Test
+    fun `capacity must be positive`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            TimedPickupTracker(capacity = 0)
+        }
     }
 }
