@@ -83,20 +83,31 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
             private val inventoryConstraints = tree(InventoryConstraints())
 
             @JvmField var currentBestTool: ItemSlot? = null
-            private var swapAction: InventoryAction? = null
+            private var anchorSwapAction: InventoryAction? = null
+            private var anchorHotbarSlot: HotbarItemSlot? = null
+            private var pendingRestore = false
 
             @Suppress("unused")
             private val inventoryActionHandler = handler<ScheduleInventoryActionEvent> { event ->
                 val currentBestTool = currentBestTool ?: return@handler
-                val slotToSwap = Slots.Hotbar.findSlot { it.isEmpty } ?: Slots.Hotbar[SilentHotbar.serversideSlot]
+                val slotToSwap = anchorHotbarSlot ?: (
+                    Slots.Hotbar.findSlot { it.isEmpty } ?: Slots.Hotbar[SilentHotbar.serversideSlot]
+                    ).also { anchorHotbarSlot = it }
+
+                val swapAction = InventoryAction.Click.performSwap(
+                    from = currentBestTool,
+                    to = slotToSwap,
+                )
 
                 event.schedule(
                     inventoryConstraints,
-                    InventoryAction.Click.performSwap(
-                        from = currentBestTool,
-                        to = slotToSwap,
-                    ).also { if (swapAction == null) swapAction = it }
+                    swapAction
                 )
+
+                if (anchorSwapAction == null) {
+                    anchorSwapAction = swapAction
+                    pendingRestore = true
+                }
                 this.currentBestTool = null
             }
 
@@ -104,21 +115,32 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
 
             @Suppress("unused")
             private val tickHandler = handler<GameTickEvent> {
+                if (!pendingRestore) return@handler
+
                 waitingTicks++
                 if (waitingTicks <= swapPreviousDelay) return@handler
 
                 waitingTicks = 0
-                val swapAction = swapAction ?: return@handler
-                this.swapAction = null
+                val restoreAction = anchorSwapAction ?: run {
+                    pendingRestore = false
+                    anchorHotbarSlot = null
+                    return@handler
+                }
+                anchorSwapAction = null
+                anchorHotbarSlot = null
+                pendingRestore = false
+
                 once<ScheduleInventoryActionEvent> { event ->
-                    event.schedule(inventoryConstraints, swapAction)
+                    event.schedule(inventoryConstraints, restoreAction)
                 }
             }
 
             override fun onDisabled() {
                 waitingTicks = 0
                 currentBestTool = null
-                swapAction = null
+                anchorSwapAction = null
+                anchorHotbarSlot = null
+                pendingRestore = false
                 super.onDisabled()
             }
         }
@@ -134,15 +156,22 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
                 val slot = (Slots.Hotbar + Slots.Inventory)
                     .findBestToolToMineBlock(blockState, ignoreDurability, SilkTouchHandler)
 
-                ConsiderInventory.waitingTicks = 0
-                if (slot is HotbarItemSlot?) {
-                    // We found the best tool in hotbar, don't need inventory action
-                    ConsiderInventory.currentBestTool = null
-                    return slot
-                } else {
-                    // Request inventory action
-                    ConsiderInventory.currentBestTool = slot
-                    return null
+                return when (slot) {
+                    is HotbarItemSlot -> {
+                        // We found the best tool in hotbar, don't need inventory action
+                        ConsiderInventory.currentBestTool = null
+                        slot
+                    }
+                    is ItemSlot -> {
+                        // Request inventory action and keep restore delay alive while actively switching.
+                        ConsiderInventory.waitingTicks = 0
+                        ConsiderInventory.currentBestTool = slot
+                        null
+                    }
+                    null -> {
+                        ConsiderInventory.currentBestTool = null
+                        null
+                    }
                 }
             }
         }
