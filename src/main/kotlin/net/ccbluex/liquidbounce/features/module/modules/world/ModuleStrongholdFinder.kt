@@ -330,7 +330,7 @@ object ModuleStrongholdFinder : ClientModule(
 
         lines.forEachIndexed { index, line ->
             val lineX = centerX - mc.font.width(line) / 2
-            event.context.drawString(
+            event.context.text(
                 mc.font,
                 line,
                 lineX,

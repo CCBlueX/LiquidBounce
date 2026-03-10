@@ -169,7 +169,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
                 pose().translate(screenPos.x, screenPos.y)
                 pose().scale(currentScale, currentScale)
 
-                drawCenteredString(
+                centeredText(
                     mc.font,
                     particle.text,
                     0,

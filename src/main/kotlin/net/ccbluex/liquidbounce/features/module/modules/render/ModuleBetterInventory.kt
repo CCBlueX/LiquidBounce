@@ -141,7 +141,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
                     if (seconds > 1) "${seconds.toInt()}s" else "${seconds.toFixed(1)}s"
                 }
             }
-            this.drawCenteredString(
+            this.centeredText(
                 mc.font,
                 text,
                 x + GuiRenderer.DEFAULT_ITEM_SIZE / 2,

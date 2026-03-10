@@ -26,7 +26,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.INVENTORY_LOCATION
-import net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse
+import net.minecraft.client.gui.screens.inventory.InventoryScreen.extractEntityInInventoryFollowsMouse
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.world.entity.player.Player
@@ -49,8 +49,8 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
         y = (height - backgroundHeight) / 2
     }
 
-    override fun render(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
-        super.render(context, mouseX, mouseY, delta)
+    override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
+        super.extractRenderState(context, mouseX, mouseY, delta)
 
         val handler = handler ?: return
         GlStateManager._disableDepthTest()
@@ -94,15 +94,15 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
         }
     }
 
-    override fun renderBackground(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
-        renderTransparentBackground(context)
+    override fun extractBackground(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
+        extractTransparentBackground(context)
         drawBackground(context, mouseX, mouseY)
     }
 
     private fun drawItem(context: GuiGraphicsExtractor, stack: ItemStack, x: Int, y: Int) {
         context.pose().withPush {
-            context.renderItem(stack, x, y)
-            context.renderItemDecorations(font, stack, x, y, null)
+            context.item(stack, x, y)
+            context.itemDecorations(font, stack, x, y, null)
         }
     }
 
@@ -111,7 +111,7 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
             RenderPipelines.GUI_TEXTURED, INVENTORY_LOCATION, x, y,
             0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256)
         player()?.let { player ->
-            renderEntityInInventoryFollowsMouse(
+            extractEntityInInventoryFollowsMouse(
                 context, x + 26, y + 8, x + 75, y + 78,
                 30, 0.0625f, mouseX.toFloat(), mouseY.toFloat(), player
             )
@@ -138,12 +138,12 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
         if (!spriteDrawn) {
             val seed = slot.x + slot.y * backgroundWidth
             if (slot.isFake) {
-                context.renderFakeItem(slot.item, slot.x, slot.y, seed)
+                context.fakeItem(slot.item, slot.x, slot.y, seed)
             } else {
-                context.renderItem(slot.item, slot.x, slot.y, seed)
+                context.item(slot.item, slot.x, slot.y, seed)
             }
 
-            context.renderItemDecorations(font, slot.item, slot.x, slot.y, null)
+            context.itemDecorations(font, slot.item, slot.x, slot.y, null)
         }
 
         context.pose().popMatrix()

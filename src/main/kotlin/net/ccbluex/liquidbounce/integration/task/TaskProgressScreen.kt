@@ -45,8 +45,8 @@ class TaskProgressScreen(
 
     private val percentFormat = DecimalFormat("0.0")
 
-    override fun render(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        renderMenuBackground(context)
+    override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+        extractMenuBackground(context)
 
         val cx = width / 2.0
         val cy = height / 2.0
@@ -64,7 +64,7 @@ class TaskProgressScreen(
         var yOffset = (cy - textHeight / 2).toInt() - 40
 
         // Draw title
-        context.drawString(
+        context.text(
             font,
             title.string.asPlainText(ChatFormatting.GOLD),
             (cx - font.width(title.string) / 2).toInt(),
@@ -77,7 +77,7 @@ class TaskProgressScreen(
 
         // Draw task information
         for (line in textLines) {
-            context.drawString(
+            context.text(
                 font,
                 line,
                 (cx - font.width(line) / 2).toInt(),

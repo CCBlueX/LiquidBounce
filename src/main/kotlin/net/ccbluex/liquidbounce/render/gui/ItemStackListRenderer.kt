@@ -142,7 +142,7 @@ object ItemStackListRenderer : EventListener {
             }
 
             state.title?.let { title ->
-                guiGraphics.drawCenteredString(textRenderer, title, width / 2, 0, state.titleColor)
+                guiGraphics.centeredText(textRenderer, title, width / 2, 0, state.titleColor)
                 translate(0F, textRenderer.lineHeight + 2F)
             }
 
@@ -209,13 +209,13 @@ object ItemStackListRenderer : EventListener {
 
             @JvmField
             val OnlyItem = SingleItemStackRenderer { _, _, stack, x, y ->
-                renderItem(stack, x, y)
+                item(stack, x, y)
             }
 
             @JvmField
             val All = SingleItemStackRenderer { textRenderer, _, stack, x, y ->
-                renderItem(stack, x, y)
-                renderItemDecorations(textRenderer, stack, x, y)
+                item(stack, x, y)
+                itemDecorations(textRenderer, stack, x, y)
             }
 
             @JvmField
@@ -229,7 +229,7 @@ object ItemStackListRenderer : EventListener {
             ): SingleItemStackRenderer {
                 return SingleItemStackRenderer { textRenderer, _, stack, x, y ->
                     if (stack.isEmpty) return@SingleItemStackRenderer
-                    renderItem(stack, x, y)
+                    item(stack, x, y)
                     pose().withPush {
                         if (drawItemBar) drawItemBar(stack, x, y)
                         if (drawStackCount) drawStackCount(textRenderer, stack, x, y, null)

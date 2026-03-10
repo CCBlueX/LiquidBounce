@@ -155,11 +155,11 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     private val extraElements = arrayOf(
         ExtraElement("Compass", GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()) { ctx ->
             val stack = player.inventory.nonEquipmentItems.find { it.item === Items.COMPASS } ?: COMPASS
-            ctx.renderItem(stack, 0, 0)
+            ctx.item(stack, 0, 0)
         },
         ExtraElement("Clock", GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()) { ctx ->
             val stack = player.inventory.nonEquipmentItems.find { it.item === Items.CLOCK } ?: CLOCK
-            ctx.renderItem(stack, 0, 0)
+            ctx.item(stack, 0, 0)
         },
     )
 

@@ -123,7 +123,7 @@ inline fun GuiGraphicsExtractor.drawCustomElement(
     scissorArea: ScreenRectangle? = this.scissorStack.peek(),
     bounds: ScreenRectangle? = null,
     verticesSetupHandler: VerticesSetupHandler,
-) = this.guiRenderState.submitGuiElement(
+) = this.guiRenderState.addGuiElement(
     LambdaSimpleGuiElementRenderState(
         pipeline,
         textureSetup,
@@ -140,7 +140,7 @@ fun GuiGraphicsExtractor.drawLines(
     bounds: ScreenRectangle,
     cull: Boolean = true,
 ) {
-    this.guiRenderState.submitGuiElement(
+    this.guiRenderState.addGuiElement(
         LineGuiElementRenderState(
             points,
             argb,
@@ -168,7 +168,7 @@ fun GuiGraphicsExtractor.drawQuad(
     val bounds = getBounds(x11, y11, x21, y21)
 
     if (fillColor != null && !fillColor.isTransparent) {
-        this.guiRenderState.submitGuiElement(
+        this.guiRenderState.addGuiElement(
             QuadGuiElementRenderState(
                 x11,
                 y11,
@@ -238,7 +238,7 @@ fun GuiGraphicsExtractor.drawTriangle(
     val bounds = getBounds(minX, minY, maxX, maxY)
 
     if (fillColor != null && !fillColor.isTransparent) {
-        this.guiRenderState.submitGuiElement(
+        this.guiRenderState.addGuiElement(
             TriangleGuiElementRenderState(
                 x0, y0, x1, y1, x2, y2,
                 fillColor.argb,
@@ -289,7 +289,7 @@ inline fun GuiGraphicsExtractor.drawGlyphOnCurrentLayer(
     argb: Int = -1,
     pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
 ) {
-    this.guiRenderState.submitGlyphToCurrentLayer(
+    this.guiRenderState.addGlyphToCurrentLayer(
         TexQuadGuiElementRenderState(
             x0,
             y0,
@@ -323,7 +323,7 @@ inline fun GuiGraphicsExtractor.drawTexQuad(
     argb: Int = -1,
     pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
 ) {
-    this.guiRenderState.submitGuiElement(
+    this.guiRenderState.addGuiElement(
         TexQuadGuiElementRenderState(
             x0,
             y0,
@@ -357,7 +357,7 @@ inline fun GuiGraphicsExtractor.drawBlitOnCurrentLayer(
     argb: Int = -1,
     pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
 ) {
-    this.guiRenderState.submitBlitToCurrentLayer(
+    this.guiRenderState.addBlitToCurrentLayer(
         BlitRenderState(
             pipeline,
             textureSetup,
@@ -392,7 +392,7 @@ fun GuiGraphicsExtractor.drawCircle(
     val innerRatio = (innerRadius / radius).coerceIn(0f, 1f)
     val bounds = getBoundsXYWH(x - radius, y - radius, radius * 2, radius * 2)
 
-    this.guiRenderState.submitGuiElement(
+    this.guiRenderState.addGuiElement(
         CircleGuiElementRenderState(
             x,
             y,
