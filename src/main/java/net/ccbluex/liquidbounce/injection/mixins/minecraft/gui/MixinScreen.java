@@ -82,21 +82,21 @@ public abstract class MixinScreen implements ScreenAddition {
         ThemeManager.INSTANCE.loadBackgroundAsync();
     }
 
-    @Inject(method = "renderTransparentBackground", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractTransparentBackground", at = @At("HEAD"), cancellable = true)
     private void hookRenderInGameBackground(GuiGraphicsExtractor context, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.GUI_BACKGROUND)) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "renderWithTooltipAndSubtitles", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractRenderStateWithTooltipAndSubtitles", at = @At("HEAD"), cancellable = true)
     private void cancelRenderByChestStealer(CallbackInfo ci) {
         if (LiquidBounce.INSTANCE.isInitialized() && FeatureSilentScreen.INSTANCE.getShouldHide()) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractBackground", at = @At("HEAD"), cancellable = true)
     private void renderBackgroundTexture(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (this.minecraft != null && this.minecraft.level == null && !HideAppearance.INSTANCE.isHidingNow()) {
             if (!LiquidBounce.INSTANCE.isInitialized()) {

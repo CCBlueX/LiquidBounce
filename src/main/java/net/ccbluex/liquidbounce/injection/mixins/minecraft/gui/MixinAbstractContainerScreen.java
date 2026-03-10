@@ -88,12 +88,12 @@ public abstract class MixinAbstractContainerScreen<T extends AbstractContainerMe
     }
 
     // Before `if (itemStack.isEmpty() && slot.isEnabled()) {`
-    @Inject(method = "renderSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 5))
+    @Inject(method = "extractSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 5))
     private void drawSlotOutline(GuiGraphicsExtractor context, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
         ModuleBetterInventory.INSTANCE.drawHighlightSlot(context, slot);
     }
 
-    @Inject(method = "renderContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractContainerScreen;renderSlots(Lnet/minecraft/client/gui/GuiGraphicsExtractor;II)V", shift = At.Shift.AFTER))
+    @Inject(method = "extractContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractContainerScreen;extractSlots(Lnet/minecraft/client/gui/GuiGraphicsExtractor;II)V", shift = At.Shift.AFTER))
     private void hookDrawSlot(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         var cursorStack = this.menu.getCarried();
         var slot = getHoveredSlot(mouseX, mouseY);

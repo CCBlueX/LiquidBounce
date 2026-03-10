@@ -35,33 +35,33 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinGuiGraphicsExtractor implements GuiGraphicsExtractorAddition {
 
     @Shadow
-    protected abstract void renderItemBar(ItemStack stack, int x, int y);
+    protected abstract void itemBar(ItemStack stack, int x, int y);
 
     @Shadow
-    protected abstract void renderItemCount(Font textRenderer, ItemStack stack, int x, int y,
+    protected abstract void itemCount(Font textRenderer, ItemStack stack, int x, int y,
         @Nullable String stackCountText);
 
     @Shadow
-    protected abstract void renderItemCooldown(ItemStack stack, int x, int y);
+    protected abstract void itemCooldown(ItemStack stack, int x, int y);
 
-    @Inject(method = "renderItemCooldown", at = @At("TAIL"))
+    @Inject(method = "itemCooldown", at = @At("TAIL"))
     private void drawCooldownProgress(ItemStack stack, int x, int y, CallbackInfo ci) {
         ModuleBetterInventory.INSTANCE.drawTextCooldownProgress((GuiGraphicsExtractor) (Object) this, stack, x, y);
     }
 
     @Override
     public void liquidbounce$drawItemBar(@NotNull ItemStack stack, int x, int y) {
-        renderItemBar(stack, x, y);
+        itemBar(stack, x, y);
     }
 
     @Override
     public void liquidbounce$drawStackCount(@NotNull Font textRenderer, @NotNull ItemStack stack, int x, int y,
             @Nullable String stackCountText) {
-        renderItemCount(textRenderer, stack, x, y, stackCountText);
+        itemCount(textRenderer, stack, x, y, stackCountText);
     }
 
     @Override
     public void liquidbounce$drawCooldownProgress(@NotNull ItemStack stack, int x, int y) {
-        renderItemCooldown(stack, x, y);
+        itemCooldown(stack, x, y);
     }
 }
