@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.text.PlainText;
 import net.ccbluex.liquidbounce.utils.text.TextList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.TransferState;
@@ -64,8 +64,8 @@ public abstract class MixinConnectScreen extends MixinScreen {
     @Unique
     private ServerAddress serverAddress = null;
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
-    private void injectRender(GuiGraphics context, int mouseX, int mouseY, float delta, final CallbackInfo callback) {
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;drawCenteredString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+    private void injectRender(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, final CallbackInfo callback) {
         /*
          * Make a text demonstration of the connection status
          * This is useful for debugging the connection trace

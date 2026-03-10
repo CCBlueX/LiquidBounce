@@ -356,7 +356,12 @@ object ClientRenderPipelines {
         screenQuadSnippet()
         withFragmentShader(ClientShaders.Fragment.EntityOutline)
         withSampler("InSampler")
-        withColorTargetState(ColorTargetState(optional(BlendFunction.ENTITY_OUTLINE_BLIT), ColorTargetState.WRITE_COLOR))
+        withColorTargetState(
+            ColorTargetState(
+                optional(BlendFunction.ENTITY_OUTLINE_BLIT),
+                ColorTargetState.WRITE_COLOR,
+            )
+        )
         withDepthStencilState(optional())
     }
 

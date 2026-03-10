@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.network.chat.Component
@@ -45,7 +45,7 @@ class TaskProgressScreen(
 
     private val percentFormat = DecimalFormat("0.0")
 
-    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, partialTick: Float) {
+    override fun render(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
         renderMenuBackground(context)
 
         val cx = width / 2.0

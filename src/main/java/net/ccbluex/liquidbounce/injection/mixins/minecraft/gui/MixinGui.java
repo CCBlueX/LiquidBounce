@@ -41,7 +41,7 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -76,13 +76,13 @@ public abstract class MixinGui {
     private Minecraft minecraft;
 
     @Shadow
-    protected abstract void renderSlot(GuiGraphics context, int x, int y, DeltaTracker tickCounter, Player player, ItemStack stack, int seed);
+    protected abstract void renderSlot(GuiGraphicsExtractor context, int x, int y, DeltaTracker tickCounter, Player player, ItemStack stack, int seed);
 
     /**
      * Hook render hud event at the top layer
      */
     @Inject(method = "renderHotbarAndDecorations", at = @At("HEAD"))
-    private void hookRenderEventStart(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
+    private void hookRenderEventStart(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
         if (HideAppearance.INSTANCE.isHidingNow()) {
             return;
         }
@@ -98,14 +98,14 @@ public abstract class MixinGui {
     }
 
     @Inject(method = "renderSpyglassOverlay", at = @At("HEAD"), cancellable = true)
-    private void hookRenderSpyglassOverlay(GuiGraphics context, float scale, CallbackInfo ci) {
+    private void hookRenderSpyglassOverlay(GuiGraphicsExtractor context, float scale, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.SPYGLASS_OVERLAY)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderTextureOverlay", at = @At("HEAD"), cancellable = true)
-    private void injectPumpkinBlur(GuiGraphics context, Identifier texture, float opacity, CallbackInfo callback) {
+    private void injectPumpkinBlur(GuiGraphicsExtractor context, Identifier texture, float opacity, CallbackInfo callback) {
         if (!ModuleAntiBlind.INSTANCE.getRunning()) {
             return;
         }
@@ -121,7 +121,7 @@ public abstract class MixinGui {
     }
 
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
-    private void hookFreeCamRenderCrosshairInThirdPerson(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
+    private void hookFreeCamRenderCrosshairInThirdPerson(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
         if ((ModuleFreeCam.INSTANCE.getRunning() && ModuleFreeCam.INSTANCE.shouldDisableCameraInteract())
                 || HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_CROSSHAIR) || ModuleCrosshair.INSTANCE.getEnabled()) {
             ci.cancel();
@@ -201,7 +201,7 @@ public abstract class MixinGui {
     }
 
     @Unique
-    private void drawHotbar(GuiGraphics context, DeltaTracker tickCounter, HudComponent hudComponent) {
+    private void drawHotbar(GuiGraphicsExtractor context, DeltaTracker tickCounter, HudComponent hudComponent) {
         var playerEntity = this.getCameraPlayer();
         if (playerEntity == null) {
             return;
@@ -255,7 +255,7 @@ public abstract class MixinGui {
     }
 
     @Inject(method = "renderConfusionOverlay", at = @At("HEAD"), cancellable = true)
-    private void hookNauseaOverlay(GuiGraphics context, float distortionStrength, CallbackInfo ci) {
+    private void hookNauseaOverlay(GuiGraphicsExtractor context, float distortionStrength, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.NAUSEA)) {
             ci.cancel();
         }

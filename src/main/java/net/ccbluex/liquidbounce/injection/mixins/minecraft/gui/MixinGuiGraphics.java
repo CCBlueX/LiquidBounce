@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.ccbluex.liquidbounce.additions.GuiGraphicsAddition;
+import net.ccbluex.liquidbounce.additions.GuiGraphicsExtractorAddition;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,8 +31,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(GuiGraphics.class)
-public abstract class MixinGuiGraphics implements GuiGraphicsAddition {
+@Mixin(GuiGraphicsExtractor.class)
+public abstract class MixinGuiGraphicsExtractor implements GuiGraphicsExtractorAddition {
 
     @Shadow
     protected abstract void renderItemBar(ItemStack stack, int x, int y);
@@ -46,7 +46,7 @@ public abstract class MixinGuiGraphics implements GuiGraphicsAddition {
 
     @Inject(method = "renderItemCooldown", at = @At("TAIL"))
     private void drawCooldownProgress(ItemStack stack, int x, int y, CallbackInfo ci) {
-        ModuleBetterInventory.INSTANCE.drawTextCooldownProgress((GuiGraphics) (Object) this, stack, x, y);
+        ModuleBetterInventory.INSTANCE.drawTextCooldownProgress((GuiGraphicsExtractor) (Object) this, stack, x, y);
     }
 
     @Override

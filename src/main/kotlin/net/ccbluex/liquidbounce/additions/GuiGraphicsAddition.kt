@@ -22,13 +22,13 @@
 package net.ccbluex.liquidbounce.additions
 
 import net.minecraft.client.gui.Font
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.world.item.ItemStack
 
 /**
- * Addition to [net.minecraft.client.gui.GuiGraphics].
+ * Addition to [net.minecraft.client.gui.GuiGraphicsExtractor].
  */
-interface GuiGraphicsAddition {
+interface GuiGraphicsExtractorAddition {
 
     fun `liquidbounce$drawItemBar`(stack: ItemStack, x: Int, y: Int)
 
@@ -44,23 +44,23 @@ interface GuiGraphicsAddition {
 
 }
 
-internal inline fun GuiGraphics.drawItemBar(stack: ItemStack, x: Int, y: Int) =
-    (this as GuiGraphicsAddition).`liquidbounce$drawItemBar`(stack, x, y)
+internal inline fun GuiGraphicsExtractor.drawItemBar(stack: ItemStack, x: Int, y: Int) =
+    (this as GuiGraphicsExtractorAddition).`liquidbounce$drawItemBar`(stack, x, y)
 
-internal inline fun GuiGraphics.drawStackCount(
+internal inline fun GuiGraphicsExtractor.drawStackCount(
     textRenderer: Font,
     stack: ItemStack,
     x: Int,
     y: Int,
     stackCountText: String?,
 ) =
-    (this as GuiGraphicsAddition).`liquidbounce$drawStackCount`(textRenderer, stack, x, y, stackCountText)
+    (this as GuiGraphicsExtractorAddition).`liquidbounce$drawStackCount`(textRenderer, stack, x, y, stackCountText)
 
-internal inline fun GuiGraphics.drawCooldownProgress(stack: ItemStack, x: Int, y: Int) =
-    (this as GuiGraphicsAddition).`liquidbounce$drawCooldownProgress`(stack, x, y)
+internal inline fun GuiGraphicsExtractor.drawCooldownProgress(stack: ItemStack, x: Int, y: Int) =
+    (this as GuiGraphicsExtractorAddition).`liquidbounce$drawCooldownProgress`(stack, x, y)
 
 // Removed in 1.21.9, copied from 1.21.8
-fun GuiGraphics.drawBorder(x: Int, y: Int, width: Int, height: Int, color: Int) {
+fun GuiGraphicsExtractor.drawBorder(x: Int, y: Int, width: Int, height: Int, color: Int) {
     fill(x, y, x + width, y + 1, color)
     fill(x, y + height - 1, x + width, y + height, color)
     fill(x, y + 1, x + 1, y + height - 1, color)

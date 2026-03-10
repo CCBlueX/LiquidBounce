@@ -46,7 +46,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.Alignment
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
@@ -126,7 +126,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     ) : ToggleableValueGroup(this, name, false) {
         val placement by enumChoice("Placement", Placement.TOP_LEFT)
 
-        fun render(ctx: GuiGraphics, boundingBox: BoundingBox2f) {
+        fun render(ctx: GuiGraphicsExtractor, boundingBox: BoundingBox2f) {
             if (enabled) {
                 ctx.pose().withPush {
                     when (placement) {
@@ -148,7 +148,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
 
         fun interface Renderer {
-            operator fun invoke(ctx: GuiGraphics)
+            operator fun invoke(ctx: GuiGraphicsExtractor)
         }
     }
 
@@ -260,7 +260,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
     }
 
-    private fun GuiGraphics.drawShadowForBB(
+    private fun GuiGraphicsExtractor.drawShadowForBB(
         boundingBox: BoundingBox2f,
         bounds: ScreenRectangle,
         from: Color4b,
@@ -302,7 +302,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
     }
 
-    private fun GuiGraphics.drawMinimapTexture(
+    private fun GuiGraphicsExtractor.drawMinimapTexture(
         bounds: ScreenRectangle,
         baseX: Int,
         baseZ: Int,
@@ -347,7 +347,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
     }
 
-    private fun GuiGraphics.drawEntities(
+    private fun GuiGraphicsExtractor.drawEntities(
         tickDelta: Float,
         baseX: Float,
         baseZ: Float,
@@ -397,7 +397,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
     }
 
-    private fun GuiGraphics.drawOutOfBoundsEntityMarkers(
+    private fun GuiGraphicsExtractor.drawOutOfBoundsEntityMarkers(
         tickDelta: Float,
         center: Vec2,
         boundingBox: BoundingBox2f,

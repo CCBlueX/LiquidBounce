@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
 import net.minecraft.ChatFormatting
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.resources.language.I18n
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.ResourceKey
@@ -161,7 +161,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         val width: Float
     )
 
-    fun GuiGraphics.drawEntityEnchantments(
+    fun GuiGraphicsExtractor.drawEntityEnchantments(
         entity: LivingEntity,
         worldX: Float,
         worldY: Float,
@@ -255,7 +255,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         )
     }
 
-    private fun GuiGraphics.renderEnchantmentColumn(
+    private fun GuiGraphicsExtractor.renderEnchantmentColumn(
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
@@ -289,7 +289,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         }
     }
 
-    private fun GuiGraphics.drawEnchantmentColumns(
+    private fun GuiGraphicsExtractor.drawEnchantmentColumns(
         x: Float,
         y: Float,
         columnData: List<EnchantColumn>
@@ -320,7 +320,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         }
     }
 
-    private fun GuiGraphics.drawGroupBorder(rect: Rect) {
+    private fun GuiGraphicsExtractor.drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
         drawQuad(
             rect.x1, rect.y1,

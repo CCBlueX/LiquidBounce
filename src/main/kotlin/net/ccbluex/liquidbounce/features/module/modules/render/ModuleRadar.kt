@@ -49,7 +49,7 @@ import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.client.CameraType
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player
@@ -119,7 +119,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         final override val parent: ModeValueGroup<*>
             get() = pointerModes
 
-        context(ctx: GuiGraphics)
+        context(ctx: GuiGraphicsExtractor)
         abstract fun draw(color: Color4b)
 
         object Triangle : PointerMode("Triangle") {
@@ -129,7 +129,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 minOf(it, height)
             }
 
-            context(ctx: GuiGraphics)
+            context(ctx: GuiGraphicsExtractor)
             override fun draw(color: Color4b) {
                 if (Mth.equal(tailConcaveSize, 0f)) {
                     ctx.drawTriangle(
@@ -163,7 +163,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
 
             private val size by float("Size", 10f, 1f..100f)
 
-            context(ctx: GuiGraphics)
+            context(ctx: GuiGraphicsExtractor)
             override fun draw(color: Color4b) {
                 ctx.drawTexQuad(
                     texture.textureSetup,

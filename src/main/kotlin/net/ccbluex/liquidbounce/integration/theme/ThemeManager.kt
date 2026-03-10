@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import org.apache.logging.log4j.LogManager
@@ -234,7 +234,12 @@ object ThemeManager : Config("theme") {
     }
 
     @Suppress("LongParameterList")
-    fun drawBackground(context: GuiGraphics, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
+    fun drawBackground(
+        context: GuiGraphicsExtractor,
+        width: Int, height: Int,
+        mouseX: Int, mouseY: Int,
+        delta: Float,
+    ): Boolean {
         val background = if (shaderEnabled) {
             theme?.backgroundShader
         } else {

@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab;
 import net.ccbluex.liquidbounce.features.module.modules.misc.Visibility;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
@@ -141,7 +141,7 @@ public abstract class MixinPlayerTabOverlay {
      * @author Paul1365972 (on Meteor Client)
      */
     @Inject(method = "renderPingIcon", at = @At("HEAD"), cancellable = true)
-    private void hookOnRenderLatencyIcon(GuiGraphics context, int width, int x, int y, PlayerInfo entry, CallbackInfo ci) {
+    private void hookOnRenderLatencyIcon(GuiGraphicsExtractor context, int width, int x, int y, PlayerInfo entry, CallbackInfo ci) {
         var accurateLatency = ModuleBetterTab.AccurateLatency.INSTANCE;
         if (ModuleBetterTab.INSTANCE.getRunning() && accurateLatency.getRunning()) {
             var textRenderer = Minecraft.getInstance().font;
@@ -155,8 +155,8 @@ public abstract class MixinPlayerTabOverlay {
     }
 
     // ModifyArg breaks lunar compatibility as of 17.1.2025 (minecraft 1.21.4); that's why WrapOperation is used
-    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V", ordinal = 2))
-    private void hookRenderPlayerBackground(GuiGraphics instance, int x1, int y1, int x2, int y2, int color, Operation<Void> original, @Local(ordinal = 13) int w, @Local(ordinal = 0) List<PlayerInfo> entries) {
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V", ordinal = 2))
+    private void hookRenderPlayerBackground(GuiGraphicsExtractor instance, int x1, int y1, int x2, int y2, int color, Operation<Void> original, @Local(ordinal = 13) int w, @Local(ordinal = 0) List<PlayerInfo> entries) {
         var drawColor = color;
 
         var highlight = ModuleBetterTab.Highlight.INSTANCE;
