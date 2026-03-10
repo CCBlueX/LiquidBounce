@@ -57,6 +57,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 
+@Suppress("TooManyFunctions")
 object NoWebPlaceWater : NoWebMode("PlaceWater") {
     private const val MAX_TRACKED_WEBS = 8
     private const val PICKUP_TRACKER_CAPACITY = 16
