@@ -61,19 +61,12 @@ fun AABB.iterateBlockPos(
 fun AABB.iterateBottomLayerBlockPos(): Iterable<BlockPos> =
     iterateBlockPos(maxYInclusive = minY.ceilToInt())
 
-fun AABB.centerPointOf(side: Direction): Vec3 {
+fun AABB.centerOnSide(side: Direction): Vec3 {
     val cx = minX + xsize * 0.5
     val cy = minY + ysize * 0.5
     val cz = minZ + zsize * 0.5
 
-    return when (side) {
-        Direction.DOWN -> Vec3(cx, minY, cz)
-        Direction.UP -> Vec3(cx, maxY, cz)
-        Direction.NORTH -> Vec3(cx, cy, minZ)
-        Direction.SOUTH -> Vec3(cx, cy, maxZ)
-        Direction.WEST -> Vec3(minX, cy, cz)
-        Direction.EAST -> Vec3(maxX, cy, cz)
-    }
+    return pointOnSide(cx, cy, cz, side)
 }
 
 /**
@@ -137,16 +130,15 @@ fun AABB.getNearestPoint(from: Position): Vec3 {
 
 fun AABB.getNearestPointOnSide(from: Vec3, side: Direction): Vec3 {
     val nearest = getNearestPoint(from)
-    val x = nearest.x
-    val y = nearest.y
-    val z = nearest.z
+    return pointOnSide(nearest.x, nearest.y, nearest.z, side)
+}
 
-    return when (side) {
+private fun AABB.pointOnSide(x: Double, y: Double, z: Double, side: Direction): Vec3 =
+    when (side) {
         Direction.DOWN -> Vec3(x, minY, z)
         Direction.UP -> Vec3(x, maxY, z)
         Direction.NORTH -> Vec3(x, y, minZ)
         Direction.SOUTH -> Vec3(x, y, maxZ)
-        Direction.WEST -> Vec3(maxX, y, z)
-        Direction.EAST -> Vec3(minX, y, z)
+        Direction.WEST -> Vec3(minX, y, z)
+        Direction.EAST -> Vec3(maxX, y, z)
     }
-}

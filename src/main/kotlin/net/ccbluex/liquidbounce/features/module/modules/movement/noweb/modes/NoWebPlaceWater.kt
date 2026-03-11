@@ -43,7 +43,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.centerPointOf
+import net.ccbluex.liquidbounce.utils.math.centerOnSide
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
@@ -204,7 +204,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         directions: Array<Direction>,
     ): UseAction? {
         val side = pickBestSide(webPos, directions) ?: return null
-        val faceCenter = AABB(webPos).centerPointOf(side)
+        val faceCenter = AABB(webPos).centerOnSide(side)
         val fallbackHitResult = BlockHitResult(faceCenter, side, webPos, false)
 
         return UseAction(
