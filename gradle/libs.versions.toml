@@ -24,7 +24,7 @@ djl = "0.36.0"
 okhttp = "5.3.2"
 
 httpServer = "2.5.4"
-discordIpc = "4.0.1"
+discordIpc = "0.6.0-SNAPSHOT"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
 fastutil4k = "0.2.7"
@@ -75,9 +75,9 @@ lwjgl-egl = { group = "org.lwjgl", name = "lwjgl-egl", version.ref = "lwjgl" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-coroutines = { group = "com.squareup.okhttp3", name = "okhttp-coroutines", version.ref = "okhttp" }
 mcAuthlib = { group = "net.ccbluex", name = "mc-authlib", version.ref = "mc_authlib" }
-mcef = { group = "com.github.CCBlueX", name = "mcef", version.ref = "mcef" }
+mcef = { group = "net.ccbluex", name = "mcef", version.ref = "mcef" }
 httpServer = { group = "net.ccbluex", name = "netty-httpserver", version.ref = "httpServer" }
-discordIpc = { group = "com.github.CCBlueX", name = "DiscordIPC", version.ref = "discordIpc" }
+discordIpc = { group = "com.jagrosh", name = "DiscordIPC", version.ref = "discordIpc" }
 semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
 ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
 fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }
@@ -98,7 +98,7 @@ sodium = { group = "maven.modrinth", name = "sodium", version.ref = "sodium" }
 lithium = { group = "maven.modrinth", name = "lithium", version.ref = "lithium" }
 vfp-api = { group = "com.viaversion", name = "viafabricplus-api", version.ref = "viafabricplus" }
 vfp = { group = "com.viaversion", name = "viafabricplus", version.ref = "viafabricplus" }
-exploitPreventer-api = { group = "com.nikoverflow", name = "ExploitPreventer-API", version.ref = "exploit_preventer_api" }
+exploitPreventer-api = { group = "com.nikoverflow", name = "exploit-preventer-api", version.ref = "exploit_preventer_api" }
 exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
 immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
 iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
