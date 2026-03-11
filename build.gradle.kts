@@ -52,7 +52,7 @@ allprojects {
             url = uri("https://maven.ccbluex.net/releases")
         }
         maven {
-            name = "CCBlueX Releases"
+            name = "CCBlueX Snapshots"
             url = uri("https://maven.ccbluex.net/snapshots")
         }
         maven {
