@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.commands.arguments.item.ItemInput
 import net.minecraft.commands.arguments.item.ItemParser
 import net.minecraft.core.BlockPos
@@ -81,6 +82,7 @@ import net.minecraft.world.item.component.UseEffects
 import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
 import org.apache.commons.lang3.function.Consumers
 import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
@@ -171,6 +173,23 @@ fun <E : Any> ResourceKey<Registry<E>>.getOrNull(): Registry<E>? =
 
 fun ResourceKey<Enchantment>.toRegistryEntryOrNull(): Holder<Enchantment>? =
     Registries.ENCHANTMENT.getOrNull()?.get(this)?.getOrNull()
+
+/**
+ * @see net.minecraft.world.entity.player.Player.getDestroySpeed
+ * @see net.minecraft.world.entity.ai.attributes.Attributes.MINING_EFFICIENCY
+ * @see net.minecraft.world.item.enchantment.LevelBasedValue.LevelsSquared
+ */
+fun ItemStack.getDestroySpeedWithEnchantment(state: BlockState): Float {
+    var speed = this.getDestroySpeed(state)
+
+    val enchantmentLevel = this.getEnchantment(Enchantments.EFFICIENCY)
+    if (speed > 1f && enchantmentLevel != 0) {
+        val enchantmentAddition = enchantmentLevel.sq() + 1f
+        speed += enchantmentAddition.coerceIn(0f, 1024f)
+    }
+
+    return speed
+}
 
 /**
  * Get [Block] of inner item if it is [BlockItem], or null if not
