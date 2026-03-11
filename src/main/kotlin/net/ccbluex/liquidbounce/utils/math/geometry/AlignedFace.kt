@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -102,6 +103,10 @@ class AlignedFace(from: Vec3, to: Vec3) {
     }
 
     fun offset(vec: Vec3): AlignedFace {
+        return AlignedFace(this.from + vec, this.to + vec)
+    }
+
+    fun offset(vec: Vec3i): AlignedFace {
         return AlignedFace(this.from + vec, this.to + vec)
     }
 
