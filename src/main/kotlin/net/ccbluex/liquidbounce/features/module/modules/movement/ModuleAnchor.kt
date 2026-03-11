@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.boundingBox
-import net.ccbluex.liquidbounce.utils.math.centerPointOf
+import net.ccbluex.liquidbounce.utils.math.centerOnSide
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.Direction
@@ -72,7 +72,7 @@ object ModuleAnchor : ClientModule(
         // if we're already in a hole, we should just center us in that
         val playerBB = player.boundingBox
         HoleTracker.holes.firstOrNull { hole -> playerBB.intersects(hole.positions.boundingBox) }?.let { hole ->
-            goal = hole.positions.centerPointOf(Direction.DOWN)
+            goal = hole.positions.centerOnSide(Direction.DOWN)
             return@tickHandler
         }
 
@@ -89,7 +89,7 @@ object ModuleAnchor : ClientModule(
         // not in a hole and no valid goal means we need to search one
         goal = HoleTracker.holes
             .filter { hole -> hole.positions.maxY() + 1 <= playerPos.y }
-            .map { hole -> hole.positions.centerPointOf(Direction.DOWN) }
+            .map { hole -> hole.positions.centerOnSide(Direction.DOWN) }
             .weightedMinByOrNullAtMost(maxDistanceSq.toDouble(), playerPos::distanceToSqr)
     }
 

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.math.centerPointOf
+import net.ccbluex.liquidbounce.utils.math.centerOnSide
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.core.BlockPos
@@ -162,7 +162,7 @@ data class BlockTargetPlan(
      * Note: no check for raycast!
      */
     val targetPositionOnBlock: Vec3 =
-        AABB(blockPosToInteractWith).centerPointOf(interactionDirection)
+        AABB(blockPosToInteractWith).centerOnSide(interactionDirection)
 
     /**
      * cosine of the angle between the expected player's eye position and the normal of the targeted face.
