@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalPostAttackTracker
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 
 /**
  * Module CrystalAura
@@ -47,7 +45,7 @@ import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
  */
 object ModuleCrystalAura : ClientModule(
     "CrystalAura",
-    Category.COMBAT,
+    ModuleCategories.COMBAT,
     aliases = listOf("AutoCrystal"),
     disableOnQuit = true
 ) {
@@ -56,7 +54,7 @@ object ModuleCrystalAura : ClientModule(
         rangeValue =  FloatValueProvider("Range", 4.5f, 1f..12f)
     ))
 
-    object PredictFeature : Configurable("Predict") {
+    object PredictFeature : ValueGroup("Predict") {
         init {
             treeAll(SelfPredict, TargetPredict)
         }
@@ -75,9 +73,11 @@ object ModuleCrystalAura : ClientModule(
         )
     }
 
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
-    val rotationMode = choices(this, "RotationMode") {
+    val rotationMode = modes(this, "RotationMode") {
         arrayOf(
             NormalRotationMode(it, this, Priority.IMPORTANT_FOR_USAGE_2, true),
             NoRotationMode(it, this)
@@ -104,15 +104,6 @@ object ModuleCrystalAura : ClientModule(
         }
 
         targetTracker.selectFirst()
-    }
-
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
-        val target = targetTracker.target ?: return@handler
-
-        renderEnvironmentForWorld(it.matrixStack) {
-            targetRenderer.render(target, it.partialTicks)
-        }
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,19 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserState
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.task.MCEFProgressForwarder
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.mcef.MCEF
+import net.ccbluex.liquidbounce.mcef.MCEFAccelerationSupport
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.QuickFix
 import net.ccbluex.liquidbounce.utils.client.error.errors.JcefIsntCompatible
@@ -37,9 +39,11 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
-import net.minecraft.util.Util
-import org.lwjgl.opengl.GL
-import org.lwjgl.opengl.GL11
+import org.cef.browser.CefFrame
+import org.cef.handler.CefLifeSpanHandlerAdapter
+import org.cef.handler.CefLoadHandler
+import org.cef.handler.CefLoadHandlerAdapter
+import org.cef.network.CefRequest
 
 /**
  * The time threshold for cleaning up old cache directories.
@@ -66,7 +70,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
     override val isInitialized: Boolean
         get() = MCEF.INSTANCE.isInitialized
     override var browsers = mutableListOf<CefBrowser>()
-    override var isAccelerationSupported: Boolean = false
+    override var accelerationFlags = BrowserAccelerationFlags.UNSUPPORTED
 
     @Suppress("ThrowingExceptionsWithoutMessageOrCause")
     override fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit) {
@@ -75,19 +79,21 @@ class CefBrowserBackend : BrowserBackend, EventListener {
 
         if (!MCEF.INSTANCE.isInitialized) {
             MCEF.INSTANCE.settings.apply {
-                // Uses a natural user agent to prevent websites from blocking the browser
                 userAgent = HttpClient.DEFAULT_AGENT
                 cacheDirectory = cacheFolder.resolve(System.currentTimeMillis().toString(16)).apply {
                     deleteOnExit()
                 }
                 librariesDirectory = librariesFolder
+
+                // CEF Switches
+                appendCefSwitches("--no-proxy-server")
             }
 
             val resourceManager = MCEF.INSTANCE.newResourceManager()
 
             // Check if system is compatible with MCEF (JCEF)
             if (!resourceManager.isSystemCompatible) {
-                throw JcefIsntCompatible
+                throw JcefIsntCompatible()
             }
 
             HashValidator.validateFolder(resourceManager.commitDirectory)
@@ -151,16 +157,52 @@ class CefBrowserBackend : BrowserBackend, EventListener {
     override fun start() {
         if (!MCEF.INSTANCE.isInitialized) {
             MCEF.INSTANCE.initialize()
+
+            MCEF.INSTANCE.client.handle.addLifeSpanHandler(object : CefLifeSpanHandlerAdapter() {
+                override fun onAfterCreated(cefBrowser: org.cef.browser.CefBrowser) {
+                    markInitialized(cefBrowser)
+                    super.onAfterCreated(cefBrowser)
+                }
+            })
+
+            MCEF.INSTANCE.client.addLoadHandler(object : CefLoadHandlerAdapter() {
+
+                override fun onLoadStart(
+                    cefBrowser: org.cef.browser.CefBrowser, frame: CefFrame?,
+                    transitionType: CefRequest.TransitionType?
+                ) {
+                    updateStateForBrowser(cefBrowser, BrowserState.Loading)
+                    super.onLoadStart(cefBrowser, frame, transitionType)
+                }
+
+                override fun onLoadEnd(cefBrowser: org.cef.browser.CefBrowser, frame: CefFrame?, httpStatusCode: Int) {
+                    updateStateForBrowser(cefBrowser, BrowserState.Success(httpStatusCode))
+                    super.onLoadEnd(cefBrowser, frame, httpStatusCode)
+                }
+
+                override fun onLoadError(
+                    cefBrowser: org.cef.browser.CefBrowser, frame: CefFrame?,
+                    errorCode: CefLoadHandler.ErrorCode?, errorText: String?, failedUrl: String?
+                ) {
+                    updateStateForBrowser(
+                        cefBrowser,
+                        BrowserState.Failure(
+                            errorCode?.code ?: -1,
+                            errorText ?: "Unknown Error",
+                            failedUrl ?: "Unknown URL"
+                        )
+                    )
+                    super.onLoadError(cefBrowser, frame, errorCode, errorText, failedUrl)
+                }
+
+            })
         }
 
-        // Check if acceleration is supported
-        val system = Util.getPlatform()
-        isAccelerationSupported = when (system) {
-            Util.OS.WINDOWS -> {
-                // Check if required OpenGL extensions for D3D11 shared texture interop are supported
-                checkAccelerationSupport()
-            }
-            else -> false
+        val support = MCEFAccelerationSupport.getAccelerationSupport()
+        accelerationFlags = if (support.isSupported) {
+            BrowserAccelerationFlags(isSupported = true, isBeta = support.isBeta)
+        } else {
+            BrowserAccelerationFlags.UNSUPPORTED
         }
     }
 
@@ -196,62 +238,26 @@ class CefBrowserBackend : BrowserBackend, EventListener {
         browsers.remove(browser)
     }
 
-    /**
-     * Checks if the GPU supports the required OpenGL extensions for accelerated CEF rendering.
-     * Currently only NVIDIA GPUs are known to work reliably with D3D11 shared texture interoperability.
-     *
-     * @return true if all required extensions are supported, false otherwise
-     */
-    private fun checkAccelerationSupport(): Boolean {
-        return try {
-            RenderSystem.assertOnRenderThread()
+    fun getBrowserByApi(apiInstance: org.cef.browser.CefBrowser) = browsers.find { it.browserApi == apiInstance }
 
-            val capabilities = GL.getCapabilities()
-            val vendor = GL11.glGetString(GL11.GL_VENDOR) ?: ""
-            val renderer = GL11.glGetString(GL11.GL_RENDERER) ?: ""
-
-            logger.info("GPU Vendor: $vendor")
-            logger.info("GPU Renderer: $renderer")
-
-            // Check if the GPU is NVIDIA or AMD as
-            // we could not get this feature to work reliably on Intel GPUs.
-            // On Intel GPU (Intel ARC), it does not work as well and is reported:
-            // https://github.com/IGCIT/Intel-GPU-Community-Issue-Tracker-IGCIT/issues/1143
-
-            val isSupportedGpu =
-                vendor.contains("nvidia", true) ||
-                    renderer.contains("geforce", true) ||
-                    renderer.contains("quadro", true) ||
-                    vendor.contains("amd", true) ||
-                    renderer.contains("radeon", true)
-            if (!isSupportedGpu) {
-                logger.warn("GPU acceleration only supported on NVIDIA and AMD GPUs")
-                logger.info("Falling back to software rendering for browser")
-                return false
+    private fun markInitialized(apiInstance: org.cef.browser.CefBrowser) {
+        val browser = getBrowserByApi(apiInstance)
+        if (browser != null) {
+            if (!browser.isInitialized) {
+                browser.isInitialized = true
             }
-
-            // Required OpenGL extensions for D3D11 shared texture interoperability
-            // See https://registry.khronos.org/OpenGL/extensions/EXT/EXT_external_objects_win32.txt
-            val extensions = arrayOf(
-                capabilities.GL_EXT_memory_object,
-                capabilities.GL_EXT_memory_object_win32
-            )
-
-            logger.info("Checking OpenGL extensions for GPU acceleration" +
-                " support: ${extensions.joinToString(", ")}")
-            for (extension in extensions) {
-                if (!extension) {
-                    logger.warn("Required OpenGL extension for GPU acceleration not supported")
-                    logger.info("Falling back to software rendering for browser")
-                    return false
-                }
-            }
-
-            true
-        } catch (e: Exception) {
-            logger.warn("Failed to check GPU acceleration support: ${e.message}")
-            logger.info("Falling back to software rendering for browser")
-            false
+        } else {
+            logger.warn("[CefBrowser-${apiInstance.hashCode()}] Browser Instance not present in BrowserManager")
         }
     }
+
+    private fun updateStateForBrowser(apiInstance: org.cef.browser.CefBrowser, state: BrowserState) {
+        val browser = getBrowserByApi(apiInstance)
+        if (browser != null) {
+            browser.state = state
+        } else {
+            logger.warn("[CefBrowser-${apiInstance.hashCode()}] Browser Instance not present in BrowserManager")
+        }
+    }
+
 }

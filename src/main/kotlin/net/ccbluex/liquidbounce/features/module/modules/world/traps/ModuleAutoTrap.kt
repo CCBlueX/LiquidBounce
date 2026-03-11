@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,19 +22,19 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.IgnitionTrapPlanner
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.TrapPlayerSimulation
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTrapPlanner
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 
 /**
  * Ignite & AutoWeb module
@@ -42,7 +42,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  * Ignite: Automatically sets targets around you on fire.
  * AutoWeb: Automatically places cobwebs at targets around you.
  */
-object ModuleAutoTrap : ClientModule("AutoTrap", Category.WORLD, aliases = listOf("Ignite", "AutoWeb")) {
+object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases = listOf("Ignite", "AutoWeb")) {
 
     private val range = floatRange("Range", 3.0f..4.5f, 2f..6f)
     private val delay by int("Delay", 20, 0..400, "ticks")
@@ -51,7 +51,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", Category.WORLD, aliases = listO
     private val ignitionTrapPlanner = tree(IgnitionTrapPlanner(this))
     private val webTrapPlanner = tree(WebTrapPlanner(this))
     val targetTracker = tree(TargetTracker(range = range))
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     private var currentPlan: BlockChangeIntent<*>? = null
 
@@ -79,7 +79,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", Category.WORLD, aliases = listO
             RotationManager.setRotationTarget(
                 (intent.blockChangeInfo as BlockChangeInfo.PlaceBlock).blockPlacementTarget.rotation,
                 considerInventory = !ignoreOpenInventory,
-                configurable = rotationsConfigurable,
+                valueGroup = rotations,
                 Priority.IMPORTANT_FOR_PLAYER_LIFE,
                 this
             )
@@ -90,7 +90,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", Category.WORLD, aliases = listO
     private val placementHandler = tickHandler {
         val plan = currentPlan ?: return@tickHandler
 
-        val raycast = raycast()
+        val raycast = traceFromPlayer()
         if (!plan.validate(raycast)) {
             return@tickHandler
         }
@@ -99,7 +99,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", Category.WORLD, aliases = listO
         SilentHotbar.selectSlotSilently(this, plan.slot, 1)
         doPlacement(raycast, hand = plan.slot.useHand)
         timeout = true
-        plan.onIntentFullfilled()
+        plan.onIntentFulfilled()
         waitTicks(delay)
         timeout = false
     }

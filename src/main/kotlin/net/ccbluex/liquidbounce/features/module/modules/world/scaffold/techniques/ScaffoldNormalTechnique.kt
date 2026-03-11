@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,12 +31,12 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.technique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldTellyFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldTellyFeature.Mode
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AimMode
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AngleYawTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.DiagonalYawTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.EdgePointTargetPositionFactory
@@ -53,12 +53,13 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
+import net.minecraft.core.Vec3i
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import net.minecraft.core.Vec3i
 import kotlin.math.round
 import kotlin.random.Random
 
@@ -96,17 +97,17 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
     ): BlockPlacementTarget? {
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityComparator: Comparator<Vec3i> = if (optimalLine != null) {
-            compareByDescending { vec -> optimalLine.squaredDistanceTo(Vec3.atCenterOf(vec)) }
+            BlockPlacementTargetFindingOptions.leastBlockDistanceToLine(optimalLine)
         } else {
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+            BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos)
         }
 
         val offsets = if (ModuleFreeze.running) {
-            FULL_INVESTIGATION_OFFSETS
+            BlockPosOffsets.FULL.offsets
         } else if (ScaffoldDownFeature.shouldGoDown) {
-            INVESTIGATE_DOWN_OFFSETS
+            BlockPosOffsets.DOWN.offsets
         } else {
-            NORMAL_INVESTIGATION_OFFSETS
+            BlockPosOffsets.NORMAL.offsets
         }
 
         // Face position factory for current config
@@ -142,7 +143,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
 
         if (visibilityMode == VisibilityMode.VISIBLE_AND_RAYTRACED) {
             val target = target ?: return null
-            val raycast = raycast(rotation = target.rotation)
+            val raycast = traceFromPlayer(rotation = target.rotation)
 
             if (raycast.type != HitResult.Type.BLOCK || raycast.blockPos != target.interactedBlockPos) {
                 return null

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,35 +15,36 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.core.component.DataComponents
-import net.minecraft.world.item.component.WrittenBookContent
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
 import net.minecraft.network.protocol.game.ServerboundEditBookPacket
 import net.minecraft.server.network.Filterable
-import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.Component
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.component.WrittenBookContent
 import okio.buffer
 import okio.source
-import java.util.*
+import java.util.Optional
+import java.util.PrimitiveIterator
+import java.util.Random
 import java.util.stream.IntStream
 
 /**
@@ -75,7 +76,7 @@ private const val MAX_LINE_WIDTH: Float = 114f
  * @author sqlerrorthing
  * @since 12/28/2024
  **/
-object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit = true) {
+object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disableOnQuit = true) {
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
     internal val generationMode = choices(
@@ -86,7 +87,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
         tagBy(this)
     }
 
-    private object Sign : ToggleableConfigurable(ModuleBookBot, "Sign", true) {
+    private object Sign : ToggleableValueGroup(ModuleBookBot, "Sign", true) {
         val bookName by text("Name", "Generated book #%count%")
     }
 
@@ -161,7 +162,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
         }
 
         val bookBuilder = BookBuilder()
-        val generator = generationMode.activeChoice.generate()
+        val generator = generationMode.activeMode.generate()
             .filter { it.toChar() != '\r' }
             .iterator()
 
@@ -182,7 +183,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
 
     private class BookBuilder {
         private val title: String = Sign.bookName.replace("%count%", bookCount.toString())
-        private val pageAmount: Int = generationMode.activeChoice.pages
+        private val pageAmount: Int = generationMode.activeMode.pages
 
         private val pages = ArrayList<String>(pageAmount)
         private val filteredPages = ArrayList<Filterable<Component>>(pageAmount)
@@ -275,8 +276,8 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
 
 internal sealed class GenerationMode(
     name: String,
-) : Choice(name) {
-    override val parent: ChoiceConfigurable<*> get() = ModuleBookBot.generationMode
+) : Mode(name) {
+    override val parent: ModeValueGroup<*> get() = ModuleBookBot.generationMode
 
     internal val random = Random()
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.misc.proxy
@@ -34,17 +33,17 @@ import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
 import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress
-import net.minecraft.client.multiplayer.resolver.ServerNameResolver
 import net.minecraft.client.multiplayer.resolver.ServerAddress
+import net.minecraft.client.multiplayer.resolver.ServerNameResolver
 import net.minecraft.network.Connection
 import net.minecraft.network.DisconnectionDetails
 import net.minecraft.network.protocol.PacketFlow
-import net.minecraft.network.protocol.status.ClientStatusPacketListener
-import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
-import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket
 import net.minecraft.network.protocol.ping.ClientboundPongResponsePacket
+import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
+import net.minecraft.network.protocol.status.ClientStatusPacketListener
 import net.minecraft.network.protocol.status.ClientboundStatusResponsePacket
 import net.minecraft.network.protocol.status.ServerStatus
+import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket
 import net.minecraft.util.Util
 import java.net.InetSocketAddress
 import kotlin.jvm.optionals.getOrNull

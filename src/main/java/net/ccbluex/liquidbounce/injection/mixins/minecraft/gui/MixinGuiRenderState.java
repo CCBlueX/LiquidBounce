@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,10 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
-
 import net.ccbluex.liquidbounce.utils.collection.Pools;
-import net.ccbluex.liquidbounce.utils.render.LiquidBounceGuiElementRenderState;
-import net.minecraft.client.gui.render.state.ScreenArea;
+import net.ccbluex.liquidbounce.render.gui.element.PoseReusableGuiElementRenderState;
 import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.minecraft.client.gui.render.state.ScreenArea;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,6 +34,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+
+import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
 
 @SuppressWarnings("rawtypes")
 @Mixin(GuiRenderState.class)
@@ -51,30 +51,35 @@ public abstract class MixinGuiRenderState {
             if (layer.elementStates != null) {
                 layer.elementStates.forEach(liquid_bounce$tryRecycleMatrix3x2f);
                 ARRAY_LIST.recycle((ArrayList) layer.elementStates);
+                layer.elementStates = null;
             }
 
             if (layer.glyphStates != null) {
                 layer.glyphStates.forEach(liquid_bounce$tryRecycleMatrix3x2f);
                 ARRAY_LIST.recycle((ArrayList) layer.glyphStates);
+                layer.glyphStates = null;
             }
 
             if (layer.itemStates != null) {
                 ARRAY_LIST.recycle((ArrayList) layer.itemStates);
+                layer.itemStates = null;
             }
 
             if (layer.textStates != null) {
                 ARRAY_LIST.recycle((ArrayList) layer.textStates);
+                layer.textStates = null;
             }
 
             if (layer.picturesInPictureStates != null) {
                 ARRAY_LIST.recycle((ArrayList) layer.picturesInPictureStates);
+                layer.picturesInPictureStates = null;
             }
         }
     }
 
     @Unique
     private static final Consumer<ScreenArea> liquid_bounce$tryRecycleMatrix3x2f = element -> {
-        if (element instanceof LiquidBounceGuiElementRenderState t) {
+        if (element instanceof PoseReusableGuiElementRenderState t) {
             Pools.Mat3x2f.recycle(t.pose());
         }
     };

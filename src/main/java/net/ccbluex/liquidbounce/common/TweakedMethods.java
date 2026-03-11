@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,21 @@
 package net.ccbluex.liquidbounce.common;
 
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleGhostHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.ClipContext;
 
 public class TweakedMethods {
 
     public static BlockHitResult tweakedRaycast(BlockGetter blockView, ClipContext context) {
         if (ModuleGhostHand.INSTANCE.getRunning()) {
-            var returned = (BlockHitResult) BlockGetter.traverseBlocks(context.getFrom(), context.getTo(), context, (contextx, pos) -> {
+            var returned = BlockGetter.traverseBlocks(context.getFrom(), context.getTo(), context, (contextx, pos) -> {
                 BlockState blockState = blockView.getBlockState(pos);
 
                 if (!ModuleGhostHand.INSTANCE.getTargetedBlocks().contains(blockState.getBlock()))

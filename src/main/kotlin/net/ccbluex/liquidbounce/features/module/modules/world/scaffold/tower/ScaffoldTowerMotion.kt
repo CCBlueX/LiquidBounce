@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,12 +57,10 @@ object ScaffoldTowerMotion : ScaffoldTower("Motion") {
             player.setPos(player.x, truncate(player.y), player.z)
 
             player.deltaMovement.y = motion.toDouble()
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    slow.toDouble(),
-                    1.0,
-                    slow.toDouble()
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                slow.toDouble(),
+                1.0,
+                slow.toDouble()
             )
             player.awardStat(Stats.JUMP)
 

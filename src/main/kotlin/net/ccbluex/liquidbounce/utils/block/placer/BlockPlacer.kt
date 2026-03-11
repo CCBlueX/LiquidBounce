@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.utils.block.placer
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.fastutil.fastIterator
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -34,8 +34,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
@@ -56,16 +54,16 @@ import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.item.BlockItem
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
-import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.core.Vec3i
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
 @Suppress("TooManyFunctions")
@@ -75,7 +73,7 @@ class BlockPlacer(
     val priority: Priority,
     val slotFinder: (BlockPos?) -> HotbarItemSlot?,
     allowSupportPlacements: Boolean = true
-) : Configurable(name), EventListener {
+) : ValueGroup(name), EventListener {
 
     val range by float("Range", 4.5f, 1f..6f)
     val wallRange by float("WallRange", 4.5f, 0f..6f)
@@ -103,7 +101,7 @@ class BlockPlacer(
 
     val slotResetDelay by intRange("SlotResetDelay", 4..6, 0..40, "ticks")
 
-    val rotationMode = choices(this, "RotationMode") {
+    val rotationMode = modes(this, "RotationMode") {
         arrayOf(NormalRotationMode(it, this), NoRotationMode(it, this))
     }
 
@@ -167,12 +165,12 @@ class BlockPlacer(
         }
 
         // return if no blocks are available
-        slotFinder(null) ?: return@handler
+        val slot = slotFinder(null) ?: return@handler
 
-        val itemStack = ItemStack(Items.SANDSTONE)
+        val itemStack = slot.itemStack
 
         inaccessible.clear()
-        rotationMode.activeChoice.onTickStart()
+        rotationMode.activeMode.onTickStart()
         if (scheduleCurrentPlacements(itemStack)) {
             return@handler
         }
@@ -257,10 +255,7 @@ class BlockPlacer(
             }
 
             val searchOptions = BlockPlacementTargetFindingOptions(
-                BlockOffsetOptions(
-                    listOf(Vec3i.ZERO),
-                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-                ),
+                BlockOffsetOptions.Default,
                 FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
                 stackToPlaceWith = itemStack,
                 PlayerLocationOnPlacement(position = player.position()),
@@ -285,7 +280,7 @@ class BlockPlacer(
                 sneakTimes = sneak - 1
             }
 
-            if (rotationMode.activeChoice(entry.booleanValue, pos, placementTarget)) {
+            if (rotationMode.activeMode(entry.booleanValue, pos, placementTarget)) {
                 return true
             }
 
@@ -327,7 +322,7 @@ class BlockPlacer(
             slotFinder(pos)
         } ?: return
 
-        val verificationRotation = rotationMode.activeChoice.getVerificationRotation(placementTarget.rotation)
+        val verificationRotation = rotationMode.activeMode.getVerificationRotation(placementTarget.rotation)
 
         // check if we can still reach the target
         if (!canReach(placementTarget.interactedBlockPos, verificationRotation)) {
@@ -381,7 +376,7 @@ class BlockPlacer(
             return true
         }
 
-        val raycast = raycast(range = range.toDouble(), rotation = rotation)
+        val raycast = traceFromPlayer(range = range.toDouble(), rotation = rotation)
         return raycast.type == HitResult.Type.BLOCK && raycast.blockPos == pos
     }
 
@@ -408,7 +403,7 @@ class BlockPlacer(
     /**
      * Adds a block to be placed.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      * @param update Whether the renderer should update the culling.
      */
     fun addToQueue(pos: BlockPos, update: Boolean = true, isSupport: Boolean = false) {
@@ -421,7 +416,7 @@ class BlockPlacer(
     /**
      * Removes a block from the queue.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      */
     fun removeFromQueue(pos: BlockPos) {
         blocks.remove(pos.asLong())
@@ -463,7 +458,7 @@ class BlockPlacer(
 
     override fun parent(): EventListener = module
 
-    private enum class Ignore(override val choiceName: String) : NamedChoice {
+    private enum class Ignore(override val tag: String) : Tagged {
         OPEN_INVENTORY("OpenInventory"),
         USING_ITEM("UsingItem")
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.item.ItemUseAnimation
 
 /**
  * Cancels block interactions allowing to bypass certain anti-cheats
@@ -35,7 +35,7 @@ import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 internal class NoSlowNoBlockInteract(
     parent: EventListener? = null,
     actionFilter: (ItemUseAnimation) -> Boolean = { true }
-) : ToggleableConfigurable(parent, "NoBlockInteract", true) {
+) : ToggleableValueGroup(parent, "NoBlockInteract", true) {
 
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet

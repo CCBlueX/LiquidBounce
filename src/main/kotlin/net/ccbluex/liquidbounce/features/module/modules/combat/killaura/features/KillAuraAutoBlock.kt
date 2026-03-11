@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ALL
@@ -34,29 +35,31 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.range
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.raycast
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.wallRange
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
+import net.ccbluex.liquidbounce.utils.client.releaseUsingItemNextTick
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ItemUseAnimation
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.ItemInHandRenderer
+import net.minecraft.core.component.DataComponents.BLOCKS_ATTACKS
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.HitResult
 import kotlin.random.Random
 
-object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false) {
+object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", false) {
 
     private val blockMode by enumChoice("BlockMode", BlockMode.INTERACT)
     private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM)
@@ -83,7 +86,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
      * Enforces the blocking state on the Input
      *
      * todo: fix open screen affecting this
-     * @see net.minecraft.client.MinecraftClient handleInputEvents
+     * @see Minecraft.handleKeybinds
      */
     var blockingStateEnforced = false
         set(value) {
@@ -102,16 +105,22 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
      * Visual blocking shows a blocking state, while not actually blocking.
      * This is useful to make the blocking animation become much smoother.
      *
-     * @see net.minecraft.client.render.item.HeldItemRenderer renderFirstPersonItem
+     * @see ItemInHandRenderer.renderArmWithItem
      */
     var blockVisual = false
-        get() = field && super.running && (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
+        get() = field && running &&
+            (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
 
     val shouldUnblockToHit
         get() = unblockMode != UnblockMode.NONE
 
     val blockImmediate
         get() = currentTickOn == 0 || blockMode == BlockMode.HYPIXEL
+
+    override fun onDisabled() {
+        this.stopBlocking()
+        super.onDisabled()
+    }
 
     /**
      * Make it seem like the player is blocking.
@@ -138,22 +147,16 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         }
 
         if (onlyWhenInDanger && !isInDanger()) {
-            stopBlocking()
+            this.stopBlocking()
             return
         }
 
-        val blockHand = when {
-            canBlock(player.mainHandItem) -> InteractionHand.MAIN_HAND
-            canBlock(player.offhandItem) -> InteractionHand.OFF_HAND
-            else -> return  // We cannot block with any item.
-        }
-
-        val itemStack = player.getItemInHand(blockHand)
-
-        // We do not want to block if the item is disabled.
-        if (itemStack.isEmpty || !itemStack.isItemEnabled(world.enabledFeatures())) {
-            return
-        }
+        val blockHand = InteractionHand.entries.find {
+            val itemStack = player.getItemInHand(it)
+            itemStack.has(BLOCKS_ATTACKS)
+                && itemStack.isItemEnabled(world.enabledFeatures())
+                && !player.cooldowns.isOnCooldown(itemStack)
+        } ?: return
 
         when (blockMode) {
             BlockMode.HYPIXEL -> {
@@ -164,16 +167,15 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
                 } else {
                     interaction.interact(player, target, InteractionHand.MAIN_HAND)
                 }
+
+                interactWithFront()
             }
+            BlockMode.INTERACT -> interactWithFront()
             BlockMode.FAKE -> {
                 blockVisual = true
                 return
             }
             else -> { }
-        }
-
-        if (blockMode == BlockMode.INTERACT || blockMode == BlockMode.HYPIXEL) {
-            interactWithFront()
         }
 
         // Interact with the item in the block hand
@@ -211,7 +213,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
     }
 
     @Suppress("unused")
-    private val blinkHandler = handler<QueuePacketEvent> { event ->
+    private val blinkHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin != TransferOrigin.OUTGOING) {
             return@handler
         }
@@ -233,7 +235,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             flushTicks >= blink -> flush("T")
 
             // Start to queue
-            else -> event.action = PacketQueueManager.Action.QUEUE
+            else -> event.action = BlinkManager.Action.QUEUE
         }
     }
 
@@ -247,36 +249,41 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         }
 
         // We do not want the player to stop eating or else. Only when he blocks.
-        if (!player.isBlockAction) {
+        if (!player.isBlocking) {
             return false
         }
 
         currentTickOff = tickOffRange.random()
 
-        return when {
-            unblockMode == UnblockMode.STOP_USING_ITEM -> {
-                interaction.releaseUsingItem(player)
-
+        return when (unblockMode) {
+            UnblockMode.STOP_USING_ITEM -> {
+                interaction.releaseUsingItemNextTick()
                 blockingStateEnforced = false
                 true
             }
-
-            unblockMode == UnblockMode.CHANGE_SLOT -> {
+            // Not working when blocking with offhand
+            UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 8
-                network.send(ServerboundSetCarriedItemPacket(nextSlot))
-                network.send(ServerboundSetCarriedItemPacket(currentSlot))
+                network.sendHeldItemChange(nextSlot)
+                network.sendHeldItemChange(currentSlot)
                 blockingStateEnforced = false
                 true
             }
-
-            unblockMode == UnblockMode.NONE && !pauses -> {
-                interaction.releaseUsingItem(player)
-
+            // Not working when server doesn't have offhand
+            UnblockMode.SWAP_HAND -> {
+                network.sendSwapItemWithOffhand()
+                network.sendSwapItemWithOffhand()
                 blockingStateEnforced = false
                 true
             }
-            else -> false
+            UnblockMode.NONE -> if (!pauses) {
+                interaction.releaseUsingItemNextTick()
+                blockingStateEnforced = false
+                true
+            } else {
+                false
+            }
         }
     }
 
@@ -297,13 +304,14 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         // Raycast using the current rotation and find a block or entity that should be interacted with
         val rotationToTheServer = RotationManager.serverRotation
 
-        val entityHitResult = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
-            when (raycast) {
-                TRACE_NONE -> false
-                TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                TRACE_ALL -> true
-            }
-        })
+        val entityHitResult =
+            findEntityInCrosshair(range.interactionRange.toDouble(), rotationToTheServer, predicate = {
+                when (raycast) {
+                    TRACE_NONE -> false
+                    TRACE_ONLYENEMY -> it.shouldBeAttacked()
+                    TRACE_ALL -> true
+                }
+            })
         val entity = entityHitResult?.entity
 
         if (entity != null) {
@@ -317,7 +325,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             return
         }
 
-        val hitResult = raycast(rotationToTheServer) ?: return
+        val hitResult = traceFromPlayer(rotationToTheServer)
 
         if (hitResult.type != HitResult.Type.BLOCK) {
             return
@@ -328,35 +336,30 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
     }
 
     /**
-     * Check if the player can block with the given item stack.
-     */
-    private fun canBlock(itemStack: ItemStack) =
-        itemStack.item?.getUseAnimation(itemStack) == ItemUseAnimation.BLOCK
-
-    /**
      * Check if the player is in danger.
      */
     private fun isInDanger() = targetTracker.targets().any { target ->
-        facingEnemy(
+        isLookingAtEntity(
             fromEntity = target,
             toEntity = player,
             rotation = target.rotation,
-            range = range.toDouble(),
-            wallsRange = wallRange.toDouble()
-        )
+            range = range.interactionRange.toDouble(),
+            throughWallsRange = range.interactionThroughWallsRange.toDouble()
+        ) != null
     }
 
-    enum class BlockMode(override val choiceName: String) : NamedChoice {
+    enum class BlockMode(override val tag: String) : Tagged {
         BASIC("Basic"),
         INTERACT("Interact"),
         HYPIXEL("Hypixel"),
         FAKE("Fake"),
     }
 
-    enum class UnblockMode(override val choiceName: String) : NamedChoice {
+    enum class UnblockMode(override val tag: String) : Tagged {
         STOP_USING_ITEM("StopUsingItem"),
         CHANGE_SLOT("ChangeSlot"),
-        NONE("None")
+        SWAP_HAND("SwapHand"),
+        NONE("None"),
     }
 
 }

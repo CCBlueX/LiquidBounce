@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
-import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
+import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
  * Hylex LowHop
@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
  * Works because of a silly exemption from Hylex
  * @author @liquidsquid1
  */
-class SpeedHylexLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("HylexLowHop", parent) {
+class SpeedHylexLowHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HylexLowHop", parent) {
 
     private var airTicks = 0
 
@@ -42,12 +42,10 @@ class SpeedHylexLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
             airTicks = 0
             if (player.moving && player.horizontalSpeed < 0.32) {
 
-                player.setDeltaMovement(
-                    player.deltaMovement.multiply(
-                        1.1,
-                        1.0,
-                        1.1
-                    )
+                player.deltaMovement = player.deltaMovement.multiply(
+                    1.1,
+                    1.0,
+                    1.1
                 )
             }
             return@tickHandler
@@ -55,32 +53,26 @@ class SpeedHylexLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
         airTicks++
 
         if (airTicks == 9 && player.horizontalSpeed < 0.29) {
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    1.007,
-                    1.0,
-                    1.007
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                1.007,
+                1.0,
+                1.007
             )
         }
 
         if (airTicks == 1 && player.horizontalSpeed < 0.20) {
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    1.01,
-                    1.0,
-                    1.01
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                1.01,
+                1.0,
+                1.01
             )
         }
 
         if (player.deltaMovement.y > 0 && airTicks <= 2 && player.horizontalSpeed < 0.2) {
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    1.02,
-                    1.0,
-                    1.02
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                1.02,
+                1.0,
+                1.02
             )
         }
 

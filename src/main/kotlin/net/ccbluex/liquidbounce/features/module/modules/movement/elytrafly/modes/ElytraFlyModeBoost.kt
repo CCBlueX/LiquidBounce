@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -127,10 +127,8 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
         handleAcceleration(shouldBoost)
 
         if (player.moving) {
-            player.setDeltaMovement(
-                player.deltaMovement.withStrafe(
-                    speed = calculateEffectiveSpeed(isNearGround)
-                )
+            player.deltaMovement = player.deltaMovement.withStrafe(
+                speed = calculateEffectiveSpeed(isNearGround)
             )
         }
     }

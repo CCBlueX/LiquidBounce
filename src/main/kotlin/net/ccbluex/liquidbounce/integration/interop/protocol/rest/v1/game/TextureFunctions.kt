@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
-import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
+import io.netty.handler.codec.http.FullHttpResponse
+import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.netty.http.model.RequestObject
@@ -31,10 +30,10 @@ import net.ccbluex.netty.http.util.httpInternalServerError
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.resources.DefaultPlayerSkin
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceKey
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
-import java.util.*
+import net.minecraft.resources.ResourceKey
+import java.util.UUID
 import javax.imageio.ImageIO
 import kotlin.jvm.optionals.getOrNull
 
@@ -43,12 +42,11 @@ import kotlin.jvm.optionals.getOrNull
 fun getResource(requestObject: RequestObject) = run {
     val identifier = requestObject.queryParams["id"]
         ?: return@run httpBadRequest("Missing identifier parameter")
-    val minecraftIdentifier = Identifier.parse(identifier)
+    val minecraftIdentifier = Identifier.tryParse(identifier)
+        ?: return@run httpBadRequest("Invalid identifier $identifier")
     val resource = mc.resourceManager.getResourceOrThrow(minecraftIdentifier)
 
-    resource.open().use {
-        httpFileStream(it)
-    }
+    return httpFileStream(resource.open(), contentType = "image/png")
 }
 
 // GET /api/v1/client/itemTexture
@@ -60,8 +58,8 @@ fun getItemTexture(requestObject: RequestObject) = run {
 
     val identifier = requestObject.queryParams["id"]
         ?: return@run httpBadRequest("Missing identifier parameter")
-    val minecraftIdentifier = runCatching { Identifier.parse(identifier) }.getOrNull()
-        ?: return@run httpBadRequest("Invalid identifier")
+    val minecraftIdentifier = Identifier.tryParse(identifier)
+        ?: return@run httpBadRequest("Invalid identifier $identifier")
 
     val alternativeIdentifier = ItemImageAtlas.resolveAliasIfPresent(minecraftIdentifier)
 
@@ -73,6 +71,22 @@ fun getItemTexture(requestObject: RequestObject) = run {
     val buffer = okio.Buffer()
     ImageIO.write(image, "PNG", buffer.outputStream())
     httpFileStream(buffer.inputStream(), contentLength = buffer.size.toInt(), contentType = "image/png")
+}
+
+// GET /api/v1/client/effectTexture
+@Suppress("UNUSED_PARAMETER")
+fun getEffectTexture(requestObject: RequestObject): FullHttpResponse {
+    val identifier = requestObject.queryParams["id"]
+        ?: return httpBadRequest("Missing identifier parameter")
+    val minecraftIdentifier = Identifier.tryParse(identifier)
+        ?: return httpBadRequest("Invalid identifier $identifier")
+
+    val textureId = Identifier.withDefaultNamespace("textures/mob_effect/${minecraftIdentifier.path}.png")
+
+    val resource = mc.resourceManager.getResource(textureId).getOrNull()
+        ?: return httpBadRequest("Mob effect texture of $minecraftIdentifier not found")
+
+    return httpFileStream(resource.open(), contentType = "image/png")
 }
 
 // GET /api/v1/client/skin
@@ -92,8 +106,6 @@ fun getSkin(requestObject: RequestObject) = run {
         val resource = mc.resourceManager.getResource(bodyTexturePath)
             .getOrNull() ?: return@run httpInternalServerError("Texture not found")
 
-        resource.open().use {
-            httpFileStream(it)
-        }
+        httpFileStream(resource.open(), contentType = "image/png")
     }
 }

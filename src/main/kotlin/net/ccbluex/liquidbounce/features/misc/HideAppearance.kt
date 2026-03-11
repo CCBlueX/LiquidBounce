@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.misc
 
+import com.mojang.blaze3d.platform.IconSet
 import com.terraformersmc.modmenu.util.mod.Mod
 import kotlinx.coroutines.cancel
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -31,14 +32,14 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.integration.IntegrationListener
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.modmenu.ModMenuCompatibility
 import net.fabricmc.loader.impl.FabricLoaderImpl
 import net.minecraft.SharedConstants
-import com.mojang.blaze3d.platform.IconSet
 import org.lwjgl.glfw.GLFW
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
@@ -70,10 +71,10 @@ object HideAppearance : EventListener {
 
     private val shiftChronometer = Chronometer()
 
-    var isHidingNow = false
+    var isHidingNow = env("LB_UI_HIDE", "net.ccbluex.liquidbounce.ui.hide")?.toBoolean() ?: false
         set(value) {
             field = value
-            mc.execute(::updateClient)
+            mc.schedule(::updateClient)
 
             if (modMenuPresent) {
                 if (value) {
@@ -94,9 +95,9 @@ object HideAppearance : EventListener {
 
     private fun updateClient() {
         if (isHidingNow) {
-            IntegrationListener.restoreOriginalScreen()
+            ScreenManager.restoreOriginalScreen()
         } else {
-            IntegrationListener.update()
+            ScreenManager.update()
         }
 
         mc.updateTitle()
@@ -132,7 +133,7 @@ object HideAppearance : EventListener {
         isDestructed = true
 
         mc.gui.chat.recentChat.removeIf {
-            it.startsWith(CommandManager.Options.prefix)
+            it.startsWith(CommandManager.GlobalSettings.prefix)
         }
 
         // Cancel all async tasks

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid
 
 import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidBlinkMode
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidFlagMode
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidGhostBlockMode
@@ -41,7 +39,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * AntiVoid module protects the player from falling into the void by simulating
  * future movements and taking action if necessary.
  */
-object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
+object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
 
     val mode = choices(
         "Mode", AntiVoidGhostBlockMode, arrayOf(
@@ -80,16 +78,16 @@ object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
             ShapeFlag.noShapeChange = false
         }
 
-        val rescuePosition = mode.activeChoice.discoverRescuePosition()
+        val rescuePosition = mode.activeMode.discoverRescuePosition()
         if (rescuePosition != null) {
             this@ModuleAntiVoid.rescuePosition = rescuePosition
         }
 
-        debugParameter("IsExempt") { mode.activeChoice.isExempt }
+        debugParameter("IsExempt") { mode.activeMode.isExempt }
         debugParameter("IsLikelyFalling") { isLikelyFalling }
         debugParameter("SafePosition") { ModuleAntiVoid.rescuePosition }
 
-        if (mode.activeChoice.isExempt || !isLikelyFalling) {
+        if (mode.activeMode.isExempt || !isLikelyFalling) {
             return@tickHandler
         }
 
@@ -104,7 +102,7 @@ object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
         val collisions = world.getBlockCollisions(player, boundingBox)
 
         if (collisions.none() || collisions.all { shape -> shape == Shapes.empty() }) {
-            if (mode.activeChoice.rescue()) {
+            if (mode.activeMode.rescue()) {
                 notification(
                     "AntiVoid", "Action taken to prevent void fall",
                     NotificationEvent.Severity.INFO

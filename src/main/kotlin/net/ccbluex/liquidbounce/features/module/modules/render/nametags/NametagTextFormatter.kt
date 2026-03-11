@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
-import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.joinToText
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.textOf
@@ -34,13 +32,14 @@ import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.ping
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.TextColor
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.TextColor
-import net.minecraft.ChatFormatting
 import java.util.function.Function
 import kotlin.math.roundToInt
 
@@ -52,7 +51,7 @@ private val BABY_TEXT = "Baby ".asPlainText()
 
 private val BOT_TEXT = "Bot".asPlainText(BOT_STYLE)
 
-internal object NametagTextFormatter : Configurable("Text") {
+internal object NametagTextFormatter : ValueGroup("Text") {
 
     private val parts by multiEnumChoice(
         "Parts",
@@ -60,7 +59,7 @@ internal object NametagTextFormatter : Configurable("Text") {
         canBeNone = false
     )
 
-    private enum class Part(override val choiceName: String) : NamedChoice, Function<Entity, Component?> {
+    private enum class Part(override val tag: String) : Tagged, Function<Entity, Component?> {
         DISTANCE("Distance") {
             override fun apply(t: Entity): Component? {
                 if (t === player) return null
@@ -94,28 +93,24 @@ internal object NametagTextFormatter : Configurable("Text") {
         },
 
         NAME("Name") {
-            override fun apply(entity: Entity): Component = buildList(4) {
-                val name = entity.displayName!!
-                val nameColor = entity.nameColor
+            override fun apply(entity: Entity): Component {
+                val isBaby = entity is LivingEntity && entity.isBaby
 
-                if (entity is LivingEntity && entity.isBaby) {
-                    this += BABY_TEXT
-                }
+                // Optimized entity.getDisplayName()
+                val displayName = entity.team?.getFormattedName(entity.name) ?: entity.name
 
-                this += if (nameColor != null) {
-                    name.copy().withColor(nameColor)
-                } else {
-                    name
-                }
+                val coloredName = entity.nameColor?.let { nameColor ->
+                    displayName.copy().withColor(nameColor)
+                } ?: displayName
 
-                if (ModuleCombineMobs.running) {
-                    val count = ModuleCombineMobs.getCombinedCount(entity)
-                    if (count > 1) {
-                        this += PlainText.SPACE
-                        this += ("x $count").asPlainText(COUNT_STYLE)
-                    }
+                val count = ModuleCombineMobs.getCombinedCount(entity)
+                return when {
+                    isBaby && count > 1 -> textOf(BABY_TEXT, coloredName, " ($count)".asPlainText(COUNT_STYLE))
+                    isBaby -> textOf(BABY_TEXT, coloredName)
+                    count > 1 -> textOf(coloredName, " ($count)".asPlainText(COUNT_STYLE))
+                    else -> coloredName
                 }
-            }.asText()
+            }
         },
 
         HEALTH("Health") {
@@ -151,16 +146,11 @@ internal object NametagTextFormatter : Configurable("Text") {
 private val Entity.isBot get() = ModuleAntiBot.isBot(this)
 
 private val Entity.nameColor: TextColor?
-    get() {
-        val tagColor = EntityTaggingManager.getTag(this).color
-
-        return when {
-            isBot -> ChatFormatting.DARK_AQUA.toTextColor()
-            isInvisible -> ChatFormatting.GOLD.toTextColor()
-            isShiftKeyDown -> ChatFormatting.DARK_RED.toTextColor()
-            tagColor != null -> tagColor.toTextColor()
-            else -> null
-        }
+    get() = when {
+        isBot -> ChatFormatting.DARK_AQUA.toTextColor()
+        isInvisible -> ChatFormatting.GOLD.toTextColor()
+        isShiftKeyDown -> ChatFormatting.DARK_RED.toTextColor()
+        else -> EntityTaggingManager.getTag(this).color?.toTextColor()
     }
 
 private fun ChatFormatting.toTextColor(): TextColor {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.InstrumentNote
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
@@ -27,11 +28,10 @@ import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.minecraft.ChatFormatting
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
-import net.minecraft.ChatFormatting
 
 object NotebotScanner : MinecraftShortcuts {
     fun scanBlocksAndCheckRequirements(songData: SongData): BlocksAndRequirements {
@@ -64,7 +64,7 @@ object NotebotScanner : MinecraftShortcuts {
     // since a song tick != a game tick thus this is technically incorrect but works well enough
     // it has the advantage that we don't get super huge requirements for very fast songs -
     // and well playing the same sound multiple times a tick due to minecraft's limitations
-    // would sound weird anyways
+    // would sound weird anyway
     private fun calculateRequirements(songData: SongData): Object2IntMap<InstrumentNote> {
         val maxConcurrentCounts = Object2IntOpenHashMap<InstrumentNote>()
         val countsInTick = Object2IntOpenHashMap<InstrumentNote>()

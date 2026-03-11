@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.attack
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.validateAttack
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.canAttackNow
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.additionalRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Box
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Sound
@@ -33,12 +33,12 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.HitResult
 import kotlin.math.pow
 
-internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", false) {
+internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSwing", false) {
 
     /**
      * Additional range for fail swing to work
@@ -46,8 +46,8 @@ internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "Fail
     private val additionalRange by floatRange("AdditionalRange", 2.5f..3f, 0f..10f).onChanged { range ->
         currentAdditionalRange = range.random()
     }
-    val mode = choices(this, "NotifyWhenFail", activeIndex = 1) {
-        arrayOf(NoneChoice(it), Box, Sound)
+    val mode = modes(this, "NotifyWhenFail", activeIndex = 1) {
+        arrayOf(NoneMode(it), Box, Sound)
     }.apply {
         doNotIncludeAlways()
     }
@@ -64,12 +64,12 @@ internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "Fail
     }
 
     suspend fun dealWithFakeSwing(target: Entity?) {
-        if (!enabled || !validateAttack()) {
+        if (!enabled || !canAttackNow()) {
             return
         }
 
-        val range = ModuleKillAura.range + currentAdditionalRange
-        val entity = target ?: world.findEnemy(0f..range.toFloat()) ?: return
+        val range = ModuleKillAura.range.interactionRange + currentAdditionalRange
+        val entity = target ?: world.findEnemy(0f..range) ?: return
         val raycastType = mc.hitResult?.type
 
         if (entity.isRemoved || entity.squaredBoxedDistanceTo(player) > range.pow(2)

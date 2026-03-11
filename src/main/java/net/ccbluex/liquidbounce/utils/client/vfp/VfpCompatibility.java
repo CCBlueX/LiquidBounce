@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.utils.client.vfp;
@@ -156,6 +154,17 @@ public enum VfpCompatibility {
             return version.newerThanOrEqualTo(ProtocolVersion.v1_21_6);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.21.6", throwable);
+            return false;
+        }
+    }
+
+    public boolean isNewerThanOrEqual1_21_9() {
+        try {
+            var version = ViaFabricPlus.getImpl().getTargetVersion();
+
+            return version.newerThanOrEqualTo(ProtocolVersion.v1_21_9);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.21.9", throwable);
             return false;
         }
     }

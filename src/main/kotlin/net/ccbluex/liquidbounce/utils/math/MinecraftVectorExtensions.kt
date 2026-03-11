@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +21,14 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.core.BlockPos
-import net.minecraft.world.level.ChunkPos
-import net.minecraft.util.Mth
 import net.minecraft.core.Position
+import net.minecraft.core.Vec3i
+import net.minecraft.util.Mth
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
-import net.minecraft.core.Vec3i
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import kotlin.math.abs
@@ -53,6 +53,13 @@ inline operator fun Vec3i.plus(other: Vec3i): Vec3i = offset(other)
 inline operator fun Vec3i.minus(other: Vec3i): Vec3i = subtract(other)
 
 inline operator fun Vec3i.times(scalar: Int): Vec3i = multiply(scalar)
+
+fun Vec3i.lengthSqr(): Long {
+    val x1 = x.toLong()
+    val y1 = y.toLong()
+    val z1 = z.toLong()
+    return x1 * x1 + y1 * y1 + z1 * z1
+}
 
 inline operator fun Vec3.plus(other: Position): Vec3 = add(other.x(), other.y(), other.z())
 
@@ -103,6 +110,12 @@ inline fun Vector3f.add(vec3d: Vec3): Vector3f =
 inline fun Vector3f.sub(vec3d: Vec3): Vector3f =
     sub(vec3d.x.toFloat(), vec3d.y.toFloat(), vec3d.z.toFloat())
 
+inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: Float = 1.0f): Vec3 =
+    multiply(factorX.toDouble(), factorY.toDouble(), factorZ.toDouble())
+
+inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
+    multiply(factorX, factorY, factorZ)
+
 inline operator fun Vec3.component1(): Double = this.x
 inline operator fun Vec3.component2(): Double = this.y
 inline operator fun Vec3.component3(): Double = this.z
@@ -120,14 +133,13 @@ fun Iterable<Vec3>.average(): Vec3 {
     return result.scaleMut(1.0 / i)
 }
 
-inline fun Vec3i.toVec3d(): Vec3 = Vec3.atLowerCornerOf(this)
 inline fun Vec3i.toVec3d(
     xOffset: Double = 0.0,
     yOffset: Double = 0.0,
     zOffset: Double = 0.0,
 ): Vec3 = Vec3(x + xOffset, y + yOffset, z + zOffset)
 
-inline fun Vec3.toVec3(): Vec3f = Vec3f(this.x, this.y, this.z)
+inline fun Vec3.toVec3f(): Vec3f = Vec3f(this.x, this.y, this.z)
 
 @Deprecated("use this.toBlockPos instead", replaceWith = ReplaceWith("this.toBlockPos"))
 inline fun Vec3.toVec3i(): Vec3i = toBlockPos()

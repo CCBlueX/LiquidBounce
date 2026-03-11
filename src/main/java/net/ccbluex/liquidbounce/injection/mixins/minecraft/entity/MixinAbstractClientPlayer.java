@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.authlib.GameProfile;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerVulcanScaffold;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
 import net.minecraft.client.Minecraft;
@@ -44,6 +46,14 @@ public abstract class MixinAbstractClientPlayer extends Player {
     private float injectFovMultiplier(float original) {
         if (ModuleNoFov.INSTANCE.getRunning()) {
             return ModuleNoFov.INSTANCE.getFovMultiplier(original);
+        }
+        return original;
+    }
+
+    @ModifyExpressionValue(method = "getFieldOfViewModifier", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;getAttributeValue(Lnet/minecraft/core/Holder;)D"))
+    private double injectAlwaysSprint(double original) {
+        if (ModuleDisabler.INSTANCE.getRunning() && DisablerVulcanScaffold.INSTANCE.getRunning()) {
+            return 0.10000000149011612D;
         }
         return original;
     }

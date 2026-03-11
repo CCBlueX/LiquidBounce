@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ import net.minecraft.world.phys.Vec3
  */
 internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
 
-    private val modification by vec3d("Modification", Vec3(1337.0, 0.0, 1337.0))
+    private val modification by vec3d("Modification", Vec3(1337.0, 0.0, 1337.0), useLocateButton = false)
 
     @Volatile
     private var prevFallDistance = 0.0
@@ -82,7 +82,7 @@ internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
             }
 
             prevOnGround = packet.onGround
-            prevFallDistance = player.fallDistance.toDouble()
+            prevFallDistance = player.fallDistance
         }
     }
 

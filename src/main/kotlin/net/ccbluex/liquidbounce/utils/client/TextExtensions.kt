@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,44 +26,45 @@ import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.network.chat.MutableComponent
-import net.minecraft.util.FormattedCharSequence
-import net.minecraft.network.chat.contents.PlainTextContents
-import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.TextColor
-import net.minecraft.network.chat.ComponentContents
-import net.minecraft.network.chat.contents.TranslatableContents
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.ccbluex.liquidbounce.utils.text.TextList
 import net.minecraft.ChatFormatting
-import java.util.*
-import java.util.regex.Pattern
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.ComponentContents
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.TextColor
+import net.minecraft.network.chat.contents.PlainTextContents
+import net.minecraft.network.chat.contents.TranslatableContents
+import net.minecraft.util.FormattedCharSequence
+import java.util.Optional
+import java.util.function.Function
 
-private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
-
-fun String.stripMinecraftColorCodes(): String {
-    return COLOR_PATTERN.matcher(this).replaceAll("")
-}
+inline fun String.stripMinecraftColorCodes(): String =
+    ChatFormatting.stripFormatting(this)!!
 
 inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(this)
 
 /**
- * Returns a [MutableText] from the receiver.
- * If you just need a [Text], use [asPlainText] instead.
+ * Returns a [MutableComponent] from the receiver.
+ * If you just need a [Component], use [asPlainText] instead.
  */
 inline fun String.asText(): MutableComponent = Component.literal(this)
 
 /**
- * Returns an immutable [Text] from the receiver.
+ * Returns an immutable [Component] from the receiver.
  */
 inline fun String.asPlainText(): Component = PlainText.of(this, Style.EMPTY)
 
 /**
- * Returns an immutable [Text] from the receiver with [style].
+ * Returns an immutable [Component] from the receiver with [style].
  */
 inline fun String.asPlainText(style: Style): Component = PlainText.of(this, style)
 
 /**
- * Returns an immutable [Text] from the receiver with [formatting].
+ * Returns an immutable [Component] from the receiver with [formatting].
  */
 inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
 
@@ -73,11 +74,47 @@ inline operator fun Style.plus(color: TextColor): Style = withColor(color)
 
 inline operator fun Style.plus(color: Color4b): Style = withColor(color.toTextColor())
 
+inline operator fun Style.plus(clickEvent: ClickEvent): Style = withClickEvent(clickEvent)
+
+inline operator fun Style.plus(hoverEvent: HoverEvent): Style = withHoverEvent(hoverEvent)
+
 inline fun List<Component>.asText(): Component = TextList.of(this)
 
 inline fun Array<out Component>.asText(): Component = TextList.of(this.unmodifiable())
 
 inline fun textOf(vararg parts: Component): Component = parts.asText()
+
+fun <T> Collection<T>.joinToText(
+    separator: Component,
+    prefix: Component? = null,
+    postfix: Component? = null,
+    transform: Function<T, Component>,
+): Component {
+    if (isEmpty()) {
+        return PlainText.EMPTY
+    }
+
+    val iterator = iterator()
+    val offset = if (prefix == null) 0 else 1
+    var arraySize = this.size * 2 - 1
+    if (prefix != null) arraySize++
+    if (postfix != null) arraySize++
+
+    return Array(arraySize) { i ->
+        when {
+            i == 0 && prefix != null -> prefix
+            i == arraySize - 1 && postfix != null -> postfix
+            i % 2 == offset -> transform.apply(iterator.next())
+            else -> separator
+        }
+    }.asText()
+}
+
+/**
+ * Joins a list of [Component] into a single [Component] with the given [separator].
+ */
+fun Collection<Component>.joinToText(separator: Component): Component =
+    joinToText(separator, transform = Function.identity())
 
 fun FormattedCharSequence.toText(): Component {
     if (this is Component) return this
@@ -233,12 +270,17 @@ fun Long.formatAsCapacity(): String {
 }
 
 fun String.hideSensitiveAddress(): String {
+    val idx = lastIndexOf(':')
+    val host = if (idx == -1) this else substring(0, idx)
+
     // Hide possibly sensitive information from LiquidProxy
-    return when {
-        this.endsWith(".liquidbounce.net") -> "<redacted>.liquidbounce.net"
-        this.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
-        else -> this
+    val newHost = when {
+        host.endsWith(".liquidbounce.net") -> "<redacted>.liquidbounce.net"
+        host.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
+        else -> host
     }
+
+    return if (idx == -1) newHost else newHost + substring(idx)
 }
 
 @JvmRecord

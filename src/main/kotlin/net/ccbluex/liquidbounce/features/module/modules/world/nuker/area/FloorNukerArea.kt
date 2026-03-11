@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,16 +20,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.area
 
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.rangeTo
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Vec3i
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
 
 object FloorNukerArea : NukerArea("Floor") {
 
@@ -55,7 +54,7 @@ object FloorNukerArea : NukerArea("Floor") {
         // Check if the box is within the radius
         val eyesPos = player.eyePosition
         val rangeSquared = (radius * radius).toDouble()
-        if (box.squaredBoxedDistanceTo(eyesPos) > rangeSquared) {
+        if (box.distanceToSqr(eyesPos) > rangeSquared) {
             // Return empty list if not
             return emptyList()
         }

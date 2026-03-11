@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.minecraft.world.level.block.Blocks
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.Blocks
 
 object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
 

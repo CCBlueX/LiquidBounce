@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,11 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
+import com.mojang.blaze3d.platform.NativeImage
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
 import net.ccbluex.liquidbounce.render.engine.font.GlyphRenderInfo
+import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import com.mojang.blaze3d.platform.NativeImage
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.image.BufferedImage
@@ -49,7 +49,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         Dimension(fontHeight / 3, fontHeight / 3)
     )
 
-    fun getGlyph(char: Char, style: Int): GlyphRenderInfo? {
+    fun getGlyph(char: Char, style: @FontStyle Int): GlyphRenderInfo? {
         return glyphMap[GlyphIdentifier.asLong(char, style)]?.first
     }
 
@@ -96,7 +96,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         return failed
     }
 
-    fun free(ch: Char, style: Int): GlyphRenderInfo? {
+    fun free(ch: Char, style: @FontStyle Int): GlyphRenderInfo? {
         val (renderInfo, sliceHandle) = this.glyphMap.remove(GlyphIdentifier.asLong(ch, style)) ?: return null
 
         this.allocator.free(sliceHandle)

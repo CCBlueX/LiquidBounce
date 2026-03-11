@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.integration.BrowserScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -39,7 +39,7 @@ object CommandClientBrowserSubcommand {
         ).handler {
             chat(regular("Opening browser..."))
             mc.schedule {
-                mc.setScreen(BrowserScreen(args[0] as String))
+                mc.setScreen(InternetExplorerScreen(args[0] as String))
             }
         }.build()
 }

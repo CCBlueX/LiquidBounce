@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.module
 import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.Minecraft
-import net.minecraft.client.multiplayer.ClientPacketListener
-import net.minecraft.client.player.LocalPlayer
-import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.multiplayer.ClientPacketListener
+import net.minecraft.client.multiplayer.MultiPlayerGameMode
+import net.minecraft.client.player.LocalPlayer
 
 /**
  * Collection of the most used variables
@@ -38,13 +38,13 @@ interface MinecraftShortcuts {
     val mc: Minecraft
         get() = net.ccbluex.liquidbounce.utils.client.mc
     val player: LocalPlayer
-        get() = mc.player!!
+        get() = requireNotNull(mc.player) { "mc.player is null" }
     val world: ClientLevel
-        get() = mc.level!!
+        get() = requireNotNull(mc.level) { "mc.level is null" }
     val network: ClientPacketListener
-        get() = mc.connection!!
+        get() = requireNotNull(mc.connection) { "mc.connection is null" }
     val interaction: MultiPlayerGameMode
-        get() = mc.gameMode!!
+        get() = requireNotNull(mc.gameMode) { "mc.gameMode is null" }
     val gpuDevice: GpuDevice
         get() = RenderSystem.getDevice()
 }

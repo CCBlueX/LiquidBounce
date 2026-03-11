@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
-import net.minecraft.client.renderer.state.MapRenderState;
 import net.minecraft.client.renderer.MapRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.state.MapRenderState;
 import net.minecraft.world.level.saveddata.maps.MapDecoration;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(MapRenderer.class)
-public class MixinMapRenderer {
+public abstract class MixinMapRenderer {
     @ModifyExpressionValue(
             method = "render",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/MapRenderState;decorations:Ljava/util/List;")

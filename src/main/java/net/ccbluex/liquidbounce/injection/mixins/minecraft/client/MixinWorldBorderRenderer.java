@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(WorldBorderRenderer.class)
-public class MixinWorldBorderRenderer {
+public abstract class MixinWorldBorderRenderer {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void render(WorldBorderRenderState state, Vec3 cameraPos, double viewDistanceBlocks, double farPlaneDistance, CallbackInfo ci) {

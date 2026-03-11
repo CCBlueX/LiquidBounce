@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,18 @@
  */
 package net.ccbluex.liquidbounce.config.types
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import net.ccbluex.liquidbounce.config.types.list.ListValue
 import net.ccbluex.liquidbounce.utils.math.CurveUtil
 import org.joml.Vector2f
 
-open class CurveValue(
+class CurveValue(
     name: String,
     value: MutableList<Vector2f>,
-    @Exclude var xAxis: Axis,
-    @Exclude var yAxis: Axis,
-    @Exclude var tension: Float = 0.4f,
+    @Exclude val xAxis: Axis,
+    @Exclude val yAxis: Axis,
+    @Exclude val tension: Float = DEFAULT_TENSION,
 ) : ListValue<MutableList<Vector2f>, Vector2f>(
     name,
     value,
@@ -52,6 +54,44 @@ open class CurveValue(
         }
     }
 
-    fun transform(x: Float) = CurveUtil.transform(get(), x, tension)
+    // TODO: add option for out-of-bounds behavior
+    fun transform(x: Float): Float =
+        CurveUtil.transformNormalized(get(), x, tension, CurveUtil.OnOutOfBounds.CLAMP)
+
+    companion object {
+        const val DEFAULT_TENSION = 0.4f
+    }
+
+    class Builder {
+        @JvmField var name: String? = null
+        @JvmField var xAxis: Axis? = null
+        @JvmField var yAxis: Axis? = null
+        @JvmField var tension: Float = DEFAULT_TENSION
+        @JvmField var points: MutableList<Vector2f>? = null
+
+        infix fun String.x(range: ClosedFloatingPointRange<Float>): Builder {
+            xAxis = Axis(this, range)
+            return this@Builder
+        }
+
+        infix fun String.y(range: ClosedFloatingPointRange<Float>): Builder {
+            yAxis = Axis(this, range)
+            return this@Builder
+        }
+
+        fun points(vararg values: Vector2f): Builder = apply {
+            points = ObjectArrayList.wrap(values)
+        }
+
+        fun build(): CurveValue {
+            return CurveValue(
+                requireNotNull(name) { "Missing name" },
+                requireNotNull(points) { "Missing default value" },
+                requireNotNull(xAxis) { "Missing xAxis" },
+                requireNotNull(yAxis) { "Missing yAxis" },
+                tension,
+            )
+        }
+    }
 
 }

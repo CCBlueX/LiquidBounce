@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
-import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
@@ -37,28 +37,33 @@ import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball
 import net.minecraft.world.entity.projectile.ShulkerBullet
+import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball
 
 /**
  * ProjectilePuncher module
  *
  * Shoots back incoming projectiles around you.
  */
-object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORLD, aliases = listOf("AntiFireball")) {
+object ModuleProjectilePuncher : ClientModule(
+    "ProjectilePuncher",
+    ModuleCategories.WORLD,
+    aliases = listOf("AntiFireball")
+) {
 
     private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.keyAttack, null))
 
-    private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Target
     private var target: Entity? = null
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     override fun onDisabled() {
         target = null
@@ -76,17 +81,17 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
         val target = target ?: return@tickHandler
 
         if (target.squaredBoxedDistanceTo(player) > range * range ||
-            !facingEnemy(
+            isLookingAtEntity(
                 toEntity = target,
                 rotation = RotationManager.serverRotation,
                 range = range.toDouble(),
-                wallsRange = 0.0
-            )) {
+                throughWallsRange = 0.0
+            ) != null) {
             return@tickHandler
         }
 
         clicker.click {
-            target.attack(swing)
+            attackEntity(target, swingMode)
             true
         }
     }
@@ -104,7 +109,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
             val nextTickFireballPosition = entity.position() + entity.position() - entity.lastPos
 
             val entityBox = entity.dimensions.makeBoundingBox(nextTickFireballPosition)
-            val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyePosition)
+            val distanceSquared = entityBox.distanceToSqr(player.eyePosition)
 
             if (distanceSquared > rangeSquared) {
                 continue
@@ -121,7 +126,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
             RotationManager.setRotationTarget(
                 spot.rotation,
                 considerInventory = !ignoreOpenInventory,
-                configurable = rotations,
+                valueGroup = rotations,
                 Priority.IMPORTANT_FOR_USER_SAFETY,
                 this@ModuleProjectilePuncher
             )
@@ -136,7 +141,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
 
         val fireballVelocity = entity.position() - entity.lastPos
 
-        // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
+        // If the fireball is not moving the player can obviously not be hit. Additionally, the code below only works if
         // the fireball is moving.
         if (fireballVelocity.isLikelyZero) {
             return false

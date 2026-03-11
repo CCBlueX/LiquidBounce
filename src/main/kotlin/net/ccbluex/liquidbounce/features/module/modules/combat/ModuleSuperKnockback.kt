@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.sendStartSprinting
@@ -50,7 +50,7 @@ import net.minecraft.world.entity.LivingEntity
  * Increases knockback dealt to other entities.
  */
 @Suppress("MagicNumber")
-object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, aliases = listOf("WTap")) {
+object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.COMBAT, aliases = listOf("WTap")) {
 
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap)).apply(::tagBy)
     val hurtTime by int("HurtTime", 10, 0..10)
@@ -59,9 +59,9 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
 
     @Suppress("unused")
     private enum class Conditions(
-        override val choiceName: String,
+        override val tag: String,
         val testCondition: (target: Entity) -> Boolean
-    ) : NamedChoice {
+    ) : Tagged {
         ONLY_FACING("OnlyFacing", { target ->
             target.lookAngle.dot(player.position() - target.position()) < 0
         }),
@@ -73,7 +73,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
         }),
     }
 
-    private object OnlyOnMove : ToggleableConfigurable(this, "OnlyOnMove", true) {
+    private object OnlyOnMove : ToggleableValueGroup(this, "OnlyOnMove", true) {
         val onlyForward by boolean("OnlyForward", true)
     }
 
@@ -81,8 +81,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
         tree(OnlyOnMove)
     }
 
-    object Packet : Choice("Packet") {
-        override val parent: ChoiceConfigurable<Choice>
+    object Packet : Mode("Packet") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused", "ComplexCondition")
@@ -98,12 +98,12 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
                 && !ModuleCriticals.wouldDoCriticalHit()
             ) {
                 if (player.isSprinting) {
-                    sendStopSprinting()
+                    network.sendStopSprinting()
                 }
 
-                sendStartSprinting()
-                sendStopSprinting()
-                sendStartSprinting()
+                network.sendStartSprinting()
+                network.sendStopSprinting()
+                network.sendStartSprinting()
 
                 player.isSprinting = true
                 player.wasSprinting = true
@@ -111,8 +111,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
         }
     }
 
-    object SprintTap : Choice("SprintTap") {
-        override val parent: ChoiceConfigurable<Choice>
+    object SprintTap : Mode("SprintTap") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val reSprintTicks by intRange("ReSprint", 0..1, 0..10, "ticks")
@@ -132,7 +132,10 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
 
             this@SprintTap.debugParameter("State") { "Disallowing Sprint" }
             cancelSprint = true
-            tickUntil { !player.isSprinting && !player.wasSprinting }
+            tickUntil {
+                val player = mc.player ?: return@tickUntil true
+                !player.isSprinting && !player.wasSprinting
+            }
             this@SprintTap.debugParameter("State") { "Waiting for ReSprint" }
             waitTicks(reSprintTicks.random())
             this@SprintTap.debugParameter("State") { "Allowing Sprint" }
@@ -156,8 +159,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
 
     }
 
-    object WTap : Choice("WTap") {
-        override val parent: ChoiceConfigurable<Choice>
+    object WTap : Mode("WTap") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val ticksUntilMovementBlock by intRange("UntilMovementBlock", 0..1, 0..10,

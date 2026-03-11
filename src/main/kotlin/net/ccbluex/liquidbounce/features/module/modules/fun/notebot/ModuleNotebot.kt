@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,19 +20,20 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.InstrumentNote
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsLoader
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsNoteBlock
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -41,12 +42,11 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.client.textLoadingBar
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
-import net.minecraft.network.protocol.game.ClientboundSoundPacket
-import net.minecraft.network.chat.MutableComponent
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.util.Mth
-import java.util.*
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
 
 /**
  * Notebot Module
@@ -55,17 +55,17 @@ import java.util.*
  *
  * @author ccetl
  */
-object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = true) {
+object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQuit = true) {
 
     // LWJGL native bug (windows)
     private val song = file("Song") // , supportedExtensions = setOf("nbs")
     private val pianoOnly by boolean("PianoOnly", false)
     val reuseBlocks by boolean("ReuseBlocks", true).onChanged { enabled = false }
     val range by float("Range", 6f, 1f..6f)
-    val rotationsConfigurable = RotationsConfigurable(this)
+    val rotations = RotationsValueGroup(this)
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    private object StartDelay : Configurable("StartDelay") {
+    private object StartDelay : ValueGroup("StartDelay") {
         val test by int("Test", 0, 0..20, "ticks")
         val tune by int("Tune", 0, 0..20, "ticks")
         val play by int("Play", 2, 0..20, "ticks")
@@ -225,13 +225,13 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         return InstrumentNote(instrument, noteValue)
     }
 
-    fun getRequiredInstruments(songData: SongData): EnumSet<NoteBlockInstrument> {
+    fun getRequiredInstruments(songData: SongData): Set<NoteBlockInstrument> {
         if (pianoOnly) {
-            return EnumSet.of(NoteBlockInstrument.HARP)
+            return setOf(NoteBlockInstrument.HARP)
         }
 
         return songData.nbs.noteBlocks
-            .mapTo(EnumSet.noneOf(NoteBlockInstrument::class.java)) {
+            .mapTo(enumSetOf()) {
                 InstrumentNote.getInstrumentEnumFromId(it.instrument.toInt())
             }
     }

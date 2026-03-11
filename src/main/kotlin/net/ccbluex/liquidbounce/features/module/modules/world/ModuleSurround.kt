@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.fastutil.fastIterator
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter.CenterHandlerState
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.getBlockingEntities
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
@@ -44,12 +44,12 @@ import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.entity.getFeetBlockPos
 import net.ccbluex.liquidbounce.utils.entity.isInHole
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.level.block.Blocks
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
-import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
-import net.minecraft.core.Direction
 import org.joml.Vector2d
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -62,7 +62,7 @@ import kotlin.math.floor
  *
  * @author ccetl
  */
-object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit = true) {
+object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disableOnQuit = true) {
 
     /**
      * The blocks the surround normal utilizes.
@@ -93,7 +93,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
      *
      * Destroying requires the crystal destroyer in the placer to be active.
      */
-    private object Protect : ToggleableConfigurable(this, "Protect", true) {
+    private object Protect : ToggleableValueGroup(this, "Protect", true) {
 
         /**
          * At what destroy stage, actions should be taken.
@@ -114,7 +114,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
          * X = obsidian
          * p = the players hitbox
          */
-        object ExtraLayer : ToggleableConfigurable(this, "ExtraLayer", true) {
+        object ExtraLayer : ToggleableValueGroup(this, "ExtraLayer", true) {
 
             /**
              * Will place even more blocks (top view):
@@ -189,7 +189,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
                 placer.crystalDestroyer.currentTarget = crystal
 
                 // we could target the blocking crystal, now we have to wait a tick before it has been destroyed
-                // anyways, so we can return here
+                // anyway, so we can return here
                 if (placer.crystalDestroyer.currentTarget == crystal) {
                     return@handler
                 }
@@ -341,7 +341,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
 
         val maxX = getMax(bb, Direction.Axis.X)
         val maxZ = getMax(bb, Direction.Axis.Z)
-        val hole = setOf(
+        val hole = listOf(
             BlockPos.containing(bb.minX, y, bb.minZ),
             BlockPos.containing(bb.minX, y, maxZ),
             BlockPos.containing(maxX, y, bb.minZ),
@@ -352,7 +352,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
 
         val directions = if (down) DIRECTIONS_EXCLUDING_UP else Direction.BY_2D_DATA
         hole.forEach {
-            directions.forEach { direction ->
+            for (direction in directions) {
                 val pos = it.relative(direction)
 
                 if (it !in blocked) {
@@ -374,16 +374,16 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
     }
 
     private enum class DisableOn(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         Y_CHANGE("YChange"),
         XZ_MOVE("XZMove"),
         XZ_SPEED("XZSpeed");
     }
 
     private enum class Features(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         /**
          * Runs [CommandCenter] when the module is enabled.
          */

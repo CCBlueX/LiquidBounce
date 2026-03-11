@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,16 @@
  */
 package net.ccbluex.liquidbounce.utils.input
 
+import com.mojang.blaze3d.platform.InputConstants
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.unmodifiable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.bold
@@ -32,10 +36,8 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
-import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.util.Util
 import org.lwjgl.glfw.GLFW
 
@@ -130,6 +132,46 @@ data class InputBind(
     }
 
     /**
+     * Determines if a keyboard press event matches this bind key and required modifiers.
+     */
+    fun matchesKeyPress(event: KeyboardKeyEvent): Boolean {
+        return event.action == GLFW.GLFW_PRESS
+            && matchesKey(event.keyCode, event.scanCode)
+            && matchesModifiers(event.mods)
+    }
+
+    /**
+     * Determines if a keyboard release affects this bind key or one of its required modifiers.
+     */
+    fun matchesKeyRelease(event: KeyboardKeyEvent): Boolean {
+        if (event.action != GLFW.GLFW_RELEASE) return false
+        val keyReleased = matchesKey(event.keyCode, event.scanCode)
+        val modifierReleased = event.key.toModifierOrNull().let { it in modifiers && !it!!.isAnyPressed }
+
+        return keyReleased || modifierReleased
+    }
+
+    /**
+     * Determines if a mouse press event matches this bind button and required modifiers.
+     */
+    fun matchesMousePress(event: MouseButtonEvent): Boolean {
+        return event.action == GLFW.GLFW_PRESS
+            && matchesMouse(event.button)
+            && matchesModifiers(event.mods)
+    }
+
+    /**
+     * Determines if a mouse release affects this bind button or one of its required modifiers.
+     */
+    fun matchesMouseRelease(event: MouseButtonEvent): Boolean {
+        if (event.action != GLFW.GLFW_RELEASE) return false
+        val buttonReleased = matchesMouse(event.button)
+        val modifierReleased = event.key.toModifierOrNull().let { it in modifiers && !it!!.isAnyPressed }
+
+        return buttonReleased || modifierReleased
+    }
+
+    /**
      * Handles the event. Returns the new state, assumes the original state is `false`.
      *
      * @param event The [KeyboardKeyEvent] to handle.
@@ -143,24 +185,52 @@ data class InputBind(
 
         val eventAction = event.action
         return when (eventAction) {
-            GLFW.GLFW_PRESS if mc.screen == null -> !currentState || action == BindAction.HOLD
-            GLFW.GLFW_RELEASE -> false
+            GLFW.GLFW_PRESS if mc.screen == null -> when (action) {
+                BindAction.TOGGLE -> !currentState
+                BindAction.HOLD, BindAction.SMART -> true
+            }
+            GLFW.GLFW_RELEASE -> when (action) {
+                BindAction.HOLD -> false
+                BindAction.TOGGLE, BindAction.SMART -> currentState
+            }
             else -> currentState
         }
     }
 
     /**
-     * Enum representing the action associated with a key binding.
-     * It includes two actions: TOGGLE and HOLD.
+     * Action mode used to interpret bind input events.
      *
-     * @param choiceName The display name of the action.
+     * @param tag display name used in config/ui
      */
-    enum class BindAction(override val choiceName: String) : NamedChoice {
+    enum class BindAction(override val tag: String) : Tagged {
+        /**
+         * Flip state when pressed.
+         */
         TOGGLE("Toggle"),
-        HOLD("Hold")
+
+        /**
+         * Stay enabled while key is held and disable on release.
+         */
+        HOLD("Hold"),
+
+        /**
+         * Start as enabled on press, then classify as:
+         * - hold if a repeat event is received before release
+         * - toggle if release is received first
+         * - toggle on unexpected fallback paths
+         */
+        SMART("Smart");
+
+        companion object {
+            @JvmStatic
+            private val LOOKUP_TABLE = BindAction.entries.makeLookupTable()
+
+            @JvmStatic
+            fun of(string: String?): BindAction? = LOOKUP_TABLE[string]
+        }
     }
 
-    enum class Modifier(override val choiceName: String, val bitMask: Int, vararg val keyCodes: Int): NamedChoice {
+    enum class Modifier(override val tag: String, val bitMask: Int, vararg val keyCodes: Int): Tagged {
         SHIFT("Shift", GLFW.GLFW_MOD_SHIFT, InputConstants.KEY_LSHIFT, InputConstants.KEY_RSHIFT),
         CONTROL("Control", GLFW.GLFW_MOD_CONTROL, InputConstants.KEY_LCONTROL, InputConstants.KEY_RCONTROL),
         ALT("Alt", GLFW.GLFW_MOD_ALT, InputConstants.KEY_LALT, InputConstants.KEY_RALT),
@@ -183,7 +253,7 @@ data class InputBind(
             Util.OS.WINDOWS -> when (this) {
                 CONTROL -> "Ctrl"
                 SUPER -> "\u229e"
-                else -> choiceName
+                else -> tag
             }
             Util.OS.OSX -> when (this) {
                 SHIFT -> "\u21e7"
@@ -192,12 +262,12 @@ data class InputBind(
                 SUPER -> "\u2318"
                 // else -> choiceName
             }
-            else -> choiceName
+            else -> tag
         }
 
         companion object {
             @JvmStatic
-            private val LOOKUP_TABLE = NamedChoice.makeLookupTable<Modifier>()
+            private val LOOKUP_TABLE = Modifier.entries.makeLookupTable()
 
             @JvmStatic
             private val KEY_CODE_LOOKUP: Int2ReferenceMap<Modifier> = run {
@@ -217,7 +287,7 @@ data class InputBind(
             fun of(keyCode: Int): Modifier? = KEY_CODE_LOOKUP[keyCode]
 
             @JvmStatic
-            fun fromRawValue(modifiers: Int) = entries.filterTo(emptyEnumSet()) {
+            fun fromRawValue(modifiers: Int) = entries.filterTo(enumSetOf()) {
                 it.isActive(modifiers)
             }
         }
@@ -259,10 +329,10 @@ fun InputBind.renderText(): Component = buildList {
     if (modifiers.isNotEmpty()) {
         modifiers.forEach {
             add(divider)
-            add(variable(it.platformRenderName).onHover(HoverEvent.ShowText(it.choiceName.asPlainText())))
+            add(variable(it.platformRenderName).onHover(HoverEvent.ShowText(it.tag.asPlainText())))
         }
     }
     add(regular(" ("))
-    add(variable(action.choiceName))
+    add(variable(action.tag))
     add(regular(")"))
 }.asText()

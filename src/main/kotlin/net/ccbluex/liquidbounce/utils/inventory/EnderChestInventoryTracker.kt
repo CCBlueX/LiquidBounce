@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,17 +30,17 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
+import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.inventory.MenuType
 import net.minecraft.network.chat.Component
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.item.ItemStack
 
 object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
 
-    private val DEFAULT = Array<ItemStack>(27) { ItemStack.EMPTY }.asList()
+    private val DEFAULT = Array(27) { ItemStack.EMPTY }.asList()
 
     private val flow = MutableStateFlow(DEFAULT)
     @Volatile
@@ -72,8 +72,8 @@ object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
     }
 
     @Suppress("unused")
-    private val packetHandler = handler<PacketEvent>() { event ->
-        if (ModuleInventoryMove.isContainerPacket(event.packet)) {
+    private val packetHandler = handler<PacketEvent> { event ->
+        if (event.packet.isC2SContainerPacket()) {
             track()
         }
     }

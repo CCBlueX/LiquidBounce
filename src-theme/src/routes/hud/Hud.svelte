@@ -7,7 +7,7 @@
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Scoreboard from "./elements/Scoreboard.svelte";
     import {onMount} from "svelte";
-    import {getComponents, getGameWindow, getMetadata} from "../../integration/rest";
+    import {getClientInfo, getComponents, getGameWindow, getMetadata} from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {HudComponent, Metadata} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
@@ -19,12 +19,16 @@
     import DraggableComponent from "./elements/DraggableComponent.svelte";
     import KeyBinds from "./elements/KeyBinds.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
+    import {os} from "../clickgui/clickgui_store";
+    import InventoryStatistics from "./elements/inventory/InventoryStatistics.svelte";
 
     let zoom = 100;
     let metadata: Metadata;
     let components: HudComponent[] = [];
 
     onMount(async () => {
+        $os = (await getClientInfo()).os;
+
         const gameWindow = await getGameWindow();
         zoom = gameWindow.scaleFactor * 50;
 
@@ -51,7 +55,7 @@
 <div class="hud" style="zoom: {zoom}%">
     {#each components as c}
         {#if c.settings.enabled}
-            <DraggableComponent name={c.name} id={c.id} alignment={c.settings.alignment} >
+            <DraggableComponent alignment={c.settings.alignment} >
                 {#if c.name === "Watermark"}
                     <Watermark/>
                 {:else if c.name === "ArrayList"}
@@ -75,6 +79,8 @@
                             gap="2px"
                             getRenderedStacks={it => Array.from(it.armor).reverse()}
                     />
+                {:else if c.name === "InventoryStatistics"}
+                    <InventoryStatistics settings={c.settings} />
                 {:else if c.name === "Inventory"}
                     <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.main.slice(9)} />
                 {:else if c.name === "CraftingInventory"}

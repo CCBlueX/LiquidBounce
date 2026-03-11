@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.point.exempts
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.minecraft.world.phys.Vec3
 
-enum class ExemptBoxPart(override val choiceName: String) : NamedChoice, ExemptPoint {
+enum class ExemptBoxPart(override val tag: String) : Tagged, ExemptPoint {
 
     HEAD("Head") {
         override fun predicate(

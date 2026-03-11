@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,26 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
-import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.configs
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.configs
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
+import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -40,11 +46,17 @@ import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.plus
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.AsyncLoadingText
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.Style
 import org.apache.commons.io.input.CharSequenceReader
 
 /**
@@ -68,6 +80,20 @@ object CommandConfig : Command.Factory {
             .subcommand(reloadSubcommand())
             .build()
     }
+
+    private fun hoverText(settingName: String) =
+        textOf(
+            "Click to load ".asPlainText(ChatFormatting.GRAY),
+            settingName.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.BOLD),
+            PlainText.NEW_LINE,
+            AsyncLoadingText(
+                ioScope.async {
+                    ClientApi.requestSettingsScript(settingName).use { r ->
+                        publicGson.fromJson(r, AutoConfigMetadata::class.java)
+                    }.asText()
+                }
+            )
+        )
 
     private fun browseSubcommand() = CommandBuilder
         .begin("browse")
@@ -113,14 +139,10 @@ object CommandConfig : Command.Factory {
                         variable(settingName)
                             .onClick(
                                 ClickEvent.SuggestCommand(
-                                    ".config load $settingName"
+                                    CommandManager.GlobalSettings.prefix + "config load $settingName"
                                 )
                             )
-                            .onHover(
-                                HoverEvent.ShowText(
-                                    Component.nullToEmpty("§7Click to load $settingName")
-                                )
-                            ),
+                            .onHover(HoverEvent.ShowText(hoverText(settingName))),
                         regular(spaces),
                         regular(" | "),
                         variable(it.dateFormatted),
@@ -128,9 +150,7 @@ object CommandConfig : Command.Factory {
                         Component.literal(it.statusType.displayName)
                             .withStyle(it.statusType.formatting)
                             .onHover(
-                                HoverEvent.ShowText(
-                                    Component.nullToEmpty(it.statusDateFormatted)
-                                )
+                                HoverEvent.ShowText(it.statusDateFormatted.asPlainText())
                             )
                         ,
                         regular(" | ${it.serverAddress ?: "Global"}"),

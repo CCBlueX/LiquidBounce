@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,49 +21,49 @@ package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.im
 import it.unimi.dsi.fastutil.floats.FloatFloatPair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationDelta
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.AngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.floor
 import kotlin.math.max
 
-class AccelerationAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Acceleration", parent) {
+class AccelerationAngleSmooth(parent: ModeValueGroup<*>) : AngleSmooth("Acceleration", parent) {
 
     private val yawAcceleration by floatRange("YawAcceleration", 20f..25f, 1f..180f)
     private val pitchAcceleration by floatRange(
         "PitchAcceleration", 20f..25f, 1f..180f, aliases = listOf("PitchAccelelation")
     )
 
-    private inner class DynamicAccel : ToggleableConfigurable(this, "DynamicAccel", false) {
+    private inner class DynamicAccel : ToggleableValueGroup(this, "DynamicAccel", false) {
         val coefDistance by float("CoefDistance", -1.393f, -2f..2f)
         val yawCrosshairAccel by floatRange("YawCrosshairAccel", 17f..20f, 1f..180f)
         val pitchCrosshairAccel by floatRange("PitchCrosshairAccel", 17f..20f, 1f..180f)
     }
 
-    private inner class AccelerationError : ToggleableConfigurable(this, "AccelerationError", true) {
+    private inner class AccelerationError : ToggleableValueGroup(this, "AccelerationError", true) {
         val yawAccelerationError by float("YawAccelError", 0.1f, 0.01f..1f)
         val pitchAccelerationError by float("PitchAccelError", 0.1f, 0.01f..1f)
     }
 
-    private inner class ConstantError : ToggleableConfigurable(this, "ConstantError", true) {
+    private inner class ConstantError : ToggleableValueGroup(this, "ConstantError", true) {
         val yawConstantError by float("YawConstantError", 0.1f, 0.01f..1f)
         val pitchConstantError by float("PitchConstantError", 0.1f, 0.01f..1f)
     }
 
     // compute a sigmoid-like deceleration factor
-    private inner class SigmoidDeceleration : ToggleableConfigurable(this, "SigmoidDeceleration", false) {
+    private inner class SigmoidDeceleration : ToggleableValueGroup(this, "SigmoidDeceleration", false) {
         val steepness by float("Steepness", 10f, 0.0f..20f)
         val midpoint by float("Midpoint", 0.3f, 0.0f..1.0f)
 
@@ -128,7 +128,9 @@ class AccelerationAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Acce
 
         val entity = rotationTarget.entity
         val distance = entity?.let { entity -> player.boxedDistanceTo(entity) } ?: 0.0
-        val crosshair = entity?.let { facingEnemy(entity, max(3.0, distance), currentRotation) } == true
+        val crosshair = entity?.let {
+            isLookingAtEntity(entity, max(3.0, distance), currentRotation) != null
+        } == true
 
         val (newYawDiff, newPitchDiff) = computeTurnSpeed(
             prevDiff,
@@ -211,7 +213,7 @@ class AccelerationAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Acce
 
         return FloatFloatPair.of(
             prevDiff.deltaYaw + yawAccel + yawErrorProvider.getError(yawAccel),
-            prevDiff.deltaPitch + pitchAccel + pitchErrorProvider.getError(yawAccel)
+            prevDiff.deltaPitch + pitchAccel + pitchErrorProvider.getError(pitchAccel)
         )
     }
 

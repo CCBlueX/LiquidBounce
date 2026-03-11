@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.placer.placeInstantOnBlockUpdate
 import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
@@ -36,10 +34,10 @@ import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.range
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.world.entity.Entity
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 import kotlin.math.max
 import kotlin.math.min
 
@@ -51,7 +49,7 @@ import kotlin.math.min
  * @author ccetl
  */
 @Suppress("MagicNumber")
-object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
+object ModuleBlockTrap : ClientModule("BlockTrap", ModuleCategories.WORLD) {
 
     private val doublePlace by multiEnumChoice<DoublePlace>("DoublePlace")
 
@@ -73,7 +71,9 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         FloatValueProvider("Range", 4f, 1f..6f)
     ))
 
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     override fun onDisabled() {
         placer.disable()
@@ -92,15 +92,6 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
 
         val plan = findTrapPlan(target)
         placer.update(plan.sortedWith(placePriority.comparator).toSet())
-    }
-
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
-        val target = targetTracker.target ?: return@handler
-
-        renderEnvironmentForWorld(it.matrixStack) {
-            targetRenderer.render(target, it.partialTicks)
-        }
     }
 
     @Suppress("unused")
@@ -176,9 +167,9 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
      */
     @Suppress("unused")
     private enum class PlacePriority(
-        override val choiceName: String,
+        override val tag: String,
         val comparator: Comparator<BlockPos>
-    ) : NamedChoice {
+    ) : Tagged {
         CLOSEST("Closest", compareBy { it.distToCenterSqr(player.position()) }),
         FURTHEST("Furthest", compareByDescending { it.distToCenterSqr(player.position()) }),
         HIGHEST("Highest", compareByDescending { it.y }),
@@ -186,8 +177,8 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
     }
 
     private enum class PlaceAt(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         /**
          * Allows placing crystals next to their legs and keep them at the spot when disabled.
          */
@@ -200,8 +191,8 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
     }
 
     private enum class DoublePlace(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         /**
          * Places two blocks above the target's head so that they can't mine the block and at the same time tower up to
          * escape.

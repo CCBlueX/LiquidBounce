@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.integration.theme.component
@@ -33,7 +31,7 @@ object HudComponentManager {
     val nativeComponents = listOf(MinimapHudComponent)
 
     val components: List<HudComponent>
-        get() = nativeComponents + ThemeManager.theme.components
+        get() = nativeComponents + (ThemeManager.theme?.components ?: emptyList())
 
     @JvmStatic
     fun isTweakEnabled(tweak: HudComponentTweak) = ModuleHud.running && !HideAppearance.isHidingNow &&
@@ -64,7 +62,8 @@ object HudComponentManager {
     fun updateComponents() {
         // Might be necessary later on.
         // EventManager.callEvent(ComponentsUpdate(null, components))
-        EventManager.callEvent(ComponentsUpdateEvent(ThemeManager.theme.metadata.id, ThemeManager.theme.components))
+        val theme = ThemeManager.theme ?: return
+        EventManager.callEvent(ComponentsUpdateEvent(theme.metadata.id, theme.components))
     }
 
 }

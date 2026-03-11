@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,13 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.utils.client.world
-import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
-import net.minecraft.world.level.ChunkPos
 import net.minecraft.core.Direction
-import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.chunk.ChunkAccess
+import net.minecraft.world.level.levelgen.structure.BoundingBox
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 fun BoundingBox.iterate(): Iterable<BlockPos> =
     BlockPos.betweenClosed(minX(), minY(), minZ(), maxX(), maxY(), maxZ())
@@ -97,7 +97,7 @@ inline fun BoundingBox.copy(
 ): BoundingBox = BoundingBox(minX, minY, minZ, maxX, maxY, maxZ)
 
 @JvmSynthetic
-fun BlockPos.expendToBlockBox(
+fun BlockPos.expandToBoundingBox(
     offsetX: Int = 0,
     offsetY: Int = 0,
     offsetZ: Int = 0,

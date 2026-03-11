@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.render.engine.font
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
 import net.ccbluex.liquidbounce.render.engine.font.StaticGlyphPage.Companion.createGlyphPageWithFittingCharacters
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -35,11 +34,11 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
- * A staticly allocated glyph page.
+ * A statically allocated glyph page.
  */
 class StaticGlyphPage(
     override val texture: DynamicTexture,
-    val glyphs: Set<Pair<FontManager.FontId, GlyphRenderInfo>>
+    val glyphs: Set<Pair<FontId, GlyphRenderInfo>>
 ): GlyphPage() {
     companion object {
         @JvmStatic
@@ -64,7 +63,7 @@ class StaticGlyphPage(
          */
         @JvmStatic
         fun createGlyphPageWithFittingCharacters(chars: List<FontGlyph>): Pair<StaticGlyphPage, List<FontGlyph>> {
-            val result: Pair<GlyphPlacementResult, List<FontGlyph>>? = tryCharacterPlacementWithShrinking(chars)
+            val result = tryCharacterPlacementWithShrinking(chars)
 
             val (res, remainingGlyphs) = result ?: error("Unable to create static atlas.")
 
@@ -193,7 +192,7 @@ class StaticGlyphPage(
                 currentX += allocationSize.width
             }
 
-            // Return the dimension and match it's requirement of being at least (1, 1)
+            // Return the dimension and match its requirement of being at least (1, 1)
             return Dimension(max(1, maxWidth), max(1, currentY + currentLineMaxHeight))
         }
     }

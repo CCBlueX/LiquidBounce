@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,17 +23,8 @@ import com.llamalad7.mixinextras.sugar.Cancellable;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.common.ChunkUpdateFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.ChunkDeltaUpdateEvent;
-import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent;
-import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent;
-import net.ccbluex.liquidbounce.event.events.DeathEvent;
-import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent;
-import net.ccbluex.liquidbounce.event.events.TitleEvent;
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.BlockChangeTrigger;
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.CrystalDestroyTrigger;
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.CrystalSpawnTrigger;
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.EntityMoveTrigger;
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ExplodeSoundTrigger;
+import net.ccbluex.liquidbounce.event.events.*;
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerSpigotSpam;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.features.module.modules.player.Limit;
@@ -45,30 +36,19 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
-import net.minecraft.client.multiplayer.CommonListenerCookie;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.CommonListenerCookie;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.PacketUtils;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
-import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
-import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket;
-import net.minecraft.network.protocol.game.ClientboundClearTitlesPacket;
-import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
-import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
-import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
-import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
-import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
-import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.PacketUtils;
+import net.minecraft.network.protocol.game.*;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
@@ -250,7 +230,8 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         }
     }
 
-    private ThreadLocal<Rotation> rotationThreadLocal = ThreadLocal.withInitial(() -> null);
+    @Unique
+    private final ThreadLocal<Rotation> rotationThreadLocal = ThreadLocal.withInitial(() -> null);
 
     @Inject(method = "handleMovePlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;setValuesFromPositionPacket(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;Lnet/minecraft/world/entity/Entity;Z)Z"))
     private void injectPlayerPositionLook(
@@ -270,9 +251,9 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         }
         this.rotationThreadLocal.remove();
 
-        if (ModuleNoRotateSet.INSTANCE.getMode().getActiveChoice() == ModuleNoRotateSet.ResetRotation.INSTANCE) {
+        if (ModuleNoRotateSet.INSTANCE.getMode().getActiveMode() == ModuleNoRotateSet.ResetRotation.INSTANCE) {
             // Changes your server side rotation and then resets it with provided settings
-            var rotationTarget = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().toRotationTarget(
+            var rotationTarget = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotations().toRotationTarget(
                     new Rotation(playerEntity.getYRot(), playerEntity.getXRot(), true),
                     null,
                     true,
@@ -283,8 +264,8 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
         // Increase yaw and pitch by a value so small that the difference cannot be seen,
         // just to update the rotation server-side.
-        playerEntity.setYRot(prevRotation.getYaw() + 0.000001f);
-        playerEntity.setXRot(prevRotation.getPitch() + 0.000001f);
+        playerEntity.setYRot(prevRotation.yRot() + 0.000001f);
+        playerEntity.setXRot(prevRotation.xRot() + 0.000001f);
     }
 
     @ModifyVariable(method = "sendChat", at = @At("HEAD"), ordinal = 0, argsOnly = true)

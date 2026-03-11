@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
+import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -43,19 +43,19 @@ object CommandTargets : Command.Factory {
         .subcommand(
             CommandBuilder
                 .begin("combat")
-                .fromTargets(ModuleTargets.combatConfigurable)
+                .fromTargets(GlobalSettingsTarget.combatChoices)
                 .build()
         )
         .subcommand(
             CommandBuilder
                 .begin("visual")
-                .fromTargets(ModuleTargets.visualConfigurable)
+                .fromTargets(GlobalSettingsTarget.visualChoices)
                 .build()
         )
         .hub()
         .build()
 
-    private fun CommandBuilder.fromTargets(targets: MultiChooseListValue<Targets>): CommandBuilder {
+    private fun CommandBuilder.fromTargets(targets: MultiChoiceListValue<Targets>): CommandBuilder {
         this.parameter(
             ParameterBuilder
                 .enumChoice<Targets>("category") { it in targets.choices }
@@ -77,7 +77,7 @@ object CommandTargets : Command.Factory {
                 metadata = MessageMetadata(id = "CTargets#info")
             )
 
-            ModuleClickGui.reload()
+            ModuleClickGui.sync()
         }
 
         return this

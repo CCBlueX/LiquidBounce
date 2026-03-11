@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,20 +27,12 @@ import net.ccbluex.liquidbounce.interfaces.MemberRetriever;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.lang.reflect.Executable;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;

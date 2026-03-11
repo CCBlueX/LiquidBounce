@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ object CommandHide : Command.Factory {
             .begin("hide")
             .hub()
             .subcommand(hideSubcommand())
-            .subcommand(unhideSubommand())
+            .subcommand(unhideSubcommand())
             .subcommand(listSubcommand())
             .subcommand(clearSubcommand())
             .build()
@@ -86,7 +86,7 @@ object CommandHide : Command.Factory {
             }
         )
 
-    private fun unhideSubommand() = CommandBuilder
+    private fun unhideSubcommand() = CommandBuilder
         .begin("unhide")
         .parameter(
             ParameterBuilder.modules { it.hidden }

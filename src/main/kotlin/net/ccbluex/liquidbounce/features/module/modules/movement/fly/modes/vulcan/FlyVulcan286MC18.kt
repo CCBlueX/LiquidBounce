@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
@@ -45,14 +43,14 @@ import net.minecraft.world.phys.shapes.Shapes
  * @note ONLY WORKS ON 1.8 SERVERS
  * @author Nullable
  */
-internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
+internal object FlyVulcan286MC18 : Mode("Vulcan286-18") {
 
 
     // 2.5 is the maximum timer tested.
     private val timer by float("Timer", 2.5f, 1f..2.5f)
     private val autoDisable by boolean("AutoDisable", false)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     var flags = 0
@@ -66,23 +64,30 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
 
     val tickHandler = handler<PlayerTickEvent> {
         if (flags > 1) {
+            // 1.8 vulcan allows timer while desynced, 1.9 doesn't.
             Timer.requestTimerSpeed(timer, Priority.NORMAL, ModuleFly, 1)
-            /**
-             * 1.8 vulcan allows timer while desynced, 1.9 doesn't.
-             */
         }
     }
 
 
     /**
-     * When you flag (any PlayerPositionLookS2CPacket packet works),
-     * vanilla desyncs you. While desynced, you can timer
-     * and flagging ghost block check sets you back to
-     * the new position while in desync...
+     * When you flag (any ClientBoundPlayerPositionPacket works),
+     * vanilla server stops you. If for some reason your client doesn't
+     * receive the packet, the players serverside position will
+     * not change when moving. This will provide a "desynced state"
      *
-     * 1.8 servers spam the flag, so when you flag for
-     * ghostblock fix, it switches the spammed flag to
+     * While desynced, you can use timer freely, and
+     * flagging the ghost block check sets you back to
+     * the position you are in while desynced.
+     *
+     * 1.8 servers spam ClientBoundPlayerPositionPackets
+     * so when you flag for ghost block check,
+     * it switches the spammed packet to
      * the new position.
+     *
+     * NOTE: ghost block check works by checking if you
+     * are walking on air after walking off of a ledge.
+     * This check can be triggered while desynced...
      */
 
     val packetHandler = handler<PacketEvent> {
@@ -95,11 +100,8 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
                     flagPos = pos
                 } else if (flags > 2 && flagPos != pos) {
                     ModuleFly.enabled = false
+                    // Return here so we accept this packet
                     return@handler
-                    /**
-                     * If we didn't return, we would have to wait 1 tick
-                     * for a new PlayerPositionLook
-                     */
                 }
             }
             it.cancelEvent()

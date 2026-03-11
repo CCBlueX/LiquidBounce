@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce
 
@@ -35,12 +34,11 @@ import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
-import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.ConfigSystem.jsonFile
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
-import net.ccbluex.liquidbounce.deeplearn.ModelHolster
+import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
@@ -48,38 +46,37 @@ import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.account.AccountManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
-import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
-import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
+import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
+import net.ccbluex.liquidbounce.features.global.GlobalManager
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.BacktrackPacketManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
-import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
-import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
-import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
+import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -90,12 +87,10 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
-import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.server.packs.resources.ReloadableResourceManager
-import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.resources.Identifier
+import net.minecraft.server.packs.resources.PreparableReloadListener
+import net.minecraft.server.packs.resources.ReloadableResourceManager
 import java.io.InputStream
-import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import kotlin.time.measureTime
@@ -117,7 +112,7 @@ object LiquidBounce : EventListener {
     const val CLIENT_NAME = "LiquidBounce"
     const val CLIENT_AUTHOR = "CCBlueX"
 
-    private object Client : Configurable("Client") {
+    private object Client : Config("Client") {
         val version = text("Version", GitInfo.version())
             .immutable()
         val commit = text("Commit", GitInfo.get("git.commit.id.abbrev")?.let { "git-$it" } ?: "unknown")
@@ -163,10 +158,12 @@ object LiquidBounce : EventListener {
         private set
 
     /**
-     * Creates an [net.minecraft.util.Identifier] starts with [CLIENT_NAME].
+     * Creates an [net.minecraft.resources.Identifier] starts with [CLIENT_NAME].
+     *
+     * Warning: Use [clientIdentifier] to prevent silent `<clinit>` invocation
      */
     @JvmStatic
-    fun identifier(path: String): Identifier = Identifier.fromNamespaceAndPath(CLIENT_NAME.lowercase(Locale.ROOT), path)
+    fun identifier(path: String): Identifier = clientIdentifier(path)
 
     /**
      * Gets client resource.
@@ -274,19 +271,16 @@ object LiquidBounce : EventListener {
 
         // Utility managers
         RotationManager
-        PacketQueueManager
-        BacktrackPacketManager
+        BlinkManager
         InteractionTracker
         CombatManager
         FriendManager
         InventoryManager
         EnderChestInventoryTracker
-        WorldToScreen
         ActiveServerList
-        ConfigSystem.root(ClientItemGroups)
-        ConfigSystem.root(LanguageManager)
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
+        ConfigSystem.root(GlobalManager)
         ConfigSystem.root(MarketplaceManager)
         PostRotationExecutor
         ServerObserver
@@ -323,10 +317,6 @@ object LiquidBounce : EventListener {
 
         supervisorScope {
             launch {
-                // Load shaders as string
-                ClientShaders
-            }
-            launch {
                 // Load translations
                 LanguageManager.loadDefault()
             }
@@ -342,7 +332,7 @@ object LiquidBounce : EventListener {
             }
             launch {
                 // Download player heads
-                HeadsItemGroup.heads.getFinalState()
+                HeadsCreativeModeTab.heads.getFinalState()
             }
             launch {
                 // Load configs
@@ -352,6 +342,11 @@ object LiquidBounce : EventListener {
                 IpInfoApi.original
             }
             launch {
+                ConfigSystem.load(ClientAccountManager)
+                if (ClientAccount.ENV_ACCOUNT != null) {
+                    ClientAccountManager.clientAccount = ClientAccount.ENV_ACCOUNT
+                }
+
                 if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
                     runCatching {
                         ClientAccountManager.clientAccount.renew()
@@ -360,8 +355,9 @@ object LiquidBounce : EventListener {
                         ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
-                        ConfigSystem.store(ClientAccountManager)
                     }
+
+                    ConfigSystem.store(ClientAccountManager)
                 }
             }
         }
@@ -381,14 +377,16 @@ object LiquidBounce : EventListener {
 
         BrowserBackendManager.init()
         ClientInteropServer.start()
-        ThemeManager.init()
-        // Preload marketplace items
-        ConfigSystem.load(MarketplaceManager)
-        ConfigSystem.load(ThemeManager)
-        ThemeManager.load()
+        if (!ClientInteropServer.isSkipping) {
+            ThemeManager.init()
+            // Preload marketplace items
+            ConfigSystem.load(MarketplaceManager)
+            ConfigSystem.load(ThemeManager)
+            ThemeManager.load()
+        }
 
         BlurEffectRenderer
-        IntegrationListener
+        ScreenManager
 
         taskManager = TaskManager(ioScope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
@@ -400,7 +398,7 @@ object LiquidBounce : EventListener {
             launch("Deep Learning") { task ->
                 runCatching {
                     DeepLearningEngine.init(task)
-                    ModelHolster.load()
+                    ModelManager.load()
                 }.onFailure { exception ->
                     task.subTasks.clear()
 

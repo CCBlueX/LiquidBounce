@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -31,7 +29,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -40,70 +38,72 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.item.Items
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Block
 
-internal object FlyEnderpearl : Choice("Enderpearl") {
+internal object FlyEnderpearl : Mode("Enderpearl") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     val speed by float("Speed", 1f, 0.5f..2f)
 
     var threwPearl = false
-    var canFly = false
+    var shouldFly = false
 
-    val rotations = tree(RotationsConfigurable(this))
+    val rotations = tree(RotationsValueGroup(this))
 
     override fun enable() {
         threwPearl = false
-        canFly = false
+        shouldFly = false
     }
 
     val repeatable = tickHandler {
-        val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
-
         if (player.isDeadOrDying || player.isSpectator || player.abilities.instabuild) {
             return@tickHandler
         }
 
-        if (!threwPearl && !canFly) {
-            if (slot != null) {
-                if (player.xRot <= 80) {
-                    RotationManager.setRotationTarget(
-                        Rotation(player.yRot, (80f..90f).random()),
-                        configurable = rotations,
-                        provider = ModuleFastUse,
-                        priority = Priority.IMPORTANT_FOR_USAGE_2
-                    )
-                }
+        if (shouldFly) { // Fly after setback/pearl land
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
 
-                waitTicks(2)
-                SilentHotbar.selectSlotSilently(this, slot, 1)
-                interaction.startPrediction(world) { sequence ->
-                    ServerboundUseItemPacket(slot.useHand, sequence, player.yRot, player.xRot)
-                }
-
-                threwPearl = true
-            }
-        } else if (!threwPearl && canFly) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
             player.deltaMovement.y = when {
                 mc.options.keyJump.isDown -> speed.toDouble()
                 mc.options.keyShift.isDown -> -speed.toDouble()
                 else -> 0.0
             }
+
             return@tickHandler
         }
+
+        if (threwPearl) return@tickHandler // Already threw pearl, nothing to do
+
+        // If there isn't a pearl, return
+        val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
+
+        if (player.xRot <= 80) {
+            RotationManager.setRotationTarget(
+                Rotation(player.yRot, (80f..90f).random()),
+                valueGroup = rotations,
+                provider = ModuleFastUse,
+                priority = Priority.IMPORTANT_FOR_USAGE_2
+            )
+        }
+
+        waitTicks(2)
+        SilentHotbar.selectSlotSilently(this, slot, 1)
+        interaction.startPrediction(world) { sequence ->
+            ServerboundUseItemPacket(slot.useHand, sequence, player.yRot, player.xRot)
+        }
+
+        threwPearl = true
     }
 
     val packetHandler = handler<PacketEvent> { event ->
         if (event.origin == TransferOrigin.OUTGOING && event.packet is ServerboundAcceptTeleportationPacket
-            && isABitAboveGround() && threwPearl) {
-            threwPearl = false
-            canFly = true
+            && isABitAboveGround() && threwPearl) { // Pearl landed, accepting teleport -> should fly
+            shouldFly = true
         }
     }
 
@@ -112,7 +112,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
             val boundingBox = player.box
             val detectionBox = boundingBox.setMinY(boundingBox.minY - y)
 
-            return detectionBox.isBlockAtPosition { it is Block }
+            if (detectionBox.isBlockAtPosition { it is Block }) return true
         }
         return false
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,34 +20,34 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.minecraft.client.gui.screens.TitleScreen
+import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.screens.ConnectScreen
+import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
-import net.minecraft.client.multiplayer.resolver.ServerAddress
 import net.minecraft.client.multiplayer.ServerData
-import net.minecraft.network.protocol.game.ServerboundCommandSuggestionPacket
-import net.minecraft.network.protocol.common.ClientboundPingPacket
+import net.minecraft.client.multiplayer.resolver.ServerAddress
+import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket
+import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.configuration.ClientboundSelectKnownPacks
-import net.minecraft.network.protocol.login.ClientboundHelloPacket
 import net.minecraft.network.protocol.game.ClientboundCommandSuggestionsPacket
 import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
-import net.minecraft.network.chat.Component
-import net.minecraft.ChatFormatting
+import net.minecraft.network.protocol.game.ServerboundCommandSuggestionPacket
+import net.minecraft.network.protocol.login.ClientboundHelloPacket
 import net.minecraft.resources.Identifier
 import java.net.InetAddress
 import java.util.TreeSet
-import kotlin.collections.ArrayDeque
 import kotlin.random.Random
 import kotlin.time.Duration
 
@@ -145,8 +145,8 @@ object ServerObserver : EventListener {
      * Plugins will add themselves to the command suggestions list with a prefix like `/pluginname:command`.
      * This can be used to get a list of plugins on the server.
      *
-     * @see [net.minecraft.network.packet.s2c.play.CommandSuggestionsS2CPacket]
-     * @see [net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins]
+     * @see [ServerboundCommandSuggestionPacket]
+     * @see [ModulePlugins]
      */
     suspend fun captureCommandSuggestions(timeout: Duration): Boolean {
         this.plugins = null
@@ -348,7 +348,7 @@ object ServerObserver : EventListener {
         }
     }
 
-    enum class ServerType(override val choiceName: String) : NamedChoice {
+    enum class ServerType(override val tag: String) : Tagged {
 
         /**
          * Allows only premium players to join.

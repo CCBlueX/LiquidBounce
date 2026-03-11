@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,10 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
+import com.mojang.blaze3d.resource.ResourceHandle;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
@@ -30,16 +34,12 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbie
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.render.engine.OutlineShaderRenderer;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
-import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.state.LevelRenderState;
-import com.mojang.blaze3d.resource.ResourceHandle;
-import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -66,11 +66,8 @@ public abstract class MixinLevelRenderer {
     @Shadow
     protected abstract boolean shouldShowEntityOutlines();
 
-    @Shadow
-    @Final
-    private LevelRenderState levelRenderState;
-
-    @Inject(method = "renderLevel", at = @At("HEAD"))
+    // After ModelViewMatrix setup
+    @Inject(method = "renderLevel", at = @At(value = "NEW", target = "()Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;"))
     private void onRender(GraphicsResourceAllocator allocator, DeltaTracker tickCounter, boolean renderBlockOutline, Camera camera, Matrix4f positionMatrix, Matrix4f matrix4f, Matrix4f projectionMatrix, GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
         OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
         if (!renderer.shouldRender()) {
@@ -78,8 +75,6 @@ public abstract class MixinLevelRenderer {
         }
 
         var matrixStack = Pools.MatStack.borrow();
-        // Apply camera transformation to fix outline positioning
-        matrixStack.last().pose().mul(positionMatrix);
         var event = new DrawOutlinesEvent(
             renderer.prepareRenderTarget(),
             matrixStack,
@@ -97,7 +92,7 @@ public abstract class MixinLevelRenderer {
 
     @ModifyExpressionValue(method = "method_62218", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/ARGB;colorFromFloat(FFFF)I"))
     private int customFogClearColor(int original) {
-        return ModuleCustomAmbience.FogConfigurable.INSTANCE.modifyClearColor(original);
+        return ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyClearColor(original);
     }
 
     // this method is a lambda

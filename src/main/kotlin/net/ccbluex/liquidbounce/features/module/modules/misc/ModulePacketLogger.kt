@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,15 +22,14 @@ import kotlinx.atomicfu.atomic
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.bold
@@ -45,9 +44,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.isNotRoot
 import net.ccbluex.liquidbounce.utils.kotlin.toFullString
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
-import net.minecraft.network.protocol.Packet
-import net.minecraft.network.chat.MutableComponent
+import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.protocol.Packet
 import net.minecraft.resources.Identifier
 import okio.appendingSink
 import okio.buffer
@@ -65,11 +65,11 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * @author ccetl
  */
-object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
+object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) {
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val clientPackets by clientPackets("ClientPackets", sortedSetOf())
-    private val serverPackets by serverPackets("ServerPackets", sortedSetOf())
+    private val clientPackets by c2sPackets("C2SPackets", sortedSetOf())
+    private val serverPackets by s2cPackets("S2CPackets", sortedSetOf())
     private val showFieldType by boolean("ShowFieldType", true)
 
     private val outputTarget by multiEnumChoice("OutputTarget", OutputTarget.CHAT, canBeNone = false).onChanged {
@@ -128,7 +128,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         }
     }
 
-    private enum class OutputTarget(override val choiceName: String) : NamedChoice {
+    private enum class OutputTarget(override val tag: String) : Tagged {
         CHAT("Chat") {
             override fun handle(origin: TransferOrigin, packet: Packet<*>, canceled: Boolean, packetId: Identifier) {
                 val clazz = packet.javaClass
@@ -181,7 +181,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
                 file.appendingSink().buffer().use {
                     it.writeUtf8(System.currentTimeMillis().toString())
                         .writeByte(','.code)
-                        .writeUtf8(origin.choiceName)
+                        .writeUtf8(origin.tag)
                         .writeByte(','.code)
                         .writeUtf8(packetClassName)
                         .writeByte(','.code)

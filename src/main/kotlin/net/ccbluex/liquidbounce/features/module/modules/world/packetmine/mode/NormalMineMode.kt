@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode
 
-import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
-import net.minecraft.world.item.ItemStack
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.InteractionHand
 
@@ -68,7 +67,7 @@ object NormalMineMode : MineMode("Normal") {
         }
     }
 
-    override fun shouldUpdate(mineTarget: MineTarget, slot: IntObjectImmutablePair<ItemStack>?): Boolean {
+    override fun shouldUpdate(mineTarget: MineTarget, slot: HotbarItemSlot?): Boolean {
         return !mineTarget.finished
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,16 +20,16 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
+import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.Avatar;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Avatar.class)
-public class MixinAvatar {
+public abstract class MixinAvatar {
     /**
      * Sneak height fix
      * @see net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose

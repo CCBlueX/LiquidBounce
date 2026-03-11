@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
@@ -36,15 +37,20 @@ import net.minecraft.world.item.ShieldItem
 /**
  * This module allows the user to block with swords. This makes sense to be used on servers with ViaVersion.
  */
-object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = listOf("OldBlocking")) {
+object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, aliases = listOf("OldBlocking")) {
 
     val onlyVisual by boolean("OnlyVisual", false)
+    val fakeOnPressing by boolean("FakeOnPressing", false)
     val hideShieldSlot by boolean("HideShieldSlot", false).doNotIncludeAlways()
+    val applyToThirdPersonView by boolean("ApplyToThirdPersonView", true).doNotIncludeAlways()
     private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
     @JvmStatic
-    val LivingEntity.isBlockingWithOffhandShield
-        get() = isUsingItem && offhandItem.item is ShieldItem && useItem === offhandItem
+    val LivingEntity.shouldApplySwordBlockAnimation
+        get() = when(fakeOnPressing) {
+            true -> mc.options.keyUse.isPressedOnAny
+            false -> isUsingItem && offhandItem.item is ShieldItem && useItem === offhandItem
+        }
 
     @JvmOverloads
     fun shouldHideOffhand(

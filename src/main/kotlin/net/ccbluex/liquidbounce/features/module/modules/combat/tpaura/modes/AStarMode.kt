@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes
@@ -36,7 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAu
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.stuckChronometer
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.targetSelector
-import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraChoice
+import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraMode
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -46,17 +45,17 @@ import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.minecraft.world.entity.LivingEntity
+import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
-import net.minecraft.core.Vec3i
 
-object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
+object AStarMode : TpAuraMode("AStar"), AStarPathBuilder {
 
     private val maximumDistance by int("MaximumDistance", 95, 50..250)
     private val maximumCost by int("MaximumCost", 250, 50..500)
@@ -131,9 +130,9 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
         renderEnvironmentForWorld(matrixStack) {
             drawLineStrip(
-                argb = Color4b.WHITE.toARGB(),
+                argb = Color4b.WHITE.argb,
                 positions = path.mapToArray {
-                    relativeToCamera(it.toVec3d(0.5, 0.5, 0.5)).toVec3()
+                    relativeToCamera(it.toVec3d(0.5, 0.5, 0.5)).toVec3f()
                 }
             )
         }

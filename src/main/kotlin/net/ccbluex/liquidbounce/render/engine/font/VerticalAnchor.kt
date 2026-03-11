@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
-enum class VerticalAnchor(override val choiceName: String) : NamedChoice {
+enum class VerticalAnchor(override val tag: String) : Tagged {
     TOP("Top") {
         override fun anchorToDrawY(y: Float, height: Float, scale: Float): Float =
             y

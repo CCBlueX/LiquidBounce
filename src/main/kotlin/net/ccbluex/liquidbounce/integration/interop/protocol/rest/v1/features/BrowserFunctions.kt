@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.integration.BrowserScreen
-import net.ccbluex.liquidbounce.integration.browserBrowsers
+import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.browserBrowsers
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpBadRequest
@@ -31,8 +30,8 @@ import net.ccbluex.netty.http.util.httpOk
 // GET /api/v1/client/browser
 @Suppress("UNUSED_PARAMETER")
 fun getBrowserInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    val browserScreen = mc.screen as? BrowserScreen ?: return@apply
-    val browser = browserScreen.browserBrowser ?: return@apply
+    val internetExplorerScreen = mc.screen as? InternetExplorerScreen ?: return@apply
+    val browser = internetExplorerScreen.browserBrowser ?: return@apply
 
     addProperty("url", browser.url)
 })
@@ -41,9 +40,9 @@ fun getBrowserInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
 @Suppress("UNUSED_PARAMETER")
 fun postBrowserNavigate(requestObject: RequestObject) = with(requestObject.asJson<Navigate>()) {
     val url = this.url
-    val browserScreen = mc.screen as? BrowserScreen
+    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
         ?: return@with httpBadRequest("No browser screen")
-    val browser = browserScreen.browserBrowser
+    val browser = internetExplorerScreen.browserBrowser
         ?: return@with httpBadRequest("No browser tab")
 
     browser.url = url
@@ -55,8 +54,7 @@ private data class Navigate(val url: String)
 // POST /api/v1/client/browser/close
 @Suppress("UNUSED_PARAMETER")
 fun postBrowserClose(requestObject: RequestObject) = with(requestObject) {
-    mc.screen as? BrowserScreen
-        ?: return@with httpBadRequest("No browser screen")
+    if (mc.screen !is InternetExplorerScreen) return@with httpBadRequest("No browser screen")
     mc.setScreen(null)
     httpNoContent()
 }
@@ -64,9 +62,9 @@ fun postBrowserClose(requestObject: RequestObject) = with(requestObject) {
 // POST /api/v1/client/browser/reload
 @Suppress("UNUSED_PARAMETER")
 fun postBrowserReload(requestObject: RequestObject) = with(requestObject) {
-    val browserScreen = mc.screen as? BrowserScreen
+    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
         ?: return@with httpBadRequest("No browser screen")
-    val browser = browserScreen.browserBrowser
+    val browser = internetExplorerScreen.browserBrowser
         ?: return@with httpBadRequest("No browser tab")
 
     browser.reload()
@@ -76,9 +74,9 @@ fun postBrowserReload(requestObject: RequestObject) = with(requestObject) {
 // POST /api/v1/client/browser/forceReload
 @Suppress("UNUSED_PARAMETER")
 fun postBrowserForceReload(requestObject: RequestObject) = with(requestObject) {
-    val browserScreen = mc.screen as? BrowserScreen
+    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
         ?: return@with httpBadRequest("No browser screen")
-    val browser = browserScreen.browserBrowser
+    val browser = internetExplorerScreen.browserBrowser
         ?: return@with httpBadRequest("No browser tab")
 
     browser.forceReload()
@@ -88,9 +86,9 @@ fun postBrowserForceReload(requestObject: RequestObject) = with(requestObject) {
 // POST /api/v1/client/browser/forward
 @Suppress("UNUSED_PARAMETER")
 fun postBrowserForward(requestObject: RequestObject) = with(requestObject) {
-    val browserScreen = mc.screen as? BrowserScreen
+    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
         ?: return@with httpBadRequest("No browser screen")
-    val browser = browserScreen.browserBrowser
+    val browser = internetExplorerScreen.browserBrowser
         ?: return@with httpBadRequest("No browser tab")
 
     browser.goForward()
@@ -100,9 +98,9 @@ fun postBrowserForward(requestObject: RequestObject) = with(requestObject) {
 // POST /api/v1/client/browser/back
 @Suppress("UNUSED_PARAMETER")
 fun postBrowserBack(requestObject: RequestObject) = with(requestObject) {
-    val browserScreen = mc.screen as? BrowserScreen
+    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
         ?: return@with httpBadRequest("No browser screen")
-    val browser = browserScreen.browserBrowser
+    val browser = internetExplorerScreen.browserBrowser
         ?: return@with httpBadRequest("No browser tab")
 
     browser.goBack()
@@ -112,9 +110,9 @@ fun postBrowserBack(requestObject: RequestObject) = with(requestObject) {
 // POST /api/v1/client/browser/closeTab
 @Suppress("UNUSED_PARAMETER")
 fun postBrowserCloseTab(requestObject: RequestObject) = with(requestObject) {
-    val browserScreen = mc.screen as? BrowserScreen
+    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
         ?: return@with httpBadRequest("No browser screen")
-    val browser = browserScreen.browserBrowser
+    val browser = internetExplorerScreen.browserBrowser
         ?: return@with httpBadRequest("No browser tab")
 
     browser.close()

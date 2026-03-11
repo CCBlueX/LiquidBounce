@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,21 +22,21 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.item.asItemFacetComparator
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 
 class BlockItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
         private val COMPARATOR =
             ComparatorChain<BlockItemFacet>(
-                ModuleScaffold.BLOCK_COMPARATOR_FOR_INVENTORY.asItemFacetComparator(),
+                ModuleScaffold.BLOCK_COMPARATOR_FOR_INVENTORY.asHolderComparator(),
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.BLOCK, 0)
+        get() = ItemType.BLOCK.defaultCategory
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as BlockItemFacet)

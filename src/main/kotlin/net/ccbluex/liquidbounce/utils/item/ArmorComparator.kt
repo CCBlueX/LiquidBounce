@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.utils.client.roundToDecimalPlaces
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.core.component.DataComponents
-import net.minecraft.world.item.enchantment.Enchantment
-import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.resources.ResourceKey
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
-import net.minecraft.resources.ResourceKey
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.Enchantments
 
 class ArmorParameter(val defensePoints: Float, val toughness: Float)
 

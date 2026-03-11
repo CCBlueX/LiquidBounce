@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,29 +15,27 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 
@@ -53,7 +51,7 @@ import net.minecraft.world.phys.shapes.Shapes
  *
  * @author 1zuna <marco@ccbluex.net>
  */
-object FlyNcpClip : Choice("NcpClip") {
+object FlyNcpClip : Mode("NcpClip") {
 
     private val speed by float("Speed", 7.5f, 2f..10f)
     private val additionalEntrySpeed by float("AdditionalEntry", 2f, 0f..2f)
@@ -66,7 +64,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
     private val maximumDistance by float("MaximumDistance", 200f, 0.1f..500f)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     private var startPosition: Vec3? = null
@@ -78,7 +76,7 @@ object FlyNcpClip : Choice("NcpClip") {
     val tickHandler = tickHandler {
         val startPos = startPosition
 
-        // If fall damage is required, wait for damage to be true
+        // If fall damage is required, wait for damage
         if (fallDamage) {
             tickUntil { damage }
         }
@@ -113,23 +111,23 @@ object FlyNcpClip : Choice("NcpClip") {
 
             // Proceed to jump (just like speeding up) and boost strafe entry
             player.jumpFromGround()
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = (speed + additionalEntrySpeed).toDouble()))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = (speed + additionalEntrySpeed).toDouble())
 
-            // Wait until the player is not on ground
+            // Wait until the player is in air
             tickUntil { !player.onGround() }
 
             // Proceed to strafe with the normal speed
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
         } else if (collidesBottomVertical()) {
             shouldLag = false
 
-            // Disable the module if the player is on ground again
+            // Disable the module when the player touches ground
             ModuleFly.enabled = false
             return@tickHandler
         } else if (startPos.distanceTo(player.position()) > maximumDistance) {
             if (shouldLag) {
-                // If we are lagging, we might abuse this to get us back to safety
-                PacketQueueManager.cancel()
+                // If we are lagging, we can abuse this to get us back to safety
+                BlinkManager.cancel()
                 shouldLag = false
             }
 
@@ -143,7 +141,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
         // Strafe the player to improve control
         if (strafe) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe())
+            player.deltaMovement = player.deltaMovement.withStrafe()
         }
 
         // Set timer speed
@@ -153,15 +151,12 @@ object FlyNcpClip : Choice("NcpClip") {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-        // 3.5 is the minimum, 5 doesn't flag for nofall
-        // Should be a float setting but no easy way to
-        // make settings hidden with booleans
-        //
+        // 3.5 is technically the minimum, 5 is consistent and doesn't flag for nofall
         // Falling from 5 blocks deals 3hp damage.
         if (packet is ServerboundMovePlayerPacket && player.fallDistance > 5) {
             if (!damage && fallDamage) {
                 /**
-                 * Alright, we are able to take fall damge.
+                 * Alright, we are able to take fall damage.
                  * NCP calculates fall damage differently,
                  * this seems as the only proper way to
                  * take damage out of nowhere.
@@ -169,11 +164,11 @@ object FlyNcpClip : Choice("NcpClip") {
                  * It's called ncp setbacks!
                  */
 
-                // Adding 1 to y because it's consistent and easy.
+                // Adding 1 to y because it flags consistently
                 packet.y += 1
 
-                // Requires falldistance = 0 otherwise
-                // we would try to float..
+                // Reset fallDistance so this same logic
+                // doesn't get called multiple times
                 player.fallDistance = 0.0
             }
 
@@ -185,9 +180,9 @@ object FlyNcpClip : Choice("NcpClip") {
     }
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (blink && shouldLag && event.origin == TransferOrigin.OUTGOING) {
-            event.action = PacketQueueManager.Action.QUEUE
+            event.action = BlinkManager.Action.QUEUE
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.integration.theme.component
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
 /**
  * A set of tweaks that can be applied to the Original HUD by the component
  */
-enum class HudComponentTweak(override val choiceName: String) : NamedChoice {
+enum class HudComponentTweak(override val tag: String) : Tagged {
 
     /**
      * Disables the Item Hotbar and draws only the items instead
@@ -44,6 +42,7 @@ enum class HudComponentTweak(override val choiceName: String) : NamedChoice {
     DISABLE_HELD_ITEM_TOOL_TIP("disableHeldItemToolTip"),
     DISABLE_OVERLAY_MESSAGE("disableOverlayMessage"),
     DISABLE_STATUS_EFFECT_OVERLAY("disableStatusEffectOverlay"),
+    DISABLE_LOCATOR_BAR("disableLocatorBar");
 
 
 }

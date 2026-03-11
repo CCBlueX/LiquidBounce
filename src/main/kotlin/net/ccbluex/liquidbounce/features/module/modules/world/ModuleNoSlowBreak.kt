@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * NoSlowBreak module
  *
  * Automatically adjusts breaking speed when in negatively affecting situations.
  */
-object ModuleNoSlowBreak : ClientModule("NoSlowBreak", Category.WORLD) {
+object ModuleNoSlowBreak : ClientModule("NoSlowBreak", ModuleCategories.WORLD) {
     @Suppress("ObjectPropertyNaming")
     private val `when` by multiEnumChoice("When",
         When.MINING_FATIGUE,
@@ -44,7 +44,7 @@ object ModuleNoSlowBreak : ClientModule("NoSlowBreak", Category.WORLD) {
     val water get() = running && When.UNDERWATER in `when`
 
     @Suppress("unused")
-    private enum class When(override val choiceName: String) : NamedChoice {
+    private enum class When(override val tag: String) : Tagged {
         MINING_FATIGUE("MiningFatigue"),
         ON_AIR("OnAir"),
         UNDERWATER("Underwater");

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,23 +21,24 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Rect
+import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
+import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.resources.language.I18n
-import net.minecraft.world.item.enchantment.Enchantment
-import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.core.registries.Registries
+import net.minecraft.resources.ResourceKey
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
-import net.minecraft.resources.ResourceKey
-import net.minecraft.core.registries.Registries
-import net.minecraft.ChatFormatting
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.Enchantments
 import org.joml.Vector2f
 import org.joml.component1
 import org.joml.component2
@@ -120,7 +121,7 @@ private data class EnchantmentInfo(
     val isCurse: Boolean = false
 )
 
-internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNametags, "Enchantment", true) {
+internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags, "Enchantment", true) {
 
     private val slots by multiEnumChoice(
         "Slots",
@@ -188,10 +189,9 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
         }
     }
 
+    private const val OCCLUSION_THRESHOLD = 2f
     // Check if a position would be occluded by another enchantment panel
     private fun isPositionOccluded(x: Float, y: Float): Boolean {
-        val OCCLUSION_THRESHOLD = 2f
-
         return ModuleNametags.drawnEnchantmentAreas.any { (existingX, existingY) ->
             hypot(existingX - x, existingY - y) < OCCLUSION_THRESHOLD
         }
@@ -280,13 +280,12 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
             val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
 
-            ModuleNametags.fontRenderer.draw(
-                cell.processedText,
-                textX,
-                textY,
-                shadow = true,
+            ModuleNametags.fontRenderer.draw(cell.processedText) {
+                this.x = textX
+                this.y = textY
+                shadow = true
                 scale = FIXED_SCALE
-            )
+            }
         }
     }
 

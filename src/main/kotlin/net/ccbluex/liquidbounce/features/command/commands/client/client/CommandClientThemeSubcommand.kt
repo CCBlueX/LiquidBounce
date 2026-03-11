@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client.client
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
@@ -37,9 +38,9 @@ import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.HoverEvent
-import net.minecraft.ChatFormatting
 import net.minecraft.util.Util
 import java.net.URI
 
@@ -122,10 +123,10 @@ object CommandClientThemeSubcommand {
                     .append(regular(" by "))
                     .append(variable(theme.metadata.authors.joinToString(separator = ", ")).copyable())
                     .append(regular(" from "))
-                    .append(variable(theme.origin.choiceName))
+                    .append(variable(theme.origin.tag))
                 ).onClick(
                     ClickEvent.SuggestCommand(
-                        ".client theme set ${theme.metadata.id}"
+                        "${CommandManager.GlobalSettings.prefix}client theme set ${theme.metadata.id}"
                     )
                 ).onHover(
                     HoverEvent.ShowText(

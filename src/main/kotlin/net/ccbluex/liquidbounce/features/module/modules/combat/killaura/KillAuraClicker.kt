@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.rotationTiming
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.simulateInventoryClosing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions
@@ -36,13 +36,12 @@ import net.ccbluex.liquidbounce.utils.clicking.ItemCooldown
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.send1_11_1OpenInventory
+import net.ccbluex.liquidbounce.utils.client.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
-import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.openInventorySilently
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
 import kotlin.math.round
 
@@ -89,9 +88,8 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
             val isExitingRange = !canSeeBox(
                 eyes = ownEyePos,
                 box = targetBox,
-                // Do not care about scan range
-                range = ModuleKillAura.range.toDouble(),
-                wallsRange = ModuleKillAura.wallRange.toDouble()
+                range = ModuleKillAura.range.interactionRange.toDouble(),
+                wallsRange = ModuleKillAura.range.interactionThroughWallsRange.toDouble()
             )
             debugParameter("Is Exiting Range On ${round(ticks)}") { isExitingRange }
             if (isExitingRange) {
@@ -128,18 +126,22 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
     /**
      * Prepare the scene for e.g. attacking an entity.
      */
+    @JvmRecord
     private data class InteractiveScene(
         val rotation: Rotation?,
         val isInInventoryScreen: Boolean = InventoryManager.isInventoryOpen,
     ) {
 
+        /**
+         * @return if we can't attack.
+         */
         @Suppress("CognitiveComplexMethod")
         suspend fun prepare(): Boolean {
             if (simulateInventoryClosing && isInInventoryScreen) {
-                network.send(ServerboundContainerClosePacket(0))
+                network.sendCloseInventory()
             }
 
-            if (player.isBlockAction) {
+            if (player.isBlocking) {
                 if (!KillAuraAutoBlock.enabled && !ModuleMultiActions.mayAttackWhileUsing()) {
                     return true
                 }
@@ -156,7 +158,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
                 return true
             }
 
-            if (rotationTiming == KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK && rotation != null) {
+            if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
                 network.send(
                     PosRot(
                         player.x, player.y, player.z, rotation.yaw, rotation.pitch, player.onGround(),
@@ -168,7 +170,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
         }
 
         fun unprepare() {
-            if (rotationTiming == KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK && rotation != null) {
+            if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
                 network.send(
                     PosRot(
                         player.x, player.y, player.z, player.withFixedYaw(rotation), player.xRot, player.onGround(),
@@ -178,7 +180,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
             }
 
             if (simulateInventoryClosing && isInInventoryScreen) {
-                openInventorySilently()
+                network.send1_11_1OpenInventory()
             }
 
             // If the player was blocking before, we start blocking again after the attack if the tick on is 0

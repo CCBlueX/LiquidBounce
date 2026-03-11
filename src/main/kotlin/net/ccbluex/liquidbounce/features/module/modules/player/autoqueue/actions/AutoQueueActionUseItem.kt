@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,19 +20,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
 
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.AutoQueueItemMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.inventory.SingleItemStackPickMode
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 
 object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
 
-    private val mode = choices("Mode", 0) {
-        arrayOf(AutoQueueItemMode.ByName(it), AutoQueueItemMode.ByItem(it))
+    private val mode = modes("Mode", 0) {
+        arrayOf(SingleItemStackPickMode.ByName(it), SingleItemStackPickMode.ByItem(it))
     }
 
     override suspend fun execute() {
-        val slot = Slots.OffhandWithHotbar.findSlot(mode.activeChoice::test) ?: return
+        val slot = Slots.OffhandWithHotbar.findSlot(mode.activeMode::test) ?: return
 
         SilentHotbar.selectSlotSilently(ModuleAutoQueue, slot, 20)
         waitTicks(1)

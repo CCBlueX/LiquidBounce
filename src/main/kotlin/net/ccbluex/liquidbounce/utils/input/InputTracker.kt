@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 
 package net.ccbluex.liquidbounce.utils.input
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.KeyMapping
-import com.mojang.blaze3d.platform.InputConstants
 import org.lwjgl.glfw.GLFW
 
 /**

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.utils.render.placement
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.fastutil.intObjectArrayMapOf
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.outlineBox
@@ -45,19 +45,19 @@ open class PlacementRenderer(
     val module: EventListener,
     val keep: Boolean = true,
     clump: Boolean = true,
-    defaultColor: Color4b = Color4b(0, 255, 0, 90)
-) : ToggleableConfigurable(module, name, enabled) {
+    defaultColor: Color4b = Color4b.GREEN.alpha(90),
+) : ToggleableValueGroup(module, name, enabled) {
 
     val clump by boolean("Clump", clump)
 
     val startSize by float("StartSize", 1f, 0f..2f)
-    val startSizeCurve by easing("StartCurve", Easing.LINEAR)
+    val startSizeCurve by enumChoice("StartCurve", Easing.LINEAR)
 
     val endSize by float("EndSize", 0.8f, 0f..2f)
-    val endSizeCurve by easing("EndCurve", Easing.LINEAR)
+    val endSizeCurve by enumChoice("EndCurve", Easing.LINEAR)
 
-    val fadeInCurve by easing("FadeInCurve", Easing.LINEAR)
-    val fadeOutCurve by easing("FadeOutCurve", Easing.LINEAR)
+    val fadeInCurve by enumChoice("FadeInCurve", Easing.LINEAR)
+    val fadeOutCurve by enumChoice("FadeOutCurve", Easing.LINEAR)
 
     val inTime by int("InTime", 500, 0..5000, "ms")
     val outTime by int("OutTime", 500, 0..5000, "ms")
@@ -72,23 +72,22 @@ open class PlacementRenderer(
      *
      * By default, there is a handler registered with the number `0`.
      */
-    var placementRenderHandlers = Int2ObjectOpenHashMap<PlacementRenderHandler>()
+    private val placementRenderHandlers = intObjectArrayMapOf(0, PlacementRenderHandler(this))
 
     init {
         doNotIncludeAlways()
-
-        placementRenderHandlers.put(0, PlacementRenderHandler(this))
     }
 
     private var outAnimationsFinished = true
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         val time = System.currentTimeMillis()
         placementRenderHandlers.values.forEach { it.render(event, time) }
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
+    private val repeatable = handler<GameTickEvent> {
         if (!outAnimationsFinished && placementRenderHandlers.values.all { it.isFinished() }) {
             outAnimationsFinished = true
         }
@@ -98,7 +97,7 @@ open class PlacementRenderer(
      * Adds a block to be rendered. First it will make an appear-animation, then
      * it will continue to get rendered until it's removed or the world changes.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      * @param handlerId To which handler the block should be added.
      */
     fun addBlock(pos: BlockPos, update: Boolean = true, box: AABB = pos.outlineBox, handlerId: Int = 0) {
@@ -114,7 +113,7 @@ open class PlacementRenderer(
     /**
      * Removes a block from the rendering, it will get an out animation tho.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      * @param handlerId From which handler the block should be removed.
      */
     fun removeBlock(pos: BlockPos, handlerId: Int = 0) {

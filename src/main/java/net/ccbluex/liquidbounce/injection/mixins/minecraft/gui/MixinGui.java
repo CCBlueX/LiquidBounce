@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -28,23 +29,28 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentTweak;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.AttackRange;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -117,7 +123,7 @@ public abstract class MixinGui {
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
     private void hookFreeCamRenderCrosshairInThirdPerson(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
         if ((ModuleFreeCam.INSTANCE.getRunning() && ModuleFreeCam.INSTANCE.shouldDisableCameraInteract())
-                || HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_CROSSHAIR)) {
+                || HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_CROSSHAIR) || ModuleCrosshair.INSTANCE.getEnabled()) {
             ci.cancel();
         }
     }
@@ -217,7 +223,7 @@ public abstract class MixinGui {
 
         var offHandStack = playerEntity.getOffhandItem();
         if (!hookOffhandItem(offHandStack.isEmpty())) {
-            this.renderSlot(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l++);
+            this.renderSlot(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l);
         }
     }
 
@@ -253,6 +259,21 @@ public abstract class MixinGui {
         if (!ModuleAntiBlind.canRender(DoRender.NAUSEA)) {
             ci.cancel();
         }
+    }
+
+    @ModifyReceiver(
+        method = "renderCrosshair",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/item/component/AttackRange;isInRange(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/phys/Vec3;)Z"
+        )
+    )
+    private AttackRange injectReachAttackRange(AttackRange instance, LivingEntity entity, Vec3 pos) {
+        if (ModuleReach.INSTANCE.getRunning()) {
+            return ModuleReach.INSTANCE.getEntity().adjustAttackRange(instance);
+        }
+
+        return instance;
     }
 
 }

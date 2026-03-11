@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,26 +24,26 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.render.entity
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 /**
  * Log off spot
  *
  * Creates a fake player entity when a player logs off.
  */
-object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
+object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
 
     @JvmRecord
     private data class LoggedOffPlayer(
@@ -124,7 +124,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
     }
 
     fun isLogoffEntity(state: LivingEntityRenderState): Boolean {
-        return isLogoffEntity((state as EntityRenderStateAddition).`liquid_bounce$getEntity`()?.id ?: return false)
+        return isLogoffEntity(state.entity?.id ?: return false)
     }
 
     fun isLogoffEntity(entityId: Int) = this.running

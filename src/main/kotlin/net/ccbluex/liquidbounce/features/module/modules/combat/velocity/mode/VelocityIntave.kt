@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 object VelocityIntave : VelocityMode("Intave") {
 
-    private class ReduceOnAttack(parent: EventListener?) : ToggleableConfigurable(
+    private class ReduceOnAttack(parent: EventListener?) : ToggleableValueGroup(
         parent, "ReduceOnAttack",
         true
     ) {
@@ -42,8 +43,10 @@ object VelocityIntave : VelocityMode("Intave") {
         @Suppress("unused")
         private val attackHandler = handler<AttackEntityEvent> { event ->
             if (player.hurtTime in hurtTime && System.currentTimeMillis() - lastAttackTime <= lastAttackTimeToReduce) {
-                player.deltaMovement.x *= reduceFactor
-                player.deltaMovement.z *= reduceFactor
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = reduceFactor,
+                    factorZ = reduceFactor,
+                )
             }
             lastAttackTime = System.currentTimeMillis()
         }
@@ -53,14 +56,14 @@ object VelocityIntave : VelocityMode("Intave") {
         tree(ReduceOnAttack(this))
     }
 
-    private class JumpReset(parent: EventListener?) : ToggleableConfigurable(
+    private class JumpReset(parent: EventListener?) : ToggleableValueGroup(
         parent, "JumpReset",
         true
     ) {
 
         private val chance by float("Chance", 50f, 0f..100f, "%")
 
-        private inner class Randomize : ToggleableConfigurable(this, "Randomize", false) {
+        private inner class Randomize : ToggleableValueGroup(this, "Randomize", false) {
             val delayTicks by intRange("DelayTicks", 0..5, 0..10)
         }
 

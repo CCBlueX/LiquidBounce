@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,14 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
+import net.minecraft.core.Holder
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.ItemStack
-import net.minecraft.core.Holder
 
 abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
 
@@ -34,7 +34,7 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
         parent: StatusEffectBasedBuff,
         name: String,
         val statusEffect: Holder<MobEffect>,
-    ) : ToggleableConfigurable(parent, name, true) {
+    ) : ToggleableValueGroup(parent, name, true) {
 
         open fun isValid(effect: MobEffectInstance, health: Float): Boolean {
             return enabled && statusEffect == effect.effect && !player.hasEffect(statusEffect)
@@ -56,7 +56,7 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
         }
     }
 
-    private class Potions(parent: StatusEffectBasedBuff) : Configurable("Potions") {
+    private class Potions(parent: StatusEffectBasedBuff) : ValueGroup("Potions") {
 
         private val healthPotion = HealthBasedPotion(parent, "Health", MobEffects.INSTANT_HEALTH)
         private val regenPotion = HealthBasedPotion(parent, "Regen", MobEffects.REGENERATION)

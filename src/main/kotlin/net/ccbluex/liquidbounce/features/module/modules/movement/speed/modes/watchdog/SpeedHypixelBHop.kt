@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -32,16 +30,16 @@ import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.network.isMovementYFallDamage
-import net.minecraft.world.effect.MobEffects
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.world.effect.MobEffects
 
 /**
  * @anticheat Watchdog (NCP)
  * @anticheatVersion 12.12.2023
  * @testedOn hypixel.net
  */
-class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("HypixelBHop", parent) {
+class SpeedHypixelBHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelBHop", parent) {
 
     private val horizontalAcceleration by boolean("HorizontalAcceleration", true)
     private val verticalAcceleration by boolean("VerticalAcceleration", true)
@@ -72,7 +70,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
     val repeatable = tickHandler {
         if (player.onGround()) {
             // Strafe when on ground
-            player.setDeltaMovement(player.deltaMovement.withStrafe())
+            player.deltaMovement = player.deltaMovement.withStrafe()
             return@tickHandler
         } else {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
@@ -90,7 +88,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
                 0.0
             }
 
-            player.setDeltaMovement(player.deltaMovement.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod))
+            player.deltaMovement = player.deltaMovement.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod)
         }
     }
 
@@ -101,7 +99,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
             0.0
         }
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(atLeast)))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(atLeast))
     }
 
     /**
@@ -126,7 +124,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
             } else {
                 player.horizontalSpeed
             }
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed)
         } else if (packet is ClientboundPlayerPositionPacket) {
             wasFlagged = true
         }

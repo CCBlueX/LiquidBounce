@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,11 @@ package net.ccbluex.liquidbounce.event
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.minecraft.ReportedException
+import org.slf4j.LoggerFactory
 import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
 import java.util.function.Predicate
@@ -32,6 +34,8 @@ import kotlin.coroutines.resume
 typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
 
 object CoroutineTicker : EventListener {
+
+    private val logger = LoggerFactory.getLogger("$CLIENT_NAME/CoroutineTicker")
 
     // Running callbacks
     private val runningList = ReferenceArrayList<BooleanSupplier>()
@@ -49,17 +53,34 @@ object CoroutineTicker : EventListener {
     }
 
     /**
-     * We want it to run before everything else, so we set the priority to [FIRST_PRIORITY]
-     * This is because we want to tick the existing tasks before new ones are added and might be ticked
-     * in the same tick
+     * We want it to run before everything else, this is because we want to tick the existing tasks before
+     * new ones are added and might be ticked in the same tick
      */
-    @Suppress("unused")
-    private val taskTicker = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+    fun tick() {
         runningList.addAll(pendingList)
         pendingList.clear()
-        runningList.removeIf(Predicate(BooleanSupplier::getAsBoolean))
+        runningList.removeIf(Predicate {
+            try {
+                it.asBoolean
+            } catch (e: ReportedException) {
+                throw e
+            } catch (e: Throwable) {
+                logger.error("Unhandled exception thrown by callback", e)
+                false
+            }
+        })
     }
 
+}
+
+/**
+ * Schedule a task to run at next [GameTickEvent], before all event handlers.
+ */
+fun nextTick(runnable: Runnable) {
+    CoroutineTicker.register {
+        runnable.run()
+        true
+    }
 }
 
 /**

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.world.chuck;
@@ -29,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SkyLightEngine.class)
-public class MixinSkyLightEngine {
+public abstract class MixinSkyLightEngine {
     @Inject(at = @At("HEAD"), method = "propagateIncrease", cancellable = true)
     private void hookNoBlindSkyLightUpdates(long blockPos, long l, int lightLevel, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.SKYLIGHT_UPDATES)) {

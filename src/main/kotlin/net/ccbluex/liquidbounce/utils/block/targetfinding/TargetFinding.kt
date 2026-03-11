@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,30 +18,39 @@
  */
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.outlineBox
+import net.ccbluex.liquidbounce.utils.block.toBlockPos
 import net.ccbluex.liquidbounce.utils.client.getFace
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.math.centerPointOf
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.world.level.block.SupportType
-import net.minecraft.world.entity.Pose
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.SupportType
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
+import java.util.function.ToDoubleFunction
 
-enum class AimMode(override val choiceName: String) : NamedChoice {
+private inline fun <T> compareBy(keyExtractor: ToDoubleFunction<T>): Comparator<T> =
+    Comparator.comparingDouble(keyExtractor)
+
+enum class AimMode(override val tag: String) : Tagged {
     CENTER("Center"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),
@@ -63,9 +72,27 @@ class BlockPlacementTargetFindingOptions(
 ) {
     companion object {
         @JvmField
-        val PRIORITIZE_LEAST_BLOCK_DISTANCE: Comparator<Vec3i> = compareByDescending { vec ->
-            player.distanceToSqr(vec.x.toDouble(), vec.y.toDouble(), vec.z.toDouble())
+        val PRIORITIZE_LEAST_BLOCK_DISTANCE: Comparator<Vec3i> = compareBy { vec ->
+            -player.distanceToSqr(vec.x.toDouble(), vec.y.toDouble(), vec.z.toDouble())
         }
+
+        @JvmStatic
+        fun leastBlockDistanceToLine(optimalLine: Line): Comparator<Vec3i> =
+            compareBy { vec ->
+                val blockPos = vec.toBlockPos()
+                val blockState = world.getBlockState(blockPos)
+                val box = blockState.outlineBox(blockPos)
+                -optimalLine.distanceToSqr(box)
+            }
+
+        @JvmStatic
+        fun leastBlockDistanceToPos(pos: Vec3): Comparator<Vec3i> =
+            compareBy { vec ->
+                val blockPos = vec.toBlockPos()
+                val blockState = world.getBlockState(blockPos)
+                val box = blockState.outlineBox(blockPos)
+                -box.distanceToSqr(pos)
+            }
     }
 }
 
@@ -79,7 +106,15 @@ class BlockPlacementTargetFindingOptions(
 class BlockOffsetOptions(
     val offsetsToInvestigate: List<Vec3i>,
     val priorityComparator: Comparator<Vec3i>,
-)
+) {
+    companion object {
+        @JvmField
+        val Default = BlockOffsetOptions(
+            BlockPosOffsets.NO_OFFSET.offsets,
+            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+        )
+    }
+}
 
 /**
  * Decides how scaffold processes the faces of the considered target blocks.
@@ -104,7 +139,10 @@ class FaceHandlingOptions(
 class PlayerLocationOnPlacement(
     val position: Vec3,
     val pose: Pose = player.pose
-)
+) {
+    val eyeHeight: Float get() = player.getEyeHeight(pose)
+    val eyePos: Vec3 get() = position.add(0.0, eyeHeight.toDouble(), 0.0)
+}
 
 /**
  * A draft of a block placement
@@ -121,20 +159,18 @@ private data class BlockTargetPlan(
 
     // FIXME: find actual point with raycast
     /**
-     * The center of the target block face
+     * The center on the target block face
+     *
+     * Note: no check for raycast!
      */
     val targetPositionOnBlock: Vec3 =
-        blockPosToInteractWith
-            .center
-            .add(Vec3.atLowerCornerOf(interactionDirection.unitVec3i).scale(0.5))
+        AABB(blockPosToInteractWith).centerPointOf(interactionDirection)
 
     /**
      * cosine of the angle between the expected player's eye position and the normal of the targeted face.
      */
-    fun calculateAngleToPlayerEyeCosine(playerPos: Vec3): Double {
-        val deltaToPlayerPos = playerPos
-            .add(0.0, mc.player!!.eyeHeight.toDouble(), 0.0)
-            .subtract(targetPositionOnBlock)
+    fun calculateAngleToPlayerEyeCosine(eyePos: Vec3): Double {
+        val deltaToPlayerPos = eyePos.subtract(targetPositionOnBlock)
 
         return deltaToPlayerPos.dot(Vec3.atLowerCornerOf(interactionDirection.unitVec3i)) / deltaToPlayerPos.length()
     }
@@ -179,18 +215,14 @@ private fun findBestTargetPlanForTargetPosition(
 ): BlockTargetPlan? {
     val directions = Direction.entries
 
-    val playerEyePositionOnPlacement = targetFindingOptions.playerLocationOnPlacement.position.add(
-        0.0,
-        player.eyeHeight.toDouble(),
-        0.0
-    )
+    val playerEyePositionOnPlacement = targetFindingOptions.playerLocationOnPlacement.eyePos
 
     val options = directions.mapNotNull { direction ->
         val targetPlan = mode.getTargetPlan(posToInvestigate, direction) ?: return@mapNotNull null
 
         // Check if the target face is pointing away from the player
         if (!targetFindingOptions.faceHandlingOptions.considerFacingAwayFaces &&
-            targetPlan.calculateAngleToPlayerEyeCosine(targetFindingOptions.playerLocationOnPlacement.position) < 0) {
+            targetPlan.calculateAngleToPlayerEyeCosine(playerEyePositionOnPlacement) < 0) {
             return@mapNotNull null
         }
 
@@ -206,8 +238,32 @@ private fun findBestTargetPlanForTargetPosition(
     }
 }
 
-@JvmRecord
-data class PointOnFace(val face: AlignedFace, val point: Vec3)
+/**
+ * @return null if it is impossible to target the block with the given parameters
+ */
+fun getTargetPlanForPositionAndDirection(
+    pos: BlockPos,
+    direction: Direction,
+    mode: BlockTargetingMode
+): BlockTargetPlan? {
+    when (mode) {
+        BlockTargetingMode.PLACE_AT_NEIGHBOR -> {
+            val currPos = pos.offset(direction.opposite.unitVec3i)
+            val currState = currPos.getState() ?: return null
+
+            if (currState.canBeReplaced()) {
+                return null
+            }
+
+            return BlockTargetPlan(currPos, direction)
+        }
+        BlockTargetingMode.REPLACE_EXISTING_BLOCK -> {
+            return BlockTargetPlan(pos, direction)
+        }
+    }
+}
+
+private class PointOnFace(val face: AlignedFace, val point: Vec3)
 
 fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFindingOptions): BlockPlacementTarget? {
     val state = pos.getState()!!
@@ -258,11 +314,7 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
 
         val rotation = Rotation.lookingAt(
             point = pointOnFace.point.add(Vec3.atLowerCornerOf(currPos)),
-            from = options.playerLocationOnPlacement.position.add(
-                0.0,
-                player.getEyeHeight(options.playerLocationOnPlacement.pose).toDouble(),
-                0.0
-            )
+            from = options.playerLocationOnPlacement.eyePos,
         )
 
         return BlockPlacementTarget(
@@ -364,4 +416,3 @@ class PlacementPlan(
             && (!sideMustMatch || rayTraceResult.direction == this.placementTarget.direction)
     }
 }
-

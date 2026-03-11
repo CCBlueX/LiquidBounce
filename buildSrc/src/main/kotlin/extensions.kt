@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,11 @@
  */
 
 import groovy.json.JsonSlurper
+import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.exclude
 import java.net.URI
 import java.net.http.HttpClient
@@ -48,8 +51,9 @@ fun Task.getContributors(repoOwner: String, repoName: String): List<String> = tr
         .header("X-GitHub-Api-Version", "2022-11-28")
         .header("Accept", "application/vnd.github+json")
         .apply {
-            if (!githubToken.isNullOrBlank())
+            if (!githubToken.isNullOrBlank()) {
                 header("Authorization", "Bearer $githubToken")
+            }
         }
 
     fun HttpClient.fetchLastPage(baseUrl: String, perPage: Int): Int {
@@ -100,7 +104,8 @@ fun Task.getContributors(repoOwner: String, repoName: String): List<String> = tr
                         emptyList()
                     }
                 } else {
-                    logger.error("Failed to get GitHub API response for $repoOwner:$repoName (HTTP ${response.statusCode()}): ${response.body().bufferedReader().readText()}")
+                    logger.error("Failed to get GitHub API response for $repoOwner:$repoName " +
+                        "(HTTP ${response.statusCode()}): ${response.body().bufferedReader().readText()}")
                     emptyList()
                 }
             }
@@ -112,6 +117,27 @@ fun Task.getContributors(repoOwner: String, repoName: String): List<String> = tr
 } catch (e: Exception) {
     logger.error("Failed to fetch contributors of $repoOwner:$repoName", e)
     emptyList()
+}
+
+fun Project.addResolvedDependencies(
+    from: Configuration,
+    vararg toConfigurations: String,
+) {
+    val resolvedDeps = from.incoming.resolutionResult.allDependencies
+        .map { dep ->
+            val requested = dep.requested.displayName
+            dependencies.create(requested) {
+                (this as? ModuleDependency)?.isTransitive = false
+            }
+        }
+
+    toConfigurations.forEach { configName ->
+        configurations.named(configName).configure {
+            withDependencies {
+                addAll(resolvedDeps)
+            }
+        }
+    }
 }
 
 /**
@@ -146,6 +172,7 @@ fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
     exclude(group = "org.slf4j", module = "slf4j-api")
     exclude(group = "com.mojang", module = "authlib")
+    exclude(group = "org.lwjgl", module = "lwjgl")
 
     exclude(group = "io.netty", module = "netty-buffer")
     exclude(group = "io.netty", module = "netty-codec")

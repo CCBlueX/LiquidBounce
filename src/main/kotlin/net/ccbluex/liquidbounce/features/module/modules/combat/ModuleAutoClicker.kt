@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -37,15 +37,15 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.world.level.block.DoorBlock
-import net.minecraft.world.level.block.FenceGateBlock
-import net.minecraft.world.level.block.TrapDoorBlock
 import net.minecraft.client.KeyMapping
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Items
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.level.block.DoorBlock
+import net.minecraft.world.level.block.FenceGateBlock
+import net.minecraft.world.level.block.TrapDoorBlock
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 
@@ -55,9 +55,9 @@ import net.minecraft.world.phys.EntityHitResult
  * Clicks automatically when holding down a mouse button.
  */
 
-object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases = listOf("TriggerBot")) {
+object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, aliases = listOf("TriggerBot")) {
 
-    object AttackButton : ToggleableConfigurable(this, "Attack", true) {
+    object AttackButton : ToggleableValueGroup(this, "Attack", true) {
 
         val clicker = tree(Clicker(this, mc.options.keyAttack))
 
@@ -69,21 +69,21 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
 
-        private enum class ObjectiveType(override val choiceName: String) : NamedChoice {
+        private enum class ObjectiveType(override val tag: String) : Tagged {
             ENEMY("Enemy"),
             ENTITY("Entity"),
             BLOCK("Block"),
             ANY("Any")
         }
 
-        private enum class Weapon(override val choiceName: String) : NamedChoice {
+        private enum class Weapon(override val tag: String) : Tagged {
             SWORD("Sword"),
             AXE("Axe"),
             BOTH("Both"),
             ANY("Any")
         }
 
-        private enum class Use(override val choiceName: String) : NamedChoice {
+        private enum class Use(override val tag: String) : Tagged {
             WAIT("Wait"),
             STOP("Stop"),
             IGNORE("Ignore")
@@ -149,7 +149,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
 
     }
 
-    object UseButton : ToggleableConfigurable(this, "Use", false) {
+    object UseButton : ToggleableValueGroup(this, "Use", false) {
         val clicker = tree(Clicker(this, mc.options.keyUse, null))
         internal val holdingItemsForIgnore by items(
             "HoldingItemsForIgnore",
@@ -235,7 +235,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 }
             }
 
-            if (player.startedUsingItem) {
+            if (player.isUsingItem) {
                 val encounterItemUse = encounterItemUse()
 
                 if (encounterItemUse) {

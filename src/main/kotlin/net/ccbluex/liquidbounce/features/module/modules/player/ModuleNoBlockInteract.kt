@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MinecraftAccessor
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -36,7 +36,7 @@ import net.minecraft.world.phys.BlockHitResult
  *
  * Allows to use items without interacting with blocks.
  */
-object ModuleNoBlockInteract : ClientModule("NoBlockInteract", Category.PLAYER) {
+object ModuleNoBlockInteract : ClientModule("NoBlockInteract", ModuleCategories.PLAYER) {
 
     private var sneaking = false
     private var interacting = false

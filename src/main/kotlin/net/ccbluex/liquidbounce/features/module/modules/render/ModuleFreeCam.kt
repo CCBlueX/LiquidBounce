@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,46 +20,55 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
+import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.client.CameraType
-import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
 import org.lwjgl.glfw.GLFW
+import java.util.function.Predicate
+import kotlin.math.abs
 
 /**
  * FreeCam module
  *
  * Allows you to move out of your body.
  */
-object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = true) {
+object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableOnQuit = true) {
 
     private val speed by float("Speed", 1f, 0.1f..2f)
 
@@ -67,26 +76,56 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
      * Allows to interact from the camera perspective. This is very useful to interact with blocks that
      * are behind the player or walls. Similar functionality to the GhostBlock module.
      */
-    private object CameraInteract : ToggleableConfigurable(ModuleFreeCam, "AllowCameraInteract", true) {
+    private object CameraInteract : ToggleableValueGroup(ModuleFreeCam, "AllowCameraInteract", true) {
         val lookAt by boolean("LookAt", true)
     }
+
+    private class CancelTrigger<E : Event>(val eventType: Class<E>, val predicate: Predicate<E>)
+    private inline fun <reified E : Event> cancelTrigger(predicate: Predicate<E>) =
+        CancelTrigger(E::class.java, predicate)
 
     /**
      * This is useful for cancelling FreeCam on certain events.
      * For example, when the player takes damage.
      */
-    private enum class CancelOn(override val choiceName: String) : NamedChoice {
-        DAMAGE("Damage"),
-        MOVE("Move"),
-        LIQUID("Liquid"),
+    private enum class CancelOn(
+        override val tag: String,
+        private val trigger: CancelTrigger<out Event>,
+    ) : Tagged {
+        DAMAGE("Damage", cancelTrigger<HealthUpdateEvent> { event ->
+            event.health < event.previousHealth
+        }),
+        TELEPORT("Teleport", cancelTrigger<PacketEvent> { event ->
+            // ClientboundPlayerPositionPacket not trigger PlayerMoveEvent
+            event.packet is ClientboundPlayerPositionPacket
+        }),
+        MOVE("Move", cancelTrigger<PlayerMoveEvent> { event ->
+            // Don't check movement.y because it's gravity / falling motion
+            abs(event.movement.x) > 0 || abs(event.movement.z) > 0
+        }),
+        LIQUID("Liquid", cancelTrigger<PlayerTickEvent> {
+            player.isInLiquid
+        });
+
+        init {
+            EventManager.registerEventHook(
+                this.trigger.eventType,
+                @Suppress("UNCHECKED_CAST")
+                newEventHook { event ->
+                    if (this in cancelOn && (this.trigger.predicate as Predicate<Event>).test(event)) {
+                        ModuleFreeCam.enabled = false
+                    }
+                }
+            )
+        }
     }
 
-    private val cancelOn by multiEnumChoice("CancelOn", emptyEnumSet<CancelOn>())
+    private val cancelOn by multiEnumChoice("CancelOn", enumSetOf<CancelOn>())
 
     /**
      * Navigation configuration for the FreeCam module
      */
-    private object Navigation : NavigationBaseConfigurable<Unit>(ModuleFreeCam, "Navigation", false) {
+    private object Navigation : NavigationBaseValueGroup<Unit>(ModuleFreeCam, "Navigation", false) {
 
         private val controlKey by key("Key", InputConstants.KEY_LCONTROL)
 
@@ -96,12 +135,14 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
         /**
          * Creates context for navigation
          */
-        override fun createNavigationContext() { }
+        override fun createNavigationContext() {
+            // Nothing to do
+        }
 
         /**
          * Calculates the desired position to move towards
          *
-         * @return Target position as Vec3d
+         * @return Target position as [Vec3]
          */
         override fun calculateGoalPosition(context: Unit): Vec3? {
             return if (shouldBeGoing) {
@@ -117,7 +158,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
 
     private val keepSneaking by boolean("KeepSneaking", false)
 
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     init {
         tree(CameraInteract)
@@ -161,8 +202,8 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
 
         // Reset player rotation
         val rotation = RotationManager.currentRotation ?: RotationManager.serverRotation
-        player.setYRot(rotation.yaw)
-        player.setXRot(rotation.pitch)
+        player.yRot = rotation.yaw
+        player.xRot = rotation.pitch
         super.onDisabled()
     }
 
@@ -223,32 +264,14 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
             return@handler
         }
 
-        RotationManager.setRotationTarget(rotationsConfigurable.toRotationTarget(lookAt),
+        RotationManager.setRotationTarget(rotations.toRotationTarget(lookAt),
             Priority.NOT_IMPORTANT, ModuleFreeCam)
     }
 
     @Suppress("unused")
-    private val healthHandler = handler<HealthUpdateEvent> { event ->
-        val tookDamage = event.health < event.previousHealth
-
-        if (CancelOn.DAMAGE in cancelOn && tookDamage) {
-            this.enabled = false
-        }
-    }
-
-    @Suppress("unused")
-    private val moveHandler = handler<PlayerMoveEvent> { event ->
-        // Don't check movement.y because it's gravity / falling motion
-        if (CancelOn.MOVE in cancelOn && (event.movement.y > 0 || event.movement.z > 0)) {
-            this.enabled = false
-        }
-    }
-
-    @Suppress("unused")
-    private val tickHandler = handler<PlayerTickEvent> { event ->
-        if (CancelOn.LIQUID in cancelOn && player.isInLiquid) {
-            this.enabled = false
-        }
+    private val alwaysCancelOnHandler = handler<WorldChangeEvent> {
+        // If not, will get stuck when world change
+        enabled = false
     }
 
     fun applyCameraPosition(entity: Entity, tickDelta: Float) {
@@ -273,7 +296,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
      * Modify the raycast position
      */
     fun modifyRaycast(original: Vec3, entity: Entity, tickDelta: Float): Vec3 {
-        if (!running || entity != mc.player || !CameraInteract.running || !PositionState.available) {
+        if (!running || entity !is LocalPlayer || !CameraInteract.running || !PositionState.available) {
             return original
         }
 
@@ -286,7 +309,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
         if (!PositionState.available) return null
 
         val cameraPosition = PositionState.interpolate(1f)
-        val target = raycast(
+        val target = traceFromPoint(
             range = 200.0,
             start = cameraPosition,
             direction = mc.cameraEntity?.rotation?.directionVector ?: return null

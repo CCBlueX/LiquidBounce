@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
 import net.minecraft.util.Mth
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.round
 
@@ -112,10 +112,10 @@ object ScaffoldMovementPlanner {
 
     private fun debugLastPlacedBlocks(lastPlacedBlocksToConsider: List<BlockPos>) {
         lastPlacedBlocksToConsider.forEachIndexed { idx, pos ->
-            val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 255.0).toInt()
+            val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 200.0).toInt()
 
             ModuleScaffold.debugGeometry("lastPlacedBlock$idx") {
-                ModuleDebug.DebuggedBox(AABB(pos), Color4b(alpha, alpha, 255, 127))
+                ModuleDebug.DebuggedBox(AABB(pos), Color4b(133, 155, 255, alpha))
             }
         }
     }
@@ -183,6 +183,8 @@ object ScaffoldMovementPlanner {
      * Remembers the last placed blocks and removes old ones.
      */
     fun trackPlacedBlock(target: BlockPos) {
+        if (target == lastPlacedBlocks.lastOrNull()) return
+
         while (lastPlacedBlocks.size >= MAX_LAST_PLACE_BLOCKS) {
             lastPlacedBlocks.removeFirst()
         }

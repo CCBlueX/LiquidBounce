@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.integration.task
@@ -24,16 +22,16 @@ package net.ccbluex.liquidbounce.integration.task
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.integration.task.type.Task
-import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.network.chat.Component
-import net.minecraft.ChatFormatting
 import net.minecraft.util.ARGB
 import java.text.DecimalFormat
 
@@ -48,7 +46,8 @@ class TaskProgressScreen(
     private val percentFormat = DecimalFormat("0.0")
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, partialTick: Float) {
-        renderBackground(context, mouseX, mouseY, partialTick)
+        renderMenuBackground(context)
+
         val cx = width / 2.0
         val cy = height / 2.0
 
@@ -162,8 +161,8 @@ class TaskProgressScreen(
     }
 
     override fun tick() {
-        if (taskManager.isCompleted && (BrowserBackendManager.browserBackend.isInitialized ||
-                BrowserBackendManager.isSkippingBrowser)) {
+        if (taskManager.isCompleted && (BrowserBackendManager.backend?.isInitialized == true ||
+                BrowserBackendManager.isSkipping)) {
             mc.setScreen(TitleScreen())
         }
     }

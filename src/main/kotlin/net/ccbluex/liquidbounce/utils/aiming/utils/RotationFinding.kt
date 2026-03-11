@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@
 package net.ccbluex.liquidbounce.utils.aiming.utils
 
 import net.ccbluex.fastutil.step
-import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.FULL_BOX
@@ -35,22 +34,27 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.kotlin.range
 import net.ccbluex.liquidbounce.utils.math.firstHit
+import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.world.phys.HitResult
+import net.ccbluex.liquidbounce.utils.raytracing.clip
+import net.ccbluex.liquidbounce.utils.raytracing.isFacingBlock
+import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
 import kotlin.math.max
 
 private val ITERATION_PROPORTIONS = 0.05..0.95 step 0.1
@@ -63,17 +67,19 @@ fun raytraceBlockRotation(
     range: Double,
     wallsRange: Double,
 ): RotationWithVector? {
-    val offset = Vec3.atLowerCornerOf(pos)
-    val shape = state.getShape(world, pos, CollisionContext.of(player))
+    val outlineShape = state.getShape(world, pos, CollisionContext.of(player))
 
-    for (box in shape.toAabbs().sortedByDescending { it.size }) {
+    for (box in outlineShape.toAabbs().sortedByDescending { it.size }) {
+        val boxWithOffset = box.move(pos)
         return raytraceBox(
             eyes,
-            box.move(offset),
+            boxWithOffset,
             range,
             wallsRange,
-            visibilityPredicate = BlockVisibilityPredicate(pos),
-            rotationPreference = LeastDifferencePreference(Rotation.lookingAt(point = pos.center, from = eyes))
+            visibilityPredicate = VisibilityPredicate.Block(pos, null),
+            rotationPreference = LeastDifferencePreference(
+                Rotation.lookingAt(point = boxWithOffset.center, from = eyes)
+            ),
         ) ?: continue
     }
 
@@ -110,7 +116,7 @@ fun canSeeUpperBlockSide(
             }
 
             // check if target is visible to eyes
-            val visible = facingBlock(eyes, vec3, pos, Direction.UP)
+            val visible = player.isFacingBlock(eyes, vec3, pos, Direction.UP)
 
             // skip because not visible in range
             if (!visible && distance > wallsRangeSquared) {
@@ -193,29 +199,45 @@ private class PrePlaningTracker(
 }
 
 fun interface VisibilityPredicate {
+
     fun isVisible(
         eyesPos: Vec3,
         targetSpot: Vec3,
     ): Boolean
-}
 
-class BlockVisibilityPredicate(private val expectedTarget: BlockPos) : VisibilityPredicate {
-    override fun isVisible(
-        eyesPos: Vec3,
-        targetSpot: Vec3,
-    ): Boolean {
-        return facingBlock(eyesPos, targetSpot, this.expectedTarget)
+    @JvmRecord
+    data class Block(
+        val blockPos: BlockPos,
+        val side: Direction?,
+    ) : VisibilityPredicate {
+        override fun isVisible(eyesPos: Vec3, targetSpot: Vec3): Boolean =
+            player.isFacingBlock(eyesPos, targetSpot, this.blockPos, this.side)
     }
-}
 
-object BoxVisibilityPredicate : VisibilityPredicate, DebuggedOwner {
-    override fun isVisible(
-        eyesPos: Vec3,
-        targetSpot: Vec3,
-    ): Boolean {
-//        debugGeometry("TargetSpot") { ModuleDebug.DebuggedPoint(targetSpot, color = Color4b.LIQUID_BOUNCE) }
+    data object Outline : VisibilityPredicate {
+        override fun isVisible(
+            eyesPos: Vec3,
+            targetSpot: Vec3
+        ): Boolean = world.clip(
+            eyesPos,
+            targetSpot,
+            ClipContext.Block.OUTLINE,
+            ClipContext.Fluid.NONE,
+            player,
+        ).type == HitResult.Type.MISS
+    }
 
-        return canSeePointFrom(eyesPos, targetSpot)
+    data object Collider : VisibilityPredicate {
+        override fun isVisible(
+            eyesPos: Vec3,
+            targetSpot: Vec3
+        ): Boolean = world.clip(
+            eyesPos,
+            targetSpot,
+            ClipContext.Block.COLLIDER,
+            ClipContext.Fluid.NONE,
+            player,
+        ).type == HitResult.Type.MISS
     }
 }
 
@@ -244,13 +266,13 @@ fun raytraceBlockSide(
     eyes: Vec3,
     rangeSquared: Double,
     wallsRangeSquared: Double,
-    shapeContext: CollisionContext
+    collisionContext: CollisionContext,
 ): RotationWithVector? {
-    pos.getState()?.getShape(world, pos, shapeContext)?.let { shape ->
+    pos.getState()?.getShape(world, pos, collisionContext)?.let { shape ->
         val sortedShapes = shape.toAabbs().sortedByDescending { it.size }
         for (boxShape in sortedShapes) {
             val box = boxShape.move(pos)
-            val visibilityPredicate = BoxVisibilityPredicate
+            val visibilityPredicate = VisibilityPredicate.Outline
 
             val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION)
 
@@ -306,7 +328,7 @@ fun raytraceBox(
     box: AABB,
     range: Double,
     wallsRange: Double,
-    visibilityPredicate: VisibilityPredicate = BoxVisibilityPredicate,
+    visibilityPredicate: VisibilityPredicate = VisibilityPredicate.Outline,
     rotationPreference: RotationPreference = LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION,
     futureTarget: AABB? = null,
     prioritizeVisible: Boolean = true
@@ -416,9 +438,9 @@ fun canSeeBox(eyes: Vec3, box: AABB, range: Double, wallsRange: Double, expected
         // check if the target is visible to eyes
         val visible =
             if (expectedTarget != null) {
-                facingBlock(eyes, posInBox, expectedTarget)
+                player.isFacingBlock(eyes, posInBox, expectedTarget)
             } else {
-                canSeePointFrom(eyes, posInBox)
+                hasLineOfSight(eyes, posInBox)
             }
 
         // skip because not visible in range
@@ -484,7 +506,7 @@ fun raytraceUpperBlockSide(
         }
 
         // check if target is visible to eyes
-        val visible = facingBlock(eyes, vec3, expectedTarget, Direction.UP)
+        val visible = player.isFacingBlock(eyes, vec3, expectedTarget, Direction.UP)
 
         // skip because not visible in range
         if (!visible && distance > wallsRangeSquared) {
@@ -576,7 +598,7 @@ fun findClosestPointOnBlockInLineWithCrystal(
             }
 
             // skip because not visible in range
-            if (distance > wallsRangeSquared && !facingBlock(eyes, vec3, expectedTarget, it)) {
+            if (distance > wallsRangeSquared && !player.isFacingBlock(eyes, vec3, expectedTarget, it)) {
                 return@range
             }
 
@@ -617,7 +639,7 @@ private fun checkCurrentRotation(
     val distance = eyes.distanceToSqr(pos)
 
     val visibleThroughWalls = distance <= wallsRange.sq() ||
-        facingBlock(eyes, pos, expectedTarget, currentHit.direction)
+        player.isFacingBlock(eyes, pos, expectedTarget, currentHit.direction)
 
     if (intersects && distance <= range.sq() && visibleThroughWalls) {
         val rotation = Rotation.lookingAt(point = pos, from = eyes)

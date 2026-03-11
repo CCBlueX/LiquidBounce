@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinEndCrystalModel
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinEndCrystalRenderer
 
@@ -28,11 +28,11 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinEndCrysta
  *
  * Tweaks how crystal models behave.
  *
- * Mixins: [MixinEndCrystalEntityModel], [MixinEndCrystalEntityRenderer]
+ * Mixins: [MixinEndCrystalModel], [MixinEndCrystalRenderer]
  *
  * @author ccetl
  */
-object ModuleCrystalView : ClientModule("CrystalView", Category.RENDER) {
+object ModuleCrystalView : ClientModule("CrystalView", ModuleCategories.RENDER) {
 
     val size by float("Size", 0.3f, 0.1f..1.5f)
     val yTranslate by float("YTranslate", -0.5f, -2f..2f)

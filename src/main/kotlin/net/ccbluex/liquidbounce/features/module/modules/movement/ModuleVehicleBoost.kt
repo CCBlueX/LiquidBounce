@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
 import kotlin.math.sin
@@ -32,11 +30,7 @@ import kotlin.math.sin
  *
  * Boosts you when leaving a vehicle.
  */
-object ModuleVehicleBoost : ClientModule("VehicleBoost", Category.MOVEMENT) {
-
-    init {
-        enableLock()
-    }
+object ModuleVehicleBoost : ClientModule("VehicleBoost", ModuleCategories.MOVEMENT) {
 
     private var horizontalSpeed by float("HorizontalSpeed", 2f, 0.1f..10f)
     private var verticalSpeed by float("VerticalSpeed", 1f, 0.1f..5f)
@@ -49,12 +43,10 @@ object ModuleVehicleBoost : ClientModule("VehicleBoost", Category.MOVEMENT) {
             val angle = Math.toRadians(player.yRot.toDouble())
 
             // Boost player
-            player.setDeltaMovement(
-                Vec3(
-                    -sin(angle) * horizontalSpeed.toDouble(),
-                    verticalSpeed.toDouble(),
-                    cos(angle) * horizontalSpeed.toDouble()
-                )
+            player.deltaMovement = Vec3(
+                -sin(angle) * horizontalSpeed.toDouble(),
+                verticalSpeed.toDouble(),
+                cos(angle) * horizontalSpeed.toDouble()
             )
         }
 

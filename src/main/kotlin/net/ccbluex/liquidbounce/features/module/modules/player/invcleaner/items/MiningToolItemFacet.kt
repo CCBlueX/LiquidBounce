@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,15 +22,17 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
-import net.ccbluex.liquidbounce.utils.item.asItemFacetComparator
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isHoe
 import net.ccbluex.liquidbounce.utils.item.isPickaxe
 import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.toolComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.ToolMaterial
+import net.minecraft.world.item.component.Tool
+import net.minecraft.world.item.enchantment.Enchantments
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
@@ -47,8 +49,8 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
         private val COMPARATOR =
             /**
-             * @see net.minecraft.item.ToolMaterial.applyToolSettings
-             * @see net.minecraft.component.type.ToolComponent.Rule.ofAlwaysDropping
+             * @see ToolMaterial.applyToolProperties
+             * @see Tool.Rule.minesAndDrops
              */
             ComparatorChain<MiningToolItemFacet>(
                 compareBy {
@@ -57,7 +59,7 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                         rule.correctForDrops.orElse(false)
                     }?.speed?.orElse(null) ?: toolComponent.defaultMiningSpeed
                 },
-                VALUE_ESTIMATOR.asItemFacetComparator(),
+                VALUE_ESTIMATOR.asHolderComparator(),
                 PREFER_BETTER_DURABILITY,
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,

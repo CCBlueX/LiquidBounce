@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.utils.client
 
@@ -128,6 +126,18 @@ val isNewerThanOrEquals1_21_6: Boolean
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_6
     }.onFailure {
         logger.error("Failed to check if the server is using 1.21.6+", it)
+    }.getOrDefault(false)
+
+/**
+ * Since 1.21.9 the byte format of [net.minecraft.world.phys.Vec3] have been rewritten
+ * with [net.minecraft.network.LpVec3].
+ */
+val isNewerThanOrEquals1_21_9: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_9
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.9+", it)
     }.getOrDefault(false)
 
 val isOlderThanOrEqual1_11_1: Boolean

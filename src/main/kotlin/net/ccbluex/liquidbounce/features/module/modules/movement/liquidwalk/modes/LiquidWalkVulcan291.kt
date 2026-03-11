@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -34,11 +32,11 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  * @tested eu.loyisa.cn
  * @note May cause occasional step flags if player is in a 1x1 water hole.
  */
-internal object LiquidWalkVulcan291 : Choice("Vulcan291") {
+internal object LiquidWalkVulcan291 : Mode("Vulcan291") {
 
     private val motion by float("Motion", 0.8f, 0.2f..1.4f)
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = ModuleLiquidWalk.modes
 
     @Suppress("unused")

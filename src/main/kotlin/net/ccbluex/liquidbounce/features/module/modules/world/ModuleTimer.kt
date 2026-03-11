@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -41,13 +41,13 @@ import kotlin.math.ceil
  *
  * Changes the speed of the entire game.
  */
-object ModuleTimer : ClientModule("Timer", Category.WORLD, disableOnQuit = true) {
+object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit = true) {
 
     val modes = choices("Mode", Classic, arrayOf(Classic, Pulse, Boost)).apply { tagBy(this) }
 
-    object Classic : Choice("Classic") {
+    object Classic : Mode("Classic") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val speed by float("Speed", 2f, 0.1f..20f)
@@ -58,9 +58,9 @@ object ModuleTimer : ClientModule("Timer", Category.WORLD, disableOnQuit = true)
 
     }
 
-    object Pulse : Choice("Pulse") {
+    object Pulse : Mode("Pulse") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..20f)
@@ -104,9 +104,9 @@ object ModuleTimer : ClientModule("Timer", Category.WORLD, disableOnQuit = true)
 
     }
 
-    object Boost : Choice("Boost") {
+    object Boost : Mode("Boost") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val boostSpeed by float("BoostSpeed", 1.3f, 0.1f..20f)
@@ -153,7 +153,7 @@ object ModuleTimer : ClientModule("Timer", Category.WORLD, disableOnQuit = true)
                 Timer.requestTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
 
                 val addition = if (accountTimerValue) (1 / slowSpeed).toInt() else 1
-                boostCapable = (boostCapable + addition).toInt().coerceAtMost(timeBoostTicks)
+                boostCapable = (boostCapable + addition).coerceAtMost(timeBoostTicks)
             } else {
                 val speedUp = boostCapable > 0 ||
                         (allowNegative && (CombatManager.isInCombat || ModuleScaffold.running))

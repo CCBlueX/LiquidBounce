@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.renderer.fog.FogData
 
@@ -30,12 +30,12 @@ import net.minecraft.client.renderer.fog.FogData
  *
  * Override the ambience of the game
  */
-object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, aliases = listOf("FogChanger")) {
+object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RENDER, aliases = listOf("FogChanger")) {
 
     val weather = enumChoice("Weather", WeatherType.SNOWY)
     private val time = enumChoice("Time", TimeType.NIGHT)
 
-    object Precipitation : ToggleableConfigurable(this, "ModifyPrecipitation", true) {
+    object Precipitation : ToggleableValueGroup(this, "ModifyPrecipitation", true) {
         val gradient by float("Gradient", 0.7f, 0.1f..1f)
 //        val layers by int("Layers", 3, 1..14)
     }
@@ -43,20 +43,23 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
     /**
      * @see FogData
      */
-    object FogConfigurable : ToggleableConfigurable(this, "Fog", true) {
+    object FogValueGroup : ToggleableValueGroup(this, "Fog", true) {
 
-        val color by color("Color", Color4b(47, 128, 255, 201))
+        val disableWorldFog by boolean("DisableWorldFog", false)
+
+        object FogColorOverride : ToggleableValueGroup(this, "FogColorOverride", false) {
+            val color by color("Color", Color4b(47, 128, 255, 201))
+        }
+
         private val backgroundColor by color("BackgroundColor", Color4b(47, 128, 255, 201))
 
-        private val environmental by floatRange("Environmental", 0f..0f, 0f..100f)
-        private val renderDistance by floatRange("RenderDistance", 0f..0f, 0f..100f)
-        private val skyEnd by float("SkyEnd", 0f, 0f..100f)
-        private val cloudEnd by float("CloudEnd", 0f, 0f..100f)
+        private val environmental by floatRange("Environmental", 0f..1024f, -16f..2048f)
+        private val renderDistance by floatRange("RenderDistance", 230f..256f, 0f..1024f)
+        private val skyEnd by float("SkyEnd", 256f, 0f..1024f)
+        private val cloudEnd by float("CloudEnd", 20480f, 0f..4096f)
 
         /**
          * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinFogRenderer
-         *
-         * FIXME: redesign
          */
         fun modifyFogData(fogData: FogData) {
             if (!this.running) {
@@ -76,23 +79,28 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
                 return original
             }
 
-            return backgroundColor.toARGB()
+            return backgroundColor.argb
         }
     }
 
     /**
-     * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmapTextureManager
+     * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmap
      *
      * FIXME: redesign
      */
-    object CustomLightmap : ToggleableConfigurable(this, "CustomLightmap", false) {
+    object CustomLightmap : ToggleableValueGroup(this, "CustomLightmap", false) {
         val color by color("Color", Color4b.LIQUID_BOUNCE)
+    }
+
+    object SkyColor : ToggleableValueGroup(this, "SkyColor", false) {
+        val color by color("Color", Color4b.BLUE)
     }
 
     init {
         tree(Precipitation)
-        tree(FogConfigurable)
+        tree(FogValueGroup)
         tree(CustomLightmap)
+        tree(SkyColor)
     }
 
     @JvmStatic
@@ -113,7 +121,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
     }
 
     @Suppress("unused")
-    enum class WeatherType(override val choiceName: String) : NamedChoice {
+    enum class WeatherType(override val tag: String) : Tagged {
         NO_CHANGE("NoChange"),
         SUNNY("Sunny"),
         RAINY("Rainy"),
@@ -121,7 +129,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
         THUNDER("Thunder")
     }
 
-    enum class TimeType(override val choiceName: String) : NamedChoice {
+    enum class TimeType(override val tag: String) : Tagged {
         NO_CHANGE("NoChange"),
         DAWN("Dawn"),
         DAY("Day"),

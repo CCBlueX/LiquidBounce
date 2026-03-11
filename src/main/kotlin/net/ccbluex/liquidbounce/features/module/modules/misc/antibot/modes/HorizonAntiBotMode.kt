@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.world.entity.player.Player
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
-import java.util.*
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
+import net.minecraft.world.entity.player.Player
+import java.util.UUID
 
-object HorizonAntiBotMode : AntibotMode("Horizon") {
+object HorizonAntiBotMode : AntiBotMode("Horizon") {
 
     private val botList = objectHashSetOf<UUID>()
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
-import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 
 /**
  * Duplicate exempt grim
@@ -59,8 +58,7 @@ internal object VelocityGrim2344 : VelocityMode("Grim2344-117") {
             canCancel = true
         }
 
-        if ((packet is ClientboundSetEntityMotionPacket && packet.id == player.id || packet is ClientboundExplodePacket)
-            && canCancel) {
+        if (packet.isLocalPlayerVelocity() && canCancel) {
             event.cancelEvent()
             waitTicks(1)
             repeat(if (alternativeBypass) 4 else 1) {

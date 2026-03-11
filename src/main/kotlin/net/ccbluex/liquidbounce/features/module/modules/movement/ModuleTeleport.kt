@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandTeleport
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandVClip
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -48,7 +47,7 @@ import kotlin.math.floor
  *
  * Commands: [CommandVClip], [CommandTeleport], [CommandPlayerTeleport]
  */
-object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = listOf("tp")) {
+object ModuleTeleport : ClientModule("Teleport", ModuleCategories.EXPLOIT, aliases = listOf("tp")) {
 
     private val allFull by boolean("AllFullPacket", false)
     private val paperExploit by boolean("PaperBypass", false)
@@ -62,7 +61,7 @@ object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = lis
 
     private val decimalFormat = DecimalFormat("##0.000")
 
-    enum class GroundMode(override val choiceName: String) : NamedChoice {
+    enum class GroundMode(override val tag: String) : Tagged {
         TRUE("True"),
         FALSE("False"),
         CORRECT("Correct")
@@ -176,7 +175,7 @@ object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = lis
         entity.absSnapTo(x, y, z)
 
         if (resetMotion) {
-            entity.setDeltaMovement(entity.deltaMovement.multiply(0.0, 0.0, 0.0))
+            entity.deltaMovement = entity.deltaMovement.multiply(0.0, 0.0, 0.0)
         }
 
         chat(regular(

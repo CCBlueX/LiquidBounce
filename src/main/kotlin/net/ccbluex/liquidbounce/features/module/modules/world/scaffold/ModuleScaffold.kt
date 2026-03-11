@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,28 +18,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.NORMAL
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.ON_TICK
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.ON_TICK_SNAP
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.considerInventory
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.rotationTiming
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.RotationTimingMode.NORMAL
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.RotationTimingMode.ON_TICK
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.RotationTimingMode.ON_TICK_SNAP
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.considerInventory
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAccelerationFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAutoBlockFeature
@@ -66,7 +67,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -93,19 +94,19 @@ import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.entity.Pose
-import net.minecraft.world.item.BlockItem
-import net.minecraft.world.item.context.BlockPlaceContext
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.context.UseOnContext
-import net.minecraft.world.item.Items
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
-import net.minecraft.world.InteractionHand
-import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.shapes.Shapes
 import kotlin.math.abs
 
@@ -115,7 +116,7 @@ import kotlin.math.abs
  * Places blocks under you.
  */
 @Suppress("TooManyFunctions")
-object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
+object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     private val delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
@@ -142,9 +143,9 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
     @Suppress("unused")
     private enum class SameYMode(
-        override val choiceName: String,
+        override val tag: String,
         val getTargetedBlockPos: (BlockPos) -> BlockPos?
-    ) : NamedChoice {
+    ) : Tagged {
 
         OFF("Off", { null }),
 
@@ -189,7 +190,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     }
 
     internal val isTowering: Boolean
-        get() = if (towerMode.activeChoice != ScaffoldTowerNone && mc.options.keyJump.isDown) {
+        get() = if (towerMode.activeMode != ScaffoldTowerNone && mc.options.keyJump.isDown) {
             this.wasTowering = true
             true
         } else {
@@ -201,12 +202,12 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     @Suppress("unused")
     private val safeWalkMode = choices("SafeWalk", 1, ModuleSafeWalk::safeWalkChoices)
 
-    internal object ScaffoldRotationConfigurable : RotationsConfigurable(this) {
+    internal object ScaffoldRotationValueGroup : RotationsValueGroup(this) {
 
         val considerInventory by boolean("ConsiderInventory", false)
         val rotationTiming by enumChoice("RotationTiming", NORMAL)
 
-        enum class RotationTimingMode(override val choiceName: String) : NamedChoice {
+        enum class RotationTimingMode(override val tag: String) : Tagged {
 
             /**
              * Rotates the player before the block is placed
@@ -231,13 +232,13 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
 
-    private object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
+    private object SimulatePlacementAttempts : ToggleableValueGroup(this, "SimulatePlacementAttempts", false) {
         val clicker = tree(Clicker(ModuleScaffold, mc.options.keyUse, null, maxCps = 100))
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
     init {
-        tree(ScaffoldRotationConfigurable)
+        tree(ScaffoldRotationValueGroup)
         tree(ScaffoldSprintControlFeature)
         tree(SimulatePlacementAttempts)
         tree(ScaffoldAccelerationFeature)
@@ -328,6 +329,10 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     }
 
     override fun onDisabled() {
+        reset()
+    }
+
+    private fun reset() {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
@@ -335,6 +340,11 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         updateRenderCount(null)
         forceSneak = 0
         renderer.clearSilently()
+    }
+
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        reset()
     }
 
     private fun updateRenderCount(count: Int?) {
@@ -368,31 +378,29 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             }
 
         debugGeometry("predictedPos") {
-            ModuleDebug.DebuggedPoint(predictedPos, Color4b(0, 255, 0, 255), size = 0.1)
+            ModuleDebug.DebuggedPoint(predictedPos, Color4b.GREEN, size = 0.1)
         }
 
         val technique = if (isTowering) {
             ScaffoldNormalTechnique
         } else {
-            technique.activeChoice
+            technique.activeMode
         }
 
         val target = technique.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
             .also { this.currentTarget = it }
 
-        if (optimalLine != null && target != null) {
-            debugGeometry("lineToBlock") {
-                // Debug stuff
-                val b = target.placedBlock.toVec3d(0.5, 1.0, 0.5)
-                val a = optimalLine.getNearestPointTo(b)
+        debugGeometry("lineToBlock") {
+            // Debug stuff
+            val b = target?.placedBlock?.toVec3d(0.5, 1.0, 0.5) ?: return@debugGeometry null
+            val a = optimalLine?.getNearestPointTo(b)  ?: return@debugGeometry null
 
-                // Debug the line a-b
-                ModuleDebug.DebuggedLineSegment(
-                    from = a,
-                    to = b,
-                    Color4b(255, 0, 0, 255),
-                )
-            }
+            // Debug the line a-b
+            ModuleDebug.DebuggedLineSegment(
+                from = a,
+                to = b,
+                Color4b.RED,
+            )
         }
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
@@ -402,7 +410,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             RotationManager.setRotationTarget(
                 rotation ?: return@handler,
                 considerInventory = considerInventory,
-                configurable = ScaffoldRotationConfigurable,
+                valueGroup = ScaffoldRotationValueGroup,
                 provider = this@ModuleScaffold,
                 priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
             )
@@ -443,7 +451,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             val technique = if (isTowering) {
                 ScaffoldNormalTechnique
             } else {
-                technique.activeChoice
+                technique.activeMode
             }
 
             val ledgeAction = ledge(
@@ -503,7 +511,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         val target = currentTarget
 
         val computedRotation = if (target != null) {
-            technique.activeChoice.getRotations(target)
+            technique.activeMode.getRotations(target)
         } else {
             null
         }
@@ -513,7 +521,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         } else {
             RotationManager.currentRotation ?: player.rotation
         }.normalize()
-        val currentCrosshairTarget = technique.activeChoice.getCrosshairTarget(target, currentRotation)
+        val currentCrosshairTarget = technique.activeMode.getCrosshairTarget(target, currentRotation)
         val currentDelay = delay.random()
 
         var hasBlockInMainHand = isValidBlock(player.inventory.getItem(player.inventory.selectedSlot))
@@ -588,7 +596,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
                 RotationManager.setRotationTarget(
                     currentRotation,
                     considerInventory = considerInventory,
-                    configurable = ScaffoldRotationConfigurable,
+                    valueGroup = ScaffoldRotationValueGroup,
                     provider = this@ModuleScaffold,
                     priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
                 )
@@ -662,7 +670,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     }
 
     internal fun getTargetedPosition(blockPos: BlockPos) = when {
-        isTowering || wasTowering -> towerMode.activeChoice.getTargetedPosition(blockPos)
+        isTowering || wasTowering -> towerMode.activeMode.getTargetedPosition(blockPos)
         ScaffoldDownFeature.running && ScaffoldDownFeature.shouldGoDown ->
             blockPos.offset(0, -2, 0)
         ScaffoldCeilingFeature.running && ScaffoldCeilingFeature.canConstructCeiling() ->

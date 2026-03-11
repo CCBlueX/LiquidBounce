@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.placer
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -27,24 +27,25 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.getExplosionDamageFromEntity
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.entity.boss.enderdragon.EndCrystal
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 class CrystalDestroyFeature(eventListener: EventListener, private val module: ClientModule) :
-    ToggleableConfigurable(eventListener, "DestroyCrystals", true) {
+    ToggleableValueGroup(eventListener, "DestroyCrystals", true) {
 
     private val range by float("Range", 4.5f, 1f..6f)
     private val wallRange by float("WallRange", 4.5f, 0f..6f)
     private val delay by int("Delay", 0, 0..1000, "ms")
-    private val swing by boolean("Swing", true)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
-    private val rotationMode = choices(this, "RotationMode") {
+    private val rotationMode = modes(this, "RotationMode") {
         arrayOf(NormalRotationMode(it, module, Priority.IMPORTANT_FOR_USAGE_3), NoRotationMode(it, module))
     }
 
@@ -85,26 +86,26 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
                 wallsRange = wallRange.toDouble(),
             ) ?: return@tickHandler
 
-        rotationMode.activeChoice.rotate(rotation, isFinished = {
-            facingEnemy(
+        rotationMode.activeMode.rotate(rotation, isFinished = {
+            isLookingAtEntity(
                 toEntity = target,
                 rotation = RotationManager.serverRotation,
                 range = range.toDouble(),
-                wallsRange = wallRange.toDouble()
-            )
+                throughWallsRange = wallRange.toDouble()
+            ) != null
         }, onFinished = {
             if (!chronometer.hasElapsed(delay.toLong())) {
                 return@rotate
             }
 
-            val target1 = currentTarget ?: return@rotate
+            val target = currentTarget ?: return@rotate
 
-            if (wouldKill(target1)) {
+            if (wouldKill(target)) {
                 currentTarget = null
                 return@rotate
             }
 
-            target1.attack(swing)
+            attackEntity(target, swingMode)
             chronometer.reset()
             currentTarget = null
         })

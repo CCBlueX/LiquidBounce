@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.Esp2DMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspBoxMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspLegacy2DMode
+import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -39,20 +42,22 @@ import net.minecraft.world.entity.player.Player
  *
  * Allows you to see targets through walls.
  */
-object ModuleESP : ClientModule("ESP", Category.RENDER) {
+object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.esp"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.esp"
 
     val modes = choices("Mode", EspGlowMode, arrayOf(
         EspBoxMode,
         Esp2DMode,
+        EspLegacy2DMode,
 //        EspOutlineMode,
         EspGlowMode
     ))
 
     private val colorModes = choices("ColorMode", 0) {
         arrayOf(
+            GenericDistanceHSBColorMode.entity(it),
             GenericEntityHealthColorMode(it),
             GenericStaticColorMode(it, Color4b.WHITE.with(a = 100)),
             GenericRainbowColorMode(it)
@@ -71,16 +76,10 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     }
 
     fun getColor(entity: LivingEntity): Color4b {
-        val baseColor = getBaseColor(entity)
-
         if (entity.hurtTime > 0) {
             return Color4b.RED
         }
 
-        return baseColor
-    }
-
-    private fun getBaseColor(entity: LivingEntity): Color4b {
         if (entity is Player) {
             if (FriendManager.isFriend(entity) && friendColor.a > 0) {
                 return friendColor
@@ -89,13 +88,13 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
             EntityTaggingManager.getTag(entity).color?.let { return it }
         }
 
-        return colorModes.activeChoice.getColor(entity)
+        return colorModes.activeMode.getColor(entity)
     }
 
     /**
      * Check if the entity requires true sight to be shown with the current ESP mode
      */
     fun requiresTrueSight(entity: LivingEntity) =
-        modes.activeChoice.requiresTrueSight && entity.shouldBeShown()
+        modes.activeMode.requiresTrueSight && entity.shouldBeShown()
 
 }

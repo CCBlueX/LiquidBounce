@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.aiming.projectiles
 
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan
 import kotlin.math.atan2
@@ -37,7 +37,7 @@ import kotlin.math.sqrt
  *
  * Currently only used as backup
  */
-object PolynomialProjectileAngleCalculator: ProjectileAngleCalculator() {
+object PolynomialProjectileAngleCalculator: ProjectileAngleCalculator {
     override fun calculateAngleFor(
         projectileInfo: TrajectoryInfo,
         sourcePos: Vec3,
@@ -69,8 +69,8 @@ object PolynomialProjectileAngleCalculator: ProjectileAngleCalculator() {
         val yawRad = atan2(diff.z, diff.x)
 
         return Rotation(
-            Mth.wrapDegrees(Math.toDegrees(yawRad).toFloat() - 90f),
-            Mth.wrapDegrees((-Math.toDegrees(pitchRad)).toFloat())
+            Mth.wrapDegrees(yawRad.toDegrees().toFloat() - 90f),
+            Mth.wrapDegrees(-pitchRad.toDegrees().toFloat())
         )
     }
 }

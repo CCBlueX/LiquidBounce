@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
@@ -48,7 +48,7 @@ import kotlin.math.min
  *
  * Calls tick function to speed up, when needed
  */
-internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
+internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBAT) {
 
     private val mode by enumChoice("Mode", TickBaseMode.PAST)
         .apply { tagBy(this) }
@@ -137,7 +137,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
 
         // We do not want to tickbase if killaura is not ready to attack
         fun breakRequirement() = requiresKillAura && !(ModuleKillAura.running &&
-                ModuleKillAura.clickScheduler.willClickAt(bestTick))
+                ModuleKillAura.clicker.willClickAt(bestTick))
 
         if (breakRequirement()) {
             return@tickHandler
@@ -229,9 +229,9 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
 
         renderEnvironmentForWorld(event.matrixStack) {
             drawLineStrip(
-                argb = lineColor.toARGB(),
+                argb = lineColor.argb,
                 positions = tickBuffer.mapToArray { tick ->
-                    relativeToCamera(tick.position).toVec3()
+                    relativeToCamera(tick.position).toVec3f()
                 }
             )
         }
@@ -253,16 +253,16 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         val onGround: Boolean
     )
 
-    private enum class TickBaseMode(override val choiceName: String) : NamedChoice {
+    private enum class TickBaseMode(override val tag: String) : Tagged {
         PAST("Past"),
         FUTURE("Future")
     }
 
     @Suppress("unused")
     private enum class TickBaseCall(
-        override val choiceName: String,
+        override val tag: String,
         private val tick: Runnable
-    ) : NamedChoice {
+    ) : Tagged {
 
         /**
          * Runs a full game tick.

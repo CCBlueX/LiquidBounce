@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -42,7 +40,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  *
  * Thanks to icewormy3
  */
-internal object FlySentinel10thMar : Choice("Sentinel10thMar") {
+internal object FlySentinel10thMar : Mode("Sentinel10thMar") {
 
     private val jumpHeight by float("Height", 0.42f, 0.1f..1f)
     private val jumpSpeed by float("Speed", 0.35f, 0.1f..1f)
@@ -50,12 +48,12 @@ internal object FlySentinel10thMar : Choice("Sentinel10thMar") {
 
     private var spoofOnGround = false
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     val repeatable = tickHandler {
         player.deltaMovement.y = jumpHeight.toDouble()
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = jumpSpeed.toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = jumpSpeed.toDouble())
         spoofOnGround = true
         waitTicks(ticks)
     }

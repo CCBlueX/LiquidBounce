@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,11 +28,11 @@ import net.ccbluex.liquidbounce.utils.client.player
 /**
  * https://github.com/ViaVersion/ViaFabricPlus/blob/56c4959000e68d77fd415b89af7a95478d825079/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/movement/sprinting_and_sneaking/MixinClientPlayerEntity.java#L251-L264
  */
-class PlayerSneakPacket private constructor(val sneaking: Boolean) : LegacyPacket {
+data class PlayerSneakPacket private constructor(val sneaking: Boolean) : LegacyPacket {
 
-    override val protocol = Protocol1_21_5To1_21_6::class.java
+    override val protocol get() = Protocol1_21_5To1_21_6::class.java
 
-    override val packetType = ServerboundPackets1_21_5.PLAYER_COMMAND
+    override val packetType get() = ServerboundPackets1_21_5.PLAYER_COMMAND
 
     override fun write(packetWrapper: PacketWrapper) {
         packetWrapper.write(Types.VAR_INT, player.id)

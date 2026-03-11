@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes
 import com.google.gson.JsonObject
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -41,9 +41,9 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 
-object CriticalsJump : Choice("Jump") {
+object CriticalsJump : Mode("Jump") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleCriticals.modes
 
     // There are different possible jump heights to crit enemy
@@ -196,7 +196,7 @@ object CriticalsJump : Choice("Jump") {
         for (i in 0 until ticks) {
             // Rotate to the target after some time
             if (i == reactionTime) {
-                simulatedPlayer.yaw = Rotation.lookingAt(point = target.position(), from = simulatedPlayer.pos).yaw
+                simulatedPlayer.yRot = Rotation.lookingAt(point = target.position(), from = simulatedPlayer.pos).yRot
             }
 
             simulatedPlayer.tick()

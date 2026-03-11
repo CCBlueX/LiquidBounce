@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,25 +19,36 @@
 package net.ccbluex.liquidbounce.integration.backend
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowserBackend
+import net.ccbluex.liquidbounce.integration.backend.backends.external.ExternalSystemBrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
-import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 
 object BrowserBackendManager : EventListener {
 
-    val browserBackend: BrowserBackend = CefBrowserBackend()
+    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/BrowserBackendManager")
 
-    val isSkippingBrowser = System.getenv("LB_SKIP_BROWSER") == "true"
-        || System.getProperty("net.ccbluex.liquidbounce.skip.browser") == "true"
+    val isInitialized: Boolean
+        get() = backend?.isInitialized ?: false
+    var backend: BrowserBackend? = null
+
+    var isSkipping = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
+        ?: false
+    val backendName = env("LB_BROWSER_BACKEND", "net.ccbluex.liquidbounce.browser.backend") ?: "cef"
+    val disableAcceleration = env("LB_BROWSER_DISABLE_ACCELERATION",
+        "net.ccbluex.liquidbounce.browser.disableAcceleration")?.toBoolean() ?: false
 
     fun init() {
         PersistentLocalStorage
@@ -48,10 +59,22 @@ object BrowserBackendManager : EventListener {
      * when the dependencies are available.
      */
     fun makeDependenciesAvailable(taskManager: TaskManager) {
-        if (isSkippingBrowser) {
-            logger.warn("Environment variable 'LB_SKIP_BROWSER' is set to 'true'.")
+        if (isSkipping) {
+            logger.warn("Environment variable 'LB_BROWSER_SKIP' is set to 'true'.")
             return
         }
+
+        val browserBackend = when (backendName) {
+            "none" -> {
+                logger.warn("Environment variable 'LB_BROWSER_BACKEND' is set to 'none'.")
+                isSkipping = true
+                return
+            }
+            "cef" -> CefBrowserBackend()
+            "external" -> ExternalSystemBrowserBackend()
+            else -> error("Unknown browser backend: $backendName")
+        }
+        this.backend = browserBackend
         browserBackend.makeDependenciesAvailable(taskManager, ::start)
     }
 
@@ -65,8 +88,12 @@ object BrowserBackendManager : EventListener {
         // Ensure that the browser is started on the render thread
         RenderSystem.assertOnRenderThread()
 
+        val browserBackend = backend ?: return
         browserBackend.start()
 
+        if (disableAcceleration) {
+            logger.warn("Environment variable 'LB_BROWSER_DISABLE_ACCELERATION' is set to 'true'.")
+        }
         GlobalBrowserSettings
         EventManager.callEvent(BrowserReadyEvent)
         logger.info("Successfully initialized browser.")
@@ -76,7 +103,7 @@ object BrowserBackendManager : EventListener {
      * Shuts down the browser.
      */
     fun stop() = runCatching {
-        browserBackend.stop()
+        backend?.stop()
     }.onFailure {
         logger.error("Failed to shutdown browser.", it)
     }.onSuccess {
@@ -87,6 +114,8 @@ object BrowserBackendManager : EventListener {
      * Causes an update of every browser by re-setting their viewport.
      */
     fun forceUpdate() = mc.execute {
+        val browserBackend = backend ?: return@execute
+
         for (browser in browserBackend.browsers) {
             try {
                 browser.viewport = browser.viewport
@@ -98,6 +127,7 @@ object BrowserBackendManager : EventListener {
 
     @Suppress("unused")
     private val gameRenderHandler = handler<GameRenderEvent>(priority = FIRST_PRIORITY) {
+        val browserBackend = backend ?: return@handler
         if (!browserBackend.isInitialized) {
             return@handler
         }

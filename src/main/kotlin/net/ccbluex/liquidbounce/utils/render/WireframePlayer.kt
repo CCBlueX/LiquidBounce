@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,10 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.minecraft.world.phys.AABB
 import net.minecraft.util.Mth
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 
@@ -41,16 +42,20 @@ private val RENDER_LEFT_ARM: AABB = LIMB.move(-2 * LIMB.maxX, LIMB.maxY, 0.0)
 private val RENDER_RIGHT_ARM: AABB = LIMB.move(BODY.maxX - LIMB.maxX, LIMB.maxY, 0.0)
 private val RENDER_HEAD: AABB = HEAD.move(-LIMB.maxX, LIMB.maxY * 2, -HEAD.maxZ * 0.25)
 
-data class WireframePlayer(private var pos: Vec3, private var yaw: Float, private var pitch: Float) {
+class WireframePlayer {
+    var pos: Vec3 = Vec3.ZERO
+    var yRot: Float = 0F
+    var xRot: Float = 0F
+
+    private val quaternion = Quaternionf()
 
     fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b) {
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
             withPositionRelativeToCamera(pos) {
-                val matrix = matrixStack.last().pose()
-                val yRot = -Mth.wrapDegrees(yaw)
-                matrix.rotate(Quaternionf().rotationY(yRot.toRadians()))
-                matrix.scale(1.9f)
+                val pose = poseStack.last().pose()
+                val yRot = -Mth.wrapDegrees(yRot)
+                pose.rotate(quaternion.scaling(1f).rotationY(yRot.toRadians()))
+                pose.scale(1.9f)
 
                 drawBox(RENDER_LEFT_LEG, color, outlineColor)
                 drawBox(RENDER_RIGHT_LEG, color, outlineColor)
@@ -58,20 +63,24 @@ data class WireframePlayer(private var pos: Vec3, private var yaw: Float, privat
                 drawBox(RENDER_LEFT_ARM, color, outlineColor)
                 drawBox(RENDER_RIGHT_ARM, color, outlineColor)
 
-                matrix.translate(0f, RENDER_HEAD.minY.toFloat(), 0f)
-                matrix.rotate(Quaternionf().rotationX(pitch.toRadians()))
-                matrix.translate(0f, -RENDER_HEAD.minY.toFloat(), 0f)
+                pose.translate(0f, RENDER_HEAD.minY.toFloat(), 0f)
+                pose.rotate(quaternion.scaling(1f).rotationX(xRot.toRadians()))
+                pose.translate(0f, -RENDER_HEAD.minY.toFloat(), 0f)
 
                 drawBox(RENDER_HEAD, color, outlineColor)
             }
-            commitBatch()
         }
     }
 
-    fun setPosRot(x: Double, y: Double, z: Double, yaw: Float, pitch: Float) {
+    fun setRotation(rotation: Rotation) {
+        this.xRot = rotation.xRot
+        this.yRot = rotation.yRot
+    }
+
+    fun setPosRot(x: Double, y: Double, z: Double, yRot: Float, xRot: Float) {
         this.pos = Vec3(x, y, z)
-        this.yaw = yaw
-        this.pitch = pitch
+        this.yRot = yRot
+        this.xRot = xRot
     }
 
 }

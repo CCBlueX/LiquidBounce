@@ -13,3 +13,4 @@
 /logs/
 /.kotlin/
 .DS_Store
+*.log

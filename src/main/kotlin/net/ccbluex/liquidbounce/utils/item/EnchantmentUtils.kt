@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,28 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.minecraft.core.component.DataComponents
-import net.minecraft.world.item.enchantment.ItemEnchantments
-import net.minecraft.world.item.enchantment.Enchantment
-import net.minecraft.world.item.ItemStack
 import net.minecraft.core.Holder
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.EnchantmentHelper
+import net.minecraft.world.item.enchantment.ItemEnchantments
+
+private val ItemStack.componentTypeForEnchantment
+    inline get() = EnchantmentHelper.getComponentType(this)
 
 fun ItemStack.removeEnchantment(enchantment: Holder<Enchantment>) {
-    val enchantmentComponent = get(DataComponents.ENCHANTMENTS) ?: return
-
-    val builder = ItemEnchantments.Mutable(enchantmentComponent)
-
-    builder.removeIf { it == enchantment }
-
-    set(DataComponents.ENCHANTMENTS, builder.toImmutable())
+    EnchantmentHelper.updateEnchantments(this) { it.set(enchantment, 0) }
 }
 
-fun ItemStack.clearEnchantments() {
-    set(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY)
+fun ItemStack.clearEnchantments() =
+    EnchantmentHelper.setEnchantments(this, ItemEnchantments.EMPTY)
+
+fun ItemStack?.getEnchantmentCount(): Int =
+    this?.get(componentTypeForEnchantment)?.size() ?: 0
+
+fun ItemStack?.getEnchantment(enchantment: ResourceKey<Enchantment>): Int {
+    if (this == null) return 0
+    val enchantmentEntry = enchantment.toRegistryEntryOrNull() ?: return 0
+    return EnchantmentHelper.getItemEnchantmentLevel(enchantmentEntry, this)
 }

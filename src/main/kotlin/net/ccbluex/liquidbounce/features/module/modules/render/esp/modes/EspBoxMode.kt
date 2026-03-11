@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ object EspBoxMode : EspMode("Box") {
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
             for (entity in RenderedEntities) {
                 val dimensions = entity.getDimensions(entity.pose)
                 val d = dimensions.width.toDouble() / 2.0
@@ -56,7 +55,6 @@ object EspBoxMode : EspMode("Box") {
                     )
                 }
             }
-            commitBatch()
         }
     }
 

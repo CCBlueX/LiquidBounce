@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.minecraft.world.effect.MobEffects
 
@@ -29,7 +29,7 @@ import net.minecraft.world.effect.MobEffects
  * Works because of a silly exemption from Hylex
  * @author @liquidsquid1
  */
-class SpeedHylexGround(override val parent: ChoiceConfigurable<*>) : Choice("HylexGround") {
+class SpeedHylexGround(override val parent: ModeValueGroup<*>) : Mode("HylexGround") {
 
     private var groundTicks = 0
 
@@ -60,22 +60,18 @@ class SpeedHylexGround(override val parent: ChoiceConfigurable<*>) : Choice("Hyl
         }
 
         if (!(mc.options.keyLeft.isDown || mc.options.keyRight.isDown)) {
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    1.2174,
-                    1.0,
-                    1.2174
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                1.2174,
+                1.0,
+                1.2174
             )
             return@tickHandler
         }
 
-        player.setDeltaMovement(
-            player.deltaMovement.multiply(
-                1.214,
-                1.0,
-                1.214
-            )
+        player.deltaMovement = player.deltaMovement.multiply(
+            1.214,
+            1.0,
+            1.214
         )
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.world.entity.TraceableEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
@@ -42,8 +45,11 @@ import net.minecraft.world.phys.Vec3
  * Allows you to see where projectile items will land.
  */
 @Suppress("MagicNumber")
-object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
+object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER) {
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
+
+    private val trajectoryTypes by multiEnumChoice("TrajectoryTypes", TrajectoryType.entries, canBeNone = false)
+
     private val show by multiEnumChoice(
         "Show",
         Show.OTHER_PLAYERS,
@@ -68,43 +74,48 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
-        world.entitiesForRendering().forEach {
-            val trajectoryInfo = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
-                it,
-                this.activeTrajectoryArrow,
-                this.activeTrajectoryOther
-            ) ?: return@forEach
+        renderEnvironmentForWorld(event.matrixStack) {
+            for (entity in world.entitiesForRendering()) {
+                val (trajectoryInfo, trajectoryType) = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
+                    entity,
+                    activeTrajectoryArrow,
+                    activeTrajectoryOther
+                ) ?: continue
 
-            val trajectoryRenderer = TrajectoryInfoRenderer(
-                owner = (it as? TraceableEntity)?.owner ?: it,
-                icon = TrajectoryData.getRenderIconForOtherEntity(
-                    it, this.activeTrajectoryArrow, this.activeTrajectoryOther
-                ),
-                velocity = it.deltaMovement,
-                pos = it.position(),
-                trajectoryInfo = trajectoryInfo,
-                type = TrajectoryInfoRenderer.Type.REAL,
-                renderOffset = Vec3.ZERO,
-            )
+                if (trajectoryType !in trajectoryTypes) continue
 
-            val color = TrajectoryData.getColorForEntity(it)
+                val trajectoryRenderer = TrajectoryInfoRenderer(
+                    owner = (entity as? TraceableEntity)?.owner ?: entity,
+                    icon = TrajectoryData.getRenderIconForOtherEntity(
+                        entity, activeTrajectoryArrow, activeTrajectoryOther
+                    ),
+                    velocity = entity.deltaMovement,
+                    pos = entity.position(),
+                    trajectoryInfo = trajectoryInfo,
+                    trajectoryType = trajectoryType,
+                    type = TrajectoryInfoRenderer.Type.REAL,
+                    renderOffset = Vec3.ZERO,
+                )
 
-            simulationResults += trajectoryRenderer to trajectoryRenderer.drawTrajectoryForProjectile(
-                maxSimulatedTicks,
-                event,
-                trajectoryColor = color,
-                blockHitColor = color,
-                entityHitColor = color,
-            )
-        }
+                val color = TrajectoryData.getColorForEntity(entity)
 
-        if (otherPlayers) {
-            for (otherPlayer in world.players()) {
-                // Including the user
-                drawHypotheticalTrajectory(otherPlayer, event)
+                simulationResults += trajectoryRenderer to trajectoryRenderer.drawTrajectoryForProjectile(
+                    maxSimulatedTicks,
+                    event.partialTicks,
+                    trajectoryColor = color,
+                    blockHitColor = color,
+                    entityHitColor = color,
+                )
             }
-        } else {
-            drawHypotheticalTrajectory(player, event)
+
+            if (otherPlayers) {
+                for (otherPlayer in world.players()) {
+                    // Including the user
+                    drawHypotheticalTrajectory(otherPlayer, event.partialTicks)
+                }
+            } else {
+                drawHypotheticalTrajectory(player, event.partialTicks)
+            }
         }
 
         debugParameter("TrajectoryCount") { simulationResults.size }
@@ -113,15 +124,17 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     /**
      * Draws the trajectory for an item in the player's hand
      */
-    private fun drawHypotheticalTrajectory(
+    private fun WorldRenderEnvironment.drawHypotheticalTrajectory(
         otherPlayer: Player,
-        event: WorldRenderEvent
+        partialTicks: Float,
     ) {
-        val (trajectoryInfo, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
-            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack.item, this.alwaysShowBow)?.let {
+        val (trajectoryInfoTyped, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
+            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack, alwaysShowBow)?.let {
                 it to stack
             }
         } ?: return
+
+        if (trajectoryInfoTyped.type !in trajectoryTypes) return
 
         val rotation = if (otherPlayer === player) {
             if (ModuleFreeCam.running) {
@@ -137,14 +150,15 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             owner = otherPlayer,
             icon = stack,
-            trajectoryInfo = trajectoryInfo,
+            trajectoryInfo = trajectoryInfoTyped.info,
+            trajectoryType = trajectoryInfoTyped.type,
             rotation = rotation,
-            partialTicks = event.partialTicks
+            partialTicks = partialTicks
         )
 
         simulationResults += renderer to renderer.drawTrajectoryForProjectile(
             maxSimulatedTicks,
-            event,
+            partialTicks,
             trajectoryColor = Color4b.WHITE,
             blockHitColor = Color4b(0, 160, 255, 150),
             entityHitColor = Color4b(255, 0, 0, 100),
@@ -152,8 +166,8 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     }
 
     private enum class Show(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         ALWAYS_SHOW_BOW("AlwaysShowBow"),
         OTHER_PLAYERS("OtherPlayers"),
         ACTIVE_TRAJECTORY_ARROW("ActiveTrajectoryArrow"),

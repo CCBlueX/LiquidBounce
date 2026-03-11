@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -40,6 +41,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -217,7 +219,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return original;
         }
 
-        float yaw = rotation.getYaw() * Mth.DEG_TO_RAD;
+        float yaw = rotation.yaw() * Mth.DEG_TO_RAD;
 
         return new Vec3(-Mth.sin(yaw) * 0.2F, 0.0, Mth.cos(yaw) * 0.2F);
     }
@@ -236,8 +238,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
         // The jumping cooldown would lead to very slow tower building
         var towerActive = ModuleScaffold.INSTANCE.getRunning() &&
-                ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice() != ScaffoldTowerNone.INSTANCE &&
-                ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice().getRunning();
+                ModuleScaffold.INSTANCE.getTowerMode().getActiveMode() != ScaffoldTowerNone.INSTANCE &&
+                ModuleScaffold.INSTANCE.getTowerMode().getActiveMode().getRunning();
 
         if (noJumpDelay || towerActive) {
             this.noJumpDelay = 0;
@@ -288,7 +290,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return original;
         }
 
-        return rotation.getPitch();
+        return rotation.pitch();
     }
 
     @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
@@ -314,7 +316,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return original;
         }
 
-        return rotation.getDirectionVector();
+        return rotation.directionVector();
     }
 
     @Unique
@@ -362,6 +364,18 @@ public abstract class MixinLivingEntity extends MixinEntity {
     private int hookSwingSpeed(int duration) {
         var animations = ModuleAnimations.INSTANCE;
         return animations.getRunning() ? animations.getSwingDuration() : duration;
+    }
+
+    @ModifyExpressionValue(method = "handleDamageEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getHurtSound(Lnet/minecraft/world/damagesource/DamageSource;)Lnet/minecraft/sounds/SoundEvent;"))
+    private SoundEvent hookHitFxSound(SoundEvent original) {
+        if ((Object) this == Minecraft.getInstance().player && ModuleHitFX.INSTANCE.getRunning()) {
+            var hitFxSound = ModuleHitFX.INSTANCE.getSelfSound();
+            if (hitFxSound != null) {
+                return hitFxSound;
+            }
+        }
+
+        return original;
     }
 
 }

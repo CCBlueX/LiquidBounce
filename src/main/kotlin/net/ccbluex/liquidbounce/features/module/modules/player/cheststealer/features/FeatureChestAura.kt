@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,33 +29,27 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
-import net.minecraft.world.level.block.state.BlockState
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.ChestBlock
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
-import net.minecraft.world.InteractionResult
-import net.minecraft.world.InteractionHand
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.HitResult
-import net.minecraft.core.BlockPos
 import java.util.function.BooleanSupplier
-import kotlin.collections.Set
-import kotlin.collections.hashSetOf
-import kotlin.collections.none
-import kotlin.collections.plusAssign
 
 /**
  * ChestAura feature
@@ -65,7 +58,7 @@ import kotlin.collections.plusAssign
  * ChestAura feature is responsible for automatically interacting with storage blocks (such as chests)
  * within a specified range and line of sight of the player.
  */
-object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", true) {
+object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true) {
 
     // Configuration fields with appropriate names
     private val interactionRange by float("Range", 3F, 1F..6F)
@@ -74,16 +67,16 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
         minOf(interactionRange, it)
     }
     private val interactionDelay by int("Delay", 5, 1..80, "ticks")
-    private val shouldDisplayVisualSwing by boolean("VisualSwing", true)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
     private val notDuringCombat by boolean("NotDuringCombat", true)
 
     private val trackManualInteractions by boolean("TrackManualInteractions", true)
 
-    private val pauseOn by multiEnumChoice("PauseOn", emptyEnumSet<PauseCondition>())
+    private val pauseOn by multiEnumChoice("PauseOn", enumSetOf<PauseCondition>())
 
     @Suppress("unused")
-    private enum class PauseCondition(override val choiceName: String) : NamedChoice, BooleanSupplier {
+    private enum class PauseCondition(override val tag: String) : Tagged, BooleanSupplier {
         COMBAT("Combat") {
             override fun getAsBoolean() = CombatManager.isInCombat
         },
@@ -93,7 +86,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     // Sub-configurable for managing the await container settings
-    private object AwaitContainerSettings : ToggleableConfigurable(this, "AwaitContainer", true) {
+    private object AwaitContainerSettings : ToggleableValueGroup(this, "AwaitContainer", true) {
         val retryTimeout by int("Timeout", 10, 1..80, "ticks")
         val maxInteractionRetries by int("MaxRetries", 4, 1..10)
     }
@@ -114,7 +107,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     // Rotation configuration settings
-    private val rotationConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     // The block position currently being interacted with
     private var currentTargetBlock: BlockPos? = null
@@ -144,19 +137,15 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
             return !ChestBlock.isChestBlockedAt(world, pos.relative(state.anotherChestPartDirection() ?: return true))
         }
 
-        val searchRadius = interactionRange + 1
-        val searchRadiusSquared = searchRadius * searchRadius
-        val playerEyesPosition = player.eyePosition
-
         if (notDuringCombat && CombatManager.isInCombat) {
             currentTargetBlock = null
             return@handler
         }
 
         // Select blocks for processing within the search radius
-        val nearbyStorageBlocks = playerEyesPosition.searchBlocksInCuboid(searchRadius) { pos, state ->
+        val nearbyStorageBlocks = player.eyePosition.searchBlocksInRangeSorted(interactionRange) { pos, state ->
             pos !in interactedBlocksSet && state.block in validStorageBlocks && isUnblockedChestOrNotChest(state, pos)
-        }.sortedBy { it.first.getCenterDistanceSquaredEyes() }
+        }
 
         var nextTargetBlock: BlockPos? = null
 
@@ -174,7 +163,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
             RotationManager.setRotationTarget(
                 rotation,
                 considerInventory = true,
-                configurable = rotationConfigurable,
+                valueGroup = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
                 ModuleChestStealer
             )
@@ -227,12 +216,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
         // Attempt to interact with the block
         if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult) == InteractionResult.SUCCESS) {
-            // Swing hand visually if the setting is enabled, else send packet for the action
-            if (shouldDisplayVisualSwing) {
-                player.swing(InteractionHand.MAIN_HAND)
-            } else {
-                network.send(ServerboundSwingPacket(InteractionHand.MAIN_HAND))
-            }
+            swingMode.swing(InteractionHand.MAIN_HAND)
 
             var wasInteractionSuccessful = false
 

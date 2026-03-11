@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,13 +29,12 @@ import kotlinx.coroutines.delay
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.fastutil.intListOf
-import net.ccbluex.liquidbounce.config.AutoShopConfig.loadAutoShopConfig
-import net.ccbluex.liquidbounce.config.ShopConfigPreset
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.AutoShopConfig.loadAutoShopConfig
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.NormalPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.QuickPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo
@@ -58,14 +57,14 @@ import kotlin.math.min
  * Automatically buys specific items in a BedWars shop.
  */
 @Suppress("TooManyFunctions")
-object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
+object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
 
     private var shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {
         loadAutoShopConfig(it)
     }
 
     private val startDelay by intRange("StartDelay", 1..2, 0..10, "ticks")
-    val purchaseMode = choices(this, "PurchaseMode", NormalPurchaseMode,
+    val purchaseMode = modes(this, "PurchaseMode", NormalPurchaseMode,
         arrayOf(NormalPurchaseMode, QuickPurchaseMode)
     )
 
@@ -148,7 +147,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         }
 
         // buys an item (1 click only)
-        if (purchaseMode.activeChoice == NormalPurchaseMode) {
+        if (purchaseMode.activeMode == NormalPurchaseMode) {
             buyItem(itemSlot, currentElement)
             return
         }

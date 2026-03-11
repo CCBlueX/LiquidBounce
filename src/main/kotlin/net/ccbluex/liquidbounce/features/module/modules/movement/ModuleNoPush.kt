@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * NoPush module
  *
  * Disables pushing from other players and some other situations where someone/something can push.
  */
-object ModuleNoPush : ClientModule("NoPush", Category.MOVEMENT) {
+object ModuleNoPush : ClientModule("NoPush", ModuleCategories.MOVEMENT) {
     private val noPushBy = multiEnumChoice("PushBy",
         NoPushBy.ENTITIES,
         NoPushBy.LIQUIDS
@@ -54,7 +54,7 @@ object ModuleNoPush : ClientModule("NoPush", Category.MOVEMENT) {
     }
 }
 
-enum class NoPushBy(override val choiceName: String): NamedChoice {
+enum class NoPushBy(override val tag: String): Tagged {
     ENTITIES("Entities"),
     BLOCKS("Blocks"),
     FISHING_ROD("FishingRod"),

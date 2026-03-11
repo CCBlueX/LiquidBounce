@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.FactorAngleSmooth
@@ -29,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import kotlin.math.exp
 
 @Deprecated("Interpolation mode combines Sigmoid and Bezier interpolation", ReplaceWith("InterpolationAngleSmooth"))
-class SigmoidAngleSmooth(parent: ChoiceConfigurable<*>) : FactorAngleSmooth("Sigmoid", parent) {
+class SigmoidAngleSmooth(parent: ModeValueGroup<*>) : FactorAngleSmooth("Sigmoid", parent) {
 
     private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", 180f..180f,
         0.0f..180f)

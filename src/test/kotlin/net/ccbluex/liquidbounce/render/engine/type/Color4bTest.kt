@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.render.engine.type
 
+import net.minecraft.util.ARGB
+import net.minecraft.world.item.DyeColor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -67,4 +69,43 @@ class Color4bTest {
             Color4b.fromHex("FF00")
         }
     }
+
+    @Test
+    fun `toClosestDyeColor should return exact texture diffuse color match`() {
+        val color = Color4b(DyeColor.BLUE.textureDiffuseColor)
+
+        val closest = color.toClosestDyeColor(DyeColor::getTextureDiffuseColor)
+
+        assertEquals(DyeColor.BLUE, closest)
+    }
+
+    @Test
+    fun `toClosestDyeColor should pick nearest texture diffuse color`() {
+        val blue = DyeColor.BLUE.textureDiffuseColor
+        val color = Color4b(
+            ARGB.red(blue) + 1,
+            ARGB.green(blue) + 1,
+            ARGB.blue(blue) + 1
+        )
+
+        val closest = color.toClosestDyeColor(DyeColor::getTextureDiffuseColor)
+
+        assertEquals(DyeColor.BLUE, closest)
+    }
+
+    @Test
+    fun `toClosestDyeColor should ignore alpha channel of source color`() {
+        val textureDiffuse = DyeColor.LIME.textureDiffuseColor
+        val color = Color4b(
+            ARGB.red(textureDiffuse),
+            ARGB.green(textureDiffuse),
+            ARGB.blue(textureDiffuse),
+            0
+        )
+
+        val closest = color.toClosestDyeColor(DyeColor::getTextureDiffuseColor)
+
+        assertEquals(DyeColor.LIME, closest)
+    }
+
 }

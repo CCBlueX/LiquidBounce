@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.area.FloorNukerArea
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.area.SphereNukerArea
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode.InstantNukerMode
@@ -28,15 +28,15 @@ import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockState
 
 /**
  * Nuker module
  *
  * Destroys blocks around you.
  */
-object ModuleNuker : ClientModule("Nuker", Category.WORLD, disableOnQuit = true) {
+object ModuleNuker : ClientModule("Nuker", ModuleCategories.WORLD, disableOnQuit = true) {
 
     val mode =
         choices("Mode", LegitNukerMode, arrayOf(LegitNukerMode, InstantNukerMode))

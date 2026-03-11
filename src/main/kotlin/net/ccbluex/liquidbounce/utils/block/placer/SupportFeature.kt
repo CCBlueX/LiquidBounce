@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.placer
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import java.util.*
+import java.util.PriorityQueue
 
 // TODO multiple paths a tick if enough placements in none rotation mode
 // TODO support no wall range, proper reach calculations
@@ -36,7 +36,7 @@ import java.util.*
 /**
  * Places blocks to support placements.
  */
-class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "Support", true) {
+class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Support", true) {
 
     private val depth by int("Depth", 4, 1..12)
     val delay by int("Delay", 500, 0..1000, "ms")

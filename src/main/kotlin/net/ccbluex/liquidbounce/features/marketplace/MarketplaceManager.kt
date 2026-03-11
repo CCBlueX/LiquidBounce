@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,26 +18,30 @@
  */
 package net.ccbluex.liquidbounce.features.marketplace
 
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.io.File
 
 /**
  * Marketplace manager for subscribing and updating items.
  */
-object MarketplaceManager : Configurable("marketplace"), EventListener {
+object MarketplaceManager : Config("marketplace"), EventListener {
+
+    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/MarketplaceManager")
 
     val subscribedItems by list("subscribed", mutableListOf<SubscribedItem>(), ValueType.SUBSCRIBED_ITEM)
 

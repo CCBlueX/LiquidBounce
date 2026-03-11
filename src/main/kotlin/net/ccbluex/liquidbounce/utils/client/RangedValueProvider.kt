@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.config.types.RangedValue
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 
 /**
  * Provides a ranged value to a submodule.
@@ -32,7 +32,7 @@ sealed interface RangedValueProvider {
      *
      * @return The ranged value.
      */
-    fun register(offeredConfigurable: Configurable): RangedValue<*>?
+    fun register(offeredValueGroup: ValueGroup): RangedValue<*>?
 
 }
 
@@ -41,7 +41,7 @@ sealed interface RangedValueProvider {
  */
 class DummyRangedValueProvider(private val value: RangedValue<*>) : RangedValueProvider {
 
-    override fun register(offeredConfigurable: Configurable) = value
+    override fun register(offeredValueGroup: ValueGroup) = value
 
 }
 
@@ -50,12 +50,12 @@ class DummyRangedValueProvider(private val value: RangedValue<*>) : RangedValueP
  */
 data object NoneRangedValueProvider : RangedValueProvider {
 
-    override fun register(offeredConfigurable: Configurable) = null
+    override fun register(offeredValueGroup: ValueGroup) = null
 
 }
 
 /**
- * [Configurable.float] registered to the submodule directly.
+ * [ValueGroup.float] registered to the submodule directly.
  */
 class FloatValueProvider(
     val name: String,
@@ -64,8 +64,8 @@ class FloatValueProvider(
     val suffix: String = ""
 ) : RangedValueProvider {
 
-    override fun register(offeredConfigurable: Configurable) : RangedValue<*> {
-        return offeredConfigurable.float(name, default, range, suffix)
+    override fun register(offeredValueGroup: ValueGroup) : RangedValue<*> {
+        return offeredValueGroup.float(name, default, range, suffix)
     }
 
 }

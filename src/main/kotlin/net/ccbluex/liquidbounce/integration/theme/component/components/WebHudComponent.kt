@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,12 +32,12 @@ class WebHudComponent(
     val values: Array<JsonObject> = emptyArray()
 ) : HudComponent(name, enabled, alignment, tweaks) {
 
-    override fun initConfigurable() {
+    override fun walkInit() {
         for (value in values) {
             json(value)
         }
         registerComponentListen(this)
-        super.initConfigurable()
+        super.walkInit()
     }
 
 }

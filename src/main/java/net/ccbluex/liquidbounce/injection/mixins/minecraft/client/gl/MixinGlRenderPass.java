@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,11 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.gl;
 
-import static net.ccbluex.liquidbounce.utils.client.GenericPools.HASH_MAP;
-import static net.ccbluex.liquidbounce.utils.client.GenericPools.HASH_SET;
-
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.opengl.GlRenderPass;
+import com.mojang.blaze3d.textures.GpuTexture;
+import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,6 +34,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+
+import static net.ccbluex.liquidbounce.utils.client.GenericPools.HASH_MAP;
+import static net.ccbluex.liquidbounce.utils.client.GenericPools.HASH_SET;
 
 /**
  * Purpose: reusing objects for less GC.
@@ -75,6 +76,7 @@ public abstract class MixinGlRenderPass {
         HASH_MAP.recycle(this.uniforms);
         HASH_MAP.recycle(this.samplers);
         HASH_SET.recycle((HashSet) this.dirtyUniforms);
+        RenderingDebug.increaseRenderPassCount();
     }
 
 

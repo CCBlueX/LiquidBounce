@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.OnlyInCombat.modes
@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpe
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.OnlyOnPotionEffect.potionEffects
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedCustom
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedPiercingAttack
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.blocksmc.SpeedBlocksMC
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim.SpeedGrimCollide
@@ -60,53 +61,50 @@ import java.util.function.BooleanSupplier
  *
  * Allows you to move faster.
  */
-object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
-
-    init {
-        enableLock()
-    }
+object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
     /**
      * Initialize speeds choices independently
      *
      * This is useful for the `OnlyOnPotionEffect` choice, which has its own set of modes
      */
-    private fun initializeSpeeds(configurable: ChoiceConfigurable<*>) = arrayOf(
-        SpeedLegitHop(configurable),
-        SpeedCustom(configurable),
-        SpeedSpeedYPort(configurable),
+    private fun initializeSpeeds(modeValueGroup: ModeValueGroup<*>) = arrayOf(
+        SpeedLegitHop(modeValueGroup),
+        SpeedCustom(modeValueGroup),
+        SpeedSpeedYPort(modeValueGroup),
+        SpeedPiercingAttack(modeValueGroup),
 
-        SpeedVerusB3882(configurable),
+        SpeedVerusB3882(modeValueGroup),
 
-        SpeedHypixelBHop(configurable),
-        SpeedHypixelLowHop(configurable),
+        SpeedHypixelBHop(modeValueGroup),
+        SpeedHypixelLowHop(modeValueGroup),
 
-        SpeedSpartanV4043(configurable),
-        SpeedSpartanV4043FastFall(configurable),
+        SpeedSpartanV4043(modeValueGroup),
+        SpeedSpartanV4043FastFall(modeValueGroup),
 
-        SpeedSentinelDamage(configurable),
+        SpeedSentinelDamage(modeValueGroup),
 
-        SpeedVulcan286(configurable),
-        SpeedVulcan288(configurable),
-        SpeedVulcanGround286(configurable),
-        SpeedGrimCollide(configurable),
+        SpeedVulcan286(modeValueGroup),
+        SpeedVulcan288(modeValueGroup),
+        SpeedVulcanGround286(modeValueGroup),
+        SpeedGrimCollide(modeValueGroup),
 
-        SpeedNCP(configurable),
+        SpeedNCP(modeValueGroup),
 
-        SpeedIntave14(configurable),
-        SpeedIntave14Fast(configurable),
+        SpeedIntave14(modeValueGroup),
+        SpeedIntave14Fast(modeValueGroup),
 
-        SpeedHylexLowHop(configurable),
-        SpeedHylexGround(configurable),
+        SpeedHylexLowHop(modeValueGroup),
+        SpeedHylexGround(modeValueGroup),
 
-        SpeedBlocksMC(configurable),
+        SpeedBlocksMC(modeValueGroup),
 
-        SpeedMatrix7(configurable)
+        SpeedMatrix7(modeValueGroup)
     )
 
     val modes = choices("Mode", 0, this::initializeSpeeds).apply(::tagBy)
 
-    private val notCondition by multiEnumChoice("Not", NotCondition.DURING_SCAFFOLD)
+    private val notCondition by multiEnumChoice("Not", NotCondition.SCAFFOLD)
 
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
 
@@ -125,7 +123,7 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
                 !(super.running || ModuleScaffold.running && ModuleScaffold.autoSpeed) -> false
                 !passesRequirements() -> false
                 OnlyInCombat.enabled && CombatManager.isInCombat -> false
-                OnlyOnPotionEffect.enabled && potionEffects.activeChoice.checkPotionEffects() -> false
+                OnlyOnPotionEffect.enabled && potionEffects.activeMode.checkPotionEffects() -> false
                 else -> true
             }
         }
@@ -133,12 +131,12 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
     private fun passesRequirements() = when {
         // DO NOT REMOVE - PLAYER COULD BE NULL!
         !inGame || isDestructed -> false
-        else -> notCondition.all { it.testCondition.asBoolean }
+        else -> !notCondition.any { it.condition.asBoolean }
     }
 
-    private object OnlyInCombat : ToggleableConfigurable(this, "OnlyInCombat", false) {
+    private object OnlyInCombat : ToggleableValueGroup(this, "OnlyInCombat", false) {
 
-        val modes = choices(this, "Mode", activeIndex = 0, ModuleSpeed::initializeSpeeds)
+        val modes = modes(this, "Mode", activeIndex = 0, ModuleSpeed::initializeSpeeds)
 
         /**
          * Controls [modes] activation state.
@@ -152,16 +150,16 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
 
     }
 
-    private object OnlyOnPotionEffect : ToggleableConfigurable(this, "OnlyOnPotionEffect", false) {
+    private object OnlyOnPotionEffect : ToggleableValueGroup(this, "OnlyOnPotionEffect", false) {
 
-        val potionEffects = choices(
+        val potionEffects = modes(
             this,
             "PotionEffect",
-            SpeedPotionEffectChoice,
-            arrayOf(SpeedPotionEffectChoice, SlownessPotionEffectChoice, BothEffectsChoice)
+            SpeedPotionEffectMode,
+            arrayOf(SpeedPotionEffectMode, SlownessPotionEffectMode, BothEffectsMode)
         )
 
-        val modes = choices(this, "Mode", activeIndex = 0, ModuleSpeed::initializeSpeeds)
+        val modes = modes(this, "Mode", activeIndex = 0, ModuleSpeed::initializeSpeeds)
 
         /**
          * Controls [modes] activation state.
@@ -170,13 +168,13 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
             get() = when {
                 !inGame || isDestructed -> false
                 !ModuleSpeed.enabled || !this.enabled || !passesRequirements() -> false
-                else -> potionEffects.activeChoice.checkPotionEffects()
+                else -> potionEffects.activeMode.checkPotionEffects()
             }
 
     }
 
-    abstract class PotionEffectChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<PotionEffectChoice>
+    abstract class PotionEffectMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<PotionEffectMode>
             get() = potionEffects
 
         abstract fun checkPotionEffects(): Boolean
@@ -197,17 +195,13 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
 
     @Suppress("unused")
     private enum class NotCondition(
-        override val choiceName: String,
-        val testCondition: BooleanSupplier
-    ) : NamedChoice {
-        WHILE_USING_ITEM("WhileUsingItem", {
-            !player.isUsingItem
-        }),
-        DURING_SCAFFOLD("DuringScaffold", {
-            !(ModuleScaffold.running || ModuleFly.running)
-        }),
-        WHILE_SNEAKING("WhileSneaking", {
-            !player.isShiftKeyDown
-        })
+        override val tag: String,
+        val condition: BooleanSupplier
+    ) : Tagged {
+        USING_ITEM("WhileUsingItem", { player.isUsingItem }),
+        SCAFFOLD("DuringScaffold", { ModuleScaffold.running || ModuleFly.running }),
+        SNEAKING("WhileSneaking", { player.isShiftKeyDown }),
+        FALL_FLYING("IsFallFlying", { player.isFallFlying }),
+        IN_LIQUID("IsInLiquid", { player.isInLiquid }),
     }
 }

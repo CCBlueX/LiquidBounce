@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.blocksmc
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -35,8 +33,8 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.world.effect.MobEffects
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.world.effect.MobEffects
 import kotlin.math.round
 
 /**
@@ -44,7 +42,7 @@ import kotlin.math.round
  * @author liquidsquid1
  */
 
-class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("BlocksMC") {
+class SpeedBlocksMC(override val parent: ModeValueGroup<*>) : Mode("BlocksMC") {
 
     private var roundStrafeYaw by boolean("RoundStrafeYaw", false)
 
@@ -56,7 +54,7 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
     }
 
     override fun disable() {
-        player.setDeltaMovement(player.deltaMovement.copy(x = 0.0, z = 0.0))
+        player.deltaMovement = player.deltaMovement.copy(x = 0.0, z = 0.0)
     }
 
     @Suppress("unused")
@@ -112,7 +110,7 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
         }
 
         if (!player.onGround() && state != 0) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed, yaw = yaw))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed, yaw = yaw)
         }
     }
 

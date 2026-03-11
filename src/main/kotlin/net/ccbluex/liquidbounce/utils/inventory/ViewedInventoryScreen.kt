@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,18 +20,19 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.renderer.RenderPipelines
+import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.INVENTORY_LOCATION
 import net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse
 import net.minecraft.client.input.KeyEvent
+import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.world.inventory.Slot
+import net.minecraft.world.item.ItemStack
 
 class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainText.EMPTY) {
 
@@ -67,7 +68,9 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
                 if (slot.isHighlightable) {
                     // draw slot highlight
                     context.fillGradient(
-                        slot.x, slot.y, slot.x + 16, slot.y + 16,
+                        slot.x, slot.y,
+                        slot.x + GuiRenderer.DEFAULT_ITEM_SIZE,
+                        slot.y + GuiRenderer.DEFAULT_ITEM_SIZE,
                         -2130706433, -2130706433,
                     )
                 }
@@ -123,7 +126,11 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
         if (slot.item.isEmpty && slot.isActive) {
             val identifier = slot.noItemIcon
             if (identifier != null) {
-                context.blitSprite(RenderPipelines.GUI_TEXTURED, identifier, slot.x, slot.y, 16, 16)
+                context.blitSprite(
+                    RenderPipelines.GUI_TEXTURED,
+                    identifier, slot.x, slot.y,
+                    GuiRenderer.DEFAULT_ITEM_SIZE, GuiRenderer.DEFAULT_ITEM_SIZE
+                )
                 spriteDrawn = true
             }
         }
@@ -143,8 +150,8 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
     }
 
     private fun isPointOverSlot(slot: Slot, pointX: Double, pointY: Double): Boolean {
-        val width = 16
-        val height = 16
+        val width = GuiRenderer.DEFAULT_ITEM_SIZE
+        val height = GuiRenderer.DEFAULT_ITEM_SIZE
         val pX = pointX - x
         val pY = pointY - y
         return pX >= slot.x - 1 && pX < slot.x + width + 1

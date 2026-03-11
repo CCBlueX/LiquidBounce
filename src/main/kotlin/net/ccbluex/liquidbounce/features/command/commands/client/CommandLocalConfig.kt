@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,28 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import kotlinx.coroutines.async
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
-import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.IncludeConfiguration
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
+import net.ccbluex.liquidbounce.config.autoconfig.IncludeConfiguration
+import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.boolean
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
+import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.onClick
@@ -41,11 +48,16 @@ import net.ccbluex.liquidbounce.utils.client.plus
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.io.ILLEGAL_FILE_NAME_CHARS_WINDOWS
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.ccbluex.liquidbounce.utils.text.AsyncLoadingText
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Style
-import net.minecraft.ChatFormatting
 import net.minecraft.util.Util
+import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 
@@ -67,19 +79,39 @@ object CommandLocalConfig : Command.Factory {
             .build()
     }
 
+    private fun hoverText(file: File, settingName: String) =
+        textOf(
+            "Click to load ".asPlainText(ChatFormatting.GRAY),
+            settingName.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.BOLD),
+            PlainText.NEW_LINE,
+            AsyncLoadingText(
+                ioScope.async {
+                    file.bufferedReader().use { r ->
+                        publicGson.fromJson(r, AutoConfigMetadata::class.java)
+                    }.asText()
+                }
+            )
+        )
+
     private fun saveSubcommand() = CommandBuilder
         .begin("save")
         .alias("create")
         .parameter(
-            ParameterBuilder
-                .begin<String>("name")
+            ParameterBuilder.begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                .autocompletedFrom {
+                    ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
+                }
                 .required()
                 .build()
         )
         .parameter(
-            ParameterBuilder
-                .begin<String>("include")
+            ParameterBuilder.boolean("overwrite")
+                .optional()
+                .build()
+        )
+        .parameter(
+            ParameterBuilder.begin<String>("include")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .autocompletedFrom { listOf("binds", "hidden") }
                 .vararg()
@@ -89,28 +121,38 @@ object CommandLocalConfig : Command.Factory {
         .handler {
             val name = args[0] as String
 
+            if (name.isBlank() || name.contains('/') ||
+                (Util.getPlatform() == Util.OS.WINDOWS && name.any { ILLEGAL_FILE_NAME_CHARS_WINDOWS.get(it.code) })
+            ) {
+                throw CommandException(command.result("invalidFileName", variable(name)))
+            }
+
+            val overwrite = args.getOrNull(1) as Boolean? ?: false
             @Suppress("UNCHECKED_CAST")
-            val include = args.getOrNull(1) as Array<*>? ?: emptyArray<String>()
+            val include = args.getOrNull(2) as Array<*>? ?: emptyArray<String>()
 
             val includeConfiguration = IncludeConfiguration(
                 includeBinds = include.contains("binds"),
-                includeHidden = include.contains("hidden")
+                includeHidden = include.contains("hidden"),
             )
 
-            ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
-                if (exists()) {
-                    delete()
+            val file = ConfigSystem.userConfigsFolder.resolve("$name.json")
+            try {
+                if (file.exists()) {
+                    if (overwrite) {
+                        file.delete()
+                    } else {
+                        chat(markAsError(command.result("alreadyExists", variable(name))))
+                        return@handler
+                    }
                 }
 
-                createNewFile()
-                bufferedWriter().use {
-                    serializeAutoConfig(it, includeConfiguration)
-                }
-            }.onFailure {
-                chat(regular(command.result("failedToCreate", variable(name))))
-                logger.error("Failed to create local config '$name'", it)
-            }.onSuccess {
+                file.createNewFile()
+                serializeAutoConfig(file.bufferedWriter(), includeConfiguration)
                 chat(regular(command.result("created", variable(name))))
+            } catch (e: Exception) {
+                chat(regular(command.result("failedToCreate", variable(name))))
+                logger.error("Failed to create local config '$name'", e)
             }
         }
         .build()
@@ -125,15 +167,15 @@ object CommandLocalConfig : Command.Factory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                "Local Configs:".asPlainText(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD)
+                highlight("Local Configs:")
             },
             items = {
                 ConfigSystem.userConfigsFolder.listFiles { _, name ->
                     name.endsWith(".json", ignoreCase = true)
-                }.asList()
+                }.unmodifiable()
             },
             eachRow = { _, file ->
-                val fileNameWithoutSuffix = file.name.removeSuffix(".json")
+                val settingName = file.name.removeSuffix(".json")
 
                 val lastModified = Instant.ofEpochMilli(file.lastModified())
                     .atZone(ZoneId.systemDefault())
@@ -145,17 +187,10 @@ object CommandLocalConfig : Command.Factory {
                     variable(file.name)
                         .onClick(
                             ClickEvent.SuggestCommand(
-                                ".localconfig load $fileNameWithoutSuffix"
+                                CommandManager.GlobalSettings.prefix + "localconfig load $settingName"
                             )
                         )
-                        .onHover(
-                            HoverEvent.ShowText(
-                                textOf(
-                                    "Click to load ".asPlainText(ChatFormatting.GRAY),
-                                    fileNameWithoutSuffix.asPlainText(ChatFormatting.AQUA),
-                                )
-                            )
-                        ),
+                        .onHover(HoverEvent.ShowText(hoverText(file, settingName))),
                     regular(" ($lastModified)"),
                 )
             }

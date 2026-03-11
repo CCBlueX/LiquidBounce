@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,14 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.math.toFixed
@@ -37,12 +36,12 @@ import net.minecraft.world.phys.Vec3
 import java.text.DecimalFormat
 import java.util.function.BiFunction
 
-object TrajectoryDetailedInfoRenderer : ToggleableConfigurable(ModuleTrajectories, "ShowDetailedInfo", false) {
+object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories, "ShowDetailedInfo", false) {
     private val showAt by enumChoice("ShowAt", ShowAt.ENTITY)
 
     private enum class ShowAt(
-        override val choiceName: String,
-    ) : NamedChoice, BiFunction<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult, Vec3> {
+        override val tag: String,
+    ) : Tagged, BiFunction<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult, Vec3> {
         OWNER("Owner"),
         ENTITY("Entity"),
         LANDING("Landing");
@@ -64,8 +63,8 @@ object TrajectoryDetailedInfoRenderer : ToggleableConfigurable(ModuleTrajectorie
     private val color by color("Color", Color4b.WHITE)
 
     private enum class DurationUnit(
-        override val choiceName: String,
-    ) : NamedChoice {
+        override val tag: String,
+    ) : Tagged {
         TICKS("Ticks") {
             override fun format(ticks: Int): String = ticks.toString()
         },
@@ -78,7 +77,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableConfigurable(ModuleTrajectorie
     }
 
     private val scale by float("Scale", 1F, 0.25F..4F)
-    private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
+    private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
     private fun Vec3.calcScreenPosWithOffset(): Vec3f? {
         return WorldToScreen.calculateScreenPos(add(renderOffset))
     }
@@ -133,12 +132,11 @@ object TrajectoryDetailedInfoRenderer : ToggleableConfigurable(ModuleTrajectorie
                 for (text in texts) {
                     val processedText = fontRenderer.process(text, color)
 
-                    fontRenderer.draw(
-                        processedText,
-                        x = 0f, y = y,
-                        horizontalAnchor = HorizontalAnchor.CENTER,
-                        shadow = true,
-                    )
+                    fontRenderer.draw(processedText) {
+                        this.y = y
+                        horizontalAnchor = HorizontalAnchor.CENTER
+                        shadow = true
+                    }
 
                     y += fontRenderer.height + 1f
                 }

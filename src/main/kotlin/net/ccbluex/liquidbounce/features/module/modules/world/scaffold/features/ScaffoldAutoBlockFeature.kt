@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 
-object ScaffoldAutoBlockFeature : ToggleableConfigurable(ModuleScaffold, "AutoBlock", true) {
+object ScaffoldAutoBlockFeature : ToggleableValueGroup(ModuleScaffold, "AutoBlock", true) {
     val alwaysHoldBlock by boolean("Always", false)
     val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
     val doNotUseBelowCount by int("DoNotUseBelowCount", 1, 0..64)

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,11 @@ package net.ccbluex.liquidbounce.utils.block
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.fastutil.forEachLong
 import net.ccbluex.liquidbounce.utils.math.contains
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.LevelChunk
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -62,14 +63,14 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
     /**
      * Returns a [Sequence] providing all tracked [BlockPos].
      *
-     * Note: The elements of the [Sequence] is [BlockPos.Mutable]. Copy them if they will be maintained.
+     * Note: The elements of the [Sequence] is [BlockPos.MutableBlockPos]. Copy them if they will be maintained.
      */
     abstract fun allPositions(): Sequence<BlockPos>
 
     /**
      * Returns a [Sequence] providing all tracked [BlockPos] and its state [T].
      *
-     * Note: The elements of the [Map.Entry.key] is [BlockPos.Mutable]. Copy them if they will be maintained.
+     * Note: The elements of the [Map.Entry.key] is [BlockPos.MutableBlockPos]. Copy them if they will be maintained.
      */
     abstract fun iterate(): Sequence<Map.Entry<BlockPos, T>>
 
@@ -77,6 +78,10 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      * Returns if there iss nothing tracked.
      */
     abstract fun isEmpty(): Boolean
+
+    open fun onUpdated() {
+        // NOP
+    }
 
     final override fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean) {
         val newState = this.getStateFor(pos, state)
@@ -127,9 +132,8 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
             var entry: FullMutableEntry<BlockPos, T>? = null
             lock.read {
                 for ((state, positions) in stateAndPositions) {
-                    val iterator = positions.longIterator()
-                    while (iterator.hasNext()) {
-                        mutable.set(iterator.nextLong())
+                    positions.forEachLong {
+                        mutable.set(it)
                         if (entry == null) {
                             entry = FullMutableEntry(mutable, state)
                         } else {
@@ -141,34 +145,62 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
             }
         }
 
+        fun iterate(type: T): Sequence<BlockPos> {
+            val positions = stateAndPositions[type] ?: return emptySequence()
+
+            return sequence {
+                val mutable = BlockPos.MutableBlockPos()
+                lock.read {
+                    positions.forEachLong {
+                        yield(mutable.set(it))
+                    }
+                }
+            }
+        }
+
         final override fun isEmpty() = lock.read {
             stateAndPositions.isEmpty() || stateAndPositions.values.all { it.isEmpty() }
         }
 
         final override fun track(pos: BlockPos, state: T) {
-            lock.write {
+            val added = lock.write {
                 stateAndPositions.computeIfAbsent(state) { LongOpenHashSet() }.add(pos.asLong())
+            }
+            if (added) {
+                onUpdated()
             }
         }
 
         final override fun untrack(pos: BlockPos): Boolean {
-            lock.write {
+            val removed = lock.write {
                 val longValue = pos.asLong()
-                return stateAndPositions.values.any { it.remove(longValue) }
+                stateAndPositions.values.any { it.remove(longValue) }
+            }
+            return if (removed) {
+                onUpdated()
+                true
+            } else {
+                false
             }
         }
 
         final override fun clearAllChunks() {
             lock.write {
                 stateAndPositions.clear()
+                onUpdated()
             }
         }
 
         final override fun clearChunk(pos: ChunkPos) {
+            var removed = false
             lock.write {
+                val predicate = LongPredicate(pos::contains)
                 stateAndPositions.values.forEach { set ->
-                    set.removeIf(LongPredicate(pos::contains))
+                    removed = removed || set.removeIf(predicate)
                 }
+            }
+            if (removed) {
+                onUpdated()
             }
         }
 
@@ -212,10 +244,6 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
             if (positionAndState.keys.removeIf(Predicate(pos::contains))) {
                 onUpdated()
             }
-        }
-
-        open fun onUpdated() {
-            // NOP
         }
     }
 }

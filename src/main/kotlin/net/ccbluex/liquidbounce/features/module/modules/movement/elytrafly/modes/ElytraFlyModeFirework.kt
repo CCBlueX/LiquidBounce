@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
 import net.ccbluex.liquidbounce.additions.shooter
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -34,7 +34,7 @@ import net.minecraft.world.item.Items
 
 internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
-    private object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
+    private object ConsiderInventory : ToggleableValueGroup(this, "ConsiderInventory", enabled = false) {
         val constraints = tree(PlayerInventoryConstraints())
     }
 
@@ -74,7 +74,7 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
         } else {
             val actions = listOf<InventoryAction>(
                 InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
-                InventoryAction.UseItem(OffHandSlot),
+                InventoryAction.UseItem(OffHandSlot, this),
                 InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
             )
             event.schedule(ConsiderInventory.constraints, actions)

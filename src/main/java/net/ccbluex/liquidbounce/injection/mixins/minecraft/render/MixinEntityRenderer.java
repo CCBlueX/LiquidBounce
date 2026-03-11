@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
             0, text,
             true, Font.DisplayMode.NORMAL,
             light, -1,
-            Color4b.BLACK.toARGB(), -1
+            Color4b.BLACK.argb(), -1
         );
         matrices.popPose();
     }
@@ -138,7 +138,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
             return true;
         } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof PrimedTnt) {
             return true;
-        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
+        } else if (ModuleStorageESP.GlowMode.INSTANCE.getRunning()) {
             var category = ModuleStorageESP.categorize(entity);
             return category != null && category.shouldRender(entity);
         } else {
@@ -154,15 +154,15 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getTeamColor()I"))
     private int injectTeamColor(Entity entity, Operation<Integer> operation) {
         if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning() && EspGlowMode.INSTANCE.shouldRender(livingEntity)) {
-            return ModuleESP.INSTANCE.getColor(livingEntity).toARGB();
+            return ModuleESP.INSTANCE.getColor(livingEntity).argb();
         } else if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
-            return ModuleItemESP.INSTANCE.getColor().toARGB();
+            return ModuleItemESP.INSTANCE.getColor().argb();
         } else if (entity instanceof PrimedTnt tntEntity && ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp()) {
-            return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).toARGB();
-        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
+            return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).argb();
+        } else if (ModuleStorageESP.GlowMode.INSTANCE.getRunning()) {
             var category = ModuleStorageESP.categorize(entity);
             if (category != null && category.shouldRender(entity)) {
-                return category.getColor().toARGB();
+                return category.getColor().argb();
             }
         }
 

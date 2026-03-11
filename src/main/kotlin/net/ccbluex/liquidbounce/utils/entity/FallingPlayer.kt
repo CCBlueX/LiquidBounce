@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.Pose
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Holder
+import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffects
-import net.minecraft.core.Holder
-import net.minecraft.core.BlockPos
-import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.Pose
 import net.minecraft.world.phys.Vec3
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.sqrt
@@ -40,9 +40,10 @@ class FallingPlayer(
     private var motionX: Double,
     private var motionY: Double,
     private var motionZ: Double,
-    private val yaw: Float
+    private val yRot: Float
 ) {
     companion object {
+        @JvmStatic
         fun fromPlayer(player: LocalPlayer): FallingPlayer {
             return FallingPlayer(
                 player,
@@ -66,7 +67,6 @@ class FallingPlayer(
         if (bl && hasStatusEffect(MobEffects.SLOW_FALLING)) {
             d = 0.01
         }
-
 
         val j: Double = this.player.xRot.toDouble() * Mth.DEG_TO_RAD
 
@@ -103,7 +103,7 @@ class FallingPlayer(
                     this.player.input.movementForward.toDouble() * 0.98
                 ),
                 0.02F,
-                yaw
+                yRot
             )
         )
 

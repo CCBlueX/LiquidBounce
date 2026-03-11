@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.entity.direction
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.minecraft.world.entity.Entity
@@ -33,9 +31,16 @@ import net.minecraft.world.entity.decoration.ArmorStand
 import kotlin.math.cos
 import kotlin.math.sin
 
-class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("GrimCollide") {
+class SpeedGrimCollide(override val parent: ModeValueGroup<*>) : Mode("GrimCollide") {
 
     private val speed by float("BoostSpeed", 0.08F, 0.01F..0.08F, "b/t")
+
+    /**
+     * 0.5f shrink box can bypass newest versions of GrimAC (e.g., 2.3.73)
+     * 1f shrink box can bypass older GrimAC versions
+     */
+
+    private val shrinkBox by float("ShrinkBox", 0.5f, 0.1f..2f)
 
     /**
      * Grim Collide mode for the Speed module.
@@ -53,7 +58,7 @@ class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("Gri
         }
 
         var collisions = 0
-        val box = player.boundingBox.inflate(1.0)
+        val box = player.boundingBox.inflate(shrinkBox.toDouble())
 
         for (entity in world.entitiesForRendering()) {
             val entityBox = entity.boundingBox

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
@@ -30,37 +32,31 @@ import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
-import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAspect;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTracers;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
+import net.ccbluex.liquidbounce.features.module.modules.render.*;
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen;
+import net.minecraft.client.Camera;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.CameraType;
-import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.ItemInHandRenderer;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.util.Mth;
-import com.mojang.math.Axis;
+import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
@@ -98,11 +94,37 @@ public abstract class MixinGameRenderer {
      * Hook world render event
      */
     @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isSleeping()Z"))
-    public void hookWorldRender(DeltaTracker tickCounter, CallbackInfo ci, @Local(ordinal = 1) Matrix4f matrix4f2) {
+    public void hookWorldRender(
+        DeltaTracker deltaTracker,
+        CallbackInfo ci,
+        @Local(ordinal = 0) Matrix4f projectionMatrix,
+        @Local(ordinal = 1) Matrix4f modelViewMatrix
+    ) {
+        WorldToScreen.setMatrices(projectionMatrix, modelViewMatrix);
+
         var newMatStack = Pools.MatStack.borrow();
-        newMatStack.mulPose(matrix4f2);
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.mainCamera, tickCounter.getGameTimeDeltaPartialTick(false)));
-        Pools.MatStack.recycle(newMatStack);
+        try {
+            newMatStack.mulPose(modelViewMatrix);
+            WorldRenderEnvironment.beginWorldFrame(minecraft.getMainRenderTarget(), newMatStack, this.mainCamera);
+            EventManager.INSTANCE.callEvent(
+                new WorldRenderEvent(newMatStack, this.mainCamera, deltaTracker.getGameTimeDeltaPartialTick(false))
+            );
+        } finally {
+            WorldRenderEnvironment.endWorldFrame();
+            Pools.MatStack.recycle(newMatStack);
+        }
+    }
+
+    @ModifyArg(
+        method = "renderLevel",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/fog/FogRenderer;getBuffer(Lnet/minecraft/client/renderer/fog/FogRenderer$FogMode;)Lcom/mojang/blaze3d/buffers/GpuBufferSlice;")
+    )
+    private FogRenderer.FogMode disableFog(FogRenderer.FogMode fogMode) {
+        var fogValueGroup = ModuleCustomAmbience.FogValueGroup.INSTANCE;
+        if (fogValueGroup.getRunning() && ModuleCustomAmbience.FogValueGroup.INSTANCE.getDisableWorldFog()) {
+            return FogRenderer.FogMode.NONE;
+        }
+        return fogMode;
     }
 
     @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/player/LocalPlayer;I)V"))
@@ -133,7 +155,10 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "bobView", at = @At("HEAD"), cancellable = true)
     private void injectBobView(PoseStack matrixStack, float tickProgress, CallbackInfo callbackInfo) {
-        if (ModuleNoBob.INSTANCE.getRunning() || ModuleTracers.INSTANCE.getRunning()) {
+        if (ModuleNoBob.INSTANCE.getRunning() ||
+            ModuleTracers.INSTANCE.getRunning() ||
+            (ModuleItemESP.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.getShowTracers())) {
+
             callbackInfo.cancel();
             return;
         }

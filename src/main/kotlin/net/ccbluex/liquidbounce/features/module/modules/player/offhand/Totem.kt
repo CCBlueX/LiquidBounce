@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getPotentialSecondBedBlock
@@ -39,12 +39,12 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.world.bedRule
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Pose
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
-import net.minecraft.world.entity.Pose
-import net.minecraft.core.BlockPos
 
-internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
+internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
 
     /**
      * The totem mode might have a lower switch delay than other items.
@@ -59,7 +59,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
     /**
      * Switch to a totem on low health and back to the original item when the health goes up again.
      */
-    object Health : ToggleableConfigurable(this, "Health", true) {
+    object Health : ToggleableValueGroup(this, "Health", true) {
 
         /**
          * At which health we switch to a totem.
@@ -70,7 +70,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
          * For crystal pvp, allows to have longer a useful item in your offhand if you're not in danger of
          * the main damage source.
          */
-        private object Safety : ToggleableConfigurable(this, "Safety", true) {
+        private object Safety : ToggleableValueGroup(this, "Safety", true) {
             // TODO option for 2x2 and 2x1
 
             /**
@@ -105,7 +105,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
             sphere = BlockPos.ZERO.getSortedSphere(10f)
         }
 
-        private object FallDamage : ToggleableConfigurable(this, "PredictFallDamage", true) {
+        private object FallDamage : ToggleableValueGroup(this, "PredictFallDamage", true) {
 
             val ignoreElytra by boolean("IgnoreElytra", false)
 
@@ -284,7 +284,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
             return false
         }
 
-        InventoryManager.clickOccurred()
+        InventoryManager.onClickOccurs()
         actions.forEach { it.performAction() }
         return true
     }

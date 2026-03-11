@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.render
 
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
+import net.minecraft.world.phys.AABB
 
 enum class BoxVertexIterator {
     FACE {
-        override fun forEachVertex(box: AABB, consumer: Consumer) {
+        override fun forEachVertex(box: AABB, consumer: BoxVertexConsumer) {
             box.forEachFaceVertex(consumer::invoke)
         }
 
@@ -38,7 +38,7 @@ enum class BoxVertexIterator {
         }
     },
     OUTLINE {
-        override fun forEachVertex(box: AABB, consumer: Consumer) {
+        override fun forEachVertex(box: AABB, consumer: BoxVertexConsumer) {
             box.forEachOutlineVertex(consumer::invoke)
         }
 
@@ -55,14 +55,22 @@ enum class BoxVertexIterator {
     /**
      * For Java and JS usage.
      */
-    abstract fun forEachVertex(box: AABB, consumer: Consumer)
+    abstract fun forEachVertex(box: AABB, consumer: BoxVertexConsumer)
 
     /**
      * For [drawBox].
      */
     abstract fun sideMask(side: Direction): Int
 
-    fun interface Consumer {
+    fun sideMask(sides: Iterable<Direction>): Int {
+        var bits = 0
+        for (side in sides) {
+            bits = bits or sideMask(side)
+        }
+        return bits
+    }
+
+    fun interface BoxVertexConsumer {
         operator fun invoke(index: Int, x: Double, y: Double, z: Double)
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,26 +18,15 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.getUsesViaFabricPlus;
-
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.platform.Window;
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.event.CoroutineTicker;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent;
-import net.ccbluex.liquidbounce.event.events.ClientStartEvent;
-import net.ccbluex.liquidbounce.event.events.DisconnectEvent;
-import net.ccbluex.liquidbounce.event.events.FpsChangeEvent;
-import net.ccbluex.liquidbounce.event.events.GameRenderTaskQueueEvent;
-import net.ccbluex.liquidbounce.event.events.GameTickEvent;
-import net.ccbluex.liquidbounce.event.events.InputHandleEvent;
-import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent;
-import net.ccbluex.liquidbounce.event.events.ScreenEvent;
-import net.ccbluex.liquidbounce.event.events.SessionEvent;
-import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent;
-import net.ccbluex.liquidbounce.event.events.UseCooldownEvent;
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
@@ -46,34 +35,37 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActio
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAction;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
-import net.ccbluex.liquidbounce.integration.IntegrationListener;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.Options;
+import net.minecraft.client.User;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.multiplayer.ServerData;
-import net.minecraft.client.Options;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.User;
-import com.mojang.blaze3d.platform.Window;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.util.Util;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.component.AttackRange;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -85,7 +77,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import javax.annotation.Nullable;
+import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.getUsesViaFabricPlus;
 
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft {
@@ -226,18 +218,15 @@ public abstract class MixinMinecraft {
         }
 
         // For debugging purposes, will be removed until we have a stable release
-        if (Util.getPlatform() == Util.OS.WINDOWS) {
-            if (BrowserBackendManager.INSTANCE.getBrowserBackend().isInitialized() &&
-                    BrowserBackendManager.INSTANCE.getBrowserBackend().isAccelerationSupported()) {
-                var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
+        var backend = BrowserBackendManager.INSTANCE.getBackend();
+        if (backend != null && backend.isInitialized() && backend.getAccelerationFlags().isSupported()) {
+            var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
 
-                if (accelerated != null && accelerated.get()) {
-                    titleBuilder.append(" | (UI Renderer Acceleration is ON");
-                    // Hotkey only works when not in-game
-                    if (this.level == null && this.player == null) {
-                        titleBuilder.append(" - Toggle with F12");
-                    }
-                    titleBuilder.append(")");
+            if (accelerated != null && accelerated.get()) {
+                titleBuilder.append(" | Accelerated Paint is ON");
+                // Hotkey only works when not in-game
+                if (this.level == null && this.player == null) {
+                    titleBuilder.append(" [Hotkey: F12]");
                 }
             }
         }
@@ -312,6 +301,7 @@ public abstract class MixinMinecraft {
      */
     @Inject(method = "tick", at = @At("HEAD"))
     private void hookTickEvent(CallbackInfo callbackInfo) {
+        CoroutineTicker.INSTANCE.tick();
         EventManager.INSTANCE.callEvent(GameTickEvent.INSTANCE);
     }
 
@@ -370,6 +360,21 @@ public abstract class MixinMinecraft {
         return original;
     }
 
+    @ModifyReceiver(
+        method = "startAttack",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/item/component/AttackRange;isInRange(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/phys/Vec3;)Z"
+        )
+    )
+    private AttackRange injectReachAttackRange(AttackRange instance, LivingEntity entity, Vec3 pos) {
+        if (ModuleReach.INSTANCE.getRunning()) {
+            return ModuleReach.INSTANCE.getEntity().adjustAttackRange(instance);
+        }
+
+        return instance;
+    }
+
     @WrapWithCondition(method = "startAttack", at = @At(value = "FIELD",
             target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 1))
     private boolean disableAttackCooldown(Minecraft instance, int value) {
@@ -419,12 +424,11 @@ public abstract class MixinMinecraft {
 
     /**
      * Alternative input handler of [handleInputEvents] while being inside a client-side screen.
-     * @param ci
      */
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 4, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void passthroughInputHandler(CallbackInfo ci, @Local ProfilerFiller profiler) {
         if (this.overlay == null && this.player != null && this.level
-            != null && IntegrationListener.isClientScreen(this.screen)) {
+            != null && ScreenManager.isClientScreen(this.screen)) {
             profiler.popPush("Keybindings");
 
             if (ModuleAutoBreak.INSTANCE.getEnabled()) {
@@ -455,7 +459,7 @@ public abstract class MixinMinecraft {
     private boolean injectFixAttackCooldownOnVirtualBrowserScreen(Minecraft instance, int value) {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.
-        return !IntegrationListener.isClientScreen(this.screen);
+        return !ScreenManager.isClientScreen(this.screen);
     }
 
     @Inject(method = "clearDownloadedResourcePacks", at = @At("HEAD"))

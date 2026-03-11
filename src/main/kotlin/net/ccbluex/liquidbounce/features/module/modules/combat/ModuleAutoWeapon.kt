@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import com.google.common.base.Predicates
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.onTarget
@@ -37,21 +39,24 @@ import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.item.isSword
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.MaceItem
-import net.minecraft.world.InteractionHand
-import java.util.*
+import net.minecraft.world.item.enchantment.Enchantments
+import java.util.function.Predicate
 
 /**
  * AutoWeapon module
  *
  * Automatically selects the best weapon in your hotbar
  */
-object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
+object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     /**
      * The weapon type to prefer, which on 1.8 and 1.9+ versions is usually a sword,
@@ -64,32 +69,34 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     @Suppress("unused")
     private enum class WeaponType(
-        override val choiceName: String,
-        val filter: (WeaponItemFacet) -> Boolean
-    ): NamedChoice {
-        ANY("Any", { true }),
+        override val tag: String,
+        val filter: Predicate<WeaponItemFacet>,
+    ): Tagged {
+        ANY("Any", Predicates.alwaysTrue()),
+        KNOCKBACK("Knockback", { it.itemStack.getEnchantment(Enchantments.KNOCKBACK) > 0 }),
         SWORD("Sword", { it.itemStack.isSword }),
         AXE("Axe", { it.itemStack.isAxe }),
         MACE("Mace", { it.itemStack.item is MaceItem }),
+        SPEAR("Spear", { it.itemStack.isSpear }),
 
         /**
          * Do not prefer any weapon type. This is useful if you only
          * want to make use of either [autoShieldBreak] or [autoMace].
          */
-        NONE("None", { false });
+        NONE("None", Predicates.alwaysFalse());
     }
 
     private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
 
     private val changeOnActions by multiEnumChoice<ChangeOnAction>(
         "ChangeOn",
-        EnumSet.of(ChangeOnAction.ON_ATTACK)
+        enumSetOf(ChangeOnAction.ON_ATTACK)
     )
 
     @Suppress("unused")
     private enum class ChangeOnAction(
-        override val choiceName: String
-    ): NamedChoice {
+        override val tag: String
+    ): Tagged {
         ON_ATTACK("OnAttack"),
         ON_TARGET("OnTarget")
     }
@@ -137,7 +144,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     // https://minecraft.wiki/w/Mace#Falling
     private val canMaceSmash
-        get() = !isOlderThanOrEqual1_8 && MaceItem.canSmashAttack(player)
+        get() = (!isOlderThanOrEqual1_8 && MaceItem.canSmashAttack(player)) || ModuleMaceKill.enabled
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
@@ -191,7 +198,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
                     // An axe will stun the target if it is blocking with a shield
                     requiresShield -> itemFacet.itemStack.isAxe
                     // Fall back to a preferred weapon when no special case applies
-                    else -> preferredWeapon.filter(itemFacet)
+                    else -> preferredWeapon.filter.test(itemFacet)
                 }
             }
             .maxOrNull()

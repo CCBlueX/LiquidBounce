@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 
-abstract class ElytraFlyMode(name: String) : Choice(name) {
+abstract class ElytraFlyMode(name: String) : Mode(name) {
 
-    override val parent: ChoiceConfigurable<ElytraFlyMode>
+    override val parent: ModeValueGroup<ElytraFlyMode>
         get() = ModuleElytraFly.modes
 
     open fun onTick() {}

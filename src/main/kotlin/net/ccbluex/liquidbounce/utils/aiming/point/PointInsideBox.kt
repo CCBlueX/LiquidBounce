@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.point
 
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.core.Position
@@ -34,9 +34,9 @@ data class PointInsideBox private constructor(val pos: Vec3, val box: AABB) : Po
 
     fun distanceTo(point: Vec3) = pos.distanceTo(point)
 
-    fun squaredDistanceTo(point: PointInsideBox) = pos.distanceToSqr(point.pos)
+    fun distanceToSqr(point: PointInsideBox) = pos.distanceToSqr(point.pos)
 
-    fun squaredDistanceTo(point: Vec3) = pos.distanceToSqr(point)
+    fun distanceToSqr(point: Vec3) = pos.distanceToSqr(point)
 
     operator fun plus(other: Position) = Companion(pos + other, box + other)
 

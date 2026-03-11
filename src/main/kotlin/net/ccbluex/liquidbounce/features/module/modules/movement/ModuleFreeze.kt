@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,37 +19,37 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleEasyPearl
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.protocol.common.ServerboundPongPacket
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -58,7 +58,7 @@ import kotlin.random.Random
  *
  * Allows you to freeze yourself without the server knowing.
  */
-object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = true) {
+object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableOnQuit = true) {
 
     private val modes = choices("Mode", Stationary, arrayOf(Queue, Cancel, Stationary))
         .apply { tagBy(this) }
@@ -126,8 +126,8 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
         )
 
         // Alter the simulated player's yaw and pitch to match the camera
-        simulatedPlayer.yaw = event.camera.yRot()
-        simulatedPlayer.pitch = event.camera.xRot()
+        simulatedPlayer.yRot = event.camera.yRot()
+        simulatedPlayer.xRot = event.camera.xRot()
 
         // Create a cache for the simulated player
         val simulatedPlayerCache = SimulatedPlayerCache(simulatedPlayer)
@@ -136,8 +136,8 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
 
         renderEnvironmentForWorld(event.matrixStack) {
             drawLineStrip(
-                argb = Color4b(0x00, 0x80, 0xFF, 0xFF).toARGB(),
-                positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() },
+                argb = Color4b(0x00, 0x80, 0xFF, 0xFF).argb,
+                positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3f() },
             )
         }
     }
@@ -162,15 +162,15 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
     /**
      * Queue network communication - acts as network lag
      */
-    object Queue : Choice("Queue") {
+    object Queue : Mode("Queue") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
         @Suppress("unused")
-        private val fakeLagHandler = handler<QueuePacketEvent>(
+        private val fakeLagHandler = handler<BlinkPacketEvent>(
             priority = EventPriorityConvention.SAFETY_FEATURE
         ) { event ->
             if (origin.any { origin -> origin == event.origin }) {
@@ -183,11 +183,11 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
     /**
      * Cancel network communication
      */
-    object Cancel : Choice("Cancel") {
+    object Cancel : Mode("Cancel") {
 
         private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -202,7 +202,7 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
     /**
      * Stationary freeze - only cancel movement but keeps network communication intact
      */
-    object Stationary : Choice("Stationary") {
+    object Stationary : Mode("Stationary") {
         /**
          * Bypasses Grim's BadPacketsR and Matrix7 Timer Check
          */
@@ -210,7 +210,7 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
         private val yawOffset = FloatOffsetGenerator()
         private val pitchOffset = FloatOffsetGenerator()
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         /**

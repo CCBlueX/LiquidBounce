@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.spoofer
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 
-object SpooferBungeeCord : ToggleableConfigurable(name = "BungeecordSpoofer", enabled = false) {
+object SpooferBungeeCord : ToggleableValueGroup(name = "BungeecordSpoofer", enabled = false) {
 
     val host by text("Host", "127.0.0.1")
 
-    private object CustomUuid : ToggleableConfigurable(this, "CustomUUID", false) {
+    private object CustomUuid : ToggleableValueGroup(this, "CustomUUID", false) {
         val uuid by text("UUID", "85ac9d5ec3204e94933b3b0b8f6c512b")
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -35,20 +37,22 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.ChatFormatting
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket
+import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
+import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.ItemStack
-import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
-import net.minecraft.network.protocol.game.ClientboundLoginPacket
-import net.minecraft.network.protocol.game.ClientboundRespawnPacket
-import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.phys.AABB
 
-object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
+object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.RENDER) {
     var playHurt = false
     var playBow = false
+
+    private val setTeamPrefix by boolean("SetTeamPrefix", true)
 
     val modes =
         choices(
@@ -57,15 +61,27 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
             arrayOf(MurderMysteryClassicMode, MurderMysteryInfectionMode, MurderMysteryAssassinationMode),
         )
 
+    init {
+        modes.onChanged {
+            resetModeState()
+        }
+    }
+
     private val currentMode: MurderMysteryMode
-        get() = this.modes.activeChoice
+        get() = this.modes.activeMode
 
     override fun onDisabled() {
         this.reset()
     }
 
     private fun reset() {
-        this.currentMode.reset()
+        playHurt = false
+        playBow = false
+        resetModeState()
+    }
+
+    private fun resetModeState() {
+        this.modes.modes.forEach(MurderMysteryMode::reset)
     }
 
     @Suppress("unused")
@@ -83,39 +99,33 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         }
 
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
-            world.entitiesForRendering().filterIsInstance<ArmorStand>().forEach {
+            world.entitiesForRendering().forEachIsInstance<ArmorStand> {
                 if (it.getItemBySlot(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
                     renderDroppedBowBox(event.partialTicks, it)
                 }
             }
-            commitBatch()
         }
     }
 
     val packetHandler = handler<PacketEvent> { packetEvent ->
         val world = mc.level ?: return@handler
 
-        if (packetEvent.packet is ClientboundSetEquipmentPacket) {
-            val packet: ClientboundSetEquipmentPacket = packetEvent.packet
+        when (val packet = packetEvent.packet) {
+            is ClientboundSetEquipmentPacket -> {
+                val entity = world.getEntity(packet.entity)
 
-            packet.slots
-                .filter {
-                    !it.second.isEmpty && it.first in
-                        arrayOf(
-                            EquipmentSlot.MAINHAND,
-                            EquipmentSlot.OFFHAND,
-                        )
-                }
-                .forEach {
-                    val itemStack = it.second
-                    val entity = world.getEntity(packet.entity)
+                packet.slots
+                    .filter {
+                        !it.second.isEmpty && it.first.type == EquipmentSlot.Type.HAND
+                    }
+                    .forEach {
+                        handleItem(it.second, entity)
+                    }
+            }
 
-                    handleItem(itemStack, entity)
-                }
-        }
-        if (packetEvent.packet is ClientboundLoginPacket || packetEvent.packet is ClientboundRespawnPacket) {
-            this.reset()
+            is ClientboundLoginPacket, is ClientboundRespawnPacket -> {
+                this.reset()
+            }
         }
     }
 
@@ -132,20 +142,17 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         val entity = it.entity
 
         val col = when (playerType) {
-            MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> {
-                entity.team?.setPlayerPrefix("[BOW] ".asPlainText(ChatFormatting.AQUA))
-                Color4b(0, 144, 255)
-            }
-
-            MurderMysteryMode.PlayerType.MURDERER -> {
-                entity.team?.setPlayerPrefix("[MURD] ".asPlainText(ChatFormatting.RED))
-                Color4b(203, 9, 9)
-            }
-
+            MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> Color4b(0, 144, 255)
+            MurderMysteryMode.PlayerType.MURDERER -> Color4b(203, 9, 9)
             MurderMysteryMode.PlayerType.NEUTRAL -> return@handler
         }
+        if (setTeamPrefix) entity.team?.setPlayerPrefix(playerType.prefix)
 
         it.color(col, Priority.IMPORTANT_FOR_USAGE_3)
+    }
+
+    val worldChangeHandler = handler<WorldChangeEvent> {
+        reset()
     }
 
     private fun handleItem(
@@ -159,11 +166,9 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         val isSword = MurderMysterySwordDetection.isSword(itemStack)
         val isBow = itemStack.item is BowItem
 
-        val locationSkin = entity.skin.body.texturePath()
-
         when {
-            isSword -> currentMode.handleHasSword(entity, locationSkin)
-            isBow -> currentMode.handleHasBow(entity, locationSkin)
+            isSword -> currentMode.handleHasSword(entity)
+            isBow -> currentMode.handleHasBow(entity)
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,13 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import net.minecraft.core.component.DataComponents
-import net.minecraft.world.food.FoodProperties
-import net.minecraft.world.item.component.Tool
-import net.minecraft.world.entity.ai.attributes.Attributes
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
-import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.tags.ItemTags
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.food.FoodProperties
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.ItemUseAnimation
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.component.Tool
 
 val ItemStack.isConsumable: Boolean
     get() = this.isFood || this.item == Items.POTION || this.item == Items.MILK_BUCKET

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
@@ -30,13 +30,13 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.swingMode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.core.Direction
 
-object InstantNukerMode : Choice("Instant") {
+object InstantNukerMode : Mode("Instant") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = mode
 
     private val range by float("Range", 5f, 1f..50f)
@@ -53,7 +53,7 @@ object InstantNukerMode : Choice("Instant") {
             return@tickHandler
         }
 
-        val targets = areaMode.activeChoice.lookupTargets(range, count = bps.random())
+        val targets = areaMode.activeMode.lookupTargets(range, count = bps.random())
 
         if (targets.isEmpty()) {
             wasTarget = null

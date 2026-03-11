@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.utils.collection
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.item.Item
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
-import java.util.*
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.item.Item
+import net.minecraft.world.level.block.Block
+import java.util.SortedSet
 
 fun <T : Any> Registry<T>.asComparator(): Comparator<T> = compareBy(this::getKey)
 

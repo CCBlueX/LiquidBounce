@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.criticals
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsBlink
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsJump
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround
@@ -39,27 +39,23 @@ import net.ccbluex.liquidbounce.utils.client.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.minecraft.world.level.block.WebBlock
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.effect.MobEffects.BLINDNESS
 import net.minecraft.world.effect.MobEffects.LEVITATION
 import net.minecraft.world.effect.MobEffects.SLOW_FALLING
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.level.block.WebBlock
 
 /**
  * Criticals module
  *
  * Automatically crits every time you attack someone.
  */
-object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
-
-    init {
-        enableLock()
-    }
+object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
     val modes = choices("Mode", 1) {
         arrayOf(
-            NoneChoice(it),
+            NoneMode(it),
             CriticalsPacket,
             CriticalsNoGround,
             CriticalsJump,
@@ -68,9 +64,9 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
         )
     }.apply(::tagBy)
 
-    object WhenSprinting : ToggleableConfigurable(ModuleCriticals, "WhenSprinting", false) {
+    object WhenSprinting : ToggleableValueGroup(ModuleCriticals, "WhenSprinting", false) {
 
-        enum class StopSprintingMode(override val choiceName: String) : NamedChoice {
+        enum class StopSprintingMode(override val tag: String) : Tagged {
             NONE("None"),
             LEGIT("Legit"),
             ON_NETWORK("OnNetwork"),
@@ -89,7 +85,7 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
             priority = CRITICAL_MODIFICATION
         ) { event ->
             if (stopSprinting == StopSprintingMode.ON_ATTACK && player.wasSprinting) {
-                sendStopSprinting()
+                network.sendStopSprinting()
                 player.wasSprinting = false
             }
         }
@@ -117,7 +113,7 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
     /**
      * Just some visuals.
      */
-    object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", false) {
+    object VisualsValueGroup : ToggleableValueGroup(this, "Visuals", false) {
 
         val fake by boolean("Fake", false)
 
@@ -155,13 +151,13 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
 
     init {
         tree(WhenSprinting)
-        tree(VisualsConfigurable)
+        tree(VisualsValueGroup)
     }
 
     /**
      * The Criticals selection mode
      */
-    enum class CriticalsSelectionMode(override val choiceName: String) : NamedChoice {
+    enum class CriticalsSelectionMode(override val tag: String) : Tagged {
 
         SMART("Smart"),
         IGNORE("Ignore"),

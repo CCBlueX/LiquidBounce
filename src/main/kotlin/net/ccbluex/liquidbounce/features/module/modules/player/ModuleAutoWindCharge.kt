@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWindCharge.Rotate.rotations
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
@@ -35,19 +36,18 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.world.item.Items
 
 /**
  * Uses wind charges to boost yourself up when holding jump.
  */
-object ModuleAutoWindCharge : ClientModule("AutoWindCharge", Category.PLAYER) {
+object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PLAYER) {
 
-    private object Rotate : ToggleableConfigurable(this, "Rotate", true) {
-        val rotations = tree(RotationsConfigurable(this))
+    private object Rotate : ToggleableValueGroup(this, "Rotate", true) {
+        val rotations = tree(RotationsValueGroup(this))
     }
 
-    private object HorizontalBoost : ToggleableConfigurable(this, "HorizontalBoost", true) {
+    private object HorizontalBoost : ToggleableValueGroup(this, "HorizontalBoost", true) {
         val pitch by float("Pitch", 70f, 0f..90f)
         val boostKey by key("Key", InputConstants.KEY_LCONTROL)
     }

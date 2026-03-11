@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,48 +18,45 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.additions.forceSneak
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.block.collisionShape
-import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
-import net.ccbluex.liquidbounce.utils.client.floorToInt
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
-import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
-import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_6
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
+import net.ccbluex.liquidbounce.utils.client.send1_21_5StopSneaking
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.copy
 import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
+import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.world.level.block.MagmaBlock
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket
-import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
 
 /**
  * Sneak module
  *
  * Automatically sneaks all the time.
  */
-object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
+object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
 
     private val modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch)).apply { tagBy(this) }
     private val notDuringMove by boolean("NotDuringMove", false)
 
-    private object Legit : Choice("Legit") {
+    private object Legit : Mode("Legit") {
 
         private val onMagmaBlocksOnly by boolean("OnMagmaBlocksOnly", false)
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -78,9 +75,9 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
     }
 
-    private object Vanilla : Choice("Vanilla") {
+    private object Vanilla : Mode("Vanilla") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -89,21 +86,31 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
                 return@handler
             }
 
-            event.cancelEvent() // Because the packet is record
-            sendPacketSilently(ServerboundPlayerInputPacket(event.packet.input.copy(sneak = true)))
+            event.packet.forceSneak = true
         }
 
     }
 
-    private object Switch : Choice("Switch") {
+    private object Switch : Mode("Switch") {
 
-        var networkSneaking = false
+        private var networkSneaking = false
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
+        override fun enable() {
+            if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) {
+                notification(
+                    "Protocol Error",
+                    "This mode can only be used on server with version earlier than 1.21.6.",
+                    NotificationEvent.Severity.ERROR,
+                )
+            }
+            super.enable()
+        }
+
         @Suppress("unused")
-        val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+        private val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->
             if (player.moving && notDuringMove) {
                 disable()
                 return@handler
@@ -112,14 +119,14 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
             when (event.state) {
                 EventState.PRE -> {
                     if (networkSneaking) {
-                        sendStopSneaking()
+                        network.send1_21_5StopSneaking()
                         networkSneaking = false
                     }
                 }
 
                 EventState.POST -> {
                     if (!networkSneaking) {
-                        sendStartSneaking()
+                        network.send1_21_5StartSneaking()
                         networkSneaking = true
                     }
                 }
@@ -128,7 +135,7 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
         override fun disable() {
             if (networkSneaking) {
-                sendStopSneaking()
+                network.send1_21_5StopSneaking()
                 networkSneaking = false
             }
         }
@@ -145,38 +152,11 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
         simulatedPlayer.pos = player.position()
 
         simulatedPlayer.tick()
-        val isOnMagmaBlockAfterOneTick = isOnMagmaBlock(simulatedPlayer.boundingBox)
+        val isOnMagmaBlockAfterOneTick = simulatedPlayer.boundingBox.isOnMagmaBlock()
 
         simulatedPlayer.tick()
-        val isOnMagmaBlockAfterTwoTicks = isOnMagmaBlock(simulatedPlayer.boundingBox)
+        val isOnMagmaBlockAfterTwoTicks = simulatedPlayer.boundingBox.isOnMagmaBlock()
 
         return isOnMagmaBlockAfterOneTick || isOnMagmaBlockAfterTwoTicks
-    }
-
-    /**
-     * [boundingBox] - the specific bounding box of a player, mob or even another block.
-     */
-    private fun isOnMagmaBlock(boundingBox: AABB): Boolean {
-
-        // Blocks that are the height of a trapdoor or lower
-        // (such as snow layers, carpets, repeaters, or comparators)
-        // do not prevent a magma block from damaging mobs and players above it.
-
-        // Therefore, we expand the box downward by 0.2 blocks.
-        val expandedBox = boundingBox
-            .inflate(0.0, 0.1,0.0)
-            .move(0.0, -0.1, 0.0)
-
-        return BlockPos.betweenClosed(
-            expandedBox.minX.floorToInt(),
-            expandedBox.minY.floorToInt(),
-            expandedBox.minZ.floorToInt(),
-            expandedBox.maxX.ceilToInt(),
-            expandedBox.minY.ceilToInt(),
-            expandedBox.maxZ.ceilToInt(),
-        ).any {
-            it.getBlock() is MagmaBlock &&
-                expandedBox.intersects(it.collisionShape.bounds().move(it))
-        }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
@@ -35,7 +34,7 @@ import net.minecraft.world.item.BowItem
  *
  * TODO: Add version specific options
  */
-object AutoBowFastChargeFeature : ToggleableConfigurable(ModuleAutoBow, "FastCharge", false) {
+object AutoBowFastChargeFeature : ToggleableValueGroup(ModuleAutoBow, "FastCharge", false) {
 
     private val speed by int("Speed", 20, 3..20)
 
@@ -46,8 +45,8 @@ object AutoBowFastChargeFeature : ToggleableConfigurable(ModuleAutoBow, "FastCha
     private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
     @Suppress("unused")
-    val tickRepeatable = tickHandler {
-        val currentItem = player.useItem
+    private val tickRepeatable = tickHandler {
+        val currentItem = if (player.isUsingItem) player.useItem else return@tickHandler
 
         // Should speed up game ticks when using bow
         if (currentItem?.item is BowItem) {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -166,11 +166,11 @@ public abstract class MixinPlayerTabOverlay {
 
             //noinspection DataFlowIssue
             if (highlight.getSelf().getRunning() && Objects.equals(entry.getProfile().name(), Minecraft.getInstance().player.getGameProfile().name())) {
-                drawColor = highlight.getSelf().getColor().toARGB();
+                drawColor = highlight.getSelf().getColor().argb();
             } else if (highlight.getFriends().getRunning() && FriendManager.INSTANCE.isFriend(entry.getProfile().name())) {
-                drawColor = highlight.getFriends().getColor().toARGB();
+                drawColor = highlight.getFriends().getColor().argb();
             } else if (others.getRunning() && others.getFilter().isInFilter(entry)) {
-                drawColor = others.getColor().toARGB();
+                drawColor = others.getColor().argb();
             }
         }
 

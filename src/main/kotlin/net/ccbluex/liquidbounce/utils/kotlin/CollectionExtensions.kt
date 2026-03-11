@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
-import java.util.*
-import kotlin.experimental.ExperimentalTypeInference
+import java.util.Collections
+import java.util.function.Function
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
     when {
@@ -31,23 +31,8 @@ fun <T> Array<out T>?.unmodifiable(): List<T> =
         else -> ObjectImmutableList(this)
     }
 
-inline fun <reified K : Enum<K>, V> enumMapOf(): EnumMap<K, V> = EnumMap(K::class.java)
+fun <K, V> memorizingFunction(map: MutableMap<K, V>, mappingFunction: Function<K, V>): Function<K, V> =
+    Function { key -> map.computeIfAbsent(key, mappingFunction) }
 
-@JvmName("enumMapOfBuilder")
-@OptIn(ExperimentalTypeInference::class)
-inline fun <reified K : Enum<K>, V> enumMapOf(
-    @BuilderInference block: EnumMap<K, V>.() -> Unit
-): EnumMap<K, V> = enumMapOf<K, V>().apply(block)
-
-@JvmName("enumMapOfMapper")
-inline fun <reified K : Enum<K>, V> enumMapOf(
-    mapper: (K) -> V
-): EnumMap<K, V> = enumMapOf<K, V> {
-    K::class.java.enumConstants.forEach {
-        put(it, mapper(it))
-    }
-}
-
-@JvmName("enumMapOfPairs")
-inline fun <reified K : Enum<K>, V> enumMapOf(vararg pairs: Pair<K, V>): EnumMap<K, V> =
-    enumMapOf<K, V>().apply { putAll(pairs) }
+inline fun <K : Any, V : Any> Map<K, V>.immutableCopy(): Map<K, V> =
+    java.util.Map.copyOf(this)

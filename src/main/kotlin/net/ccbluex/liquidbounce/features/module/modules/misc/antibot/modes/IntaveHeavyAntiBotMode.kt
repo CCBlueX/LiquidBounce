@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +22,17 @@ import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.minecraft.world.entity.player.Player
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
-import java.util.*
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
+import net.minecraft.world.entity.player.Player
+import java.util.UUID
 
 /**
  * Intave anti-cheat, Heavy bot type, their best bot type.
  *
  * Tested on: gamster.org and a private server with latest Intave as of 7/28/2022.
  */
-object IntaveHeavyAntiBotMode : AntibotMode("IntaveHeavy") {
+object IntaveHeavyAntiBotMode : AntiBotMode("IntaveHeavy") {
 
     private val suspectList = hashMapOf<UUID, SuspectInfo>()
     private val botList = objectHashSetOf<UUID>()

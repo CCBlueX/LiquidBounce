@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,22 +19,22 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.LiquidBounce.logger
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 
-object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Prediction", true) {
+object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Prediction", true) {
 
     private val lastPlacementOffsets = ArrayDeque<Vec3>()
 

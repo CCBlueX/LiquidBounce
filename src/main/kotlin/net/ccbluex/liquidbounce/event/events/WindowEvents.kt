@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.event.events
 
-import net.ccbluex.liquidbounce.annotations.Nameable
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screens.Screen
-import com.mojang.blaze3d.platform.InputConstants
 
-@Nameable("windowResize")
+@Tag("windowResize")
 class WindowResizeEvent(val width: Int, val height: Int) : Event()
 
-@Nameable("frameBufferResize")
+@Tag("frameBufferResize")
 class FramebufferResizeEvent(val width: Int, val height: Int) : Event()
 
-@Nameable("mouseButton")
+@Tag("mouseButton")
 class MouseButtonEvent(
     val key: InputConstants.Key,
     val button: Int,
@@ -42,16 +41,16 @@ class MouseButtonEvent(
     val screen: Screen? = null
 ) : Event(), WebSocketEvent
 
-@Nameable("mouseScroll")
+@Tag("mouseScroll")
 class MouseScrollEvent(val horizontal: Double, val vertical: Double) : Event()
 
-@Nameable("mouseScrollInHotbar")
+@Tag("mouseScrollInHotbar")
 class MouseScrollInHotbarEvent(val speed: Int) : CancellableEvent()
 
-@Nameable("mouseCursor")
+@Tag("mouseCursor")
 class MouseCursorEvent(val x: Double, val y: Double) : Event()
 
-@Nameable("keyboardKey")
+@Tag("keyboardKey")
 class KeyboardKeyEvent(
     val key: InputConstants.Key,
     val keyCode: Int,
@@ -61,5 +60,5 @@ class KeyboardKeyEvent(
     val screen: Screen? = null
 ) : Event(), WebSocketEvent
 
-@Nameable("keyboardChar")
+@Tag("keyboardChar")
 class KeyboardCharEvent(val codePoint: Int, val modifiers: Int) : Event(), WebSocketEvent

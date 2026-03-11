@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,14 +47,14 @@ object CommandToggle : Command.Factory {
             .handler {
                 val module = args[0] as ClientModule
 
-                val newState = !module.running
-                module.enabled = newState
+                val isEnabled = !module.enabled
+                module.enabled = isEnabled
                 chat(
                     regular(
                         command.result(
                             "moduleToggled",
                             variable(module.name),
-                            variable(if (newState) command.result("enabled") else command.result("disabled"))
+                            variable(if (isEnabled) command.result("enabled") else command.result("disabled"))
                         )
                     ),
                     metadata = MessageMetadata(id = "CToggle#success${module.name}")

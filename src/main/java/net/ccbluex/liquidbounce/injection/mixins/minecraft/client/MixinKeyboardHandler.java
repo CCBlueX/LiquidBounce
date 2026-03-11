@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.KeyEvent;
 import net.ccbluex.liquidbounce.event.events.KeyboardCharEvent;
@@ -26,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.CharacterEvent;
-import com.mojang.blaze3d.platform.InputConstants;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -35,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(KeyboardHandler.class)
-public class MixinKeyboardHandler {
+public abstract class MixinKeyboardHandler {
 
     @Shadow
     @Final

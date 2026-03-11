@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
 import net.ccbluex.liquidbounce.utils.aiming.utils.findClosestPointOnBlockInLineWithCrystal
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -36,15 +35,16 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.clickBlockWithSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
 import kotlin.math.max
 
-object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place", true) {
+object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place", true) {
 
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
     private val switchMode by enumChoice("Switch", SwitchMode.SILENT)
@@ -86,7 +86,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
     private val chronometer = Chronometer()
     private var blockHitResult: BlockHitResult? = null
 
-    // this is shit, but i can't think of a better way right now
+    // this is shit, but I can't think of a better way right now.
     // the problem with only one rotation is
     // that when the ca switches between two players very fast and one place is invalid it would fail
     private var previousRotations = ArrayDeque<Pair<Rotation, Rotation>>(2)
@@ -136,7 +136,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
             data.first
         } ?: return
 
-        if (ModuleCrystalAura.rotationMode.activeChoice is NoRotationMode) {
+        if (ModuleCrystalAura.rotationMode.activeMode is NoRotationMode) {
             blockHitResult = raytraceBlock(
                 getMaxRange().toDouble(),
                 rotation.rotation,
@@ -151,7 +151,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
     }
 
     private fun queuePlacing(rotation: RotationWithVector, targetPos: BlockPos, side: Direction) {
-        ModuleCrystalAura.rotationMode.activeChoice.rotate(rotation.rotation, isFinished = {
+        ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, isFinished = {
             blockHitResult = raytraceBlock(
                 getMaxRange().toDouble(),
                 RotationManager.serverRotation,
@@ -165,8 +165,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
                 return@rotate
             }
 
-            clickBlockWithSlot(
-                player,
+            player.clickBlockWithSlot(
                 blockHitResult?.withDirection(side) ?: return@rotate,
                 getSlot() ?: return@rotate,
                 swingMode,

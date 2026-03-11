@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,8 @@ import com.mojang.serialization.DataResult
 import com.mojang.serialization.JsonOps
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.translated
-import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.RegistryAccess
+import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentSerialization
 import java.lang.reflect.Type
@@ -72,14 +72,14 @@ class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, Jso
     companion object {
         /** For ItemStack */
         @JvmField
-        val COMPONENT_CHANGES = CodecBasedAdapter(DataComponentPatch.CODEC)
+        val DATA_COMPONENT_PATCH = CodecBasedAdapter(DataComponentPatch.CODEC)
 
         @JvmField
-        val TEXT = CodecBasedAdapter(ComponentSerialization.CODEC)
+        val COMPONENT = CodecBasedAdapter(ComponentSerialization.CODEC)
 
         @JvmField
-        val PROCESSED_TEXT = JsonSerializer<Component> { src, t, ctx ->
-            src?.translated()?.let { TEXT.serialize(it, t, ctx) } ?: JsonNull.INSTANCE
+        val TRANSLATED_COMPONENT = JsonSerializer<Component> { src, t, ctx ->
+            src?.translated()?.let { COMPONENT.serialize(it, t, ctx) } ?: JsonNull.INSTANCE
         }
     }
 

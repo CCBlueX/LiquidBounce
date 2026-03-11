@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +20,16 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.utils.rayTraceCollidingBlocks
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
+import net.ccbluex.liquidbounce.utils.raytracing.rayTraceCollidingBlocks
 import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
 import kotlin.math.sin
@@ -58,7 +59,7 @@ fun planEvasion(
             Vec3(inflictedHit.arrowVelocity.x, 0.0, inflictedHit.arrowVelocity.z),
         )
 
-    val playerPos2d = Vec3(player.position().x, 0.0, player.position().z)
+    val playerPos2d = player.position().copy(y = 0.0)
     val nearestPointOnArrowLine = arrowLine.getNearestPointTo(playerPos2d)
     val distanceToArrowLine = nearestPointOnArrowLine.distanceTo(playerPos2d)
 
@@ -201,7 +202,7 @@ private fun getDodgeMovementWithoutAngleChange(positionRelativeToPlayer: Vec3): 
 fun findOptimalDodgePosition(baseLine: Line): Vec3 {
     val player = mc.player!!
 
-    val playerPos2d = Vec3(player.position().x, 0.0, player.position().z)
+    val playerPos2d = player.position().copy(y = 0.0)
     // Usually it takes around two ticks to change the movement to whatever we want. In this time we will keep the
     // current velocity. So we have to account for this by integrating the player's velocity in the calculation.
     val playerPosAfterFreeMovement = playerPos2d.add(player.deltaMovement.x * 2.0, 0.0, player.deltaMovement.z * 2.0)

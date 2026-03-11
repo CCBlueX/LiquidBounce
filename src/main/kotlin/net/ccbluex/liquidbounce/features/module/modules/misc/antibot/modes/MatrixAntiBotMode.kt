@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,13 +27,13 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isGameProfileUnique
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
-import java.util.*
+import java.util.UUID
 
-object MatrixAntiBotMode : AntibotMode("Matrix") {
+object MatrixAntiBotMode : AntiBotMode("Matrix") {
 
     private val suspectList = objectHashSetOf<UUID>()
     private val botList = objectHashSetOf<UUID>()

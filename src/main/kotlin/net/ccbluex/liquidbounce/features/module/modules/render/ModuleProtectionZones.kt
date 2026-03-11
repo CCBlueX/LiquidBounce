@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import com.google.common.collect.Ordering
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.synchronized
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -35,13 +35,13 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.getBlock
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.block.Blocks
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.level.Level
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -51,7 +51,7 @@ import kotlin.math.roundToInt
  *
  * Allows you to see areas protected by protection blocks and suggests optimal placement spots.
  */
-object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) {
+object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.RENDER) {
 
     private val DEFAULT_ZONE_FILL = Color4b(0, 255, 0, 51)
     private val DEFAULT_ZONE_OUTLINE = Color4b(0, 255, 0, 255)
@@ -71,23 +71,23 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         it
     }
 
-    private object Radius : Configurable("ProtectionRadius") {
+    private object Radius : ValueGroup("ProtectionRadius") {
         val x by int("RadiusX", 20, 1..256, "blocks")
         val z by int("RadiusZ", 20, 1..256, "blocks")
         val y by int("RadiusY", 383, 1..383, "blocks")
     }
 
-    private object Renderer : Configurable("Renderer") {
+    private object Renderer : ValueGroup("Renderer") {
         val renderLimit by int("RenderLimit", 16, 3..50, "zones")
         val holdBlockToRender by boolean("HoldBlockToRender", false)
 
-        object ProtectionColors : Configurable("ProtectionColors") {
+        object ProtectionColors : ValueGroup("ProtectionColors") {
             val zoneFill by color("ZoneFill", DEFAULT_ZONE_FILL)
             val zoneOutline by color("ZoneOutline", DEFAULT_ZONE_OUTLINE)
             val centerZoneOutline by color("CenterZoneOutline", DEFAULT_CENTER_OUTLINE)
         }
 
-        object IndicatorColors : Configurable("IndicatorColors") {
+        object IndicatorColors : ValueGroup("IndicatorColors") {
             val indicatorOutline by color("IndicatorOutline", DEFAULT_INDICATOR_OUTLINE)
             val indicatorFill by color("IndicatorFill", DEFAULT_INDICATOR_FILL)
         }
@@ -97,7 +97,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         }
     }
 
-    private object Indicator : Configurable("PlacementIndicator") {
+    private object Indicator : ValueGroup("PlacementIndicator") {
         val snapY by boolean("SnapToY", false)
     }
 
@@ -242,13 +242,11 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         val highlightIndex = findHighlightIndex(zones, playerPos = player.position())
 
         renderEnvironmentForWorld(e.matrixStack) {
-            startBatch()
             val camOffset = mc.entityRenderDispatcher.camera?.position()?.reverse() ?: return@handler
             drawZones(zones, centers, highlightIndex, camOffset)
             if (holdingProt) {
                 drawIndicator(centers, zones, camOffset)
             }
-            commitBatch()
         }
     }
 }

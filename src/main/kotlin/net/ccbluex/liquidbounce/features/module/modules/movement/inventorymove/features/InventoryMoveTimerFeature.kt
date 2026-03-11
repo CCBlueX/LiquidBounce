@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
-object InventoryMoveTimerFeature : ToggleableConfigurable(ModuleInventoryMove, "Timer", false) {
+object InventoryMoveTimerFeature : ToggleableValueGroup(ModuleInventoryMove, "Timer", false) {
 
     private val speed by float("Speed", 1.0f, 0.1f..2.0f)
 

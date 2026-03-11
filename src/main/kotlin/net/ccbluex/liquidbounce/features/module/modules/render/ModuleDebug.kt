@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.fastutil.forEachFloat
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -33,9 +34,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
@@ -54,12 +54,10 @@ import net.ccbluex.liquidbounce.utils.client.underline
 import net.ccbluex.liquidbounce.utils.client.vector2f
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
-import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.network.chat.Component
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
@@ -69,7 +67,7 @@ import net.minecraft.world.phys.Vec3
  * Allows you to see server-sided rotations.
  */
 
-object ModuleDebug : ClientModule("Debug", Category.RENDER) {
+object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
     private val parameters by boolean("Parameters", true).onChanged { _ ->
         debugParameters.clear()
@@ -83,7 +81,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     private val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    object RenderSimulatedPlayer : ToggleableConfigurable(this, "SimulatedPlayer", false) {
+    object RenderSimulatedPlayer : ToggleableValueGroup(this, "SimulatedPlayer", false) {
 
         private val ticksToPredict by int("TicksToPredict", 20, 5..100)
 
@@ -100,15 +98,15 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
             renderEnvironmentForWorld(event.matrixStack) {
                 drawLineStrip(
-                    Color4b.BLUE.toARGB(),
-                    positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() },
+                    Color4b.BLUE.argb,
+                    positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3f() },
                 )
             }
         }
 
     }
 
-    object Graph : ToggleableConfigurable(this, "Graph", false) {
+    object Graph : ToggleableValueGroup(this, "Graph", false) {
 
         private val curve = curve(
             "Curve", mutableListOf(
@@ -129,13 +127,12 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                 var posX = 300
                 var posY = 500
 
-                fontRenderer.draw(
-                    fontRenderer.process("Graph"),
-                    posX.toFloat(),
-                    posY.toFloat(),
-                    shadow = true,
+                fontRenderer.draw("Graph".asPlainText()) {
+                    x = posX.toFloat()
+                    y = posY.toFloat()
+                    shadow = true
                     scale = 0.3f
-                )
+                }
 
                 curve.xAxis.range.step(0.1f).forEachFloat { x ->
                     var y = curve.transform(x)
@@ -177,57 +174,21 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     @JvmRecord
     private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
 
-    private val debugParameters = hashMapOf<DebuggedKey, ParameterCapture>()
+    private val debugParameters = Object2ObjectOpenHashMap<DebuggedKey, ParameterCapture>()
 
-    private val debuggedGeometry = hashMapOf<DebuggedKey, DebuggedGeometry>()
+    private val debuggedGeometry = Object2ObjectOpenHashMap<DebuggedKey, DebuggedGeometry>()
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
         if (!geometry) {
             return@handler
         }
 
-        renderEnvironmentForWorld(matrixStack) {
-            startBatch()
+        renderEnvironmentForWorld(event.matrixStack) {
             debuggedGeometry.values.forEach { geometry ->
-                geometry.render(this)
+                geometry.render()
             }
-            commitBatch()
         }
-    }
-
-    @Suppress("unused")
-    private val scaffoldDebugging = handler<GameTickEvent> {
-        if (!ModuleScaffold.running) {
-            return@handler
-        }
-
-        val pos0 = Vec3(77.0, 75.0, -52.0)
-        val face = AlignedFace(pos0, pos0.add(1.0, 1.0, 0.0))
-
-        debugGeometry(
-            ModuleScaffold,
-            "targetFace",
-            DebuggedBox(AABB(face.from, face.to), Color4b(255, 0, 0, 64))
-        )
-
-        val line = LineSegment(player.eyePosition, player.lookAngle, 0.0..10.0)
-
-        debugGeometry(
-            ModuleScaffold,
-            "daLine",
-            DebuggedLineSegment(line.endPoints.first, line.endPoints.second, Color4b(0, 0, 255, 255))
-        )
-
-        val pointTo = face.nearestPointTo(line)
-
-        debugGeometry(
-            ModuleScaffold,
-            "targetPoint",
-            DebuggedPoint(pointTo, Color4b(0, 0, 255, 255), size = 0.05)
-        )
     }
 
     @Suppress("unused")
@@ -295,38 +256,40 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
         with(event.context) {
             // Draw
-            fontRenderer.draw(
-                fontRenderer.process("Debugging"),
-                120f,
-                22f,
-                shadow = true,
+            fontRenderer.draw("Debugging".asPlainText()) {
+                x = 120f
+                y = 22f
+                shadow = true
                 scale = 0.3f
-            )
+            }
 
             // Draw text line one by one
             textList.forEachIndexed { index, text ->
-                fontRenderer.draw(
-                    fontRenderer.process(text),
-                    120f,
-                    40 + ((fontRenderer.height * 0.17f) * index),
-                    shadow = true,
+                fontRenderer.draw(text) {
+                    x = 120f
+                    y = 40 + ((fontRenderer.height * 0.17f) * index)
+                    shadow = true
                     scale = 0.17f
-                )
+                }
             }
         }
     }
 
-    fun debugGeometry(owner: DebuggedOwner, name: String, geometry: DebuggedGeometry) {
+    fun debugGeometry(owner: DebuggedOwner, name: String, geometry: DebuggedGeometry?) {
         // Do not take any new debugging while the module is off
         if (!running) {
             return
         }
 
-        debuggedGeometry[DebuggedKey(owner, name)] = geometry
+        if (geometry != null) {
+            debuggedGeometry[DebuggedKey(owner, name)] = geometry
+        } else {
+            debuggedGeometry.remove(DebuggedKey(owner, name))
+        }
     }
 
-    inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
-        if (!ModuleDebug.running) {
+    inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry?) {
+        if (!running) {
             return
         }
 
@@ -342,7 +305,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     }
 
     inline fun DebuggedOwner.debugParameter(name: String, lazyValue: () -> Any?) {
-        if (!ModuleDebug.running) {
+        if (!running) {
             return
         }
 
@@ -351,15 +314,15 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     fun getArrayEntryColor(idx: Int, length: Int): Color4b {
         val hue = idx.toFloat() / length.toFloat()
-        return Color4b.ofHSB(hue, 1f, 1f).with(a = 32)
+        return Color4b.ofHSB(hue, 1f, 1f, alpha = 32f / 255f)
     }
 
-    sealed interface DebuggedGeometry {
-        val color: Color4b
-        fun render(env: WorldRenderEnvironment)
+    fun interface DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        fun render()
     }
 
-    class DebuggedLine(line: Line, override val color: Color4b) : DebuggedGeometry {
+    class DebuggedLine(line: Line, val color: Color4b) : DebuggedGeometry {
         val from: Vec3
         val to: Vec3
 
@@ -370,11 +333,12 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             this.to = line.position.add(normalizedDirection.scale(100.0))
         }
 
-        override fun render(env: WorldRenderEnvironment) {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
             env.drawLine(
-                env.relativeToCamera(from).toVec3(),
-                env.relativeToCamera(to).toVec3(),
-                color.toARGB(),
+                env.relativeToCamera(from).toVec3f(),
+                env.relativeToCamera(to).toVec3f(),
+                color.argb,
             )
         }
     }
@@ -383,30 +347,33 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         val p1: Vec3,
         val p2: Vec3,
         val p3: Vec3,
-        override val color: Color4b,
+        val color: Color4b,
     ) : DebuggedGeometry {
-        override fun render(env: WorldRenderEnvironment) {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
             env.drawTriangle(
-                p1 = env.relativeToCamera(p1).toVec3(),
-                p2 = env.relativeToCamera(p2).toVec3(),
-                p3 = env.relativeToCamera(p2).toVec3(),
-                argb = color.toARGB(),
+                p1 = env.relativeToCamera(p1).toVec3f(),
+                p2 = env.relativeToCamera(p2).toVec3f(),
+                p3 = env.relativeToCamera(p2).toVec3f(),
+                argb = color.argb,
             )
         }
     }
 
-    class DebuggedLineSegment(val from: Vec3, val to: Vec3, override val color: Color4b) : DebuggedGeometry {
-        override fun render(env: WorldRenderEnvironment) {
+    class DebuggedLineSegment(val from: Vec3, val to: Vec3, val color: Color4b) : DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
             env.drawLine(
-                env.relativeToCamera(from).toVec3(),
-                env.relativeToCamera(to).toVec3(),
-                color.toARGB(),
+                env.relativeToCamera(from).toVec3f(),
+                env.relativeToCamera(to).toVec3f(),
+                color.argb,
             )
         }
     }
 
-    open class DebuggedBox(val box: AABB, override val color: Color4b) : DebuggedGeometry {
-        override fun render(env: WorldRenderEnvironment) {
+    open class DebuggedBox(val box: AABB, val color: Color4b) : DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
             env.drawBox(box.move(env.camera.position().reverse()), color)
         }
     }
@@ -417,9 +384,9 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     )
 
     class DebugCollection(val geometry: Collection<DebuggedGeometry>) : DebuggedGeometry {
-        override val color: Color4b get() = Color4b.WHITE
-        override fun render(env: WorldRenderEnvironment) {
-            this.geometry.forEach { it.render(env) }
+        context(env: WorldRenderEnvironment)
+        override fun render() {
+            this.geometry.forEach { it.render() }
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,15 +37,15 @@ import ai.djl.training.optimizer.Adam
 import ai.djl.training.tracker.Tracker
 import ai.djl.translate.TranslateException
 import ai.djl.translate.Translator
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.listener.OverlayTrainingListener
 import java.io.Closeable
 import java.io.InputStream
 import java.nio.file.Path
-import java.util.*
+import java.util.Locale
 
 private const val NUM_EPOCH = 100
 private const val BATCH_SIZE = 32
@@ -54,8 +54,8 @@ abstract class ModelWrapper<I, O>(
     name: String,
     val translator: Translator<I, O>,
     val outputs: Long,
-    override val parent: ChoiceConfigurable<*>
-) : Choice(name), Closeable {
+    override val parent: ModeValueGroup<*>
+) : Mode(name), Closeable {
 
     private val model: Model by lazy {
         Model.newInstance(name).apply {

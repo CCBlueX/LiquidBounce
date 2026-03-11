@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,26 +19,25 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.reporthelper
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
 import net.ccbluex.liquidbounce.utils.inventory.syncId
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.item.Items
 import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.item.Items
 
-internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHelper, "AutoConfirm", false) {
+internal object ReportHelperAutoConfirm : ToggleableValueGroup(ModuleReportHelper, "AutoConfirm", false) {
 
     private val mode = choices("Mode", 0) {
         arrayOf(Hypixel, Heypixel)
     }
 
-    private sealed class Mode(name: String) : Choice(name) {
-        final override val parent: ChoiceConfigurable<*>
+    private sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
+        final override val parent: ModeValueGroup<*>
             get() = mode
 
         protected abstract fun onScreenUpdated(screen: AbstractContainerScreen<*>)

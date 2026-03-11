@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,17 @@
  */
 package net.ccbluex.liquidbounce.utils.input
 
+import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.brigadier.StringReader
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.liquidbounce.utils.item.getOrNull
 import net.minecraft.core.Registry
 import net.minecraft.resources.Identifier
-import java.awt.Color
+import net.minecraft.resources.ResourceKey
 import java.io.File
-import java.util.*
+import java.util.Locale
 import kotlin.jvm.optionals.getOrNull
 
 object HumanInputDeserializer {
@@ -55,8 +56,15 @@ object HumanInputDeserializer {
         if (it.startsWith('#')) {
             Color4b.fromHex(it)
         } else {
-            Color4b(Color(it.toInt()))
+            Color4b(it.toInt())
         }
+    }
+
+    fun <T : Any> registryItemDeserializer(key: ResourceKey<Registry<T>>) = StringDeserializer {
+        val registry = key.getOrNull() ?: error("No registry '$key'")
+        val item = registry.getOptional(Identifier.read(StringReader(it))).getOrNull()
+
+        requireNotNull(item) { "Unknown item '$it'" }
     }
 
     fun <T : Any> registryItemDeserializer(registry: Registry<T>) = StringDeserializer {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,10 +31,10 @@ import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.plusAssign
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
-import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.HoverEvent
-import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 
 /**
  * Help Command
@@ -55,7 +55,7 @@ object CommandHelp : Command.Factory {
                     CommandManager.sortedBy { it.name }
                 },
                 eachRow = { _, command ->
-                    val commandStart = CommandManager.Options.prefix + command.name
+                    val commandStart = CommandManager.GlobalSettings.prefix + command.name
                     "\u2B25 ".asText()
                         .withStyle(ChatFormatting.BLUE)
                         .onHover(
@@ -80,7 +80,7 @@ object CommandHelp : Command.Factory {
             cmd.aliases.forEach { alias ->
                 aliasesText += ", ".asPlainText(ChatFormatting.DARK_GRAY)
                 aliasesText += regular(alias).withStyle(ChatFormatting.GRAY)
-                    .onClick(ClickEvent.SuggestCommand(CommandManager.Options.prefix + alias))
+                    .onClick(ClickEvent.SuggestCommand(CommandManager.GlobalSettings.prefix + alias))
             }
         }
 

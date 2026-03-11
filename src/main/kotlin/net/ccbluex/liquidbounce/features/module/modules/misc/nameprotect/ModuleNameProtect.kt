@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,12 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.LfuCache
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.fastutil.Pool.Companion.use
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.GenericColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -36,10 +36,10 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.client.toText
 import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.minecraft.util.FormattedCharSink
-import net.minecraft.util.FormattedCharSequence
-import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.util.FormattedCharSink
 
 private const val DEFAULT_CACHE_SIZE = 512
 
@@ -49,20 +49,19 @@ private const val DEFAULT_CACHE_SIZE = 512
  * Changes players names clientside.
  */
 
-object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
+object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
 
     private val replacement by text("Replacement", "You")
 
     private val colorMode = choices<GenericColorMode<Unit>>(
         "ColorMode",
-        0,
-        {
-            arrayOf(GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it))
-        }
-    )
+        0
+    ) {
+        arrayOf(GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it))
+    }
 
-    private object ReplaceFriendNames : ToggleableConfigurable(this, "ObfuscateFriends", true) {
-        val colorMode = choices<GenericColorMode<Unit>>(
+    private object ReplaceFriendNames : ToggleableValueGroup(this, "ObfuscateFriends", true) {
+        val colorMode = modes<GenericColorMode<Unit>>(
             ReplaceFriendNames,
             "ColorMode",
             0
@@ -71,8 +70,8 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         }
     }
 
-    private object ReplaceOthers : ToggleableConfigurable(this, "ObfuscateOthers", false) {
-        val colorMode = choices<GenericColorMode<Unit>>(
+    private object ReplaceOthers : ToggleableValueGroup(this, "ObfuscateOthers", false) {
+        val colorMode = modes<GenericColorMode<Unit>>(
             ReplaceOthers,
             "ColorMode",
             0
@@ -92,9 +91,9 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
     private val replacementMappings = NameProtectMappings()
 
     private val coloringInfo = NameProtectMappings.ColoringInfo(
-        username = { this.colorMode.activeChoice.getColor(Unit) },
-        friends = { ReplaceFriendNames.colorMode.activeChoice.getColor(Unit) },
-        otherPlayers = { ReplaceOthers.colorMode.activeChoice.getColor(Unit) },
+        username = { this.colorMode.activeMode.getColor(Unit) },
+        friends = { ReplaceFriendNames.colorMode.activeMode.getColor(Unit) },
+        otherPlayers = { ReplaceOthers.colorMode.activeMode.getColor(Unit) },
     )
 
     @Suppress("unused")
@@ -228,7 +227,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
                 mappedCharacters.ensureCapacity(mappedCharacters.size + replacement.second.newName.length)
                 replacement.second.newName.mapTo(mappedCharacters) { ch ->
                     MappedCharacter(
-                        originalCharacters[currentIndex].style.withColor(color.toARGB()),
+                        originalCharacters[currentIndex].style.withColor(color.argb),
                         false,
                         ch.code
                     )

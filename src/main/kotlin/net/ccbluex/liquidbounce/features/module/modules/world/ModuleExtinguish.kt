@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
+import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
-import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -45,23 +39,23 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
+import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Items
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Vec3i
 
 /**
  * Module Extinguish
  *
  * Automatically extinguishes yourself when you're burning.
  */
-object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
+object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
 
     private val cooldown by float("Cooldown", 1.0F, 0.0F..20.0F, "s")
     private val notDuringCombat by boolean("NotDuringCombat", true)
 
-    private object Pickup : ToggleableConfigurable(ModuleExtinguish, "Pickup", true) {
+    private object Pickup : ToggleableValueGroup(ModuleExtinguish, "Pickup", true) {
         val pickupSpan by floatRange("PickupSpan", 0.1F..10.0F, 0.0F..20.0F, "s")
     }
 
@@ -71,15 +65,14 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
 
     private var currentTarget: PlacementPlan? = null
 
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     private val cooldownTimer = Chronometer()
-
-    private var lastExtinguishPos: BlockPos? = null
-    private val lastAttemptTimer = Chronometer()
+    private val pickupTracker = TimedPickupTracker(capacity = 1)
 
     override fun onEnabled() {
         currentTarget = null
+        pickupTracker.clear()
     }
 
     @Suppress("unused")
@@ -97,9 +90,9 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
 
         RotationManager.setRotationTarget(
             target.placementTarget.rotation,
-            configurable = rotationsConfigurable,
+            valueGroup = rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-            provider = ModuleNoFall
+            provider = ModuleExtinguish
         )
     }
 
@@ -112,17 +105,15 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
         val pickupSpanStart = (Pickup.pickupSpan.start * 1000.0F).toLong()
         val pickupSpanEnd = (Pickup.pickupSpan.endInclusive * 1000.0F).toLong()
 
-        if (lastExtinguishPos != null && lastAttemptTimer.hasElapsed(pickupSpanEnd)) {
-            lastExtinguishPos = null
-        }
+        pickupTracker.prune(pickupSpanEnd) { true }
 
         if (player.hasEffect(MobEffects.FIRE_RESISTANCE) || (notDuringCombat && CombatManager.isInCombat)) {
             return null
         }
 
-        val pickupPos = this.lastExtinguishPos
+        val pickupPos = pickupTracker.firstEligible(pickupSpanStart)
 
-        if (pickupPos != null && Pickup.enabled && this.lastAttemptTimer.hasElapsed(pickupSpanStart)) {
+        if (pickupPos != null && Pickup.enabled) {
             planPickup(pickupPos)?.let {
                 return it
             }
@@ -136,22 +127,20 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        val target = currentTarget ?: return@tickHandler
+    private val tickHandler = handler<GameTickEvent> {
+        val target = currentTarget ?: return@handler
 
-        val rayTraceResult = raycast()
+        val rayTraceResult = traceFromPlayer()
 
         if (!target.doesCorrespondTo(rayTraceResult)) {
-            return@tickHandler
+            return@handler
         }
 
         SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
 
         val successFunction = {
             cooldownTimer.waitForAtLeast((cooldown * 1000.0F).toLong())
-            lastAttemptTimer.reset()
-
-            lastExtinguishPos = target.placementTarget.placedBlock
+            pickupTracker.record(target.placementTarget.placedBlock)
 
             true
         }
@@ -170,38 +159,12 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
         } ?: return null
 
         val playerPos = frameOnGround.pos.toBlockPos()
-
-        val options = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions(
-                listOf(Vec3i.ZERO),
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-            ),
-            FaceHandlingOptions(CenterTargetPositionFactory),
-            stackToPlaceWith = waterBucketSlot.itemStack,
-            PlayerLocationOnPlacement(position = frameOnGround.pos),
-        )
-
-        val bestPlacementPlan = findBestBlockPlacementTarget(playerPos, options) ?: return null
-
-        return PlacementPlan(playerPos, bestPlacementPlan, waterBucketSlot)
+        return planPlacementAtPos(playerPos, waterBucketSlot, frameOnGround.pos)
     }
 
     private fun planPickup(blockPos: BlockPos): PlacementPlan? {
         val bucket = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
-
-        val options = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions(
-                listOf(Vec3i.ZERO),
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-            ),
-            FaceHandlingOptions(CenterTargetPositionFactory),
-            stackToPlaceWith = bucket.itemStack,
-            PlayerLocationOnPlacement(position = player.position()),
-        )
-
-        val bestPlacementPlan = findBestBlockPlacementTarget(blockPos, options) ?: return null
-
-        return PlacementPlan(blockPos, bestPlacementPlan, bucket)
+        return planPlacementAtPos(blockPos, bucket)
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
@@ -31,10 +29,12 @@ import net.minecraft.world.item.Items
 
 internal object Gapple : HealthBasedBuff("Gapple") {
 
+    private val enchanted by boolean("Enchanted", true)
+
     private var forceUseKey = false
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        return stack.`is`(Items.GOLDEN_APPLE)
+        return stack.`is`(Items.GOLDEN_APPLE) || (enchanted && stack.`is`(Items.ENCHANTED_GOLDEN_APPLE))
     }
 
     override suspend fun execute(slot: HotbarItemSlot) {

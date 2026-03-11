@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.event.events
 
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.combat.EntityTargetClassification
@@ -30,18 +30,18 @@ import net.ccbluex.liquidbounce.utils.kotlin.PriorityField
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 
-@Nameable("attack")
+@Tag("attack")
 class AttackEntityEvent(
     val entity: Entity
-) : Event()
+) : CancellableEvent()
 
-@Nameable("entityMargin")
+@Tag("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 
-@Nameable("entityHealthUpdate")
+@Tag("entityHealthUpdate")
 class EntityHealthUpdateEvent(val entity: LivingEntity, val old: Float, val new: Float, val max: Float) : Event()
 
-@Nameable("tagEntityEvent")
+@Tag("tagEntityEvent")
 class TagEntityEvent(val entity: Entity, var targetingInfo: EntityTargetingInfo) : Event() {
     val color: PriorityField<Color4b?> = PriorityField(null, Priority.NOT_IMPORTANT)
 

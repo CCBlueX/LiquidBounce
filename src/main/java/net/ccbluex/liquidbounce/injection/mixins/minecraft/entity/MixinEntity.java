@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.EntityMarginEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerFluidCollisionCheckEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerStepEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
@@ -35,12 +31,12 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.Minecraft;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;

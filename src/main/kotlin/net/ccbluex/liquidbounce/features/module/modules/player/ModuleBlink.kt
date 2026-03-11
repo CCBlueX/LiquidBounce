@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,28 +18,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.dummyPlayer
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.positions
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.player.RemotePlayer
-import net.minecraft.world.entity.Entity
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
-import java.util.*
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.entity.EntityLookup
+import java.util.UUID
 
 /**
  * Blink module
@@ -47,13 +48,13 @@ import java.util.*
  * Makes it look as if you were teleporting to other players.
  */
 
-object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
+object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
     private val dummy by boolean("Dummy", false)
     private val ambush by boolean("Ambush", false)
     private val autoDisable by boolean("AutoDisable", true)
 
-    private object AutoResetOption : ToggleableConfigurable(this, "AutoReset", false) {
+    private object AutoResetOption : ToggleableValueGroup(this, "AutoReset", false) {
         val resetAfter by int("ResetAfter", 100, 1..1000)
         val action by enumChoice("ResetAction", ResetAction.RESET)
     }
@@ -72,7 +73,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
             clone.copyPosition(player)
             /**
              * A different UUID has to be set, to avoid [dummyPlayer] from being invisible to [player]
-             * @see net.minecraft.world.entity.EntityIndex.add
+             * @see EntityLookup.add
              */
             clone.setUUID(UUID.randomUUID())
             world.addEntity(clone)
@@ -82,7 +83,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
     }
 
     override fun onDisabled() {
-        PacketQueueManager.flush(TransferOrigin.OUTGOING)
+        BlinkManager.flush(TransferOrigin.OUTGOING)
         removeClone()
     }
 
@@ -127,10 +128,10 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
                 enabled = false
             } else if (evadingPacket.ticksToImpact != null) {
                 notification("Blink", "Trying to evade arrow...", NotificationEvent.Severity.INFO)
-                PacketQueueManager.flush(evadingPacket.idx + 1)
+                BlinkManager.flush(evadingPacket.idx + 1)
             } else {
                 notification("Blink", "Arrow evaded.", NotificationEvent.Severity.INFO)
-                PacketQueueManager.flush(evadingPacket.idx + 1)
+                BlinkManager.flush(evadingPacket.idx + 1)
             }
         }
     }
@@ -139,9 +140,9 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
     private val playerMoveHandler = handler<PlayerMovementTickEvent> {
         if (AutoResetOption.enabled && positions.count() > AutoResetOption.resetAfter) {
             when (AutoResetOption.action) {
-                ResetAction.RESET -> PacketQueueManager.cancel()
+                ResetAction.RESET -> BlinkManager.cancel()
                 ResetAction.BLINK -> {
-                    PacketQueueManager.flush(TransferOrigin.OUTGOING)
+                    BlinkManager.flush(TransferOrigin.OUTGOING)
                     dummyPlayer?.copyPosition(player)
                 }
             }
@@ -154,13 +155,13 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
     }
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin == TransferOrigin.OUTGOING) {
             event.action = Action.QUEUE
         }
     }
 
-    enum class ResetAction(override val choiceName: String) : NamedChoice {
+    enum class ResetAction(override val tag: String) : Tagged {
         RESET("Reset"),
         BLINK("Blink");
     }

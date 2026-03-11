@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.api.thirdparty.translator.providers
@@ -27,10 +25,10 @@ import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
-import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorChoice
+import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorMode
 import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.string
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 private val GOOGLE_API_URL = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()
@@ -39,8 +37,8 @@ private val GOOGLE_API_URL = "https://translate.googleapis.com/translate_a/t?cli
  * @author MukjepScarlet
  */
 class GoogleTranslateApi(
-    override val parent: ChoiceConfigurable<*>
-) : TranslatorChoice("Google") {
+    override val parent: ModeValueGroup<*>
+) : TranslatorMode("Google") {
     /**
      * [Reference](https://github.com/ssut/py-googletrans/issues/268)
      * Updated at 2025/06/11

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,34 +42,33 @@ import net.ccbluex.liquidbounce.api.thirdparty.PlayerSkinApi
 import net.ccbluex.liquidbounce.authlib.utils.generateOfflinePlayerUuid
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.authlib.MixinYggdrasilMinecraftSessionServiceAccessor
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.ccbluex.liquidbounce.utils.render.registerTexture
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.multiplayer.PlayerInfo
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.core.ClientAsset
 import net.minecraft.world.entity.player.PlayerModelType
 import net.minecraft.world.entity.player.PlayerSkin
-import net.minecraft.core.ClientAsset
 import java.io.IOException
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
-object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
+object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) {
 
     /**
      * Changes the player model by forcefully modifying
-     * [net.minecraft.client.network.AbstractClientPlayerEntity.getSkin],
+     * [AbstractClientPlayer.getSkin],
      * as PlayerListEntry is unreliable on some servers.
      */
     private val allowMixinAbstractClientPlayerEntity by boolean("ForceOverride", false)
@@ -89,7 +88,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             // debounce skin uploads to prevent rapid calls
             uploadSkinFlow.debounce(DEBOUNCE_DURATION).filter { canUploadSkin() }.collectLatest {
                 logger.info("Uploading skin...")
-                mode.activeChoice.uploadSkin()
+                mode.activeMode.uploadSkin()
             }
         }
 
@@ -124,8 +123,8 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         }
     }
 
-    private sealed class Mode(name: String) : Choice(name) {
-        final override val parent: ChoiceConfigurable<*>
+    private sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
+        final override val parent: ModeValueGroup<*>
             get() = mode
 
         abstract val skinTextures: Supplier<PlayerSkin>?
@@ -193,9 +192,9 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             override fun texturePath() = identifier
 
             private enum class ModelChoice(
-                override val choiceName: String,
+                override val tag: String,
                 val type: PlayerModelType,
-            ) : NamedChoice {
+            ) : Tagged {
                 SLIM("Slim", PlayerModelType.SLIM),
                 WIDE("Default", PlayerModelType.WIDE),
             }
@@ -214,7 +213,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                 image.asStateFlow().filter { it.isFile }.debounceUntilInGame { file ->
                     // New texture will replace the old one
                     val nativeImage = withContext(Dispatchers.IO) {
-                        file.inputStream().toNativeImage()
+                        file.readNativeImage()
                     }
 
                     withContext(Dispatchers.Minecraft) {
@@ -238,7 +237,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         }
     }
 
-    val skinTextures: Supplier<PlayerSkin>? get() = mode.activeChoice.skinTextures
+    val skinTextures: Supplier<PlayerSkin>? get() = mode.activeMode.skinTextures
 
     @JvmStatic
     fun shouldApplyChanges(): Boolean =

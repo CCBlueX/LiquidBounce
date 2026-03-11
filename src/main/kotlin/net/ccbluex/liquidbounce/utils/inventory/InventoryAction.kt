@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,14 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.item.ItemStack
 
 sealed interface InventoryAction {
 
@@ -164,15 +165,17 @@ sealed interface InventoryAction {
     }
 
     @JvmRecord
-    data class UseItem(
+    data class UseItem @JvmOverloads constructor(
         val hotbarItemSlot: HotbarItemSlot,
+        val requester: Any? = null,
     ) : InventoryAction {
 
         override fun canPerformAction(inventoryConstraints: InventoryConstraints) =
             !InventoryManager.isInventoryOpen && !isInContainerScreen && !isInInventoryScreen
 
         override fun performAction(): Boolean {
-            useHotbarSlotOrOffhand(hotbarItemSlot)
+            SilentHotbar.selectSlotSilently(requester, hotbarItemSlot, 1)
+            useItem(hotbarItemSlot.useHand)
             return true
         }
 

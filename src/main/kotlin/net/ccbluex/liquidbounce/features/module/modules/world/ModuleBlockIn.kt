@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -47,7 +47,7 @@ import kotlin.random.Random
  *
  * Builds blocks to cover yourself.
  */
-object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = true) {
+object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOnQuit = true) {
 
     private val blockPlacer = tree(BlockPlacer("Placer", this, Priority.NORMAL, ::slotFinder))
     private val autoDisable by boolean("AutoDisable", true)
@@ -57,8 +57,8 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val blocks by blocks("Blocks", blockSortedSetOf())
 
-    private sealed class Order(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private sealed class Order(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = placeOrder
 
         abstract fun positions(): MutableSet<BlockPos>
@@ -136,7 +136,7 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
     }
 
     private fun getPositions() {
-        blockList = placeOrder.activeChoice.positions()
+        blockList = placeOrder.activeMode.positions()
         debugParameter("Place Count") { blockList.size }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -30,10 +30,11 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
+import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.ccbluex.liquidbounce.utils.network.isMovementYFallDamage
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
@@ -52,9 +53,9 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  * - Avoid edge bump
  *
  */
-class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Custom", parent) {
+class SpeedCustom(parent: ModeValueGroup<*>) : SpeedBHopBase("Custom", parent) {
 
-    private class HorizontalModification(parent: EventListener?) : ToggleableConfigurable(parent,
+    private class HorizontalModification(parent: EventListener?) : ToggleableValueGroup(parent,
         "HorizontalModification", true) {
 
         private val horizontalAcceleration by float("HorizontalAcceleration", 0f, -0.1f..0.2f)
@@ -72,8 +73,10 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             }
 
             if (horizontalAcceleration != 0f) {
-                player.deltaMovement.x *= 1f + horizontalAcceleration
-                player.deltaMovement.z *= 1f + horizontalAcceleration
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = 1.0F + horizontalAcceleration,
+                    factorZ = 1.0F + horizontalAcceleration,
+                )
             }
         }
 
@@ -82,14 +85,16 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             if (horizontalJumpOffModifier != 0f) {
                 waitTicks(ticksToBoostOff)
 
-                player.deltaMovement.x *= 1f + horizontalJumpOffModifier
-                player.deltaMovement.z *= 1f + horizontalJumpOffModifier
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = 1.0F + horizontalJumpOffModifier,
+                    factorZ = 1.0F + horizontalJumpOffModifier,
+                )
             }
         }
 
     }
 
-    private class VerticalModification(parent: EventListener?) : ToggleableConfigurable(parent,
+    private class VerticalModification(parent: EventListener?) : ToggleableValueGroup(parent,
         "VerticalModification", true) {
 
         private val jumpHeight by float("JumpHeight", 0.42f, 0.0f..3f)
@@ -116,7 +121,7 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
 
     }
 
-    private class Strafe(parent: EventListener?) : ToggleableConfigurable(parent, "Strafe", true) {
+    private class Strafe(parent: EventListener?) : ToggleableValueGroup(parent, "Strafe", true) {
 
         private val strength by float("Strength", 1f, 0.1f..1f)
 
@@ -140,14 +145,12 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             }
 
             when {
-                customSpeed -> player.setDeltaMovement(
-                    player.deltaMovement.withStrafe(
-                        speed = speed.toDouble(),
-                        strength = strength.toDouble()
-                    )
+                customSpeed -> player.deltaMovement = player.deltaMovement.withStrafe(
+                    speed = speed.toDouble(),
+                    strength = strength.toDouble()
                 )
                 else ->
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = strength.toDouble()))
+                    player.deltaMovement = player.deltaMovement.withStrafe(strength = strength.toDouble())
             }
         }
 
@@ -170,7 +173,7 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
                     } else {
                         player.horizontalSpeed
                     }
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
+                    player.deltaMovement = player.deltaMovement.withStrafe(speed = speed)
                 }
             }
         }

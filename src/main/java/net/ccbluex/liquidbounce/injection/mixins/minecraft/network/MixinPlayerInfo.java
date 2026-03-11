@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.core.ClientAsset;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.PlayerSkin;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

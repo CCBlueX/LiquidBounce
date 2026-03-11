@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,31 +28,32 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.minecraft.world.effect.MobEffects
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.effect.MobEffects
 import kotlin.math.abs
 
 /**
  * BHop Speed for Vulcan 288
  * Tested on both anticheat-test.com and loyisa.cn
  */
-class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Vulcan288", parent) {
+class SpeedVulcan288(parent: ModeValueGroup<*>) : SpeedBHopBase("Vulcan288", parent) {
 
     @Suppress("unused")
     private val afterJumpHandler = sequenceHandler<PlayerAfterJumpEvent> {
         val hasSpeed = (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) != 0
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.771 else 0.5))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.771 else 0.5)
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.605 else 0.31))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.605 else 0.31)
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.57 else 0.29))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.57 else 0.29)
         // does max possible motion down without introducing other issues
-        player.setDeltaMovement(player.deltaMovement.copy(y = if (hasSpeed) -0.5 else -0.37))
+        player.deltaMovement = player.deltaMovement.copy(y = if (hasSpeed) -0.5 else -0.37)
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.595 else 0.27))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.595 else 0.27)
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.595 else 0.28))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.595 else 0.28)
     }
 
     @Suppress("unused")
@@ -62,8 +61,7 @@ class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
         val hasSpeed = (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) != 0
         if (!player.onGround()) {
             if (abs(player.fallDistance) > 0 && hasSpeed) {
-                player.deltaMovement.x *= 1.055
-                player.deltaMovement.z *= 1.055
+                player.deltaMovement = player.deltaMovement.multiply(factorX = 1.055, factorZ = 1.055)
             }
         }
     }

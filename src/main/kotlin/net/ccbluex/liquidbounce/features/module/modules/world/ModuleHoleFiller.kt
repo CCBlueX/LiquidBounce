@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.booleans.BooleanDoubleImmutablePair
 import it.unimi.dsi.fastutil.doubles.DoubleLongPair
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.hole.Hole
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
@@ -37,14 +37,14 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
+import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
 import net.ccbluex.liquidbounce.utils.math.from
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.levelgen.structure.BoundingBox
 import org.joml.Vector2d
 import kotlin.math.acos
 import kotlin.math.ceil
@@ -57,7 +57,7 @@ import kotlin.math.max
  *
  * @author ccetl
  */
-object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManagerSubscriber {
+object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), HoleManagerSubscriber {
 
     private val features by multiEnumChoice("Features",
         Features.SMART,
@@ -116,7 +116,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
             return@handler
         }
 
-        val selfRegion = blockPos.expendToBlockBox(fillArea, fillArea, fillArea)
+        val selfRegion = blockPos.expandToBoundingBox(fillArea, fillArea, fillArea)
 
         val blocks = linkedSetOf<BlockPos>()
         val holeContext = HoleContext(holes, selfInHole, selfRegion, blocks)
@@ -197,7 +197,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
         found: MutableSet<DoubleLongPair>
     ): Int {
         var remainingItems1 = remainingItems
-        val region = entity.blockPosition().expendToBlockBox(fillArea, fillArea, fillArea)
+        val region = entity.blockPosition().expandToBoundingBox(fillArea, fillArea, fillArea)
 
         holeContext.holes.forEach { hole ->
             if (hole in checkedHoles) {
@@ -275,8 +275,8 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
     )
 
     private enum class Features(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         /**
          * When enabled, only places when entities are about to enter a hole, otherwise fills all holes.
          */

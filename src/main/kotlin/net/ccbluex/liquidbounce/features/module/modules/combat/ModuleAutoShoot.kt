@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +15,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
@@ -46,9 +42,9 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
-import net.ccbluex.liquidbounce.utils.inventory.interactItem
+import net.ccbluex.liquidbounce.utils.inventory.useItem
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.EggItem
@@ -66,7 +62,7 @@ import java.util.function.Function
  *
  * @author 1zuna
  */
-object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
+object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
     private val throwableType by enumChoice("ThrowableType", ThrowableType.EGG_AND_SNOWBALL)
     private val gravityType by enumChoice("GravityType", GravityType.AUTO).apply { tagBy(this) }
@@ -87,7 +83,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
      * So far, I have never seen an anti-cheat which detects high turning speed for actions such as
      * shooting.
      */
-    private val rotationConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
 
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
@@ -95,7 +91,9 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     /**
      * The target renderer to render the target, which we are currently aiming at.
      */
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
     private val tickUntilReset by int("TicksUntillSlotReset", 1, 0..20)
@@ -150,7 +148,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
 
         // Set the rotation with the usage priority of 2.
         RotationManager.setRotationTarget(
-            rotationConfigurable.toRotationTarget(rotation ?: return@handler, considerInventory = considerInventory),
+            rotations.toRotationTarget(rotation ?: return@handler, considerInventory = considerInventory),
             Priority.IMPORTANT_FOR_USAGE_2, this
         )
     }
@@ -193,23 +191,14 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
                 return@click false
             }
 
-            interactItem(
+            useItem(
                 slot.useHand,
                 swingMode = swingMode,
             ).consumesAction()
         }
     }
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val target = targetTracker.target ?: return@handler
-
-        renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(target, event.partialTicks)
-        }
-    }
-
-    private enum class ThrowableType(override val choiceName: String) : NamedChoice, () -> HotbarItemSlot? {
+    private enum class ThrowableType(override val tag: String) : Tagged, () -> HotbarItemSlot? {
         EGG_AND_SNOWBALL("EggAndSnowball"),
         ANYTHING("Anything");
 
@@ -225,7 +214,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         }
     }
 
-    private enum class GravityType(override val choiceName: String) : NamedChoice, Function<LivingEntity, Rotation?> {
+    private enum class GravityType(override val tag: String) : Tagged, Function<LivingEntity, Rotation?> {
 
         AUTO("Auto"),
         LINEAR("Linear"),

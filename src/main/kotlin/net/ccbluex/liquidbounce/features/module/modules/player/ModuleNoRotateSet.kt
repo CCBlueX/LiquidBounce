@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,33 +18,33 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 
 /**
  * NoRotateSet module.
  *
  * Prevents the server from rotating your head.
  */
-object ModuleNoRotateSet : ClientModule("NoRotateSet", Category.PLAYER) {
+object ModuleNoRotateSet : ClientModule("NoRotateSet", ModuleCategories.PLAYER) {
     val mode = choices(
         "Mode", SilentAccept, arrayOf(
             SilentAccept, ResetRotation
         )
     ).apply { tagBy(this) }
 
-    object ResetRotation : Choice("ResetRotation") {
-        override val parent: ChoiceConfigurable<Choice>
+    object ResetRotation : Mode("ResetRotation") {
+        override val parent: ModeValueGroup<Mode>
             get() = mode
 
-        val rotationsConfigurable = tree(RotationsConfigurable(this))
+        val rotations = tree(RotationsValueGroup(this))
     }
 
-    object SilentAccept : Choice("SilentAccept") {
-        override val parent: ChoiceConfigurable<Choice>
+    object SilentAccept : Mode("SilentAccept") {
+        override val parent: ModeValueGroup<Mode>
             get() = mode
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.entity
@@ -32,24 +31,21 @@ import kotlin.math.round
 /**
  * A utility which predicts the position of something in n ticks.
  */
-interface PositionExtrapolation {
+fun interface PositionExtrapolation {
     fun getPositionInTicks(ticks: Double): Vec3
 
     companion object {
+        @JvmStatic
         fun getBestForEntity(target: Entity): PositionExtrapolation {
             return when (target) {
                 is Player -> PlayerSimulationExtrapolation(target)
                 else -> LinearPositionExtrapolation(target)
             }
         }
-    }
-}
 
-class ConstantPositionExtrapolation(private val pos: Vec3) : PositionExtrapolation {
-    override fun getPositionInTicks(ticks: Double): Vec3 {
-        return pos
+        @JvmStatic
+        fun constant(pos: Vec3): PositionExtrapolation = PositionExtrapolation { pos }
     }
-
 }
 
 /**

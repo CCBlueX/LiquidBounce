@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,18 +24,21 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
+import net.ccbluex.liquidbounce.render.gui.GuiCircleLutAtlas;
 import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.client.gui.render.GuiRenderer;
+import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@NullMarked
 @Mixin(GuiRenderer.class)
 public abstract class MixinGuiRenderer {
 
@@ -85,7 +88,7 @@ public abstract class MixinGuiRenderer {
         BlurEffectRenderer blurEffectRenderer = BlurEffectRenderer.INSTANCE;
         if (blurEffectRenderer.shouldDrawBlur()) {
             blurEffectRenderer.setDrawingHudFramebuffer(true);
-            return blurEffectRenderer.getOverlayFramebuffer();
+            return blurEffectRenderer.getOverlayRenderTargetHolder().initAndGet();
         }
         return original.call(instance);
     }
@@ -94,6 +97,7 @@ public abstract class MixinGuiRenderer {
         method = "draw", at = @At("RETURN")
     )
     private void afterRenderBlurOverlay(GpuBufferSlice fogBuffer, CallbackInfo ci) {
+        GuiCircleLutAtlas.INSTANCE.resetForNextDraw();
         BlurEffectRenderer.INSTANCE.blitBlurOverlay();
     }
 

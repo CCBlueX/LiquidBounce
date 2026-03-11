@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,18 +21,16 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
-import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
-import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.ChatComponent;
+import net.ccbluex.liquidbounce.interfaces.ChatComponentAddition;
+import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition;
 import net.minecraft.client.GuiMessage;
-import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.util.ArrayListDeque;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import net.minecraft.util.FormattedCharSequence;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -40,7 +38,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(ChatComponent.class)
-public abstract class MixinChatComponent implements ChatHudAddition {
+public abstract class MixinChatComponent implements ChatComponentAddition {
+
+    @Shadow
+    @Final
+    private Minecraft minecraft;
 
     @Mutable
     @Shadow
@@ -63,9 +65,6 @@ public abstract class MixinChatComponent implements ChatHudAddition {
 
     @Shadow
     public abstract void scrollChat(int scroll);
-
-//    @Shadow
-//    protected abstract int getWidth();
 
     @Unique
     private int chatY = -1;
@@ -113,7 +112,7 @@ public abstract class MixinChatComponent implements ChatHudAddition {
     @Inject(method = "addMessageToDisplayQueue", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;isChatFocused()Z", shift = At.Shift.BEFORE), cancellable = true)
     public void hookAddVisibleMessage(GuiMessage message, CallbackInfo ci, @Local List<FormattedCharSequence> list) {
         var focused = isChatFocused();
-        var removable = ChatMessageAddition.class.cast(message);
+        var removable = GuiMessageLineAddition.class.cast(message);
         //noinspection DataFlowIssue
         var id = removable.liquid_bounce$getId();
 
@@ -127,7 +126,7 @@ public abstract class MixinChatComponent implements ChatHudAddition {
             boolean last = j == list.size() - 1;
             //noinspection DataFlowIssue
             var visible = new GuiMessage.Line(message.addedTime(), orderedText, message.tag(), last);
-            ((ChatMessageAddition) (Object) visible).liquid_bounce$setId(id);
+            ((GuiMessageLineAddition) (Object) visible).liquid_bounce$setId(id);
             trimmedMessages.addFirst(visible);
         }
 
@@ -141,32 +140,85 @@ public abstract class MixinChatComponent implements ChatHudAddition {
         ci.cancel();
     }
 
-//    @Inject(method = "render(Lnet/minecraft/client/gui/hud/ChatHud$Backend;IIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;getLineHeight()I", ordinal = 0))
-//    public void hookStoreChatY(ChatHud.Backend drawer, int windowHeight, int currentTick, boolean expanded, CallbackInfo ci, @Local(ordinal = 7) int m) {
-//        this.chatY = m;
-//    }
-//
-//    @ModifyArgs(method = "render(Lnet/minecraft/client/gui/hud/ChatHud$Backend;IIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V", ordinal = 0))
-//    private void modifyArgs(
-//            Args args,
-//            @Local(ordinal = 1, argsOnly = true) int mouseX,
-//            @Local(ordinal = 2, argsOnly = true) int mouseY
-//    ) {
-//        if(!(ModuleBetterChat.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getHighlight())) {
-//            return;
-//        }
-//
-//        var hovering = mouseX >= 0 && mouseX <= ((int) args.get(2)) -4 &&
-//                mouseY >= ((int)args.get(1)+1) && mouseY <= ((int)args.get(3));
-//
-//        if (hovering) {
-//            args.set(4, 140 << 24);
-//        }
-//    }
+    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;IIIZZ)V", at = @At("TAIL"))
+    private void hookRenderCopyHighlight(
+        GuiGraphics graphics,
+        Font font,
+        int tickCount,
+        int globalMouseX,
+        int globalMouseY,
+        boolean focused,
+        boolean changeCursorOnInsertions,
+        CallbackInfo ci
+    ) {
+        if (!focused) {
+            return;
+        }
+
+        var betterChat = ModuleBetterChat.INSTANCE;
+        if (!(betterChat.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getHighlight())) {
+            return;
+        }
+
+        if (trimmedMessages.isEmpty()) {
+            return;
+        }
+
+        var accessor = (MixinChatComponentAccessor) this;
+        double chatScale = accessor.invokeGetScale();
+        if (chatScale <= 0.0) {
+            return;
+        }
+
+        int chatWidth = (int) Math.ceil(accessor.invokeGetWidth() / chatScale);
+        double localMouseX = globalMouseX / chatScale - 4.0;
+        if (localMouseX < 0.0 || localMouseX > chatWidth) {
+            return;
+        }
+
+        int lineHeight = accessor.invokeGetLineHeight();
+        if (lineHeight <= 0) {
+            return;
+        }
+
+        int guiHeight = minecraft.getWindow().getGuiScaledHeight();
+        int chatBottom = (int) Math.floor((guiHeight - 40) / chatScale);
+        double localMouseY = chatBottom - globalMouseY / chatScale;
+        if (localMouseY < 0.0) {
+            return;
+        }
+
+        int lineIndex = (int) Math.floor(localMouseY / lineHeight);
+        int visibleLineCount = Math.min(accessor.invokeGetLinesPerPage(), trimmedMessages.size() - chatScrollbarPos);
+        if (lineIndex < 0 || lineIndex >= visibleLineCount) {
+            return;
+        }
+
+        int messageIndex = lineIndex + chatScrollbarPos;
+        if (messageIndex < 0 || messageIndex >= trimmedMessages.size()) {
+            return;
+        }
+
+        var messageBounds = ModuleBetterChat.resolveMessageBounds(trimmedMessages, messageIndex);
+        int visibleStart = chatScrollbarPos;
+        int visibleEnd = visibleStart + visibleLineCount - 1;
+        int highlightedStart = Math.max(messageBounds.getStart(), visibleStart);
+        int highlightedEnd = Math.min(messageBounds.getEndInclusive(), visibleEnd);
+        if (highlightedStart > highlightedEnd) {
+            return;
+        }
+
+        int startLineIndex = highlightedStart - visibleStart;
+        int endLineIndex = highlightedEnd - visibleStart;
+        int left = (int) Math.floor(4.0 * chatScale);
+        int right = (int) Math.ceil((chatWidth + 4.0) * chatScale);
+        int top = (int) Math.floor((chatBottom - (endLineIndex + 1) * lineHeight) * chatScale);
+        int bottom = (int) Math.ceil((chatBottom - startLineIndex * lineHeight) * chatScale);
+        graphics.fill(left, top, right, bottom, 0x4422AAFF);
+    }
 
     @Override
     public int liquidbounce_getChatY() {
         return chatY;
     }
 }
-

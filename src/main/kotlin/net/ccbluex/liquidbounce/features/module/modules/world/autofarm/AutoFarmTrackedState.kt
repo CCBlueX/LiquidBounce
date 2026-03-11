@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,45 +19,42 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.objectArraySetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_HORIZONTAL
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.tags.BlockTags
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
-import net.minecraft.world.level.block.FarmBlock
-import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.world.level.block.state.BlockState
 
 sealed interface AutoFarmTrackedState {
     enum class Plantable(
-        override val choiceName: String,
+        override val tag: String,
         val items: Collection<Item>,
-    ) : AutoFarmTrackedState, NamedChoice {
-        FARM(
+    ) : AutoFarmTrackedState, Tagged {
+        FARMLAND(
             "Farmland",
             objectArraySetOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO),
         ) {
-            override fun isBlockMatches(state: BlockState): Boolean = state.block is FarmBlock
+            override fun isBlockMatches(state: BlockState): Boolean = state.supportsCrops
         },
         SOUL_SAND(
             "SoulSand",
             setOf(Items.NETHER_WART),
         ) {
-            override fun isBlockMatches(state: BlockState): Boolean = state.block is SoulSandBlock
+            override fun isBlockMatches(state: BlockState): Boolean = state.supportsNetherWart
         },
         JUNGLE_LOGS(
             "JungleLogs",
             setOf(Items.COCOA_BEANS),
         ) {
-            override fun isBlockMatches(state: BlockState): Boolean = state.`is`(BlockTags.JUNGLE_LOGS)
+            override fun isBlockMatches(state: BlockState): Boolean = state.supportsCocoa
 
             override fun findPlantableNeighbors0(pos: BlockPos, state: BlockState): Collection<Direction> {
-                val result = emptyEnumSet<Direction>()
+                val result = enumSetOf<Direction>()
                 val mutable = BlockPos.MutableBlockPos()
                 for (dir in DIRECTIONS_HORIZONTAL) {
                     mutable.setWithOffset(pos, dir)

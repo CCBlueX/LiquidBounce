@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import net.ccbluex.liquidbounce.interfaces.ItemCooldownManagerAdditions;
+import net.ccbluex.liquidbounce.interfaces.ItemCooldownsAddition;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.Map;
 
 @Mixin(ItemCooldowns.class)
-public abstract class MixinItemCooldowns implements ItemCooldownManagerAdditions {
+public abstract class MixinItemCooldowns implements ItemCooldownsAddition {
 
     @Shadow
     @Final

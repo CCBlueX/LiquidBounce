@@ -9,6 +9,7 @@ import type {
     Server,
     Session, Setting,
     TextComponent,
+    StatusEffect,
 } from "./types";
 
 
@@ -42,6 +43,8 @@ export interface EventMap {
     componentsUpdate: ComponentsUpdateEvent;
     scaleFactorChange: ScaleFactorChangeEvent;
     browserUrlChange: BrowserUrlChangeEvent;
+    userLoggedIn: void;
+    userLoggedOut: void;
 
     //WindowEvents.kt
     mouseButton: MouseButtonEvent;
@@ -51,6 +54,7 @@ export interface EventMap {
     //UserInterfaceEvents.kt
     fps: FpsChangeEvent;
     clientPlayerData: ClientPlayerDataEvent;
+    clientPlayerEffect: ClientPlayerEffectEvent;
     clientPlayerInventory: ClientPlayerInventoryEvent;
     title: TitleEventTitle;
     subtitle: TitleEventSubtitle;
@@ -113,6 +117,10 @@ export interface ComponentsUpdateEvent {
 
 export interface ClientPlayerDataEvent {
     playerData: PlayerData;
+}
+
+export interface ClientPlayerEffectEvent {
+    effects: StatusEffect[];
 }
 
 export interface OverlayMessageEvent {

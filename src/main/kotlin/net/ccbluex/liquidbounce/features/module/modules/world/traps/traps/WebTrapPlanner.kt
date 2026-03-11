@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,15 +36,15 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacement
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.entity.Pose
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebIntentData>(
@@ -126,7 +126,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
         return plan.slot.itemStack.item in trapItems
     }
 
-    override fun onIntentFullfilled(intent: BlockChangeIntent<WebIntentData>) {
+    override fun onIntentFulfilled(intent: BlockChangeIntent<WebIntentData>) {
         targetTracker.target = intent.planningInfo.target
     }
 

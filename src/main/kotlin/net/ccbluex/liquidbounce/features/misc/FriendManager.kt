@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,23 +19,33 @@
 package net.ccbluex.liquidbounce.features.misc
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
-import java.util.*
+import java.util.TreeSet
 
-object FriendManager : Configurable("Friends"), EventListener {
+object FriendManager : Config("Friends"), EventListener {
 
     val friends by list(name, TreeSet<Friend>(), valueType = ValueType.FRIEND)
+
+    private val cancelAttack by boolean("CancelAttack", false)
 
     @Suppress("unused")
     private val tagEntityEvent = handler<TagEntityEvent> {
         if (isFriend(it.entity)) {
             it.assumeFriend()
+        }
+    }
+
+    @Suppress("unused")
+    private val onAttack = handler<AttackEntityEvent> {
+        if (cancelAttack && isFriend(it.entity)) {
+            it.cancelEvent()
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isMergeable
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
-import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 
@@ -47,15 +46,16 @@ import net.minecraft.world.item.Items
  *
  * @author ccetl
  */
-object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = listOf("Refill")) {
+object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, aliases = listOf("Refill")) {
     private val constraints = tree(PlayerInventoryConstraints())
     private val itemThreshold by int("ItemThreshold", 5, 0..63)
     private val delay by int("Delay", 40, 0..1000, "ms")
+    private val replenishEmpty by boolean("ReplenishEmpty", true)
     private val features by multiEnumChoice("Features", Features.CLEANUP)
     private val insideOf by multiEnumChoice<InsideOf>("InsideOf")
 
-    // 0..9 -> hotbar 10 -> offHand
-    private val trackedHotbarItems = Array<Item>(10) { Items.AIR }
+    // 0..8 -> hotbar, 9 -> offHand
+    private val trackedHotbarItems = Array(10) { Items.AIR }
     private val chronometer = Chronometer()
 
     private fun clear() {
@@ -89,13 +89,25 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
         Slots.OffhandWithHotbar.slots.forEach { slot ->
             val idx = if (slot is OffHandSlot) trackedHotbarItems.lastIndex else slot.hotbarSlot
 
-            // find the desired item
-            val itemStack = slot.itemStack.takeUnless { it.isEmpty } ?: ItemStack(trackedHotbarItems[idx], 0)
-            if (itemStack.isEmpty) {
+            val currentStack = slot.itemStack
+            val currentStackNotEmpty = !currentStack.isEmpty
+
+            if (!currentStackNotEmpty && !replenishEmpty) {
+                trackedHotbarItems[idx] = Items.AIR
                 return@forEach
             }
 
-            val currentStackNotEmpty = !itemStack.isEmpty
+            // find the desired item
+            val itemStack = if (currentStackNotEmpty) {
+                currentStack
+            } else {
+                val trackedItem = trackedHotbarItems[idx]
+                if (trackedItem == Items.AIR) {
+                    return@forEach
+                }
+
+                trackedItem.defaultInstance
+            }
 
             // check if the current stack, if not empty, is allowed to be refilled
             val unsupportedStackSize = itemStack.maxStackSize <= itemThreshold
@@ -186,8 +198,8 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
                 )
 
     private enum class Features(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         CLEANUP("CleanUp"),
         USE_PICKUP_ALL("UsePickupAll"),
         USE_SWAP("UseSwap"),
@@ -195,8 +207,8 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
 
     @Suppress("unused")
     private enum class InsideOf(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         CHESTS("Chests"),
         INVENTORIES("Inventories")
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
@@ -26,8 +25,10 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.FontFace
+import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
+import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
 import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -43,7 +44,7 @@ class DynamicFontCacheManager(
     /**
      * Available fonts, sorted by priority
      */
-    private val availableFonts: Collection<FontManager.FontFace>
+    private val availableFonts: Collection<FontFace>
 ) {
 
     private val glyphPageLock = ReentrantLock()
@@ -56,7 +57,7 @@ class DynamicFontCacheManager(
     private val requestsLock = ReentrantLock()
     private val hasRequest = requestsLock.newCondition()
 
-    fun requestGlyph(ch: Char, font: Int) {
+    fun requestGlyph(ch: Char, font: @FontStyle Int) {
         val glyphIdentifier = GlyphIdentifier(ch, font)
         val cacheObject = this.cacheData.computeIfAbsent(glyphIdentifier) { CharCacheData() }
 
@@ -228,13 +229,17 @@ class DynamicFontCacheManager(
         return requests
     }
 
-    private fun findFontForGlyph(ch: GlyphIdentifier): FontManager.FontId? {
+    private fun findFontForGlyph(ch: GlyphIdentifier): FontId? {
         return this.availableFonts.firstNotNullOfOrNull { fontFace ->
-            fontFace.styles[ch.style]?.takeIf { it.awtFont.canDisplay(ch.codepoint) }
+            fontFace.style(ch.style)?.takeIf { it.awtFont.canDisplay(ch.codepoint) }
         }
     }
 
-    class ChangeOnAtlas(val descriptor: GlyphDescriptor, val style: Int, val removed: Boolean)
+    class ChangeOnAtlas(
+        @JvmField val descriptor: GlyphDescriptor,
+        @JvmField val style: @FontStyle Int,
+        @JvmField val removed: Boolean,
+    )
 }
 
 private const val MAX_CACHE_TIME_MS = 30 * 1000L

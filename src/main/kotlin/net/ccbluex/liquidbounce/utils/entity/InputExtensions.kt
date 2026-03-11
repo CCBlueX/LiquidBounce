@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,16 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("NOTHING_TO_INLINE", "LongParameterList")
+
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.minecraft.client.player.ClientInput
 import net.minecraft.world.entity.player.Input
 
-val Input.any: Boolean
+inline val Input.anyHorizontal: Boolean
     get() = forward || backward || left || right
 
-@Suppress("LongParameterList")
-fun Input.copy(
+inline fun Input.copy(
     forward: Boolean = this.forward,
     backward: Boolean = this.backward,
     left: Boolean = this.left,
@@ -45,8 +46,7 @@ fun Input.copy(
     )
 }
 
-@Suppress("LongParameterList")
-fun ClientInput.set(
+inline fun ClientInput.set(
     forward: Boolean = keyPresses.forward,
     backward: Boolean = keyPresses.backward,
     left: Boolean = keyPresses.left,

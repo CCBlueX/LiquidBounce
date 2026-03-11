@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,42 +20,36 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.textures.GpuTextureView
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
+import net.ccbluex.fastutil.Pool
+import net.ccbluex.liquidbounce.utils.render.begin
 
 object ClientTesselator {
 
     private const val BUFFER_SIZE = 0xC0000
 
-    private val bufferAllocators = Reference2ReferenceOpenHashMap<RenderPipeline, ByteBufferBuilder>()
+    @JvmField
+    val Shared = ByteBufferBuilder(BUFFER_SIZE)
+
+    private val bufferAllocatorPool = Pool(
+        initializer = { ByteBufferBuilder(BUFFER_SIZE) },
+        finalizer = ByteBufferBuilder::clear,
+    )
 
     @JvmStatic
-    internal val texQuadsSpecialAllocators = Reference2ReferenceOpenHashMap<GpuTextureView, ByteBufferBuilder>()
+    fun begin(
+        pipeline: RenderPipeline,
+        allocatorInUse: MutableCollection<ByteBufferBuilder>,
+    ): BufferBuilder {
+        val allocator = bufferAllocatorPool.borrow()
+        allocatorInUse += allocator
+        return allocator.begin(pipeline)
+    }
 
     @JvmStatic
-    fun allocator(pipeline: RenderPipeline): ByteBufferBuilder =
-        bufferAllocators.getOrPut(pipeline) { ByteBufferBuilder(BUFFER_SIZE) }
-
-    @JvmStatic
-    fun begin(pipeline: RenderPipeline): BufferBuilder =
-        BufferBuilder(
-            allocator(pipeline),
-            pipeline.vertexFormatMode,
-            pipeline.vertexFormat
-        )
-
-    @JvmStatic
-    fun allocator(texture: GpuTextureView): ByteBufferBuilder =
-        texQuadsSpecialAllocators.getOrPut(texture) { ByteBufferBuilder(BUFFER_SIZE) }
-
-    @JvmStatic
-    fun begin(texture: GpuTextureView): BufferBuilder =
-        BufferBuilder(
-            allocator(texture),
-            ClientRenderPipelines.TexQuads.vertexFormatMode,
-            ClientRenderPipelines.TexQuads.vertexFormat
-        )
+    fun recycleAll(allocatorInUse: Iterable<ByteBufferBuilder>) {
+        bufferAllocatorPool.recycleAll(allocatorInUse)
+    }
 
 }

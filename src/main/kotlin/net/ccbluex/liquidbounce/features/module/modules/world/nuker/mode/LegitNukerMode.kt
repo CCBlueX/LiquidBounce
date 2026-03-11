@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -33,23 +33,23 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
-object LegitNukerMode : Choice("Legit") {
+object LegitNukerMode : Mode("Legit") {
 
     private var currentTarget: BlockPos? = null
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = mode
 
     private val range by float("Range", 5F, 1F..6F)
@@ -58,7 +58,7 @@ object LegitNukerMode : Choice("Legit") {
     }
 
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-    private val rotations = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
     private val switchDelay by int("SwitchDelay", 0, 0..20, "ticks")
 
     @Suppress("unused")
@@ -148,7 +148,7 @@ object LegitNukerMode : Choice("Legit") {
                 RotationManager.setRotationTarget(
                     raytraceResult.rotation,
                     considerInventory = !ignoreOpenInventory,
-                    configurable = rotations,
+                    valueGroup = rotations,
                     priority = Priority.IMPORTANT_FOR_USAGE_1,
                     ModuleNuker
                 )
@@ -158,7 +158,7 @@ object LegitNukerMode : Choice("Legit") {
             return pos
         }
 
-        for ((pos, blockState) in areaMode.activeChoice.lookupTargets(range)) {
+        for ((pos, blockState) in areaMode.activeMode.lookupTargets(range)) {
             val raytraceResult = raytraceBlockRotation(
                 eyes = eyes,
                 pos = pos,
@@ -171,7 +171,7 @@ object LegitNukerMode : Choice("Legit") {
                 RotationManager.setRotationTarget(
                     raytraceResult.rotation,
                     considerInventory = !ignoreOpenInventory,
-                    configurable = rotations,
+                    valueGroup = rotations,
                     priority = Priority.IMPORTANT_FOR_USAGE_1,
                     ModuleNuker
                 )

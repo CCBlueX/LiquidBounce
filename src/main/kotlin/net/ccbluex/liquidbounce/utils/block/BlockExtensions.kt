@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,11 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
+import net.ccbluex.fastutil.weightedFilterSortedByAtMost
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
@@ -33,10 +34,25 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
+import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.core.Vec3i
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionResult.Success
+import net.minecraft.world.InteractionResult.SwingSource
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.level.BlockGetter
+import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.AbstractChestBlock
 import net.minecraft.world.level.block.AbstractFurnaceBlock
 import net.minecraft.world.level.block.AnvilBlock
@@ -45,7 +61,6 @@ import net.minecraft.world.level.block.BeaconBlock
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.BellBlock
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.BrewingStandBlock
 import net.minecraft.world.level.block.ButtonBlock
@@ -53,8 +68,8 @@ import net.minecraft.world.level.block.CakeBlock
 import net.minecraft.world.level.block.CandleCakeBlock
 import net.minecraft.world.level.block.CartographyTableBlock
 import net.minecraft.world.level.block.CaveVines
-import net.minecraft.world.level.block.CaveVinesPlantBlock
 import net.minecraft.world.level.block.CaveVinesBlock
+import net.minecraft.world.level.block.CaveVinesPlantBlock
 import net.minecraft.world.level.block.ChestBlock
 import net.minecraft.world.level.block.ComparatorBlock
 import net.minecraft.world.level.block.ComposterBlock
@@ -69,6 +84,7 @@ import net.minecraft.world.level.block.DragonEggBlock
 import net.minecraft.world.level.block.EnchantingTableBlock
 import net.minecraft.world.level.block.FenceGateBlock
 import net.minecraft.world.level.block.FlowerPotBlock
+import net.minecraft.world.level.block.GameMasterBlock
 import net.minecraft.world.level.block.GrindstoneBlock
 import net.minecraft.world.level.block.HopperBlock
 import net.minecraft.world.level.block.HorizontalDirectionalBlock
@@ -77,39 +93,25 @@ import net.minecraft.world.level.block.LecternBlock
 import net.minecraft.world.level.block.LeverBlock
 import net.minecraft.world.level.block.LightBlock
 import net.minecraft.world.level.block.NoteBlock
-import net.minecraft.world.level.block.GameMasterBlock
 import net.minecraft.world.level.block.RedStoneWireBlock
 import net.minecraft.world.level.block.RepeaterBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
 import net.minecraft.world.level.block.ShulkerBoxBlock
-import net.minecraft.world.level.block.SupportType
 import net.minecraft.world.level.block.SlabBlock
 import net.minecraft.world.level.block.StairBlock
 import net.minecraft.world.level.block.StonecutterBlock
+import net.minecraft.world.level.block.SupportType
 import net.minecraft.world.level.block.SweetBerryBushBlock
 import net.minecraft.world.level.block.TrapDoorBlock
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.boss.enderdragon.EndCrystal
-import net.minecraft.world.level.material.Fluids
-import net.minecraft.world.item.context.BlockPlaceContext
-import net.minecraft.world.item.ItemStack
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.world.InteractionResult
-import net.minecraft.world.InteractionHand
-import net.minecraft.world.phys.shapes.BooleanOp
-import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.levelgen.structure.BoundingBox
-import net.minecraft.core.BlockPos
+import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.AABB
-import net.minecraft.core.Direction
-import net.minecraft.core.Position
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
-import net.minecraft.core.Vec3i
+import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.VoxelShape
-import net.minecraft.world.phys.shapes.Shapes
-import net.minecraft.world.level.BlockGetter
-import net.minecraft.world.level.ClipContext
 import java.util.function.Consumer
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -156,61 +158,19 @@ val BlockPos.outlineBox: AABB
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
 
-fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
-    var minDistanceSq = Double.MAX_VALUE
-    forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-        val nearestX = position.x().coerceIn(minX, maxX)
-        val nearestY = position.y().coerceIn(minY, maxY)
-        val nearestZ = position.z().coerceIn(minZ, maxZ)
-        val distanceSq = (position.x() - nearestX).sq() +
-            (position.y() - nearestY).sq() + (position.z() - nearestZ).sq()
-        if (distanceSq < minDistanceSq) {
-            minDistanceSq = distanceSq
-        }
-    }
-    return minDistanceSq
-}
-
 /**
- * Shrinks a VoxelShape by the specified amounts on selected axes.
+ * Outline shape
  */
-@Suppress("CognitiveComplexMethod")
-fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelShape {
-    return when {
-        this.isEmpty -> Shapes.empty()
-        this == Shapes.block() -> Shapes.box(
-            x, y, z,
-            1.0 - x, 1.0 - y, 1.0 - z
-        )
+val BlockPos.shape: VoxelShape
+    get() = this.getState()!!.getShape(world, this)
 
-        else -> {
-            var shape = Shapes.empty()
+fun BlockState.outlineBox(blockPos: BlockPos): AABB {
+    val outlineShape = this.getShape(world, blockPos)
 
-            this.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-                val width = maxX - minX
-                val height = maxY - minY
-                val depth = maxZ - minZ
-
-                val canShrinkX = x == 0.0 || width > x * 2
-                val canShrinkY = y == 0.0 || height > y * 2
-                val canShrinkZ = z == 0.0 || depth > z * 2
-
-                if (canShrinkX && canShrinkY && canShrinkZ) {
-                    val shrunkBox = Shapes.box(
-                        minX + (if (x > 0) x else 0.0),
-                        minY + (if (y > 0) y else 0.0),
-                        minZ + (if (z > 0) z else 0.0),
-                        maxX - (if (x > 0) x else 0.0),
-                        maxY - (if (y > 0) y else 0.0),
-                        maxZ - (if (z > 0) z else 0.0)
-                    )
-
-                    shape = Shapes.joinUnoptimized(shape, shrunkBox, BooleanOp.OR)
-                }
-            }
-
-            shape
-        }
+    return if (outlineShape.isEmpty) {
+        FULL_BOX
+    } else {
+        outlineShape.bounds()
     }
 }
 
@@ -223,11 +183,8 @@ val Block.mustBePlacedOnUpperSide: Boolean
         return this is SlabBlock || this is StairBlock
     }
 
-/**
- * Scan blocks around the position in a cuboid.
- */
-fun Vec3.searchBlocksInCuboid(radius: Float): BoundingBox =
-    BoundingBox(
+fun Vec3.searchBlocksInCuboid(radius: Float): Iterable<BlockPos> =
+    BlockPos.betweenClosed(
         floor(x - radius).toInt(),
         floor(y - radius).toInt(),
         floor(z - radius).toInt(),
@@ -254,27 +211,24 @@ inline fun Vec3.searchBlocksInCuboid(
     }
 
 /**
- * Search blocks around the position in a specific [radius]
+ * Scan blocks around the position in a cuboid, filtered and sorted by shape distance from this [Vec3].
+ * Distance calculation is based on outline shape:
+ * `shapeGetter.get(state, level, pos, collisionContext).move(pos).distanceToSqr(eyesPos)`.
+ *
+ * @return pairs of [BlockPos] and its [BlockState], sorted by distance to the center
  */
-inline fun Vec3.searchBlocksInRadius(
-    radius: Float,
+inline fun Vec3.searchBlocksInRangeSorted(
+    range: Float,
+    shapeGetter: ClipContext.ShapeGetter = ClipContext.Block.OUTLINE,
+    collisionContext: CollisionContext = CollisionContext.of(player),
     crossinline filter: (BlockPos, BlockState) -> Boolean,
-): Sequence<Pair<BlockPos, BlockState>> =
-    searchBlocksInCuboid(radius).iterator().asSequence().mapNotNull {
-        val state = it.getState() ?: return@mapNotNull null
-
-        if (it.distToCenterSqr(this@searchBlocksInRadius) <= radius.sq() && filter(it, state)) {
-            it.immutable() to state
-        } else {
-            null
+): List<Pair<BlockPos, BlockState>> =
+    searchBlocksInCuboid(range + 1, filter)
+        .weightedFilterSortedByAtMost(range.sq().toDouble()) { (pos, state) ->
+            shapeGetter.get(state, world, pos, collisionContext)
+                .move(pos)
+                .distanceToSqr(this)
         }
-    }
-
-/**
- * Scan blocks around the position in a cuboid.
- */
-fun BlockPos.searchBlocksInCuboid(radius: Int): BoundingBox =
-    this.expendToBlockBox(radius, radius, radius)
 
 /**
  * Scan blocks outwards from a bed
@@ -518,9 +472,9 @@ fun BlockState.canBeReplacedWith(
 
 @Suppress("unused")
 enum class SwingMode(
-    override val choiceName: String,
+    override val tag: String,
     val serverSwing: Boolean,
-) : NamedChoice, Consumer<InteractionHand> {
+) : Tagged, Consumer<InteractionHand> {
 
     DO_NOT_HIDE("DoNotHide", true),
     HIDE_BOTH("HideForBoth", false),
@@ -551,24 +505,28 @@ fun doPlacement(
     val stack = player.getItemInHand(hand)
     val count = stack.count
 
-    val interactionResult = interaction.useItemOn(player, hand, rayTraceResult)
+    val useItemOnResult = interaction.useItemOn(player, hand, rayTraceResult)
 
     when {
-        interactionResult == InteractionResult.FAIL -> {
+        useItemOnResult == InteractionResult.FAIL -> {
             return
         }
 
-        interactionResult == InteractionResult.PASS -> {
+        useItemOnResult == InteractionResult.PASS -> {
             // Ok, we cannot place on the block, so let's just use the item in the direction
             // without targeting a block (for buckets, etc.)
-            handlePass(hand, stack, onItemUseSuccess, swingMode)
-            return
+            if (!stack.isEmpty) {
+                val useItemResult = interaction.useItem(player, hand)
+                if (useItemResult.consumesAction()) {
+                    handleActionsOnAccept(hand, useItemResult, true, onItemUseSuccess, swingMode)
+                }
+            }
         }
 
-        interactionResult.consumesAction() -> {
+        useItemOnResult.consumesAction() -> {
             val wasStackUsed = !stack.isEmpty && (stack.count != count || player.isCreative)
 
-            handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess, swingMode)
+            handleActionsOnAccept(hand, useItemOnResult, wasStackUsed, onPlacementSuccess, swingMode)
         }
     }
 }
@@ -577,52 +535,26 @@ fun doPlacement(
  * Swings item, resets equip progress and hand swing progress
  *
  * @param wasStackUsed was an item consumed in order to place the block
- * @param onPlacementSuccess if result of the lambda is true, swing hand with [swingMode]
+ * @param shouldSwing if result of the lambda is true, swing hand with [swingMode]
  */
 private inline fun handleActionsOnAccept(
     hand: InteractionHand,
     interactionResult: InteractionResult,
     wasStackUsed: Boolean,
-    onPlacementSuccess: () -> Boolean,
-    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
+    shouldSwing: () -> Boolean,
+    swingMode: SwingMode,
 ) {
-    if (!interactionResult.shouldSwingHand()) {
+    if (interactionResult is Success && interactionResult.swingSource != SwingSource.CLIENT) {
         return
     }
 
-    if (onPlacementSuccess()) {
+    if (shouldSwing()) {
         swingMode.swing(hand)
     }
 
     if (wasStackUsed) {
         mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
     }
-
-    return
-}
-
-private fun InteractionResult.shouldSwingHand(): Boolean {
-    return this !is InteractionResult.Success ||
-        this.swingSource != InteractionResult.SwingSource.SERVER
-}
-
-
-/**
- * Just interacts with the item in the hand instead of using it on the block
- */
-private inline fun handlePass(
-    hand: InteractionHand,
-    stack: ItemStack,
-    onItemUseSuccess: () -> Boolean,
-    swingMode: SwingMode
-) {
-    if (stack.isEmpty) {
-        return
-    }
-
-    val actionResult = interaction.useItem(player, hand)
-
-    handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess, swingMode)
 }
 
 /**
@@ -709,7 +641,7 @@ fun BedBlock.getPotentialSecondBedBlock(state: BlockState, pos: BlockPos): Block
  *
  * Note: The player is required to NOT be `null`.
  *
- * This data has been collected by looking at the implementations of [AbstractBlock.onUse].
+ * This data has been collected by looking at the implementations of [BlockBehaviour.useWithoutItem].
  */
 fun Block?.isInteractable(blockState: BlockState?): Boolean {
     if (this == null) {

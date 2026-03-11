@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -37,12 +35,12 @@ import net.minecraft.world.phys.Vec3
  * @anticheatVersion 2.8.9
  * @testedOn anticheat-test.com, eu.loyisa.cn
  */
-internal object VulcanLongJump : Choice("Vulcan289") {
+internal object VulcanLongJump : Mode("Vulcan289") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleLongJump.mode
 
-    private var recievedLagback = false
+    private var receivedSetback = false
     private var started = false
 
     private val jumpingSequence = listOf(
@@ -61,7 +59,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
     )
 
     override fun enable() {
-        recievedLagback = false
+        receivedSetback = false
         started = false
         ModuleLongJump.jumped = false
         ModuleLongJump.boosted = false
@@ -70,11 +68,11 @@ internal object VulcanLongJump : Choice("Vulcan289") {
     @Suppress("unused")
     private val repeatable = tickHandler {
         if (started) {
-            if (recievedLagback) {
+            if (receivedSetback) {
                 player.deltaMovement.y = 1.0
                 player.setPos(player.position().x, player.position().y + 8, player.position().z)
-                player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 1.0, speed = 4.2))
-                recievedLagback = false
+                player.deltaMovement = player.deltaMovement.withStrafe(strength = 1.0, speed = 4.2)
+                receivedSetback = false
             }
 
             when (player.hurtTime) {
@@ -83,7 +81,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
                 }
                 5 -> {
                     player.setPos(player.position().x, player.position().y + 8, player.position().z)
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 1.0, speed = 0.3))
+                    player.deltaMovement = player.deltaMovement.withStrafe(strength = 1.0, speed = 0.3)
                     started = false
                     ModuleLongJump.jumped = true
                     ModuleLongJump.boosted = true
@@ -91,17 +89,15 @@ internal object VulcanLongJump : Choice("Vulcan289") {
             }
         }
 
-        player.setDeltaMovement(
-            Vec3(
-                player.deltaMovement.x,
-                if (player.tickCount % 2 == 0) -0.0971 else -0.148,
-                player.deltaMovement.z
-            )
+        player.deltaMovement = Vec3(
+            player.deltaMovement.x,
+            if (player.tickCount % 2 == 0) -0.0971 else -0.148,
+            player.deltaMovement.z
         )
 
         val didLongJump = ModuleLongJump.autoDisable && ModuleLongJump.jumped
 
-        if (player.onGround() && !recievedLagback && player.hurtTime == 0 && !didLongJump) {
+        if (player.onGround() && !receivedSetback && player.hurtTime == 0 && !didLongJump) {
             repeat(3) {
                 for (position in jumpingSequence) {
                     network.send(
@@ -125,7 +121,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
         val packet = event.packet
 
         if (packet is ClientboundPlayerPositionPacket) {
-            recievedLagback = true
+            receivedSetback = true
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.config.gson.serializer
@@ -24,7 +22,7 @@ package net.ccbluex.liquidbounce.config.gson.serializer
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.ccbluex.liquidbounce.config.gson.serializer.ConfigurableSerializer.Companion.serializeReadOnly
+import net.ccbluex.liquidbounce.config.gson.serializer.ValueGroupSerializer.Companion.serializeReadOnly
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import java.lang.reflect.Type
 

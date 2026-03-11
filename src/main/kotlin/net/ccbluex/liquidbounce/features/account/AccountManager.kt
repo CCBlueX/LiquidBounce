@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.authlib.account.SessionAccount
 import net.ccbluex.liquidbounce.authlib.yggdrasil.clientIdentifier
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
@@ -41,11 +41,11 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.with
 import net.minecraft.client.multiplayer.ProfileKeyPairManager
 import java.net.Proxy
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("TooManyFunctions")
-object AccountManager : Configurable("Accounts"), EventListener {
+object AccountManager : Config("Accounts"), EventListener {
 
     val accounts by list(name, mutableListOf<MinecraftAccount>(), ValueType.ACCOUNT)
 
@@ -158,7 +158,14 @@ object AccountManager : Configurable("Accounts"), EventListener {
     }
 
     fun loginSessionAccount(token: String) {
-        val account = SessionAccount(token).also { it.refresh() }
+        val account = if (token.startsWith("M.")) {
+            MicrosoftAccount.buildFromRefreshToken(token)
+        } else {
+            SessionAccount(token).apply {
+                refresh()
+            }
+        }
+
         loginDirectAccount(account)
     }
 
@@ -357,10 +364,15 @@ object AccountManager : Configurable("Accounts"), EventListener {
             return
         }
 
-        // Create a new cracked account
-        val account = SessionAccount(token)
-        try {
-            account.refresh()
+        val account: MinecraftAccount = try {
+            if (token.startsWith("M.")) {
+                MicrosoftAccount.buildFromRefreshToken(token)
+            } else {
+                // Create a new cracked account
+                SessionAccount(token).apply {
+                    refresh()
+                }
+            }
         } catch (exception: Exception) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = exception.message ?: "Unknown error"))
             return

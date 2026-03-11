@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@ import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
-import net.minecraft.core.Vec3i
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -55,10 +54,7 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
             val position = getTargetedPosition(expandPos(predictedPos, i))
 
             val searchOptions = BlockPlacementTargetFindingOptions(
-                BlockOffsetOptions(
-                    listOf(Vec3i.ZERO),
-                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-                ),
+                BlockOffsetOptions.Default,
                 FaceHandlingOptions(
                     CenterTargetPositionFactory,
                     considerFacingAwayFaces = true

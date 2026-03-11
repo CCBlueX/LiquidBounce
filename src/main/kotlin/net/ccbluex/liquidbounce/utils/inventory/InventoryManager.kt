@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.utils.inventory
@@ -37,15 +35,18 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_11_1
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.send1_11_1OpenInventory
+import net.ccbluex.liquidbounce.utils.client.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
-import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
-import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.world.inventory.ClickType
 import kotlin.math.max
 import kotlin.random.Random
@@ -68,7 +69,7 @@ object InventoryManager : EventListener {
     var isInventoryOpenServerSide = false
         internal set(value) {
             if (!field && value) {
-                inventoryOpened()
+                onInventoryOpened()
             }
             field = value
         }
@@ -161,7 +162,7 @@ object InventoryManager : EventListener {
                     val requiresPlayerInventory = action.requiresPlayerInventoryOpen()
                     if (requiresPlayerInventory) {
                         if (!isInventoryOpen) {
-                            openInventorySilently()
+                            network.send1_11_1OpenInventory()
                             waitTicks(constraints.startDelay.random())
                             cycles = 0
                         }
@@ -170,7 +171,7 @@ object InventoryManager : EventListener {
                         if (isInventoryOpen) {
                             waitTicks(constraints.closeDelay.random())
                             cycles = 0
-                            closeInventorySilently()
+                            network.sendCloseInventory()
                         }
                     }
 
@@ -211,17 +212,19 @@ object InventoryManager : EventListener {
         // When all scheduled actions are done, we can close the inventory
         if (isInventoryOpen && canCloseMainInventory) {
             waitTicks(maximumCloseDelay)
-            closeInventorySilently()
+            network.sendCloseInventory()
         }
 
         lastClickedSlot = -1
     }
 
     /**
-     * Called when a click occurred. Can be tracked by listening for [ServerboundContainerClickPacket]
+     * Called when a click occurs. Can be tracked by listening for [ServerboundContainerClickPacket]
+     *
+     * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinPacketWrapper
      */
     @JvmStatic
-    fun clickOccurred() {
+    fun onClickOccurs() {
         // Every click will require an update
         requiresUpdate = true
     }
@@ -230,7 +233,7 @@ object InventoryManager : EventListener {
      * Called when the inventory was opened. Can be tracked by listening for [ClientboundOpenScreenPacket]
      */
     @JvmStatic
-    fun inventoryOpened() {
+    fun onInventoryOpened() {
         recentInventoryOpen = true
     }
 
@@ -248,7 +251,7 @@ object InventoryManager : EventListener {
 
         // If we actually send a click packet, we can reset the click chronometer
         if (packet is ServerboundContainerClickPacket) {
-            clickOccurred()
+            onClickOccurs()
 
             if (packet.containerId == 0) {
                 isInventoryOpenServerSide = true
@@ -296,7 +299,7 @@ object InventoryManager : EventListener {
                 isInventoryOpenServerSide = true
             }
 
-            inventoryOpened()
+            onInventoryOpened()
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,26 +15,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 
-object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", Category.COMBAT) {
+object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", ModuleCategories.COMBAT) {
 
     private val targetSelector = TargetSelector()
-    private val rotations = RotationsConfigurable(this)
+    private val rotations = RotationsValueGroup(this)
 
     init {
         tree(targetSelector)
@@ -42,18 +42,18 @@ object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", Category.COMBAT
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        val target = targetSelector.targets().firstOrNull() ?: return@tickHandler
+    private val tickHandler = handler<GameTickEvent> {
+        val target = targetSelector.targets().firstOrNull() ?: return@handler
 
         val rotation = player.handItems.firstNotNullOfOrNull {
-            val trajectory = TrajectoryData.getRenderedTrajectoryInfo(
+            val (trajectory, _) = TrajectoryData.getRenderedTrajectoryInfo(
                 player,
-                it.item,
+                it,
                 true
             ) ?: return@firstNotNullOfOrNull null
 
             SituationalProjectileAngleCalculator.calculateAngleForEntity(trajectory, target)
-        } ?: return@tickHandler
+        } ?: return@handler
 
         RotationManager.setRotationTarget(
             rotation,

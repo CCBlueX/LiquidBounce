@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.AutoArmorSaveArmor.durabilityThreshold
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.performMoveOrHotbarClick
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -40,7 +40,7 @@ import net.minecraft.world.item.Items
  *
  * Automatically puts on the best armor.
  */
-object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
+object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
 
     val inventoryConstraints = tree(PlayerInventoryConstraints())
 
@@ -48,7 +48,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
      * Should the module use the hotbar to equip armor pieces?
      * If disabled, it will only use inventory moves.
      */
-    object UseHotbar : ToggleableConfigurable(this, "Hotbar", true) {
+    object UseHotbar : ToggleableValueGroup(this, "Hotbar", true) {
         /**
          * Defines whether the [UseHotbar] option supports the armor swap from MC 1.19.4+.
          */
@@ -120,7 +120,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
             !InventoryManager.isInventoryOpen && (!isInArmorSlot || UseHotbar.canSwapArmor)
 
         if (inventorySlot is HotbarItemSlot && canTryHotbarMove) {
-            return InventoryAction.UseItem(inventorySlot)
+            return InventoryAction.UseItem(inventorySlot, this)
         }
 
         // Should the item be just thrown out of the inventory

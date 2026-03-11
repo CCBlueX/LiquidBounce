@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.material.MapColor
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.ChunkAccess
+import net.minecraft.world.level.material.MapColor
 import java.util.concurrent.ConcurrentHashMap
 
 class MinimapHeightmapManager {

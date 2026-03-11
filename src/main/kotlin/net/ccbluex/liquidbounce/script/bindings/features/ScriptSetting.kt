@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,19 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
-import net.ccbluex.liquidbounce.config.types.ChooseListValue
-import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.NamedChoice.Companion.asNamedChoice
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.types.RangedValue
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.deeplearn.ModelHolster.list
+import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.asTagged
+import net.ccbluex.liquidbounce.deeplearn.ModelManager.list
 import net.ccbluex.liquidbounce.script.asArray
 import net.ccbluex.liquidbounce.script.asDoubleArray
 import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.input.inputByName
-import com.mojang.blaze3d.platform.InputConstants
 import org.graalvm.polyglot.Value as PolyglotValue
 
 /**
@@ -136,30 +136,30 @@ object ScriptSetting {
     }
 
     @JvmName("choose")
-    fun choose(value: PolyglotValue): ChooseListValue<NamedChoice> {
+    fun choose(value: PolyglotValue): ChoiceListValue<Tagged> {
         val name = value.getMember("name").asString()
         val choices = value.getMember("choices").asArray<String>().toNamedChoices(::LinkedHashSet)
         val defaultStr = value.getMember("default").asString()
 
-        val default = choices.find { it.choiceName == defaultStr }
+        val default = choices.find { it.tag == defaultStr }
             ?: error(
                 "[ScriptAPI] Choose default value '${defaultStr}' is not part of choices '${
-                    choices.joinToString(", ") { it.choiceName }
+                    choices.joinToString(", ") { it.tag }
                 }'"
             )
 
-        return ChooseListValue(name, defaultValue = default, choices = choices)
+        return ChoiceListValue(name, defaultValue = default, choices = choices)
     }
 
     @JvmName("multiChoose")
-    fun multiChoose(value: PolyglotValue): MultiChooseListValue<NamedChoice> {
+    fun multiChoose(value: PolyglotValue): MultiChoiceListValue<Tagged> {
         val name = value.getMember("name").asString()
         val choices = value.getMember("choices").asArray<String>().toNamedChoices(::LinkedHashSet)
         val default = value.getMember("default")?.asArray<String>().toNamedChoices(::HashSet)
 
         val canBeNone = value.getMember("canBeNone")?.asBoolean() ?: true
 
-        return MultiChooseListValue(
+        return MultiChoiceListValue(
             name,
             value = default,
             choices = choices,
@@ -179,6 +179,6 @@ object ScriptSetting {
     ) =
         RangedValue(name, defaultValue = default, range = range, suffix = suffix, valueType = valueType)
 
-    private inline fun Array<String>?.toNamedChoices(toSet: (Int) -> MutableSet<NamedChoice>) =
-        this?.mapTo(toSet(size)) { it.asNamedChoice() } ?: toSet(0)
+    private inline fun Array<String>?.toNamedChoices(toSet: (Int) -> MutableSet<Tagged>) =
+        this?.mapTo(toSet(size)) { it.asTagged() } ?: toSet(0)
 }

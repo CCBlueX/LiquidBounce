@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
@@ -37,9 +38,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.core.Direction
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
-import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
 import kotlin.math.round
@@ -62,8 +63,8 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
     ): BlockPlacementTarget? {
         val searchOptions = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
-                NORMAL_INVESTIGATION_OFFSETS,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                BlockPosOffsets.NORMAL.offsets,
+                BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos),
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = bestStack,

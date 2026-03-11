@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.modes
@@ -28,9 +28,9 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 /**
  * Same thing as NoGround NoFall mode
  */
-object CriticalsNoGround : Choice("NoGround") {
+object CriticalsNoGround : Mode("NoGround") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = modes
 
     @Suppress("unused")

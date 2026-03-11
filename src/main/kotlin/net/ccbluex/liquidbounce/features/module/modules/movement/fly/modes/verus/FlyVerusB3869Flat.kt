@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,27 +15,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.level.block.LiquidBlock
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.level.block.LiquidBlock
 import net.minecraft.world.phys.shapes.Shapes
 
 /**
@@ -44,11 +43,11 @@ import net.minecraft.world.phys.shapes.Shapes
  * @testedOn anticheat-test
  * @note it can rarely flag once | needs 1.9x or above
  */
-internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
+internal object FlyVerusB3869Flat : Mode("VerusB3896Flat") {
 
     private val timer by float("Timer", 5.0f, 1.0f..20.0f)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     @Suppress("unused")
@@ -78,15 +77,15 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
     }
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin == TransferOrigin.OUTGOING) {
-            event.action = PacketQueueManager.Action.QUEUE
+            event.action = BlinkManager.Action.QUEUE
         }
     }
 
     override fun disable() {
-        player.deltaMovement.x = 0.0
-        player.deltaMovement.z = 0.0
+        val player = mc.player ?: return
+        player.deltaMovement = player.deltaMovement.copy(x = 0.0, z = 0.0)
 
         network.send(
             ServerboundMovePlayerPacket.Pos(

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 
 /**
@@ -69,9 +68,7 @@ internal object NoFallForceJump : NoFallMode("ForceJump") {
      */
     private fun forceJump() {
         player.jumpFromGround()
-
-        val velocity = player.deltaMovement
-        player.setDeltaMovement(Vec3(velocity.x, jumpHeight.toDouble(), velocity.z))
+        player.deltaMovement = player.deltaMovement.copy(y = jumpHeight.toDouble())
         jumpTriggered = true
     }
 }

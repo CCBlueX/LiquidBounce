@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,19 +19,19 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.area
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
 
-sealed class NukerArea(name: String) : Choice(name) {
+sealed class NukerArea(name: String) : Mode(name) {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = areaMode
 
     abstract fun lookupTargets(radius: Float, count: Int? = null): List<Pair<BlockPos, BlockState>>

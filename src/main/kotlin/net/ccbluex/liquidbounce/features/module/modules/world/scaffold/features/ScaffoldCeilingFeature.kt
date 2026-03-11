@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.block.getState
 
-object ScaffoldCeilingFeature : ToggleableConfigurable(ModuleScaffold, "Ceiling", false) {
+object ScaffoldCeilingFeature : ToggleableValueGroup(ModuleScaffold, "Ceiling", false) {
     fun canConstructCeiling() = !player.blockPosition().below().getState()!!.isAir
 }

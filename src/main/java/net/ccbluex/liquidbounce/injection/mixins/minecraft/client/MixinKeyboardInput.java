@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import static net.minecraft.util.Mth.DEG_TO_RAD;
-
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -31,12 +29,12 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.ccbluex.liquidbounce.utils.input.InputTracker;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.KeyboardInput;
-import net.minecraft.client.Options;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.world.entity.player.Input;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Input;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,6 +42,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import static net.minecraft.util.Mth.DEG_TO_RAD;
 
 @Mixin(KeyboardInput.class)
 public abstract class MixinKeyboardInput extends MixinClientInput {
@@ -121,7 +121,7 @@ public abstract class MixinKeyboardInput extends MixinClientInput {
             return input;
         }
 
-        float deltaYaw = player.getYRot() - rotation.getYaw();
+        float deltaYaw = player.getYRot() - rotation.yRot();
 
         float newX = x * Mth.cos(deltaYaw * DEG_TO_RAD) - z *
                 Mth.sin(deltaYaw * DEG_TO_RAD);

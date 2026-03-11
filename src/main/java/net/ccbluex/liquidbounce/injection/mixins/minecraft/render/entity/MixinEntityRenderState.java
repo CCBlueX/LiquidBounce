@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,17 +33,27 @@ public abstract class MixinEntityRenderState implements EntityRenderStateAdditio
     private Entity liquid_bounce$entity;
 
     @Unique
+    private boolean liquid_bounce$isCustom = false;
+
+    @Unique
     @Override
-    @SuppressWarnings("unused")
     public void liquid_bounce$setEntity(@NotNull Entity entity) {
         this.liquid_bounce$entity = entity;
     }
 
     @Unique
     @Override
-    @SuppressWarnings("unused")
     public Entity liquid_bounce$getEntity() {
         return liquid_bounce$entity;
     }
 
+    @Override
+    public boolean liquid_bounce$isCustom() {
+        return liquid_bounce$isCustom;
+    }
+
+    @Override
+    public void liquid_bounce$setCustom(boolean custom) {
+        liquid_bounce$isCustom = custom;
+    }
 }

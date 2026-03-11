@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
@@ -32,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -47,10 +47,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
-import net.minecraft.world.entity.Entity
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.world.entity.Entity
 
 /**
  * A rotation manager
@@ -87,7 +87,7 @@ object RotationManager : EventListener {
     var previousRotation: Rotation? = null
 
     private val fakeLagging
-        get() = PacketQueueManager.isLagging || ModuleBacktrack.isLagging()
+        get() = BlinkManager.isLagging || ModuleBacktrack.isLagging()
 
     private val freezing
         get() = ModuleFreeze.running
@@ -109,12 +109,12 @@ object RotationManager : EventListener {
     fun setRotationTarget(
         rotation: Rotation,
         considerInventory: Boolean = true,
-        configurable: RotationsConfigurable,
+        valueGroup: RotationsValueGroup,
         priority: Priority,
         provider: ClientModule,
         whenReached: RestrictedSingleUseAction? = null
     ) {
-        setRotationTarget(configurable.toRotationTarget(
+        setRotationTarget(valueGroup.toRotationTarget(
             rotation, considerInventory = considerInventory, whenReached = whenReached
         ), priority, provider)
     }
@@ -174,7 +174,7 @@ object RotationManager : EventListener {
                     || activeRotationTarget.processors.isEmpty()
                     || diff <= activeRotationTarget.resetThreshold)) {
                 currentRotation?.let { currentRotation ->
-                    player.setYRot(player.withFixedYaw(currentRotation))
+                    player.yRot = player.withFixedYaw(currentRotation)
                     player.yBob = player.yRot
                     player.yBobO = player.yRot
                 }

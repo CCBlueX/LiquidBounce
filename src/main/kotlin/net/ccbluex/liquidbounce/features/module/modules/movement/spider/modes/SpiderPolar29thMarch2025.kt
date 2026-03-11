@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
-import net.ccbluex.liquidbounce.utils.block.shrink
+import net.ccbluex.liquidbounce.utils.math.shrink
 
 /**
  * Shrinks the block collision shape and allows you to walk on it.
@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.utils.block.shrink
  * @testedOn pika.host
  * @anticheat Polar
  */
-internal object SpiderPolar29thMarch2025 : Choice("Polar-29.03.2025") {
+internal object SpiderPolar29thMarch2025 : Mode("Polar-29.03.2025") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = ModuleSpider.modes
 
     /**

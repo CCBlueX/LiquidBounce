@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import it.unimi.dsi.fastutil.ints.IntList
+import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 
 interface ProcessedText {
@@ -40,6 +41,6 @@ interface ProcessedText {
     val strikeThroughs: IntList
 
     @JvmRecord
-    data class ProcessedChar(val char: Char, val font: Int, val obfuscated: Boolean, val color: Color4b)
+    data class ProcessedChar(val char: Char, val font: @FontStyle Int, val obfuscated: Boolean, val color: Color4b)
 
 }

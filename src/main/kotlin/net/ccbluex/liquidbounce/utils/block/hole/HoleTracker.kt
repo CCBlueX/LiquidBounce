@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,19 +25,19 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.kotlin.getValue
-import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
+import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.toBlockBox
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.world.level.levelgen.structure.BoundingBox
-import net.minecraft.core.BlockPos
-import net.minecraft.world.level.ChunkPos
-import net.minecraft.core.Direction
 import net.minecraft.world.level.chunk.LevelChunk
+import net.minecraft.world.level.levelgen.structure.BoundingBox
 import java.util.concurrent.ConcurrentSkipListSet
 
 private const val INDESTRUCTIBLE = (-2).toByte()
@@ -78,7 +78,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         }
 
         // Check new ones
-        val region = pos.expendToBlockBox(2, 3, 2)
+        val region = pos.expandToBoundingBox(2, 3, 2)
         invalidate(region)
         region.cachedUpdate()
     }

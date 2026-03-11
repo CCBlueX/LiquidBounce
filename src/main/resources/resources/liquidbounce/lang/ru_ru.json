@@ -5,7 +5,6 @@
   "liquidbounce.generic.error": "Ошибка",
   "liquidbounce.generic.forum": "Форум",
   "liquidbounce.generic.guilded": "Guilded",
-  "liquidbounce.generic.locked": "Модуль заблокирован и не может быть включен. Скорее всего, он не обходит.",
   "liquidbounce.generic.notifyDeveloper": "Проверьте свои логи и оповестите нас.",
   "liquidbounce.command.autodisable.subcommand.add.result.moduleAdded": "Модуль \"%s\" добавлен.",
   "liquidbounce.command.autodisable.subcommand.add.result.moduleIsPresent": "Модуль \"%s\" уже присутствует.",
@@ -345,7 +344,6 @@
   "liquidbounce.module.antiStaff.messages.vanishClear": "Невидимые игроки не найденны.",
   "liquidbounce.module.antiVoid.description": "Защищает от падения в пустоту.",
   "liquidbounce.module.aspect.description": "Позволяет растягивать или сужать игру по горизонтали.",
-  "liquidbounce.module.attackEffects.description": "Отображает эффект при атаке на сущность.",
   "liquidbounce.module.autoAccount.description": "Автоматическая аутентификация на неофициальных серверах.",
   "liquidbounce.module.autoArmor.description": "Автоматически одевает лучшую броню.",
   "liquidbounce.module.autoArmor.value.delay.description": "Время для задержки между надеванием нескольких предметов.",
@@ -627,10 +625,11 @@
   "liquidbounce.module.vomit.description": "Выбрасывает предметы из вашего инвентаря.",
   "liquidbounce.module.xRay.description": "Отрисовывает только выбранные блоки.",
   "liquidbounce.module.zoom.description": "Позволяет сделать всё в мире больше или меньше.",
-  "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "Minarai требует нейросеть, используется сглаживание углов: %s.",
+  "liquidbounce.module.macros.description": "Позволяет выполнять сообщения чата или действия с предметами по настраиваемым клавишам.",
+  "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "используется сглаживание углов: %s.",
   "liquidbounce.scripts.debug.dap": "с DAP на порту %s",
   "liquidbounce.scripts.debug.inspect.url": "Нажмите, чтобы скопировать URL отладчика и вставьте его в браузер (к сожалению, работают только браузеры на основе Chromium).",
   "liquidbounce.scripts.debug.support": "Скрипт %s настроен на запуск с поддержкой отладчика на: ",
   "liquidbounce.tooltip.clickToCopy": "Кликни для копирования",
-  "liquidbounce.unsupportedDeepLearning": "❌ Движок нейросети не инициализирован. Твоя система, возможно, не поддерживается."
+  "liquidbounce.unsupportedDeepLearning": "Движок нейросети не инициализирован. Твоя система, возможно, не поддерживается."
 }

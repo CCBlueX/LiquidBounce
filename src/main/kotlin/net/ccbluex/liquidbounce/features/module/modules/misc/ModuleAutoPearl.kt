@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
@@ -41,13 +41,14 @@ import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityDimensions
-import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl
 import net.minecraft.world.item.Items
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 
@@ -60,18 +61,22 @@ private const val MAX_SIMULATED_TICKS = 240
  *
  * @author sqlerrorthing
  */
-object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = listOf("PearlFollower", "PearlTarget")) {
+object ModuleAutoPearl : ClientModule(
+    "AutoPearl",
+    ModuleCategories.COMBAT,
+    aliases = listOf("PearlFollower", "PearlTarget")
+) {
 
     private val mode by enumChoice("Mode", Modes.TRIGGER)
 
-    private object Limits : ToggleableConfigurable(this, "Limits", true) {
+    private object Limits : ToggleableValueGroup(this, "Limits", true) {
         val angle by int("Angle", 180, 0..180, suffix = "°")
         val activationDistance by float("MinDistance", 8.0f, 0.0f..10.0f, suffix = "m")
         val destDistance by float("DestinationDistance", 8.0f, 0.0f..30.0f, suffix = "m")
     }
 
-    private object Rotate : ToggleableConfigurable(this, "Rotate", true) {
-        val rotations = tree(RotationsConfigurable(this))
+    private object Rotate : ToggleableValueGroup(this, "Rotate", true) {
+        val rotations = tree(RotationsValueGroup(this))
     }
 
     init {
@@ -206,6 +211,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
         val simulatedDestination = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             owner = player,
             trajectoryInfo = TrajectoryInfo.GENERIC,
+            trajectoryType = TrajectoryType.EnderPearl,
             rotation = angles
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.location ?: return false
 
@@ -225,6 +231,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
             velocity = velocity,
             pos = pos,
             trajectoryInfo = trajectoryInfo,
+            trajectoryType = TrajectoryType.EnderPearl,
             type = TrajectoryInfoRenderer.Type.REAL,
             renderOffset = renderOffset
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult
@@ -233,7 +240,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
         queue.clear()
     }
 
-    private enum class Modes(override val choiceName: String) : NamedChoice {
+    private enum class Modes(override val tag: String) : Tagged {
         TRIGGER("Trigger"),
         TARGET("Target")
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
@@ -39,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.input.bind
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.ccbluex.liquidbounce.utils.input.renderText
 import net.ccbluex.liquidbounce.utils.input.unbind
-import net.ccbluex.liquidbounce.utils.kotlin.toEnumSet
 
 /**
  * Bind Command
@@ -78,7 +78,7 @@ object CommandBind : Command.Factory {
 
             if (keyName.equals("none", true)) {
                 module.bindValue.unbind()
-                ModuleClickGui.reload()
+                ModuleClickGui.sync()
                 chat(
                     regular(command.result("moduleUnbound", variable(module.name))),
                     metadata = MessageMetadata(id = "Bind#${module.name}")
@@ -88,7 +88,7 @@ object CommandBind : Command.Factory {
 
             runCatching {
                 module.bindValue.bind(inputByName(keyName), action, modifiers)
-                ModuleClickGui.reload()
+                ModuleClickGui.sync()
             }.onSuccess {
                 chat(
                     regular(command.result("moduleBound", variable(module.name), module.bind.renderText())),

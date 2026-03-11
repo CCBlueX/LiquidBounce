@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
+import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -36,7 +36,7 @@ import kotlin.math.abs
 /**
  * Tries to run calculations with simulated player positions.
  */
-abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCrystalAura, name, true) {
+abstract class PredictFeature(name: String) : ToggleableValueGroup(ModuleCrystalAura, name, true) {
 
     /**
      * The ticks should be equal to `20 / cps` to get the approximate time it would take to place a crystal.
@@ -56,7 +56,7 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
     /**
      * How the predicted data will be used. For damage prediction only.
      */
-    val calculationMode = choices(this, "CalculationMode") {
+    val calculationMode = modes(this, "CalculationMode") {
         arrayOf(Both(it), PredictOnly(it))
     }
 
@@ -144,7 +144,7 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
             entityBoundingBox = predictedBoundingBox
         )
 
-        val calcMode = calculationMode.activeChoice
+        val calcMode = calculationMode.activeMode
         if (calcMode is PredictOnly) {
             return NormalDamageProvider(predictedDamage)
         }
@@ -158,23 +158,23 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
 
     abstract class CalculationMode(
         name: String,
-        private val choiceConfigurable: ChoiceConfigurable<CalculationMode>
-    ) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
-            get() = choiceConfigurable
+        private val modeValueGroup: ModeValueGroup<CalculationMode>
+    ) : Mode(name) {
+        override val parent: ModeValueGroup<*>
+            get() = modeValueGroup
     }
 
     class PredictOnly(
-        choiceConfigurable: ChoiceConfigurable<CalculationMode>
-    ) : CalculationMode("PredictOnly", choiceConfigurable)
+        modeValueGroup: ModeValueGroup<CalculationMode>
+    ) : CalculationMode("PredictOnly", modeValueGroup)
 
     class Both(
-        choiceConfigurable: ChoiceConfigurable<CalculationMode>
-    ) : CalculationMode("Both", choiceConfigurable) {
+        modeValueGroup: ModeValueGroup<CalculationMode>
+    ) : CalculationMode("Both", modeValueGroup) {
         val logicalOperator by enumChoice("Logic", LogicalOperator.AND)
     }
 
-    enum class LogicalOperator(override val choiceName: String) : NamedChoice {
+    enum class LogicalOperator(override val tag: String) : Tagged {
         AND("And") {
             override fun getDamageProvider(damage: Float, damage1: Float) = AndBiDamageProvider(damage, damage1)
         },

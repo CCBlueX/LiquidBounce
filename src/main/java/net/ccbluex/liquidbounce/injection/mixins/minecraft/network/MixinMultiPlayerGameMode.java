@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,23 +20,17 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.AttackEntityEvent;
-import net.ccbluex.liquidbounce.event.events.BlockAttackEvent;
-import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent;
-import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent;
-import net.ccbluex.liquidbounce.event.events.GameModeChangeEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow;
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ClientBlockBreakTrigger;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -50,9 +44,12 @@ public abstract class MixinMultiPlayerGameMode {
     /**
      * Hook attacking entity
      */
-    @Inject(method = "attack", at = @At("HEAD"))
+    @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
     private void hookAttack(Player player, Entity target, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new AttackEntityEvent(target));
+        var event = EventManager.INSTANCE.callEvent(new AttackEntityEvent(target));
+        if (event.isCancelled()) {
+            callbackInfo.cancel();
+        }
     }
 
     /**
@@ -102,7 +99,7 @@ public abstract class MixinMultiPlayerGameMode {
 
     @Inject(method = "useItem", at = @At("HEAD"), cancellable = true)
     private void hookItemInteractAtHead(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        final PlayerInteractItemEvent cancelEvent = new PlayerInteractItemEvent();
+        final PlayerInteractItemEvent cancelEvent = new PlayerInteractItemEvent(player, hand);
         EventManager.INSTANCE.callEvent(cancelEvent);
         if (cancelEvent.isCancelled()) {
             cir.setReturnValue(InteractionResult.PASS);

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,16 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import it.unimi.dsi.fastutil.longs.LongSets
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.world.level.block.SupportType
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.world.level.block.SupportType
 import net.minecraft.world.level.chunk.ChunkAccess
 
 /**
@@ -38,10 +39,10 @@ import net.minecraft.world.level.chunk.ChunkAccess
  * Highlight all surrounding positions that may be void.
  */
 
-object ModuleVoidESP : ClientModule("VoidESP", Category.RENDER) {
+object ModuleVoidESP : ClientModule("VoidESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.voidEsp"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.voidEsp"
 
     private val yThreshold by int("YThreshold", 16, 3..32)
     private val rangeSide by int("RangeSide", 3, 0..32)

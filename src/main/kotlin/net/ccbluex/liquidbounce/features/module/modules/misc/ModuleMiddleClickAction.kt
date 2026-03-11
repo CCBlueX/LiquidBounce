@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,22 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Items
 
@@ -44,7 +44,7 @@ import net.minecraft.world.item.Items
  */
 object ModuleMiddleClickAction : ClientModule(
     "MiddleClickAction",
-    Category.MISC,
+    ModuleCategories.MISC,
     aliases = listOf("FriendClicker", "MiddleClickPearl")
 ) {
 
@@ -52,13 +52,13 @@ object ModuleMiddleClickAction : ClientModule(
         doNotIncludeAlways()
     }
 
-    private val mode = choices(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
+    private val mode = modes(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
 
     override fun onDisabled() {
         Pearl.disable()
     }
 
-    object Pearl : Choice("Pearl") {
+    object Pearl : Mode("Pearl") {
 
         private val slotResetDelay by int("SlotResetDelay", 1, 0..10, "ticks")
         private val stopOnSubmit by floatRange("StopOnSubmit", 85F..90F, 60F..90F, "Pitch")
@@ -101,16 +101,16 @@ object ModuleMiddleClickAction : ClientModule(
 
         fun cancelPick(): Boolean {
             return ModuleMiddleClickAction.running &&
-                mode.activeChoice == this &&
+                mode.activeMode == this &&
                 Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) != null
         }
 
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = mode
 
     }
 
-    object FriendClicker : Choice("FriendClicker") {
+    object FriendClicker : Mode("FriendClicker") {
 
         private val pickUpRange by float("PickUpRange", 3.0f, 1f..100f)
 
@@ -119,17 +119,17 @@ object ModuleMiddleClickAction : ClientModule(
         val repeatable = handler<GameTickEvent> {
             val rotation = player.rotation
 
-            val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is Player }
+            val entity = (findEntityInCrosshair(pickUpRange.toDouble(), rotation) { it is Player }
                 ?: return@handler).entity as Player
 
-            val facesEnemy = facingEnemy(
+            val entityHitResult = isLookingAtEntity(
                 toEntity = entity, rotation = rotation, range = pickUpRange.toDouble(),
-                wallsRange = 0.0
+                throughWallsRange = 0.0
             )
 
             val pickup = mc.options.keyPickItem.isDown
 
-            if (facesEnemy && pickup && !clicked) {
+            if (entityHitResult != null && pickup && !clicked) {
                 val name = entity.scoreboardName
 
                 if (FriendManager.isFriend(name)) {
@@ -153,7 +153,7 @@ object ModuleMiddleClickAction : ClientModule(
             clicked = pickup
         }
 
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = mode
 
     }

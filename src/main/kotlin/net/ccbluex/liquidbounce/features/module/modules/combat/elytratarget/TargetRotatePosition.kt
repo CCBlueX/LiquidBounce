@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,20 +15,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 
 @Suppress("unused")
 internal enum class TargetRotatePosition(
-    override val choiceName: String,
+    override val tag: String,
     val position: (LivingEntity) -> Vec3
-) : NamedChoice {
+) : Tagged {
     EYES("Eyes", { target ->
         target.eyePosition
     }),

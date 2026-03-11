@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import kotlin.math.round
 
-object ScaffoldJumpStrafe : ToggleableConfigurable(ModuleScaffold, "StrafeOnJump", false) {
+object ScaffoldJumpStrafe : ToggleableValueGroup(ModuleScaffold, "StrafeOnJump", false) {
 
     /**
      * Allows to adjust the speed of the strafe.
@@ -57,7 +57,7 @@ object ScaffoldJumpStrafe : ToggleableConfigurable(ModuleScaffold, "StrafeOnJump
         val isMovingStraight = movingYaw % 90 == 0f
 
         val speed = if (isMovingStraight) straightSpeed else diagonalSpeed
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.random().toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.random().toDouble())
         ModuleDebug.debugParameter(ModuleScaffold, "Telly-Speed", "%.2f".format(player.horizontalSpeed))
     }
 

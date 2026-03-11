@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.blockingHand
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
+import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 
-internal object NoSlowBlockingInteract : Choice("Interact") {
+internal object NoSlowBlockingInteract : Mode("Interact") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = modes
 
     @Suppress("unused")
@@ -41,7 +40,7 @@ internal object NoSlowBlockingInteract : Choice("Interact") {
         blockingHand?.let { blockingHand ->
             if (event.state == EventState.POST) {
                 untracked {
-                    network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
+                    network.sendHeldItemChange(player.inventory.selectedSlot)
                     interaction.startPrediction(world) { sequence ->
                         ServerboundUseItemPacket(blockingHand, sequence, player.yRot, player.xRot)
                     }

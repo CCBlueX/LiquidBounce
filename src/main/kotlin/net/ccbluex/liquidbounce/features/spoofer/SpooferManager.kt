@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.spoofer
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.utils.client.exploitpreventer.ExpCompatibility
 
 /**
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.exploitpreventer.ExpCompatibility
  * to e.g., trick the server into thinking you are connecting from
  * another client brand.
  */
-object SpooferManager : Configurable("Spoofer") {
+object SpooferManager : Config("Spoofer") {
 
     val usesExploitPreventer = runCatching {
         // The API does not report whether [ExploitPreventer] is installed or not.

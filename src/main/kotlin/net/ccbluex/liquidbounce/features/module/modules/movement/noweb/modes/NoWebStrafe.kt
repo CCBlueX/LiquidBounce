@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoWeb.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -28,27 +28,28 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.core.BlockPos
 
 /**
- * Bypassing Vulcan't Anti Cheat's All Version(6/27/2025)
- * Bypassing Grim Anti Cheat (7/28/2025)
+ * Bypassing Vulcan anticheat (6/27/2025)
+ * Bypassing Grim anticheat (7/28/2025)
  *
  * @author XeContrast
  */
 object NoWebStrafe : NoWebMode("Strafe") {
-    override val parent: ChoiceConfigurable<NoWebMode>
+    override val parent: ModeValueGroup<NoWebMode>
         get() = modes
 
     private val strength by float("Strength", 0.23f, 0.01f..0.8f)
     private val motionY = tree(Motion())
     private val onlyGround by boolean("OnlyOnGround", false)
 
-    private class Motion : ToggleableConfigurable(this@NoWebStrafe, "MotionY", false) {
+    private class Motion : ToggleableValueGroup(this@NoWebStrafe, "MotionY", false) {
         val motionStrength by float("MotionYStrength", 0.6f, -2.00f..2.00f)
     }
 
+    // TODO: make motionY more flexible based on player input
     override fun handleEntityCollision(pos: BlockPos): Boolean {
         if (player.moving) {
             if (player.onGround() || !onlyGround) {
-                player.setDeltaMovement(player.deltaMovement.withStrafe(strength.toDouble()))
+                player.deltaMovement = player.deltaMovement.withStrafe(strength.toDouble())
             }
 
             if (motionY.enabled) {

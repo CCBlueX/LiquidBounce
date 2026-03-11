@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.item.ItemStack
 import java.lang.reflect.Type
 
 object ItemStackSerializer : JsonSerializer<ItemStack> {

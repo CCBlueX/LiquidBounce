@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,15 +27,16 @@ import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import kotlin.math.max
 
+@JvmRecord
 data class LedgeAction(
     val jump: Boolean = false,
     val sneakTime: Int = 0,
     val stopInput: Boolean = false,
-    val stepBack: Boolean = false
+    val stepBack: Boolean = false,
 ) {
     companion object {
         @JvmField
-        val NO_LEDGE = LedgeAction(jump = false, sneakTime = 0, stopInput = false)
+        val NO_LEDGE = LedgeAction(jump = false, sneakTime = 0, stopInput = false, stepBack = false)
     }
 
 }
@@ -46,7 +47,7 @@ fun ledge(
     extension: ScaffoldLedgeExtension? = null
 ): LedgeAction {
     if (player.isCloseToEdge(DirectionalInput(player.input))) {
-        val ticks = ModuleScaffold.ScaffoldRotationConfigurable.calculateTicks(rotation)
+        val ticks = ModuleScaffold.ScaffoldRotationValueGroup.calculateTicks(rotation)
 
         ModuleDebug.debugParameter(ModuleScaffold, "TicksUntilDestination", ticks)
 
@@ -64,7 +65,7 @@ fun ledge(
     ) ?: LedgeAction.NO_LEDGE
 }
 
-interface ScaffoldLedgeExtension {
+fun interface ScaffoldLedgeExtension {
     fun ledge(
         target: BlockPlacementTarget?,
         rotation: Rotation

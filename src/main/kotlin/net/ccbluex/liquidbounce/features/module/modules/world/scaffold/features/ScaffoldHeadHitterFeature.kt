@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.moving
 
-object ScaffoldHeadHitterFeature : ToggleableConfigurable(ModuleScaffold, "HeadHitter", false) {
+object ScaffoldHeadHitterFeature : ToggleableValueGroup(ModuleScaffold, "HeadHitter", false) {
     fun canHeadHit() =
         !world.getBlockState(player.blockPosition().offset(0, 2, 0)).isAir && player.onGround()
 

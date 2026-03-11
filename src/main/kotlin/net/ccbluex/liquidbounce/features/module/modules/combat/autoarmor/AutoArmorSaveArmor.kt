@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.UseHotbar
@@ -31,10 +31,8 @@ import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
-import net.minecraft.world.entity.EquipmentSlot
-import java.util.*
 
-object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor", true) {
+object AutoArmorSaveArmor : ToggleableValueGroup(ModuleAutoArmor, "SaveArmor", true) {
     val durabilityThreshold by int("DurabilityThreshold", 24, 0..100)
     private val autoOpen by boolean("AutoOpenInventory", true)
 
@@ -119,9 +117,7 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
             return@tickHandler
         }
 
-        val armorSlotsToEquip = armorToEquipWithSlots.mapTo(
-            EnumSet.noneOf(EquipmentSlot::class.java)
-        ) { ArmorPiece(it.itemSlot).slotType }
+        val armorSlotsToEquip = armorToEquipWithSlots.mapTo(enumSetOf()) { ArmorPiece(it.itemSlot).slotType }
 
         val hasArmorToReplace = Slots.Armor.any {
             val armorStack = it.itemStack

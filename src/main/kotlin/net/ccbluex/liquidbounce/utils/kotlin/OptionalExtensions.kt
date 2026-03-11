@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,12 @@
 
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import java.util.*
+import java.util.Optional
+import java.util.OptionalDouble
+import java.util.OptionalInt
+import java.util.OptionalLong
+
+inline fun <T : Any> optional() = Optional.empty<T>()
 
 inline fun <T : Any> optional(value: T?) = Optional.ofNullable(value)
 

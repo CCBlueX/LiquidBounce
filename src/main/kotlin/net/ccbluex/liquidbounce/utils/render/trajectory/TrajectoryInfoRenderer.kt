@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,20 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
-import com.mojang.blaze3d.vertex.PoseStack
-import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
-import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.drawLineStripAsLines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -38,15 +34,13 @@ import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.move
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.scaleMut
 import net.ccbluex.liquidbounce.utils.math.set
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
@@ -71,6 +65,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
     velocity: Vec3,
     pos: Vec3,
     val trajectoryInfo: TrajectoryInfo,
+    val trajectoryType: TrajectoryType,
     /**
      * Only used for rendering. No effect on simulation.
      */
@@ -101,6 +96,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         fun getHypotheticalTrajectory(
             owner: Entity,
             trajectoryInfo: TrajectoryInfo,
+            trajectoryType: TrajectoryType,
             rotation: Rotation,
             icon: ItemStack = ItemStack.EMPTY,
             partialTicks: Float = mc.deltaTracker.getGameTimeDeltaPartialTick(true),
@@ -137,6 +133,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
                 velocity = velocity,
                 pos = pos,
                 trajectoryInfo = trajectoryInfo,
+                trajectoryType = trajectoryType,
                 type = Type.HYPOTHETICAL,
                 renderOffset = interpolatedOffset.add(-cos(yawRadians) * 0.16, 0.0, -sin(yawRadians) * 0.16)
             )
@@ -165,13 +162,16 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         }
 
         val positions = mutableListOf<Vec3>()
+        val requiresInitialTickCorrection = this.trajectoryType.requiresInitialTickCorrection
 
         // Apply first-tick physics to velocity only, mimicking server spawn reset
-        tickVelocity()
+        if (requiresInitialTickCorrection) {
+            tickVelocity()
+        }
 
         // Now start normal simulation, starting from currTicks = 1
         val prevPos = pos.copy()
-        var currTicks = 1
+        var currTicks = if (requiresInitialTickCorrection) 1 else 0
 
         while (currTicks < maxTicks) {
             if (pos.y < world.minY) {
@@ -244,9 +244,10 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         }
     }
 
+    context(env: WorldRenderEnvironment)
     fun drawTrajectoryForProjectile(
         maxTicks: Int,
-        event: WorldRenderEvent,
+        partialTicks: Float,
         trajectoryColor: Color4b,
         blockHitColor: Color4b?,
         entityHitColor: Color4b?,
@@ -255,38 +256,34 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
 
         val (landingPosition, positions) = simulationResult
 
-        drawTrajectoryForProjectile(positions, trajectoryColor, event.matrixStack)
+        env.drawTrajectoryForProjectile(positions, trajectoryColor.argb)
 
         when (landingPosition) {
             null -> return simulationResult
             is BlockHitResult -> if (blockHitColor != null) {
-                renderHitBlockFace(event.matrixStack, landingPosition, blockHitColor)
+                env.renderHitBlockFace(landingPosition, blockHitColor)
             }
             is EntityHitResult -> if (entityHitColor != null) {
                 val entities = listOf(landingPosition.entity)
 
-                drawHitEntities(event.matrixStack, entityHitColor, entities, event.partialTicks)
+                env.drawHitEntities(entityHitColor, entities, partialTicks)
             }
             else -> error("Unexpected HitResult type: ${landingPosition::class.java.name}")
         }
 
         if (trajectoryInfo == TrajectoryInfo.POTION && entityHitColor != null) {
-            drawSplashPotionTargets(landingPosition.location, trajectoryInfo, event, entityHitColor)
+            env.drawSplashPotionTargets(landingPosition.location, trajectoryInfo, partialTicks, entityHitColor)
         }
 
         return simulationResult
     }
 
-    private fun drawTrajectoryForProjectile(
-        positions: List<Vec3>,
-        color: Color4b,
-        matrixStack: PoseStack,
-    ) {
-        renderEnvironmentForWorld(matrixStack) {
-            drawLineStrip(
-                color.toARGB(),
-                positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3() })
-        }
+    private fun WorldRenderEnvironment.drawTrajectoryForProjectile(positions: List<Vec3>, argb: Int) {
+        // Don't use LineStrip because in batch mode
+        poseStack.pushPose()
+        poseStack.translate(renderOffset - camera.position())
+        drawLineStripAsLines(argb, if (positions.size and 1 != 0) positions.subList(1) else positions)
+        poseStack.popPose()
     }
 
     @JvmRecord
@@ -296,67 +293,60 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
     )
 }
 
-private fun drawSplashPotionTargets(
+private fun WorldRenderEnvironment.drawSplashPotionTargets(
     landingPosition: Vec3,
     trajectoryInfo: TrajectoryInfo,
-    event: WorldRenderEvent,
+    partialTicks: Float,
     entityHitColor: Color4b,
 ) {
     val box: AABB = trajectoryInfo.hitbox(landingPosition).inflate(4.0, 2.0, 4.0)
 
     val hitTargets =
-        world.getEntitiesOfClass(LivingEntity::class.java, box)
-            .takeWhile { it.distanceToSqr(landingPosition) <= 16.0 }
-            .filter { it.isAffectedByPotions }
+        world.getEntitiesOfClass(LivingEntity::class.java, box) {
+            it.distanceToSqr(landingPosition) <= 16.0 && it.isAffectedByPotions
+        }
 
-    drawHitEntities(event.matrixStack, entityHitColor, hitTargets, event.partialTicks)
+    drawHitEntities(entityHitColor, hitTargets, partialTicks)
 }
 
-private fun drawHitEntities(
-    matrixStack: PoseStack,
+private fun WorldRenderEnvironment.drawHitEntities(
     entityHitColor: Color4b,
     entities: List<Entity>,
     partialTicks: Float
 ) {
-    renderEnvironmentForWorld(matrixStack) {
-        startBatch()
-        for (entity in entities) {
-            if (entity === player) {
-                continue
-            }
-
-            val pos = entity.interpolateCurrentPosition(partialTicks)
-
-            withPositionRelativeToCamera(pos) {
-                drawBox(
-                    entity
-                        .getDimensions(entity.pose)
-                        .makeBoundingBox(Vec3.ZERO),
-                    entityHitColor,
-                )
-            }
+    for (entity in entities) {
+        if (entity === player) {
+            continue
         }
-        commitBatch()
+
+        val pos = entity.interpolateCurrentPosition(partialTicks)
+
+        withPositionRelativeToCamera(pos) {
+            drawBox(
+                entity
+                    .getDimensions(entity.pose)
+                    .makeBoundingBox(Vec3.ZERO),
+                entityHitColor,
+            )
+        }
     }
 }
 
-private fun renderHitBlockFace(matrixStack: PoseStack, blockHitResult: BlockHitResult, color: Color4b) {
+private fun WorldRenderEnvironment.renderHitBlockFace(blockHitResult: BlockHitResult, color: Color4b) {
     val currPos = blockHitResult.blockPos
     val currState = currPos.getState()!!
 
     val bestBox = currState.getShape(world, currPos, CollisionContext.of(player)).toAabbs()
-        .filter { blockHitResult.location in it.inflate(0.01, 0.01, 0.01).move(currPos) }
-        .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.location) }
+        .filter { blockHitResult.location in it.inflate(0.01).move(currPos) }
+        .minByOrNull { it.distanceToSqr(blockHitResult.location) }
 
     if (bestBox != null) {
-        renderEnvironmentForWorld(matrixStack) {
-            withPositionRelativeToCamera(currPos) {
-                drawBoxSide(
-                    bestBox,
-                    side = blockHitResult.direction,
-                    faceColor = color,
-                )
-            }
+        withPositionRelativeToCamera(currPos) {
+            drawBoxSide(
+                bestBox,
+                side = blockHitResult.direction,
+                faceColor = color,
+            )
         }
     }
 }

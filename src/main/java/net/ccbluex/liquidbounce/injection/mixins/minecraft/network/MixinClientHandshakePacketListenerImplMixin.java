@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +15,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.spoofer.SpooferClient;
-import net.ccbluex.liquidbounce.utils.client.PlainText;
-import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Component;
+import net.ccbluex.liquidbounce.utils.text.PlainText;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ClientHandshakePacketListenerImpl.class)
-public class MixinClientHandshakePacketListenerImplMixin {
+public abstract class MixinClientHandshakePacketListenerImplMixin {
 
     @ModifyExpressionValue(method = "handleLoginFinished", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/ClientBrandRetriever;getClientModName()Ljava/lang/String;", remap = false))
     private String getClientModName(String original) {
@@ -49,12 +49,16 @@ public class MixinClientHandshakePacketListenerImplMixin {
             return original;
         }
 
-        var notOfflineMode = Component.literal("Not offline mode")
-                .withStyle(style -> style.withColor(ChatFormatting.RED).withUnderlined(true));
-        var requiresValidText = Component.literal("This server requires a valid session. Possible solutions:")
-                .withStyle(style -> style.withColor(ChatFormatting.RED));
-        var loginText = Component.literal("Login into a Minecraft premium account and try again.");
-        var retryText = Component.literal("If you've already signed into a premium account,\n" +
+        var notOfflineMode = PlainText.of(
+            "Not offline mode",
+            Style.EMPTY.withColor(ChatFormatting.RED).withUnderlined(true)
+        );
+        var requiresValidText = PlainText.of(
+            "This server requires a valid session. Possible solutions:",
+            ChatFormatting.RED
+        );
+        var loginText = PlainText.of("Login into a Minecraft premium account and try again.");
+        var retryText = PlainText.of("If you've already signed into a premium account,\n" +
                 "reload the game or re-sign into the account.");
 
         return Component.empty()

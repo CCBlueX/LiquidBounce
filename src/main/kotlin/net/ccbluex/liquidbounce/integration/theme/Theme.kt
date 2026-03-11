@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,17 @@
 
 package net.ccbluex.liquidbounce.integration.theme
 
+import com.mojang.blaze3d.platform.NativeImage
 import io.netty.handler.codec.http.HttpHeaderNames
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
@@ -33,16 +37,16 @@ import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory.JsonHudComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.capitalize
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.server.packs.resources.ResourceManager
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import okhttp3.Headers
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
-import java.util.*
+import java.util.Locale
 
 /**
  * A web-based theme loaded from the provided URL.
@@ -56,12 +60,12 @@ class Theme private constructor(val origin: Origin, url: String) :
         defaultHeaders = Headers.Builder()
             .add(
                 HttpHeaderNames.COOKIE.toString(),
-                "${AuthMiddleware.AUTH_COOKIE_NAME}=${AuthMiddleware.AUTH_CODE}"
+                "${AuthMiddleware.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}"
             )
             .build()
     ), Closeable, ResourceManagerReloadListener {
 
-    enum class Origin(override val choiceName: String, val external: Boolean) : NamedChoice {
+    enum class Origin(override val tag: String, val external: Boolean) : Tagged {
         RESOURCE("resource", false),
         LOCAL("local", false),
         MARKETPLACE("marketplace", false),
@@ -85,8 +89,8 @@ class Theme private constructor(val origin: Origin, url: String) :
     val components: List<HudComponent>
         get() = requireNotNull(_components) { "components not loaded" }
 
-    private var _settings: Configurable? = null
-    val settings: Configurable
+    private var _settings: ValueGroup? = null
+    val settings: ValueGroup
         get() = requireNotNull(_settings) { "settings not loaded" }
 
     private suspend fun loadComponents() {
@@ -109,7 +113,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             check(count == 1) { "Found duplicated component name '$name'" }
         }
 
-        _settings = Configurable(metadata.id.capitalize()).apply {
+        _settings = ValueGroup(metadata.id.capitalize()).apply {
             metadata.values?.let { values ->
                 for (value in values) {
                     json(value)
@@ -117,7 +121,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             }
 
             @Suppress("UNCHECKED_CAST")
-            val componentSettings = Configurable("Components", components as MutableList<Value<*>>)
+            val componentSettings = ValueGroup("Components", components as MutableList<Value<*>>)
             tree(componentSettings)
         }
     }
@@ -142,13 +146,15 @@ class Theme private constructor(val origin: Origin, url: String) :
         loadFonts()
     }
 
-    var themeBackgroundShader: ThemeBackground? = null
+    var backgroundShader: ThemeBackground? = null
         private set
-    var themeBackgroundTexture: ThemeBackground? = null
+    private val shaderMutex = Mutex()
+    var backgroundImage: ThemeBackground? = null
         private set
+    private val imageMutex = Mutex()
 
-    suspend fun compileShader(): Boolean {
-        if (themeBackgroundShader != null) {
+    suspend fun compileShader(): Boolean = shaderMutex.withLock {
+        if (backgroundShader != null) {
             return true
         }
 
@@ -164,7 +170,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         }.getOrNull() ?: return false
 
         withContext(Dispatchers.Minecraft) {
-            themeBackgroundShader = ThemeBackground.Shader.build(
+            backgroundShader = ThemeBackground.Shader.build(
                 metadata,
                 background,
                 fragmentShader,
@@ -177,8 +183,8 @@ class Theme private constructor(val origin: Origin, url: String) :
         return true
     }
 
-    suspend fun loadBackgroundImage(): Boolean {
-        if (themeBackgroundTexture != null) {
+    suspend fun loadBackgroundImage(): Boolean = imageMutex.withLock {
+        if (backgroundImage != null) {
             return true
         }
 
@@ -194,7 +200,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         }.getOrNull() ?: return false
 
         withContext(Dispatchers.Minecraft) {
-            themeBackgroundTexture = ThemeBackground.Image(metadata, image).also {
+            backgroundImage = ThemeBackground.Image(metadata, image).also {
                 it.onResourceReload()
             }
         }
@@ -207,9 +213,9 @@ class Theme private constructor(val origin: Origin, url: String) :
      */
     fun getUrl(name: String? = null, markAsStatic: Boolean = false): String {
         val baseUrlWithFragment = "$baseUrl/?${AuthMiddleware.AUTH_CODE_PARAM}=" +
-            "${AuthMiddleware.AUTH_CODE}#/${name.orEmpty()}"
+            "${ClientInteropServer.AUTH_CODE}#/${name.orEmpty()}"
         val params = buildList {
-            if (origin.external) add("port=${ClientInteropServer.port}")
+            if (origin.external) add("port=${ClientInteropServer.PORT}")
             if (markAsStatic) add("static")
         }.joinToString("&")
 
@@ -223,27 +229,30 @@ class Theme private constructor(val origin: Origin, url: String) :
     fun isOverlaySupported(name: String?) = name != null && metadata.overlays.contains(name)
 
     override fun onResourceManagerReload(manager: ResourceManager) {
-        themeBackgroundShader?.onResourceReload()
-        themeBackgroundTexture?.onResourceReload()
+        backgroundShader?.onResourceReload()
+        backgroundImage?.onResourceReload()
         logger.info("Reloaded theme '${metadata.name}'.")
     }
 
     override fun close() {
-        themeBackgroundShader?.close()
-        themeBackgroundTexture?.close()
+        backgroundShader?.close()
+        backgroundImage?.close()
         _components?.forEach { EventManager.unregisterEventHandler(it) }
     }
 
-    override fun toString() = "Theme(name=${metadata.name}, origin=${origin.choiceName}, url=$baseUrl)"
+    override fun toString() = "Theme(name=${metadata.name}, origin=${origin.tag}, url=$baseUrl)"
 
     companion object {
+
+        private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/Theme")
+
         @JvmStatic
         suspend fun load(url: String) = Theme(Origin.REMOTE, url).loadAll()
 
         @JvmStatic
         suspend fun load(origin: Origin, file: File) = Theme(
             origin,
-            url = "${ClientInteropServer.url}/${origin.choiceName}/${file.invariantSeparatorsPath}/"
+            url = "${ClientInteropServer.url}/${origin.tag}/${file.invariantSeparatorsPath}/"
         ).loadAll()
     }
 

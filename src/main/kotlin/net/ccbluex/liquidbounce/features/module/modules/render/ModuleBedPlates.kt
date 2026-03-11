@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +22,18 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import kotlinx.coroutines.Dispatchers
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.additions.drawStackCount
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.createItemStackForRendering
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.createItemStackForRendering
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
@@ -41,20 +42,21 @@ import net.ccbluex.liquidbounce.utils.block.bed.SurroundingBlock
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.minecraft.core.BlockPos
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.item.ItemStack
-import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.Vec3
+import org.joml.Vector2f
 import java.util.function.Predicate
 
-object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTracker.Subscriber {
+object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), BedBlockTracker.Subscriber {
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII")
 
-    private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+    private val backgroundColor by color("BackgroundColor", Color4b.DEFAULT_BG_COLOR)
     private val outline by boolean("Outline", false)
 
     override val maxLayers by int("MaxLayers", 5, 1..5).onChanged {
@@ -62,9 +64,13 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     }
     private val showBed by boolean("ShowBed", true)
     private val textShadow by boolean("TextShadow", true)
-    private val scale by float("Scale", 1.5f, 0.5f..3.0f)
-    private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
-    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F, aliases = listOf("MaxDistance"))
+    private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
+    private val scale = curve(
+        "Scale",
+        mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
+        xAxis = "Distance" axis 0f..200f,
+        yAxis = "Scale" axis 0.25f..4f,
+    )
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
     private val compact by boolean("Compact", true)
@@ -75,8 +81,8 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val ignoreSelfBed = choices("IgnoreSelfBed", 0, ::isSelfBedChoices)
     private val ignoreAdjacent by boolean("IgnoreAdjacent", false)
 
-    private sealed class FilterMode(name: String) : Choice(name), Predicate<Block> {
-        final override val parent: ChoiceConfigurable<*>
+    private sealed class FilterMode(name: String) : Mode(name), Predicate<Block> {
+        final override val parent: ModeValueGroup<*>
             get() = filterMode
 
         object Predefined : FilterMode("Predefined") {
@@ -137,13 +143,12 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val beds = ArrayList<BedStateRenderState>()
 
     private fun updateAndSortBeds() {
-        val cameraPos = (mc.cameraEntity ?: mc.player ?: return).position()
         beds.forEach { renderState ->
             val bedState = renderState.bedState
-            renderState.distance = bedState.pos.distanceTo(cameraPos)
+            renderState.distance = bedState.pos.cameraDistance()
 
             val surrounding = (if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks)
-                .filter { filterMode.activeChoice.test(it.block) }
+                .filter { filterMode.activeMode.test(it.block) }
             renderState.surrounding = surrounding
 
             renderState.itemStacksForRender = if (showBed) {
@@ -186,13 +191,15 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
         var i = 0
         for ((bedState, distance, surrounding, itemStacksForRender) in beds) {
-            val currPos = bedState.trackedBlockPos
-
-            if (distance > maximumDistance || i > maxCount) {
-                break // because list beds are sorted by distance (ASC), so we break at first item out of range
+            if (i > maxCount) {
+                break
             }
 
-            if (ignoreSelfBed.activeChoice.isSelfBed(bedState.block, currPos) ||
+            val currPos = bedState.trackedBlockPos
+            val scale = scale.transform(distance.toFloat())
+
+            if (scale < 0.01f ||
+                ignoreSelfBed.activeMode.isSelfBed(bedState.block, currPos) ||
                 ignoreAdjacent && beds.any { isAdjacentAndNotEquals(it.bedState.trackedBlockPos, currPos) }
             ) {
                 continue
@@ -200,7 +207,11 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
             val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
 
-            val outlineColor = if (outline) Color4b(bedState.block.color.mapColor.col) else Color4b.TRANSPARENT
+            val outlineColor = if (outline) {
+                Color4b.fullAlpha(bedState.block.color.mapColor.col)
+            } else {
+                Color4b.TRANSPARENT
+            }
 
             event.context.drawItemStackList(itemStacksForRender)
                 .rowLength(Int.MAX_VALUE)
@@ -223,7 +234,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                                 Color4b.RED
                             } else {
                                 Color4b.WHITE
-                            }.toARGB()
+                            }.argb
 
                         renderItem(stack, x, y)
                         val countString = stack.count.toString()

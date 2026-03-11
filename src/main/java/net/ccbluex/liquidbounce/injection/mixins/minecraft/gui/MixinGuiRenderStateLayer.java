@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
-
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.gui.render.state.GuiRenderState;
@@ -28,6 +26,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.ArrayList;
+
+import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
 
 @SuppressWarnings("rawtypes")
 @Mixin(GuiRenderState.Node.class)

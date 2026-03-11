@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -101,9 +101,23 @@ inline fun <reified T : Event> EventListener.until(
 inline fun <reified T : Event> EventListener.once(
     priority: Short = 0,
     crossinline handler: (T) -> Unit
-): EventHook<T> = until(priority) { event ->
+): EventHook<T> = until(priority) { event -> // Don't use `repeated` 'cause for no overhead
     handler(event)
     true // This will unregister the handler after the first call
+}
+
+inline fun <reified T : Event> EventListener.repeated(
+    times: Int = 1,
+    priority: Short = 1,
+    crossinline handler: (T) -> Unit
+): EventHook<T> {
+    require(times > 0) { "times must be > 0" }
+
+    var called = 0
+    return until<T>(priority) { event ->
+        handler(event)
+        ++called >= times
+    }
 }
 
 /**

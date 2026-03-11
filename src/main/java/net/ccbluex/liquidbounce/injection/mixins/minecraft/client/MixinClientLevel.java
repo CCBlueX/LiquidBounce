@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,16 +26,16 @@ import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ExplosionParticleInfo;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.random.WeightedList;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -43,7 +43,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientLevel.class)
-public class MixinClientLevel {
+public abstract class MixinClientLevel {
 
     @ModifyReturnValue(method = "getMarkerParticleTarget", at = @At("RETURN"))
     private Block injectBlockParticle(Block original) {

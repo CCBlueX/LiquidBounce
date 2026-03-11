@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Reference2FloatOpenHashMap
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -44,7 +44,7 @@ import kotlin.math.abs
  *
  * Show health changes of entities
  */
-object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) {
+object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.RENDER) {
 
     private val ttl by float("TimeToLive", 3F, 0.5F..5.0F, "s")
     private val scale by float("Scale", 2F, 0.25F..4F)
@@ -57,14 +57,14 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
         tree(Colors)
     }
 
-    private object Colors : Configurable("Colors") {
+    private object Colors : ValueGroup("Colors") {
         val damage by color("Damage", Color4b.RED)
         val death by color("Death", Color4b.RED)
         val heal by color("Heal", Color4b.GREEN)
         val maxHealth by color("MaxHealth", Color4b.GREEN)
     }
 
-    private enum class TrackMode(override val choiceName: String) : NamedChoice {
+    private enum class TrackMode(override val tag: String) : Tagged {
         ON_TICK("OnTick"),
         ON_UPDATE("OnUpdate"),
     }
@@ -174,7 +174,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
                     particle.text,
                     0,
                     0,
-                    particle.color.toARGB(),
+                    particle.color.argb,
                 )
                 pose().popMatrix()
             }

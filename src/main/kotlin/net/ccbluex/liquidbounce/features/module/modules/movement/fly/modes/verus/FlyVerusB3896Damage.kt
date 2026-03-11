@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
@@ -40,9 +38,9 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  * @testedOn eu.loyisa.cn
  * @note it gives you ~2 flags for damage
  */
-internal object FlyVerusB3896Damage : Choice("VerusB3896Damage") {
+internal object FlyVerusB3896Damage : Mode("VerusB3896Damage") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     private var flyTicks = 0
@@ -88,7 +86,7 @@ internal object FlyVerusB3896Damage : Choice("VerusB3896Damage") {
             return@tickHandler
         }
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 9.95))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = 9.95)
         player.deltaMovement.y = 0.0
         Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly)
     }

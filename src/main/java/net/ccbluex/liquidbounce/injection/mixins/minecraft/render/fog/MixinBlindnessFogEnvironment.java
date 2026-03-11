@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,15 +22,15 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render.fog;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.minecraft.client.renderer.fog.environment.BlindnessFogEnvironment;
-import net.minecraft.world.effect.MobEffect;
 import net.minecraft.core.Holder;
+import net.minecraft.world.effect.MobEffect;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlindnessFogEnvironment.class)
-public class MixinBlindnessFogEnvironment {
+public abstract class MixinBlindnessFogEnvironment {
     @Inject(method = "getMobEffect()Lnet/minecraft/core/Holder;", at = @At("HEAD"), cancellable = true)
     public void hookGetStatusEffect(CallbackInfoReturnable<Holder<MobEffect>> cir) {
         if (!ModuleAntiBlind.canRender(DoRender.BLINDING)) {

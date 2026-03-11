@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementPositionCandidate
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.item.Items
 import net.minecraft.core.BlockPos
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.state.BlockState
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
@@ -43,7 +43,7 @@ import kotlin.math.max
 /**
  * Tries to build improved placement spots.
  */
-object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace", true) {
+object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace", true) {
 
     /**
      * How long to wait before starting a new calculation.
@@ -78,7 +78,7 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
      * Makes sure we don't run into the placement. This does not mean the damage will be predicted at the simulated
      * position.
      */
-    private object SimulateMovement : ToggleableConfigurable(this, "SimulateMovement", true) {
+    private object SimulateMovement : ToggleableValueGroup(this, "SimulateMovement", true) {
 
         /**
          * How many ticks the player movement is simulated.

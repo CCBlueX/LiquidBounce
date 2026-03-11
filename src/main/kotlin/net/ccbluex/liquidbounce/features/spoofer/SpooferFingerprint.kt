@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.spoofer
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 
 /**
  * "Spoofs" the fingerprint of the client
@@ -28,4 +28,4 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
  *
  * To combat this, we simply use a new cache directory for each UUID that we use.
  */
-object SpooferFingerprint : ToggleableConfigurable(name = "FingerprintSpoofer", enabled = true)
+object SpooferFingerprint : ToggleableValueGroup(name = "FingerprintSpoofer", enabled = true)

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,53 +19,53 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
-import net.ccbluex.fastutil.WeightedSortedList
-import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
-import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.getClosestSquaredDistanceTo
+import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
-import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.outlineBox
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
+import net.ccbluex.liquidbounce.utils.block.shape
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.clipAllBoxes
+import net.ccbluex.liquidbounce.utils.raytracing.clip
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.InteractionResult
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.HitResult
-import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
-import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.Shapes
-import net.minecraft.world.level.ClipContext
+import net.minecraft.world.phys.shapes.CollisionContext
 import java.util.function.ToDoubleFunction
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
@@ -75,7 +75,7 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
-object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("BedBreaker", "IdNuker")) {
+object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = listOf("BedBreaker", "IdNuker")) {
 
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -89,7 +89,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
      *
      * Useful for Hypixel and CubeCraft
      */
-    private object FuckerEntrance : ToggleableConfigurable(this, "Entrance", false) {
+    private object FuckerEntrance : ToggleableValueGroup(this, "Entrance", false) {
         /**
          * Breaks the weakest block around target block and makes an entrance
          */
@@ -113,7 +113,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
     private val targetRenderer = tree(
         PlacementRenderer("TargetRendering", true, this,
             defaultColor = Color4b(255, 0, 0, 90)
@@ -124,15 +124,6 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         get() = if (ModuleAutoTool.isInventoryConsidered) Slots.Hotbar + Slots.Inventory else Slots.Hotbar
 
     private var currentTarget: DestroyerTarget? = null
-    private fun clearCurrentTarget() {
-        currentTarget?.let {
-            interaction.stopDestroyBlock()
-            targetRenderer.removeBlock(it.pos)
-        }
-
-        currentTarget = null
-    }
-
     private var oldTarget: DestroyerTarget? = null
 
     override fun onDisabled() {
@@ -153,9 +144,6 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         oldTarget = currentTarget
         updateCurrentTarget()
-        currentTarget?.let {
-            targetRenderer.addBlock(it.pos)
-        }
     }
 
     @Suppress("unused")
@@ -164,12 +152,12 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
             return@tickHandler
         }
 
-        // Delay if the target changed - this also includes when introducing a new target from null.
-        if (oldTarget != currentTarget) {
-            if (currentTarget == null || delay > 0) {
-                clearCurrentTarget()
-            }
-
+        // If we don't have any new target, and we had one before, stop breaking.
+        if (oldTarget != null && currentTarget == null) {
+            interaction.stopDestroyBlock()
+            return@tickHandler
+        } else if (oldTarget != currentTarget && delay > 0) {
+            interaction.stopDestroyBlock()
             waitTicks(delay)
         }
 
@@ -180,6 +168,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         val destroyerTarget = currentTarget ?: return@tickHandler
         val currentRotation = RotationManager.serverRotation
+        targetRenderer.addBlock(destroyerTarget.pos)
 
         if (ModulePacketMine.running && destroyerTarget.action == DestroyAction.DESTROY) {
             ModulePacketMine.setTarget(destroyerTarget.pos)
@@ -248,24 +237,29 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
             if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
                 val weakBlock = pos.weakestNeighbor ?: continue
                 considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
-            } else if (surroundings) {
-                updateSurroundings(pos)
+            } else if (surroundings && updateSurroundings(pos)) {
+                break
             }
         }
     }
 
+    private fun clearCurrentTarget() {
+        interaction.stopDestroyBlock()
+
+        currentTarget?.let { target ->
+            targetRenderer.removeBlock(target.pos)
+        }
+        currentTarget = null
+    }
+
     private fun searchPossibleTargetPositions(): List<BlockPos> {
-        return player.eyePosition.searchBlocksInCuboid(range + 1) { pos, state ->
+        return player.eyePosition.searchBlocksInRangeSorted(range) { pos, state ->
             when (val block = state.block) {
                 !in targets -> false
-                is BedBlock if isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
+                is BedBlock if isSelfBedMode.activeMode.isSelfBed(block, pos) -> false
                 else -> true
             }
-        }.toCollection(WeightedSortedList(upperBound = range.sq().toDouble()) { (pos, state) ->
-            state.getShape(world, pos, CollisionContext.of(player))
-                .move(pos)
-                .getClosestSquaredDistanceTo(player.eyePosition)
-        }).mapToArray { it.first }.unmodifiable()
+        }.map { it.first }
     }
 
     private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {
@@ -297,38 +291,39 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
     private fun traceWayToTarget(
         target: BlockPos,
+        targetPoint: Vec3,
         startPos: BlockPos,
     ): List<BlockPos> {
         val eyePos = player.eyePosition
+
         val visited = LongOpenHashSet()
         val result = mutableListOf<BlockPos>()
-        val targetPoint = target.collisionShape.closestPointTo(eyePos).getOrNull() ?: return emptyList()
 
-        fun trace0(currBlock: Long) {
-            val pos = BlockPos.MutableBlockPos()
+        fun traceSingle(pos: BlockPos): Boolean {
+            if (pos == target || !visited.add(pos.asLong())) {
+                return false
+            }
+
+            // Any of boxes raycast the line is not null -> need to break
+            return pos.shape.clipAllBoxes(pos, eyePos, targetPoint).isNotEmpty()
+        }
+
+        fun traceSurrounding(pos: Long) {
+            val mut = BlockPos.MutableBlockPos().set(pos)
+            if (traceSingle(mut)) {
+                result.add(mut.immutable())
+            }
+
             for (direction in Direction.entries) {
-                pos.set(currBlock).move(direction)
-                if (pos == target || pos.asLong() in visited) {
-                    continue
+                mut.set(pos).move(direction)
+                if (traceSingle(mut)) {
+                    result.add(mut.immutable())
+                    traceSurrounding(mut.asLong())
                 }
-
-                // Any of boxes raycast the line is not null -> need to break
-                var rc: Vec3? = null
-                pos.collisionShape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-                    if (rc == null) {
-                        rc = AABB.clip(minX, minY, minZ, maxX, maxY, maxZ, eyePos, targetPoint).getOrNull()
-                    }
-                }
-
-                rc ?: continue
-
-                result.add(pos.immutable())
-                visited.add(pos.asLong())
-
-                trace0(pos.asLong())
             }
         }
-        trace0(startPos.asLong())
+
+        traceSurrounding(startPos.asLong())
 
         return result
     }
@@ -366,7 +361,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
             RotationManager.setRotationTarget(
                 raytrace.rotation,
                 considerInventory = !ignoreOpenInventory,
-                configurable = rotations,
+                valueGroup = rotations,
                 if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
                 this@ModuleFucker
             )
@@ -378,24 +373,36 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         return true
     }
 
-    private fun updateSurroundings(initialPosition: BlockPos) {
-        val raytraceResult = world.clip(
-            ClipContext(
-                player.eyePosition,
-                initialPosition.center,
-                ClipContext.Block.COLLIDER,
-                ClipContext.Fluid.NONE,
-                player
-            )
-        ) ?: return
+    private fun updateSurroundings(initialPosition: BlockPos): Boolean {
+        val eyePos = player.eyePosition
+        val targetPoint = initialPosition.shape.move(initialPosition)
+            .closestPointTo(eyePos).getOrNull() ?: return false
 
-        if (raytraceResult.type != HitResult.Type.BLOCK) {
-            return
+        debugGeometry("targetPos") {
+            ModuleDebug.DebuggedPoint(targetPoint, Color4b.RED.alpha(100))
         }
+
+        val raytraceResult = world.clip(
+            eyePos,
+            targetPoint,
+            ClipContext.Block.OUTLINE,
+            ClipContext.Fluid.NONE,
+            player,
+        ).takeIf { it.type == HitResult.Type.BLOCK } ?: return false
 
         val blockPos = raytraceResult.blockPos
 
-        val arr = traceWayToTarget(initialPosition, blockPos)
+        debugGeometry("initialPosition") {
+            ModuleDebug.DebuggedBox(initialPosition.outlineBox.move(initialPosition), Color4b.GREEN.alpha(50))
+        }
+
+        debugGeometry("raytraceResult") {
+            ModuleDebug.DebuggedBox(blockPos.outlineBox.move(blockPos), Color4b.BLUE.alpha(50))
+        }
+
+        val arr = traceWayToTarget(initialPosition, targetPoint, blockPos).ifEmpty { return false }
+
+        debugParameter("wayToTarget") { arr }
 
         val resistance = arr.mapNotNull {
             it to (it.getState()?.takeUnless { state -> state.isAir } ?: return@mapNotNull null)
@@ -406,8 +413,11 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
             range.toDouble(),
             wallRange.toDouble(),
         )
+
+        return true
     }
 
+    @JvmRecord
     private data class DestroyerTarget(
         val pos: BlockPos,
         val action: DestroyAction,
@@ -437,7 +447,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         val resistance: Double
     )
 
-    private enum class DestroyAction(override val choiceName: String) : NamedChoice {
+    private enum class DestroyAction(override val tag: String) : Tagged {
         DESTROY("Destroy"), USE("Use")
     }
 
@@ -447,7 +457,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
             val cache = BlockPos.MutableBlockPos()
             return DIRECTIONS_EXCLUDING_DOWN.any {
                 val neighbor = cache.setWithOffset(this, it)
-                neighbor.collisionShape == Shapes.empty() && neighbor.getBlock() !== block
+                neighbor.shape.isEmpty && neighbor.getBlock() !== block
             }
         }
 
@@ -468,7 +478,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         .thenComparingDouble(ToDoubleFunction { (pos, state) ->
             state.getShape(world, pos, CollisionContext.of(player))
                 .move(pos)
-                .getClosestSquaredDistanceTo(player.eyePosition)
+                .distanceToSqr(player.eyePosition)
         })
 
     @JvmStatic

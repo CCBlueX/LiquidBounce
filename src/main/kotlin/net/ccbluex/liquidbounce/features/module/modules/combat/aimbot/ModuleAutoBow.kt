@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowAimbotFeature
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowAutoShootFeature
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowFastChargeFeature
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.world.item.BowItem
-import java.util.*
+import java.util.Random
 
 /**
  * AutoBow module
@@ -33,7 +33,7 @@ import java.util.*
  * Automatically shoots with your bow when it's fully charged
  *  + and make it possible to shoot faster
  */
-object ModuleAutoBow : ClientModule("AutoBow", Category.COMBAT, aliases = listOf("BowAssist", "BowAimbot")) {
+object ModuleAutoBow : ClientModule("AutoBow", ModuleCategories.COMBAT, aliases = listOf("BowAssist", "BowAimbot")) {
     val random = Random()
 
     /**

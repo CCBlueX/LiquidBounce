@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,32 +19,32 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsAutoTranslate
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.Gui
 import net.minecraft.network.chat.Component
-import net.minecraft.ChatFormatting
 
 object ModuleBetterTitle : ClientModule(
-    "BetterTitle", Category.RENDER, aliases = listOf("BetterSubtitle")
+    "BetterTitle", ModuleCategories.RENDER, aliases = listOf("BetterSubtitle")
 ) {
     init {
         tree(AutoTranslate)
     }
 }
 
-private object AutoTranslate : ToggleableConfigurable(ModuleBetterTitle, "AutoTranslate", false) {
+private object AutoTranslate : ToggleableValueGroup(ModuleBetterTitle, "AutoTranslate", false) {
     private val components by multiEnumChoice("Components", TitleType.entries)
     private val showIn by multiEnumChoice("ShowIn", ShowIn.CHAT)
 
@@ -61,7 +61,7 @@ private object AutoTranslate : ToggleableConfigurable(ModuleBetterTitle, "AutoTr
             ?.takeUnless(String::isBlank)
             ?: return@suspendHandler
 
-        val result = ModuleTranslation.translate(text = string)
+        val result = GlobalSettingsAutoTranslate.translate(text = string)
         if (result.isValid && result is TranslationResult.Success) {
             showIn.forEach { it.show(type, event, result) }
         }
@@ -77,12 +77,12 @@ private object AutoTranslate : ToggleableConfigurable(ModuleBetterTitle, "AutoTr
 
 @Suppress("unused")
 private enum class ShowIn(
-    override val choiceName: String,
+    override val tag: String,
     val show: (TitleType, TitleEvent.TextContent, TranslationResult.Success) -> Unit
-) : NamedChoice {
+) : Tagged {
     CHAT("Chat", { type, _, result ->
         chat(
-            highlight(type.choiceName),
+            highlight(type.tag),
             regular(": "),
             result.toResultText(),
         )
@@ -97,13 +97,13 @@ private enum class ShowIn(
 
 
 private enum class TitleType(
-    override val choiceName: String,
+    override val tag: String,
     /**
-     * Doesn't use [InGameHud.setTitle] and [InGameHud.setSubtitle] because
+     * Doesn't use [Gui.setTitle] and [Gui.setSubtitle] because
      * this will cause reset of the stayIn timer
      */
     val setText: (Component) -> Unit
-) : NamedChoice {
+) : Tagged {
     TITLE("Title", {
         mc.gui.title = it
     }),

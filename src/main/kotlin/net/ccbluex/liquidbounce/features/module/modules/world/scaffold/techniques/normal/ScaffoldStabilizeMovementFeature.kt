@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,25 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
-import net.minecraft.world.phys.Vec3
 
-object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "StabilizeMovement",
+object ScaffoldStabilizeMovementFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "StabilizeMovement",
     true) {
     private const val MAX_CENTER_DEVIATION: Double = 0.2
     private const val MAX_CENTER_DEVIATION_IF_MOVING_TOWARDS: Double = 0.075
 
     @Suppress("unused")
     val moveEvent = handler<MovementInputEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
-        // Prevents the stabilization from giving the player a boost before jumping that cannot be corrected mid-air.
+        // Prevents the stabilization from giving the player a boost before jumping that cannot be corrected midair.
         if (event.jump && player.onGround()) {
             return@handler
         }
@@ -47,7 +47,7 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalT
         val nearestPointOnLine = optimalLine.getNearestPointTo(player.position())
 
         val vecToLine = nearestPointOnLine.subtract(player.position())
-        val horizontalVelocity = Vec3(player.deltaMovement.x, 0.0, player.deltaMovement.z)
+        val horizontalVelocity = player.deltaMovement.copy(y = 0.0)
         val isRunningTowardsLine = vecToLine.dot(horizontalVelocity) > 0.0
 
         val maxDeviation =
@@ -66,14 +66,14 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalT
         val newDirectionalInput = getDirectionalInputForDegrees(DirectionalInput.NONE, dgs, deadAngle = 0.0F)
 
         val frontalAxisBlocked = currentInput.forwards || currentInput.backwards
-        val sagitalAxisBlocked = currentInput.right || currentInput.left
+        val sagittalAxisBlocked = currentInput.right || currentInput.left
 
         event.directionalInput =
             DirectionalInput(
                 if (frontalAxisBlocked) currentInput.forwards else newDirectionalInput.forwards,
                 if (frontalAxisBlocked) currentInput.backwards else newDirectionalInput.backwards,
-                if (sagitalAxisBlocked) currentInput.left else newDirectionalInput.left,
-                if (sagitalAxisBlocked) currentInput.right else newDirectionalInput.right,
+                if (sagittalAxisBlocked) currentInput.left else newDirectionalInput.left,
+                if (sagittalAxisBlocked) currentInput.right else newDirectionalInput.right,
             )
     }
 }

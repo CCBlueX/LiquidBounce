@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,22 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 /**
  * Makes you go faster by strategically strafing
  */
-object SpeedYawOffset : ToggleableConfigurable(ModuleSpeed, "YawOffset", false) {
+object SpeedYawOffset : ToggleableValueGroup(ModuleSpeed, "YawOffset", false) {
 
     private val yawOffsetMode by enumChoice("YawOffsetMode", YawOffsetMode.AIR)
-    private val rotationsConfigurable = RotationsConfigurable(this)
+    private val rotations = RotationsValueGroup(this)
 
     private var yaw = 0f
 
@@ -48,7 +48,7 @@ object SpeedYawOffset : ToggleableConfigurable(ModuleSpeed, "YawOffset", false) 
         val rotation = Rotation(player.yRot - yaw, player.xRot)
 
         RotationManager.setRotationTarget(
-            rotationsConfigurable.toRotationTarget(rotation),
+            rotations.toRotationTarget(rotation),
             Priority.NOT_IMPORTANT,
             ModuleSpeed
         )
@@ -100,7 +100,7 @@ object SpeedYawOffset : ToggleableConfigurable(ModuleSpeed, "YawOffset", false) 
         return 0f
     }
 
-    private enum class YawOffsetMode(override val choiceName: String) : NamedChoice {
+    private enum class YawOffsetMode(override val tag: String) : Tagged {
         GROUND("Ground"),
         AIR("Air"),
         CONSTANT("Constant")

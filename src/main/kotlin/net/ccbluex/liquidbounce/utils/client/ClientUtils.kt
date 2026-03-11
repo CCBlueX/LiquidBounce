@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,16 @@ val logger: Logger = LogManager.getLogger(CLIENT_NAME)
 val inGame: Boolean
     get() = Minecraft.getInstance()?.let { mc -> mc.player != null && mc.level != null } == true
 
+inline val clientStartDurationMs: Long
+    get() = System.currentTimeMillis() - mc.clientStartTimeMs
+
 /**
  * Open uri in browser
  */
 fun browseUrl(url: String) = Util.getPlatform().openUri(url)
+
+/**
+ * Get environment variable or system property.
+ */
+fun env(name: String, property: String) =
+    (System.getenv(name) ?: System.getProperty(property))?.takeIf { string -> string.isNotBlank() }

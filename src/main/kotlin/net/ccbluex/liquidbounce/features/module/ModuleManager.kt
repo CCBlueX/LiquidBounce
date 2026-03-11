@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,10 @@
 package net.ccbluex.liquidbounce.features.module
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -31,11 +32,6 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoLeave
@@ -96,6 +92,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDete
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoChatGame
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoConfig
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoPearl
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBookBot
@@ -105,6 +102,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFlagCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleGUICloser
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleInventoryTracker
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleItemScroller
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMacros
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAction
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNotifier
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
@@ -162,6 +160,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWindCharge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleChestCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
@@ -184,14 +183,12 @@ import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOff
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAspect
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAttackEffects
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAutoF5
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBedPlates
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockOutline
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleChams
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
@@ -219,6 +216,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleProphuntESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleProtectionZones
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRadar
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger
@@ -230,7 +228,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleVoidESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom
+import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip
+import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats
+import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
@@ -247,6 +249,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleHoleFiller
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleProjectilePuncher
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleStrongholdFinder
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleSurround
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleTimer
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild
@@ -257,11 +260,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModuleP
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.ccbluex.liquidbounce.utils.input.toModifierOrNull
 import org.lwjgl.glfw.GLFW
 
 private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
@@ -271,7 +274,17 @@ private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
  */
 object ModuleManager : EventListener, Collection<ClientModule> by modules {
 
-    val modulesConfigurable = ConfigSystem.root("modules", modules)
+    val modulesConfig = ConfigSystem.root("modules", modules)
+
+    private const val SMART_MOUSE_HOLD_THRESHOLD_MS = 200L
+
+    private enum class SmartBindKeyboardState {
+        PENDING_ENABLED, PENDING_DISABLED, HOLDING,
+    }
+    private class SmartBindMouseState(val pendingEnabled: Boolean, val pressTimestamp: Long)
+
+    private val smartKeyboardStates = Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>()
+    private val smartMouseStates = Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>()
 
     /**
      * Handles keystrokes for module binds.
@@ -282,21 +295,59 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> { event ->
         when (event.action) {
             GLFW.GLFW_PRESS -> if (mc.screen == null) {
-                filter { m ->
-                    m.bind.matchesKey(event.keyCode, event.scanCode) && m.bind.matchesModifiers(event.mods)
-                }.forEach { m ->
-                    m.enabled = !m.enabled || m.bind.action == InputBind.BindAction.HOLD
+                // Usually nobody actually wants a module to activate when they press the Minecraft debug key combo.
+                if (mc.options.keyDebugModifier.isDown) return@handler
+                for (m in modules) {
+                    if (!m.bind.matchesKeyPress(event)) {
+                        continue
+                    }
+
+                    when (m.bind.action) {
+                        InputBind.BindAction.TOGGLE -> m.enabled = !m.enabled
+                        InputBind.BindAction.HOLD -> m.enabled = true
+                        InputBind.BindAction.SMART -> {
+                            smartKeyboardStates[m] = if (m.enabled) {
+                                SmartBindKeyboardState.PENDING_ENABLED
+                            } else {
+                                SmartBindKeyboardState.PENDING_DISABLED
+                            }
+                            m.enabled = true
+                        }
+                    }
                 }
             }
-            GLFW.GLFW_RELEASE ->
-                filter { m ->
-                    m.bind.action == InputBind.BindAction.HOLD && (
-                        m.bind.matchesKey(event.keyCode, event.scanCode)
-                            || event.key.toModifierOrNull().let { it in m.bind.modifiers && !it!!.isAnyPressed }
-                        )
-                }.forEach { m ->
-                    m.enabled = false
+
+            GLFW.GLFW_REPEAT -> {
+                for (m in modules) {
+                    if (m.bind.action != InputBind.BindAction.SMART ||
+                        !m.bind.matchesKey(event.keyCode, event.scanCode) ||
+                        m !in smartKeyboardStates
+                    ) {
+                        continue
+                    }
+
+                    smartKeyboardStates[m] = SmartBindKeyboardState.HOLDING
                 }
+            }
+
+            GLFW.GLFW_RELEASE -> {
+                for (m in modules) {
+                    if (!m.bind.matchesKeyRelease(event)) {
+                        continue
+                    }
+
+                    when (m.bind.action) {
+                        InputBind.BindAction.HOLD -> m.enabled = false
+
+                        InputBind.BindAction.SMART -> {
+                            val stateBeforePress = smartKeyboardStates.remove(m) ?: continue
+                            m.enabled = stateBeforePress == SmartBindKeyboardState.PENDING_DISABLED
+                        }
+
+                        InputBind.BindAction.TOGGLE -> {}
+                    }
+                }
+            }
         }
     }
 
@@ -304,18 +355,51 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
         when (event.action) {
             GLFW.GLFW_PRESS -> if (mc.screen == null) {
-                filter { m -> m.bind.matchesMouse(event.button) && m.bind.matchesModifiers(event.mods) }
-                    .forEach { m ->
-                        m.enabled = !m.running || m.bind.action == InputBind.BindAction.HOLD
+                for (m in modules) {
+                    if (!m.bind.matchesMousePress(event)) {
+                        continue
                     }
+
+                    when (m.bind.action) {
+                        InputBind.BindAction.TOGGLE -> m.enabled = !m.enabled
+                        InputBind.BindAction.HOLD -> m.enabled = true
+                        InputBind.BindAction.SMART -> {
+                            smartMouseStates[m] = SmartBindMouseState(m.enabled, clientStartDurationMs)
+                            m.enabled = true
+                        }
+                    }
+                }
             }
-            GLFW.GLFW_RELEASE ->
-                filter { m ->
-                    m.bind.action == InputBind.BindAction.HOLD && (
-                        m.bind.matchesMouse(event.button)
-                            || event.key.toModifierOrNull().let { it in m.bind.modifiers && !it!!.isAnyPressed }
-                        )
-                }.forEach { m -> m.enabled = false }
+
+            GLFW.GLFW_RELEASE -> {
+                for (m in modules) {
+                    if (!m.bind.matchesMouseRelease(event)) {
+                        continue
+                    }
+
+                    when (m.bind.action) {
+                        InputBind.BindAction.HOLD -> m.enabled = false
+
+                        InputBind.BindAction.SMART -> {
+                            val state = smartMouseStates.remove(m) ?: continue
+
+                            // Mouse button events do not emit GLFW_REPEAT, so SMART falls back to:
+                            // - hold if the press was long enough
+                            // - toggle otherwise
+                            val shouldFallbackToHold =
+                                clientStartDurationMs - state.pressTimestamp >= SMART_MOUSE_HOLD_THRESHOLD_MS
+
+                            if (shouldFallbackToHold) {
+                                m.enabled = false
+                            } else {
+                                m.enabled = !state.pendingEnabled
+                            }
+                        }
+
+                        InputBind.BindAction.TOGGLE -> {}
+                    }
+                }
+            }
         }
     }
 
@@ -343,11 +427,11 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
         }
 
         // Store modules configuration after world change, happens on disconnect as well
-        ConfigSystem.store(modulesConfigurable)
+        ConfigSystem.store(modulesConfig)
     }
 
     /**
-     * Handles disconnect and if [Module.disableOnQuit] is true disables module
+     * Handles disconnect and if [ClientModule.disableOnQuit] is true disables module
      */
     @Suppress("unused")
     private val handleDisconnect = handler<DisconnectEvent> {
@@ -432,6 +516,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleVomit,
 
             // Misc
+            ModuleAutoConfig,
             ModuleGUICloser,
             ModuleBookBot,
             ModuleAntiBot,
@@ -439,6 +524,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleItemScroller,
             ModuleBetterChat,
             ModuleElytraTarget,
+            ModuleMacros,
             ModuleMiddleClickAction,
             ModuleInventoryTracker,
             ModuleNameProtect,
@@ -509,6 +595,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleAutoShop,
             ModuleAutoWalk,
             ModuleBlink,
+            ModuleChestCleaner,
             ModuleChestStealer,
             ModuleEagle,
             ModuleFastExp,
@@ -544,17 +631,18 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleFullBright,
             ModuleHoleESP,
             ModuleHud,
+            ModuleHats,
             ModuleItemESP,
             ModuleItemTags,
             ModuleJumpEffect,
             ModuleMobOwners,
             ModuleMurderMystery,
-            ModuleAttackEffects,
+            ModuleHitFX,
             ModuleNametags,
             ModuleCombineMobs,
             ModuleAspect,
             ModuleAutoF5,
-//            ModuleChams,
+            ModuleChams,
             ModuleBedPlates,
             ModuleNoBob,
             ModuleNoFov,
@@ -563,6 +651,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleCustomAmbience,
             ModuleProphuntESP,
             ModuleQuickPerspectiveSwap,
+            ModuleRadar,
             ModuleRotations,
             ModuleSilentHotbar,
             ModuleStorageESP,
@@ -578,6 +667,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleCrystalView,
             ModuleSkinChanger,
             ModuleProtectionZones,
+            ModuleCrosshair,
 
             // World
             ModuleAirPlace,
@@ -603,13 +693,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSurround,
             ModulePacketMine,
             ModuleHoleFiller,
-
-            // Client
-            ModuleAutoConfig,
-            ModuleRichPresence,
-            ModuleTargets,
-            ModuleTranslation,
-            ModuleLiquidChat
+            ModuleStrongholdFinder,
         )
 
         builtin.forEach { module ->
@@ -623,7 +707,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
         if (!modules.add(module)) {
             error("Module '${module.name}' is already registered.")
         }
-        module.initConfigurable()
+        module.walkInit()
         module.onRegistration()
     }
 
@@ -631,8 +715,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
         if (!modules.remove(module)) {
             error("Module '${module.name}' is not registered.")
         }
-        if (module.running) {
-            module.onDisabled()
+        if (module.enabled) {
+            module.enabled = false
         }
         module.unregister()
     }
@@ -646,7 +730,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
      */
     @JvmName("getCategories")
     @ScriptApiRequired
-    fun getCategories() = Category.entries.mapToArray { it.choiceName }
+    fun getCategories() = ModuleCategories.entries.mapToArray { it.tag }
 
     @JvmName("getModules")
     @ScriptApiRequired

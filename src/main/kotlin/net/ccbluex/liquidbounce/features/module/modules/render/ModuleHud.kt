@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -28,13 +29,12 @@ import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
-import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
-import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomOverlay
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -49,23 +49,26 @@ import net.minecraft.client.gui.screens.LevelLoadingScreen
  * The client in-game dashboard.
  */
 
-object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = true) {
+object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hide = true) {
 
     override val running
         get() = this.enabled && !isDestructed
+    override val baseKey: String
+        get() = "${ConfigSystem.KEY_PREFIX}.module.hud"
 
-    private val visible: Boolean
+    private val isVisible: Boolean
         get() = !isHidingNow && inGame
 
-    override val baseKey: String
-        get() = "liquidbounce.module.hud"
-    private var browserBrowser: Browser? = null
+    private var overlay = CustomOverlay(
+        screenType = CustomScreenType.HUD,
+        browserSettings = BrowserSettings(60, ::reopen)
+    )
 
     init {
         tree(Blur)
     }
 
-    object Blur : ToggleableConfigurable(ModuleHud, "Blur", enabled = true) {
+    object Blur : ToggleableValueGroup(ModuleHud, "Blur", enabled = true) {
         /**
          * The range in which the blending from not-blurred to blurred occurs.
          */
@@ -81,11 +84,9 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     val isBlurEffectActive
         get() = Blur.enabled && !(mc.options.hideGui && mc.screen == null)
 
-    private var browserSettings: BrowserSettings? = null
+    val themes = tree(ValueGroup("Themes"))
 
-    val themes = tree(Configurable("Themes"))
-
-    val components = tree(Configurable("AdditionalComponents")).apply {
+    val components = tree(ValueGroup("AdditionalComponents")).apply {
         tree(MinimapHudComponent)
     }
 
@@ -93,11 +94,14 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
      * Updates [themes] content
      */
     fun updateThemes() {
-        themes.inner.clear()
+        // filterIsInstance then forEach to prevent ConcurrentModificationException
+        themes.inner.filterIsInstance<ValueGroup>().forEach {
+            themes.drop(it)
+        }
         for (theme in ThemeManager.themes) {
             themes.tree(theme.settings)
         }
-        themes.initConfigurable()
+        themes.walkInit()
         themes.walkKeyPath()
     }
 
@@ -106,68 +110,42 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
             chat(markAsError(message("hidingAppearance")))
         }
 
-        if (visible) {
-            open()
+        if (isVisible) {
+            overlay.open()
         }
     }
 
     override fun onDisabled() {
-        // Closes tab entirely
-        close()
+        overlay.close()
     }
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
-        tree(GlobalBrowserSettings)
-        browserSettings = tree(BrowserSettings(60, ::reopen))
+        tree(overlay.browserSettings)
     }
 
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
         // Close the tab when the HUD is not running, is hiding now, or the player is not in-game
-        if (!enabled || !visible) {
-            close()
+        if (!enabled || !isVisible) {
+            overlay.close()
             return@handler
         }
 
         // Otherwise, open the tab and set its visibility
-        val browserTab = open()
-        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is LevelLoadingScreen
+        overlay.visible = event.screen !is DisconnectedScreen && event.screen !is LevelLoadingScreen
     }
 
     @Suppress("unused")
     private val disconnectHandler = handler<DisconnectEvent> {
-        close()
-    }
-
-    private fun open(): Browser {
-        browserBrowser?.let { return it }
-
-        return ThemeManager.openImmediate(
-            VirtualScreenType.HUD,
-            true,
-            browserSettings!!
-        ).also { browser ->
-            browserBrowser = browser
-        }
-    }
-
-    private fun close() {
-        browserBrowser?.let {
-            it.close()
-            browserBrowser = null
-        }
+        overlay.close()
     }
 
     fun reopen() {
-        close()
-        if (enabled && visible) {
-            open()
+        overlay.close()
+        if (enabled && isVisible) {
+            overlay.open()
         }
-    }
-
-    fun disableBlur() {
-        Blur.enabled = false
     }
 
 }

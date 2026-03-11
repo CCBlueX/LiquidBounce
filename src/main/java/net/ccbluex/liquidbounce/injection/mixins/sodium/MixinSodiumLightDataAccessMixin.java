@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +22,13 @@ import net.caffeinemc.mods.sodium.client.model.light.data.LightDataAccess;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Pseudo
 @Mixin(value = LightDataAccess.class, remap = false)
-public class MixinSodiumLightDataAccessMixin {
+public abstract class MixinSodiumLightDataAccessMixin {
 
     @Shadow
     @Final

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import com.mojang.blaze3d.platform.InputConstants
 import kotlinx.coroutines.launch
-import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventListenerScope
@@ -36,11 +40,11 @@ import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import com.mojang.blaze3d.platform.InputConstants
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -48,22 +52,24 @@ import com.mojang.blaze3d.platform.InputConstants
 @Suppress("LongParameterList", "detekt:TooManyFunctions")
 open class ClientModule(
     name: String, // name parameter in configurable
-    @Exclude val category: Category, // module category
+    @Exclude val category: ModuleCategory, // module category
     bind: Int = InputConstants.UNKNOWN.value, // default bind
     bindAction: InputBind.BindAction = InputBind.BindAction.TOGGLE, // default action
     state: Boolean = false, // default state
     @Exclude val notActivatable: Boolean = false, // disable settings that are not needed if the module can't be enabled
     @Exclude val disableActivation: Boolean = notActivatable, // disable activation
-    hide: Boolean = false, // default hide
     @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
-    aliases: List<String> = emptyList() // additional names under which the module is known
-) : ToggleableConfigurable(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
+    aliases: List<String> = emptyList(), // additional names under which the module is known
+    hide: Boolean = false // default hide
+) : ToggleableValueGroup(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
+
+    protected val logger: Logger = LogManager.getLogger("$CLIENT_NAME/$name")
 
     /**
-     * If a module is running or not is seperated from the enabled state. A module can be paused even when
+     * If a module is running or not is separated from the enabled state. A module can be paused even when
      * it is enabled, or it can be running when it is not enabled.
      *
-     * Note: This overwrites [ToggleableConfigurable] declaration of [running].
+     * Note: This overwrites [ToggleableValueGroup] declaration of [running].
      */
     override val running: Boolean
         get() = super<EventListener>.running && inGame && (enabled || notActivatable)
@@ -89,12 +95,7 @@ open class ClientModule(
             }
         }
 
-    /**
-     * If this value is on true, we cannot enable the module, as it likely does not bypass.
-     */
-    private var locked: Value<Boolean>? = null
-
-    override val baseKey: String = "liquidbounce.module.${name.toLowerCamelCase()}"
+    override val baseKey: String = "${ConfigSystem.KEY_PREFIX}.module.${name.toLowerCamelCase()}"
 
     // Tag to be displayed on the HUD
     open val tag: String?
@@ -123,7 +124,8 @@ open class ClientModule(
     final override fun onEnabledValueRegistration(value: Value<Boolean>) =
         super.onEnabledValueRegistration(value).also { value ->
             // Might not include the enabled state of the module depending on the category
-            if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
+            if (category == ModuleCategories.MISC || category == ModuleCategories.FUN ||
+                category == ModuleCategories.RENDER) {
                 if (this is ModuleAntiBot) {
                     return@also
                 }
@@ -141,19 +143,6 @@ open class ClientModule(
     open suspend fun enabledEffect() {}
 
     final override fun onToggled(state: Boolean): Boolean {
-        // Check if the module is locked and cannot be enabled
-        locked?.let { locked ->
-            if (locked.get()) {
-                notification(
-                    this.name,
-                    translation("liquidbounce.generic.locked"),
-                    NotificationEvent.Severity.ERROR
-                )
-
-                return false
-            }
-        }
-
         if (!inGame) {
             return state
         }
@@ -181,14 +170,6 @@ open class ClientModule(
         return state
     }
 
-    /**
-     * If we want a module to have the requires bypass option, we specifically call it
-     * on init. This will add the option and enable the feature.
-     */
-    fun enableLock() {
-        this.locked = boolean("Locked", false)
-    }
-
     fun tagBy(setting: Value<*>) {
         check(this.tagValue == null) { "Tag already set" }
 
@@ -203,7 +184,7 @@ open class ClientModule(
     /**
      * Warns when no module description is set in the main translation file.
      *
-     * Requires that [Configurable.walkKeyPath] has previously been run.
+     * Requires that [ValueGroup.walkKeyPath] has previously been run.
      */
     fun verifyFallbackDescription() {
         if (!LanguageManager.hasFallbackTranslation(descriptionKey!!)) {

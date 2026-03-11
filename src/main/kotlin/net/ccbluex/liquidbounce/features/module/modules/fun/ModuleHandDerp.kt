@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.network.protocol.common.ServerboundClientInformationPacket
-import net.minecraft.server.level.ClientInformation
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.server.level.ClientInformation
 
 
 /**
@@ -37,7 +37,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
  *
  * Switches your main hand.
  */
-object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
+object ModuleHandDerp : ClientModule("HandDerp", ModuleCategories.FUN) {
 
 
     private val silent by boolean("Silent", false)
@@ -91,8 +91,8 @@ object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
         }
     }
 
-    private object Delay : Choice("Delay") {
-        override val parent: ChoiceConfigurable<Choice>
+    private object Delay : Mode("Delay") {
+        override val parent: ModeValueGroup<Mode>
             get() = mode
 
         val delayValue by int("Delay", 1, 0..20, "ticks")
@@ -104,8 +104,8 @@ object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
         }
     }
 
-    private object Swing : Choice("Swing") {
-        override val parent: ChoiceConfigurable<Choice>
+    private object Swing : Mode("Swing") {
+        override val parent: ModeValueGroup<Mode>
             get() = mode
 
         @Suppress("unused")

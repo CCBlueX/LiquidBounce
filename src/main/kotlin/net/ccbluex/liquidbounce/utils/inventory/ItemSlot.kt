@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,25 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.item.ItemStackHolder
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
-import net.ccbluex.liquidbounce.utils.item.asItemSlotComparator
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.InteractionHand
-import java.util.*
+import java.util.Objects
 import kotlin.math.abs
 
 /**
  * Represents an inventory slot (e.g. Hotbar Slot 0, OffHand, Chestslot 5, etc.)
  */
-sealed interface ItemSlot {
-    val itemStack: ItemStack
-    val slotType: ItemSlotType
+sealed interface ItemSlot : ItemStackHolder {
+    override val itemStack: ItemStack
+    val slotType: Type
 
     /**
      * Used for example for slot click packets
@@ -56,7 +56,7 @@ sealed interface ItemSlot {
          * current hand -> offhand -> other hotbar slots -> other slots
          */
         @JvmField
-        val PREFER_NEARBY: Comparator<ItemSlot> = Comparator<ItemSlot> { left, right ->
+        val PREFER_NEARBY: Comparator<ItemSlot> = Comparator { left, right ->
             val leftIsHotbar = left is HotbarItemSlot
             val rightIsHotbar = right is HotbarItemSlot
             when {
@@ -68,10 +68,22 @@ sealed interface ItemSlot {
         }
 
         @JvmField
-        val PREFER_FEWER_ITEM: Comparator<ItemSlot> = PreferStackSize.PREFER_FEWER.asItemSlotComparator()
+        val PREFER_FEWER_ITEM: Comparator<in ItemSlot> = PreferStackSize.PREFER_FEWER.asHolderComparator()
 
         @JvmField
-        val PREFER_MORE_ITEM: Comparator<ItemSlot> = PreferStackSize.PREFER_MORE.asItemSlotComparator()
+        val PREFER_MORE_ITEM: Comparator<in ItemSlot> = PreferStackSize.PREFER_MORE.asHolderComparator()
+    }
+
+    enum class Type {
+        HOTBAR,
+        OFFHAND,
+        ARMOR,
+        INVENTORY,
+
+        /**
+         * e.g. chests
+         */
+        CONTAINER,
     }
 }
 
@@ -80,7 +92,7 @@ sealed interface ItemSlot {
  */
 class VirtualItemSlot(
     override val itemStack: ItemStack,
-    override val slotType: ItemSlotType,
+    override val slotType: ItemSlot.Type,
     val id: Int
 ) : ItemSlot {
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Nothing =
@@ -109,8 +121,8 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot {
     override val itemStack: ItemStack
         get() = this.screen.menu.slots[this.slotInContainer].item
 
-    override val slotType: ItemSlotType
-        get() = ItemSlotType.CONTAINER
+    override val slotType: ItemSlot.Type
+        get() = ItemSlot.Type.CONTAINER
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Int = this.slotInContainer
 
@@ -151,8 +163,8 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
     override val itemStack: ItemStack
         get() = player.inventory.getItem(this.hotbarSlot)
 
-    override val slotType: ItemSlotType
-        get() = ItemSlotType.HOTBAR
+    override val slotType: ItemSlot.Type
+        get() = ItemSlot.Type.HOTBAR
 
     open val hotbarSlotForServer: Int = hotbarSlot
 
@@ -162,7 +174,7 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
     open val isSelected: Boolean
         get() = hotbarSlotForServer == player.inventory.selectedSlot
 
-    open val useHand = InteractionHand.MAIN_HAND
+    open val useHand get() = InteractionHand.MAIN_HAND
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Int? {
         return if (screen == null) 36 + hotbarSlot else screen.itemCount() - 9 + this.hotbarSlot
@@ -207,8 +219,8 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot {
     override val itemStack: ItemStack
         get() = player.inventory.getItem(9 + this.inventorySlot)
 
-    override val slotType: ItemSlotType
-        get() = ItemSlotType.INVENTORY
+    override val slotType: ItemSlot.Type
+        get() = ItemSlot.Type.INVENTORY
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Int {
         return if (screen == null) 9 + inventorySlot else screen.itemCount() - 36 + this.inventorySlot
@@ -234,8 +246,8 @@ class ArmorItemSlot(private val equipmentSlot: EquipmentSlot) : ItemSlot {
     override val itemStack: ItemStack
         get() = player.getItemBySlot(equipmentSlot)
 
-    override val slotType: ItemSlotType
-        get() = ItemSlotType.ARMOR
+    override val slotType: ItemSlot.Type
+        get() = ItemSlot.Type.ARMOR
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?) =
         if (screen == null) 8 - this.equipmentSlot.index else null
@@ -258,8 +270,8 @@ data object OffHandSlot : HotbarItemSlot(-1) {
     override val itemStack: ItemStack
         get() = player.offhandItem
 
-    override val slotType: ItemSlotType
-        get() = ItemSlotType.OFFHAND
+    override val slotType: ItemSlot.Type
+        get() = ItemSlot.Type.OFFHAND
 
     override val hotbarSlotForServer: Int = 40
 
@@ -269,7 +281,7 @@ data object OffHandSlot : HotbarItemSlot(-1) {
     override val isSelected: Boolean
         get() = true
 
-    override val useHand = InteractionHand.OFF_HAND
+    override val useHand get() = InteractionHand.OFF_HAND
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?) = if (screen == null) 45 else null
 }

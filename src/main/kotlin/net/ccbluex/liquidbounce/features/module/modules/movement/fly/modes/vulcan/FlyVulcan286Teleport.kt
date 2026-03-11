@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,21 +28,22 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
+import net.ccbluex.liquidbounce.utils.math.copy
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.phys.Vec3
 
 /**
  * @anticheat Vulcan
  * @anticheat Version 2.8.6
  * @testedOn eu.loyisa.cn, anticheat-test.com
- * @note Few seconds cooldown to not flag. DAMAGE METHOD ONLY 1.8
+ * @note Few seconds cooldown to not flag. Requires 1.8 serverside
  * @author Nullable
  */
-internal object FlyVulcan286Teleport : Choice("Vulcan286-Teleport-18") {
+internal object FlyVulcan286Teleport : Mode("Vulcan286-Teleport-18") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     private var jumping = false
@@ -57,18 +56,18 @@ internal object FlyVulcan286Teleport : Choice("Vulcan286-Teleport-18") {
 
     /**
      * Alright, lets fly...
-     * Fall damage is based on fall distance and the fact that
-     * you aren't on ground.
+     * Fall damage is based on fall distance. By spoofing the ground
+     * state to be false and jumping 3 times, you gain a fall distance
+     * of 3 which is enough to take damage.
      *
-     * By spoofing onground false and jumping 3 times,
-     * you gain a falldistance of 3 which is enough to take damage.
-     *
-     * After damage, vulcan gives leniency to all sorts of stuff like
+     * After taking damage, vulcan gives leniency to all sorts of stuff like
      * motion, and teleporting.
      */
     val repeatable = tickHandler {
         jumping = true
 
+        // TODO: remove assumption of getting a falldistance of 3
+        // Only works if there isnt a block above head...
         repeat(3) {
             player.jumpFromGround()
             // Ugly code, yes I know
@@ -80,7 +79,7 @@ internal object FlyVulcan286Teleport : Choice("Vulcan286-Teleport-18") {
         jumping = false
         tickUntil { player.hurtTime > 0 }
 
-        // Flag to disable some checks...
+        // Flag to disable more checks...
         network.send(
             Pos(
             player.x,
@@ -117,8 +116,7 @@ internal object FlyVulcan286Teleport : Choice("Vulcan286-Teleport-18") {
     // Let's not move around while jumping, that would make it harder.
     val moveHandler = handler<PlayerMoveEvent> { event ->
         if (jumping) {
-            event.movement.x = 0.0
-            event.movement.z = 0.0
+            event.movement = event.movement.copy(x = 0.0, z = 0.0)
         }
     }
 

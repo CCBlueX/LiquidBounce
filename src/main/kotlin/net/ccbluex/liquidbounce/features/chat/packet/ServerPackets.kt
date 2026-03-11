@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.chat.packet
 
 import com.google.gson.annotations.SerializedName
-import java.util.*
+import java.util.UUID
 
 /**
  * AXOCHAT PROTOCOL
@@ -34,9 +32,9 @@ import java.util.*
 /**
  * To log in via mojang, the client has to send a RequestMojangInfo packet.
  * The server will then send a MojangInfo to the client.
- * This packet has no body.
+ * This packet does not have a body.
  */
-class ServerRequestMojangInfoPacket : Packet
+class C2SRequestMojangInfoPacket : AxochatPacket.C2S
 
 /**
  * After the client received a MojangInfo packet and authenticating itself with mojang,
@@ -47,7 +45,7 @@ class ServerRequestMojangInfoPacket : Packet
  * @param uuid uuid is not guaranteed to be hyphenated.
  * @param allowMessages If allow_messages is true, other clients may send private messages to this client.
  */
-data class ServerLoginMojangPacket(
+data class C2SLoginMojangPacket(
 
     @SerializedName("name")
     val name: String,
@@ -58,7 +56,7 @@ data class ServerLoginMojangPacket(
     @SerializedName("allow_messages")
     val allowMessages: Boolean
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * To log in using a json web token, the client has to send a LoginJWT packet.
@@ -67,7 +65,7 @@ data class ServerLoginMojangPacket(
  * @param token can be retrieved by sending RequestJWT on an already authenticated connection.
  * @param allowMessages If allow_messages is true, other clients may send private messages to this client.
  */
-data class ServerLoginJWTPacket(
+data class C2SLoginJWTPacket(
 
     @SerializedName("token")
     val token: String,
@@ -75,19 +73,19 @@ data class ServerLoginJWTPacket(
     @SerializedName("allow_messages")
     val allowMessages: Boolean
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * The content of this packet will be sent to every client as Message if it fits the validation scheme.
  *
  * @param content content of the message.
  */
-data class ServerMessagePacket(
+data class C2SMessagePacket(
 
     @SerializedName("content")
     val content: String
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * The content of this packet will be sent to the specified client as PrivateMessage if it fits the validation scheme.
@@ -95,7 +93,7 @@ data class ServerMessagePacket(
  * @param receiver receiver is an ID.
  * @param content content of the message.
  */
-data class ServerPrivateMessagePacket(
+data class C2SPrivateMessagePacket(
 
     @SerializedName("receiver")
     val receiver: String,
@@ -103,37 +101,37 @@ data class ServerPrivateMessagePacket(
     @SerializedName("content")
     val content: String
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * A client can send this packet to ban other users from using this chat.
  *
  * @param user user is an ID.
  */
-data class ServerBanUserPacket(
+data class C2SBanUserPacket(
 
     @SerializedName("user")
     val user: String
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * A client can send this packet to unban other users.
  *
  * @param user user is an ID.
  */
-data class ServerUnbanUserPacket(
+data class C2SUnbanUserPacket(
 
     @SerializedName("user")
     val user: String
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * To log in using LoginJWT, a client needs to own a json web token.
  * This token can be retrieved by sending RequestJWT as an already authenticated client to the server.
  * The server will send a NewJWT packet to the client.
  *
- * This packet has no body.
+ * This packet does not have a body.
  */
-class ServerRequestJWTPacket : Packet
+class C2SRequestJWTPacket : AxochatPacket.C2S

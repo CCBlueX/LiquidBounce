@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
@@ -37,7 +37,7 @@ import java.util.function.Predicate
  * Legit trick to build faster.
  */
 object ModuleEagle : ClientModule(
-    "Eagle", Category.PLAYER,
+    "Eagle", ModuleCategories.PLAYER,
     aliases = listOf("FastBridge", "BridgeAssistant", "LegitScaffold")
 ) {
 
@@ -86,7 +86,7 @@ object ModuleEagle : ClientModule(
         }
     }
 
-    private object Conditional : ToggleableConfigurable(this, "Conditional", true) {
+    private object Conditional : ToggleableValueGroup(this, "Conditional", true) {
         private val conditions by multiEnumChoice(
             "Conditions",
             Condition.ON_GROUND
@@ -101,7 +101,7 @@ object ModuleEagle : ClientModule(
             !enabled || player.xRot in pitch && conditions.all { it.test(event) }
 
         @Suppress("unused")
-        private enum class Condition(override val choiceName: String) : NamedChoice, Predicate<MovementInputEvent> {
+        private enum class Condition(override val tag: String) : Tagged, Predicate<MovementInputEvent> {
             LEFT("Left"),
             RIGHT("Right"),
             FORWARDS("Forwards"),

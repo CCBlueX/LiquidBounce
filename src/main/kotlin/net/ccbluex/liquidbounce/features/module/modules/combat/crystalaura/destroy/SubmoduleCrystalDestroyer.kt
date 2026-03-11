@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalAuraSpeedDebugger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
@@ -27,18 +27,18 @@ import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 
-object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "Destroy", true) {
+object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Destroy", true) {
 
     val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
     private val delay by int("Delay", 0, 0..1000, "ms")
@@ -94,13 +94,13 @@ object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "De
     private fun queueDestroy(rotation: Rotation, target: EndCrystal, base: AABB, eyePos: Vec3, vec3d: Vec3) {
         // create the action chain to execute
         val action = {
-            ModuleCrystalAura.rotationMode.activeChoice.rotate(rotation, isFinished = {
-                facingEnemy(
+            ModuleCrystalAura.rotationMode.activeMode.rotate(rotation, isFinished = {
+                isLookingAtEntity(
                     toEntity = target,
                     rotation = RotationManager.serverRotation,
                     range = range.toDouble(),
-                    wallsRange = wallsRange.toDouble()
-                )
+                    throughWallsRange = wallsRange.toDouble()
+                ) != null
             }, onFinished = {
                 if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
                     return@rotate
@@ -108,7 +108,7 @@ object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "De
 
                 val target1 = CrystalAuraDestroyTargetFactory.currentTarget ?: return@rotate
 
-                target1.attack(swingMode)
+                attackEntity(target1, swingMode)
                 postAttackHandlers.forEach { it.attacked(target1.id) }
                 chronometer.reset()
             })

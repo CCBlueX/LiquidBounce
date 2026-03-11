@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,12 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.player.RemotePlayer
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
-import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
+import java.util.function.Consumer
 
 /**
  * This class represents a Fake Player implementing
@@ -35,14 +36,10 @@ import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
  * into [RemotePlayer].
  */
 open class FakePlayer(
-    clientWorld: ClientLevel,
+    level: ClientLevel,
     gameProfile: GameProfile,
-) : RemotePlayer(
-    clientWorld,
-    gameProfile
-), MinecraftShortcuts {
-
-    var onRemoval: Runnable? = null
+    var onRemoval: Consumer<in FakePlayer>? = null,
+) : RemotePlayer(level, gameProfile), MinecraftShortcuts {
 
     /**
      * Loads the attributes from the player into the fake player.
@@ -94,7 +91,7 @@ open class FakePlayer(
      */
     override fun tick() {
         if (removalReason != null) {
-            onRemoval?.run()
+            onRemoval?.accept(this)
         }
 
         super.tick()

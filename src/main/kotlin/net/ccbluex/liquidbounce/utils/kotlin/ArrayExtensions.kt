@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.doubles.DoubleIterable
 import net.ccbluex.fastutil.forEachDouble
-import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.stream.Stream
 
@@ -88,6 +87,10 @@ fun ClosedFloatingPointRange<Float>.random(): Float {
     return if (start >= endInclusive) start else ThreadLocalRandom.current().nextFloat(start, endInclusive)
 }
 
+inline operator fun ClosedFloatingPointRange<Float>.unaryMinus(): ClosedFloatingPointRange<Float> {
+    return -endInclusive..-start
+}
+
 fun ClosedFloatingPointRange<Double>.random(): Double {
     return if (start >= endInclusive) start else ThreadLocalRandom.current().nextDouble(start, endInclusive)
 }
@@ -114,15 +117,6 @@ inline fun <T, C : Collection<T>> C.forEachWithSelf(action: (T, index: Int, self
         action(item, i, this)
     }
 }
-
-inline fun <reified T : Enum<T>> Array<out T>.toEnumSet(): EnumSet<T> =
-    toCollection(emptyEnumSet())
-
-inline fun <reified T : Enum<T>> Iterable<T>.toEnumSet(): EnumSet<T> =
-    toCollection(emptyEnumSet())
-
-inline fun <reified T : Enum<T>> emptyEnumSet(): EnumSet<T> =
-    EnumSet.noneOf(T::class.java)
 
 /**
  * Inserts a new element into a sorted list while maintaining the order.

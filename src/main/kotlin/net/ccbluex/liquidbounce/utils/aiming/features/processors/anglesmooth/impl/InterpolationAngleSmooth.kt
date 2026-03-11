@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,11 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
@@ -29,7 +28,7 @@ import kotlin.math.abs
 import kotlin.math.exp
 
 class InterpolationAngleSmooth(
-    parent: ChoiceConfigurable<*>,
+    parent: ModeValueGroup<*>,
     horizontalSpeed: IntRange = 80..85,
     verticalSpeed: IntRange = 20..25,
     directionChangeFactor: IntRange = 95..100,

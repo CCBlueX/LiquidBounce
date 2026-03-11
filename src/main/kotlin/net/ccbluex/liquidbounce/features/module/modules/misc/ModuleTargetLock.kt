@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import it.unimi.dsi.fastutil.ints.Int2LongLinkedOpenHashMap
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.client.player.AbstractClientPlayer
@@ -39,7 +39,7 @@ import net.minecraft.client.player.AbstractClientPlayer
  * Locks on to a target and prevents targeting other entities,
  * either [Temporary]ly on attack or by [Filter]ing by username.
  */
-object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
+object ModuleTargetLock : ClientModule("TargetLock", ModuleCategories.MISC) {
 
     init {
         doNotIncludeAlways()
@@ -52,18 +52,18 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
      */
     private val combatOnly by boolean("Combat", false)
 
-    private sealed class LockChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private sealed class LockMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = mode
         abstract fun isLockedOn(playerEntity: AbstractClientPlayer): Boolean
     }
 
-    private object Filter : LockChoice("Filter") {
+    private object Filter : LockMode("Filter") {
 
         private val usernames by textList("Usernames", mutableListOf("Notch"))
         private val filterType by enumChoice("FilterType", FilterType.WHITELIST)
 
-        enum class FilterType(override val choiceName: String) : NamedChoice {
+        enum class FilterType(override val tag: String) : Tagged {
             WHITELIST("Whitelist"),
             BLACKLIST("Blacklist")
         }
@@ -81,7 +81,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
         }
     }
 
-    private object Temporary : LockChoice("Temporary") {
+    private object Temporary : LockMode("Temporary") {
 
         private val timeUntilReset by int("MaximumTime", 30, 0..120, "s")
         private val outOfRange by float("MaximumRange", 20f, 8f..40f)
@@ -91,7 +91,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
         // Combination of [entityId] and [time]
         private val lockList = Int2LongLinkedOpenHashMap()
 
-        enum class NoLockMode(override val choiceName: String) : NamedChoice {
+        enum class NoLockMode(override val tag: String) : Tagged {
             ALLOW_ALL("AllowAll"),
             ALLOW_NONE("AllowNone")
         }
@@ -183,7 +183,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
             return false
         }
 
-        return mode.activeChoice.isLockedOn(entity)
+        return mode.activeMode.isLockedOn(entity)
     }
 
 }

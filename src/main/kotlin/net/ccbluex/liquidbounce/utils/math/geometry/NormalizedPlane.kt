@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ class NormalizedPlane(val pos: Vec3, normalVec: Vec3) {
     }
 
     fun intersection(line: Line): Vec3? {
-        return intersectionPhi(line)?.let(line::getPositionChcked)
+        return intersectionPhi(line)?.let(line::getPositionChecked)
     }
 
     fun intersection(other: NormalizedPlane): Line? {

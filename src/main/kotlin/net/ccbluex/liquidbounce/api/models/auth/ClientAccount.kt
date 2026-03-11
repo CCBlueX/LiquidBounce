@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,8 @@ import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import net.ccbluex.liquidbounce.api.services.auth.OAuthClient
 import net.ccbluex.liquidbounce.api.services.user.UserApi
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
-import java.util.*
+import net.ccbluex.liquidbounce.utils.client.env
+import java.util.UUID
 
 
 /**
@@ -63,5 +64,30 @@ data class ClientAccount(
     companion object {
         @JvmField
         val EMPTY_ACCOUNT = ClientAccount(null, null, null)
+        @JvmField
+        val ENV_ACCOUNT = fromEnv()
+
+        private fun fromEnv(): ClientAccount? {
+            val accessToken = env(
+                "LB_ACCOUNT_ACCESS_TOKEN",
+                "net.ccbluex.liquidbounce.account.accessToken"
+            ) ?: return null
+            val accessTokenExpiresAt = env(
+                "LB_ACCOUNT_ACCESS_TOKEN_EXPIRES_AT",
+                "net.ccbluex.liquidbounce.account.accessTokenExpiresAt"
+            )?.toLongOrNull() ?: return null
+            val refreshToken = env(
+                "LB_ACCOUNT_REFRESH_TOKEN",
+                "net.ccbluex.liquidbounce.account.refreshToken"
+            ) ?: return null
+
+            return ClientAccount(
+                session = OAuthSession(
+                    accessToken = ExpiryValue(accessToken, accessTokenExpiresAt),
+                    refreshToken = refreshToken
+                )
+            )
+        }
+
     }
 }

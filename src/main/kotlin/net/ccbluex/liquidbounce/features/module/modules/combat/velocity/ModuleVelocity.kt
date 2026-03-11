@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityAAC442
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityBlocksMC
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityDexland
@@ -36,11 +36,13 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.Vel
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityHypixel
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityIntave
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityJumpReset
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityModify
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReversal
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityStrafe
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
-import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
@@ -49,11 +51,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  * Modifies the amount of velocity you take.
  */
 
-object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = listOf("AntiKnockBack")) {
-
-    init {
-        enableLock()
-    }
+object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliases = listOf("AntiKnockBack")) {
 
     val modes = choices(
         "Mode", VelocityModify, arrayOf(
@@ -62,6 +60,7 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = list
             VelocityReversal,
             VelocityStrafe,
             VelocityJumpReset,
+            VelocityLag,
 
             // Server modes
             VelocityHypixel,
@@ -97,9 +96,7 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = list
             return@sequenceHandler
         }
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id
-            || packet is ClientboundExplodePacket
-        ) {
+        if (packet.isLocalPlayerVelocity()) {
             // When delay is above 0, we will delay the velocity update
             if (delay.last > 0) {
                 event.cancelEvent()
@@ -116,7 +113,8 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = list
                 EventManager.callEvent(packetEvent)
 
                 if (!packetEvent.isCancelled) {
-                    packet.handle(network)
+                    @Suppress("UNCHECKED_CAST")
+                    (packet as Packet<ClientGamePacketListener>).handle(network)
                 }
             }
         } else if (packet is ClientboundPlayerPositionPacket) {

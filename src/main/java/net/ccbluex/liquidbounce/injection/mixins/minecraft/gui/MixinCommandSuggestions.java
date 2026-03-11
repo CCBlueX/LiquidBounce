@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ public abstract class MixinCommandSuggestions {
 
     @Inject(method = "updateCommandInfo", at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/StringReader;canRead()Z", remap = false), cancellable = true)
     private void injectAutoCompletionB(CallbackInfo ci) {
-        if (this.input.getValue().startsWith(CommandManager.Options.INSTANCE.getPrefix())) {
+        if (this.input.getValue().startsWith(CommandManager.GlobalSettings.INSTANCE.getPrefix())) {
             this.pendingSuggestions = CommandManager.INSTANCE.autoComplete(this.input.getValue(), this.input.getCursorPosition());
             this.pendingSuggestions.thenRun(() -> {
                 if (suggestions == null) {

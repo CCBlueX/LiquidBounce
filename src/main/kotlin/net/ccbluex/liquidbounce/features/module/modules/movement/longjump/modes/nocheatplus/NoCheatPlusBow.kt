@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -31,7 +29,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -44,15 +42,15 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  * @testedOn eu.loyisa.cn
  */
 
-internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
+internal object NoCheatPlusBow : Mode("NoCheatPlusBow") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleLongJump.mode
 
     private var arrowBoost = 0f
     private var shotArrows = 0f
 
-    val rotations = tree(RotationsConfigurable(this))
+    val rotations = tree(RotationsValueGroup(this))
     private val charged by int("Charged", 4, 3..20)
     val speed by float("Speed", 2.5f, 0f..20f)
     private val arrowsToShoot by int("ArrowsToShoot", 8, 0..20)
@@ -81,7 +79,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
             forceUseKey = true
             RotationManager.setRotationTarget(
                 Rotation(player.yRot, -90f),
-                configurable = rotations,
+                valueGroup = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = ModuleLongJump
             )
@@ -103,7 +101,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
             shotArrows = 0f
             waitTicks(5)
             player.jumpFromGround()
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
             waitTicks(5)
             arrowBoost = 0f
         }

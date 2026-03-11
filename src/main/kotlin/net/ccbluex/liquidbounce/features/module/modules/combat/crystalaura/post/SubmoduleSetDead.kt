@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import net.ccbluex.fastutil.synchronized
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -29,7 +29,7 @@ import net.minecraft.world.entity.boss.enderdragon.EndCrystal
  * Removes hit crystals instantly from the world instead of waiting for the actual remove packet
  * what might allow faster placement.
  */
-object SubmoduleSetDead : ToggleableConfigurable(ModuleCrystalAura, "SetDead", true) {
+object SubmoduleSetDead : ToggleableValueGroup(ModuleCrystalAura, "SetDead", true) {
 
     /**
      * If the crystal was removed but no entity remove packet was sent after the confirmation time, the

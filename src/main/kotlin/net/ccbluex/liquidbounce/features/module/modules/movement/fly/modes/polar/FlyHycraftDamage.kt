@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,22 +15,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
@@ -43,9 +41,9 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  *
  * @note Tested in Bedwars, Skywars. Pretty much flagless
  */
-internal object FlyHycraftDamage : Choice("HycraftDamage") {
+internal object FlyHycraftDamage : Mode("HycraftDamage") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     private var damageTaken = false
@@ -71,29 +69,29 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
      * Used to works on different servers as well but now only Hycraft
      */
     @Suppress("unused")
-    private val packetHandler = handler<QueuePacketEvent> { event ->
+    private val packetHandler = handler<BlinkPacketEvent> { event ->
         val packet = event.packet
 
         if (event.origin != TransferOrigin.INCOMING) {
             return@handler
         }
 
-        event.action = when {
-            packet is ClientboundDamageEventPacket && packet.entityId == player.id && ticks <= 0 -> {
+        event.action = when (packet) {
+            is ClientboundDamageEventPacket if packet.entityId == player.id && ticks <= 0 -> {
                 damageTaken = true
                 ticks = 40
                 handlePacket(packet)
-                PacketQueueManager.Action.QUEUE
+                BlinkManager.Action.QUEUE
             }
 
-            packet is ClientboundSetEntityMotionPacket && packet.id == player.id && damageTaken -> {
+            is ClientboundSetEntityMotionPacket if packet.id == player.id && damageTaken -> {
                 damageTaken = false
                 release = true
                 handlePacket(packet)
-                PacketQueueManager.Action.QUEUE
+                BlinkManager.Action.QUEUE
             }
 
-            packet is ClientboundPingPacket -> {
+            is ClientboundPingPacket -> {
                 if (ticks <= 0) {
                     if (release) {
                         ModuleFly.enabled = false
@@ -102,11 +100,11 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
                 }
 
                 ticks--
-                PacketQueueManager.Action.QUEUE
+                BlinkManager.Action.QUEUE
             }
 
             // Prevent [PacketQueueManager] from flushing queued packets
-            else -> PacketQueueManager.Action.PASS
+            else -> BlinkManager.Action.PASS
         }
 
     }

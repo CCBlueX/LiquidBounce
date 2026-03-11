@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
@@ -34,9 +32,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.m
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.phys.shapes.Shapes
 
 /**
@@ -45,9 +43,9 @@ import net.minecraft.world.phys.shapes.Shapes
  * @testedOn localhost
  * @note ONLY WORKS ON 1.13+ SERVERS
  */
-internal object FlyVulcan286 : Choice("Vulcan286-113") {
+internal object FlyVulcan286 : Mode("Vulcan286-113") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     var packet: ClientboundPlayerPositionPacket? = null
@@ -86,9 +84,8 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
     }
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
-        if (world.getBlockState(player.blockPosition().below()).block != Blocks.AIR && wait) {
-            event.movement.x = 0.0
-            event.movement.z = 0.0
+        if (!world.getBlockState(player.blockPosition().below()).isAir && wait) {
+            event.movement = event.movement.copy(x = 0.0, z = 0.0)
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
@@ -34,14 +32,14 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
 
     data class ScheduledEntityDebug(var ticksLeft: Int, val entityId: Int)
 
-    private val waitingEntites = CopyOnWriteArraySet<ScheduledEntityDebug>()
+    private val waitingEntities = CopyOnWriteArraySet<ScheduledEntityDebug>()
 
     fun debugEntityIn(entity: Entity, ticks: Int) {
-        waitingEntites.add(ScheduledEntityDebug(ticks, entity.id))
+        waitingEntities.add(ScheduledEntityDebug(ticks, entity.id))
     }
 
     val repeatable = tickHandler {
-        val due = waitingEntites.filter {
+        val due = waitingEntities.filter {
             it.ticksLeft--
             it.ticksLeft <= 0
         }
@@ -54,7 +52,7 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
             }
         }
 
-        waitingEntites.removeAll(due)
+        waitingEntities.removeAll(due)
     }
 
     fun recordDebugInfo(module: ClientModule, packetName: String, packet: JsonElement) {

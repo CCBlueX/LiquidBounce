@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,35 +18,34 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.utils.canSeePointFrom
 import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
-import net.ccbluex.liquidbounce.utils.entity.cameraEyePos
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import com.mojang.blaze3d.platform.NativeImage
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
@@ -59,12 +58,12 @@ import kotlin.math.max
  *
  * @author sqlerrorthing
  */
-object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
+object ModuleParticles : ClientModule("Particles", category = ModuleCategories.RENDER) {
 
     private val particleSize by float("Size", 1f, 0.5f..2f)
     private val count by intRange("Count", 2..10, 2..30, "particles")
     private val rotate by boolean("RandomParticleRotation", true)
-    private class Physical : Configurable("Physical") {
+    private class Physical : ValueGroup("Physical") {
         val motion by float("Motion", 15f, 1f..30f)
         val bounceX by float("BounceX", 0.8f, 0.0f..1.0f)
         val bounceY by float("BounceY", 0.6f, 0.0f..1.0f)
@@ -79,7 +78,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     }
 
     private val color by color("Color", Color4b.RED)
-    private val particleImages by multiEnumChoice("Particle", ParticleImage.STAR, canBeNone = false)
+    private val builtinParticles by multiEnumChoice("Particle", enumSetOf(BuiltinParticle.STAR), canBeNone = false)
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
 
@@ -98,12 +97,12 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        val cameraEyePos = cameraEyePos
+        val cameraPos = mc.gameRenderer.mainCamera.position()
         particles.removeIf { particle ->
-            if (particle.alpha <= 0 || cameraEyePos.distanceToSqr(particle.pos) > 30 * 30) {
+            if (particle.alpha <= 0 || cameraPos.distanceToSqr(particle.pos) > 30 * 30) {
                 true
             } else {
-                particle.update(cameraEyePos)
+                particle.update(cameraPos)
                 false
             }
         }
@@ -121,7 +120,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         val pos = player.eyePosition.add(directionVector * player.distanceTo(event.entity).toDouble())
 
         repeat(count.random()) {
-            particles.add(Particle(pos, particleImages.random()))
+            particles.add(Particle(pos, builtinParticles.random()))
         }
     }
 
@@ -136,33 +135,42 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         }
     }
 
-
     @Suppress("UNUSED")
-    private enum class ParticleImage(
-        override val choiceName: String,
-        val image: NativeImage,
-    ) : NamedChoice {
+    private enum class BuiltinParticle(
+        override val tag: String,
+        fileName: String,
+    ) : Tagged {
         /**
          * Original: IDK (first: https://github.com/CCBlueX/LiquidBounce/pull/4976)
          */
-        ORBIZ("Orbiz", LiquidBounce.resource("particles/glow.png").toNativeImage()),
+        ORBIZ("Orbiz", "glow"),
 
         /**
          * Original: https://www.svgrepo.com/svg/528677/stars-minimalistic
          * Modified: @sqlerrorthing
          */
-        STAR("Star", LiquidBounce.resource("particles/star.png").toNativeImage()),
+        STAR("Star", "star"),
 
         /**
          * Original: https://www.svgrepo.com/svg/487288/dollar?edit=true
          * Modified: @sqlerrorthing
          */
-        DOLLAR("Dollar", LiquidBounce.resource("particles/dollar.png").toNativeImage());
+        DOLLAR("Dollar", "dollar"),
 
-        val texture = this.image.asTexture { choiceName }
+        CROWN("Crown", "crown"),
+        HEART("Heart", "heart"),
+        LIGHTNING("Lightning", "lightning"),
+        LINE("Line", "line"),
+        POINT("Point", "point"),
+        RHOMBUS("Rhombus", "rhombus"),
+        SNOWFLAKE("Snowflake", "snowflake"),
+        SPARK("Spark", "spark");
+
+        val image = LiquidBounce.resource("particles/$fileName.png").readNativeImage()
+        val texture = this.image.asTexture { "Builtin Particle $tag" }
     }
 
-    private class Particle(var pos: Vec3, val particleImage: ParticleImage) {
+    private class Particle(var pos: Vec3, val builtinParticle: BuiltinParticle) {
         private var prevPos = pos
         private var velocity = Vec3(
             (-0.01..0.01).random(),
@@ -212,15 +220,13 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             }
 
             pos = nextPos
-            visible = canSeePointFrom(cameraPos, pos)
+            visible = hasLineOfSight(cameraPos, pos)
         }
 
         context(env: WorldRenderEnvironment)
         fun render(partialTicks: Float) {
             val interpPos = prevPos.lerp(pos, partialTicks.toDouble())
             env.withPositionRelativeToCamera(interpPos) {
-                env.sampler0(particleImage.texture)
-
                 val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - spawnTime) / 12000f)
                 val rotation = if (rotate) {
                     (rotation + 90f) % 360f
@@ -228,7 +234,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
                     90f
                 }
 
-                with(matrixStack) {
+                with(poseStack) {
                     translate(-size / 2.0, -size / 2.0, 0.0)
                     mulPose(mc.gameRenderer.mainCamera.rotation())
                     scale(-1.0f, 1.0f, -1.0f)
@@ -243,8 +249,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
                     )
                 )
 
-                drawSquareTexture(size, renderColor.toARGB())
-                env.sampler0(null)
+                drawSquareTexture(builtinParticle.texture, size, renderColor.argb)
             }
         }
     }

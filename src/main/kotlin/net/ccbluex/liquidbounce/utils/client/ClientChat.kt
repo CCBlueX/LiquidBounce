@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,18 +26,19 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAccessor
-import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
+import net.ccbluex.liquidbounce.interfaces.TextColorAddition
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.text.RunnableClickEvent
+import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.TextColor
-import net.minecraft.ChatFormatting
 import java.io.File
 
 // Chat formatting
@@ -59,9 +60,11 @@ fun clickablePath(file: File): MutableComponent =
         .onClick(ClickEvent.OpenFile(file))
         .onHover(HoverEvent.ShowText("Open".asPlainText()))
 
-fun highlight(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.DARK_PURPLE)
+fun highlight(text: MutableComponent): MutableComponent = text
+    .withStyle(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD)
 
-fun highlight(text: String): MutableComponent = text.asText().withStyle(ChatFormatting.DARK_PURPLE)
+fun highlight(text: String): MutableComponent = text.asText()
+    .withStyle(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD)
 
 fun warning(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.YELLOW)
 
@@ -131,7 +134,7 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableC
 /**
  * Creates text with a copy-to-clipboard click event
  *
- * @param this@copyable The text to make copyable
+ * @receiver The text to make copyable
  * @param copyContent The content to copy when clicked (defaults to text's string representation)
  * @param hover The hover event to apply (defaults to "Click to copy" tooltip)
  * @return Styled text with copy functionality
@@ -150,7 +153,7 @@ fun MutableComponent.bypassNameProtection(): MutableComponent = withStyle {
     val color = it.color ?: TextColor.fromLegacyFormat(ChatFormatting.RESET)
 
     @Suppress("CAST_NEVER_SUCCEEDS")
-    val newColor = (color as ClientTextColorAdditions).`liquid_bounce$withNameProtectionBypass`()
+    val newColor = (color as TextColorAddition).`liquid_bounce$withNameProtectionBypass`()
 
     it.withColor(newColor)
 }
@@ -234,24 +237,6 @@ fun notification(title: String, message: Component, severity: NotificationEvent.
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message, severity))
 
-/**
- * Joins a list of [Text] into a single [Text] with the given [separator].
- */
-fun Collection<Component>.joinToText(separator: Component): Component {
-    if (isEmpty()) {
-        return PlainText.EMPTY
-    }
-
-    val iterator = iterator()
-    return Array(this.size * 2 - 1) { i ->
-        if (i % 2 == 0) {
-            iterator.next()
-        } else {
-            separator
-        }
-    }.asText()
-}
-
 val TextColor.bypassesNameProtection: Boolean
     @Suppress("CAST_NEVER_SUCCEEDS")
-    get() = (this as ClientTextColorAdditions).`liquid_bounce$doesBypassingNameProtect`()
+    get() = (this as TextColorAddition).`liquid_bounce$doesBypassingNameProtect`()
