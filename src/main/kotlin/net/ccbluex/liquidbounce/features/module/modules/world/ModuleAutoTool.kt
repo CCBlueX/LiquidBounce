@@ -22,10 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
@@ -34,8 +32,8 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.inventory.AnchoredHotbarSwapController
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -81,67 +79,28 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
 
         object ConsiderInventory : ToggleableValueGroup(this, "ConsiderInventory", enabled = false) {
             private val inventoryConstraints = tree(InventoryConstraints())
-
-            @JvmField var currentBestTool: ItemSlot? = null
-            private var anchorSwapAction: InventoryAction? = null
-            private var anchorHotbarSlot: HotbarItemSlot? = null
-            private var pendingRestore = false
-
-            @Suppress("unused")
-            private val inventoryActionHandler = handler<ScheduleInventoryActionEvent> { event ->
-                val currentBestTool = currentBestTool ?: return@handler
-                val slotToSwap = anchorHotbarSlot ?: (
-                    Slots.Hotbar.findSlot { it.isEmpty } ?: Slots.Hotbar[SilentHotbar.serversideSlot]
-                    ).also { anchorHotbarSlot = it }
-
-                val swapAction = InventoryAction.Click.performSwap(
-                    from = currentBestTool,
-                    to = slotToSwap,
-                )
-
-                event.schedule(
-                    inventoryConstraints,
-                    swapAction
-                )
-
-                if (anchorSwapAction == null) {
-                    anchorSwapAction = swapAction
-                    pendingRestore = true
-                }
-                this.currentBestTool = null
-            }
-
-            @JvmField var waitingTicks = 0
-
-            @Suppress("unused")
-            private val tickHandler = handler<GameTickEvent> {
-                if (!pendingRestore) return@handler
-
-                waitingTicks++
-                if (waitingTicks <= swapPreviousDelay) return@handler
-
-                waitingTicks = 0
-                val restoreAction = anchorSwapAction ?: run {
-                    pendingRestore = false
-                    anchorHotbarSlot = null
-                    return@handler
-                }
-                anchorSwapAction = null
-                anchorHotbarSlot = null
-                pendingRestore = false
-
-                once<ScheduleInventoryActionEvent> { event ->
-                    event.schedule(inventoryConstraints, restoreAction)
-                }
-            }
+            private val swapController = AnchoredHotbarSwapController(
+                owner = this,
+                inventoryConstraints = inventoryConstraints,
+                swapDelayProvider = { swapPreviousDelay },
+            )
 
             override fun onDisabled() {
-                waitingTicks = 0
-                currentBestTool = null
-                anchorSwapAction = null
-                anchorHotbarSlot = null
-                pendingRestore = false
+                swapController.reset()
                 super.onDisabled()
+            }
+
+            fun onToolInHotbar() {
+                swapController.clearRequestedSwap()
+                swapController.touchActiveSwitching()
+            }
+
+            fun onToolInInventory(slot: ItemSlot) {
+                swapController.requestSwapFromInventory(slot)
+            }
+
+            fun onNoTool() {
+                swapController.clearRequestedSwap()
             }
         }
 
@@ -159,17 +118,16 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
                 return when (slot) {
                     is HotbarItemSlot -> {
                         // We found the best tool in hotbar, don't need inventory action
-                        ConsiderInventory.currentBestTool = null
+                        ConsiderInventory.onToolInHotbar()
                         slot
                     }
                     is ItemSlot -> {
                         // Request inventory action and keep restore delay alive while actively switching.
-                        ConsiderInventory.waitingTicks = 0
-                        ConsiderInventory.currentBestTool = slot
+                        ConsiderInventory.onToolInInventory(slot)
                         null
                     }
                     null -> {
-                        ConsiderInventory.currentBestTool = null
+                        ConsiderInventory.onNoTool()
                         null
                     }
                 }
@@ -241,8 +199,18 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
         switchToBreakBlock(event.pos)
     }
 
+    @Suppress("unused")
+    private val handleCancelBlockBreaking = handler<CancelBlockBreakingEvent> {
+        if (isInventoryConsidered) {
+            DynamicSelectMode.ConsiderInventory.onNoTool()
+        }
+    }
+
     fun switchToBreakBlock(pos: BlockPos) {
         if (requireSneaking && !player.isShiftKeyDown || RequireNearBed.enabled && !RequireNearBed.matches()) {
+            if (isInventoryConsidered) {
+                DynamicSelectMode.ConsiderInventory.onNoTool()
+            }
             return
         }
 
