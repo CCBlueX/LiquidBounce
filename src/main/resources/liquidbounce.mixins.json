@@ -55,6 +55,7 @@
     "minecraft.entity.MixinExperienceOrbAccessor",
     "minecraft.entity.MixinFoodData",
     "minecraft.entity.MixinHumanoidArmorLayer",
+    "minecraft.entity.MixinInterpolationHandler",
     "minecraft.entity.MixinItemCooldowns",
     "minecraft.entity.MixinLivingEntity",
     "minecraft.entity.MixinLocalPlayer",
