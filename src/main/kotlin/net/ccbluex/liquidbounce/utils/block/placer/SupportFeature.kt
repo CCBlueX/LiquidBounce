@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
 import net.ccbluex.liquidbounce.utils.block.dijkstraShortestPath
+import net.ccbluex.liquidbounce.utils.kotlin.toOrderedSet
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -57,13 +58,13 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
      * Finds the shortest support path to make [targetPos] placeable via Dijkstra search.
      */
     fun findSupport(targetPos: BlockPos): Set<BlockPos>? {
-        val rangeSq = placer.range.sq()
-        val queuedBlocks = placer.blocks.keys
-
         val shortestPath = dijkstraShortestPath(
             start = targetPos,
             isGoal = ::canPlace,
             neighbors = { current ->
+                val rangeSq = placer.range.sq()
+                val queuedBlocks = placer.blocks.keys
+
                 buildList {
                     for (direction in Direction.entries) {
                         val neighbor = current.relative(direction)
@@ -88,7 +89,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
             }
         ) ?: return null
 
-        return shortestPath.nodes.toSet()
+        return shortestPath.nodes.toOrderedSet()
     }
 
     private fun canPlace(pos: BlockPos): Boolean {

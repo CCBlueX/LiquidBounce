@@ -100,7 +100,7 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         positions: MutableList<PlacementPositionCandidate>
     ): Boolean {
         val target = ModuleCrystalAura.targetTracker.target ?: return true
-        val expectedCrystal = if (oldVersion) FULL_BOX.setMaxX(2.0) else FULL_BOX
+        val expectedCrystal = if (oldVersion) FULL_BOX.setMaxY(2.0) else FULL_BOX
         val basePlaceLayers = if (basePlace) SubmoduleBasePlace.getBasePlaceLayers(target.y) else IntRange.EMPTY
 
         // create the context
@@ -131,12 +131,13 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
     ): PlacementPositionCandidate? {
         // choose the target with the maximum damage
         var bestTarget = finalPositions.maxOrNull() ?: return null
+        val minAdvantage = SubmoduleBasePlace.minAdvantage
 
         // find a target position that will not require base place if possible
         if (bestTarget.requiresBasePlace) {
-            finalPositions.filterNot { it.requiresBasePlace }.maxOrNull()?.let {
-                if (it.enemyDamage!! - bestTarget.enemyDamage!! >= SubmoduleBasePlace.minAdvantage) {
-                    bestTarget = it
+            finalPositions.filterNot { it.requiresBasePlace }.maxOrNull()?.let { nonBasePlaceTarget ->
+                if (bestTarget.enemyDamage!! - nonBasePlaceTarget.enemyDamage!! <= minAdvantage) {
+                    bestTarget = nonBasePlaceTarget
                 }
             }
         }
@@ -145,7 +146,7 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         currentBasePlaceTarget?.let {
             it.calculate()
             if (it.isNotInvalid() &&
-                it.enemyDamage!! - bestTarget.enemyDamage!! >= SubmoduleBasePlace.minAdvantage
+                bestTarget.enemyDamage!! - it.enemyDamage!! <= minAdvantage
             ) {
                 bestTarget = it
             }
