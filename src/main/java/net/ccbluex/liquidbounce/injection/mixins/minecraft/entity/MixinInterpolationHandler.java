@@ -38,7 +38,7 @@ public abstract class MixinInterpolationHandler {
     )
     private int hookInterpolationSteps(int original) {
         if (ModuleNoInterpolation.INSTANCE.getRunning()) {
-            return original - ModuleNoInterpolation.INSTANCE.getValue();
+            return Math.max(original - ModuleNoInterpolation.INSTANCE.getValue(), 0);
         }
         return original;
     }
