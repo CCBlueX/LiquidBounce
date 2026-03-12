@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.collection
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.minecraft.world.level.block.Block
 
@@ -41,8 +42,8 @@ enum class Filter(override val tag: String) : Tagged {
 fun Filter.getSlot(blocks: Set<Block>, offhand: Boolean = true): HotbarItemSlot? {
     val slots = if (offhand) Slots.OffhandWithHotbar else Slots.Hotbar
 
-    return slots.find {
-        val block = it.itemStack.getBlock() ?: return@find false
+    return slots.findClosestSlot {
+        val block = it.getBlock() ?: return@findClosestSlot false
         this(block, blocks)
     }
 }

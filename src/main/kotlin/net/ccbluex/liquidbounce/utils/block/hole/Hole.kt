@@ -31,7 +31,7 @@ data class Hole(
 ) : Comparable<Hole> {
 
     override fun compareTo(other: Hole): Int {
-        val yDiff = this.positions.maxX() - other.positions.maxX()
+        val yDiff = this.positions.maxY() - other.positions.maxY()
         val zDiff = this.positions.maxZ() - other.positions.maxZ()
         val xDiff = this.positions.minX() - other.positions.minX()
         return when {

@@ -18,16 +18,18 @@
  */
 package net.ccbluex.liquidbounce.utils.block.placer
 
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.block.WeightedEdge
+import net.ccbluex.liquidbounce.utils.block.dijkstraShortestPath
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import java.util.PriorityQueue
 
 // TODO multiple paths a tick if enough placements in none rotation mode
 // TODO support no wall range, proper reach calculations
@@ -49,80 +51,44 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
     val chronometer = Chronometer()
 
     // positions we may not place at
-    val blockedPositions = hashSetOf<BlockPos>()
+    val blockedPositions = objectHashSetOf<BlockPos>()
 
     /**
-     * Currently finds the best path of blocks to support the placement of [targetPos] using Dijkstra's algorithm,
-     * the speed can possibly be improved by adding heuristics and making it an A* algorithm.
+     * Finds the shortest support path to make [targetPos] placeable via Dijkstra search.
      */
-    @Suppress("detekt:all")
     fun findSupport(targetPos: BlockPos): Set<BlockPos>? {
         val rangeSq = placer.range.sq()
+        val queuedBlocks = placer.blocks.keys
 
-        val openList = PriorityQueue<Node>(Comparator.comparingDouble { it.totalCost })
-        val closedList = hashSetOf<BlockPos>()
+        val shortestPath = dijkstraShortestPath(
+            start = targetPos,
+            isGoal = ::canPlace,
+            neighbors = { current ->
+                buildList {
+                    for (direction in Direction.entries) {
+                        val neighbor = current.relative(direction)
 
-        val startNode = Node(targetPos, null, 0.0)
-        openList.add(startNode)
+                        if (
+                            // don't place helping blocks where the structure will be
+                            blockedPositions.contains(neighbor) ||
 
-        while (!openList.isEmpty()) {
-            val currentNode = openList.poll()
-            closedList.add(currentNode.position)
+                            // exclude blocks where the structure is...
+                            // this useless because we already search the shortest path under all structure blocks?
+                            queuedBlocks.contains(neighbor.asLong()) ||
+                            neighbor.distManhattan(targetPos) > depth ||
+                            player.eyePosition.distanceToSqr(neighbor.center) > rangeSq ||
+                            neighbor.isBlockedByEntities()
+                        ) {
+                            continue
+                        }
 
-            // found a possible path
-            if (canPlace(currentNode.position)) {
-                return reconstructPath(currentNode)
-            }
-
-            for (direction in Direction.entries) {
-                val neighbor = currentNode.position.relative(direction)
-
-                // skip visited nodes
-                if (closedList.contains(neighbor)) {
-                    continue
-                }
-
-                if (
-                    // don't place helping blocks where the structure will be
-                    blockedPositions.contains(neighbor) ||
-
-                    // exclude blocks where the structure is...
-                    // this useless because we already search the shortest path under all structure blocks?
-                    placer.blocks.keys.contains(neighbor.asLong()) ||
-                    neighbor.distManhattan(targetPos) > depth ||
-                    player.eyePosition.distanceToSqr(neighbor.center) > rangeSq ||
-                    neighbor.isBlockedByEntities()
-                    ) {
-                    closedList.add(neighbor)
-                    continue
-                }
-
-                val totalCost = currentNode.totalCost + 2.0 // the current total cost and the move cost of two
-                val neighborNode = Node(neighbor, currentNode, totalCost)
-
-                if (!openList.contains(neighborNode) || totalCost < neighborNode.totalCost) {
-                    neighborNode.totalCost = totalCost
-                    neighborNode.parent = currentNode
-
-                    if (!openList.contains(neighborNode)) {
-                        openList.add(neighborNode)
+                        add(WeightedEdge(node = neighbor, cost = 2.0))
                     }
                 }
             }
-        }
+        ) ?: return null
 
-        // no path found
-        return null
-    }
-
-    private fun reconstructPath(currentNode: Node): Set<BlockPos> {
-        var node: Node? = currentNode
-        val path = mutableSetOf<BlockPos>()
-        while (node != null) {
-            path.add(node.position)
-            node = node.parent
-        }
-        return path
+        return shortestPath.nodes.toSet()
     }
 
     private fun canPlace(pos: BlockPos): Boolean {
@@ -133,5 +99,3 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
     }
 
 }
-
-private data class Node(val position: BlockPos, var parent: Node? = null, var totalCost: Double)
