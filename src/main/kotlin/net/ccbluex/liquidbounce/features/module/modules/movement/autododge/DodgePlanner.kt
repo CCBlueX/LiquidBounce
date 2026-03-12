@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
+import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.fastutil.mapToDoubleArray
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -25,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
@@ -53,10 +56,15 @@ fun planEvasion(
     inflictedHit: ModuleAutoDodge.HitInfo,
 ): DodgePlan? {
     val player = mc.player!!
+    val arrowVelocity2d = inflictedHit.arrowVelocity.copy(y = 0.0)
+    if (arrowVelocity2d.isLikelyZero) {
+        return null
+    }
+
     val arrowLine =
         Line(
-            Vec3(inflictedHit.prevArrowPos.x, 0.0, inflictedHit.prevArrowPos.z),
-            Vec3(inflictedHit.arrowVelocity.x, 0.0, inflictedHit.arrowVelocity.z),
+            inflictedHit.prevArrowPos.copy(y = 0.0),
+            arrowVelocity2d,
         )
 
     val playerPos2d = player.position().copy(y = 0.0)
@@ -210,9 +218,9 @@ fun findOptimalDodgePosition(baseLine: Line): Vec3 {
     val dangerZone = getDangerZoneBorders(baseLine, DodgePlanner.SAFE_DISTANCE_WITH_PADDING)
 
     val nearestPointsToDangerZoneBorders =
-        dangerZone.map { it.getNearestPointTo(playerPosAfterFreeMovement) }
+        dangerZone.mapToArray { it.getNearestPointTo(playerPosAfterFreeMovement) }
     val nearestPointDistancesToPlayer =
-        nearestPointsToDangerZoneBorders.map { it.distanceTo(playerPosAfterFreeMovement) }
+        nearestPointsToDangerZoneBorders.mapToDoubleArray { it.distanceTo(playerPosAfterFreeMovement) }
 
     val nearestPosToLine = baseLine.getNearestPointTo(playerPos2d)
 
