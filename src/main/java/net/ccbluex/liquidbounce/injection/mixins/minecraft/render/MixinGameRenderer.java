@@ -53,6 +53,7 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
@@ -103,7 +104,7 @@ public abstract class MixinGameRenderer {
         DeltaTracker deltaTracker,
         CallbackInfo ci,
         @Local(name = "projectionMatrix") Matrix4f projectionMatrix,
-        @Local(name = "modelViewMatrix") Matrix4f modelViewMatrix
+        @Local(name = "modelViewMatrix") Matrix4fc modelViewMatrix
     ) {
         WorldToScreen.setMatrices(projectionMatrix, modelViewMatrix);
 
@@ -145,7 +146,7 @@ public abstract class MixinGameRenderer {
      * Hook screen render event
      */
     @Inject(method = "extractGui", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V",
+            target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V",
             shift = At.Shift.AFTER))
     public void hookScreenRender(DeltaTracker deltaTracker, boolean shouldRenderLevel, boolean resourcesLoaded,
         CallbackInfo ci, @Local(name = "graphics") GuiGraphicsExtractor graphics) {
