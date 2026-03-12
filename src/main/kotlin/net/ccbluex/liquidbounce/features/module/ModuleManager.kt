@@ -247,6 +247,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleHoleFiller
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoInterpolation
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleProjectilePuncher
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleStrongholdFinder
@@ -694,6 +695,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModulePacketMine,
             ModuleHoleFiller,
             ModuleStrongholdFinder,
+            ModuleNoInterpolation,
         )
 
         builtin.forEach { module ->

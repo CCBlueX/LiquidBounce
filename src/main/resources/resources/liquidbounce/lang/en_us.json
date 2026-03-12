@@ -633,6 +633,7 @@
   "liquidbounce.module.noFall.description": "Protects you from taking fall damage.",
   "liquidbounce.module.noHurtCam.description": "Disables the camera effect when getting hurt.",
   "liquidbounce.module.noJumpDelay.description": "Removes the delay between jumps.",
+  "liquidbounce.module.noInterpolation.description": "Reduces entity interpolation steps to make position updates appear more immediate.",
   "liquidbounce.module.noPitchLimit.description": "Allows you to rotate your head beyond the regular limits.",
   "liquidbounce.module.noPush.description": "Protects you from being pushed around by other players.",
   "liquidbounce.module.noRotateSet.description": "Prevents the server from being able to rotate your head.",
