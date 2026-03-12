@@ -91,7 +91,7 @@ class BlockPlacer(
      * Defines how long the player should sneak when placing on an interactable block.
      * This can make placing multiple blocks seem smoother.
      */
-    val sneak by int("Sneak", 1, 0..10, "ticks")
+    private val sneak by intRange("Sneak", 1..1, 0..10, "ticks")
 
     private val ignores by multiEnumChoice("Ignore", Ignore.entries)
 
@@ -219,7 +219,7 @@ class BlockPlacer(
 
                 // one block is almost the best we can get, so why bother scanning the other blocks
                 if (size <= 1) {
-                    continue
+                    break
                 }
             }
         }
@@ -277,7 +277,7 @@ class BlockPlacer(
 
             // sneak when placing on interactable block to not trigger their action
             if (placementTarget.interactedBlockPos.getState().isInteractable) {
-                sneakTimes = sneak - 1
+                sneakTimes = sneak.random()
             }
 
             if (rotationMode.activeMode(entry.booleanValue, pos, placementTarget)) {
@@ -313,8 +313,6 @@ class BlockPlacer(
     }
 
     fun doPlacement(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget) {
-        blocks.remove(pos.asLong())
-
         // choose block to place
         val slot = if (isSupport) {
             support.filter.getSlot(support.blocks)
@@ -339,12 +337,13 @@ class BlockPlacer(
         SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())
 
         if (slot.itemStack.item !is BlockItem || pos.getState()!!.canBeReplaced()) {
+            blocks.remove(pos.asLong())
+
             // place the block
             doPlacement(blockHitResult, hand = slot.useHand, swingMode = swingMode)
             placedRenderer.addBlock(pos)
+            targetRenderer.removeBlock(pos)
         }
-
-        targetRenderer.removeBlock(pos)
     }
 
     private fun raytraceTarget(pos: BlockPos, providedRotation: Rotation, direction: Direction): BlockHitResult? {
