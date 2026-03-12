@@ -51,7 +51,7 @@ object ModuleCrystalAura : ClientModule(
 ) {
 
     val targetTracker = tree(TargetTracker(
-        rangeValue =  FloatValueProvider("Range", 4.5f, 1f..12f)
+        rangeValue = FloatValueProvider("Range", 4.5f, 1f..12f)
     ))
 
     object PredictFeature : ValueGroup("Predict") {

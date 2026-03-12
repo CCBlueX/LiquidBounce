@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.state.BlockState
@@ -203,7 +204,7 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
         return running &&
             (!onlyAboveSelf || pos.y >= player.blockPosition().y) &&
             pos.y in layers &&
-            pos.getCenterDistanceSquared() + 1.0 < max(placer.range, placer.wallRange) &&
+            pos.getCenterDistanceSquared() + 1.0 < max(placer.range, placer.wallRange).sq() &&
             state.canBeReplaced() &&
             !pos.isBlockedByEntities() &&
             playerWillNotRunIn(pos) &&
@@ -214,7 +215,7 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
      * Simulates player movement, so that we won't run into the position.
      */
     private fun playerWillNotRunIn(pos: BlockPos): Boolean {
-        if (SimulateMovement.enabled) {
+        if (!SimulateMovement.enabled) {
             return true
         }
 
@@ -231,13 +232,14 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
         // check if the pos will intersect at any expected position
         return snapShots.none {
             val simulatedPos = it.pos
+            val error = errorOffset
             val result = posBB.intersects(
-                simulatedPos.x - errorStep,
-                simulatedPos.y - if (errorDown) errorOffset else 0.0,
-                simulatedPos.z - errorStep,
-                simulatedPos.x + 1.0 + errorStep,
-                simulatedPos.y + 1.8 + errorStep,
-                simulatedPos.z + 1.0 + errorStep
+                simulatedPos.x - error,
+                simulatedPos.y - if (errorDown) error else 0.0,
+                simulatedPos.z - error,
+                simulatedPos.x + 1.0 + error,
+                simulatedPos.y + 1.8 + error,
+                simulatedPos.z + 1.0 + error
             )
             errorOffset += errorStep
             val isPlatform = SimulateMovement.antiPlatform && floor(simulatedPos.y) == y
@@ -252,7 +254,7 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
     private fun willNotTrap(pos: BlockPos): Boolean {
         val bb = player.boundingBox
         val yA = ceil(bb.minY)
-        val yB = floor(bb.maxX)
+        val yB = floor(bb.maxY)
 
         val positions = arrayOf(
             DoubleDoubleImmutablePair(bb.minX, bb.minZ),
