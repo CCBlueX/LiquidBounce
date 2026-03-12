@@ -12,6 +12,8 @@ mutable field net/minecraft/client/Minecraft services Lnet/minecraft/server/Serv
 accessible method net/minecraft/world/entity/LivingEntity updatingUsingItem ()V
 accessible field net/minecraft/world/entity/HumanoidArm id I
 
+accessible class net/minecraft/world/item/CreativeModeTab$Output
+
 mutable field net/minecraft/world/phys/Vec3 x D
 mutable field net/minecraft/world/phys/Vec3 y D
 mutable field net/minecraft/world/phys/Vec3 z D
