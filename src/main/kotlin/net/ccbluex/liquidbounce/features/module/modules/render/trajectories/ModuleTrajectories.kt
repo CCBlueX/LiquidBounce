@@ -33,8 +33,10 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
+import net.ccbluex.liquidbounce.utils.render.trajectory.EntityTrajectoryResolver
+import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryDisplayResolver
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.world.entity.TraceableEntity
 import net.minecraft.world.entity.player.Player
@@ -84,14 +86,12 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
 
             for (entity in world.entitiesForRendering()) {
                 val delta = entity.position().subtract(viewPos)
-                if (delta.lengthSqr() > maxRenderDistanceSq) {
-                    continue
-                }
-                if (cullBehindPlayer && delta.dot(viewDirection) < 0.0 && delta.lengthSqr() > 9.0) {
+                if (delta.lengthSqr() > maxRenderDistanceSq ||
+                    cullBehindPlayer && delta.dot(viewDirection) < 0.0 && delta.lengthSqr() > 9.0) {
                     continue
                 }
 
-                val (trajectoryInfo, trajectoryType) = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
+                val (trajectoryInfo, trajectoryType) = EntityTrajectoryResolver.resolveEntityTrajectory(
                     entity,
                     activeTrajectoryArrow,
                     activeTrajectoryOther
@@ -101,7 +101,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
 
                 val trajectoryRenderer = TrajectoryInfoRenderer(
                     owner = (entity as? TraceableEntity)?.owner ?: entity,
-                    icon = TrajectoryData.getRenderIconForOtherEntity(
+                    icon = TrajectoryDisplayResolver.resolveEntityIcon(
                         entity, activeTrajectoryArrow, activeTrajectoryOther
                     ),
                     velocity = entity.deltaMovement,
@@ -112,7 +112,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     renderOffset = Vec3.ZERO,
                 )
 
-                val color = TrajectoryData.getColorForEntity(entity)
+                val color = TrajectoryDisplayResolver.resolveEntityColor(entity)
 
                 simulationResults += trajectoryRenderer to trajectoryRenderer.drawTrajectoryForProjectile(
                     maxSimulatedTicks,
@@ -153,8 +153,8 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
         otherPlayer: Player,
         partialTicks: Float,
     ) {
-        val (trajectoryShotSpecs, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
-            TrajectoryData.getRenderedTrajectoryShotSpecs(otherPlayer, stack, alwaysShowBow)?.let {
+        val (trajectoryShotDescriptors, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
+            HeldItemTrajectoryResolver.resolveHeldItemShots(otherPlayer, stack, alwaysShowBow)?.let {
                 it to stack
             }
         } ?: return
@@ -170,22 +170,22 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             otherPlayer.rotation
         }
 
-        trajectoryShotSpecs.forEach { shotSpec ->
-            if (shotSpec.trajectoryType !in trajectoryTypes) {
+        trajectoryShotDescriptors.forEach { shotDescriptor ->
+            if (shotDescriptor.trajectoryType !in trajectoryTypes) {
                 return@forEach
             }
 
             val shotRotation = Rotation(
-                yaw = rotation.yaw + shotSpec.yawOffsetDegrees,
+                yaw = rotation.yaw + shotDescriptor.yawOffsetDegrees,
                 pitch = rotation.pitch,
                 isNormalized = rotation.isNormalized
             )
 
             val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
                 owner = otherPlayer,
-                icon = if (shotSpec.icon.isEmpty) stack else shotSpec.icon,
-                trajectoryInfo = shotSpec.trajectoryInfo,
-                trajectoryType = shotSpec.trajectoryType,
+                icon = if (shotDescriptor.icon.isEmpty) stack else shotDescriptor.icon,
+                trajectoryInfo = shotDescriptor.trajectoryInfo,
+                trajectoryType = shotDescriptor.trajectoryType,
                 rotation = shotRotation,
                 partialTicks = partialTicks
             )

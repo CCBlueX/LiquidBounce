@@ -30,23 +30,26 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
  */
 enum class TrajectoryType(
     override val tag: String,
-    /**
-     * Determines if first-tick position skip is needed
-     *
-     * This flag mirrors whether vanilla applies movement-affecting physics before first movement
-     * in the corresponding projectile tick loop.
-     */
-    val requiresInitialTickCorrection: Boolean,
+    val initialTickBehavior: InitialTickBehavior,
 ) : Tagged {
-    Arrow("Arrow", false),
-    Potion("Potion", true),
-    EnderPearl("EnderPearl", true),
-    FishingBobber("FishingBobber", true),
-    Trident("Trident", false),
-    Snowball("Snowball", true),
-    Egg("Egg", true),
-    ExpBottle("ExpBottle", true),
-    FireworkRocket("FireworkRocket", false),
-    Fireball("Fireball", true),
-    WindCharge("WindCharge", true),
+    Arrow("Arrow", InitialTickBehavior.NONE),
+    Potion("Potion", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    EnderPearl("EnderPearl", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    FishingBobber("FishingBobber", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    Trident("Trident", InitialTickBehavior.NONE),
+    Snowball("Snowball", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    Egg("Egg", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    ExpBottle("ExpBottle", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    FireworkRocket("FireworkRocket", InitialTickBehavior.NONE),
+    Fireball("Fireball", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    WindCharge("WindCharge", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    ;
+
+    enum class InitialTickBehavior {
+        NONE,
+        APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE,
+    }
+
+    val requiresInitialTickCorrection: Boolean
+        get() = initialTickBehavior == InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE
 }
