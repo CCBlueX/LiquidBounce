@@ -25,7 +25,57 @@ import net.minecraft.world.item.ItemStack
 data class TrajectoryDescriptor(
     val trajectoryInfo: TrajectoryInfo,
     val trajectoryType: TrajectoryType,
-)
+) {
+    fun toShotDescriptor(
+        yawOffsetDegrees: Float = 0f,
+        icon: ItemStack = ItemStack.EMPTY,
+    ): TrajectoryShotDescriptor {
+        return TrajectoryShotDescriptor(
+            trajectoryInfo = trajectoryInfo,
+            trajectoryType = trajectoryType,
+            yawOffsetDegrees = yawOffsetDegrees,
+            icon = icon
+        )
+    }
+
+    companion object {
+        @JvmField
+        val BOW_ARROW = TrajectoryDescriptor(TrajectoryInfo.BOW_FULL_PULL, TrajectoryType.Arrow)
+
+        @JvmField
+        val ENTITY_ARROW = TrajectoryDescriptor(TrajectoryInfo(0.05, 0.3), TrajectoryType.Arrow)
+
+        @JvmField
+        val POTION = TrajectoryDescriptor(TrajectoryInfo.POTION, TrajectoryType.Potion)
+
+        @JvmField
+        val ENDER_PEARL = TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.EnderPearl)
+
+        @JvmField
+        val FISHING_BOBBER = TrajectoryDescriptor(TrajectoryInfo.FISHING_ROD, TrajectoryType.FishingBobber)
+
+        @JvmField
+        val TRIDENT = TrajectoryDescriptor(TrajectoryInfo.TRIDENT, TrajectoryType.Trident)
+
+        @JvmField
+        val SNOWBALL = TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.Snowball)
+
+        @JvmField
+        val EGG = TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.Egg)
+
+        @JvmField
+        val EXP_BOTTLE = TrajectoryDescriptor(TrajectoryInfo.EXP_BOTTLE, TrajectoryType.ExpBottle)
+
+        @JvmField
+        val FIREWORK_ROCKET = TrajectoryDescriptor(TrajectoryInfo.FIREWORK_ROCKET, TrajectoryType.FireworkRocket)
+
+        @JvmField
+        val FIREBALL = TrajectoryDescriptor(TrajectoryInfo.FIREBALL, TrajectoryType.Fireball)
+
+        @JvmField
+        val WIND_CHARGE = TrajectoryDescriptor(TrajectoryInfo.WIND_CHARGE, TrajectoryType.WindCharge)
+    }
+}
 
 @JvmRecord
 data class TrajectoryShotDescriptor(

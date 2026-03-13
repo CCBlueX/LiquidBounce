@@ -40,47 +40,29 @@ object EntityTrajectoryResolver {
         activeOthers: Boolean,
     ): TrajectoryDescriptor? {
         if (activeArrows && entity is AbstractArrow && entity !is ThrownTrident && !entity.isInGround) {
-            return TrajectoryDescriptor(TrajectoryInfo(0.05, 0.3), TrajectoryType.Arrow)
+            return TrajectoryDescriptor.ENTITY_ARROW
         }
         if (!activeOthers) {
             return null
         }
 
         return when (entity) {
-            is AbstractThrownPotion -> TrajectoryDescriptor(
-                TrajectoryInfo.POTION,
-                TrajectoryType.Potion
-            )
+            is AbstractThrownPotion -> TrajectoryDescriptor.POTION
             is ThrownTrident -> {
                 if (!entity.isInGround) {
-                    TrajectoryDescriptor(TrajectoryInfo.TRIDENT, TrajectoryType.Trident)
+                    TrajectoryDescriptor.TRIDENT
                 } else {
                     null
                 }
             }
-            is ThrownEnderpearl -> TrajectoryDescriptor(
-                TrajectoryInfo.GENERIC,
-                TrajectoryType.EnderPearl
-            )
-            is Snowball -> TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.Snowball)
-            is ThrownExperienceBottle -> TrajectoryDescriptor(
-                TrajectoryInfo.EXP_BOTTLE,
-                TrajectoryType.ExpBottle
-            )
-            is ThrownEgg -> TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.Egg)
-            is FishingHook -> TrajectoryDescriptor(
-                TrajectoryInfo.FISHING_ROD,
-                TrajectoryType.FishingBobber
-            )
-            is FireworkRocketEntity -> TrajectoryDescriptor(
-                TrajectoryInfo.FIREWORK_ROCKET,
-                TrajectoryType.FireworkRocket
-            )
-            is Fireball -> TrajectoryDescriptor(TrajectoryInfo.FIREBALL, TrajectoryType.Fireball)
-            is WindCharge -> TrajectoryDescriptor(
-                TrajectoryInfo.WIND_CHARGE,
-                TrajectoryType.WindCharge
-            )
+            is ThrownEnderpearl -> TrajectoryDescriptor.ENDER_PEARL
+            is Snowball -> TrajectoryDescriptor.SNOWBALL
+            is ThrownExperienceBottle -> TrajectoryDescriptor.EXP_BOTTLE
+            is ThrownEgg -> TrajectoryDescriptor.EGG
+            is FishingHook -> TrajectoryDescriptor.FISHING_BOBBER
+            is FireworkRocketEntity -> TrajectoryDescriptor.FIREWORK_ROCKET
+            is Fireball -> TrajectoryDescriptor.FIREBALL
+            is WindCharge -> TrajectoryDescriptor.WIND_CHARGE
             else -> null
         }
     }
