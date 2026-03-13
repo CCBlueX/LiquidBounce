@@ -510,14 +510,8 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         val target = currentTarget
         val technique = activeTechnique
 
-        val computedRotation = if (target != null) {
-            technique.getRotations(target)
-        } else {
-            null
-        }
-
         val currentRotation = if ((rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) && target != null) {
-            computedRotation ?: (RotationManager.currentRotation ?: player.rotation)
+            technique.getRotations(target) ?: (RotationManager.currentRotation ?: player.rotation)
         } else {
             RotationManager.currentRotation ?: player.rotation
         }.normalize()
