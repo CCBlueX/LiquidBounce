@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
@@ -46,11 +47,13 @@ import org.lwjgl.glfw.GLFW
 object ModuleDBCHelper : ClientModule("DBCHelper", ModuleCategories.COMBAT) {
 
     object AttackButton : ToggleableValueGroup(this, "Attack", true) {
-        internal var chance by int("Chance", 80, 1..100)
+        internal var chance by intRange("Chance", 75..80, 1..100)
+        internal var triggerDelay by intRange("Trigger Delay", 5..10, 0..50, "ms")
     }
 
     object UseButton : ToggleableValueGroup(this, "Use", false) {
-        internal var chance by int("Chance", 80, 1..100)
+        internal var chance by intRange("Chance", 75..80, 1..100)
+        internal var triggerDelay by intRange("Trigger Delay", 5..10, 0..50, "ms")
 
         internal val holdingItemsForIgnore by items(
             "HoldingItemsForIgnore",
@@ -104,10 +107,11 @@ object ModuleDBCHelper : ClientModule("DBCHelper", ModuleCategories.COMBAT) {
                     return@run
                 }
 
-                if (chance < (1..100).random()) {
+                if (chance.random() < (1..100).random()) {
                     return@run
                 }
 
+                delay(triggerDelay.random().toLong())
                 mc.options.keyAttack.clickCount = 2
             }
         }
@@ -143,14 +147,16 @@ object ModuleDBCHelper : ClientModule("DBCHelper", ModuleCategories.COMBAT) {
                     return@run
                 }
 
-                if (chance < (1..100).random()) {
+                if (chance.random() < (1..100).random()) {
                     return@run
                 }
 
                 if (mainHandStack.item is BlockItem || offHandStack.item is BlockItem) {
+                    delay(triggerDelay.random().toLong())
                     mc.options.keyUse.clickCount = 3
                 }
                 else {
+                    delay(triggerDelay.random().toLong())
                     mc.options.keyUse.clickCount = 2
                 }
             }
