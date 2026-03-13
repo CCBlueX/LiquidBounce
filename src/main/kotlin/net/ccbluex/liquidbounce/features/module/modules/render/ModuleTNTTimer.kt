@@ -87,7 +87,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
 
                 if (ownerName) {
                     tnt.owner?.name?.let {
-                        text.append(" (").append(name).append(")")
+                        text.append(" (").append(it).append(")")
                     }
                 }
 
