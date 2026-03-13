@@ -92,15 +92,17 @@ fun traceFromPoint(
  *
  * @see net.minecraft.world.entity.LivingEntity.hasLineOfSight
  */
+@JvmOverloads
 fun hasLineOfSight(
     eyes: Vec3,
     vec3: Vec3,
+    entity: Entity = player,
 ): Boolean {
-    return world.clip(
+    return entity.level().clip(
         eyes,
         vec3,
         ClipContext.Block.COLLIDER,
         ClipContext.Fluid.NONE,
-        player,
+        entity,
     ).type == HitResult.Type.MISS
 }

@@ -77,6 +77,9 @@ object ModuleProjectilePuncher : ClientModule(
         updateTarget()
     }
 
+    /**
+     * Tries to punch the current projectile target when it is in range and the server-side rotation already faces it.
+     */
     val repeatable = tickHandler {
         val target = target ?: return@tickHandler
 
@@ -86,7 +89,7 @@ object ModuleProjectilePuncher : ClientModule(
                 rotation = RotationManager.serverRotation,
                 range = range.toDouble(),
                 throughWallsRange = 0.0
-            ) != null) {
+            ) == null) {
             return@tickHandler
         }
 

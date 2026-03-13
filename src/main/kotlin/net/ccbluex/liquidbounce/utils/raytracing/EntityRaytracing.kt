@@ -57,7 +57,11 @@ fun findEntityInCrosshair(
 ): EntityHitResult? = mc.cameraEntity?.findEntityInCrosshair(range, rotation, predicate)
 
 /**
- * Allows you to check if your enemy is behind a wall
+ * Ray-traces from the current camera entity and returns a hit result when the traced entity equals [toEntity].
+ *
+ * @param toEntity target entity that must be hit by the ray.
+ * @param range maximum ray-trace distance.
+ * @param rotation yaw/pitch used to build the ray direction.
  */
 fun isLookingAtEntity(
     toEntity: Entity,
@@ -67,6 +71,15 @@ fun isLookingAtEntity(
     !entity.isSpectator && entity.isPickable && entity == toEntity
 }
 
+/**
+ * Ray-traces from [fromEntity] and validates whether [toEntity] is hit with the given [rotation].
+ *
+ * @param fromEntity entity whose eye position is used as ray origin.
+ * @param toEntity target entity that must be hit by the ray.
+ * @param rotation yaw/pitch used to build the ray direction.
+ * @param range maximum non-wall-bypass distance.
+ * @param throughWallsRange distance that is allowed without line-of-sight.
+ */
 fun isLookingAtEntity(
     fromEntity: Entity = mc.cameraEntity!!,
     toEntity: Entity,
@@ -84,6 +97,6 @@ fun isLookingAtEntity(
     // Either within through-walls range, or within normal range and has line of sight
     return entityHitResult.takeIf {
         distance <= throughWallsRange.sq()
-            || distance <= range.sq() && hasLineOfSight(cameraVec, entityHitResult.location)
+            || distance <= range.sq() && hasLineOfSight(cameraVec, entityHitResult.location, fromEntity)
     }
 }
