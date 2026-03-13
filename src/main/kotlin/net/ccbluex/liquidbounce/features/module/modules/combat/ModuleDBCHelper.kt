@@ -147,7 +147,12 @@ object ModuleDBCHelper : ClientModule("DBCHelper", ModuleCategories.COMBAT) {
                     return@run
                 }
 
-                mc.options.keyUse.clickCount = 2
+                if (mainHandStack.item is BlockItem || offHandStack.item is BlockItem) {
+                    mc.options.keyUse.clickCount = 3
+                }
+                else {
+                    mc.options.keyUse.clickCount = 2
+                }
             }
         }
     }
