@@ -52,6 +52,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
     private val maxRenderDistance by int("MaxRenderDistance", 96, 16..512, "m")
     private val cullBehindPlayer by boolean("CullBehindPlayer", false)
+    private val showMultiShot by boolean("ShowMultiShot", true)
 
     private val trajectoryTypes by multiEnumChoice("TrajectoryTypes", TrajectoryType.entries, canBeNone = false)
 
@@ -154,7 +155,12 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
         partialTicks: Float,
     ) {
         val (trajectoryShotDescriptors, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
-            HeldItemTrajectoryResolver.resolveHeldItemShots(otherPlayer, stack, alwaysShowBow)?.let {
+            HeldItemTrajectoryResolver.resolveHeldItemShots(
+                otherPlayer,
+                stack,
+                alwaysShowBow,
+                includeMultiShot = showMultiShot
+            )?.let {
                 it to stack
             }
         } ?: return

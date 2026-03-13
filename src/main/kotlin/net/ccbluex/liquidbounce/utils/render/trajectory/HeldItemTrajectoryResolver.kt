@@ -56,6 +56,7 @@ object HeldItemTrajectoryResolver {
         player: Player,
         stack: ItemStack,
         alwaysShowBow: Boolean,
+        includeMultiShot: Boolean = true,
     ): List<TrajectoryShotDescriptor>? {
         return when (stack.item) {
             is BowItem -> {
@@ -73,6 +74,7 @@ object HeldItemTrajectoryResolver {
                 val chargedProjectileCount = chargedProjectiles?.items?.size ?: 0
                 val isMultiShot = stack.getEnchantment(Enchantments.MULTISHOT) > 0
                 val shotCount = when {
+                    !includeMultiShot -> 1
                     chargedProjectileCount > 0 -> chargedProjectileCount
                     isMultiShot -> 3
                     else -> 1
@@ -112,7 +114,7 @@ object HeldItemTrajectoryResolver {
         stack: ItemStack,
         alwaysShowBow: Boolean,
     ): TrajectoryDescriptor? {
-        return resolveHeldItemShots(player, stack, alwaysShowBow)
+        return resolveHeldItemShots(player, stack, alwaysShowBow, includeMultiShot = false)
             ?.firstOrNull()
             ?.let { TrajectoryDescriptor(it.trajectoryInfo, it.trajectoryType) }
     }
