@@ -95,7 +95,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     private val gameTickHandler = tickHandler {
         isEnemyNearby = world.findEnemy(range) != null
 
-        if (ModuleAutoDodge.running) {
+        if (ModuleAutoDodge.enabled) {
             val position = positions.firstOrNull() ?: return@tickHandler
 
             if (ModuleAutoDodge.getInflictedHit(position) == null) {
