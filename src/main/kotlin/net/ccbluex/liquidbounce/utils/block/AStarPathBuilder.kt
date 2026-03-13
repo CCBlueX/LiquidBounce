@@ -19,34 +19,11 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
-import net.ccbluex.fastutil.Pool.Companion.use
-import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.AABB
-
-private class Node(val position: Vec3i, var parent: Node? = null) {
-    var g = 0
-    var h = 0
-    var f = 0
-
-    override fun hashCode(): Int = position.hashCode()
-    override fun equals(other: Any?): Boolean = other is Node && other.position == this.position
-
-    fun buildPath(): List<Vec3i> {
-        val path = mutableListOf<Vec3i>()
-        var currentNode = this
-        while (currentNode.parent != null) {
-            path.add(currentNode.position)
-            currentNode = currentNode.parent!!
-        }
-        path.reverse()
-        return path
-    }
-}
 
 private val directions = buildList(22) {
     add(Vec3i(-1, 0, 0)) // left
@@ -63,8 +40,6 @@ private val diagonalDirections = arrayOf(
     Vec3i(-1, 0, 1), // left back
     Vec3i(1, 0, 1) // right back
 )
-
-private val NODE_COMPARATOR = Comparator.comparingInt<Node> { it.f }.thenComparing { it.position }
 
 interface AStarPathBuilder {
 
@@ -83,81 +58,50 @@ interface AStarPathBuilder {
             return collisions.none()
         }
 
-    infix fun Vec3i.costWith(that: Vec3i): Int =
-        (this.x - that.x).sq() + (this.y - that.y).sq() + (this.z - that.z).sq()
-
     fun findPath(start: Vec3i, end: Vec3i, maxCost: Int): List<Vec3i> {
         if (end.closerThan(start, stopRange)) return emptyList()
 
-        val startNode = Node(start)
-        val endNode = Node(end)
+        val shortestPath = aStarShortestPath(
+            start = start,
+            isGoal = { it.closerThan(end, stopRange) },
+            neighbors = ::getAdjacentEdges,
+            heuristic = { (it.distSqr(end)) },
+            maxIterations = maxIterations,
+            maxCost = maxCost.toDouble(),
+        ) ?: return emptyList()
 
-        // Node::f won't be modified after added
-        val openList = objectRBTreeSetOf(NODE_COMPARATOR).apply { add(startNode) }
-        val closedList = hashSetOf<Node>()
-
-        var iterations = 0
-        while (openList.isNotEmpty()) {
-            iterations++
-            if (iterations > maxIterations) {
-                break
-            }
-
-            val currentNode = openList.removeFirst()
-            closedList.add(currentNode)
-
-            if (currentNode.position.closerThan(endNode.position, stopRange)) {
-                return currentNode.buildPath()
-            }
-
-            for (node in getAdjacentNodes(currentNode)) {
-                if (node in closedList || !node.position.isPassable) continue
-
-                val tentativeG = currentNode.g + currentNode.position.costWith(node.position)
-                if (tentativeG < node.g || node !in openList) {
-                    if (tentativeG > maxCost) continue // Skip this node if the cost exceeds the maximum
-
-                    node.parent = currentNode
-                    node.g = tentativeG
-                    node.h = node.position costWith endNode.position
-                    node.f = node.g + node.h
-
-                    openList.add(node)
-                }
-            }
-        }
-
-        return emptyList() // Return an empty list if no path was found
+        // Exclude start node to preserve the original API contract.
+        return shortestPath.nodes.drop(1)
     }
 
-    private fun getAdjacentNodes(node: Node): List<Node> = buildList {
-        getAdjacentNodesDirect(node)
+    private fun getAdjacentEdges(position: Vec3i): List<WeightedEdge<Vec3i>> = buildList {
+        getAdjacentNodesDirect(position)
         if (allowDiagonal) {
-            getAdjacentNodesDiagonal(node)
+            getAdjacentNodesDiagonal(position)
         }
     }
 
-    private fun MutableList<Node>.getAdjacentNodesDirect(node: Node) {
-        Pools.MutableBlockPos.use { pos ->
-            for (direction in directions) {
-                val adjacentPosition = pos.setWithOffset(node.position, direction)
-                if (adjacentPosition.isPassable) {
-                    add(Node(adjacentPosition.immutable(), node))
-                }
+    private fun MutableList<WeightedEdge<Vec3i>>.getAdjacentNodesDirect(position: Vec3i) {
+        val pos = BlockPos.MutableBlockPos()
+        for (direction in directions) {
+            val adjacentPosition = pos.setWithOffset(position, direction)
+            if (adjacentPosition.isPassable) {
+                val adjacentImmutable = adjacentPosition.immutable()
+                add(WeightedEdge(adjacentImmutable, (position.distSqr(adjacentImmutable))))
             }
         }
     }
 
-    private fun MutableList<Node>.getAdjacentNodesDiagonal(node: Node) {
-        Pools.MutableBlockPos.use { pos ->
-            for (direction in diagonalDirections) {
-                val adjacentPosition = pos.setWithOffset(node.position, direction)
-                if (adjacentPosition.isPassable &&
-                    node.position.offset(direction.x, 0, 0).isPassable &&
-                    node.position.offset(0, 0, direction.z).isPassable
-                ) {
-                    add(Node(adjacentPosition.immutable(), node))
-                }
+    private fun MutableList<WeightedEdge<Vec3i>>.getAdjacentNodesDiagonal(position: Vec3i) {
+        val pos = BlockPos.MutableBlockPos()
+        for (direction in diagonalDirections) {
+            val adjacentPosition = pos.setWithOffset(position, direction)
+            if (adjacentPosition.isPassable &&
+                position.offset(direction.x, 0, 0).isPassable &&
+                position.offset(0, 0, direction.z).isPassable
+            ) {
+                val adjacentImmutable = adjacentPosition.immutable()
+                add(WeightedEdge(adjacentImmutable, (position.distSqr(adjacentImmutable))))
             }
         }
     }

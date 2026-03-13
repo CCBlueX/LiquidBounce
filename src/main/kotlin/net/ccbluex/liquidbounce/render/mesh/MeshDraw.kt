@@ -35,6 +35,11 @@ import net.ccbluex.liquidbounce.render.bindAndDraw
 import net.ccbluex.liquidbounce.utils.kotlin.memorizingFunction
 import java.util.function.Function
 
+/**
+ * GPU-ready draw descriptor produced from [MeshData].
+ *
+ * It stores uploaded vertex/index slices plus the draw parameters needed by [RenderPass.bindAndDraw].
+ */
 @JvmRecord
 data class MeshDraw(
     val vertexSlice: GpuBufferSlice,
@@ -46,6 +51,11 @@ data class MeshDraw(
 
     companion object {
 
+        /**
+         * Shared dynamic VBO pool (keyed by [VertexFormat]).
+         *
+         * This is the default upload target for per-frame dynamic meshes.
+         */
         private val sharedVboGetter =
             memorizingFunction<VertexFormat, GrowableMappableRingBuffer>(Object2ObjectArrayMap()) {
                 GrowableMappableRingBuffer(
@@ -55,6 +65,11 @@ data class MeshDraw(
                 )
             }
 
+        /**
+         * Shared dynamic IBO pool (keyed by [VertexFormat.IndexType]).
+         *
+         * This is the default upload target for per-frame dynamic meshes.
+         */
         private val sharedIboGetter =
             memorizingFunction<VertexFormat.IndexType, GrowableMappableRingBuffer>(enumMapOf()) {
                 GrowableMappableRingBuffer(
@@ -71,6 +86,11 @@ data class MeshDraw(
          * if [MeshData.indexBuffer] returns null.
          *
          * This function doesn't close the [MeshData].
+         *
+         * [vboGetter]/[iboGetter] decide the storage strategy:
+         * default shared getters are intended for dynamic per-frame meshes,
+         * while custom getters (e.g. from [net.ccbluex.liquidbounce.render.StaticMeshStorage])
+         * allow static meshes to keep dedicated buffers.
          *
          * @return The uploaded data. The lifecycle is handled by backend buffer storage.
          */
@@ -113,6 +133,9 @@ data class MeshDraw(
             )
         }
 
+        /**
+         * Bind mesh buffers and issue one indexed draw call.
+         */
         @JvmStatic
         fun RenderPass.bindAndDraw(meshDraw: MeshDraw) = bindAndDraw(
             meshDraw.vertexSlice,

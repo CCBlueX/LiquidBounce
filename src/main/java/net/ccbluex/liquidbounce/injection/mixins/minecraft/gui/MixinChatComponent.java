@@ -183,8 +183,14 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
 
         int guiHeight = minecraft.getWindow().getGuiScaledHeight();
         int chatBottom = (int) Math.floor((guiHeight - 40) / chatScale);
-        int lineIndex = (int) Math.floor((chatBottom - globalMouseY / chatScale) / lineHeight);
-        if (lineIndex < 0) {
+        double localMouseY = chatBottom - globalMouseY / chatScale;
+        if (localMouseY < 0.0) {
+            return;
+        }
+
+        int lineIndex = (int) Math.floor(localMouseY / lineHeight);
+        int visibleLineCount = Math.min(accessor.invokeGetLinesPerPage(), trimmedMessages.size() - chatScrollbarPos);
+        if (lineIndex < 0 || lineIndex >= visibleLineCount) {
             return;
         }
 
@@ -193,10 +199,21 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
             return;
         }
 
+        var messageBounds = ModuleBetterChat.resolveMessageBounds(trimmedMessages, messageIndex);
+        int visibleStart = chatScrollbarPos;
+        int visibleEnd = visibleStart + visibleLineCount - 1;
+        int highlightedStart = Math.max(messageBounds.getStart(), visibleStart);
+        int highlightedEnd = Math.min(messageBounds.getEndInclusive(), visibleEnd);
+        if (highlightedStart > highlightedEnd) {
+            return;
+        }
+
+        int startLineIndex = highlightedStart - visibleStart;
+        int endLineIndex = highlightedEnd - visibleStart;
         int left = (int) Math.floor(4.0 * chatScale);
         int right = (int) Math.ceil((chatWidth + 4.0) * chatScale);
-        int top = (int) Math.floor((chatBottom - (lineIndex + 1) * lineHeight) * chatScale);
-        int bottom = (int) Math.ceil((chatBottom - lineIndex * lineHeight) * chatScale);
+        int top = (int) Math.floor((chatBottom - (endLineIndex + 1) * lineHeight) * chatScale);
+        int bottom = (int) Math.ceil((chatBottom - startLineIndex * lineHeight) * chatScale);
         graphics.fill(left, top, right, bottom, 0x4422AAFF);
     }
 

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitSeconds
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue.presets
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -59,6 +60,10 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
     }
 
     val repeatable = tickHandler {
+        if (ModuleAutoQueue.shouldPause) {
+            return@tickHandler
+        }
+
         val inGameHud = mc.gui ?: return@tickHandler
         val playerListHeader = inGameHud.tabList.header
 

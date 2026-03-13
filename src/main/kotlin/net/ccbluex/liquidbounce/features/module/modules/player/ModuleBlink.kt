@@ -109,7 +109,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
     @Suppress("unused")
     private val tickTask = tickHandler {
-        if (ModuleAutoDodge.running) {
+        if (ModuleAutoDodge.enabled) {
             val playerPosition = positions.firstOrNull() ?: return@tickHandler
 
             if (ModuleAutoDodge.getInflictedHit(playerPosition) == null) {

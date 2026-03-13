@@ -354,7 +354,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
             env.drawTriangle(
                 p1 = env.relativeToCamera(p1).toVec3f(),
                 p2 = env.relativeToCamera(p2).toVec3f(),
-                p3 = env.relativeToCamera(p2).toVec3f(),
+                p3 = env.relativeToCamera(p3).toVec3f(),
                 argb = color.argb,
             )
         }

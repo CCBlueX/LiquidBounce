@@ -248,6 +248,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleHoleFiller
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoInterpolation
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleProjectilePuncher
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleStrongholdFinder
@@ -296,6 +297,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> { event ->
         when (event.action) {
             GLFW.GLFW_PRESS -> if (mc.screen == null) {
+                // Usually nobody actually wants a module to activate when they press the Minecraft debug key combo.
+                if (mc.options.keyDebugModifier.isDown) return@handler
                 for (m in modules) {
                     if (!m.bind.matchesKeyPress(event)) {
                         continue
@@ -694,6 +697,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModulePacketMine,
             ModuleHoleFiller,
             ModuleStrongholdFinder,
+            ModuleNoInterpolation,
         )
 
         builtin.forEach { module ->

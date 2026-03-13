@@ -20,22 +20,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.minecraft.ChatFormatting
 import net.minecraft.client.player.AbstractClientPlayer
-import net.minecraft.resources.Identifier
+import net.minecraft.network.chat.Component
 
 sealed class MurderMysteryMode(name: String) : Mode(name) {
     final override val parent
         get() = ModuleMurderMystery.modes
 
-    abstract fun handleHasBow(
-        entity: AbstractClientPlayer,
-        locationSkin: Identifier,
-    )
+    abstract fun handleHasBow(entity: AbstractClientPlayer)
 
-    abstract fun handleHasSword(
-        entity: AbstractClientPlayer,
-        locationSkin: Identifier,
-    )
+    abstract fun handleHasSword(entity: AbstractClientPlayer)
 
     open fun disallowsArrowDodge(): Boolean = false
 
@@ -45,9 +41,9 @@ sealed class MurderMysteryMode(name: String) : Mode(name) {
 
     abstract fun reset()
 
-    enum class PlayerType {
-        NEUTRAL,
-        DETECTIVE_LIKE,
-        MURDERER,
+    enum class PlayerType(val prefix: Component?) {
+        NEUTRAL(null),
+        DETECTIVE_LIKE("[BOW] ".asPlainText(ChatFormatting.AQUA)),
+        MURDERER("[MURD] ".asPlainText(ChatFormatting.RED)),
     }
 }

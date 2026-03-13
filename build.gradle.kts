@@ -48,8 +48,12 @@ allprojects {
         mavenCentral()
         mavenLocal()
         maven {
-            name = "CCBlueX"
+            name = "CCBlueX Releases"
             url = uri("https://maven.ccbluex.net/releases")
+        }
+        maven {
+            name = "CCBlueX Snapshots"
+            url = uri("https://maven.ccbluex.net/snapshots")
         }
         maven {
             name = "Fabric"
@@ -78,10 +82,6 @@ allprojects {
         maven {
             name = "Lenni0451"
             url = uri("https://maven.lenni0451.net/everything")
-        }
-        maven {
-            name = "NikOverflow"
-            url = uri("https://reposilite.nikoverflow.com/releases")
         }
         maven {
             name = "ParchmentMC"

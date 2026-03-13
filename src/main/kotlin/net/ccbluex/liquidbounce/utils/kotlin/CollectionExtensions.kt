@@ -20,7 +20,9 @@
 @file:Suppress("NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.utils.kotlin
 
+import it.unimi.dsi.fastutil.objects.ObjectArraySet
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import java.util.Collections
 import java.util.function.Function
 
@@ -36,3 +38,12 @@ fun <K, V> memorizingFunction(map: MutableMap<K, V>, mappingFunction: Function<K
 
 inline fun <K : Any, V : Any> Map<K, V>.immutableCopy(): Map<K, V> =
     java.util.Map.copyOf(this)
+
+fun <E> Collection<E>.toOrderedSet(): Set<E> {
+    return when (this.size) {
+        0 -> emptySet()
+        1 -> Collections.singleton(this.first())
+        in 2..4 -> ObjectArraySet(this)
+        else -> ObjectLinkedOpenHashSet(this)
+    }
+}

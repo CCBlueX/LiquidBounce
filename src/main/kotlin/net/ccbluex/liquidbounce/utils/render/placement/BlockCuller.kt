@@ -51,7 +51,8 @@ private const val EDGE_SOUTH_UP = ((1 shl 20) or (1 shl (21)))
 private const val EDGE_WEST_UP = ((1 shl 22) or (1 shl (23)))
 
 // TODO check whether the Boxes actually touch
-internal class BlockCuller(val owner: Owner) {
+@JvmInline
+internal value class BlockCuller(val owner: Owner) {
 
     interface Owner {
         operator fun contains(pos: Long): Boolean

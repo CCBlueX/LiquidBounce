@@ -118,7 +118,6 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
         it.distanceToSqr(player)
     }?.position()
 
-    @Suppress("EmptyFunctionBlock")
     override fun createNavigationContext(): Vec3? {
         val invHasSpace = hasInventorySpace()
         if (!invHasSpace && invHadSpace && toItems.enabled) {

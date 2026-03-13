@@ -75,7 +75,7 @@ val BoundingBox.box: AABB
     lengthX.toDouble(), lengthY.toDouble(), lengthZ.toDouble(),
 )
 
-fun BoundingBox.centerPointOf(side: Direction): Vec3 =
+fun BoundingBox.centerOnSide(side: Direction): Vec3 =
     when (side) {
         Direction.DOWN  -> Vec3(lengthX * 0.5, minY() - 0.5, lengthZ * 0.5)
         Direction.UP    -> Vec3(lengthX * 0.5, maxY() + 0.5, lengthZ * 0.5)

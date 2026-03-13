@@ -29,29 +29,22 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFa
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isFallDamageBlocking
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
+import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
-import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
-import net.minecraft.core.BlockPos
 import net.minecraft.world.item.Items
-import net.minecraft.world.level.block.Blocks
 
 internal object NoFallMLG : NoFallMode("MLG") {
+    private const val PICKUP_TRACKER_CAPACITY = 8
+
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
 
     private object PickupWater : ToggleableValueGroup(NoFallMLG, "PickUpWater", true) {
@@ -64,7 +57,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
     private val rotations = tree(RotationsValueGroup(this))
 
     private var currentTarget: PlacementPlan? = null
-    private val lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
+    private val pickupTracker = TimedPickupTracker(PICKUP_TRACKER_CAPACITY)
 
     private val netherItems =
         setOf(
@@ -128,7 +121,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
         SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
 
         val onSuccess: () -> Boolean = {
-            lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
+            pickupTracker.record(target.targetPos)
 
             if (target.hotbarItemSlot.itemStack.item == Items.SCAFFOLDING) {
                 repeated<MovementInputEvent>(SCAFFOLDING_SNEAKING_TICKS) { event ->
@@ -173,23 +166,10 @@ internal object NoFallMLG : NoFallMode("MLG") {
         val bestPickupItem = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
 
         // Remove all time outed/invalid pickup targets from the list
-        this.lastPlacements.removeIf {
-            it.second.hasElapsed(PickupWater.pickupSpan.last.toLong()) || it.first.getState()?.block != Blocks.WATER
-        }
+        pickupTracker.prune(PickupWater.pickupSpan.last.toLong(), TimedPickupTracker.PickupFilter.WATER)
 
-        for (lastPlacement in this.lastPlacements) {
-            if (!lastPlacement.second.hasElapsed(PickupWater.pickupSpan.first.toLong())) {
-                continue
-            }
-
-            val possibleTarget = findPlacementPlanAtPos(lastPlacement.first, bestPickupItem)
-
-            if (possibleTarget != null) {
-                return possibleTarget
-            }
-        }
-
-        return null
+        val pickupPos = pickupTracker.firstEligible(PickupWater.pickupSpan.first.toLong()) ?: return null
+        return planPlacementAtPos(pickupPos, bestPickupItem)
     }
 
     /**
@@ -208,23 +188,6 @@ internal object NoFallMLG : NoFallMode("MLG") {
             return null
         }
 
-        return findPlacementPlanAtPos(collision.above(), itemForMLG)
-    }
-
-    private fun findPlacementPlanAtPos(
-        pos: BlockPos,
-        item: HotbarItemSlot,
-    ): PlacementPlan? {
-        val options =
-            BlockPlacementTargetFindingOptions(
-                BlockOffsetOptions.Default,
-                FaceHandlingOptions(CenterTargetPositionFactory),
-                stackToPlaceWith = item.itemStack,
-                PlayerLocationOnPlacement(position = player.position()),
-            )
-
-        val bestPlacementPlan = findBestBlockPlacementTarget(pos, options) ?: return null
-
-        return PlacementPlan(pos, bestPlacementPlan, item)
+        return planPlacementAtPos(collision.above(), itemForMLG)
     }
 }

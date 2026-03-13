@@ -21,11 +21,12 @@ package net.ccbluex.liquidbounce.utils.block.targetfinding
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.edgePoints
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.toDegrees
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -40,15 +41,17 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 
-
+@JvmRecord
 data class PositionFactoryConfiguration(
     val eyePos: Vec3,
     /**
      * Random number [[-1;1]]. Can also be constant.
+     * TODO: Wire this into point selection so aim modes can apply deterministic per-jump jitter.
      */
     val randomNumber: Double
 )
 
+private object PositionFactoryDebug : DebuggedOwner
 
 sealed class FaceTargetPositionFactory {
 
@@ -121,7 +124,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 
         val pointOnFace = face.nearestPointTo(rotationLine)
 
-        ModuleScaffold.debugGeometry("targetFace") {
+        PositionFactoryDebug.debugGeometry("targetFace") {
             ModuleDebug.DebuggedBox(
                 AABB(
                 face.from,
@@ -129,7 +132,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
             ).move(Vec3.atLowerCornerOf(targetPos)), Color4b.RED)
         }
 
-        ModuleScaffold.debugGeometry("targetPoint") {
+        PositionFactoryDebug.debugGeometry("targetPoint") {
             ModuleDebug.DebuggedPoint(
                 pointOnFace + targetPos,
                 Color4b.BLUE,
@@ -137,7 +140,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
             )
         }
 
-        ModuleScaffold.debugGeometry("daLine") {
+        PositionFactoryDebug.debugGeometry("daLine") {
             ModuleDebug.DebuggedLine(
                 Line(
                     config.eyePos,
@@ -159,7 +162,7 @@ class StabilizedRotationTargetPositionFactory(
     private val optimalLine: Line?
 ) : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
-        val trimmedFace = trimFace(face).offset(Vec3.atLowerCornerOf(targetPos))
+        val trimmedFace = trimFace(face).offset(targetPos)
 
         val targetFace = getTargetFace(player, trimmedFace) ?: trimmedFace
 
@@ -217,8 +220,6 @@ object CenterTargetPositionFactory : FaceTargetPositionFactory() {
     }
 }
 
-private object PositionFactoryDebug : DebuggedOwner
-
 abstract class BaseYawTargetPositionFactory(
     protected val config: PositionFactoryConfiguration,
     private val yawTolerance: Float = 5f
@@ -230,7 +231,7 @@ abstract class BaseYawTargetPositionFactory(
 
         // If the player is not moving, we can just aim at the nearest point
         return if (!player.input.keyPresses.anyHorizontal) {
-            return aimAtNearestPointToRotationLine(targetPos, trimmedFace)
+            aimAtNearestPointToRotationLine(targetPos, trimmedFace)
         } else {
             aimAtNearestPointToYaw(targetPos, trimmedFace) ?: aimAtNearestPointToRotationLine(targetPos, trimmedFace)
         }
@@ -253,8 +254,8 @@ abstract class BaseYawTargetPositionFactory(
 
         val yaw = Mth.wrapDegrees(player.yRot)
         val angle = getAngle()
-        val highTargetYaw = Math.toRadians(Mth.wrapDegrees(yaw + angle).toDouble()).toFloat()
-        val lowTargetYaw = Math.toRadians(Mth.wrapDegrees(yaw - angle).toDouble()).toFloat()
+        val highTargetYaw = Mth.wrapDegrees(yaw + angle)
+        val lowTargetYaw = Mth.wrapDegrees(yaw - angle)
 
         ModuleDebug.debugParameter(PositionFactoryDebug, "PlayerYaw", yaw)
         ModuleDebug.debugParameter(PositionFactoryDebug, "Angle", angle)
@@ -263,13 +264,13 @@ abstract class BaseYawTargetPositionFactory(
 
         val highPlane = NormalizedPlane.fromParams(
             config.eyePos - targetPos,
-            Vec3(0.0, 0.0, 1.0).yRot(highTargetYaw),
+            Vec3(0.0, 0.0, 1.0).yRot(highTargetYaw.toRadians()),
             Vec3(0.0, 1.0, 0.0)
         )
 
         val lowPlane = NormalizedPlane.fromParams(
             config.eyePos - targetPos,
-            Vec3(0.0, 0.0, 1.0).yRot(lowTargetYaw),
+            Vec3(0.0, 0.0, 1.0).yRot(lowTargetYaw.toRadians()),
             Vec3(0.0, 1.0, 0.0)
         )
 
@@ -316,20 +317,20 @@ abstract class BaseYawTargetPositionFactory(
     private fun findClosestPointToYaw(lineSegment: LineSegment, targetYaw: Float): Vec3 {
         val start = lineSegment.endPoints.first
         val end = lineSegment.endPoints.second
-        val direction = end.subtract(start).normalize()
+        val segmentDelta = end.subtract(start)
 
         val startYaw = calculateYaw(start)
         val endYaw = calculateYaw(end)
         val yawDiff = Mth.wrapDegrees(endYaw - startYaw)
         val targetYawDiff = Mth.wrapDegrees(targetYaw - startYaw)
         val t = if (yawDiff != 0f) targetYawDiff / yawDiff else 0f
-        return start.add(direction.scale(t.toDouble().coerceIn(0.0, 1.0)))
+        return start.add(segmentDelta.scale(t.toDouble().coerceIn(0.0, 1.0)))
     }
 
     private fun calculateYaw(point: Vec3): Float {
         val dx = point.x - config.eyePos.x
         val dz = point.z - config.eyePos.z
-        return Mth.atan2(dz, dx).toFloat()
+        return Mth.wrapDegrees(Mth.atan2(dz, dx).toFloat().toDegrees() - 90f)
     }
 
     private fun calculateYawDifference(point: Vec3, targetYaw: Float): Float {
@@ -361,7 +362,7 @@ class EdgePointTargetPositionFactory(
 
         // If the player is not moving, we can just aim at the nearest point
         return if (!player.input.keyPresses.anyHorizontal) {
-            return aimAtNearestPointToRotationLine(targetPos, trimmedFace)
+            aimAtNearestPointToRotationLine(targetPos, trimmedFace)
         } else {
             aimAtFurthestPointToPlayerPosition(targetPos, trimmedFace)
                 ?: aimAtNearestPointToRotationLine(targetPos, trimmedFace)
@@ -378,11 +379,12 @@ class EdgePointTargetPositionFactory(
         face: AlignedFace
     ): Vec3? {
         val box = AABB(face.from, face.to)
+        val playerPositionRelativeToTarget = player.position() - Vec3.atLowerCornerOf(targetPos)
         val edge = box.edgePoints.maxByOrNull { edge ->
-            edge.distanceToSqr(player.position() - player.blockPosition())
+            edge.distanceToSqr(playerPositionRelativeToTarget)
         } ?: return null
 
-        ModuleScaffold.debugGeometry("Face") {
+        PositionFactoryDebug.debugGeometry("Face") {
             ModuleDebug.DebuggedBox(
                 AABB(
                     face.from,
@@ -391,7 +393,7 @@ class EdgePointTargetPositionFactory(
             )
         }
 
-        ModuleScaffold.debugGeometry("Edge") {
+        PositionFactoryDebug.debugGeometry("Edge") {
             ModuleDebug.DebuggedPoint(
                 edge + targetPos,
                 Color4b(0, 0, 255, 255),

@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.FactorAngleSmooth
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.minecraft.world.phys.Vec2
 import kotlin.math.exp
 
 @Deprecated("Interpolation mode combines Sigmoid and Bezier interpolation", ReplaceWith("InterpolationAngleSmooth"))
@@ -47,7 +48,7 @@ class SigmoidAngleSmooth(parent: ModeValueGroup<*>) : FactorAngleSmooth("Sigmoid
         rotationTarget: RotationTarget?,
         currentRotation: Rotation,
         targetRotation: Rotation
-    ): Pair<Float, Float> {
+    ): Vec2 {
         val rotationDifference = currentRotation.angleTo(targetRotation)
 
         val (horizontalTurnSpeed, verticalTurnSpeed) = if (rotationTarget != null) {
@@ -60,7 +61,7 @@ class SigmoidAngleSmooth(parent: ModeValueGroup<*>) : FactorAngleSmooth("Sigmoid
         val horizontalFactor = computeFactor(rotationDifference, horizontalTurnSpeed)
         val verticalFactor = computeFactor(rotationDifference, verticalTurnSpeed)
 
-        return horizontalFactor to verticalFactor
+        return Vec2(horizontalFactor, verticalFactor)
     }
 
     private fun computeFactor(rotationDifference: Float, turnSpeed: Float): Float {

@@ -21,15 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.client.player.AbstractClientPlayer
-import net.minecraft.resources.Identifier
 
-object MurderMysteryClassicMode : SkinBasedMurderMysteryMode("Classic") {
+object MurderMysteryClassicMode : UuidBasedMurderMysteryMode("Classic") {
 
-    override fun handleHasSword(
-        entity: AbstractClientPlayer,
-        locationSkin: Identifier,
-    ) {
-        if (murdererSkins.add(locationSkin.path)) {
+    override fun handleHasSword(entity: AbstractClientPlayer) {
+        if (murdererPlayers.add(entity.gameProfile.id)) {
             chat("It's " + entity.gameProfile.name)
 
             ModuleMurderMystery.playHurt = true

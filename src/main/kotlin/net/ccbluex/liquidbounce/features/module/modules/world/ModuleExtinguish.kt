@@ -19,23 +19,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
+import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
-import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -73,12 +68,11 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     private val rotations = tree(RotationsValueGroup(this))
 
     private val cooldownTimer = Chronometer()
-
-    private var lastExtinguishPos: BlockPos? = null
-    private val lastAttemptTimer = Chronometer()
+    private val pickupTracker = TimedPickupTracker(capacity = 1)
 
     override fun onEnabled() {
         currentTarget = null
+        pickupTracker.clear()
     }
 
     @Suppress("unused")
@@ -98,7 +92,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
             target.placementTarget.rotation,
             valueGroup = rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-            provider = ModuleNoFall
+            provider = ModuleExtinguish
         )
     }
 
@@ -111,17 +105,15 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
         val pickupSpanStart = (Pickup.pickupSpan.start * 1000.0F).toLong()
         val pickupSpanEnd = (Pickup.pickupSpan.endInclusive * 1000.0F).toLong()
 
-        if (lastExtinguishPos != null && lastAttemptTimer.hasElapsed(pickupSpanEnd)) {
-            lastExtinguishPos = null
-        }
+        pickupTracker.prune(pickupSpanEnd) { true }
 
         if (player.hasEffect(MobEffects.FIRE_RESISTANCE) || (notDuringCombat && CombatManager.isInCombat)) {
             return null
         }
 
-        val pickupPos = this.lastExtinguishPos
+        val pickupPos = pickupTracker.firstEligible(pickupSpanStart)
 
-        if (pickupPos != null && Pickup.enabled && this.lastAttemptTimer.hasElapsed(pickupSpanStart)) {
+        if (pickupPos != null && Pickup.enabled) {
             planPickup(pickupPos)?.let {
                 return it
             }
@@ -135,22 +127,20 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        val target = currentTarget ?: return@tickHandler
+    private val tickHandler = handler<GameTickEvent> {
+        val target = currentTarget ?: return@handler
 
         val rayTraceResult = traceFromPlayer()
 
         if (!target.doesCorrespondTo(rayTraceResult)) {
-            return@tickHandler
+            return@handler
         }
 
         SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
 
         val successFunction = {
             cooldownTimer.waitForAtLeast((cooldown * 1000.0F).toLong())
-            lastAttemptTimer.reset()
-
-            lastExtinguishPos = target.placementTarget.placedBlock
+            pickupTracker.record(target.placementTarget.placedBlock)
 
             true
         }
@@ -169,32 +159,12 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
         } ?: return null
 
         val playerPos = frameOnGround.pos.toBlockPos()
-
-        val options = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions.Default,
-            FaceHandlingOptions(CenterTargetPositionFactory),
-            stackToPlaceWith = waterBucketSlot.itemStack,
-            PlayerLocationOnPlacement(position = frameOnGround.pos),
-        )
-
-        val bestPlacementPlan = findBestBlockPlacementTarget(playerPos, options) ?: return null
-
-        return PlacementPlan(playerPos, bestPlacementPlan, waterBucketSlot)
+        return planPlacementAtPos(playerPos, waterBucketSlot, frameOnGround.pos)
     }
 
     private fun planPickup(blockPos: BlockPos): PlacementPlan? {
         val bucket = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
-
-        val options = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions.Default,
-            FaceHandlingOptions(CenterTargetPositionFactory),
-            stackToPlaceWith = bucket.itemStack,
-            PlayerLocationOnPlacement(position = player.position()),
-        )
-
-        val bestPlacementPlan = findBestBlockPlacementTarget(blockPos, options) ?: return null
-
-        return PlacementPlan(blockPos, bestPlacementPlan, bucket)
+        return planPlacementAtPos(blockPos, bucket)
     }
 
 }

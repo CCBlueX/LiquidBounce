@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.RenderPassRenderState
+import net.ccbluex.liquidbounce.render.StaticMeshStorage
 import net.ccbluex.liquidbounce.render.addBoxFaces
 import net.ccbluex.liquidbounce.render.addBoxOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
@@ -151,8 +151,8 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
         val dirtyFlag = atomic(true)
 
-        private val blockFacesRenderState = RenderPassRenderState("${ModuleStorageESP.name} $name BlockFaces")
-        private val blockOutlinesRenderState = RenderPassRenderState("${ModuleStorageESP.name} $name BlockOutlines")
+        private val blockFacesRenderState = StaticMeshStorage("${ModuleStorageESP.name} $name BlockFaces")
+        private val blockOutlinesRenderState = StaticMeshStorage("${ModuleStorageESP.name} $name BlockOutlines")
 
         override fun enable() {
             dirtyFlag.value = true
@@ -271,7 +271,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     object GlowMode : Mode("Glow") {
         internal val dirtyFlag = atomic(true)
 
-        private val renderState = RenderPassRenderState("${ModuleStorageESP.name} $name")
+        private val renderState = StaticMeshStorage("${ModuleStorageESP.name} $name")
 
         override fun enable() {
             dirtyFlag.value = true
