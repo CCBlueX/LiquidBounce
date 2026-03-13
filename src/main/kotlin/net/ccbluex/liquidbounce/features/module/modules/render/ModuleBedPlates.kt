@@ -191,7 +191,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
 
         var i = 0
         for ((bedState, distance, surrounding, itemStacksForRender) in beds) {
-            if (i > maxCount) {
+            if (i >= maxCount) {
                 break
             }
 

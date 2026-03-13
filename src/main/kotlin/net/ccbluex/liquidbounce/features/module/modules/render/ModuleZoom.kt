@@ -88,7 +88,11 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
             return original
         }
 
-        val factor = (chronometer.elapsed / scaledDifference).toFloat().coerceIn(0F..1F)
+        val factor = if (scaledDifference <= 0.0 || !scaledDifference.isFinite()) {
+            1f
+        } else {
+            (chronometer.elapsed / scaledDifference).toFloat().coerceIn(0F, 1F)
+        }
         if (!enabled && factor == 1f) {
             disableAnimationFinished = true
         }
