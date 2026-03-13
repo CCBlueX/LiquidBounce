@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -152,13 +153,11 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
         otherPlayer: Player,
         partialTicks: Float,
     ) {
-        val (trajectoryInfoTyped, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
-            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack, alwaysShowBow)?.let {
+        val (trajectoryShotSpecs, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
+            TrajectoryData.getRenderedTrajectoryShotSpecs(otherPlayer, stack, alwaysShowBow)?.let {
                 it to stack
             }
         } ?: return
-
-        if (trajectoryInfoTyped.type !in trajectoryTypes) return
 
         val rotation = if (otherPlayer === player) {
             if (ModuleFreeCam.running) {
@@ -171,22 +170,34 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             otherPlayer.rotation
         }
 
-        val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            owner = otherPlayer,
-            icon = stack,
-            trajectoryInfo = trajectoryInfoTyped.info,
-            trajectoryType = trajectoryInfoTyped.type,
-            rotation = rotation,
-            partialTicks = partialTicks
-        )
+        trajectoryShotSpecs.forEach { shotSpec ->
+            if (shotSpec.trajectoryType !in trajectoryTypes) {
+                return@forEach
+            }
 
-        simulationResults += renderer to renderer.drawTrajectoryForProjectile(
-            maxSimulatedTicks,
-            partialTicks,
-            trajectoryColor = Color4b.WHITE,
-            blockHitColor = Color4b(0, 160, 255, 150),
-            entityHitColor = Color4b(255, 0, 0, 100),
-        )
+            val shotRotation = Rotation(
+                yaw = rotation.yaw + shotSpec.yawOffsetDegrees,
+                pitch = rotation.pitch,
+                isNormalized = rotation.isNormalized
+            )
+
+            val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
+                owner = otherPlayer,
+                icon = if (shotSpec.icon.isEmpty) stack else shotSpec.icon,
+                trajectoryInfo = shotSpec.trajectoryInfo,
+                trajectoryType = shotSpec.trajectoryType,
+                rotation = shotRotation,
+                partialTicks = partialTicks
+            )
+
+            simulationResults += renderer to renderer.drawTrajectoryForProjectile(
+                maxSimulatedTicks,
+                partialTicks,
+                trajectoryColor = Color4b.WHITE,
+                blockHitColor = Color4b(0, 160, 255, 150),
+                entityHitColor = Color4b(255, 0, 0, 100),
+            )
+        }
     }
 
     private enum class Show(

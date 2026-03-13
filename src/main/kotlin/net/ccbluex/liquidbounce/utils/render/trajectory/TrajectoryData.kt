@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.render.trajectory
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
@@ -48,16 +49,38 @@ import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.ThrowablePotionItem
 import net.minecraft.world.item.TridentItem
 import net.minecraft.world.item.WindChargeItem
+import net.minecraft.world.item.component.ChargedProjectiles
+import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 object TrajectoryData {
+    @JvmRecord
+    data class TrajectoryShotSpec(
+        val trajectoryInfo: TrajectoryInfo,
+        val trajectoryType: TrajectoryType,
+        val yawOffsetDegrees: Float = 0f,
+        val icon: ItemStack = ItemStack.EMPTY,
+    )
+
     @JvmStatic
-    fun getRenderedTrajectoryInfo(
+    /**
+     * Resolves one or more rendered trajectory shots for held items.
+     *
+     * Crossbow behavior mirrors vanilla projectile loading/spread semantics:
+     * @see net.minecraft.core.component.DataComponents.CHARGED_PROJECTILES
+     * @see net.minecraft.world.item.component.ChargedProjectiles.items
+     * @see net.minecraft.world.item.ProjectileWeaponItem.draw
+     * @see net.minecraft.world.item.ProjectileWeaponItem.shoot
+     * @see net.minecraft.world.item.enchantment.EnchantmentHelper.processProjectileCount
+     * @see net.minecraft.world.item.enchantment.EnchantmentHelper.processProjectileSpread
+     * @see net.minecraft.world.item.CrossbowItem.createProjectile
+     */
+    fun getRenderedTrajectoryShotSpecs(
         player: Player,
         stack: ItemStack,
         alwaysShowBow: Boolean,
-    ): TrajectoryInfo.Typed? {
+    ): List<TrajectoryShotSpec>? {
         return when (stack.item) {
             is BowItem -> {
                 val useTime = if (alwaysShowBow && player.ticksUsingItem < 1) {
@@ -66,26 +89,86 @@ object TrajectoryData {
                     player.ticksUsingItem
                 }
 
-                TrajectoryInfo.bowWithUsageDuration(useTime)?.typed(TrajectoryType.Arrow)
+                val trajectoryInfo = TrajectoryInfo.bowWithUsageDuration(useTime) ?: return null
+                listOf(TrajectoryShotSpec(trajectoryInfo, TrajectoryType.Arrow, icon = stack))
             }
             is CrossbowItem -> {
                 val chargedProjectiles = stack[DataComponents.CHARGED_PROJECTILES]
-                if (chargedProjectiles != null && chargedProjectiles.contains(Items.FIREWORK_ROCKET)) {
+                val chargedProjectileCount = chargedProjectiles?.items?.size ?: 0
+                val isMultiShot = stack.getEnchantment(Enchantments.MULTISHOT) > 0
+                val shotCount = when {
+                    chargedProjectileCount > 0 -> chargedProjectileCount
+                    isMultiShot -> 3
+                    else -> 1
+                }.coerceAtLeast(1)
+
+                val trajectoryInfoTyped = if (isCrossbowFirework(chargedProjectiles)) {
                     TrajectoryInfo.FIREWORK_ROCKET.typed(TrajectoryType.FireworkRocket)
                 } else {
                     TrajectoryInfo.BOW_FULL_PULL.typed(TrajectoryType.Arrow)
                 }
+
+                getShotYawOffsets(shotCount).map { yawOffsetDegrees ->
+                    TrajectoryShotSpec(
+                        trajectoryInfo = trajectoryInfoTyped.info,
+                        trajectoryType = trajectoryInfoTyped.type,
+                        yawOffsetDegrees = yawOffsetDegrees,
+                        icon = stack
+                    )
+                }
             }
-            is FishingRodItem -> TrajectoryInfo.FISHING_ROD.typed(TrajectoryType.FishingBobber)
-            is ThrowablePotionItem -> TrajectoryInfo.POTION.typed(TrajectoryType.Potion)
-            is TridentItem -> TrajectoryInfo.TRIDENT.typed(TrajectoryType.Trident)
-            is SnowballItem -> TrajectoryInfo.GENERIC.typed(TrajectoryType.Snowball)
-            is EnderpearlItem -> TrajectoryInfo.GENERIC.typed(TrajectoryType.EnderPearl)
-            is EggItem -> TrajectoryInfo.GENERIC.typed(TrajectoryType.Egg)
-            is ExperienceBottleItem -> TrajectoryInfo.EXP_BOTTLE.typed(TrajectoryType.ExpBottle)
-            is FireChargeItem -> TrajectoryInfo.FIREBALL.typed(TrajectoryType.Fireball)
-            is WindChargeItem -> TrajectoryInfo.WIND_CHARGE.typed(TrajectoryType.WindCharge)
+            is FishingRodItem -> listOf(TrajectoryShotSpec(TrajectoryInfo.FISHING_ROD, TrajectoryType.FishingBobber, icon = stack))
+            is ThrowablePotionItem -> listOf(TrajectoryShotSpec(TrajectoryInfo.POTION, TrajectoryType.Potion, icon = stack))
+            is TridentItem -> listOf(TrajectoryShotSpec(TrajectoryInfo.TRIDENT, TrajectoryType.Trident, icon = stack))
+            is SnowballItem -> listOf(TrajectoryShotSpec(TrajectoryInfo.GENERIC, TrajectoryType.Snowball, icon = stack))
+            is EnderpearlItem -> listOf(TrajectoryShotSpec(TrajectoryInfo.GENERIC, TrajectoryType.EnderPearl, icon = stack))
+            is EggItem -> listOf(TrajectoryShotSpec(TrajectoryInfo.GENERIC, TrajectoryType.Egg, icon = stack))
+            is ExperienceBottleItem -> listOf(TrajectoryShotSpec(TrajectoryInfo.EXP_BOTTLE, TrajectoryType.ExpBottle, icon = stack))
+            is FireChargeItem -> listOf(TrajectoryShotSpec(TrajectoryInfo.FIREBALL, TrajectoryType.Fireball, icon = stack))
+            is WindChargeItem -> listOf(TrajectoryShotSpec(TrajectoryInfo.WIND_CHARGE, TrajectoryType.WindCharge, icon = stack))
             else -> null
+        }
+    }
+
+    /**
+     * Fallback compatibility API for single-shot callers.
+     *
+     * @see getRenderedTrajectoryShotSpecs
+     */
+    @JvmStatic
+    fun getRenderedTrajectoryInfo(
+        player: Player,
+        stack: ItemStack,
+        alwaysShowBow: Boolean,
+    ): TrajectoryInfo.Typed? {
+        return getRenderedTrajectoryShotSpecs(player, stack, alwaysShowBow)
+            ?.firstOrNull()
+            ?.let {
+                it.trajectoryInfo.typed(it.trajectoryType)
+            }
+    }
+
+    private fun isCrossbowFirework(chargedProjectiles: ChargedProjectiles?): Boolean {
+        return chargedProjectiles != null && chargedProjectiles.contains(Items.FIREWORK_ROCKET)
+    }
+
+    /**
+     * Yaw offset model for multi-shot trajectory preview.
+     *
+     * The `[-10, 0, +10]` branch mirrors vanilla triple-shot spread behavior.
+     * @see net.minecraft.world.item.ProjectileWeaponItem.shoot
+     */
+    private fun getShotYawOffsets(shotCount: Int): FloatArray {
+        return when (shotCount) {
+            1 -> floatArrayOf(0f)
+            3 -> floatArrayOf(-10f, 0f, 10f)
+            else -> {
+                val spread = 20f
+                val step = spread / (shotCount - 1).toFloat()
+                FloatArray(shotCount) { index ->
+                    -spread * 0.5f + step * index.toFloat()
+                }
+            }
         }
     }
 

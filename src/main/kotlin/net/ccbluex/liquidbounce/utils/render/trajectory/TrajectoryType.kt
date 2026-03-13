@@ -22,15 +22,19 @@ package net.ccbluex.liquidbounce.utils.render.trajectory
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 
 /**
- * @see net.minecraft.world.entity.projectile.ThrowableProjectile
- * @see net.minecraft.world.entity.projectile.arrow.AbstractArrow
- * @see net.minecraft.world.entity.projectile.hurtingprojectile.AbstractHurtingProjectile
- * @see net.minecraft.world.entity.projectile.FishingHook
+ * @see net.minecraft.world.entity.projectile.ThrowableProjectile.tick
+ * @see net.minecraft.world.entity.projectile.arrow.AbstractArrow.tick
+ * @see net.minecraft.world.entity.projectile.hurtingprojectile.AbstractHurtingProjectile.tick
+ * @see net.minecraft.world.entity.projectile.FireworkRocketEntity.tick
+ * @see net.minecraft.world.entity.projectile.FishingHook.tick
  */
 enum class TrajectoryType(
     override val tag: String,
     /**
      * Determines if first-tick position skip is needed
+     *
+     * This flag mirrors whether vanilla applies movement-affecting physics before first movement
+     * in the corresponding projectile tick loop.
      */
     val requiresInitialTickCorrection: Boolean,
 ) : Tagged {
