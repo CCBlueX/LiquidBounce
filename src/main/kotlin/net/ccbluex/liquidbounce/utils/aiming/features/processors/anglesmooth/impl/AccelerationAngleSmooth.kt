@@ -18,9 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
-import it.unimi.dsi.fastutil.floats.FloatFloatPair
-import net.ccbluex.fastutil.component1
-import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -32,8 +29,11 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.math.component1
+import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec2
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.floor
@@ -188,7 +188,7 @@ class AccelerationAngleSmooth(parent: ModeValueGroup<*>) : AngleSmooth("Accelera
         diff: RotationDelta,
         crosshair: Boolean,
         distance: Double
-    ): FloatFloatPair {
+    ): Vec2 {
         val decelerationFactor = sigmoidDeceleration.computeDecelerationFactor(diff.length())
             .takeIf { sigmoidDeceleration.enabled } ?: 1.0F
 
@@ -211,7 +211,7 @@ class AccelerationAngleSmooth(parent: ModeValueGroup<*>) : AngleSmooth("Accelera
         val yawAccel = calculateAcceleration(diff.deltaYaw, prevDiff.deltaYaw, accRangeYaw, decelerationFactor)
         val pitchAccel = calculateAcceleration(diff.deltaPitch, prevDiff.deltaPitch, accRangePitch, decelerationFactor)
 
-        return FloatFloatPair.of(
+        return Vec2(
             prevDiff.deltaYaw + yawAccel + yawErrorProvider.getError(yawAccel),
             prevDiff.deltaPitch + pitchAccel + pitchErrorProvider.getError(pitchAccel)
         )

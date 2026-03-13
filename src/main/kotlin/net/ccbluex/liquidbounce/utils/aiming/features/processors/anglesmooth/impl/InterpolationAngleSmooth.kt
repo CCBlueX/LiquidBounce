@@ -24,8 +24,11 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.FactorAngleSmooth
+import net.minecraft.world.phys.Vec2
 import kotlin.math.abs
 import kotlin.math.exp
+
+internal fun normalizeDirectionChange(angle: Float): Float = (angle / 180f).coerceIn(0f, 1f)
 
 class InterpolationAngleSmooth(
     parent: ModeValueGroup<*>,
@@ -65,13 +68,14 @@ class InterpolationAngleSmooth(
         rotationTarget: RotationTarget?,
         currentRotation: Rotation,
         targetRotation: Rotation
-    ): Pair<Float, Float> {
+    ): Vec2 {
         val (yawDiff, pitchDiff) = currentRotation.rotationDeltaTo(targetRotation)
         ModuleDebug.debugParameter(this, "Yaw Diff", yawDiff)
         ModuleDebug.debugParameter(this, "Pitch Diff", pitchDiff)
 
         val directionChange = RotationManager.previousRotationTarget.takeIf { rotationTarget != null }?.run {
-            rotation.angleTo(targetRotation).coerceIn(0f, 1f) * (directionChangeFactor.random().toFloat() / 100.0f)
+            normalizeDirectionChange(rotation.angleTo(targetRotation)) *
+                (directionChangeFactor.random().toFloat() / 100.0f)
         } ?: 0f
         ModuleDebug.debugParameter(this, "Direction Change", directionChange)
 
@@ -97,12 +101,12 @@ class InterpolationAngleSmooth(
 
         // Multiplying the factor with the difference in yaw and pitch allows us
         // to bypass the linear [towardsLinear] method
-        return horizontalFactor * abs(yawDiff) to verticalFactor * abs(pitchDiff)
+        return Vec2(horizontalFactor * abs(yawDiff), verticalFactor * abs(pitchDiff))
     }
 
     private fun calculateFactor(name: String, rotationDifference: Float, turnSpeed: Float,
                                 directionChange: Float): Float {
-        val t = (rotationDifference / 180f).coerceIn(0f, 1f)
+        val t = normalizeDirectionChange(rotationDifference)
         ModuleDebug.debugParameter(this, "$name T", t)
 
         val bezierSpeed = bezier.transform(0.05f, 1f, 1f - t)

@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.FactorAngleSmooth
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.minecraft.world.phys.Vec2
 
 class LinearAngleSmooth(
     parent: ModeValueGroup<*>,
@@ -40,12 +41,12 @@ class LinearAngleSmooth(
         rotationTarget: RotationTarget?,
         currentRotation: Rotation,
         targetRotation: Rotation
-    ): Pair<Float, Float> {
+    ): Vec2 {
         return if (rotationTarget != null) {
-            horizontalTurnSpeed.random() to verticalTurnSpeed.random()
+            Vec2(horizontalTurnSpeed.random(), verticalTurnSpeed.random())
         } else {
             // Slowest turn speed, so we can calculate the slowest turn speed
-            horizontalTurnSpeed.start to verticalTurnSpeed.start
+            Vec2(horizontalTurnSpeed.start, verticalTurnSpeed.start)
         }
     }
 

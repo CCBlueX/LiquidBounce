@@ -22,6 +22,9 @@ package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.math.component1
+import net.ccbluex.liquidbounce.utils.math.component2
+import net.minecraft.world.phys.Vec2
 
 abstract class FactorAngleSmooth(name: String, parent: ModeValueGroup<*>) : AngleSmooth(name, parent) {
 
@@ -36,7 +39,7 @@ abstract class FactorAngleSmooth(name: String, parent: ModeValueGroup<*>) : Angl
         rotationTarget: RotationTarget?,
         currentRotation: Rotation,
         targetRotation: Rotation
-    ): Pair<Float, Float>
+    ): Vec2
 
     override fun process(
         rotationTarget: RotationTarget,
