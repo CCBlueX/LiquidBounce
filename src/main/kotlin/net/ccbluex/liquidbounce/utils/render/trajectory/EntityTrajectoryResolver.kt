@@ -21,9 +21,11 @@ package net.ccbluex.liquidbounce.utils.render.trajectory
 
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.projectile.FireworkRocketEntity
-import net.minecraft.world.entity.projectile.arrow.Arrow
+import net.minecraft.world.entity.projectile.FishingHook
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident
 import net.minecraft.world.entity.projectile.hurtingprojectile.Fireball
+import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.WindCharge
 import net.minecraft.world.entity.projectile.throwableitemprojectile.AbstractThrownPotion
 import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEgg
@@ -37,7 +39,7 @@ object EntityTrajectoryResolver {
         activeArrows: Boolean,
         activeOthers: Boolean,
     ): TrajectoryDescriptor? {
-        if (activeArrows && entity is Arrow && !entity.isInGround) {
+        if (activeArrows && entity is AbstractArrow && entity !is ThrownTrident && !entity.isInGround) {
             return TrajectoryDescriptor(TrajectoryInfo(0.05, 0.3), TrajectoryType.Arrow)
         }
         if (!activeOthers) {
@@ -45,7 +47,10 @@ object EntityTrajectoryResolver {
         }
 
         return when (entity) {
-            is AbstractThrownPotion -> TrajectoryDescriptor(TrajectoryInfo.POTION, TrajectoryType.Potion)
+            is AbstractThrownPotion -> TrajectoryDescriptor(
+                TrajectoryInfo.POTION,
+                TrajectoryType.Potion
+            )
             is ThrownTrident -> {
                 if (!entity.isInGround) {
                     TrajectoryDescriptor(TrajectoryInfo.TRIDENT, TrajectoryType.Trident)
@@ -53,12 +58,29 @@ object EntityTrajectoryResolver {
                     null
                 }
             }
-            is ThrownEnderpearl -> TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.EnderPearl)
+            is ThrownEnderpearl -> TrajectoryDescriptor(
+                TrajectoryInfo.GENERIC,
+                TrajectoryType.EnderPearl
+            )
             is Snowball -> TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.Snowball)
-            is ThrownExperienceBottle -> TrajectoryDescriptor(TrajectoryInfo.EXP_BOTTLE, TrajectoryType.ExpBottle)
+            is ThrownExperienceBottle -> TrajectoryDescriptor(
+                TrajectoryInfo.EXP_BOTTLE,
+                TrajectoryType.ExpBottle
+            )
             is ThrownEgg -> TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.Egg)
-            is FireworkRocketEntity -> TrajectoryDescriptor(TrajectoryInfo.FIREWORK_ROCKET, TrajectoryType.FireworkRocket)
+            is FishingHook -> TrajectoryDescriptor(
+                TrajectoryInfo.FISHING_ROD,
+                TrajectoryType.FishingBobber
+            )
+            is FireworkRocketEntity -> TrajectoryDescriptor(
+                TrajectoryInfo.FIREWORK_ROCKET,
+                TrajectoryType.FireworkRocket
+            )
             is Fireball -> TrajectoryDescriptor(TrajectoryInfo.FIREBALL, TrajectoryType.Fireball)
+            is WindCharge -> TrajectoryDescriptor(
+                TrajectoryInfo.WIND_CHARGE,
+                TrajectoryType.WindCharge
+            )
             else -> null
         }
     }

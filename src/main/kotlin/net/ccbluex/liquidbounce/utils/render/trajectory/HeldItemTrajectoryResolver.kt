@@ -67,7 +67,11 @@ object HeldItemTrajectoryResolver {
                 }
 
                 val trajectoryInfo = TrajectoryInfo.bowWithUsageDuration(useTime) ?: return null
-                listOf(TrajectoryShotDescriptor(trajectoryInfo, TrajectoryType.Arrow, icon = stack))
+                singleShot(
+                    stack = stack,
+                    trajectoryInfo = trajectoryInfo,
+                    trajectoryType = TrajectoryType.Arrow
+                )
             }
             is CrossbowItem -> {
                 val chargedProjectiles = stack[DataComponents.CHARGED_PROJECTILES]
@@ -95,15 +99,15 @@ object HeldItemTrajectoryResolver {
                     )
                 }
             }
-            is FishingRodItem -> listOf(TrajectoryShotDescriptor(TrajectoryInfo.FISHING_ROD, TrajectoryType.FishingBobber, icon = stack))
-            is ThrowablePotionItem -> listOf(TrajectoryShotDescriptor(TrajectoryInfo.POTION, TrajectoryType.Potion, icon = stack))
-            is TridentItem -> listOf(TrajectoryShotDescriptor(TrajectoryInfo.TRIDENT, TrajectoryType.Trident, icon = stack))
-            is SnowballItem -> listOf(TrajectoryShotDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.Snowball, icon = stack))
-            is EnderpearlItem -> listOf(TrajectoryShotDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.EnderPearl, icon = stack))
-            is EggItem -> listOf(TrajectoryShotDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.Egg, icon = stack))
-            is ExperienceBottleItem -> listOf(TrajectoryShotDescriptor(TrajectoryInfo.EXP_BOTTLE, TrajectoryType.ExpBottle, icon = stack))
-            is FireChargeItem -> listOf(TrajectoryShotDescriptor(TrajectoryInfo.FIREBALL, TrajectoryType.Fireball, icon = stack))
-            is WindChargeItem -> listOf(TrajectoryShotDescriptor(TrajectoryInfo.WIND_CHARGE, TrajectoryType.WindCharge, icon = stack))
+            is FishingRodItem -> singleShot(stack, TrajectoryInfo.FISHING_ROD, TrajectoryType.FishingBobber)
+            is ThrowablePotionItem -> singleShot(stack, TrajectoryInfo.POTION, TrajectoryType.Potion)
+            is TridentItem -> singleShot(stack, TrajectoryInfo.TRIDENT, TrajectoryType.Trident)
+            is SnowballItem -> singleShot(stack, TrajectoryInfo.GENERIC, TrajectoryType.Snowball)
+            is EnderpearlItem -> singleShot(stack, TrajectoryInfo.GENERIC, TrajectoryType.EnderPearl)
+            is EggItem -> singleShot(stack, TrajectoryInfo.GENERIC, TrajectoryType.Egg)
+            is ExperienceBottleItem -> singleShot(stack, TrajectoryInfo.EXP_BOTTLE, TrajectoryType.ExpBottle)
+            is FireChargeItem -> singleShot(stack, TrajectoryInfo.FIREBALL, TrajectoryType.Fireball)
+            is WindChargeItem -> singleShot(stack, TrajectoryInfo.WIND_CHARGE, TrajectoryType.WindCharge)
             else -> null
         }
     }
@@ -121,6 +125,20 @@ object HeldItemTrajectoryResolver {
 
     private fun isCrossbowFirework(chargedProjectiles: ChargedProjectiles?): Boolean {
         return chargedProjectiles != null && chargedProjectiles.contains(Items.FIREWORK_ROCKET)
+    }
+
+    private fun singleShot(
+        stack: ItemStack,
+        trajectoryInfo: TrajectoryInfo,
+        trajectoryType: TrajectoryType,
+    ): List<TrajectoryShotDescriptor> {
+        return listOf(
+            TrajectoryShotDescriptor(
+                trajectoryInfo = trajectoryInfo,
+                trajectoryType = trajectoryType,
+                icon = stack
+            )
+        )
     }
 
     /**

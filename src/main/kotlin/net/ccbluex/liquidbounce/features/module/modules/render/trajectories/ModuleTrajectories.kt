@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.render.trajectory.EntityTrajectoryResolver
@@ -40,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryDisplayResolve
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.world.entity.TraceableEntity
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.FishingRodItem
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -154,7 +154,15 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
         otherPlayer: Player,
         partialTicks: Float,
     ) {
+        val shouldFilterHeldFishingRod = otherPlayer.fishing != null &&
+            activeTrajectoryOther &&
+            TrajectoryType.FishingBobber in trajectoryTypes
+
         val (trajectoryShotDescriptors, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
+            if (shouldFilterHeldFishingRod && stack.item is FishingRodItem) {
+                return@firstNotNullOfOrNull null
+            }
+
             HeldItemTrajectoryResolver.resolveHeldItemShots(
                 otherPlayer,
                 stack,
