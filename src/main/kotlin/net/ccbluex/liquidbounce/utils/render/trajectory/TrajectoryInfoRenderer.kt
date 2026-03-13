@@ -225,7 +225,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
             owner,
             posBefore,
             posAfter,
-            hitbox.move(pos).expandTowards(velocity).inflate(1.0),
+            hitbox.move(posBefore).expandTowards(posAfter - posBefore).inflate(1.0),
             {
                 val canCollide = !it.isSpectator && it.isAlive
                 val shouldCollide = it.isPickable || owner !== player && it === player

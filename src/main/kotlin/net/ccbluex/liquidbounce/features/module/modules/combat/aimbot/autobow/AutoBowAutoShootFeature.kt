@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.useItem
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
+import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
@@ -171,8 +171,10 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
         val yaw = rotation.yaw
         val pitch = rotation.pitch
 
-        val (trajectoryInfo, _) =
-            TrajectoryData.getRenderedTrajectoryInfo(player, player.activeItem, false) ?: return null
+        val trajectoryInfo = HeldItemTrajectoryResolver
+            .resolveHeldItemPrimaryShot(player, player.activeItem, false)
+            ?.trajectoryInfo
+            ?: return null
 
         val velocity = trajectoryInfo.initialVelocity
 

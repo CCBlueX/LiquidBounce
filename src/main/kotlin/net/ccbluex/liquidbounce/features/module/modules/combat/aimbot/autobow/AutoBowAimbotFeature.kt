@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
+import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.CrossbowItem
 import net.minecraft.world.item.TridentItem
@@ -70,7 +70,7 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
             return@handler
         }
 
-        val (projectileInfo, _) = TrajectoryData.getRenderedTrajectoryInfo(
+        val trajectoryDescriptor = HeldItemTrajectoryResolver.resolveHeldItemPrimaryShot(
             player,
             activeStack,
             true
@@ -83,7 +83,7 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
             SituationalProjectileAngleCalculator.VerifyHitResult
         }
         targetTracker.selectFirst { enemy ->
-            rotation = calculator.calculateAngleForEntity(projectileInfo, enemy)
+            rotation = calculator.calculateAngleForEntity(trajectoryDescriptor.trajectoryInfo, enemy)
             rotation != null
         } ?: return@handler
 
