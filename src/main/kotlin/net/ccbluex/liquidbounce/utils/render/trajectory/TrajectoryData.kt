@@ -27,6 +27,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident
+import net.minecraft.world.entity.projectile.FireworkRocketEntity
 import net.minecraft.world.entity.projectile.hurtingprojectile.Fireball
 import net.minecraft.world.entity.projectile.throwableitemprojectile.AbstractThrownPotion
 import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball
@@ -70,7 +71,7 @@ object TrajectoryData {
             is CrossbowItem -> {
                 val chargedProjectiles = stack[DataComponents.CHARGED_PROJECTILES]
                 if (chargedProjectiles != null && chargedProjectiles.contains(Items.FIREWORK_ROCKET)) {
-                    TrajectoryInfo.FIREBALL.typed(TrajectoryType.Fireball)
+                    TrajectoryInfo.FIREWORK_ROCKET.typed(TrajectoryType.FireworkRocket)
                 } else {
                     TrajectoryInfo.BOW_FULL_PULL.typed(TrajectoryType.Arrow)
                 }
@@ -93,6 +94,7 @@ object TrajectoryData {
         return when (it) {
             is Arrow -> Color4b(255, 0, 0, 200)
             is ThrownEnderpearl -> Color4b(128, 0, 128, 200)
+            is FireworkRocketEntity -> Color4b(255, 165, 0, 220)
             else -> Color4b(200, 200, 200, 200)
         }
     }
@@ -123,6 +125,7 @@ object TrajectoryData {
             is Snowball -> TrajectoryInfo.GENERIC.typed(TrajectoryType.Snowball)
             is ThrownExperienceBottle -> TrajectoryInfo.EXP_BOTTLE.typed(TrajectoryType.ExpBottle)
             is ThrownEgg -> TrajectoryInfo.GENERIC.typed(TrajectoryType.Egg)
+            is FireworkRocketEntity -> TrajectoryInfo.FIREWORK_ROCKET.typed(TrajectoryType.FireworkRocket)
             is Fireball -> TrajectoryInfo.FIREBALL.typed(TrajectoryType.Fireball)
             else -> null
         }
@@ -144,6 +147,7 @@ object TrajectoryData {
 
         return when (entity) {
             is ThrowableItemProjectile -> entity.item
+            is FireworkRocketEntity -> entity.item
             is Fireball -> entity.item
             is AbstractArrow -> if (!entity.isInGround) {
                 entity.pickupItemStackOrigin
@@ -199,6 +203,15 @@ data class TrajectoryInfo(
         val TRIDENT = PERSISTENT.copy(initialVelocity = 2.5, gravity = 0.05, dragInWater = 0.99)
         @JvmField
         val BOW_FULL_PULL = PERSISTENT.copy(initialVelocity = 3.0)
+        @JvmField
+        val FIREWORK_ROCKET = TrajectoryInfo(
+            gravity = 0.0,
+            hitboxRadius = 0.25,
+            initialVelocity = 1.6,
+            drag = 1.0,
+            dragInWater = 1.0,
+            copiesPlayerVelocity = false
+        )
         @JvmField
         val FIREBALL = TrajectoryInfo(gravity = 0.0, hitboxRadius = 1.0)
         @JvmField

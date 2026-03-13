@@ -52,6 +52,34 @@ object SituationalProjectileAngleCalculator: ProjectileAngleCalculator {
     }
 
     object VerifyHitResult : ProjectileAngleCalculator {
+        private fun resolveTrajectoryType(projectileInfo: TrajectoryInfo): TrajectoryType {
+            return when {
+                projectileInfo == TrajectoryInfo.POTION -> TrajectoryType.Potion
+                projectileInfo == TrajectoryInfo.EXP_BOTTLE -> TrajectoryType.ExpBottle
+                projectileInfo == TrajectoryInfo.FISHING_ROD -> TrajectoryType.FishingBobber
+                projectileInfo == TrajectoryInfo.TRIDENT -> TrajectoryType.Trident
+                projectileInfo == TrajectoryInfo.FIREWORK_ROCKET -> TrajectoryType.FireworkRocket
+                projectileInfo == TrajectoryInfo.GENERIC -> TrajectoryType.Snowball
+                projectileInfo.hitboxRadius == TrajectoryInfo.BOW_FULL_PULL.hitboxRadius
+                    && projectileInfo.gravity == TrajectoryInfo.BOW_FULL_PULL.gravity
+                    && projectileInfo.drag == TrajectoryInfo.BOW_FULL_PULL.drag
+                    && projectileInfo.dragInWater == TrajectoryInfo.BOW_FULL_PULL.dragInWater
+                    && projectileInfo.copiesPlayerVelocity == TrajectoryInfo.BOW_FULL_PULL.copiesPlayerVelocity -> {
+                    TrajectoryType.Arrow
+                }
+
+                projectileInfo.gravity == 0.0 && projectileInfo.hitboxRadius >= 1.0 -> {
+                    if (projectileInfo.copiesPlayerVelocity) {
+                        TrajectoryType.Fireball
+                    } else {
+                        TrajectoryType.WindCharge
+                    }
+                }
+
+                else -> TrajectoryType.Arrow
+            }
+        }
+
         override fun calculateAngleFor(
             projectileInfo: TrajectoryInfo,
             sourcePos: Vec3,
@@ -65,7 +93,7 @@ object SituationalProjectileAngleCalculator: ProjectileAngleCalculator {
                 owner = player,
                 trajectoryInfo = projectileInfo,
                 rotation = rotation,
-                trajectoryType = TrajectoryType.Arrow, // TODO
+                trajectoryType = resolveTrajectoryType(projectileInfo),
             )
 
             val result = renderer.runSimulation(300)

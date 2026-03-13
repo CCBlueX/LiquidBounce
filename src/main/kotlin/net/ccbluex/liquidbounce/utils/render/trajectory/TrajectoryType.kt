@@ -21,6 +21,12 @@ package net.ccbluex.liquidbounce.utils.render.trajectory
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 
+/**
+ * @see net.minecraft.world.entity.projectile.ThrowableProjectile
+ * @see net.minecraft.world.entity.projectile.arrow.AbstractArrow
+ * @see net.minecraft.world.entity.projectile.hurtingprojectile.AbstractHurtingProjectile
+ * @see net.minecraft.world.entity.projectile.FishingHook
+ */
 enum class TrajectoryType(
     override val tag: String,
     /**
@@ -36,6 +42,7 @@ enum class TrajectoryType(
     Snowball("Snowball", true),
     Egg("Egg", true),
     ExpBottle("ExpBottle", true),
-    Fireball("Fireball", false),
-    WindCharge("WindCharge", false),
+    FireworkRocket("FireworkRocket", false),
+    Fireball("Fireball", true),
+    WindCharge("WindCharge", true),
 }

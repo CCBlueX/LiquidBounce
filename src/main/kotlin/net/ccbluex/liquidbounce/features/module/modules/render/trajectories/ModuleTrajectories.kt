@@ -47,6 +47,8 @@ import net.minecraft.world.phys.Vec3
 @Suppress("MagicNumber")
 object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER) {
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
+    private val maxRenderDistance by int("MaxRenderDistance", 96, 16..512, "m")
+    private val cullBehindPlayer by boolean("CullBehindPlayer", false)
 
     private val trajectoryTypes by multiEnumChoice("TrajectoryTypes", TrajectoryType.entries, canBeNone = false)
 
@@ -75,7 +77,19 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
         renderEnvironmentForWorld(event.matrixStack) {
+            val viewPos = player.eyePosition
+            val viewDirection = player.rotation.directionVector
+            val maxRenderDistanceSq = maxRenderDistance * maxRenderDistance.toDouble()
+
             for (entity in world.entitiesForRendering()) {
+                val delta = entity.position().subtract(viewPos)
+                if (delta.lengthSqr() > maxRenderDistanceSq) {
+                    continue
+                }
+                if (cullBehindPlayer && delta.dot(viewDirection) < 0.0 && delta.lengthSqr() > 9.0) {
+                    continue
+                }
+
                 val (trajectoryInfo, trajectoryType) = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
                     entity,
                     activeTrajectoryArrow,
@@ -110,6 +124,16 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
 
             if (otherPlayers) {
                 for (otherPlayer in world.players()) {
+                    if (otherPlayer !== player) {
+                        val delta = otherPlayer.eyePosition.subtract(viewPos)
+                        if (delta.lengthSqr() > maxRenderDistanceSq) {
+                            continue
+                        }
+                        if (cullBehindPlayer && delta.dot(viewDirection) < 0.0 && delta.lengthSqr() > 9.0) {
+                            continue
+                        }
+                    }
+
                     // Including the user
                     drawHypotheticalTrajectory(otherPlayer, event.partialTicks)
                 }
