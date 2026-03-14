@@ -51,6 +51,7 @@ import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -240,48 +241,28 @@ public abstract class MixinGameRenderer {
         }
     }
 
-    /**
-     * Cache to improve efficiency.
-      */
     @Unique
-    private PerspectiveEvent perspectiveModify;
+    private @Nullable CameraType liquid_bounce$cameraTypeOverride;
 
     @Inject(method = "render", at = @At("HEAD"))
     private void renderPre(CallbackInfo ci) {
-        perspectiveModify = new PerspectiveEvent(this.minecraft.options.getCameraType());
-        EventManager.INSTANCE.callEvent(perspectiveModify);
+        PerspectiveEvent event = new PerspectiveEvent(this.minecraft.options.getCameraType());
+        liquid_bounce$cameraTypeOverride = EventManager.INSTANCE.callEvent(event).getPerspective();
     }
 
-    @ModifyExpressionValue(method = "updateCamera",
+    @ModifyExpressionValue(
+        method = {
+            "updateCamera",
+            "renderLevel",
+            "renderItemInHand",
+        },
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/Options;getCameraType()Lnet/minecraft/client/CameraType;"
         )
     )
     private CameraType updataCameraHookCameraType(CameraType original) {
-        return perspectiveModify.getPerspective();
+        return liquid_bounce$cameraTypeOverride == null ? original : liquid_bounce$cameraTypeOverride;
     }
-
-    @ModifyExpressionValue(method = "renderLevel",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/Options;getCameraType()Lnet/minecraft/client/CameraType;"
-        )
-    )
-    private CameraType renderLevelHookCameraType(CameraType original) {
-        return perspectiveModify.getPerspective();
-    }
-
-    @ModifyExpressionValue(method = "renderItemInHand",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/Options;getCameraType()Lnet/minecraft/client/CameraType;"
-        )
-    )
-    private CameraType renderItemInHandHookCameraType(CameraType original) {
-        return perspectiveModify.getPerspective();
-    }
-
-
 
 }
