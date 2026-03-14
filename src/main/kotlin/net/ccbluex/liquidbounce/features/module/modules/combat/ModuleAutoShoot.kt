@@ -50,7 +50,6 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.EggItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.SnowballItem
-import java.util.function.Function
 
 /**
  * A module that automatically shoots at the nearest enemy.
@@ -96,7 +95,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
     }
 
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
-    private val tickUntilReset by int("TicksUntillSlotReset", 1, 0..20)
+    private val tickUntilReset by int("TicksUntilSlotReset", 1, 0..20)
     private val considerInventory by boolean("ConsiderInventory", true)
 
     private val requiresKillAura by boolean("RequiresKillAura", false)
@@ -117,34 +116,46 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
         return true
     }
 
+    private fun shouldPauseForKillAura(): Boolean {
+        if (requiresKillAura && !ModuleKillAura.running) {
+            targetTracker.reset()
+            return true
+        }
+
+        return false
+    }
+
+    private fun getThrowableSlot(): HotbarItemSlot? {
+        val slot = throwableType.findSlot() ?: return null
+
+        return slot.takeIf {
+            it.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)
+        }
+    }
+
+    private fun getRotation(target: LivingEntity, slot: HotbarItemSlot): Rotation? {
+        return GravityType.from(slot).rotationFor(target)
+    }
+
     /**
      * Simulates the next tick, which we use to figure out the required rotation for the next tick to react
      * as fast possible. This means we already pre-aim before we peek around the corner.
      */
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
+        if (shouldPauseForKillAura()) return@handler
+
         // Find the recommended target
-        val target = targetTracker.selectFirst {
-            // Check if we can see the enemy
-            player.hasLineOfSight(it)
-        } ?: return@handler
+        // Check if we can see the enemy
+        val target = targetTracker.selectFirst(player::hasLineOfSight) ?: return@handler
 
         if (notDuringCombat && CombatManager.isInCombat) {
             return@handler
         }
 
-        if (requiresKillAura && !ModuleKillAura.running) {
-            return@handler
-        }
-
         // Check if we have a throwable, if not we can't shoot.
-        val slot = throwableType() ?: return@handler
-
-        if (!slot.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)) {
-            return@handler
-        }
-
-        val rotation = GravityType.from(slot).apply(target)
+        val slot = getThrowableSlot() ?: return@handler
+        val rotation = getRotation(target, slot)
 
         // Set the rotation with the usage priority of 2.
         RotationManager.setRotationTarget(
@@ -155,6 +166,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
     override fun onDisabled() {
         targetTracker.reset()
+        SilentHotbar.resetSlot(ModuleAutoShoot)
     }
 
     /**
@@ -162,6 +174,8 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
      */
     @Suppress("unused")
     private val handleAutoShoot = tickHandler {
+        if (shouldPauseForKillAura()) return@tickHandler
+
         val target = targetTracker.target ?: return@tickHandler
 
         if (notDuringCombat && CombatManager.isInCombat) {
@@ -169,13 +183,8 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
         }
 
         // Check if we have a throwable, if not we can't shoot.
-        val slot = throwableType() ?: return@tickHandler
-
-        if (!slot.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)) {
-            return@tickHandler
-        }
-
-        val rotation = GravityType.from(slot).apply(target)
+        val slot = getThrowableSlot() ?: return@tickHandler
+        val rotation = getRotation(target, slot)
 
         // Check the difference between server and client rotation
         val rotationDifference = RotationManager.serverRotation.angleTo(rotation ?: return@tickHandler)
@@ -198,50 +207,46 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
         }
     }
 
-    private enum class ThrowableType(override val tag: String) : Tagged, () -> HotbarItemSlot? {
-        EGG_AND_SNOWBALL("EggAndSnowball"),
-        ANYTHING("Anything");
-
-        override fun invoke(): HotbarItemSlot? = when (this) {
-            EGG_AND_SNOWBALL -> Slots.OffhandWithHotbar.findClosestSlot {
+    private enum class ThrowableType(override val tag: String) : Tagged {
+        EGG_AND_SNOWBALL("EggAndSnowball") {
+            override fun findSlot(): HotbarItemSlot? = Slots.OffhandWithHotbar.findClosestSlot {
                 it.item is EggItem || it.item is SnowballItem
             }
-            ANYTHING -> when {
+        },
+        ANYTHING("Anything") {
+            override fun findSlot(): HotbarItemSlot? = when {
                 !player.mainHandItem.isEmpty -> Slots.Hotbar[player.inventory.selectedSlot]
                 !player.offhandItem.isEmpty -> OffHandSlot
                 else -> null
             }
-        }
+        };
+
+        abstract fun findSlot(): HotbarItemSlot?
     }
 
-    private enum class GravityType(override val tag: String) : Tagged, Function<LivingEntity, Rotation?> {
-
-        AUTO("Auto"),
-        LINEAR("Linear"),
-        PROJECTILE("Projectile");
-
-        override fun apply(target: LivingEntity): Rotation? = when (this) {
-            AUTO -> {
-                // Should not happen, we convert [gravityType] to LINEAR or PROJECTILE before.
-                null
-            }
-
-            LINEAR -> {
+    private enum class GravityType(override val tag: String) : Tagged {
+        AUTO("Auto") {
+            override fun rotationFor(target: LivingEntity): Rotation? = null
+        },
+        LINEAR("Linear") {
+            override fun rotationFor(target: LivingEntity): Rotation? {
                 // On linear we likely don't need to care about gravity,
                 // but instead aim exactly at the hitbox of the target.
                 val eyes = player.eyePosition
                 val point = pointTracker.findPoint(eyes, target, 1)
-                Rotation.lookingAt(point.pos, eyes)
+                return Rotation.lookingAt(point.pos, eyes)
             }
-            // Determines the required yaw and pitch angles to hit a target with a projectile,
-            // considering gravity's effect on the projectile's motion.
-            PROJECTILE -> {
-                SituationalProjectileAngleCalculator.calculateAngleForEntity(
+        },
+        PROJECTILE("Projectile") {
+            override fun rotationFor(target: LivingEntity): Rotation? {
+                return SituationalProjectileAngleCalculator.calculateAngleForEntity(
                     TrajectoryInfo.GENERIC,
                     target
                 )
             }
-        }
+        };
+
+        abstract fun rotationFor(target: LivingEntity): Rotation?
 
         companion object {
             @JvmStatic
@@ -262,7 +267,6 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
                 }
             }
         }
-
     }
 
 }
