@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.math
 
+import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.minecraft.world.phys.AABB
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -182,25 +183,26 @@ class AabbMergeUtilTest {
         return list
     }
 
+    @Suppress("CognitiveComplexMethod")
     private fun naiveMerge(items: List<KeyedAabb<Int>>): List<KeyedAabb<Int>> {
         if (items.isEmpty()) return emptyList()
 
         val visited = BooleanArray(items.size)
         val result = ArrayList<KeyedAabb<Int>>(items.size)
-        val stack = ArrayDeque<Int>()
+        val stack = IntArrayList()
 
         for (start in items.indices) {
             if (visited[start]) continue
 
             visited[start] = true
             stack.clear()
-            stack.addLast(start)
+            stack.push(start)
 
             val key = items[start].key
             var merged = items[start].box
 
             while (stack.isNotEmpty()) {
-                val current = stack.removeLast()
+                val current = stack.popInt()
                 val currentBox = items[current].box
 
                 for (candidate in items.indices) {
@@ -209,7 +211,7 @@ class AabbMergeUtilTest {
                     if (!currentBox.intersects(items[candidate].box)) continue
 
                     visited[candidate] = true
-                    stack.addLast(candidate)
+                    stack.push(candidate)
                     merged = merged.minmax(items[candidate].box)
                 }
             }
