@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import java.util.function.Predicate
@@ -50,7 +52,28 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
         EquipmentSlotChoice.allHumanoidArmor(),
     )
 
-    private val setColorFromArmor by boolean("SetColorFromArmor", true)
+    private val colorSources by multiEnumChoice(
+        "ColorSources",
+        ObjectLinkedOpenHashSet(ColorSource.entries),
+        canBeNone = true,
+    )
+
+    private enum class ColorSource(
+        override val tag: String,
+        val entityToColor: (Entity) -> Int?,
+    ) : Tagged {
+        TEAM("Team", { entity ->
+            entity.team?.color?.color
+        }),
+        ARMOR("Armor", { entity ->
+            val armorColorSlots = armorColorSlots
+            if (entity is LivingEntity && armorColorSlots.isNotEmpty()) {
+                armorColorSlots.firstNotNullOfOrNull { it.getArmorColor(entity) }
+            } else {
+                null
+            }
+        }),
+    }
 
     @Suppress("unused")
     private val entityTagEvent = handler<TagEntityEvent> { event ->
@@ -60,14 +83,8 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
             event.dontTarget()
         }
 
-        // Team color
-        val color = entity.team?.color?.color
-            ?: if (entity is LivingEntity && setColorFromArmor && armorColorSlots.isNotEmpty()) {
-                armorColorSlots.firstNotNullOfOrNull { it.getArmorColor(entity) }
-            } else {
-                null
-            }
-
+        // Resolve tag color from sources (first found)
+        val color = colorSources.firstNotNullOfOrNull { it.entityToColor(entity) }
         event.color(Color4b.fullAlpha(color ?: return@handler), Priority.IMPORTANT_FOR_USAGE_1)
     }
 
