@@ -123,6 +123,11 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
      */
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
+        if (requiresKillAura && !ModuleKillAura.running) {
+            targetTracker.reset()
+            return@handler
+        }
+
         // Find the recommended target
         val target = targetTracker.selectFirst {
             // Check if we can see the enemy
@@ -130,10 +135,6 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
         } ?: return@handler
 
         if (notDuringCombat && CombatManager.isInCombat) {
-            return@handler
-        }
-
-        if (requiresKillAura && !ModuleKillAura.running) {
             return@handler
         }
 
@@ -155,6 +156,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
     override fun onDisabled() {
         targetTracker.reset()
+        SilentHotbar.resetSlot(ModuleAutoShoot)
     }
 
     /**
@@ -162,6 +164,11 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
      */
     @Suppress("unused")
     private val handleAutoShoot = tickHandler {
+        if (requiresKillAura && !ModuleKillAura.running) {
+            targetTracker.reset()
+            return@tickHandler
+        }
+
         val target = targetTracker.target ?: return@tickHandler
 
         if (notDuringCombat && CombatManager.isInCombat) {
