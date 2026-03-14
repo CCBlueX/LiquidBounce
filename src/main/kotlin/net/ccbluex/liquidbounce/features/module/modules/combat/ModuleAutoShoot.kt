@@ -100,7 +100,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
     private val requiresKillAura by boolean("RequiresKillAura", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)
-    private val constantLag by boolean("ConstantLag", false)
+    val constantLag by boolean("ConstantLag", false)
 
     private val HotbarItemSlot.isSelectionNeeded: Boolean
         get() = this != OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
