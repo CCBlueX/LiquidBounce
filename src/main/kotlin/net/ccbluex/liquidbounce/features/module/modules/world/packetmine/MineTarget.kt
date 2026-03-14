@@ -33,6 +33,7 @@ class MineTarget(val targetPos: BlockPos) {
     var finished = false
     var progress = 0f
     var started = false
+    var finishReadyTick: Long? = null
     var direction: Direction? = null
     var blockState = targetPos.getState()!!
 
