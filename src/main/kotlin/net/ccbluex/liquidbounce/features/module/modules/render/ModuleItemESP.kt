@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.utils.render.drawLegacy2DMarker
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -85,6 +86,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
             GlowMode,
 //            OutlineMode,
             BoxMode,
+            Legacy2DMode,
         )
     }
     private val colorMode = choices("ColorMode", 0) {
@@ -165,6 +167,50 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                     withPositionRelativeToCamera(pos) {
                         drawBox(box, baseColor, outlineColor)
                     }
+                }
+            }
+        }
+    }
+
+    private object Legacy2DMode : Mode("Legacy2D") {
+        override val parent: ModeValueGroup<Mode>
+            get() = modes
+
+        private val scale by float("Scale", 0.1f, 0.02f..0.3f)
+        private val yOffset by float("YOffset", 0f, -1f..1f)
+        private val backgroundAlpha by int("BackgroundAlpha", 150, 0..255)
+
+        private val entities = mutableListOf<Entity>()
+
+        override fun disable() {
+            entities.clear()
+            super.disable()
+        }
+
+        @Suppress("unused")
+        private val tickHandler = handler<GameTickEvent> {
+            entities.clear()
+            world.entitiesForRendering().filterTo(entities, ::shouldRender)
+        }
+
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            if (entities.isEmpty()) return@handler
+
+            val color = getColor().argb
+            val backgroundColor = Color4b.BLACK.with(a = backgroundAlpha).argb
+
+            renderEnvironmentForWorld(event.matrixStack) {
+                for (entity in entities) {
+                    val pos = entity.interpolateCurrentPosition(event.partialTicks).add(0.0, yOffset.toDouble(), 0.0)
+
+                    drawLegacy2DMarker(
+                        pos = pos,
+                        entityHeight = entity.boundingBox.ysize,
+                        scale = scale,
+                        foregroundArgb = color,
+                        backgroundArgb = backgroundColor
+                    )
                 }
             }
         }
