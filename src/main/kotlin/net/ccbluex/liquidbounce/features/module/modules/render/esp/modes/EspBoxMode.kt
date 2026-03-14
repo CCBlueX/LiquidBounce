@@ -22,6 +22,7 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -56,14 +57,14 @@ object EspBoxMode : EspMode.BoxBased("Box") {
             )
 
             withPositionRelativeToCamera {
-                for ((box, key) in mergedBoxes) {
-                    drawColoredBox(box, key)
+                for ((box, color) in mergedBoxes) {
+                    drawColoredBox(box, color)
                 }
             }
         }
     }
 
-    private fun net.ccbluex.liquidbounce.render.WorldRenderEnvironment.drawColoredBox(box: AABB, color: Color4b) {
+    private fun WorldRenderEnvironment.drawColoredBox(box: AABB, color: Color4b) {
         val baseColor = color.with(a = 50)
         val outlineColor = color.with(a = 100).takeIf { outline }
         drawBox(box, baseColor, outlineColor)

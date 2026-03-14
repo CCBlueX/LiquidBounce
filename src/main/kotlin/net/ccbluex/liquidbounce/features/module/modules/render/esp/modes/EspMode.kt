@@ -18,9 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.modes
+import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
@@ -44,16 +49,10 @@ sealed class EspMode(
     sealed class BoxBased(name: String) : EspMode(name) {
         protected val expand by float("Expand", 0.05f, 0f..0.5f)
 
-        protected data class PreparedBox(
-            @JvmField val entity: LivingEntity,
-            @JvmField val localBox: AABB,
-            @JvmField val position: Vec3,
-            @JvmField val worldBox: AABB
-        )
-
-        protected fun collectPreparedBoxes(tickDelta: Float): List<PreparedBox> {
-            val prepared = ArrayList<PreparedBox>(RenderedEntities.size)
-
+        @Suppress("unused")
+        private val tickHandler = handler<GameTickEvent> {
+            pool.recycleAll(prepared)
+            prepared.clear()
             for (entity in RenderedEntities) {
                 if (!shouldRender(entity)) continue
 
@@ -64,11 +63,54 @@ sealed class EspMode(
                     halfWidth, dimensions.height.toDouble(), halfWidth
                 ).inflate(expand.toDouble())
 
-                val position = entity.interpolateCurrentPosition(tickDelta)
-                prepared += PreparedBox(entity, localBox, position, localBox.move(position))
+                val state = pool.borrow()
+                state.entity = entity
+                state.localBox = localBox
+                prepared.add(state)
+            }
+        }
+
+        override fun disable() {
+            super.disable()
+            pool.recycleAll(prepared)
+            prepared.clear()
+        }
+
+        protected class BoxBasedEspRenderState {
+            @JvmField var entity: LivingEntity? = null
+            @JvmField var localBox: AABB = EMPTY_BOX
+            @JvmField var position: Vec3 = Vec3.ZERO
+            @JvmField var worldBox: AABB = EMPTY_BOX
+
+            fun update(tickDelta: Float) {
+                position = entity?.interpolateCurrentPosition(tickDelta) ?: Vec3.ZERO
+                worldBox = localBox.move(position)
             }
 
+            fun reset() {
+                entity = null
+                localBox = EMPTY_BOX
+                position = Vec3.ZERO
+                worldBox = EMPTY_BOX
+            }
+
+            operator fun component1() = entity!!
+            operator fun component2() = localBox
+            operator fun component3() = position
+            operator fun component4() = worldBox
+        }
+
+        protected fun collectPreparedBoxes(tickDelta: Float): List<BoxBasedEspRenderState> {
+            for (i in prepared.indices) {
+                prepared[i].update(tickDelta)
+            }
             return prepared
+        }
+
+        private companion object {
+            private val pool = Pool(::BoxBasedEspRenderState, BoxBasedEspRenderState::reset)
+
+            private val prepared = ObjectArrayList<BoxBasedEspRenderState>()
         }
     }
 }
