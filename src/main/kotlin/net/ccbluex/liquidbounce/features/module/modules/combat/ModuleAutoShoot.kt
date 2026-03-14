@@ -146,10 +146,8 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
         if (shouldPauseForKillAura()) return@handler
 
         // Find the recommended target
-        val target = targetTracker.selectFirst {
-            // Check if we can see the enemy
-            player.hasLineOfSight(it)
-        } ?: return@handler
+        // Check if we can see the enemy
+        val target = targetTracker.selectFirst(player::hasLineOfSight) ?: return@handler
 
         if (notDuringCombat && CombatManager.isInCombat) {
             return@handler
