@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -43,6 +44,8 @@ import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.KeyedAabb
+import net.ccbluex.liquidbounce.utils.math.mergeIntersectingAabbsSweep
 import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.item.ItemEntity
@@ -136,6 +139,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
             get() = modes
 
         private val box = AABB(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
+        private val mergeIntersecting by boolean("MergeIntersecting", false)
 
         private val entities = mutableListOf<Entity>()
 
@@ -156,16 +160,32 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
             val matrixStack = event.matrixStack
 
-            val base = getColor()
-            val baseColor = base.with(a = 50)
-            val outlineColor = base.with(a = 100)
+            val color = getColor()
+            val faceColor = color.with(a = 50)
+            val outlineColor = color.with(a = 100)
 
             renderEnvironmentForWorld(matrixStack) {
-                for (entity in entities) {
-                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                if (!mergeIntersecting) {
+                    for (entity in entities) {
+                        val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
-                    withPositionRelativeToCamera(pos) {
-                        drawBox(box, baseColor, outlineColor)
+                        withPositionRelativeToCamera(pos) {
+                            drawBox(box, faceColor, outlineColor)
+                        }
+                    }
+                    return@renderEnvironmentForWorld
+                }
+
+                val mergedBoxes = mergeIntersectingAabbsSweep(
+                    entities.mapToArray { entity ->
+                        val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                        KeyedAabb(box.move(pos), color)
+                    }.asList()
+                )
+
+                withPositionRelativeToCamera {
+                    for ((mergedBox, _) in mergedBoxes) {
+                        drawBox(mergedBox, faceColor, outlineColor)
                     }
                 }
             }
