@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 
 import net.ccbluex.fastutil.forEachDouble
 import net.ccbluex.fastutil.step
+import net.ccbluex.liquidbounce.test.assertVec3Equals
 import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -127,12 +128,6 @@ class LineTest {
         val relative = point.subtract(line.position)
         val cross = relative.cross(line.direction)
         assertTrue(cross.lengthSqr() <= eps, "Point $point is not on line $line")
-    }
-
-    private fun assertVec3Equals(expected: Vec3, actual: Vec3, tolerance: Double) {
-        assertEquals(expected.x, actual.x, tolerance, "x")
-        assertEquals(expected.y, actual.y, tolerance, "y")
-        assertEquals(expected.z, actual.z, tolerance, "z")
     }
 
     private fun squaredDistanceToBox(point: Vec3, box: AABB): Double {

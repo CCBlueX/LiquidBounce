@@ -174,7 +174,6 @@ inline fun projectPointsOnBox(
  * @param visibilityPredicate An optional predicate to determine if a given point is visible
  * @return the best visible spot found or `null`
  */
-@Suppress("detekt:complexity.LongParameterList")
 fun findVisiblePointFromVirtualEye(
     virtualEyes: Vec3,
     box: AABB,
@@ -217,7 +216,7 @@ fun findVisiblePointFromVirtualEye(
 object ArrowVisibilityPredicate : VisibilityPredicate {
     override fun isVisible(eyesPos: Vec3, targetSpot: Vec3): Boolean {
         val arrowEntity = Arrow(
-            world, eyesPos.x, targetSpot.y, targetSpot.z, ItemStack(Items.ARROW),
+            world, eyesPos.x, eyesPos.y, eyesPos.z, ItemStack(Items.ARROW),
             null)
 
         return world.clip(
