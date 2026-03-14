@@ -19,15 +19,27 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.minecraft.world.phys.AABB
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.random.Random
 
 class AabbMergeUtilTest {
 
     @Test
     fun `returns empty list for empty input`() {
         assertTrue(mergeIntersectingAabbsSweep<Int>(emptyList()).isEmpty())
+    }
+
+    @Test
+    fun `returns same single element for singleton input`() {
+        val input = listOf(KeyedAabb(box(1.0, 2.0, 3.0, 4.0, 5.0, 6.0), 7))
+        val merged = mergeIntersectingAabbsSweep(input)
+
+        assertEquals(1, merged.size)
+        assertEquals(7, merged[0].key)
+        assertBoxEquals(input[0].box, merged[0].box)
     }
 
     @Test
@@ -57,6 +69,22 @@ class AabbMergeUtilTest {
     }
 
     @Test
+    fun `merges same key boxes even when different keys are interleaved`() {
+        val merged = mergeIntersectingAabbsSweep(
+            listOf(
+                KeyedAabb(box(0.0, 0.0, 0.0, 2.0, 2.0, 2.0), 1),
+                KeyedAabb(box(0.5, 0.0, 0.0, 2.5, 2.0, 2.0), 2),
+                KeyedAabb(box(1.0, 0.0, 0.0, 3.0, 2.0, 2.0), 1),
+            )
+        )
+
+        assertEquals(2, merged.size)
+
+        val mergedKeyOne = merged.first { it.key == 1 }
+        assertBoxEquals(box(0.0, 0.0, 0.0, 3.0, 2.0, 2.0), mergedKeyOne.box)
+    }
+
+    @Test
     fun `merges transitively connected overlaps`() {
         val merged = mergeIntersectingAabbsSweep(
             listOf(
@@ -82,6 +110,34 @@ class AabbMergeUtilTest {
         assertEquals(2, merged.size)
     }
 
+    @Test
+    fun `keeps all disjoint boxes unmerged`() {
+        val merged = mergeIntersectingAabbsSweep(
+            listOf(
+                KeyedAabb(box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), 1),
+                KeyedAabb(box(2.0, 0.0, 0.0, 3.0, 1.0, 1.0), 1),
+                KeyedAabb(box(4.0, 0.0, 0.0, 5.0, 1.0, 1.0), 1),
+            )
+        )
+
+        assertEquals(3, merged.size)
+    }
+
+    @Test
+    fun `matches naive merge on small random data`() {
+        assertMatchesNaiveForRandomDataset(size = 24, seed = 1001)
+    }
+
+    @Test
+    fun `matches naive merge on medium random data`() {
+        assertMatchesNaiveForRandomDataset(size = 96, seed = 2002)
+    }
+
+    @Test
+    fun `matches naive merge on large random data`() {
+        assertMatchesNaiveForRandomDataset(size = 320, seed = 3003)
+    }
+
     private fun box(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): AABB =
         AABB(minX, minY, minZ, maxX, maxY, maxZ)
 
@@ -92,5 +148,81 @@ class AabbMergeUtilTest {
         assertEquals(expected.maxX, actual.maxX, 1e-9)
         assertEquals(expected.maxY, actual.maxY, 1e-9)
         assertEquals(expected.maxZ, actual.maxZ, 1e-9)
+    }
+
+    private fun assertMatchesNaiveForRandomDataset(size: Int, seed: Int) {
+        val input = randomDataset(size, Random(seed))
+        val fast = normalize(mergeIntersectingAabbsSweep(input))
+        val naive = normalize(naiveMerge(input))
+        assertEquals(naive, fast)
+    }
+
+    private fun randomDataset(size: Int, random: Random): List<KeyedAabb<Int>> {
+        val list = ArrayList<KeyedAabb<Int>>(size)
+        repeat(size) {
+            val key = random.nextInt(0, 4)
+            val cx = random.nextDouble(0.0, 100.0)
+            val cy = random.nextDouble(0.0, 20.0)
+            val cz = random.nextDouble(0.0, 100.0)
+            val sx = random.nextDouble(0.3, 3.0)
+            val sy = random.nextDouble(0.3, 3.0)
+            val sz = random.nextDouble(0.3, 3.0)
+
+            val aabb = box(
+                cx - sx * 0.5,
+                cy - sy * 0.5,
+                cz - sz * 0.5,
+                cx + sx * 0.5,
+                cy + sy * 0.5,
+                cz + sz * 0.5
+            )
+            list += KeyedAabb(aabb, key)
+        }
+        assertFalse(list.isEmpty())
+        return list
+    }
+
+    private fun naiveMerge(items: List<KeyedAabb<Int>>): List<KeyedAabb<Int>> {
+        if (items.isEmpty()) return emptyList()
+
+        val visited = BooleanArray(items.size)
+        val result = ArrayList<KeyedAabb<Int>>(items.size)
+        val stack = ArrayDeque<Int>()
+
+        for (start in items.indices) {
+            if (visited[start]) continue
+
+            visited[start] = true
+            stack.clear()
+            stack.addLast(start)
+
+            val key = items[start].key
+            var merged = items[start].box
+
+            while (stack.isNotEmpty()) {
+                val current = stack.removeLast()
+                val currentBox = items[current].box
+
+                for (candidate in items.indices) {
+                    if (visited[candidate]) continue
+                    if (items[candidate].key != key) continue
+                    if (!currentBox.intersects(items[candidate].box)) continue
+
+                    visited[candidate] = true
+                    stack.addLast(candidate)
+                    merged = merged.minmax(items[candidate].box)
+                }
+            }
+
+            result += KeyedAabb(merged, key)
+        }
+
+        return result
+    }
+
+    private fun normalize(items: List<KeyedAabb<Int>>): List<String> {
+        return items.map {
+            "${it.key}|${it.box.minX}|${it.box.minY}|${it.box.minZ}|${it.box.maxX}|${it.box.maxY}|${it.box.maxZ}"
+        }.sorted()
     }
 }

@@ -18,9 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.math
 
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntArrays
+import it.unimi.dsi.fastutil.ints.IntList
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap
 import net.minecraft.world.phys.AABB
 
 /**
@@ -43,63 +44,37 @@ fun <K> mergeIntersectingAabbsSweep(items: List<KeyedAabb<K>>): List<KeyedAabb<K
         return emptyList()
     }
 
-    val order = IntArray(items.size) { it }
-    IntArrays.quickSort(order) { left, right ->
-        val cmp = items[left].box.minX.compareTo(items[right].box.minX)
-        if (cmp != 0) cmp else left - right
+    val buckets = Object2ObjectLinkedOpenHashMap<K, IntArrayList>()
+    for (index in items.indices) {
+        val key = items[index].key
+        buckets.computeIfAbsent(key) { IntArrayList() }.add(index)
     }
 
     val dsu = DisjointSet(items.size)
-    val active = IntArrayList(items.size)
-
-    for (index in order) {
-        val current = items[index]
-
-        // Keep only boxes that can still intersect on X axis.
-        var write = 0
-        for (read in 0 until active.size) {
-            val activeIndex = active.getInt(read)
-            if (items[activeIndex].box.maxX > current.box.minX) {
-                active.set(write++, activeIndex)
-            }
-        }
-        active.size(write)
-
-        for (activeIdx in 0 until active.size) {
-            val candidateIndex = active.getInt(activeIdx)
-            val candidate = items[candidateIndex]
-
-            if (candidate.key != current.key) continue
-            if (!candidate.box.intersects(current.box)) continue
-
-            dsu.union(index, candidateIndex)
-        }
-
-        active.add(index)
+    for (bucket in buckets.values) {
+        unionIntersectingInBucket(items, bucket, dsu)
     }
 
-    class MutableMerged<K>(
-        var box: AABB,
-        val key: K
-    )
-
-    val groupByRoot = Int2IntOpenHashMap(items.size)
-    groupByRoot.defaultReturnValue(-1)
-    val merged = ArrayList<MutableMerged<K>>(items.size)
+    val rootToMerged = IntArray(items.size) { -1 }
+    val mergedBoxes = ArrayList<AABB>(items.size)
+    val mergedKeys = ArrayList<K>(items.size)
 
     for (index in items.indices) {
         val root = dsu.find(index)
-        val mergedIndex = groupByRoot.putIfAbsent(root, merged.size)
+        val mergedIndex = rootToMerged[root]
         if (mergedIndex == -1) {
-            merged += MutableMerged(items[index].box, items[index].key)
+            rootToMerged[root] = mergedBoxes.size
+            mergedBoxes += items[index].box
+            mergedKeys += items[index].key
             continue
         }
 
-        val existing = merged[mergedIndex]
-        existing.box = existing.box.minmax(items[index].box)
+        mergedBoxes[mergedIndex] = mergedBoxes[mergedIndex].minmax(items[index].box)
     }
 
-    return merged.map { KeyedAabb(it.box, it.key) }
+    return Array(mergedBoxes.size) { i ->
+        KeyedAabb(mergedBoxes[i], mergedKeys[i])
+    }.asList()
 }
 
 private class DisjointSet(size: Int) {
@@ -133,5 +108,43 @@ private class DisjointSet(size: Int) {
         if (rank[rootLeft] == rank[rootRight]) {
             rank[rootLeft]++
         }
+    }
+}
+
+private fun <K> unionIntersectingInBucket(
+    items: List<KeyedAabb<K>>,
+    bucket: IntList,
+    dsu: DisjointSet
+) {
+    if (bucket.size <= 1) {
+        return
+    }
+
+    val order = bucket.toIntArray()
+    IntArrays.quickSort(order) { left, right ->
+        val cmp = items[left].box.minX.compareTo(items[right].box.minX)
+        if (cmp != 0) cmp else left - right
+    }
+
+    val active = IntArrayList(order.size)
+    for (index in order) {
+        val currentBox = items[index].box
+
+        var write = 0
+        for (read in 0 until active.size) {
+            val activeIndex = active.getInt(read)
+            if (items[activeIndex].box.maxX > currentBox.minX) {
+                active.set(write++, activeIndex)
+            }
+        }
+        active.size(write)
+
+        for (activeIdx in 0 until active.size) {
+            val candidateIndex = active.getInt(activeIdx)
+            if (!items[candidateIndex].box.intersects(currentBox)) continue
+            dsu.union(index, candidateIndex)
+        }
+
+        active.add(index)
     }
 }
