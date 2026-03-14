@@ -37,6 +37,8 @@ object EspBoxMode : EspMode("Box") {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             for (entity in RenderedEntities) {
+                if (!shouldRender(entity)) continue
+
                 val dimensions = entity.getDimensions(entity.pose)
                 val d = dimensions.width.toDouble() / 2.0
                 val box = AABB(-d, 0.0, -d, d, dimensions.height.toDouble(), d).inflate(expand.toDouble())
