@@ -34,17 +34,24 @@ class ComparatorChain<T>(private vararg val comparisonFunctions: Comparator<in T
 
 }
 
+/**
+ * false first
+ */
+@Deprecated(
+    message = "Use standard compareValuesBy instead",
+    replaceWith = ReplaceWith("compareValuesBy(a, b, cond)"),
+)
 inline fun <T> compareValueByCondition(a: T, b: T, cond: (T) -> Boolean): Int {
-    val condA = cond(a)
-    val condB = cond(b)
-
-    return when {
-        condA == condB -> 0
-        condA -> 1
-        else -> -1
-    }
+    return compareValuesBy(a, b, cond)
 }
 
+/**
+ * false first
+ */
+@Deprecated(
+    message = "Use standard compareBy instead",
+    replaceWith = ReplaceWith("compareBy(cond)"),
+)
 inline fun <T> compareByCondition(crossinline cond: (T) -> Boolean): Comparator<T> {
-    return Comparator { o1, o2 -> compareValueByCondition(o1, o2, cond) }
+    return compareBy(cond)
 }
