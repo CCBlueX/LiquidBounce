@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoGolemRepair
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoLeave
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoShoot
@@ -458,6 +459,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleAutoArmor,
             ModuleAutoBow,
             ModuleAutoClicker,
+            ModuleAutoGolemRepair,
             ModuleAutoLeave,
             ModuleAutoBuff,
             ModuleAutoRod,
