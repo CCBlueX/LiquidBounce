@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Switc
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket

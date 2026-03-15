@@ -46,7 +46,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
-import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer

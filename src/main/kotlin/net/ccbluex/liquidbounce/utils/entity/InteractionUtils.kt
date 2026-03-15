@@ -29,6 +29,9 @@ import net.minecraft.world.InteractionResult.SwingSource
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.EntityHitResult
 
+fun InteractionResult.shouldSwingHand() =
+    this is InteractionResult.Success && this.swingSource === SwingSource.CLIENT
+
 /**
  * Simulated [net.minecraft.world.phys.HitResult.Type.ENTITY] branch in vanilla
  *
@@ -64,10 +67,8 @@ fun interactEntity(
         }
     }
 
-    if (result is InteractionResult.Success) {
-        if (result.swingSource() === SwingSource.CLIENT) {
-            swingMode.swing(hand)
-        }
+    if (result.shouldSwingHand()) {
+        swingMode.swing(hand)
     }
 
     return result

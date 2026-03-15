@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.useItem
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
-import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getDestroySpeedWithEnchantment
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
