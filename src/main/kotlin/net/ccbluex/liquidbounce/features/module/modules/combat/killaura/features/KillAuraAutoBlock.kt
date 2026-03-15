@@ -44,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
-import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
@@ -116,7 +115,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         get() = unblockMode != UnblockMode.NONE
 
     val blockImmediate
-        get() = currentTickOn == 0 || blockMode == BlockMode.HYPIXEL
+        get() = currentTickOn == 0
 
     override fun onDisabled() {
         this.stopBlocking()
@@ -127,7 +126,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      * Make it seem like the player is blocking.
      */
     fun makeSeemBlock() {
-        if (!enabled) {
+        if (!running) {
             return
         }
 
@@ -139,7 +138,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     @Suppress("ReturnCount", "CognitiveComplexMethod")
     fun startBlocking() {
-        if (!enabled || (player.isBlockAction && blockMode != BlockMode.HYPIXEL)) {
+        if (!running) {
             return
         }
 
@@ -160,17 +159,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         } ?: return
 
         when (blockMode) {
-            BlockMode.HYPIXEL -> {
-                val target = targetTracker.target
-
-                if (target == null) {
-                    interaction.useItem(player, InteractionHand.MAIN_HAND)
-                } else {
-                    interaction.interact(player, target, InteractionHand.MAIN_HAND)
-                }
-
-                interactWithFront()
-            }
             BlockMode.INTERACT -> interactWithFront()
             BlockMode.FAKE -> {
                 blockVisual = true
@@ -201,10 +189,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         if (blockingStateEnforced) {
             blockingTicks++
-        }
-
-        if (blockMode == BlockMode.HYPIXEL && blockingTicks % 5 == 0 && blockingStateEnforced) {
-            interaction.useItem(player, InteractionHand.MAIN_HAND)
         }
     }
 
@@ -352,7 +336,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     enum class BlockMode(override val tag: String) : Tagged {
         BASIC("Basic"),
         INTERACT("Interact"),
-        HYPIXEL("Hypixel"),
         FAKE("Fake"),
     }
 
