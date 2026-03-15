@@ -47,8 +47,8 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.interactBlockStrict
 import net.ccbluex.liquidbounce.utils.entity.interactEntityStrict
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.entity.useItemStrict
+import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
@@ -58,7 +58,6 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResult
 import net.minecraft.world.phys.HitResult
 import kotlin.random.Random
 
@@ -107,10 +106,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      * todo: fix open screen affecting this
      * @see net.minecraft.client.Minecraft.handleKeybinds
      */
-    var blockingStateEnforced = false
+    var enforcedBlockingHand: InteractionHand? = null
         set(value) {
-            ModuleDebug.debugParameter(this, "BlockingStateEnforced", value)
-            ModuleDebug.debugParameter(this, if (value) {
+            ModuleDebug.debugParameter(this, "enforcedBlockingHand", value)
+            ModuleDebug.debugParameter(this, if (value != null) {
                 "Block Age"
             } else {
                 "Unblock Age"
@@ -170,7 +169,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             return
         }
 
-        val blockHand = InteractionHand.entries.find {
+        val blockHand = InteractionHand.entries.firstOrNull {
             val itemStack = player.getItemInHand(it)
             itemStack.has(BLOCKS_ATTACKS)
                 && itemStack.isItemEnabled(world.enabledFeatures())
@@ -180,10 +179,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         debugParameter("blockHand") { blockHand }
 
         when (blockMode) {
-            BlockMode.INTERACT -> if (interactWithFacing(rotation)) {
+            BlockMode.INTERACT -> if (interactWithFacing(rotation, blockHand)) {
                 currentTickOn = tickOnRange.random()
                 blockVisual = true
-                blockingStateEnforced = true
+                enforcedBlockingHand = blockHand
                 return
             }
             BlockMode.FAKE -> {
@@ -194,9 +193,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         // Interact with the item in the block hand
-        if (useItemStrict(rotation.yRot, rotation.xRot) != null) {
+        val useItemResult = useItemStrict(rotation.yRot, rotation.xRot)
+        if (useItemResult != null && useItemResult.hand == blockHand) {
             currentTickOn = tickOnRange.random()
-            blockingStateEnforced = true
+            enforcedBlockingHand = blockHand
         }
 
         blockVisual = true
@@ -208,14 +208,14 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private val gameTickHandler = handler<GameTickEvent> {
         flushTicks++
 
-        if (blockingStateEnforced) {
+        if (enforcedBlockingHand != null) {
             blockingTicks++
         }
     }
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
-        blockingStateEnforced = false
+        enforcedBlockingHand = null
     }
 
     @Suppress("unused")
@@ -235,7 +235,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             !blockVisual -> flush("N")
 
             // Start blocking
-            blockingStateEnforced || event.packet is ServerboundUseItemPacket -> flush("B")
+            enforcedBlockingHand != null || event.packet is ServerboundUseItemPacket -> flush("B")
 
             // Timeout reached
             flushTicks >= blink -> flush("T")
@@ -264,7 +264,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         return when (unblockMode) {
             UnblockMode.STOP_USING_ITEM -> {
                 interaction.releaseUsingItemInTickLoop()
-                blockingStateEnforced = false
+                enforcedBlockingHand = null
                 true
             }
             // Not working when blocking with offhand
@@ -273,19 +273,23 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 val nextSlot = (currentSlot + 1) % 9
                 network.sendHeldItemChange(nextSlot)
                 network.sendHeldItemChange(currentSlot)
-                blockingStateEnforced = false
-                true
+                if (enforcedBlockingHand == InteractionHand.MAIN_HAND) {
+                    enforcedBlockingHand = null
+                    true
+                } else {
+                    false
+                }
             }
             // Not working when server doesn't have offhand
             UnblockMode.SWAP_HAND -> {
                 network.sendSwapItemWithOffhand()
                 network.sendSwapItemWithOffhand()
-                blockingStateEnforced = false
+                enforcedBlockingHand = null
                 true
             }
             UnblockMode.NONE -> if (!pauses) {
                 interaction.releaseUsingItemInTickLoop()
-                blockingStateEnforced = false
+                enforcedBlockingHand = null
                 true
             } else {
                 false
@@ -297,12 +301,13 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private val changeSlot = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is ServerboundSetCarriedItemPacket ||
-            packet is ServerboundPlayerActionPacket &&
-            packet.action === ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND
+        if ((packet is ServerboundSetCarriedItemPacket &&
+            enforcedBlockingHand == InteractionHand.MAIN_HAND) ||
+            (packet is ServerboundPlayerActionPacket &&
+            packet.action === ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND)
         ) {
             blockVisual = false
-            blockingStateEnforced = false
+            enforcedBlockingHand = null
         }
     }
 
@@ -313,7 +318,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      * and find a block or entity that should be interacted with
      * @return if successfully started blocking
      */
-    private fun interactWithFacing(rotation: Rotation): Boolean {
+    private fun interactWithFacing(rotation: Rotation, blockHand: InteractionHand): Boolean {
         val entityHitResult =
             findEntityInCrosshair(range.interactionRange.toDouble(), rotation, predicate = {
                 when (raycast) {
@@ -327,17 +332,20 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         if (entity != null) {
             // Interact with entity
             // Vanilla blocking action won't trigger swing
-            return interactEntityStrict(entity, entityHitResult, rotation = rotation) is InteractionResult.Success
+            val result = interactEntityStrict(entity, entityHitResult, rotation = rotation) ?: return false
+            return result.isUseItemSuccess && result.hand == blockHand
         }
 
         val hitResult = traceFromPlayer(rotation)
 
         // Facing neither entity nor block -> call `useItem`
-        if (hitResult.type != HitResult.Type.BLOCK) {
-            return useItemStrict(rotation.yRot, rotation.xRot) != null
+        return if (hitResult.type != HitResult.Type.BLOCK) {
+            val useItemResult = useItemStrict(rotation.yRot, rotation.xRot)
+            useItemResult != null && useItemResult.hand == blockHand
+        } else {
+            val result = interactBlockStrict(hitResult, rotation = rotation) ?: return false
+            result.isUseItemSuccess && result.hand == blockHand
         }
-
-        return interactBlockStrict(hitResult, rotation = rotation) is InteractionResult.Success
     }
 
     /**

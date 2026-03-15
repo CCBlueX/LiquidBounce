@@ -458,7 +458,7 @@ public abstract class MixinMinecraft {
     @ModifyExpressionValue(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z", ordinal = 0))
     private boolean injectMultiActionsAttackingWhileUsingAndEnforcedBlockingState(boolean isUsingItem) {
         if (isUsingItem) {
-            if (!this.options.keyUse.isDown() && !(KillAuraAutoBlock.INSTANCE.getRunning() && KillAuraAutoBlock.INSTANCE.getBlockingStateEnforced())) {
+            if (!this.options.keyUse.isDown() && !(KillAuraAutoBlock.INSTANCE.getRunning() && KillAuraAutoBlock.INSTANCE.getEnforcedBlockingHand() != null)) {
                 this.gameMode.releaseUsingItem(this.player);
             }
 

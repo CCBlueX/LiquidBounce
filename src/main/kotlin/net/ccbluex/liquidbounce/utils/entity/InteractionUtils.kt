@@ -40,6 +40,22 @@ fun InteractionResult.shouldSwingHand() =
 private inline val gameMode: MultiPlayerGameMode
     get() = mc.gameMode!!
 
+enum class StrictInteractionSource {
+    INTERACT,
+    USE_ITEM_ON,
+    USE_ITEM,
+}
+
+@JvmRecord
+data class StrictInteractionResult(
+    val hand: InteractionHand,
+    val source: StrictInteractionSource,
+    val result: InteractionResult,
+) {
+    val isUseItemSuccess: Boolean
+        get() = source == StrictInteractionSource.USE_ITEM && result is InteractionResult.Success
+}
+
 @JvmOverloads
 fun useItem(
     hand: InteractionHand,
@@ -64,9 +80,18 @@ fun useItemStrict(
     yRot: Float = RotationManager.currentRotation?.yRot ?: player.yRot,
     xRot: Float = RotationManager.currentRotation?.xRot ?: player.xRot,
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
-): InteractionResult.Success? {
+): StrictInteractionResult? {
     return InteractionHand.entries.firstNotNullOfOrNull { hand ->
-        useItem(hand, yRot, xRot, swingMode) as? InteractionResult.Success
+        val useItemResult = useItem(hand, yRot, xRot, swingMode)
+        if (useItemResult is InteractionResult.Success) {
+            StrictInteractionResult(
+                hand = hand,
+                source = StrictInteractionSource.USE_ITEM,
+                result = useItemResult,
+            )
+        } else {
+            null
+        }
     }
 }
 
@@ -121,20 +146,33 @@ fun interactEntityStrict(
     hitResult: EntityHitResult = EntityHitResult(entity),
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
     rotation: Rotation = RotationManager.currentRotation ?: player.rotation,
-): InteractionResult? {
+): StrictInteractionResult? {
     fun interactEntityOrUseItem(
         hand: InteractionHand,
-    ): InteractionResult? {
-        val interactResult = interactEntity(entity, hitResult, hand, swingMode)
-        if (interactResult == null || interactResult is InteractionResult.Success) {
-            return interactResult
+    ): StrictInteractionResult? {
+        val interactResult = interactEntity(entity, hitResult, hand, swingMode) ?: return null
+        if (interactResult is InteractionResult.Success) {
+            return StrictInteractionResult(
+                hand = hand,
+                source = StrictInteractionSource.INTERACT,
+                result = interactResult,
+            )
         }
-        return useItem(
+        val useItemResult = useItem(
             hand,
             rotation.yRot,
             rotation.xRot,
             swingMode,
-        ).takeIf { it is InteractionResult.Success }
+        )
+        if (useItemResult is InteractionResult.Success) {
+            return StrictInteractionResult(
+                hand = hand,
+                source = StrictInteractionSource.USE_ITEM,
+                result = useItemResult,
+            )
+        }
+
+        return null
     }
 
     return InteractionHand.entries.firstNotNullOfOrNull { hand ->
@@ -176,20 +214,33 @@ fun interactBlockStrict(
     hitResult: BlockHitResult,
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
     rotation: Rotation = RotationManager.currentRotation ?: player.rotation,
-): InteractionResult? {
+): StrictInteractionResult? {
     fun interactBlockOrUseItem(
         hand: InteractionHand,
-    ): InteractionResult? {
+    ): StrictInteractionResult? {
         val interactResult = interactBlock(hitResult, hand, swingMode)
         if (interactResult is InteractionResult.Success || interactResult is InteractionResult.Fail) {
-            return interactResult
+            return StrictInteractionResult(
+                hand = hand,
+                source = StrictInteractionSource.USE_ITEM_ON,
+                result = interactResult,
+            )
         }
-        return useItem(
+        val useItemResult = useItem(
             hand,
             rotation.yRot,
             rotation.xRot,
             swingMode,
-        ).takeIf { it is InteractionResult.Success }
+        )
+        if (useItemResult is InteractionResult.Success) {
+            return StrictInteractionResult(
+                hand = hand,
+                source = StrictInteractionSource.USE_ITEM,
+                result = useItemResult,
+            )
+        }
+
+        return null
     }
 
     return InteractionHand.entries.firstNotNullOfOrNull { hand ->
