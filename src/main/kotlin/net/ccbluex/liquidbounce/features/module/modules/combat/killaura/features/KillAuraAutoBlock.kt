@@ -36,29 +36,48 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.raycast
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.interactEntity
+import net.ccbluex.liquidbounce.utils.entity.interactBlockStrict
+import net.ccbluex.liquidbounce.utils.entity.interactEntityStrict
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
-import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.entity.useItemStrict
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
-import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.ItemInHandRenderer
 import net.minecraft.core.component.DataComponents.BLOCKS_ATTACKS
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.phys.HitResult
 import kotlin.random.Random
 
+/**
+ * ## Manual blocking (1.21.11) packet sequence
+ *
+ * ### On Entity
+ *
+ * - InteractAt (>=1.8)
+ * - Interact (<=1.21.11)
+ * - UseItem
+ *
+ * ### On block
+ *
+ * - UseItemOn
+ * - UseItem
+ *
+ * If the effective blockable hand is offhand, the packets are doubled (main hand -> offhand).
+ */
 object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", false) {
 
     private val blockMode by enumChoice("BlockMode", BlockMode.INTERACT)
@@ -86,7 +105,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      * Enforces the blocking state on the Input
      *
      * todo: fix open screen affecting this
-     * @see Minecraft.handleKeybinds
+     * @see net.minecraft.client.Minecraft.handleKeybinds
      */
     var blockingStateEnforced = false
         set(value) {
@@ -138,16 +157,16 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     @Suppress("ReturnCount", "CognitiveComplexMethod")
     fun startBlocking() {
-        if (!running) {
-            return
-        }
-
-        if (Random.nextInt(100) > chance) {
+        if (!running || Random.nextInt(100) > chance) {
             return
         }
 
         if (onlyWhenInDanger && !isInDanger()) {
             this.stopBlocking()
+            return
+        }
+
+        if (player.isUsingItem) {
             return
         }
 
@@ -157,9 +176,16 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 && itemStack.isItemEnabled(world.enabledFeatures())
                 && !player.cooldowns.isOnCooldown(itemStack)
         } ?: return
+        val rotation = RotationManager.serverRotation
+        debugParameter("blockHand") { blockHand }
 
         when (blockMode) {
-            BlockMode.INTERACT -> interactWithFront()
+            BlockMode.INTERACT -> if (interactWithFacing(rotation)) {
+                currentTickOn = tickOnRange.random()
+                blockVisual = true
+                blockingStateEnforced = true
+                return
+            }
             BlockMode.FAKE -> {
                 blockVisual = true
                 return
@@ -168,17 +194,12 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         // Interact with the item in the block hand
-        val actionResult = interaction.useItem(player, blockHand)
-
-        if (actionResult.consumesAction()) {
-            if (actionResult.shouldSwingHand()) {
-                currentTickOn = tickOnRange.random()
-                player.swing(blockHand)
-            }
+        if (useItemStrict(rotation.yRot, rotation.xRot) != null) {
+            currentTickOn = tickOnRange.random()
+            blockingStateEnforced = true
         }
 
         blockVisual = true
-        blockingStateEnforced = true
     }
 
     private var flushTicks = 0
@@ -249,7 +270,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             // Not working when blocking with offhand
             UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
-                val nextSlot = (currentSlot + 1) % 8
+                val nextSlot = (currentSlot + 1) % 9
                 network.sendHeldItemChange(nextSlot)
                 network.sendHeldItemChange(currentSlot)
                 blockingStateEnforced = false
@@ -276,7 +297,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private val changeSlot = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is ServerboundSetCarriedItemPacket) {
+        if (packet is ServerboundSetCarriedItemPacket ||
+            packet is ServerboundPlayerActionPacket &&
+            packet.action === ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND
+        ) {
             blockVisual = false
             blockingStateEnforced = false
         }
@@ -284,13 +308,14 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     /**
      * Interact with the block or entity in front of the player.
+     *
+     * @param rotation Raycast using the current rotation
+     * and find a block or entity that should be interacted with
+     * @return if successfully started blocking
      */
-    private fun interactWithFront() {
-        // Raycast using the current rotation and find a block or entity that should be interacted with
-        val rotationToTheServer = RotationManager.serverRotation
-
+    private fun interactWithFacing(rotation: Rotation): Boolean {
         val entityHitResult =
-            findEntityInCrosshair(range.interactionRange.toDouble(), rotationToTheServer, predicate = {
+            findEntityInCrosshair(range.interactionRange.toDouble(), rotation, predicate = {
                 when (raycast) {
                     TRACE_NONE -> false
                     TRACE_ONLYENEMY -> it.shouldBeAttacked()
@@ -301,23 +326,18 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         if (entity != null) {
             // Interact with entity
-            interactEntity(
-                entity,
-                entityHitResult,
-                InteractionHand.MAIN_HAND,
-                SwingMode.HIDE_BOTH, // Vanilla blocking action won't trigger swing
-            )
-            return
+            // Vanilla blocking action won't trigger swing
+            return interactEntityStrict(entity, entityHitResult, rotation = rotation) is InteractionResult.Success
         }
 
-        val hitResult = traceFromPlayer(rotationToTheServer)
+        val hitResult = traceFromPlayer(rotation)
 
+        // Facing neither entity nor block -> call `useItem`
         if (hitResult.type != HitResult.Type.BLOCK) {
-            return
+            return useItemStrict(rotation.yRot, rotation.xRot) != null
         }
 
-        // Interact with block
-        interaction.useItemOn(player, InteractionHand.MAIN_HAND, hitResult)
+        return interactBlockStrict(hitResult, rotation = rotation) is InteractionResult.Success
     }
 
     /**

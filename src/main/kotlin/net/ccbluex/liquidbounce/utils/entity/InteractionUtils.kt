@@ -19,23 +19,63 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.useItem
+import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionResult.SwingSource
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 
 fun InteractionResult.shouldSwingHand() =
     this is InteractionResult.Success && this.swingSource === SwingSource.CLIENT
 
+private inline val gameMode: MultiPlayerGameMode
+    get() = mc.gameMode!!
+
+@JvmOverloads
+fun useItem(
+    hand: InteractionHand,
+    yRot: Float = RotationManager.currentRotation?.yRot ?: player.yRot,
+    xRot: Float = RotationManager.currentRotation?.xRot ?: player.xRot,
+    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
+): InteractionResult {
+    val useItemResult = gameMode.useItem(player, hand, yRot, xRot)
+
+    if (useItemResult is InteractionResult.Success) {
+        if (useItemResult.swingSource === SwingSource.CLIENT) {
+            swingMode.accept(hand)
+        }
+
+        mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
+    }
+
+    return useItemResult
+}
+
+fun useItemStrict(
+    yRot: Float = RotationManager.currentRotation?.yRot ?: player.yRot,
+    xRot: Float = RotationManager.currentRotation?.xRot ?: player.xRot,
+    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
+): InteractionResult.Success? {
+    return InteractionHand.entries.firstNotNullOfOrNull { hand ->
+        useItem(hand, yRot, xRot, swingMode) as? InteractionResult.Success
+    }
+}
+
 /**
  * Simulated [net.minecraft.world.phys.HitResult.Type.ENTITY] branch in vanilla
+ * No fallback [MultiPlayerGameMode.useItem] call
  *
  * @see net.minecraft.client.Minecraft.startUseItem
+ * @return Cannot interact -> null; else -> [MultiPlayerGameMode.interact] result
  */
 fun interactEntity(
     entity: Entity,
@@ -44,7 +84,6 @@ fun interactEntity(
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): InteractionResult? {
     val level = entity.level()
-    val gameMode = mc.gameMode!!
     if (!level.worldBorder.isWithinBounds(entity.blockPosition())) {
         return null
     }
@@ -72,4 +111,88 @@ fun interactEntity(
     }
 
     return result
+}
+
+/**
+ * @return Cannot interact -> null; else -> [MultiPlayerGameMode.interact] or [MultiPlayerGameMode.useItem] result
+ */
+fun interactEntityStrict(
+    entity: Entity,
+    hitResult: EntityHitResult = EntityHitResult(entity),
+    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
+    rotation: Rotation = RotationManager.currentRotation ?: player.rotation,
+): InteractionResult? {
+    fun interactEntityOrUseItem(
+        hand: InteractionHand,
+    ): InteractionResult? {
+        val interactResult = interactEntity(entity, hitResult, hand, swingMode)
+        if (interactResult == null || interactResult is InteractionResult.Success) {
+            return interactResult
+        }
+        return useItem(
+            hand,
+            rotation.yRot,
+            rotation.xRot,
+            swingMode,
+        ).takeIf { it is InteractionResult.Success }
+    }
+
+    return InteractionHand.entries.firstNotNullOfOrNull { hand ->
+        interactEntityOrUseItem(hand)
+    }
+}
+
+/**
+ * Simulated [net.minecraft.world.phys.HitResult.Type.BLOCK] branch in vanilla
+ * No fallback [MultiPlayerGameMode.useItem] call
+ *
+ * @see net.minecraft.client.Minecraft.startUseItem
+ * @return [MultiPlayerGameMode.useItemOn] result
+ */
+fun interactBlock(
+    hitResult: BlockHitResult,
+    hand: InteractionHand = InteractionHand.MAIN_HAND,
+    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
+): InteractionResult {
+    val itemStack = player.getItemInHand(hand)
+    val oldCount = itemStack.count
+    val useResult = gameMode.useItemOn(player, hand, hitResult)
+    if (useResult is InteractionResult.Success) {
+        if (useResult.swingSource === SwingSource.CLIENT) {
+            swingMode.swing(hand)
+            if (!itemStack.isEmpty && (itemStack.count != oldCount || player.hasInfiniteMaterials())) {
+                mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
+            }
+        }
+    }
+
+    return useResult
+}
+
+/**
+ * @return [MultiPlayerGameMode.useItemOn] or [MultiPlayerGameMode.useItem] result
+ */
+fun interactBlockStrict(
+    hitResult: BlockHitResult,
+    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
+    rotation: Rotation = RotationManager.currentRotation ?: player.rotation,
+): InteractionResult? {
+    fun interactBlockOrUseItem(
+        hand: InteractionHand,
+    ): InteractionResult? {
+        val interactResult = interactBlock(hitResult, hand, swingMode)
+        if (interactResult is InteractionResult.Success || interactResult is InteractionResult.Fail) {
+            return interactResult
+        }
+        return useItem(
+            hand,
+            rotation.yRot,
+            rotation.xRot,
+            swingMode,
+        ).takeIf { it is InteractionResult.Success }
+    }
+
+    return InteractionHand.entries.firstNotNullOfOrNull { hand ->
+        interactBlockOrUseItem(hand)
+    }
 }
