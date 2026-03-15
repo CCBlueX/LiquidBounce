@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.nextTick
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -267,6 +268,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 enforcedBlockingHand = null
                 true
             }
+
             // Not working when blocking with offhand
             UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
@@ -280,13 +282,17 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                     false
                 }
             }
+
             // Not working when server doesn't have offhand
-            UnblockMode.SWAP_HAND -> {
+            UnblockMode.SWAP_HAND -> if (isOlderThanOrEqual1_8) {
+                false
+            } else {
                 network.sendSwapItemWithOffhand()
                 network.sendSwapItemWithOffhand()
                 enforcedBlockingHand = null
                 true
             }
+
             UnblockMode.NONE -> if (!pauses) {
                 interaction.releaseUsingItemInTickLoop()
                 enforcedBlockingHand = null
