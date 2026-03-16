@@ -26,6 +26,7 @@ import com.mojang.blaze3d.platform.Window;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.CoroutineTicker;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
@@ -301,8 +302,25 @@ public abstract class MixinMinecraft {
      */
     @Inject(method = "tick", at = @At("HEAD"))
     private void hookTickEvent(CallbackInfo callbackInfo) {
+        TickLoopTaskExecutor.INSTANCE.onTickLoopStart();
         CoroutineTicker.INSTANCE.tick();
         EventManager.INSTANCE.callEvent(GameTickEvent.INSTANCE);
+    }
+
+    @Inject(method = "tick", at = @At(
+        value = "INVOKE",
+        target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;send(Lnet/minecraft/network/protocol/Packet;)V",
+        shift = At.Shift.AFTER
+    ))
+    private void hookTickLoopCompletedAfterTickEndPacket(CallbackInfo callbackInfo) {
+        TickLoopTaskExecutor.INSTANCE.onTickLoopCompleted();
+    }
+
+    @Inject(method = "tick", at = @At("RETURN"))
+    private void fallbackCompleteTickLoop(CallbackInfo callbackInfo) {
+        if (TickLoopTaskExecutor.INSTANCE.isInTickLoop()) {
+            TickLoopTaskExecutor.INSTANCE.onTickLoopCompleted();
+        }
     }
 
     /**

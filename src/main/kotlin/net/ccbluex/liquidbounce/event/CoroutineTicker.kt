@@ -22,7 +22,6 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.ReportedException
 import org.slf4j.LoggerFactory
@@ -33,7 +32,7 @@ import kotlin.coroutines.resume
 
 typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
 
-object CoroutineTicker : EventListener {
+object CoroutineTicker {
 
     private val logger = LoggerFactory.getLogger("$CLIENT_NAME/CoroutineTicker")
 
@@ -71,16 +70,6 @@ object CoroutineTicker : EventListener {
         })
     }
 
-}
-
-/**
- * Schedule a task to run at next [GameTickEvent], before all event handlers.
- */
-fun nextTick(runnable: Runnable) {
-    CoroutineTicker.register {
-        runnable.run()
-        true
-    }
 }
 
 /**

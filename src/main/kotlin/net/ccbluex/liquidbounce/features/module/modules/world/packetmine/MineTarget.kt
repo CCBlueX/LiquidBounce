@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine
 
-import net.ccbluex.liquidbounce.event.nextTick
+import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -75,7 +75,7 @@ class MineTarget(val targetPos: BlockPos) {
             direction ?: Direction.DOWN
         }
 
-        nextTick {
+        TickLoopTaskExecutor.executeInTickLoop {
             network.send(
                 ServerboundPlayerActionPacket(
                     ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK,
