@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
-import net.ccbluex.liquidbounce.utils.client.releaseUsingItemNextTick
+import net.ccbluex.liquidbounce.utils.client.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -242,7 +242,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         return when (unblockMode) {
             UnblockMode.STOP_USING_ITEM -> {
-                interaction.releaseUsingItemNextTick()
+                interaction.releaseUsingItemInTickLoop()
                 blockingStateEnforced = false
                 true
             }
@@ -263,7 +263,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 true
             }
             UnblockMode.NONE -> if (!pauses) {
-                interaction.releaseUsingItemNextTick()
+                interaction.releaseUsingItemInTickLoop()
                 blockingStateEnforced = false
                 true
             } else {
