@@ -62,7 +62,7 @@ import net.minecraft.world.phys.HitResult
 import kotlin.random.Random
 
 /**
- * ## Manual blocking (1.21.11) packet sequence
+ * ## Manual use item packet sequence
  *
  * ### On Entity
  *
@@ -82,10 +82,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private val blockMode by enumChoice("BlockMode", BlockMode.INTERACT)
     private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM)
 
-    val tickOffRange by intRange("TickOff", 0..0, 0..5, "ticks").onChanged { range ->
+    private val tickOffRange by intRange("TickOff", 0..0, 0..5, "ticks").onChanged { range ->
         currentTickOff = range.random()
     }
-    val tickOnRange by intRange("TickOn", 0..0, 0..5, "ticks").onChanged { range ->
+    private val tickOnRange by intRange("TickOn", 0..0, 0..5, "ticks").onChanged { range ->
         currentTickOn = range.random()
     }
 
