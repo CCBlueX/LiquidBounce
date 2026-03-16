@@ -198,6 +198,12 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
     private var wasTowering: Boolean = false
 
+    private val activeTechnique get() = if (isTowering) {
+        ScaffoldNormalTechnique
+    } else {
+        technique.activeMode
+    }
+
     // SafeWalk feature - uses the SafeWalk module as a base
     @Suppress("unused")
     private val safeWalkMode = choices("SafeWalk", 1, ModuleSafeWalk::safeWalkChoices)
@@ -339,6 +345,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         nextBlock = null
         updateRenderCount(null)
         forceSneak = 0
+        currentTarget = null
         renderer.clearSilently()
     }
 
@@ -381,11 +388,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             ModuleDebug.DebuggedPoint(predictedPos, Color4b.GREEN, size = 0.1)
         }
 
-        val technique = if (isTowering) {
-            ScaffoldNormalTechnique
-        } else {
-            technique.activeMode
-        }
+        val technique = activeTechnique
 
         val target = technique.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
             .also { this.currentTarget = it }
@@ -448,11 +451,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
         // Ledge feature - AutoJump and AutoSneak
         if (ledge) {
-            val technique = if (isTowering) {
-                ScaffoldNormalTechnique
-            } else {
-                technique.activeMode
-            }
+            val technique = activeTechnique
 
             val ledgeAction = ledge(
                 this.currentTarget,
@@ -509,19 +508,14 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         debugParameter("WasTowering") { wasTowering }
 
         val target = currentTarget
-
-        val computedRotation = if (target != null) {
-            technique.activeMode.getRotations(target)
-        } else {
-            null
-        }
+        val technique = activeTechnique
 
         val currentRotation = if ((rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) && target != null) {
-            computedRotation ?: (RotationManager.currentRotation ?: player.rotation)
+            technique.getRotations(target) ?: (RotationManager.currentRotation ?: player.rotation)
         } else {
             RotationManager.currentRotation ?: player.rotation
         }.normalize()
-        val currentCrosshairTarget = technique.activeMode.getCrosshairTarget(target, currentRotation)
+        val currentCrosshairTarget = technique.getCrosshairTarget(target, currentRotation)
         val currentDelay = delay.random()
 
         var hasBlockInMainHand = isValidBlock(player.inventory.getItem(player.inventory.selectedSlot))
