@@ -209,9 +209,11 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
-        if (requireSneaking && !player.isShiftKeyDown
+        val cancelDueToCombat = notDuringCombat && CombatManager.isInCombat
+        val cancelDueToNotSneaking = requireSneaking && !player.isShiftKeyDown
+        if (cancelDueToCombat
+            || cancelDueToNotSneaking
             || RequireNearBed.enabled && !RequireNearBed.matches()
-            || notDuringCombat && CombatManager.isInCombat
         ) {
             if (isInventoryConsidered) {
                 DynamicSelectMode.ConsiderInventory.onNoTool()
