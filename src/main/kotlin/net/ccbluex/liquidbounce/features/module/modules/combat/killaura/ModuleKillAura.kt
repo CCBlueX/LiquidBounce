@@ -423,6 +423,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         target: Entity? = null,
         itemStack: ItemStack = player.mainHandItem,
     ): Boolean {
+        if (KillAuraAutoBlock.pauseAttackOnUnblockTick && KillAuraAutoBlock.triedUnblockThisTick) {
+            return false
+        }
+
         if (!itemStack.isItemEnabled(world.enabledFeatures())) {
             return false
         }
