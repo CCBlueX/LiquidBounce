@@ -21,17 +21,20 @@ package net.ccbluex.liquidbounce.utils.input
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.KeyMapping
 import org.lwjgl.glfw.GLFW
 
 /**
- * Singleton object that tracks the state of mouse buttons and key presses.
- * It listens for mouse button events and provides utility functions to check if
- * a key or mouse button is currently pressed or was recently pressed.
+ * Tracking if an input constant is pressed, released or repeated,
+ * and when it was last pressed. Also tracks how long an input has been pressed repeatedly.
  */
 object InputTracker : EventListener {
+
+    private const val COMBO_TIMEOUT_MS = 250L
 
     /**
      * Tracks the state of each mouse button.
@@ -39,19 +42,18 @@ object InputTracker : EventListener {
      * [GLFW.GLFW_RELEASE], [GLFW.GLFW_PRESS] or [GLFW.GLFW_REPEAT]
      * @see GLFW
      */
-    private val mouseStates = IntArray(32)
+    private val inputStates = mutableMapOf<InputConstants.Key, Int>()
 
     /**
-     * Tracks the last time each mouse button was pressed.
-     * Array indices correspond to GLFW mouse button codes.
+     * Tracks the last time an input was pressed.
+     * Map key is the [InputConstants.Key] with value being the last time it was pressed in milliseconds.
      */
-    private val mouseLastPressed = LongArray(32)
+    private val inputLastPressed = mutableMapOf<InputConstants.Key, Long>()
 
     /**
-     * Tracks the last time each keyboard key was pressed.
-     * Map key is the GLFW key code, value is the timestamp.
+     * Tracks how long we have been pressing a key continuously.
      */
-    private val keyLastPressed = mutableMapOf<Int, Long>()
+    private val inputComboStartTime = mutableMapOf<InputConstants.Key, Long>()
 
     /**
      * Extension property that checks if a key binding is pressed on either the keyboard or mouse.
@@ -76,7 +78,7 @@ object InputTracker : EventListener {
      * @return True if the mouse button is pressed, false otherwise.
      */
     val KeyMapping.pressedOnMouse: Boolean
-        get() = this.key.type == InputConstants.Type.MOUSE && isMouseButtonPressed(this.key.value)
+        get() = this.key.type == InputConstants.Type.MOUSE && isMouseButtonPressed(this.key)
 
     /**
      * Extension property that checks if a key binding was pressed recently.
@@ -84,13 +86,7 @@ object InputTracker : EventListener {
      * @param withinMs The time window in milliseconds to check within.
      * @return True if the key binding was pressed within the specified time, false otherwise.
      */
-    fun KeyMapping.wasPressedRecently(withinMs: Long): Boolean {
-        return when (this.key.type) {
-            InputConstants.Type.KEYSYM -> wasKeyPressedRecently(this.key.value, withinMs)
-            InputConstants.Type.MOUSE -> wasMouseButtonPressedRecently(this.key.value, withinMs)
-            else -> false
-        }
-    }
+    fun KeyMapping.wasPressedRecently(withinMs: Long) = wasInputPressedRecently(this.key, withinMs)
 
     /**
      * Extension property that gets the time elapsed since the key binding was last pressed.
@@ -98,13 +94,15 @@ object InputTracker : EventListener {
      * @return Milliseconds since last press, or Long.MAX_VALUE if never pressed.
      */
     val KeyMapping.timeSinceLastPress: Long
-        get() {
-            return when (this.key.type) {
-                InputConstants.Type.KEYSYM -> getTimeSinceKeyPress(this.key.value)
-                InputConstants.Type.MOUSE -> getTimeSinceMousePress(this.key.value)
-                else -> Long.MAX_VALUE
-            }
-        }
+        get() = getTimeSinceInputPress(this.key)
+
+    /**
+     * Extension property that gets the time elapsed since the key binding combo started.
+     *
+     * @return Milliseconds since combo start, or Long.MAX_VALUE if no combo is tracked.
+     */
+    val KeyMapping.timeSinceComboStart: Long
+        get() = getTimeSinceComboStart(this.key)
 
     /**
      * Event handler for mouse button actions. It updates the mouseStates map
@@ -112,11 +110,27 @@ object InputTracker : EventListener {
      */
     @Suppress("unused")
     private val handleMouseAction = handler<MouseButtonEvent> { event ->
-        mouseStates[event.button] = event.action
+        inputStates[event.key] = event.action
 
         // Track when the button was pressed
         if (event.action == GLFW.GLFW_PRESS) {
-            mouseLastPressed[event.button] = System.currentTimeMillis()
+            updateInputPress(event.key)
+        }
+    }
+
+    @Suppress("unused")
+    private val handleKeyAction = handler<KeyboardKeyEvent> { event ->
+        if (event.action == GLFW.GLFW_PRESS) {
+            updateInputPress(event.key)
+        }
+    }
+
+    @Suppress("unused")
+    private val handleTick = handler<GameTickEvent> {
+        val now = System.currentTimeMillis()
+        inputComboStartTime.entries.removeIf { entry ->
+            val lastPressed = inputLastPressed[entry.key]
+            lastPressed == null || now - lastPressed > COMBO_TIMEOUT_MS
         }
     }
 
@@ -126,7 +140,7 @@ object InputTracker : EventListener {
      * @param button The GLFW code of the mouse button.
      * @return True if the mouse button is pressed, false otherwise.
      */
-    fun isMouseButtonPressed(button: Int): Boolean = mouseStates[button] == GLFW.GLFW_PRESS
+    fun isMouseButtonPressed(button: InputConstants.Key): Boolean = inputStates[button] == GLFW.GLFW_PRESS
 
     /**
      * Checks if the specified mouse button was pressed recently.
@@ -135,19 +149,19 @@ object InputTracker : EventListener {
      * @param withinMs The time window in milliseconds to check within.
      * @return True if the mouse button was pressed within the specified time, false otherwise.
      */
-    fun wasMouseButtonPressedRecently(button: Int, withinMs: Long): Boolean {
-        val lastPressed = mouseLastPressed[button]
+    fun wasInputPressedRecently(keyCode: InputConstants.Key, withinMs: Long): Boolean {
+        val lastPressed = inputLastPressed[keyCode] ?: return false
         return lastPressed > 0 && (System.currentTimeMillis() - lastPressed) <= withinMs
     }
 
     /**
-     * Gets the time elapsed since the specified mouse button was last pressed.
+     * Gets the time elapsed since the specified input was last pressed.
      *
-     * @param button The GLFW code of the mouse button.
+     * @param keyCode The GLFW key code.
      * @return Milliseconds since last press, or Long.MAX_VALUE if never pressed.
      */
-    fun getTimeSinceMousePress(button: Int): Long {
-        val lastPressed = mouseLastPressed[button]
+    fun getTimeSinceInputPress(keyCode: InputConstants.Key): Long {
+        val lastPressed = inputLastPressed[keyCode] ?: return Long.MAX_VALUE
         return if (lastPressed > 0) {
             System.currentTimeMillis() - lastPressed
         } else {
@@ -156,31 +170,32 @@ object InputTracker : EventListener {
     }
 
     /**
-     * Checks if the specified keyboard key was pressed recently.
-     * Note: This requires manual tracking via updateKeyPress() since we don't have a keyboard event handler.
+     * Gets the time elapsed since the specified input combo started.
      *
      * @param keyCode The GLFW key code.
-     * @param withinMs The time window in milliseconds to check within.
-     * @return True if the key was pressed within the specified time, false otherwise.
+     * @return Milliseconds since combo start, or Long.MAX_VALUE if no combo is tracked.
      */
-    fun wasKeyPressedRecently(keyCode: Int, withinMs: Long): Boolean {
-        val lastPressed = keyLastPressed[keyCode] ?: return false
-        return (System.currentTimeMillis() - lastPressed) <= withinMs
-    }
-
-    /**
-     * Gets the time elapsed since the specified keyboard key was last pressed.
-     *
-     * @param keyCode The GLFW key code.
-     * @return Milliseconds since last press, or Long.MAX_VALUE if never pressed.
-     */
-    fun getTimeSinceKeyPress(keyCode: Int): Long {
-        val lastPressed = keyLastPressed[keyCode]
-        return if (lastPressed != null) {
-            System.currentTimeMillis() - lastPressed
+    fun getTimeSinceComboStart(keyCode: InputConstants.Key): Long {
+        val comboStart = inputComboStartTime[keyCode] ?: return Long.MAX_VALUE
+        return if (comboStart > 0) {
+            System.currentTimeMillis() - comboStart
         } else {
             Long.MAX_VALUE
         }
+    }
+
+    /**
+     * Updates the last pressed time for the specified input.
+     */
+    fun updateInputPress(keyCode: InputConstants.Key) {
+        inputLastPressed[keyCode] = System.currentTimeMillis()
+        if (!inputComboStartTime.containsKey(keyCode)) {
+            inputComboStartTime[keyCode] = System.currentTimeMillis()
+        }
+    }
+
+    fun resetCombo(keyCode: InputConstants.Key) {
+        inputComboStartTime.remove(keyCode)
     }
 
 }
