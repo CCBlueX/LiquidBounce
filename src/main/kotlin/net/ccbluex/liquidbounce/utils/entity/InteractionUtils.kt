@@ -46,6 +46,10 @@ enum class StrictInteractionSource {
     USE_ITEM,
 }
 
+/**
+ * *Strict* means to 1:1 simulate [net.minecraft.client.Minecraft.startUseItem] logic:
+ * Try `interact`/`useItemOn` then `useItem` with each hand (main hand -> offhand).
+ */
 @JvmRecord
 data class StrictInteractionResult(
     val hand: InteractionHand,
