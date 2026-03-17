@@ -114,14 +114,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
             return
         }
 
-        val wasSimulatedInventoryClose = simulateInventoryClosing && InventoryManager.isInventoryOpen
-
-        // 1. Close Inventory
-        if (wasSimulatedInventoryClose) {
-            network.sendCloseInventory()
-        }
-
-        // 2. Stop blocking
+        // 1. Stop blocking
         if (player.isBlocking) {
             if (!KillAuraAutoBlock.enabled && !ModuleMultiActions.mayAttackWhileUsing()) {
                 return
@@ -137,6 +130,13 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
             // Since we are not allowed to attack while the player is using another item,
             // we will return here.
             return
+        }
+
+        val wasSimulatedInventoryClose = simulateInventoryClosing && InventoryManager.isInventoryOpen
+
+        // 2. Close Inventory
+        if (wasSimulatedInventoryClose) {
+            network.sendCloseInventory()
         }
 
         // 3. Rotate to target (if we have on-tick enabled)
