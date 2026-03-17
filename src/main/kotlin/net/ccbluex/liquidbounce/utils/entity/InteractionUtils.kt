@@ -40,6 +40,22 @@ fun InteractionResult.shouldSwingHand() =
 private inline val gameMode: MultiPlayerGameMode
     get() = mc.gameMode!!
 
+/**
+ * ## Vanilla use item packet sequence
+ *
+ * ### On Entity
+ *
+ * - InteractAt (>=1.8)
+ * - Interact (<=1.21.11)
+ * - UseItem
+ *
+ * ### On block
+ *
+ * - UseItemOn
+ * - UseItem
+ *
+ * If the effective hand (item) is offhand, the packets are doubled (main hand -> offhand).
+ */
 enum class StrictInteractionSource {
     INTERACT,
     USE_ITEM_ON,

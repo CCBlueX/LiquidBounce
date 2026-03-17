@@ -65,22 +65,6 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.phys.HitResult
 import kotlin.random.Random
 
-/**
- * ## Vanilla use item packet sequence
- *
- * ### On Entity
- *
- * - InteractAt (>=1.8)
- * - Interact (<=1.21.11)
- * - UseItem
- *
- * ### On block
- *
- * - UseItemOn
- * - UseItem
- *
- * If the effective blockable hand is offhand, the packets are doubled (main hand -> offhand).
- */
 object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", false) {
 
     private val blockMode by enumChoice("BlockMode", BlockMode.INTERACT)
@@ -301,9 +285,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             }
 
             // Not working when server doesn't have offhand
-            UnblockMode.SWAP_HAND -> if (isOlderThanOrEqual1_8) {
-                false
-            } else {
+            UnblockMode.SWAP_HAND -> {
                 lastUnblockAttemptTick = player.tickCount
                 network.sendSwapItemWithOffhand()
                 network.sendSwapItemWithOffhand()
