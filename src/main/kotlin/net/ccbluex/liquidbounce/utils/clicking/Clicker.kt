@@ -128,6 +128,9 @@ open class Clicker<T>(
             return clickArray.iterations
         }
 
+    var ticksSinceLastClick = 0
+        private set
+
     fun willClickAt(tick: Int = 1) = getClickAmount(tick) > 0
 
     fun getClickAmount(tick: Int = 0): Int {
@@ -187,6 +190,7 @@ open class Clicker<T>(
                 clickAmount++
                 itemCooldown?.newCooldown()
                 lastClickTime = System.currentTimeMillis()
+                ticksSinceLastClick = 0
             }
         }
 
@@ -213,6 +217,7 @@ open class Clicker<T>(
     private val gameHandler = handler<GameTickEvent>(
         priority = EventPriorityConvention.FIRST_PRIORITY
     ) {
+        ticksSinceLastClick++
         clickAmount = null
 
         if (clickArray.advance()) {
