@@ -29,11 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
-import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
@@ -54,12 +51,10 @@ import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.GameType
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.EntityHitResult
 
 fun ClientCommonPacketListenerImpl.send1_21_5StartSneaking() {
     if (!usesViaFabricPlus) return
@@ -184,21 +179,6 @@ fun LocalPlayer.clickBlockWithSlot(
 fun MultiPlayerGameMode.releaseUsingItemInTickLoop() = TickLoopTaskExecutor.executeInTickLoop {
     this.releaseUsingItem(player)
 }
-
-/**
- * Since 26.1-snapshot-3 INTERACT type of
- * [net.minecraft.network.protocol.game.ServerboundInteractPacket] has been removed.
- */
-fun MultiPlayerGameMode.interact(
-    player: Player,
-    entity: Entity,
-    hand: InteractionHand,
-): InteractionResult = interact(
-    player,
-    entity,
-    EntityHitResult(entity, entity.box.getNearestPoint(player.eyePosition)),
-    hand,
-)
 
 /**
  * [MultiPlayerGameMode.useItem] but with custom rotations.
