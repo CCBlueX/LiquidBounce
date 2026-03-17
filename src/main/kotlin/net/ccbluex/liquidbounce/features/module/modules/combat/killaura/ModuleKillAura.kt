@@ -232,7 +232,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod")
-    private suspend fun attackTarget(target: Entity, rotation: Rotation) {
+    private fun attackTarget(target: Entity, rotation: Rotation) {
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
 
@@ -257,8 +257,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.onScanRange &&
                 player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()
             ) {
-                KillAuraAutoBlock.startBlocking()
-                return
+                if (KillAuraAutoBlock.startBlocking() && KillAuraAutoBlock.pauseOnBlockTicks > 0) {
+                    waitTicks = KillAuraAutoBlock.pauseOnBlockTicks
+                    return
+                }
             }
 
             // Make sure we are not blocking
@@ -295,12 +297,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
                 true
             }
-        } else if (KillAuraAutoBlock.pauseOnUnblockTicks > 0
-            && clicker.willClickAt(KillAuraAutoBlock.pauseOnUnblockTicks)
-            && KillAuraAutoBlock.shouldUnblockToHit) {
-            KillAuraAutoBlock.stopBlocking(pauses = true)
-        } else {
-            KillAuraAutoBlock.startBlocking()
+        } else if (KillAuraAutoBlock.startBlocking() && KillAuraAutoBlock.pauseOnBlockTicks > 0) {
+            waitTicks = KillAuraAutoBlock.pauseOnBlockTicks
         }
     }
 

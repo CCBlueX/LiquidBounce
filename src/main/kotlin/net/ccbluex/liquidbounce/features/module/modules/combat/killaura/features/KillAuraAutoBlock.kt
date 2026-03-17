@@ -153,18 +153,18 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      * Starts blocking.
      */
     @Suppress("ReturnCount", "CognitiveComplexMethod")
-    fun startBlocking() {
+    fun startBlocking(): Boolean {
         if (!running || Random.nextInt(100) > chance) {
-            return
+            return false
         }
 
         if (onlyWhenInDanger && !isInDanger()) {
             this.stopBlocking()
-            return
+            return false
         }
 
         if (player.isUsingItem) {
-            return
+            return false
         }
 
         val blockHand = InteractionHand.entries.firstOrNull {
@@ -172,7 +172,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             itemStack.has(BLOCKS_ATTACKS)
                 && itemStack.isItemEnabled(world.enabledFeatures())
                 && !player.cooldowns.isOnCooldown(itemStack)
-        } ?: return
+        } ?: return false
         val rotation = RotationManager.serverRotation
         debugParameter("blockHand") { blockHand }
 
@@ -181,11 +181,11 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 pauseOnBlockTicks = pauseOnBlockTicksRange.random()
                 blockVisual = true
                 enforcedBlockingHand = blockHand
-                return
+                return true
             }
             BlockMode.FAKE -> {
                 blockVisual = true
-                return
+                return false
             }
             else -> { }
         }
@@ -197,6 +197,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         blockVisual = true
+        return true
     }
 
     private var flushTicks = 0
