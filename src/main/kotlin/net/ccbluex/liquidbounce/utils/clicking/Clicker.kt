@@ -61,7 +61,8 @@ open class Clicker<T>(
     val keyBinding: KeyMapping,
     val itemCooldown: ItemCooldown? = ItemCooldown(),
     maxCps: Int = 60,
-    name: String = "Clicker"
+    name: String = "Clicker",
+    simulateAttackKeyDown: Boolean = false,
 ) : ValueGroup(name, aliases = listOf("ClickScheduler")), EventListener where T : EventListener {
 
     companion object {
@@ -146,16 +147,19 @@ open class Clicker<T>(
         return lastClickPassed + (tick * 50L) >= 1000L
     }
 
-    @Suppress("unused")
-    private val keybindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
-        val clickAmount = this.clickAmount ?: return@handler
+    init {
+        if (simulateAttackKeyDown && keyBinding == mc.options.keyAttack) {
+            handler<KeybindIsPressedEvent> { event ->
+                val clickAmount = this.clickAmount ?: return@handler
 
-        // It turns out, we only want to do this with [attackKey], otherwise
-        // [useKey] will do unexpected things.
-        if (keyBinding == mc.options.keyAttack && event.keyBinding == keyBinding) {
-            // We want to simulate the click in order to
-            // allow the game to handle the logic as if we clicked
-            event.isPressed = clickAmount > 0
+                // It turns out, we only want to do this with [attackKey], otherwise
+                // [useKey] will do unexpected things.
+                if (event.keyBinding == keyBinding) {
+                    // We want to simulate the click in order to
+                    // allow the game to handle the logic as if we clicked
+                    event.isPressed = clickAmount > 0
+                }
+            }
         }
     }
 
