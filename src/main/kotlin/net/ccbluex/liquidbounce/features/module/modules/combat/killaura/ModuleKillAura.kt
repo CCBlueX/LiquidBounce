@@ -255,12 +255,12 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         // Check if our target is in range, otherwise deal with auto block
         if (!isInRange) {
             if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.onScanRange &&
-                player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()
-            ) {
-                if (KillAuraAutoBlock.startBlocking() && KillAuraAutoBlock.pauseOnBlockTicks > 0) {
-                    waitTicks = KillAuraAutoBlock.pauseOnBlockTicks
-                    return
+                player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()) {
+                if (KillAuraClicker.ticksSinceLastClick >= KillAuraAutoBlock.reblockTicks) {
+                    KillAuraAutoBlock.startBlocking()
                 }
+
+                return
             }
 
             // Make sure we are not blocking
@@ -278,7 +278,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val mainHandStack = player.mainHandItem
 
         // Attack enemy, according to the attack scheduler
-        if (clicker.isClickTick && canAttackNow(target, mainHandStack)) {
+        if (clicker.isClickTick && canAttackNow(target, mainHandStack) &&
+            !KillAuraAutoBlock.isPrioritizingBlocking) {
             clicker.prepareForAttack(rotation) {
                 // On each click, we check if we are still ready to attack
                 if (!canAttackNow(target, mainHandStack)) {
@@ -289,6 +290,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
                 attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint && !shouldBlockSprinting)
                 range.update()
                 KillAuraNotifyWhenFail.failedHitsIncrement = 0
+                KillAuraAutoBlock.hasBlockedSinceAttack = false
 
                 GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
                     add("player", GenericDebugRecorder.debugObject(player))
@@ -297,8 +299,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
                 true
             }
-        } else if (KillAuraAutoBlock.startBlocking() && KillAuraAutoBlock.pauseOnBlockTicks > 0) {
-            waitTicks = KillAuraAutoBlock.pauseOnBlockTicks
+        } else if (KillAuraClicker.ticksSinceLastClick >= KillAuraAutoBlock.reblockTicks) {
+            KillAuraAutoBlock.startBlocking()
         }
     }
 

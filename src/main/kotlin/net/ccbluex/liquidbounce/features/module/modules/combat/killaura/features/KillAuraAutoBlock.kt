@@ -76,10 +76,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private val simulateVanillaUse by boolean("SimulateVanillaUse", true)
     private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM)
 
-    private val pauseOnBlockTicksRange by intRange(
-        "PauseOnBlock", 0..0, 0..3, "ticks", aliases = listOf("TickOn")
+    private val reblockTicksRange by intRange(
+        "Reblock", 0..0, 0..3, "ticks", aliases = listOf("TickOn")
     ).onChanged { range ->
-        pauseOnBlockTicks = range.random()
+        reblockTicks = range.random()
     }
     private val pauseOnUnblockTicksRange by intRange(
         "PauseOnUnblock", 0..0, 0..3, "ticks", aliases = listOf("TickOff")
@@ -87,12 +87,13 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         pauseOnUnblockTicks = range.random()
     }
 
-    var pauseOnBlockTicks: Int = pauseOnBlockTicksRange.random()
+    var reblockTicks: Int = reblockTicksRange.random()
     var pauseOnUnblockTicks: Int = pauseOnUnblockTicksRange.random()
 
     val chance by float("Chance", 100f, 0f..100f, "%")
     val blink by int("Blink", 0, 0..10, "ticks")
 
+    private val prioritizeBlocking by boolean("PrioritizeBlocking", true)
     val onScanRange by boolean("OnScanRange", true)
     private val onlyWhenInDanger by boolean("OnlyWhenInDanger", false)
 
@@ -131,10 +132,19 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         get() = unblockMode != UnblockMode.NONE
 
     val blockImmediate
-        get() = pauseOnBlockTicks == 0
+        get() = reblockTicks == 0
+
+    var hasBlockedSinceAttack = false
+
+    /**
+     * This will decrease our CPS and prioritize blocking.
+     */
+    val isPrioritizingBlocking
+        get() = running && prioritizeBlocking && !hasBlockedSinceAttack
 
     override fun onDisabled() {
         this.stopBlocking()
+        this.hasBlockedSinceAttack = false
         super.onDisabled()
     }
 
@@ -178,9 +188,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         when (blockMode) {
             BlockMode.INTERACT -> if (interactWithFacing(rotation, blockHand)) {
-                pauseOnBlockTicks = pauseOnBlockTicksRange.random()
+                reblockTicks = reblockTicksRange.random()
                 blockVisual = true
                 enforcedBlockingHand = blockHand
+                hasBlockedSinceAttack = true
                 return true
             }
             BlockMode.FAKE -> {
@@ -192,8 +203,9 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         // Interact with the item in the block hand
         if (genericUseItem(rotation, blockHand)) {
-            pauseOnBlockTicks = pauseOnBlockTicksRange.random()
+            reblockTicks = reblockTicksRange.random()
             enforcedBlockingHand = blockHand
+            hasBlockedSinceAttack = true
         }
 
         blockVisual = true

@@ -50,6 +50,10 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
     KillAuraClickerItemCooldown()
 ) {
 
+    var lastClickTicks = 0
+    val ticksSinceLastClick
+        get() = player.tickCount - lastClickTicks
+
     class KillAuraClickerItemCooldown : ItemCooldown() {
 
         private val ignoreOnShieldBreak by boolean("IgnoreOnShieldBreak", true)
@@ -156,6 +160,11 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
 
         // Run the attack
         click(attack)
+
+        val clickAmount = this.clickAmount
+        if (clickAmount != null && clickAmount > 0) {
+            lastClickTicks = player.tickCount
+        }
 
         // 1. Rotate back
         if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
