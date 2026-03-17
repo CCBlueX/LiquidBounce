@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFa
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.interact
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
@@ -34,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 
 @Suppress("unused")
@@ -50,13 +50,13 @@ object ScriptInteractionUtil {
     }
 
     @JvmName("interactEntity")
-    fun interactEntity(entity: Entity, hand: InteractionHand) {
+    fun interactEntity(entity: Entity, hitResult: EntityHitResult, hand: InteractionHand) {
         // Safety check
         if (entity == mc.player) {
             return
         }
 
-        mc.gameMode?.interact(mc.player!!, entity, hand)
+        mc.gameMode?.interact(mc.player!!, entity, hitResult, hand)
     }
 
     @JvmName("useItem")
