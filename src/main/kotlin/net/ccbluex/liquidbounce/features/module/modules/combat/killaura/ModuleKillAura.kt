@@ -263,14 +263,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
             // Make sure we are not blocking
             val hasUnblocked = KillAuraAutoBlock.stopBlocking()
-
-            // Deal with fake swing
-            if (KillAuraFailSwing.enabled) {
-                if (hasUnblocked && KillAuraAutoBlock.pauseOnUnblockTicks > 0) {
-                    waitTicks = KillAuraAutoBlock.pauseOnUnblockTicks
-                } else {
-                    dealWithFakeSwing(target)
-                }
+            if (hasUnblocked && KillAuraAutoBlock.pauseOnUnblockTicks > 0) {
+                waitTicks = KillAuraAutoBlock.pauseOnUnblockTicks
+            }else if (KillAuraFailSwing.enabled) {
+                dealWithFakeSwing(target)
             }
             return
         }
