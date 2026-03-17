@@ -299,7 +299,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
                 true
             }
-        } else if (KillAuraAutoBlock.pauseOnUnblockTicks > 0 && clicker.willClickAt(KillAuraAutoBlock.pauseOnUnblockTicks)
+        } else if (KillAuraAutoBlock.pauseOnUnblockTicks > 0
+            && clicker.willClickAt(KillAuraAutoBlock.pauseOnUnblockTicks)
             && KillAuraAutoBlock.shouldUnblockToHit) {
             KillAuraAutoBlock.stopBlocking(pauses = true)
         } else {

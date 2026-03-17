@@ -107,6 +107,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
      * - Closing the inventory if we are simulating inventory closing
      * - Unblocking if we are blocking and the tick on is 0
      */
+    @Suppress("CognitiveComplexMethod")
     fun prepareForAttack(rotation: Rotation? = null, attack: () -> Boolean) {
         if (!canExecuteClickNow()) {
             // If we are not going to click, we don't need to prepare the environment
