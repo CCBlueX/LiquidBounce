@@ -61,7 +61,8 @@ open class Clicker<T>(
     val keyBinding: KeyMapping,
     val itemCooldown: ItemCooldown? = ItemCooldown(),
     maxCps: Int = 60,
-    name: String = "Clicker"
+    name: String = "Clicker",
+    simulateAttackKeyDown: Boolean = false,
 ) : ValueGroup(name, aliases = listOf("ClickScheduler")), EventListener where T : EventListener {
 
     companion object {
@@ -127,6 +128,9 @@ open class Clicker<T>(
             return clickArray.iterations
         }
 
+    var ticksSinceLastClick = 0
+        private set
+
     fun willClickAt(tick: Int = 1) = getClickAmount(tick) > 0
 
     fun getClickAmount(tick: Int = 0): Int {
@@ -146,16 +150,19 @@ open class Clicker<T>(
         return lastClickPassed + (tick * 50L) >= 1000L
     }
 
-    @Suppress("unused")
-    private val keybindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
-        val clickAmount = this.clickAmount ?: return@handler
+    init {
+        if (simulateAttackKeyDown && keyBinding == mc.options.keyAttack) {
+            handler<KeybindIsPressedEvent> { event ->
+                val clickAmount = this.clickAmount ?: return@handler
 
-        // It turns out, we only want to do this with [attackKey], otherwise
-        // [useKey] will do unexpected things.
-        if (keyBinding == mc.options.keyAttack && event.keyBinding == keyBinding) {
-            // We want to simulate the click in order to
-            // allow the game to handle the logic as if we clicked
-            event.isPressed = clickAmount > 0
+                // It turns out, we only want to do this with [attackKey], otherwise
+                // [useKey] will do unexpected things.
+                if (event.keyBinding == keyBinding) {
+                    // We want to simulate the click in order to
+                    // allow the game to handle the logic as if we clicked
+                    event.isPressed = clickAmount > 0
+                }
+            }
         }
     }
 
@@ -183,16 +190,34 @@ open class Clicker<T>(
                 clickAmount++
                 itemCooldown?.newCooldown()
                 lastClickTime = System.currentTimeMillis()
+                ticksSinceLastClick = 0
             }
         }
 
         this.clickAmount = clickAmount
     }
 
+    /**
+     * Returns true when a click attempt can be executed right now.
+     * This uses the same gating logic as [click] before invoking [block].
+     */
+    fun canExecuteClickNow(): Boolean {
+        if (getClickAmount() <= 0) {
+            return false
+        }
+
+        if (!passesAttackCooldown) {
+            return false
+        }
+
+        return itemCooldown?.isCooldownPassed() != false
+    }
+
     @Suppress("unused")
     private val gameHandler = handler<GameTickEvent>(
         priority = EventPriorityConvention.FIRST_PRIORITY
     ) {
+        ticksSinceLastClick++
         clickAmount = null
 
         if (clickArray.advance()) {

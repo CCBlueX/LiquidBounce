@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.inventory.useItem
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.minecraft.client.player.AbstractClientPlayer

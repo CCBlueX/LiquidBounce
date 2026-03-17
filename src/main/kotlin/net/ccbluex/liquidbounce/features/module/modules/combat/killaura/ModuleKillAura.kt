@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
@@ -36,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ALL
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_NONE
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ONLYENEMY
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.dealWithFakeSwing
@@ -106,6 +106,13 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
+    /**
+     * The use of suspend [waitTicks] is a bit too
+     * risky for a large and complex module
+     * such as KillAura. So back to the basics.
+     */
+    internal var waitTicks = 0
+
     init {
         tree(KillAuraAutoBlock)
         tree(TargetRenderer(this) {
@@ -132,6 +139,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        if (waitTicks > 0) {
+            waitTicks--
+        }
+
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen = isInventoryOpen || mc.screen is ContainerScreen
         val shouldResetTarget = player.isSpectator || player.isDeadOrDying || !requirementsMet
@@ -168,10 +179,11 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
             // Deal with fake swing when there is no target
             if (KillAuraFailSwing.enabled && requirementsMet) {
-                if (hasUnblocked) {
-                    waitTicks(KillAuraAutoBlock.currentTickOff)
+                if (hasUnblocked && KillAuraAutoBlock.pauseOnUnblockTicks > 0) {
+                    waitTicks = KillAuraAutoBlock.pauseOnUnblockTicks
+                } else {
+                    dealWithFakeSwing(null)
                 }
-                dealWithFakeSwing(null)
             }
             return@tickHandler
         }
@@ -220,7 +232,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod")
-    private suspend fun attackTarget(target: Entity, rotation: Rotation) {
+    private fun attackTarget(target: Entity, rotation: Rotation) {
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
 
@@ -243,21 +255,19 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         // Check if our target is in range, otherwise deal with auto block
         if (!isInRange) {
             if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.onScanRange &&
-                player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()
-            ) {
-                KillAuraAutoBlock.startBlocking()
+                player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()) {
+                if (KillAuraClicker.ticksSinceLastClick >= KillAuraAutoBlock.reblockTicks) {
+                    KillAuraAutoBlock.startBlocking()
+                }
+
                 return
             }
 
             // Make sure we are not blocking
             val hasUnblocked = KillAuraAutoBlock.stopBlocking()
-
-            // Deal with fake swing
-            if (KillAuraFailSwing.enabled) {
-                if (hasUnblocked) {
-                    waitTicks(KillAuraAutoBlock.currentTickOff)
-                }
-
+            if (hasUnblocked && KillAuraAutoBlock.pauseOnUnblockTicks > 0) {
+                waitTicks = KillAuraAutoBlock.pauseOnUnblockTicks
+            }else if (KillAuraFailSwing.enabled) {
                 dealWithFakeSwing(target)
             }
             return
@@ -268,17 +278,19 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val mainHandStack = player.mainHandItem
 
         // Attack enemy, according to the attack scheduler
-        if (clicker.isClickTick && canAttackNow(target, mainHandStack)) {
-            clicker.attack(rotation) {
+        if (clicker.isClickTick && canAttackNow(target, mainHandStack) &&
+            !KillAuraAutoBlock.isPrioritizingBlocking) {
+            clicker.prepareForAttack(rotation) {
                 // On each click, we check if we are still ready to attack
                 if (!canAttackNow(target, mainHandStack)) {
-                    return@attack false
+                    return@prepareForAttack false
                 }
 
                 // Attack enemy
                 attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint && !shouldBlockSprinting)
                 range.update()
                 KillAuraNotifyWhenFail.failedHitsIncrement = 0
+                KillAuraAutoBlock.hasBlockedSinceAttack = false
 
                 GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
                     add("player", GenericDebugRecorder.debugObject(player))
@@ -287,10 +299,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
                 true
             }
-        } else if (KillAuraAutoBlock.currentTickOff > 0 && clicker.willClickAt(KillAuraAutoBlock.currentTickOff)
-            && KillAuraAutoBlock.shouldUnblockToHit) {
-            KillAuraAutoBlock.stopBlocking(pauses = true)
-        } else {
+        } else if (KillAuraClicker.ticksSinceLastClick >= KillAuraAutoBlock.reblockTicks) {
             KillAuraAutoBlock.startBlocking()
         }
     }
