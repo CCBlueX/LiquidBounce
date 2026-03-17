@@ -161,7 +161,7 @@ fun interactEntity(
 /**
  * @return Cannot interact -> null; else -> [MultiPlayerGameMode.interact] or [MultiPlayerGameMode.useItem] result
  */
-fun interactEntityStrict(
+fun interactEntityLikeVanilla(
     entity: Entity,
     hitResult: EntityHitResult = EntityHitResult(entity),
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
@@ -230,7 +230,7 @@ fun interactBlock(
 /**
  * @return [MultiPlayerGameMode.useItemOn] or [MultiPlayerGameMode.useItem] result
  */
-fun interactBlockStrict(
+fun interactBlockLikeVanilla(
     hitResult: BlockHitResult,
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
     rotation: Rotation = RotationManager.currentRotation ?: player.rotation,

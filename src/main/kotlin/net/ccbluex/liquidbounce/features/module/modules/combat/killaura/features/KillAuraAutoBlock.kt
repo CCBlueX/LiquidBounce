@@ -45,9 +45,9 @@ import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.interactBlock
-import net.ccbluex.liquidbounce.utils.entity.interactBlockStrict
+import net.ccbluex.liquidbounce.utils.entity.interactBlockLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
-import net.ccbluex.liquidbounce.utils.entity.interactEntityStrict
+import net.ccbluex.liquidbounce.utils.entity.interactEntityLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.useItemStrict
@@ -69,11 +69,11 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     private val blockMode by enumChoice("BlockMode", BlockMode.INTERACT)
     /**
-     * Strict mode means to simulate vanilla use item action.
+     * This options means to simulate vanilla use item action.
      * If the effective hand (item) is [InteractionHand.OFF_HAND],
-     * It tries main hand then offhand.
+     * It tries the main hand then offhand.
      */
-    private val strict by boolean("Strict", true)
+    private val simulateVanillaUse by boolean("SimulateVanillaUse", true)
     private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM)
 
     private val tickOffRange by intRange("TickOff", 0..0, 0..5, "ticks").onChanged { range ->
@@ -337,9 +337,9 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         val entity = entityHitResult?.entity
 
         if (entity != null) {
-            return if (strict) {
+            return if (simulateVanillaUse) {
                 // Interact with entity. Vanilla blocking action won't trigger swing.
-                val result = interactEntityStrict(entity, entityHitResult, rotation = rotation) ?: return false
+                val result = interactEntityLikeVanilla(entity, entityHitResult, rotation = rotation) ?: return false
                 result.isUseItemSuccess && result.hand == blockHand
             } else {
                 interactEntity(entity, entityHitResult, hand = blockHand) is InteractionResult.Success
@@ -352,8 +352,8 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         return if (hitResult.type != HitResult.Type.BLOCK) {
             genericUseItem(rotation, blockHand)
         } else {
-            if (strict) {
-                val result = interactBlockStrict(hitResult, rotation = rotation) ?: return false
+            if (simulateVanillaUse) {
+                val result = interactBlockLikeVanilla(hitResult, rotation = rotation) ?: return false
                 result.isUseItemSuccess && result.hand == blockHand
             } else {
                 interactBlock(hitResult, hand = blockHand) is InteractionResult.Success
@@ -365,7 +365,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      * Successfully started to block (e.g. sword/shield) -> useItem Success
      */
     private fun genericUseItem(rotation: Rotation, blockHand: InteractionHand): Boolean {
-        return if (strict) {
+        return if (simulateVanillaUse) {
             val useItemResult = useItemStrict(rotation.yRot, rotation.xRot)
             useItemResult != null && useItemResult.hand == blockHand
         } else {
