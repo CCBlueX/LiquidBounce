@@ -76,23 +76,22 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private val simulateVanillaUse by boolean("SimulateVanillaUse", true)
     private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM)
 
-    private val tickOffRange by intRange("TickOff", 0..0, 0..5, "ticks").onChanged { range ->
-        currentTickOff = range.random()
+    private val pauseOnBlockTicksRange by intRange(
+        "PauseOnBlock", 0..0, 0..5, "ticks", aliases = listOf("TickOn")
+    ).onChanged { range ->
+        pauseOnBlockTicks = range.random()
     }
-    private val tickOnRange by intRange("TickOn", 0..0, 0..5, "ticks").onChanged { range ->
-        currentTickOn = range.random()
+    private val pauseOnUnblockTicksRange by intRange(
+        "PauseOnUnblock", 0..0, 0..5, "ticks", aliases = listOf("TickOff")
+    ).onChanged { range ->
+        pauseOnUnblockTicks = range.random()
     }
 
-    var currentTickOff: Int = tickOffRange.random()
-    var currentTickOn: Int = tickOnRange.random()
-    private var lastUnblockAttemptTick = Int.MIN_VALUE
-
-    val triedUnblockThisTick: Boolean
-        get() = lastUnblockAttemptTick == player.tickCount
+    var pauseOnBlockTicks: Int = pauseOnBlockTicksRange.random()
+    var pauseOnUnblockTicks: Int = pauseOnUnblockTicksRange.random()
 
     val chance by float("Chance", 100f, 0f..100f, "%")
     val blink by int("Blink", 0, 0..10, "ticks")
-    val pauseAttackOnUnblockTick by boolean("PauseAttackOnUnblockTick", true)
 
     val onScanRange by boolean("OnScanRange", true)
     private val onlyWhenInDanger by boolean("OnlyWhenInDanger", false)
@@ -132,11 +131,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         get() = unblockMode != UnblockMode.NONE
 
     val blockImmediate
-        get() = currentTickOn == 0
+        get() = pauseOnBlockTicks == 0
 
     override fun onDisabled() {
         this.stopBlocking()
-        lastUnblockAttemptTick = Int.MIN_VALUE
         super.onDisabled()
     }
 
@@ -165,7 +163,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             return
         }
 
-        if (player.isUsingItem || triedUnblockThisTick) {
+        if (player.isUsingItem) {
             return
         }
 
@@ -180,7 +178,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         when (blockMode) {
             BlockMode.INTERACT -> if (interactWithFacing(rotation, blockHand)) {
-                currentTickOn = tickOnRange.random()
+                pauseOnBlockTicks = pauseOnBlockTicksRange.random()
                 blockVisual = true
                 enforcedBlockingHand = blockHand
                 return
@@ -194,7 +192,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         // Interact with the item in the block hand
         if (genericUseItem(rotation, blockHand)) {
-            currentTickOn = tickOnRange.random()
+            pauseOnBlockTicks = pauseOnBlockTicksRange.random()
             enforcedBlockingHand = blockHand
         }
 
@@ -215,7 +213,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
         enforcedBlockingHand = null
-        lastUnblockAttemptTick = Int.MIN_VALUE
     }
 
     @Suppress("unused")
@@ -259,11 +256,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             return false
         }
 
-        currentTickOff = tickOffRange.random()
+        pauseOnUnblockTicks = pauseOnUnblockTicksRange.random()
 
         return when (unblockMode) {
             UnblockMode.STOP_USING_ITEM -> {
-                lastUnblockAttemptTick = player.tickCount
                 interaction.releaseUsingItemInTickLoop()
                 enforcedBlockingHand = null
                 true
@@ -271,7 +267,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
             // Not working when blocking with offhand
             UnblockMode.CHANGE_SLOT -> {
-                lastUnblockAttemptTick = player.tickCount
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 9
                 network.sendHeldItemChange(nextSlot)
@@ -286,7 +281,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
             // Not working when server doesn't have offhand
             UnblockMode.SWAP_HAND -> {
-                lastUnblockAttemptTick = player.tickCount
                 network.sendSwapItemWithOffhand()
                 network.sendSwapItemWithOffhand()
                 enforcedBlockingHand = null
@@ -294,7 +288,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             }
 
             UnblockMode.NONE -> if (!pauses) {
-                lastUnblockAttemptTick = player.tickCount
                 interaction.releaseUsingItemInTickLoop()
                 enforcedBlockingHand = null
                 true
