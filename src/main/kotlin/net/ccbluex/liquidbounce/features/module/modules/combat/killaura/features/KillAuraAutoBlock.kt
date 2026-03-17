@@ -77,12 +77,12 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM)
 
     private val pauseOnBlockTicksRange by intRange(
-        "PauseOnBlock", 0..0, 0..5, "ticks", aliases = listOf("TickOn")
+        "PauseOnBlock", 0..0, 0..3, "ticks", aliases = listOf("TickOn")
     ).onChanged { range ->
         pauseOnBlockTicks = range.random()
     }
     private val pauseOnUnblockTicksRange by intRange(
-        "PauseOnUnblock", 0..0, 0..5, "ticks", aliases = listOf("TickOff")
+        "PauseOnUnblock", 0..0, 0..3, "ticks", aliases = listOf("TickOff")
     ).onChanged { range ->
         pauseOnUnblockTicks = range.random()
     }
