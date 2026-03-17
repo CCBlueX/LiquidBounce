@@ -44,9 +44,12 @@ import net.ccbluex.liquidbounce.utils.client.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.entity.interactBlock
 import net.ccbluex.liquidbounce.utils.entity.interactBlockStrict
+import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.interactEntityStrict
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.useItemStrict
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
@@ -58,11 +61,12 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.phys.HitResult
 import kotlin.random.Random
 
 /**
- * ## Manual use item packet sequence
+ * ## Vanilla use item packet sequence
  *
  * ### On Entity
  *
@@ -80,6 +84,12 @@ import kotlin.random.Random
 object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", false) {
 
     private val blockMode by enumChoice("BlockMode", BlockMode.INTERACT)
+    /**
+     * Strict mode means to simulate vanilla use item action.
+     * If the effective hand (item) is [InteractionHand.OFF_HAND],
+     * It tries main hand then offhand.
+     */
+    private val strict by boolean("Strict", true)
     private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM)
 
     private val tickOffRange by intRange("TickOff", 0..0, 0..5, "ticks").onChanged { range ->
@@ -199,8 +209,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         // Interact with the item in the block hand
-        val useItemResult = useItemStrict(rotation.yRot, rotation.xRot)
-        if (useItemResult != null && useItemResult.hand == blockHand) {
+        if (genericUseItem(rotation, blockHand)) {
             currentTickOn = tickOnRange.random()
             enforcedBlockingHand = blockHand
         }
@@ -346,21 +355,39 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         val entity = entityHitResult?.entity
 
         if (entity != null) {
-            // Interact with entity
-            // Vanilla blocking action won't trigger swing
-            val result = interactEntityStrict(entity, entityHitResult, rotation = rotation) ?: return false
-            return result.isUseItemSuccess && result.hand == blockHand
+            return if (strict) {
+                // Interact with entity. Vanilla blocking action won't trigger swing.
+                val result = interactEntityStrict(entity, entityHitResult, rotation = rotation) ?: return false
+                result.isUseItemSuccess && result.hand == blockHand
+            } else {
+                interactEntity(entity, entityHitResult, hand = blockHand) is InteractionResult.Success
+            }
         }
 
         val hitResult = traceFromPlayer(rotation)
 
         // Facing neither entity nor block -> call `useItem`
         return if (hitResult.type != HitResult.Type.BLOCK) {
+            genericUseItem(rotation, blockHand)
+        } else {
+            if (strict) {
+                val result = interactBlockStrict(hitResult, rotation = rotation) ?: return false
+                result.isUseItemSuccess && result.hand == blockHand
+            } else {
+                interactBlock(hitResult, hand = blockHand) is InteractionResult.Success
+            }
+        }
+    }
+
+    /**
+     * Successfully started to block (e.g. sword/shield) -> useItem Success
+     */
+    private fun genericUseItem(rotation: Rotation, blockHand: InteractionHand): Boolean {
+        return if (strict) {
             val useItemResult = useItemStrict(rotation.yRot, rotation.xRot)
             useItemResult != null && useItemResult.hand == blockHand
         } else {
-            val result = interactBlockStrict(hitResult, rotation = rotation) ?: return false
-            result.isUseItemSuccess && result.hand == blockHand
+            useItem(blockHand, rotation.yRot, rotation.xRot) is InteractionResult.Success
         }
     }
 
