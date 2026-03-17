@@ -147,6 +147,10 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
                 }
 
                 if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.shouldUnblockToHit) {
+                    if (!canExecuteClickNow()) {
+                        return true
+                    }
+
                     // Wait for the tick off time to be over, if it's not 0
                     // Ideally this should not happen.
                     if (KillAuraAutoBlock.stopBlocking(pauses = true) && KillAuraAutoBlock.currentTickOff > 0) {

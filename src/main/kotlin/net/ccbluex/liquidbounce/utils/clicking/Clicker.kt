@@ -189,6 +189,22 @@ open class Clicker<T>(
         this.clickAmount = clickAmount
     }
 
+    /**
+     * Returns true when a click attempt can be executed right now.
+     * This uses the same gating logic as [click] before invoking [block].
+     */
+    fun canExecuteClickNow(): Boolean {
+        if (getClickAmount() <= 0) {
+            return false
+        }
+
+        if (!passesAttackCooldown) {
+            return false
+        }
+
+        return itemCooldown?.isCooldownPassed() != false
+    }
+
     @Suppress("unused")
     private val gameHandler = handler<GameTickEvent>(
         priority = EventPriorityConvention.FIRST_PRIORITY
