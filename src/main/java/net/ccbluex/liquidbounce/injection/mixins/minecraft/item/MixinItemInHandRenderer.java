@@ -23,7 +23,6 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
@@ -35,7 +34,6 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
 import org.spongepowered.asm.mixin.Final;
@@ -180,23 +178,13 @@ public abstract class MixinItemInHandRenderer {
         return y;
     }
 
-    /**
-     * Determines if the sword block animation should be applied no matter if we
-     * are actually blocking.
-     */
-    @Unique
-    private static boolean liquid_bounce$shouldAnimate(Player player) {
-        return ModuleSwordBlock.INSTANCE.getRunning()
-            && (ModuleSwordBlock.getShouldApplySwordBlockAnimation(player) || KillAuraAutoBlock.INSTANCE.getBlockVisual());
-    }
-
     @ModifyExpressionValue(method = "renderArmWithItem", at = @At(
         value = "INVOKE",
         target = "Lnet/minecraft/world/item/ItemStack;getUseAnimation()Lnet/minecraft/world/item/ItemUseAnimation;",
         ordinal = 0
     ))
-    private ItemUseAnimation hookUseAction(ItemUseAnimation original, @Local(argsOnly = true) ItemStack item) {
-        if (item.is(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(minecraft.player)) {
+    private ItemUseAnimation hookUseAction(ItemUseAnimation original, @Local(argsOnly = true) ItemStack item, @Local(argsOnly = true) AbstractClientPlayer entity) {
+        if (item.is(ItemTags.SWORDS) && ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
             return ItemUseAnimation.BLOCK;
         }
         return original;
@@ -209,7 +197,7 @@ public abstract class MixinItemInHandRenderer {
     ))
     private boolean hookIsUseItem(boolean original, @Local(argsOnly = true) AbstractClientPlayer entity) {
         var itemStack = entity.getMainHandItem();
-        if (itemStack.is(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(entity)) {
+        if (itemStack.is(ItemTags.SWORDS) && ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
             return true;
         }
 
@@ -223,7 +211,7 @@ public abstract class MixinItemInHandRenderer {
     ))
     private InteractionHand hookActiveHand(InteractionHand original, @Local(argsOnly = true) AbstractClientPlayer entity) {
         var itemStack = entity.getMainHandItem();
-        if (itemStack.is(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(entity)) {
+        if (itemStack.is(ItemTags.SWORDS) && ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
             return InteractionHand.MAIN_HAND;
         }
 
@@ -237,7 +225,7 @@ public abstract class MixinItemInHandRenderer {
     ))
     private int hookItemUseItem(int original, @Local(argsOnly = true) AbstractClientPlayer entity) {
         var itemStack = entity.getMainHandItem();
-        if (itemStack.is(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(entity)) {
+        if (itemStack.is(ItemTags.SWORDS) && ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
             return 7200;
         }
 

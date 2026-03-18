@@ -45,12 +45,18 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
     val applyToThirdPersonView by boolean("ApplyToThirdPersonView", true).doNotIncludeAlways()
     private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
+    private val LivingEntity.shouldApplySwordBlockAnimation
+        get() = (isUsingItem && offhandItem.item is ShieldItem && useItem === offhandItem)
+            || (fakeOnPressing && mc.options.keyUse.isPressedOnAny)
+
+    /**
+     * Determines if the sword block animation should be applied no matter if we
+     * are actually blocking.
+     */
     @JvmStatic
-    val LivingEntity.shouldApplySwordBlockAnimation
-        get() = when(fakeOnPressing) {
-            true -> mc.options.keyUse.isPressedOnAny
-            false -> isUsingItem && offhandItem.item is ShieldItem && useItem === offhandItem
-        }
+    fun shouldAnimateSwordBlock(entity: LivingEntity): Boolean {
+        return running && (entity.shouldApplySwordBlockAnimation || KillAuraAutoBlock.blockVisual && entity === player)
+    }
 
     @JvmOverloads
     fun shouldHideOffhand(

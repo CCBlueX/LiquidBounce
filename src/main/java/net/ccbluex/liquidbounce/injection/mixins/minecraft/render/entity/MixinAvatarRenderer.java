@@ -51,12 +51,18 @@ public abstract class MixinAvatarRenderer {
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (player == localPlayer
             && ModuleSwordBlock.INSTANCE.getApplyToThirdPersonView()
-            && ModuleSwordBlock.INSTANCE.shouldHideOffhand()
         ) {
-            if (hand == InteractionHand.OFF_HAND) {
-                cir.setReturnValue(HumanoidModel.ArmPose.EMPTY);
-            } else if (localPlayer.isUsingItem()) {
-                cir.setReturnValue(HumanoidModel.ArmPose.BLOCK);
+            switch (hand) {
+                case MAIN_HAND -> {
+                    if (ModuleSwordBlock.shouldAnimateSwordBlock(localPlayer)) {
+                        cir.setReturnValue(HumanoidModel.ArmPose.BLOCK);
+                    }
+                }
+                case OFF_HAND -> {
+                    if (ModuleSwordBlock.INSTANCE.shouldHideOffhand()) {
+                        cir.setReturnValue(HumanoidModel.ArmPose.EMPTY);
+                    }
+                }
             }
         }
     }
