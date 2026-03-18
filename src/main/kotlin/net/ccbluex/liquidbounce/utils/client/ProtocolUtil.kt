@@ -52,7 +52,7 @@ val protocolVersion: ClientProtocolVersion
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         if (usesViaFabricPlus) {
-            return@runCatching VfpCompatibility.INSTANCE.unsafeGetProtocolVersion()
+            return@runCatching VfpCompatibility.INSTANCE.unsafeGetProtocolVersion()!!
         } else {
             return@runCatching defaultProtocolVersion
         }
@@ -72,6 +72,7 @@ val protocolVersions: Array<ClientProtocolVersion>
         logger.error("Failed to get protocol version", it)
     }.getOrDefault(arrayOf(defaultProtocolVersion))
 
+@JvmRecord
 data class ClientProtocolVersion(val name: String, val version: Int)
 
 val isEqual1_8: Boolean
@@ -147,7 +148,7 @@ val isNewerThanOrEquals1_21_9: Boolean
 val isOlderThanOrEquals1_21_11: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_11
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_21_11
     }.onFailure {
         logger.error("Failed to check if the server is using 1.21.11", it)
     }.getOrDefault(false)

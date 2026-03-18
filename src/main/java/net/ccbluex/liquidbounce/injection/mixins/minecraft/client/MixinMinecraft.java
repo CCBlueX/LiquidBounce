@@ -210,7 +210,7 @@ public abstract class MixinMinecraft {
             var protocolVersion = VfpCompatibility.INSTANCE.unsafeGetProtocolVersion();
 
             if (protocolVersion != null) {
-                titleBuilder.append(protocolVersion.getName());
+                titleBuilder.append(protocolVersion.name());
             } else {
                 titleBuilder.append(SharedConstants.getCurrentVersion().name());
             }
