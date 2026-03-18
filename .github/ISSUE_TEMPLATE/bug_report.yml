@@ -8,11 +8,22 @@ body:
       value: |
         🧐 **Guidelines:**
         
-        - Search through [existing issues](https://github.com/CCBlueX/LiquidBounce/issues?q=is%3Aopen+is%3Aissue) first to ensure that this bug has not been reported before.
         - Write a descriptive title for your issue. Avoid generic or vague titles such as "Something's not working" or "A couple of problems".
         - Keep your issue focused on one single problem. If you have multiple bug reports, please create separate issues for each of them.
         - Provide as much context as possible in the details section. Include screenshots, screen recordings, links, references, or anything else you may consider relevant.
-        - Do not submit meaningless content (such as spam, duplicate information, etc.). Such issues will not be accepted, and severe cases may result in restricted commenting privileges on the repository due to spam.
+        
+        ⚠️ **Warning:**
+        - Issues without a concrete description will be closed.
+        - Meaningless spam issues will be locked.
+
+  - type: checkboxes
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have searched through existing issues and confirmed this bug has not been reported yet.
+          required: true
+        - label: I have reproduced this on the latest development build.
+          required: true
 
   - type: dropdown
     attributes:
@@ -29,7 +40,7 @@ body:
     attributes:
       label: LiquidBounce Build/Version
       description: Which version of LiquidBounce does this bug affect?
-      placeholder: e.g. 0.35.0
+      placeholder: e.g. 0.36.0
     validations:
       required: true
 
