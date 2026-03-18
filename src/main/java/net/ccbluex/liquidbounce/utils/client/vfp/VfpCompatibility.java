@@ -27,6 +27,9 @@ import net.ccbluex.liquidbounce.utils.client.ClientProtocolVersion;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.apache.commons.lang3.ArrayUtils;
+import org.jspecify.annotations.Nullable;
+
+import java.util.function.Predicate;
 
 /**
  * Compatibility layer for ViaFabricPlus
@@ -37,7 +40,7 @@ public enum VfpCompatibility {
 
     INSTANCE;
 
-    public ClientProtocolVersion unsafeGetProtocolVersion() {
+    public @Nullable ClientProtocolVersion unsafeGetProtocolVersion() {
         try {
             ProtocolVersion version = ViaFabricPlus.getImpl().getTargetVersion();
             return new ClientProtocolVersion(version.getName(), version.getVersion());
@@ -169,7 +172,7 @@ public enum VfpCompatibility {
         }
     }
 
-    public boolean isNewerThanOrEqual1_21_11() {
+    public boolean isOlderThanOrEqual1_21_11() {
         try {
             var version = ViaFabricPlus.getImpl().getTargetVersion();
 
