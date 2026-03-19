@@ -68,3 +68,12 @@ submit a pull request.
 ## Stats
 
 ![Alt](https://repobeats.axiom.co/api/embed/ad3a9161793c4dfe50934cd4442d25dc3ca93128.svg "Repobeats analytics image")
+
+## Imprint
+
+**CCBlueX**  
+Vahrenwalder Str. 269A
+30179 Hanover
+Germany
+
+**Owner and responsible for the content:** Marco Beyer
