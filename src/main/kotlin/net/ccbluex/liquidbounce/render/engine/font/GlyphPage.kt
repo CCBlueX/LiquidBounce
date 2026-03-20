@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.render.engine.font
 
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2s
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.minecraft.client.renderer.texture.DynamicTexture
-import org.lwjgl.opengl.GL11
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Dimension
@@ -96,7 +96,7 @@ abstract class GlyphPage {
         protected val maxTextureSize = lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
             // As specified in the OpenGL reference, GL_MAX_TEXTURE_SIZE must be at least 1024.
             // If it is less than that, an error occurred, the 1024 is just a failsafe.
-            max(GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE), 1024)
+            max(gpuDevice.maxTextureSize, 1024)
         }
 
         @JvmStatic
