@@ -19,11 +19,13 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
+import net.minecraft.core.TypedInstance
 import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.food.FoodProperties
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.Tool
@@ -40,50 +42,50 @@ val DataComponentGetter.foodComponent: FoodProperties?
 val DataComponentGetter.toolComponent: Tool?
     get() = this.get(DataComponents.TOOL)
 
-val ItemStack.isBundle
+val TypedInstance<Item>.isBundle
     get() = this.`is`(ItemTags.BUNDLES)
 
 // Tools
 
-val ItemStack.isSword
+val TypedInstance<Item>.isSword
     get() = this.`is`(ItemTags.SWORDS)
 
-val ItemStack.isSpear
+val TypedInstance<Item>.isSpear
     get() = this.`is`(ItemTags.SPEARS)
 
-val ItemStack.isPickaxe
+val TypedInstance<Item>.isPickaxe
     get() = this.`is`(ItemTags.PICKAXES)
 
-val ItemStack.isAxe
+val TypedInstance<Item>.isAxe
     get() = this.`is`(ItemTags.AXES)
 
-val ItemStack.isShovel
+val TypedInstance<Item>.isShovel
     get() = this.`is`(ItemTags.SHOVELS)
 
-val ItemStack.isHoe
+val TypedInstance<Item>.isHoe
     get() = this.`is`(ItemTags.HOES)
 
 /**
  * Replacement of 1.21.4 `MiningToolItem`
  */
-val ItemStack.isMiningTool
+val TypedInstance<Item>.isMiningTool
     get() = isAxe || isPickaxe || isShovel || isHoe
 
 // Armors
 
-val ItemStack.isFootArmor
+val TypedInstance<Item>.isFootArmor
     get() = this.`is`(ItemTags.FOOT_ARMOR)
 
-val ItemStack.isLegArmor
+val TypedInstance<Item>.isLegArmor
     get() = this.`is`(ItemTags.LEG_ARMOR)
 
-val ItemStack.isChestArmor
+val TypedInstance<Item>.isChestArmor
     get() = this.`is`(ItemTags.CHEST_ARMOR)
 
-val ItemStack.isHeadArmor
+val TypedInstance<Item>.isHeadArmor
     get() = this.`is`(ItemTags.HEAD_ARMOR)
 
-val ItemStack.isPlayerArmor
+val TypedInstance<Item>.isPlayerArmor
     get() = isFootArmor || isLegArmor || isChestArmor || isHeadArmor
 
 val DataComponentGetter.equippableComponent
