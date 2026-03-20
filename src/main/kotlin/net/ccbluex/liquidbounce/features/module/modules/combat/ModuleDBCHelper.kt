@@ -112,7 +112,7 @@ object ModuleDBCHelper : ClientModule("DBCHelper", ModuleCategories.COMBAT) {
                 }
 
                 delay(triggerDelay.random().toLong())
-                mc.options.keyAttack.clickCount = 2
+                mc.options.keyAttack.clickCount += 1
             }
         }
         if (event.action == GLFW.GLFW_PRESS && event.button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
@@ -153,11 +153,11 @@ object ModuleDBCHelper : ClientModule("DBCHelper", ModuleCategories.COMBAT) {
 
                 if (mainHandStack.item is BlockItem || offHandStack.item is BlockItem) {
                     delay(triggerDelay.random().toLong())
-                    mc.options.keyUse.clickCount = 3
+                    mc.options.keyUse.clickCount += 2
                 }
                 else {
                     delay(triggerDelay.random().toLong())
-                    mc.options.keyUse.clickCount = 2
+                    mc.options.keyUse.clickCount += 1
                 }
             }
         }
