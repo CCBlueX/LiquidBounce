@@ -21,7 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementPositionCandidate
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.render.FULL_BOX
@@ -144,7 +145,7 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
     private val trying = Chronometer()
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (currentTarget != null && trying.hasElapsed(timeOut.toLong())) {
             placer.clear()
             currentTarget = null
@@ -312,7 +313,6 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
         return true
     }
 
-    @Suppress("GrazieInspection")
     private fun canEscapeThroughFloorOrCeiling(
         ceiling: Array<BlockPos>,
         floor: Array<BlockPos>
@@ -342,7 +342,7 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
     private fun canEscapeThroughSides(layerA: Array<BlockPos>, layerB: Array<BlockPos>): Boolean {
         // Do we find and escape side?
         layerA.forEachIndexed { index, pos1 ->
-            if (!pos1.getState()!!.isSolid && !layerB.elementAt(index).getState()!!.isSolid) {
+            if (!pos1.getState()!!.isSolid && !layerB[index].getState()!!.isSolid) {
                 return true
             }
         }

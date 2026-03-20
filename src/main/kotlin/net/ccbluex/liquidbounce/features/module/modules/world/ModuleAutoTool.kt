@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.AnchoredHotbarSwapController
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
@@ -166,6 +167,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
 
     private val requireSneaking by boolean("RequireSneaking", false)
+    private val notDuringCombat by boolean("NotDuringCombat", false)
 
     private object RequireNearBed : ToggleableValueGroup(
         this, "RequireNearBed", enabled = false
@@ -207,7 +209,12 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
-        if (requireSneaking && !player.isShiftKeyDown || RequireNearBed.enabled && !RequireNearBed.matches()) {
+        val cancelDueToCombat = notDuringCombat && CombatManager.isInCombat
+        val cancelDueToNotSneaking = requireSneaking && !player.isShiftKeyDown
+        if (cancelDueToCombat
+            || cancelDueToNotSneaking
+            || RequireNearBed.enabled && !RequireNearBed.matches()
+        ) {
             if (isInventoryConsidered) {
                 DynamicSelectMode.ConsiderInventory.onNoTool()
             }

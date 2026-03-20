@@ -18,19 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
+import net.ccbluex.fastutil.weightedMinByOrNullAtMost
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
+import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.minecraft.world.InteractionHand
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.PlayerRideable
 import net.minecraft.world.entity.animal.happyghast.HappyGhast
 import net.minecraft.world.entity.vehicle.VehicleEntity
-import net.minecraft.world.phys.EntityHitResult
 import kotlin.math.min
 
 /**
@@ -41,6 +42,7 @@ internal object NoFallMount : NoFallMode("Mount") {
     private val minFallDistance by float("MinFallDistance", 5f, 2f..50f)
     private val searchRange by float("SearchRange", 4.5f, 1f..8f)
     private val retryDelay by int("RetryDelay", 2, 0..20, "ticks")
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
     /**
      * Automatically dismounts after a configurable delay.
@@ -77,22 +79,19 @@ internal object NoFallMount : NoFallMode("Mount") {
 
         val target = world.entitiesForRendering()
             .filter { entity ->
-                isRideableTarget(entity) &&
-                    entity.squaredBoxedDistanceTo(eyePosition) <= maxSearchRange * maxSearchRange
-            }
-            .minByOrNull { entity ->
-                entity.squaredBoxedDistanceTo(eyePosition)
+                isRideableTarget(entity)
+            }.weightedMinByOrNullAtMost(maxSearchRange.sq()) {
+                it.squaredBoxedDistanceTo(eyePosition)
             } ?: run {
                 lastTargetId = -1
                 pendingMountedTargetId = -1
                 return@tickHandler
             }
 
-        if (!isOlderThanOrEquals1_7_10) {
-            interaction.interactAt(player, target, EntityHitResult(target), InteractionHand.MAIN_HAND)
-        }
-        interaction.interact(player, target, InteractionHand.MAIN_HAND)
-        player.swing(InteractionHand.MAIN_HAND)
+        interactEntity(
+            target,
+            swingMode = swingMode,
+        )
         lastTargetId = target.id
         pendingMountedTargetId = target.id
 

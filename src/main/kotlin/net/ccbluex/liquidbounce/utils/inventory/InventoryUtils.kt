@@ -24,17 +24,13 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.useItem
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
-import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getDestroySpeedWithEnchantment
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.MenuType
@@ -79,27 +75,7 @@ fun useHotbarSlotOrOffhand(
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): InteractionResult {
     SilentHotbar.selectSlotSilently(requester, slot, ticksUntilReset)
-    return useItem(slot.useHand, yRot, xRot, swingMode)
-}
-
-@JvmOverloads
-fun useItem(
-    hand: InteractionHand,
-    yRot: Float = RotationManager.currentRotation?.yRot ?: player.yRot,
-    xRot: Float = RotationManager.currentRotation?.xRot ?: player.xRot,
-    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
-): InteractionResult {
-    val result = interaction.useItem(player, hand, yRot, xRot)
-
-    if (result.consumesAction()) {
-        if (result.shouldSwingHand()) {
-            swingMode.accept(hand)
-        }
-
-        mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
-    }
-
-    return result
+    return net.ccbluex.liquidbounce.utils.entity.useItem(slot.useHand, yRot, xRot, swingMode)
 }
 
 internal fun findBlocksEndingWith(vararg targets: String): SortedSet<Block> =

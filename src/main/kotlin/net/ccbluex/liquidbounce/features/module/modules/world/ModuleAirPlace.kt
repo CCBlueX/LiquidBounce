@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.armorItems
-import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.world.item.ArmorStandItem

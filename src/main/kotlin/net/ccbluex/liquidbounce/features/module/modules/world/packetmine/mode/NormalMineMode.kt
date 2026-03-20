@@ -67,6 +67,10 @@ object NormalMineMode : MineMode("Normal") {
         }
     }
 
+    override fun shouldPreventTargetChange(mineTarget: MineTarget): Boolean {
+        return waitForConfirm && mineTarget.finished
+    }
+
     override fun shouldUpdate(mineTarget: MineTarget, slot: HotbarItemSlot?): Boolean {
         return !mineTarget.finished
     }

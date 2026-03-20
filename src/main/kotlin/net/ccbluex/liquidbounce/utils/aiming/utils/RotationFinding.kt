@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.samplePointOnSide
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -174,19 +175,18 @@ private class PrePlaningTracker(
 ) : BestRotationTracker(comparator, ignoreVisibility) {
 
     private val eyes = player.eyePosition
-    private val bestVisibleIntersects = false
-    private val bestInvisibleIntersects = false
 
     override fun getIsRotationBetter(base: RotationWithVector?, newRotation: RotationWithVector,
                                      visible: Boolean): Boolean {
+        val currentIntersects = base?.let { futureTarget.isHitByLine(eyes, it.vec) } ?: false
         val intersects = futureTarget.isHitByLine(eyes, newRotation.vec)
 
-        val isBetterWhenVisible = visible && !bestVisibleIntersects
-        val isBetterWhenInvisible = !visible && !bestInvisibleIntersects
+        val isBetterWhenVisible = visible && !currentIntersects
+        val isBetterWhenInvisible = !visible && !currentIntersects
         val shouldPreferNewRotation = intersects && (isBetterWhenVisible || isBetterWhenInvisible)
 
-        val isWorseWhenVisible = visible && bestVisibleIntersects
-        val isWorseWhenInvisible = !visible && bestInvisibleIntersects
+        val isWorseWhenVisible = visible && currentIntersects
+        val isWorseWhenInvisible = !visible && currentIntersects
         val shouldPreferCurrentRotation = !intersects && (isWorseWhenVisible || isWorseWhenInvisible)
 
         return when {
@@ -241,24 +241,6 @@ fun interface VisibilityPredicate {
     }
 }
 
-private fun pointOnBlockSide(
-    side: Direction,
-    a: Double,
-    b: Double,
-    box: AABB,
-): Vec3 {
-    val spot = when (side) {
-        Direction.DOWN -> Vec3(a, 0.0, b)
-        Direction.UP -> Vec3(a, 1.0, b)
-        Direction.NORTH -> Vec3(a, b, 0.0)
-        Direction.SOUTH -> Vec3(a, b, 1.0)
-        Direction.WEST -> Vec3(0.0, a, b)
-        Direction.EAST -> Vec3(1.0, a, b)
-    }
-
-    return Vec3(spot.x * box.xsize, spot.y * box.ysize, spot.z * box.zsize)
-}
-
 @Suppress("detekt:complexity.LongParameterList", "detekt.NestedBlockDepth")
 fun raytraceBlockSide(
     side: Direction,
@@ -292,7 +274,7 @@ fun raytraceBlockSide(
 
 
             range(ITERATION_PROPORTIONS, ITERATION_PROPORTIONS) { a, b ->
-                val spot = pointOnBlockSide(side, a, b, box) + pos.toVec3d()
+                val spot = boxShape.samplePointOnSide(side, a, b) + pos
 
                 bestRotationTracker.considerSpot(
                     spot,
@@ -362,7 +344,7 @@ fun raytraceBox(
     val nearestSpot = box.getNearestPoint(eyes)
 
     bestRotationTracker.considerSpot(
-        preferredSpot,
+        nearestSpot,
         box,
         eyes,
         visibilityPredicate,

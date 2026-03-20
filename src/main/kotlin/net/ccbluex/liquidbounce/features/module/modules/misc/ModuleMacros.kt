@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.sendChatOrCommand
 import net.ccbluex.liquidbounce.utils.inventory.SingleItemStackPickMode
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.useItem
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.minecraft.world.phys.BlockHitResult
 
 /**

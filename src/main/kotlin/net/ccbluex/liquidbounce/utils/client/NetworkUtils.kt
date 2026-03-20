@@ -21,14 +21,14 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
-import net.ccbluex.liquidbounce.event.nextTick
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
@@ -176,7 +176,7 @@ fun LocalPlayer.clickBlockWithSlot(
     this.inventory.selectedSlot = prevHotbarSlot
 }
 
-fun MultiPlayerGameMode.releaseUsingItemNextTick() = nextTick {
+fun MultiPlayerGameMode.releaseUsingItemInTickLoop() = TickLoopTaskExecutor.executeInTickLoop {
     this.releaseUsingItem(player)
 }
 

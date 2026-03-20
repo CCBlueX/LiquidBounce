@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.utils.input
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.world.InteractionResult
 
 /**
  * Translates a key name to an InputUtil.Key using GLFW key codes.
@@ -97,9 +96,6 @@ val availableMouseKeys: Set<String>
         .toSet()
 
 val availableInputKeys: Set<String> = availableKeyboardKeys + availableMouseKeys + "none"
-
-fun InteractionResult.shouldSwingHand() =
-    this is InteractionResult.Success && this.swingSource == InteractionResult.SwingSource.CLIENT
 
 /**
  * Try to parse the key into [InputBind.Modifier] instance.

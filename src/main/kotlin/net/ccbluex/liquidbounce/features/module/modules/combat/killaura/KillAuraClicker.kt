@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.simulateInventoryClosing
@@ -102,93 +101,86 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
     }
 
     /**
-     * Prepare the environment for attacking an entity
+     * Will prepare us for attacking using the [attack] function.
      *
-     * This means, we make sure we are not blocking, we are not using another item,
-     * and we are not in an inventory screen depending on the configuration.
+     * This includes:
+     * - Closing the inventory if we are simulating inventory closing
+     * - Unblocking if we are blocking and the tick on is 0
      */
-    suspend fun attack(rotation: Rotation? = null, attack: () -> Boolean) {
-        if (!isClickTick) {
+    @Suppress("CognitiveComplexMethod")
+    fun prepareForAttack(rotation: Rotation? = null, attack: () -> Boolean) {
+        if (!canExecuteClickNow()) {
             // If we are not going to click, we don't need to prepare the environment
             return
         }
 
-        val interactiveScene = InteractiveScene(rotation = rotation)
-        if (interactiveScene.prepare()) {
+        // 1. Stop blocking
+        if (player.isBlocking) {
+            if (!KillAuraAutoBlock.enabled && !ModuleMultiActions.mayAttackWhileUsing()) {
+                return
+            }
+
+            if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.shouldUnblockToHit) {
+                if (KillAuraAutoBlock.stopBlocking(pauses = true) && KillAuraAutoBlock.pauseOnUnblockTicks > 0) {
+                    ModuleKillAura.waitTicks = KillAuraAutoBlock.pauseOnUnblockTicks
+                    return
+                }
+            }
+        } else if (player.isUsingItem && !ModuleMultiActions.mayAttackWhileUsing()) {
+            // Since we are not allowed to attack while the player is using another item,
+            // we will return here.
             return
         }
 
+        val wasSimulatedInventoryClose = simulateInventoryClosing && InventoryManager.isInventoryOpen
+
+        // 2. Close Inventory
+        if (wasSimulatedInventoryClose) {
+            network.sendCloseInventory()
+        }
+
+        // 3. Rotate to target (if we have on-tick enabled)
+        if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
+            network.send(
+                PosRot(
+                    player.x,
+                    player.y,
+                    player.z,
+                    rotation.yaw,
+                    rotation.pitch,
+                    player.onGround(),
+                    player.horizontalCollision
+                )
+            )
+        }
+
+        // Run the attack
         click(attack)
 
-        interactiveScene.unprepare()
-    }
-
-    /**
-     * Prepare the scene for e.g. attacking an entity.
-     */
-    @JvmRecord
-    private data class InteractiveScene(
-        val rotation: Rotation?,
-        val isInInventoryScreen: Boolean = InventoryManager.isInventoryOpen,
-    ) {
-
-        /**
-         * @return if we can't attack.
-         */
-        @Suppress("CognitiveComplexMethod")
-        suspend fun prepare(): Boolean {
-            if (simulateInventoryClosing && isInInventoryScreen) {
-                network.sendCloseInventory()
-            }
-
-            if (player.isBlocking) {
-                if (!KillAuraAutoBlock.enabled && !ModuleMultiActions.mayAttackWhileUsing()) {
-                    return true
-                }
-
-                if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.shouldUnblockToHit) {
-                    // Wait for the tick off time to be over, if it's not 0
-                    // Ideally this should not happen.
-                    if (KillAuraAutoBlock.stopBlocking(pauses = true) && KillAuraAutoBlock.currentTickOff > 0) {
-                        waitTicks(KillAuraAutoBlock.currentTickOff)
-                    }
-                }
-            } else if (player.isUsingItem && !ModuleMultiActions.mayAttackWhileUsing()) {
-                // return if it's not allowed to attack while the player is using another item that's not a shield
-                return true
-            }
-
-            if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
-                network.send(
-                    PosRot(
-                        player.x, player.y, player.z, rotation.yaw, rotation.pitch, player.onGround(),
-                        player.horizontalCollision
-                    )
+        // 1. Rotate back
+        if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
+            network.send(
+                PosRot(
+                    player.x,
+                    player.y,
+                    player.z,
+                    player.withFixedYaw(rotation),
+                    player.xRot,
+                    player.onGround(),
+                    player.horizontalCollision
                 )
-            }
-            return false
+            )
         }
 
-        fun unprepare() {
-            if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
-                network.send(
-                    PosRot(
-                        player.x, player.y, player.z, player.withFixedYaw(rotation), player.xRot, player.onGround(),
-                        player.horizontalCollision
-                    )
-                )
-            }
-
-            if (simulateInventoryClosing && isInInventoryScreen) {
-                network.send1_11_1OpenInventory()
-            }
-
-            // If the player was blocking before, we start blocking again after the attack if the tick on is 0
-            if (KillAuraAutoBlock.blockImmediate) {
-                KillAuraAutoBlock.startBlocking()
-            }
+        // 2. Start blocking again
+        if (KillAuraAutoBlock.blockImmediate) {
+            KillAuraAutoBlock.startBlocking()
         }
 
+        // 3. Open inventory again
+        if (wasSimulatedInventoryClose) {
+            network.send1_11_1OpenInventory()
+        }
     }
 
 }
