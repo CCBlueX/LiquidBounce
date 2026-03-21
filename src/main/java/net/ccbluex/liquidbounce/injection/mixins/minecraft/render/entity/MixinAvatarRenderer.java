@@ -31,6 +31,7 @@ import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.network.chat.Component;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.item.ItemStack;
@@ -54,7 +55,7 @@ public abstract class MixinAvatarRenderer {
         ) {
             switch (hand) {
                 case MAIN_HAND -> {
-                    if (ModuleSwordBlock.shouldAnimateSwordBlock(localPlayer)) {
+                    if (ModuleSwordBlock.shouldAnimateSwordBlock(localPlayer, stack)) {
                         cir.setReturnValue(HumanoidModel.ArmPose.BLOCK);
                     }
                 }
