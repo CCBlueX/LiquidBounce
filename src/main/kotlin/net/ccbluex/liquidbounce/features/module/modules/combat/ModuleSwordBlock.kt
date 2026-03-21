@@ -54,8 +54,11 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
      * are actually blocking.
      */
     @JvmStatic
-    fun shouldAnimateSwordBlock(entity: LivingEntity): Boolean {
-        return running && (entity.shouldApplySwordBlockAnimation || KillAuraAutoBlock.blockVisual && entity === player)
+    @JvmOverloads
+    fun shouldAnimateSwordBlock(entity: LivingEntity, itemStack: ItemStack = entity.mainHandItem): Boolean {
+        return running
+            && (entity.shouldApplySwordBlockAnimation || KillAuraAutoBlock.blockVisual && entity === player)
+            && itemStack.isSword
     }
 
     @JvmOverloads

@@ -183,8 +183,8 @@ public abstract class MixinItemInHandRenderer {
         target = "Lnet/minecraft/world/item/ItemStack;getUseAnimation()Lnet/minecraft/world/item/ItemUseAnimation;",
         ordinal = 0
     ))
-    private ItemUseAnimation hookUseAction(ItemUseAnimation original, @Local(argsOnly = true) ItemStack item, @Local(argsOnly = true) AbstractClientPlayer entity) {
-        if (item.is(ItemTags.SWORDS) && ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
+    private ItemUseAnimation hookUseAction(ItemUseAnimation original, @Local(argsOnly = true) ItemStack itemStack, @Local(argsOnly = true) AbstractClientPlayer entity) {
+        if (ModuleSwordBlock.shouldAnimateSwordBlock(entity, itemStack)) {
             return ItemUseAnimation.BLOCK;
         }
         return original;
@@ -196,8 +196,7 @@ public abstract class MixinItemInHandRenderer {
         ordinal = 1
     ))
     private boolean hookIsUseItem(boolean original, @Local(argsOnly = true) AbstractClientPlayer entity) {
-        var itemStack = entity.getMainHandItem();
-        if (itemStack.is(ItemTags.SWORDS) && ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
+        if (ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
             return true;
         }
 
@@ -210,8 +209,7 @@ public abstract class MixinItemInHandRenderer {
         ordinal = 1
     ))
     private InteractionHand hookActiveHand(InteractionHand original, @Local(argsOnly = true) AbstractClientPlayer entity) {
-        var itemStack = entity.getMainHandItem();
-        if (itemStack.is(ItemTags.SWORDS) && ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
+        if (ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
             return InteractionHand.MAIN_HAND;
         }
 
@@ -224,8 +222,7 @@ public abstract class MixinItemInHandRenderer {
         ordinal = 2
     ))
     private int hookItemUseItem(int original, @Local(argsOnly = true) AbstractClientPlayer entity) {
-        var itemStack = entity.getMainHandItem();
-        if (itemStack.is(ItemTags.SWORDS) && ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
+        if (ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
             return 7200;
         }
 
