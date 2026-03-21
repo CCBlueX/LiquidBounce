@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import com.google.common.collect.Queues
@@ -78,7 +77,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 /*
-*快速点击来进行减少击退仅仅真的类似布吉岛的服务器
+*for play.bjd-mc.com:19132
 */
 
 object VelocityReduce : VelocityMode("Reduce") {
