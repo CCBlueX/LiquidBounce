@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import com.google.common.collect.Queues
+import net.ccbluex.fastutil.filterIsInstance
+import net.ccbluex.fastutil.weightedMinByOrNullAtMost
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -32,11 +34,14 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVe
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerDamage
@@ -54,9 +59,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundRespawnPacket
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.VecDeltaCodec
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
@@ -144,15 +147,11 @@ object VelocityReduce : VelocityMode("Reduce") {
 
         if (alinkTicks >= 0) return
 
-        val farTarget = world.entitiesForRendering().filter { entity ->
-            entity is LivingEntity
-                && entity != player
-                && !entity.isRemoved
-                && entity.shouldBeAttacked()
-                && entity.squaredBoxedDistanceTo(player) <= alinkTargetRange.endInclusive.sq().toDouble()
-        }.minByOrNull { entity -> entity.squaredBoxedDistanceTo(player) }
-
-        renderTarget = farTarget
+        renderTarget = world.entitiesForRendering().filterIsInstance<LivingEntity> { entity ->
+            !entity.isRemoved && entity.shouldBeAttacked()
+        }.weightedMinByOrNullAtMost(alinkTargetRange.endInclusive.sq().toDouble()) { entity ->
+            entity.squaredBoxedDistanceTo(player)
+        }
     }
 
     private fun handle() {
@@ -174,7 +173,6 @@ object VelocityReduce : VelocityMode("Reduce") {
             chat(message)
         }
     }
-
 
     @Suppress("unused")
     private val packetEventHandler = handler<PacketEvent> { event ->
@@ -267,13 +265,8 @@ object VelocityReduce : VelocityMode("Reduce") {
             }
             repeat(attackQueue) {
                 if (player.isSprinting) player.isSprinting = false
-                network.send(ServerboundInteractPacket.createAttackPacket(target!!, player.isShiftKeyDown))
-                player.swing(InteractionHand.MAIN_HAND)
-                player.deltaMovement = Vec3(
-                    player.deltaMovement.x * horizontal,
-                    player.deltaMovement.y * vertical,
-                    player.deltaMovement.z * horizontal
-                )
+                attackEntity(target!!, SwingMode.DO_NOT_HIDE)
+                player.deltaMovement = player.deltaMovement.multiply(horizontal, vertical, horizontal)
             }
             attackQueue = 0
             target = null
