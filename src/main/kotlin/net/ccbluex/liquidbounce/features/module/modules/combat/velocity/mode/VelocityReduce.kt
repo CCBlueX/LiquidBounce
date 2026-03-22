@@ -340,21 +340,21 @@ object VelocityReduce : VelocityMode("Reduce") {
         }
     }
 
-//    @Suppress("unused")
-//    private val renderHandler = handler<WorldRenderEvent> { event ->
-//        if (alinkTicks == -1 || renderTarget == null || renderTargetPos == null) return@handler
-//
-//        WireframePlayer(
-//
-//            renderTargetPos!!.pos,
-//            renderTarget!!.yRot,
-//            renderTarget!!.xRot
-//        ).render(
-//            event,
-//            Color4b(255, 255, 255, 87),
-//            Color4b(255, 255, 255, 255)
-//        )
-//    }
+    private val wireframePlayer = WireframePlayer()
+
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
+        if (alinkTicks == -1 || renderTarget == null || renderTargetPos == null) return@handler
+
+        wireframePlayer.pos = renderTargetPos!!.pos
+        wireframePlayer.yRot = renderTarget!!.yRot
+        wireframePlayer.xRot = renderTarget!!.xRot
+        wireframePlayer.render(
+            event,
+            Color4b.WHITE.alpha(100),
+            outlineColor = Color4b.WHITE,
+        )
+    }
 
     private class TrackedPosition {
         private val codec = VecDeltaCodec()
