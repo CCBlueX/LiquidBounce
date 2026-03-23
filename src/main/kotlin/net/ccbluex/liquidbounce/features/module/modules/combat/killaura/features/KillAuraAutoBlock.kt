@@ -177,12 +177,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             return false
         }
 
-        val blockHand = InteractionHand.entries.firstOrNull {
-            val itemStack = player.getItemInHand(it)
-            itemStack.has(BLOCKS_ATTACKS)
-                && itemStack.isItemEnabled(world.enabledFeatures())
-                && !player.cooldowns.isOnCooldown(itemStack)
-        } ?: return false
+        val blockHand = findBlockableHand() ?: return false
         val rotation = RotationManager.serverRotation
         debugParameter("blockHand") { blockHand }
 
@@ -390,6 +385,16 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             range = range.interactionRange.toDouble(),
             throughWallsRange = range.interactionThroughWallsRange.toDouble()
         ) != null
+    }
+
+    /**
+     * @return the first hand can be used to block
+     */
+    private fun findBlockableHand() = InteractionHand.entries.find {
+        val itemStack = player.getItemInHand(it)
+        itemStack.has(BLOCKS_ATTACKS)
+            && itemStack.isItemEnabled(world.enabledFeatures())
+            && !player.cooldowns.isOnCooldown(itemStack)
     }
 
     enum class BlockMode(override val tag: String) : Tagged {

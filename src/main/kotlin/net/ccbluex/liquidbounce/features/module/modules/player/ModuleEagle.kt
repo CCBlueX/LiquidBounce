@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import java.util.function.Predicate
 
@@ -98,7 +99,7 @@ object ModuleEagle : ClientModule(
             get() = enabled && Condition.SNEAK in conditions
 
         fun shouldSneak(event: MovementInputEvent) =
-            !enabled || player.xRot in pitch && conditions.all { it.test(event) }
+            !enabled || player.xRot in pitch && conditions.matchesAll(event)
 
         @Suppress("unused")
         private enum class Condition(override val tag: String) : Tagged, Predicate<MovementInputEvent> {

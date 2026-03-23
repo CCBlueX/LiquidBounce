@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
+import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -34,10 +35,10 @@ val ItemStack.isConsumable: Boolean
 val ItemStack.isFood: Boolean
     get() = foodComponent != null && this.useAnimation == ItemUseAnimation.EAT
 
-val ItemStack.foodComponent: FoodProperties?
+val DataComponentGetter.foodComponent: FoodProperties?
     get() = this.get(DataComponents.FOOD)
 
-val ItemStack.toolComponent: Tool?
+val DataComponentGetter.toolComponent: Tool?
     get() = this.get(DataComponents.TOOL)
 
 val ItemStack.isBundle
@@ -86,19 +87,19 @@ val ItemStack.isHeadArmor
 val ItemStack.isPlayerArmor
     get() = isFootArmor || isLegArmor || isChestArmor || isHeadArmor
 
-val ItemStack.equippableComponent
+val DataComponentGetter.equippableComponent
     get() = this.get(DataComponents.EQUIPPABLE)
 
-val ItemStack.equipmentSlot
+val DataComponentGetter.equipmentSlot
     get() = this.equippableComponent?.slot
 
-val ItemStack.armorToughness
+val DataComponentGetter.armorToughness
     get() = this.getAttributeValue(Attributes.ARMOR_TOUGHNESS)
 
-val ItemStack.armorValue
+val DataComponentGetter.armorValue
     get() = this.getAttributeValue(Attributes.ARMOR)
 
-val ItemStack.armorKnockbackResistance
+val DataComponentGetter.armorKnockbackResistance
     get() = this.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE)
 
 // Shield
@@ -106,5 +107,5 @@ val ItemStack.armorKnockbackResistance
 /**
  * @see Items.SHIELD
  */
-val ItemStack.blocksAttacksComponent
+val DataComponentGetter.blocksAttacksComponent
     get() = this.get(DataComponents.BLOCKS_ATTACKS)

@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -35,8 +36,8 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
-import net.ccbluex.liquidbounce.utils.item.isAxe
-import net.ccbluex.liquidbounce.utils.item.isSword
+import net.ccbluex.liquidbounce.utils.item.WeaponType
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
@@ -65,7 +66,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
         internal val delayOnBroken by boolean("DelayOnBroken", true)
         private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
         private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
-        private val weapon by enumChoice("Weapon", Weapon.ANY)
+        private val weapon by multiEnumChoice("Weapon", enumSetOf(WeaponType.ANY), canBeNone = false)
         private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
 
@@ -73,13 +74,6 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
             ENEMY("Enemy"),
             ENTITY("Entity"),
             BLOCK("Block"),
-            ANY("Any")
-        }
-
-        private enum class Weapon(override val tag: String) : Tagged {
-            SWORD("Sword"),
-            AXE("Axe"),
-            BOTH("Both"),
             ANY("Any")
         }
 
@@ -100,16 +94,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
             }
         }
 
-        fun isWeaponSelected(): Boolean {
-            val stack = player.mainHandItem
-
-            return when (weapon) {
-                Weapon.SWORD -> stack.isSword
-                Weapon.AXE -> stack.isAxe
-                Weapon.BOTH -> stack.isSword || stack.isAxe
-                Weapon.ANY -> true
-            }
-        }
+        fun isWeaponSelected(): Boolean = weapon.matchesAny(player.mainHandItem)
 
         fun isCriticalHit(entity: Entity): Boolean {
             return criticalsSelectionMode.isCriticalHit(entity)
