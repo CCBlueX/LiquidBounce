@@ -207,14 +207,14 @@ class SimulatedPlayer(
             val k = if (this.isInLava()) this.getFluidHeight(FluidTags.LAVA) else this.getFluidHeight(FluidTags.WATER)
             val bl = this.isTouchingWater() && k > 0.0
 
-            val swimHeight = this.getSwimHeight()
+            val swimHeight = this.getFluidJumpThreshold()
 
             if (bl && (!this.onGround || k > swimHeight)) {
                 this.swimUpward(FluidTags.WATER)
             } else if (this.isInLava() && (!this.onGround || k > swimHeight)) {
                 this.swimUpward(FluidTags.LAVA)
             } else if ((this.onGround || bl && k <= swimHeight) && jumpTriggerTime == 0) {
-                this.jump()
+                this.jumpFromGround()
                 jumpTriggerTime = 10
             }
         }
@@ -233,7 +233,7 @@ class SimulatedPlayer(
     private fun travel(movementInput: Vec3) {
         // PlayerEntity
         if (this.isSwimming && !this.player.isPassenger) {
-            val g = this.getRotationVector().y
+            val g = this.getViewVector().y
             val h = if (g < -0.2) 0.085 else 0.06
             if (g <= 0.0 || this.input.keyPresses.jump || !this.player.level()
                 .getBlockState(BlockPos.containing(this.pos.x, this.pos.y + 1.0 - 0.1, this.pos.z))
@@ -272,7 +272,7 @@ class SimulatedPlayer(
             }
             if (h > 0.0f) {
                 f += (0.54600006f - f) * h / 3.0f
-                g += (this.getMovementSpeed() - g) * h / 3.0f
+                g += (this.getSpeed() - g) * h / 3.0f
             }
             if (hasStatusEffect(MobEffects.DOLPHINS_GRACE)) {
                 f = 0.96f
@@ -293,7 +293,7 @@ class SimulatedPlayer(
             val e: Double = this.pos.y
             this.updateVelocity(0.02f, movementInput)
             this.move(deltaMovement)
-            if (getFluidHeight(FluidTags.LAVA) <= getSwimHeight()) {
+            if (getFluidHeight(FluidTags.LAVA) <= getFluidJumpThreshold()) {
                 deltaMovement = deltaMovement.multiply(0.5, 0.8, 0.5)
                 deltaMovement = this.player.getFluidFallingAdjustedMovement(d, bl, deltaMovement)
             } else {
@@ -316,7 +316,7 @@ class SimulatedPlayer(
             if (e.y > -0.5) {
                 fallDistance = 1.0
             }
-            val vec3d3 = this.getRotationVector()
+            val vec3d3 = this.getViewVector()
             val f: Float = this.xRot * (Math.PI.toFloat() / 180)
             val g = sqrt(vec3d3.x * vec3d3.x + vec3d3.z * vec3d3.z)
             val vec3d = e.horizontalDistance()
@@ -370,9 +370,12 @@ class SimulatedPlayer(
         }
     }
 
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.handleRelativeFrictionAndCalculateMovement(Vec3, float)
+     */
     private fun applyMovementInput(movementInput: Vec3, slipperiness: Float): Vec3 {
-        this.updateVelocity(this.getMovementSpeed(slipperiness), movementInput)
-        this.deltaMovement = applyClimbingSpeed(this.deltaMovement)
+        this.updateVelocity(this.getFrictionInfluencedSpeed(slipperiness), movementInput)
+        this.deltaMovement = handleOnClimbable(this.deltaMovement)
         this.deltaMovement = applyWebSpeed(this.deltaMovement)
         this.move(this.deltaMovement)
 
@@ -395,9 +398,12 @@ class SimulatedPlayer(
         this.deltaMovement += vec3d
     }
 
-    private fun getMovementSpeed(slipperiness: Float): Float {
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.getFrictionInfluencedSpeed(float)
+     */
+    private fun getFrictionInfluencedSpeed(slipperiness: Float): Float {
         return if (this.onGround) {
-            getMovementSpeed() * (0.21600002f / (slipperiness * slipperiness * slipperiness))
+            getSpeed() * (0.21600002f / (slipperiness * slipperiness * slipperiness))
         } else {
             this.getAirStrafingSpeed()
         }
@@ -413,13 +419,16 @@ class SimulatedPlayer(
         return speed
     }
 
-    private fun getMovementSpeed(): Float = 0.10000000149011612.toFloat()
+    /**
+     * @see net.minecraft.world.entity.Entity.getSpeed()
+     */
+    private fun getSpeed(): Float = 0.10000000149011612.toFloat()
 
     private fun move(input: Vec3) {
         val event = callEvent(PlayerMoveEvent(MoverType.SELF, input))
         val vec3d = event.movement
 
-        val movement = this.adjustMovementForSneaking(vec3d)
+        val movement = this.maybeBackOffFromEdge(vec3d)
         val adjustedMovement = this.adjustMovementForCollisions(movement)
 
         if (adjustedMovement.lengthSqr() > 1.0E-7) {
@@ -525,10 +534,13 @@ class SimulatedPlayer(
         this.fallDistance = 0.0
     }
 
-    fun jump() {
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.jumpFromGround()
+     */
+    fun jumpFromGround() {
         this.deltaMovement += Vec3(
             0.0,
-            this.getJumpVelocity().toDouble() - this.deltaMovement.y,
+            this.getJumpPower().toDouble() - this.deltaMovement.y,
             0.0
         )
 
@@ -540,7 +552,12 @@ class SimulatedPlayer(
 
     }
 
-    private fun applyClimbingSpeed(motion: Vec3): Vec3 {
+    fun jump() = jumpFromGround()
+
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.handleOnClimbable(Vec3)
+     */
+    private fun handleOnClimbable(motion: Vec3): Vec3 {
         if (!isClimbing()) {
             return motion
         }
@@ -580,6 +597,9 @@ class SimulatedPlayer(
         }
     }
 
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.trapdoorUsableAsLadder(BlockPos, BlockState)
+     */
     private fun trapdoorUsableAsLadder(pos: BlockPos, state: BlockState): Boolean {
         if (!(state.getValue(TrapDoorBlock.OPEN) as Boolean)) {
             return false
@@ -588,7 +608,10 @@ class SimulatedPlayer(
         return blockState.`is`(Blocks.LADDER) && blockState.getValue(LadderBlock.FACING) == state.getValue(TrapDoorBlock.FACING)
     }
 
-    private fun adjustMovementForSneaking(movement: Vec3): Vec3 {
+    /**
+     * @see net.minecraft.world.entity.player.Player.maybeBackOffFromEdge(Vec3, MoverType)
+     */
+    private fun maybeBackOffFromEdge(movement: Vec3): Vec3 {
         var movement = movement
         val isSelfMovement = true // (type == MovementType.SELF || type == MovementType.PLAYER)
         val isFlying = false // abilities.isFlying
@@ -667,11 +690,16 @@ class SimulatedPlayer(
         )
     }
 
-    private fun getJumpVelocity(): Float =
-        0.42f * this.getJumpVelocityMultiplier() +
-            this.getJumpBoostVelocityModifier()
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.getJumpPower()
+     */
+    private fun getJumpPower(): Float =
+        0.42f * this.getJumpVelocityMultiplier() + this.getJumpBoostPower()
 
-    private fun getJumpBoostVelocityModifier() =
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.getJumpBoostPower()
+     */
+    private fun getJumpBoostPower() =
         if (hasStatusEffect(MobEffects.JUMP_BOOST)) {
             0.1f * (getStatusEffect(MobEffects.JUMP_BOOST)!!.amplifier.toFloat() + 1f)
         } else {
@@ -701,10 +729,16 @@ class SimulatedPlayer(
         )
     }
 
+    /**
+     * @see net.minecraft.world.entity.Entity.getBlockPosBelowThatAffectsMyMovement()
+     */
     private fun getBlockPosBelowThatAffectsMyMovement() =
         BlockPos.containing(this.pos.x, this.boundingBox.minY - 0.5000001, this.pos.z)
 
-    private fun getSwimHeight(): Double {
+    /**
+     * @see net.minecraft.world.entity.Entity.getFluidJumpThreshold()
+     */
+    private fun getFluidJumpThreshold(): Double {
         return if (player.eyeHeight.toDouble() < 0.4) 0.0 else 0.4
     }
 
@@ -713,6 +747,9 @@ class SimulatedPlayer(
         return this.fluidHeight.getDouble(FluidTags.LAVA) > 0.0
     }
 
+    /**
+     * @see net.minecraft.world.entity.Entity.updateFluidInteraction()
+     */
     private fun updateFluidInteraction() {
         val var2 = player.vehicle
         if (var2 is Boat) {
@@ -729,6 +766,9 @@ class SimulatedPlayer(
         }
     }
 
+    /**
+     * @see net.minecraft.world.entity.player.Player.updateSwimming()
+     */
     private fun updateSwimming() {
         isSwimming = if (this.isSwimming) {
             isSprinting && isTouchingWater() && !this.player.isPassenger
@@ -741,6 +781,9 @@ class SimulatedPlayer(
         }
     }
 
+    /**
+     * @see net.minecraft.world.entity.player.Player.updateIsUnderwater()
+     */
     private fun updateIsUnderwater() {
         wasUnderwater = this.eyeFluidTags.contains(FluidTags.WATER)
         eyeFluidTags.clear()
@@ -772,7 +815,7 @@ class SimulatedPlayer(
     private fun getFluidHeight(tags: TagKey<Fluid>): Double = this.fluidHeight.getDouble(tags)
 
     private fun updateMovementInFluid(tag: TagKey<Fluid>, speed: Double): Boolean {
-        if (this.isRegionUnloaded()) {
+        if (this.touchingUnloadedChunk()) {
             return false
         }
         val box = this.boundingBox.deflate(0.001)
@@ -817,7 +860,7 @@ class SimulatedPlayer(
             if (o > 0) {
                 vec3d = vec3d.scale(1.0 / o.toDouble())
             }
-//            if (this !is PlayerEntity) {
+//            if (this !is Player) {
 //                vec3d = vec3d.normalize()
 //            }
             val vec3d3: Vec3 = deltaMovement
@@ -833,7 +876,7 @@ class SimulatedPlayer(
         return bl2
     }
 
-    private fun isRegionUnloaded(): Boolean {
+    private fun touchingUnloadedChunk(): Boolean {
         val box = this.boundingBox.inflate(1.0)
         val i = Mth.floor(box.minX)
         val j = Mth.ceil(box.maxX)
@@ -842,17 +885,21 @@ class SimulatedPlayer(
         return !this.player.level().hasChunksAt(i, k, j, l)
     }
 
-    private fun getRotationVector() = getRotationVector(this.xRot, this.yRot)
+    /**
+     * @see Entity.getViewVector
+     */
+    private fun getViewVector(): Vec3 = calculateViewVector(this.xRot, this.yRot)
 
-    private fun getRotationVector(pitch: Float, yaw: Float): Vec3 {
-        val f = pitch * (Math.PI.toFloat() / 180)
-        val g = -yaw * (Math.PI.toFloat() / 180)
-
-        val h = g.fastCos()
-        val i = g.fastSin()
-        val j = f.fastCos()
-        val k = f.fastSin()
-
+    /**
+     * @see Entity.calculateViewVector
+     */
+    private fun calculateViewVector(xRot: Float, yRot: Float): Vec3 {
+        val f = xRot * (Math.PI.toFloat() / 180f)
+        val g = -yRot * (Math.PI.toFloat() / 180f)
+        val h = Mth.cos(g.toDouble())
+        val i = Mth.sin(g.toDouble())
+        val j = Mth.cos(f.toDouble())
+        val k = Mth.sin(f.toDouble())
         return Vec3((i * j).toDouble(), (-k).toDouble(), (h * j).toDouble())
     }
 
