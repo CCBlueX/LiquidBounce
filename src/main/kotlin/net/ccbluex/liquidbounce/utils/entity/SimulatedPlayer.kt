@@ -127,6 +127,7 @@ class SimulatedPlayer(
             )
         }
 
+        @JvmStatic
         fun fromOtherPlayer(player: Player, input: SimulatedPlayerInput): SimulatedPlayer {
             return SimulatedPlayer(
                 player,
