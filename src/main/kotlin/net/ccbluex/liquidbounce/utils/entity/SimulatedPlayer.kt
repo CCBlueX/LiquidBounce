@@ -81,9 +81,9 @@ class SimulatedPlayer(
     var isSprinting: Boolean,
 
     var fallDistance: Double,
-    private var jumpingCooldown: Int,
-    private var isJumping: Boolean,
-    private var isFallFlying: Boolean,
+    private var jumpTriggerTime: Int,
+    private var jumping: Boolean,
+    private var fallFlying: Boolean,
     var onGround: Boolean,
     var horizontalCollision: Boolean,
     private var verticalCollision: Boolean,
@@ -92,7 +92,7 @@ class SimulatedPlayer(
     private var isSwimming: Boolean,
     private var wasUnderwater: Boolean,
     private var fluidHeight: Object2DoubleMap<TagKey<Fluid>>,
-    private var fluidOnEyes: HashSet<TagKey<Fluid>>
+    private var eyeFluidTags: HashSet<TagKey<Fluid>>
 ) : PlayerSimulation {
     private val world: Level
         get() = player.level()
@@ -171,16 +171,16 @@ class SimulatedPlayer(
 
         this.input.update()
 
-        checkWaterState()
-        updateSubmergedInWaterState()
+        updateFluidInteraction()
+        updateIsUnderwater()
         updateSwimming()
 
         // LivingEntity.tickMovement()
-        if (this.jumpingCooldown > 0) {
-            this.jumpingCooldown--
+        if (this.jumpTriggerTime > 0) {
+            this.jumpTriggerTime--
         }
 
-        this.isJumping = this.input.keyPresses.jump
+        this.jumping = this.input.keyPresses.jump
 
         val d: Vec3 = this.deltaMovement
 
@@ -198,12 +198,12 @@ class SimulatedPlayer(
             j = 0.0
         }
         if (onGround) {
-            this.isFallFlying = false
+            this.fallFlying = false
         }
 
         this.deltaMovement = Vec3(h, i, j)
 
-        if (this.isJumping) {
+        if (this.jumping) {
             val k = if (this.isInLava()) this.getFluidHeight(FluidTags.LAVA) else this.getFluidHeight(FluidTags.WATER)
             val bl = this.isTouchingWater() && k > 0.0
 
@@ -213,9 +213,9 @@ class SimulatedPlayer(
                 this.swimUpward(FluidTags.WATER)
             } else if (this.isInLava() && (!this.onGround || k > swimHeight)) {
                 this.swimUpward(FluidTags.LAVA)
-            } else if ((this.onGround || bl && k <= swimHeight) && jumpingCooldown == 0) {
+            } else if ((this.onGround || bl && k <= swimHeight) && jumpTriggerTime == 0) {
                 this.jump()
-                jumpingCooldown = 10
+                jumpTriggerTime = 10
             }
         }
 
@@ -310,7 +310,7 @@ class SimulatedPlayer(
             ) {
                 deltaMovement = Vec3(deltaMovement.x, 0.3, deltaMovement.z)
             }
-        } else if (this.isFallFlying) {
+        } else if (this.fallFlying) {
             var k: Double
             var e: Vec3 = this.deltaMovement
             if (e.y > -0.5) {
@@ -339,7 +339,7 @@ class SimulatedPlayer(
 
             move(this.deltaMovement)
         } else {
-            val blockPos = this.getVelocityAffectingPos()
+            val blockPos = this.getBlockPosBelowThatAffectsMyMovement()
             val p: Float = this.player.level().getBlockState(blockPos).block.friction
             val f = if (onGround) p * 0.91f else 0.91f
             val vec3d6 = this.applyMovementInput(movementInput, p)
@@ -378,7 +378,7 @@ class SimulatedPlayer(
 
 
         var vec3d = this.deltaMovement
-        if ((horizontalCollision || this.isJumping) && (
+        if ((horizontalCollision || this.jumping) && (
             this.isClimbing() || pos.toBlockPos().getState()
                 ?.`is`(Blocks.POWDER_SNOW) == true && PowderSnowBlock.canEntityWalkOnPowderSnow(player)
             )
@@ -436,7 +436,7 @@ class SimulatedPlayer(
         onGround = verticalCollision && movement.y < 0.0
 
         if (!isTouchingWater()) {
-            checkWaterState()
+            updateFluidInteraction()
         }
 
         if (onGround) {
@@ -573,14 +573,14 @@ class SimulatedPlayer(
         val blockState = blockPos.getState()!!
         return if (blockState.`is`(BlockTags.CLIMBABLE)) {
             true
-        } else if (blockState.block is TrapDoorBlock && this.canEnterTrapdoor(blockPos, blockState)) {
+        } else if (blockState.block is TrapDoorBlock && this.trapdoorUsableAsLadder(blockPos, blockState)) {
             true
         } else {
             false
         }
     }
 
-    private fun canEnterTrapdoor(pos: BlockPos, state: BlockState): Boolean {
+    private fun trapdoorUsableAsLadder(pos: BlockPos, state: BlockState): Boolean {
         if (!(state.getValue(TrapDoorBlock.OPEN) as Boolean)) {
             return false
         }
@@ -680,7 +680,7 @@ class SimulatedPlayer(
 
     private fun getJumpVelocityMultiplier(): Float {
         val f = pos.toBlockPos().getBlock()?.jumpFactor ?: 0f
-        val g = getVelocityAffectingPos().getBlock()?.jumpFactor ?: 0f
+        val g = getBlockPosBelowThatAffectsMyMovement().getBlock()?.jumpFactor ?: 0f
 
         return if (f.toDouble() == 1.0) g else f
     }
@@ -701,7 +701,7 @@ class SimulatedPlayer(
         )
     }
 
-    private fun getVelocityAffectingPos() =
+    private fun getBlockPosBelowThatAffectsMyMovement() =
         BlockPos.containing(this.pos.x, this.boundingBox.minY - 0.5000001, this.pos.z)
 
     private fun getSwimHeight(): Double {
@@ -713,7 +713,7 @@ class SimulatedPlayer(
         return this.fluidHeight.getDouble(FluidTags.LAVA) > 0.0
     }
 
-    private fun checkWaterState() {
+    private fun updateFluidInteraction() {
         val var2 = player.vehicle
         if (var2 is Boat) {
             if (!var2.isUnderWater) {
@@ -741,9 +741,9 @@ class SimulatedPlayer(
         }
     }
 
-    private fun updateSubmergedInWaterState() {
-        wasUnderwater = this.fluidOnEyes.contains(FluidTags.WATER)
-        fluidOnEyes.clear()
+    private fun updateIsUnderwater() {
+        wasUnderwater = this.eyeFluidTags.contains(FluidTags.WATER)
+        eyeFluidTags.clear()
         val d: Double = this.getEyeY() - 0.1111111119389534
         val entity = this.player.vehicle
         if (entity is Boat) {
@@ -756,7 +756,7 @@ class SimulatedPlayer(
         val e = (blockPos.y.toFloat() + fluidState.getHeight(this.player.level(), blockPos)).toDouble()
         if (e > d) {
             fluidState.tags.forEach {
-                fluidOnEyes.add(it)
+                eyeFluidTags.add(it)
             }
         }
     }
@@ -887,9 +887,9 @@ class SimulatedPlayer(
             xRot,
             isSprinting,
             fallDistance,
-            jumpingCooldown,
-            isJumping,
-            isFallFlying,
+            jumpTriggerTime,
+            jumping,
+            fallFlying,
             onGround,
             horizontalCollision,
             verticalCollision,
@@ -897,7 +897,7 @@ class SimulatedPlayer(
             isSwimming,
             wasUnderwater,
             Object2DoubleArrayMap(fluidHeight),
-            HashSet(fluidOnEyes)
+            HashSet(eyeFluidTags)
         )
     }
 
