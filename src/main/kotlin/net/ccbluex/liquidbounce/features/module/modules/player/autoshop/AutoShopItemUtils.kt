@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
-import it.unimi.dsi.fastutil.objects.ReferenceSet
+import net.ccbluex.fastutil.referenceHashSetOf
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.item.BlockItem
@@ -40,7 +40,7 @@ const val TIER_ID           = ":tier:"      //usage example: sword:tier:2
  */
 @JvmField
 val LIMITED_ITEMS: Set<String> = hashSetOf(
-    "brick", "iron_ingot", "gold_ingot", "diamond", "emerald", EXPERIENCE_ID
+    "brick", "copper_ingot", "iron_ingot", "gold_ingot", "diamond", "emerald", EXPERIENCE_ID
 )
 
 fun Item.isWool(): Boolean {
@@ -78,14 +78,14 @@ fun ContainerScreen.stacks(): List<String> {
         .mapNotNull { BuiltInRegistries.ITEM.getKey(it.item.item).path }
 }
 
-private val WOOL_BLOCKS: Set<Item> = ReferenceSet.of(
+private val WOOL_BLOCKS: Set<Item> = referenceHashSetOf(
     Items.BLACK_WOOL, Items.BLUE_WOOL, Items.BROWN_WOOL, Items.CYAN_WOOL,
     Items.GRAY_WOOL, Items.GREEN_WOOL, Items.LIGHT_BLUE_WOOL, Items.LIGHT_GRAY_WOOL,
     Items.LIME_WOOL, Items.MAGENTA_WOOL, Items.ORANGE_WOOL, Items.PINK_WOOL,
     Items.PURPLE_WOOL, Items.RED_WOOL, Items.WHITE_WOOL, Items.YELLOW_WOOL
 )
 
-private val TERRACOTTA_BLOCKS: Set<Item> = ReferenceSet.of(
+private val TERRACOTTA_BLOCKS: Set<Item> = referenceHashSetOf(
     Items.BLACK_TERRACOTTA, Items.BLUE_TERRACOTTA, Items.BROWN_TERRACOTTA,
     Items.CYAN_TERRACOTTA, Items.GRAY_TERRACOTTA, Items.GREEN_TERRACOTTA,
     Items.LIGHT_BLUE_TERRACOTTA, Items.LIGHT_GRAY_TERRACOTTA,
@@ -94,7 +94,7 @@ private val TERRACOTTA_BLOCKS: Set<Item> = ReferenceSet.of(
     Items.WHITE_TERRACOTTA, Items.YELLOW_TERRACOTTA
 )
 
-private val STAINED_GLASS_BLOCKS: Set<Item> = ReferenceSet.of(
+private val STAINED_GLASS_BLOCKS: Set<Item> = referenceHashSetOf(
     Items.BLACK_STAINED_GLASS, Items.BLUE_STAINED_GLASS, Items.BROWN_STAINED_GLASS,
     Items.CYAN_STAINED_GLASS, Items.GRAY_STAINED_GLASS, Items.GREEN_STAINED_GLASS,
     Items.LIGHT_BLUE_STAINED_GLASS, Items.LIGHT_GRAY_STAINED_GLASS,
@@ -103,7 +103,7 @@ private val STAINED_GLASS_BLOCKS: Set<Item> = ReferenceSet.of(
     Items.RED_STAINED_GLASS, Items.WHITE_STAINED_GLASS, Items.YELLOW_STAINED_GLASS
 )
 
-private val CONCRETE_BLOCKS: Set<Item> = ReferenceSet.of(
+private val CONCRETE_BLOCKS: Set<Item> = referenceHashSetOf(
     Items.BLACK_CONCRETE, Items.BLUE_CONCRETE, Items.BROWN_CONCRETE, Items.CYAN_CONCRETE,
     Items.GRAY_CONCRETE, Items.GREEN_CONCRETE, Items.LIGHT_BLUE_CONCRETE,
     Items.LIGHT_GRAY_CONCRETE, Items.LIME_CONCRETE, Items.MAGENTA_CONCRETE,
@@ -118,24 +118,28 @@ private val CONCRETE_BLOCKS: Set<Item> = ReferenceSet.of(
 private val ARMOR_ITEMS: Set<String> = arrayOf(
     Items.LEATHER_HELMET,
     Items.CHAINMAIL_HELMET,
+    Items.COPPER_HELMET,
     Items.IRON_HELMET,
     Items.DIAMOND_HELMET,
     Items.NETHERITE_HELMET,
 
     Items.LEATHER_CHESTPLATE,
     Items.CHAINMAIL_CHESTPLATE,
+    Items.COPPER_CHESTPLATE,
     Items.IRON_CHESTPLATE,
     Items.DIAMOND_CHESTPLATE,
     Items.NETHERITE_CHESTPLATE,
 
     Items.LEATHER_LEGGINGS,
     Items.CHAINMAIL_LEGGINGS,
+    Items.COPPER_LEGGINGS,
     Items.IRON_LEGGINGS,
     Items.DIAMOND_LEGGINGS,
     Items.NETHERITE_LEGGINGS,
 
     Items.LEATHER_BOOTS,
     Items.CHAINMAIL_BOOTS,
+    Items.COPPER_BOOTS,
     Items.IRON_BOOTS,
     Items.DIAMOND_BOOTS,
     Items.NETHERITE_BOOTS

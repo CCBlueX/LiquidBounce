@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
@@ -48,6 +49,7 @@ import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.phys.Vec3
+import java.util.function.Predicate
 import kotlin.jvm.optionals.getOrNull
 
 /**
@@ -66,8 +68,8 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
 
     private enum class FlushOn(
         override val tag: String,
-        val testPacket: (packet: Packet<*>?) -> Boolean
-    ) : Tagged {
+        private val testPacket: Predicate<Packet<*>?>
+    ) : Tagged, Predicate<Packet<*>?> by testPacket {
         ENTITY_INTERACT("EntityInteract", {
             it is ServerboundInteractPacket
             || it is ServerboundSwingPacket
@@ -139,7 +141,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
             return@handler
         }
 
-        if (flushOn.any { it.testPacket(event.packet) }) {
+        if (flushOn.matchesAny(event.packet)) {
             chronometer.reset()
             return@handler
         }

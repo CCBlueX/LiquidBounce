@@ -25,6 +25,7 @@ import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import java.util.Collections
 import java.util.function.Function
+import java.util.function.Predicate
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
     when {
@@ -47,3 +48,9 @@ fun <E> Collection<E>.toOrderedSet(): Set<E> {
         else -> ObjectLinkedOpenHashSet(this)
     }
 }
+
+fun <T> Iterable<Predicate<T>>.matchesAny(t: T): Boolean =
+    any { it.test(t) }
+
+fun <T> Iterable<Predicate<T>>.matchesAll(t: T): Boolean =
+    all { it.test(t) }

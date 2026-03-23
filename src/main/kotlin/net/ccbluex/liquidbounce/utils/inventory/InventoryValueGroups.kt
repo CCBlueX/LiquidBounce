@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.text.StringMatchMode
 import net.minecraft.client.gui.screens.Screen
@@ -74,7 +75,7 @@ open class InventoryConstraints : ValueGroup("Constraints") {
      * Whether the constraints are met, this will be checked before any inventory actions are performed.
      */
     fun passesRequirements(action: InventoryAction) =
-        requirements.all { it.test(action) }
+        requirements.matchesAll(action)
 
 }
 

@@ -40,6 +40,7 @@ import net.ccbluex.netty.http.util.httpServiceUnavailable
 import net.minecraft.core.BlockPos
 import net.minecraft.core.DefaultedRegistry
 import net.minecraft.core.Registry
+import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.protocol.PacketFlow
@@ -212,7 +213,7 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
 
         "items", "item" -> {
             BuiltInRegistries.ITEM.buildOutput(
-                name = { _, id -> id.name.string },
+                name = { id, item -> item.components()[DataComponents.ITEM_NAME]?.string ?: id.toString() },
                 iconUrl = ::itemIconUrl,
             )
         }

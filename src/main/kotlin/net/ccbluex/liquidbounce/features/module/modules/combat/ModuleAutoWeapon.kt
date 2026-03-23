@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import com.google.common.base.Predicates
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -38,18 +37,15 @@ import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.WeaponType
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
-import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isConsumable
-import net.ccbluex.liquidbounce.utils.item.isSpear
-import net.ccbluex.liquidbounce.utils.item.isSword
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.MaceItem
-import net.minecraft.world.item.enchantment.Enchantments
-import java.util.function.Predicate
 
 /**
  * AutoWeapon module
@@ -61,30 +57,14 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     /**
      * The weapon type to prefer, which on 1.8 and 1.9+ versions is usually a sword,
      * due to the attack speed.
+     *
+     * If this [Set] is empty, do not prefer any weapon type.
+     * This is useful if you only want to make use of either [autoShieldBreak] or [autoMace].
      */
-    private val preferredWeapon by enumChoice("Preferred", WeaponType.SWORD)
+    private val preferredWeapon by multiEnumChoice("Preferred", WeaponType.SWORD)
 
     private val autoShieldBreak by boolean("AutoShieldBreak", true)
     private val autoMace by boolean("AutoMace", true)
-
-    @Suppress("unused")
-    private enum class WeaponType(
-        override val tag: String,
-        val filter: Predicate<WeaponItemFacet>,
-    ): Tagged {
-        ANY("Any", Predicates.alwaysTrue()),
-        KNOCKBACK("Knockback", { it.itemStack.getEnchantment(Enchantments.KNOCKBACK) > 0 }),
-        SWORD("Sword", { it.itemStack.isSword }),
-        AXE("Axe", { it.itemStack.isAxe }),
-        MACE("Mace", { it.itemStack.item is MaceItem }),
-        SPEAR("Spear", { it.itemStack.isSpear }),
-
-        /**
-         * Do not prefer any weapon type. This is useful if you only
-         * want to make use of either [autoShieldBreak] or [autoMace].
-         */
-        NONE("None", Predicates.alwaysFalse());
-    }
 
     private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
 
@@ -192,13 +172,14 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         val bestSlot = Slots.Hotbar
             .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
             .filter { itemFacet ->
+                val itemStack = itemFacet.itemStack
                 when {
                     // A mace's smash attack cannot be blocked by a shield
-                    requiresMace -> itemFacet.itemStack.item is MaceItem
+                    requiresMace -> WeaponType.MACE.test(itemStack)
                     // An axe will stun the target if it is blocking with a shield
-                    requiresShield -> itemFacet.itemStack.isAxe
+                    requiresShield -> WeaponType.AXE.test(itemStack)
                     // Fall back to a preferred weapon when no special case applies
-                    else -> preferredWeapon.filter.test(itemFacet)
+                    else -> preferredWeapon.matchesAny(itemStack)
                 }
             }
             .maxOrNull()
