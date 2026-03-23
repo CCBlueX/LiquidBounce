@@ -31,10 +31,9 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.raytracing.clip
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
-import net.minecraft.world.item.Item
-import net.minecraft.world.item.Items
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
@@ -59,18 +58,6 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
     private var state: State = State.Idle
     private var target: LivingEntity? = null
 
-    private data class SpearStats(val chargeStartDelay: Int, val maxChargeTicks: Int)
-
-    private val spearStats = mapOf(
-        Items.NETHERITE_SPEAR to SpearStats(8, 175),
-        Items.DIAMOND_SPEAR to SpearStats(10, 200),
-        Items.IRON_SPEAR to SpearStats(12, 225),
-        Items.COPPER_SPEAR to SpearStats(13, 250),
-        Items.STONE_SPEAR to SpearStats(14, 275),
-        Items.GOLDEN_SPEAR to SpearStats(14, 275),
-    )
-
-    private fun stats(item: Item) = spearStats[item] ?: SpearStats(15, 300)
 
     private sealed class State {
         data object Idle : State()
@@ -116,21 +103,11 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
             e != player && e.isAlive && e.boundingBox.clip(eye, lookEnd).isPresent
         }
 
-        var best: LivingEntity? = null
-        var bestDistanceSqr = Double.MAX_VALUE
-
-        for (entity in candidates) {
-            if (!hasLineOfSight(eye, entity.boundingBox.center)) continue
-            if (!isTargetReachable(player.distanceTo(entity))) continue
-
-            val distanceSqr = player.distanceToSqr(entity)
-            if (distanceSqr < bestDistanceSqr) {
-                bestDistanceSqr = distanceSqr
-                best = entity
-            }
-        }
-
-        return best
+        return candidates
+            .asSequence()
+            .filter { hasLineOfSight(eye, it.boundingBox.center) }
+            .filter { isTargetReachable(player.distanceTo(it)) }
+            .minByOrNull { player.distanceToSqr(it) }
     }
 
     private fun startAttack(): State {
@@ -143,39 +120,38 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
         return State.Attack(0, duration, travel / duration, direction)
     }
 
+    private fun resetState() {
+        target = null
+        if (state is State.Attack) player.deltaMovement = Vec3.ZERO
+        state = State.Idle
+    }
+
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        val hasSpearEquipped = player.mainHandItem.isSpear || player.offhandItem.isSpear
-
-        if (!hasSpearEquipped) {
-            target = null
-
-            if (state is State.Attack) player.deltaMovement = Vec3.ZERO
-            state = State.Idle
+        if (player.mainHandItem.isSpear || player.offhandItem.isSpear) {
+            target = selectTarget()
+        } else {
+            resetState()
             return@handler
         }
 
-        target = selectTarget()
-
-        val usingSpear = player.isUsingItem && player.useItem.isSpear
-
-        if (!usingSpear) {
-            if (state is State.Attack) player.deltaMovement = Vec3.ZERO
-            state = State.Idle
+        if (!player.isUsingItem || !player.useItem.isSpear) {
+            resetState()
             return@handler
         }
 
-        val stats = stats(player.useItem.item)
-        val canAttack = target != null && player.ticksUsingItem < stats.maxChargeTicks
+        val kineticWeapon = player.useItem.get(DataComponents.KINETIC_WEAPON) ?: return@handler
+        val ticksUsingItem = player.ticksUsingItem
+        val chargeFullDuration = kineticWeapon.computeDamageUseDuration() - kineticWeapon.delayTicks
+        val canAttack = target != null && ticksUsingItem < chargeFullDuration
 
         state = when {
-            player.ticksUsingItem == 1 -> State.ChargeDelay(stats.chargeStartDelay)
-            player.ticksUsingItem >= stats.maxChargeTicks && state !is State.Attack -> State.Idle
+            ticksUsingItem == 1 -> State.ChargeDelay(kineticWeapon.delayTicks)
+            ticksUsingItem >= chargeFullDuration && state !is State.Attack -> State.Idle
             else -> when (val s = state) {
                 State.Idle -> when {
-                    !mc.options.keyAttack.isDown -> State.Idle
-                    canAttack && autoAttackOnCharge -> startAttack()
-                    else -> State.ChargeDelay(1)
+                    mc.options.keyAttack.isDown && canAttack && autoAttackOnCharge -> startAttack()
+                    else -> State.Idle
                 }
 
                 is State.ChargeDelay -> if (s.ticksRemaining > 1) {
