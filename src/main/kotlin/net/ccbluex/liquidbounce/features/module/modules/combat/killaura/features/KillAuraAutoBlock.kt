@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.range
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.raycast
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -107,13 +106,12 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     var enforcedBlockingHand: InteractionHand? = null
         set(value) {
-            ModuleDebug.debugParameter(this, "enforcedBlockingHand", value)
-            ModuleDebug.debugParameter(this, if (value != null) {
+            debugParameter(this, "EnforcedBlockingHand", value)
+            debugParameter(this, if (value != null) {
                 "Block Age"
             } else {
                 "Unblock Age"
-            }, player.tickCount
-            )
+            }, player.tickCount)
 
             field = value
         }
@@ -231,6 +229,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 throughWallsRange = range.interactionThroughWallsRange.toDouble()
             ) != null
         }
+        debugParameter("IsInDanger") { isInDanger }
     }
 
     @Suppress("unused")
@@ -245,20 +244,20 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         fun flush(reason: String) {
-            ModuleDebug.debugParameter(this, "Flush", flushTicks)
-            ModuleDebug.debugParameter(this, "Flush Reason", reason)
+            debugParameter(this, "Flush", flushTicks)
+            debugParameter(this, "Flush Reason", reason)
             flushTicks = 0
         }
 
         when {
             // Not blocking
-            !blockVisual -> flush("N")
+            !blockVisual -> flush("Not blocking")
 
             // Start blocking
-            enforcedBlockingHand != null || event.packet is ServerboundUseItemPacket -> flush("B")
+            enforcedBlockingHand != null || event.packet is ServerboundUseItemPacket -> flush("Start blocking")
 
             // Timeout reached
-            flushTicks >= blink -> flush("T")
+            flushTicks >= blink -> flush("Timed out")
 
             // Start to queue
             else -> event.action = BlinkManager.Action.QUEUE
