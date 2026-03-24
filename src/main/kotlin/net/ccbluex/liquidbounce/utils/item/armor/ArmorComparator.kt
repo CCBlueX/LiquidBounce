@@ -16,10 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.item
+package net.ccbluex.liquidbounce.utils.item.armor
 
 import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.utils.client.roundToDecimalPlaces
+import net.ccbluex.liquidbounce.utils.item.armorToughness
+import net.ccbluex.liquidbounce.utils.item.armorValue
+import net.ccbluex.liquidbounce.utils.item.durability
+import net.ccbluex.liquidbounce.utils.item.equipmentSlot
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.core.component.DataComponents
@@ -29,9 +35,16 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.item.enchantment.Enchantments
 
-class ArmorParameter(val defensePoints: Float, val toughness: Float)
+@JvmRecord
+data class ArmorParameter(val defensePoints: Float, val toughness: Float) {
+    companion object {
+        @JvmField
+        val ZERO = ArmorParameter(0f, 0f)
+    }
+}
 
-class ArmorKitParameters(
+@JvmInline
+value class ArmorKitParameters private constructor(
     private val slots: Map<EquipmentSlot, ArmorParameter>
 ) {
     fun getParametersForSlot(slotType: EquipmentSlot) = this.slots[slotType]!!
@@ -44,7 +57,7 @@ class ArmorKitParameters(
         fun getParametersForSlots(currentKit: Map<EquipmentSlot, ArmorPiece?>): ArmorKitParameters {
             // Sum up all parameters
             val totalArmorKitParameters =
-                currentKit.values.fold(ArmorParameter(0.0F, 0.0F)) { acc, armorPiece ->
+                currentKit.values.fold(ArmorParameter.ZERO) { acc, armorPiece ->
                     if (armorPiece != null) {
                         ArmorParameter(
                             acc.defensePoints + armorPiece.defensePoints,

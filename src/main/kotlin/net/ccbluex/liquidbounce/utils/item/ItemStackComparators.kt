@@ -21,13 +21,13 @@ package net.ccbluex.liquidbounce.utils.item
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.core.BlockPos
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
 import java.util.function.ToIntFunction
 import kotlin.math.abs
 import kotlin.math.absoluteValue
@@ -38,9 +38,16 @@ fun Comparator<ItemStack>.asHolderComparator(): Comparator<ItemStackHolder> =
 fun comparingEnchantmentLevel(key: ResourceKey<Enchantment>): Comparator<ItemStack> =
     Comparator.comparingInt(ToIntFunction { it.getEnchantment(key) })
 
+@JvmField
+val COMPARING_DESCRIPTION_ID: Comparator<ItemStack> = Comparator.comparing { it.item.descriptionId }
+
+private fun ItemStack.block(): Block = (this.item as BlockItem).block
+
+private fun ItemStack.defaultBlockState(): BlockState = this.block().defaultBlockState()
+
 object PreferFavourableBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
-        return compareValueByCondition(o1, o2) {
+        return compareValuesBy(o1, o2) {
             !ScaffoldBlockItemSelection.isBlockUnfavourable(it)
         }
     }
@@ -48,20 +55,16 @@ object PreferFavourableBlocks : Comparator<ItemStack> {
 
 object PreferSolidBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
-        return compareValueByCondition(o1, o2) {
-            val defaultState = (it.item as BlockItem).block.defaultBlockState()
-
-            defaultState.isRedstoneConductor(mc.level!!, BlockPos.ZERO)
+        return compareValuesBy(o1, o2) {
+            it.defaultBlockState().isRedstoneConductor(mc.level!!, BlockPos.ZERO)
         }
     }
 }
 
 object PreferFullCubeBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
-        return compareValueByCondition(o1, o2) {
-            val defaultState = (it.item as BlockItem).block.defaultBlockState()
-
-            defaultState.isCollisionShapeFullBlock(mc.level!!, BlockPos.ZERO)
+        return compareValuesBy(o1, o2) {
+            it.defaultBlockState().isCollisionShapeFullBlock(mc.level!!, BlockPos.ZERO)
         }
     }
 
@@ -81,7 +84,7 @@ object PreferWalkableBlocks : Comparator<ItemStack> {
     )
 
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
-        return this.chain.compare((o1.item as BlockItem).block, (o2.item as BlockItem).block)
+        return this.chain.compare(o1.block(), o2.block())
     }
 
 }
@@ -108,8 +111,7 @@ class PreferAverageHardBlocks(private val neutralRange: Boolean) : Comparator<It
     }
 
     private fun hardnessDist(stack: ItemStack): Double {
-        val defaultState = (stack.item as BlockItem).block.defaultBlockState()
-        val hardness = defaultState.getDestroySpeed(mc.level!!, BlockPos.ZERO)
+        val hardness = stack.defaultBlockState().getDestroySpeed(mc.level!!, BlockPos.ZERO)
 
         // If neutral range is enabled, items with a specific range of hardness values should be considered ideal.
         if (this.neutralRange && hardness in GOOD_HARDNESS_RANGE) {
@@ -121,29 +123,10 @@ class PreferAverageHardBlocks(private val neutralRange: Boolean) : Comparator<It
 
 }
 
-class PreferStackSize private constructor(val higher: Boolean) : Comparator<ItemStack> {
-    override fun compare(o1: ItemStack, o2: ItemStack): Int {
-        val o1Size = o1.count
-        val o2Size = o2.count
+object PreferStackSize {
+    @JvmField
+    val PREFER_FEWER: Comparator<ItemStack> = Comparator.comparingInt(ToIntFunction(ItemStack::getCount))
 
-        return if (higher) {
-            o1Size.compareTo(o2Size)
-        } else {
-            o2Size.compareTo(o1Size)
-        }
-    }
-
-    companion object {
-        /**
-         * Fewer items first
-         */
-        @JvmField
-        val PREFER_FEWER = PreferStackSize(true)
-
-        /**
-         * More items first
-         */
-        @JvmField
-        val PREFER_MORE = PreferStackSize(false)
-    }
+    @JvmField
+    val PREFER_MORE: Comparator<ItemStack> = PREFER_FEWER.reversed()
 }

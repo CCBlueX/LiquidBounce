@@ -17,13 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
+package net.ccbluex.liquidbounce.utils.item.armor
 
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.item.ArmorComparator
-import net.ccbluex.liquidbounce.utils.item.ArmorKitParameters
-import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
 import net.minecraft.world.entity.EquipmentSlot
 
@@ -40,15 +38,16 @@ object ArmorEvaluation {
         val armorPiecesGroupedByType = groupArmorByType(slots)
 
         // We start with assuming that the best pieces are those which have the most damage points.
-        var currentBestPieces = armorPiecesGroupedByType.mapValues { (_, piecesForType) ->
+        val currentBestPieces = armorPiecesGroupedByType.mapValuesTo(enumMapOf()) { (_, piecesForType) ->
             piecesForType.maxByOrNull { it.toughness }
         }
 
         // Run some passes in which we try to find best armor pieces based on the parameters of the last pass
-        for (ignored in 0 until 2) {
+        repeat(2) {
             val comparator = getArmorComparatorFor(currentBestPieces, durabilityThreshold)
 
-            currentBestPieces = armorPiecesGroupedByType.mapValues { it.value.maxWithOrNull(comparator) }
+            currentBestPieces.clear()
+            armorPiecesGroupedByType.mapValuesTo(currentBestPieces) { it.value.maxWithOrNull(comparator) }
         }
 
         return currentBestPieces
@@ -60,7 +59,7 @@ object ArmorEvaluation {
     ): Map<EquipmentSlot, ArmorPiece?> {
         val armorPiecesGroupedByType = groupArmorByType(slots)
 
-        return armorPiecesGroupedByType.mapValues { it.value.maxWithOrNull(comparator) }
+        return armorPiecesGroupedByType.mapValuesTo(enumMapOf()) { it.value.maxWithOrNull(comparator) }
     }
 
     private fun groupArmorByType(slots: List<ItemSlot>): Map<EquipmentSlot, List<ArmorPiece>> {
@@ -74,7 +73,7 @@ object ArmorEvaluation {
             } else {
                 null
             }
-        }.groupBy(ArmorPiece::slotType)
+        }.groupByTo(enumMapOf(), ArmorPiece::slotType)
 
         return armorPiecesGroupedByType
     }

@@ -23,6 +23,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
@@ -42,7 +44,7 @@ class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 },
                 compareBy { it.itemStack.foodComponent!!.nutrition },
                 compareBy { it.itemStack.foodComponent!!.saturation },
-                compareBy { it.itemStack.count },
+                PreferStackSize.PREFER_FEWER.asHolderComparator(),
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )

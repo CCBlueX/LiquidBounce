@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.item.COMPARING_DESCRIPTION_ID
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
 import net.ccbluex.liquidbounce.utils.math.average
@@ -94,7 +95,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
     }
 
     private val itemStackComparator: Comparator<ItemStack> =
-        PreferStackSize.PREFER_MORE.thenComparing { it.item.descriptionId }
+        PreferStackSize.PREFER_MORE.thenComparing(COMPARING_DESCRIPTION_ID)
 
     @Suppress("unused")
     private enum class MergeMode(
