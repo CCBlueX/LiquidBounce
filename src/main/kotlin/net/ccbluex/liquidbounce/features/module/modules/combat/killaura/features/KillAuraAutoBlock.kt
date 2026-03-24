@@ -140,7 +140,8 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      * This will decrease our CPS and prioritize blocking.
      */
     val isPrioritizingBlocking
-        get() = running && prioritizeBlocking && !hasBlockedSinceAttack && blockMode != BlockMode.FAKE
+        get() = running && prioritizeBlocking && !hasBlockedSinceAttack && blockMode != BlockMode.FAKE &&
+            findBlockableHand() != null
 
     override fun onDisabled() {
         this.stopBlocking()
