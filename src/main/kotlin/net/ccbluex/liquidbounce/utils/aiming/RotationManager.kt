@@ -21,9 +21,11 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -34,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -84,6 +87,7 @@ object RotationManager : EventListener {
         }
 
     // Used for rotation interpolation
+    var playerRotation: Rotation? = null
     var previousRotation: Rotation? = null
 
     private val fakeLagging
@@ -156,9 +160,8 @@ object RotationManager : EventListener {
      */
     @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
     fun update() {
+        val playerRotation = player.rotation.also { this.playerRotation = it }
         val activeRotationTarget = this.activeRotationTarget ?: return
-        val playerRotation = player.rotation
-
         val rotationTarget = this.rotationTarget
 
         // Prevents any rotation changes when inventory is opened
@@ -182,10 +185,6 @@ object RotationManager : EventListener {
                 currentRotation = null
                 previousRotationTarget = null
             } else {
-                if (activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
-                    player.setRotation(rotation)
-                }
-
                 currentRotation = rotation
                 previousRotationTarget = activeRotationTarget
 
@@ -195,6 +194,51 @@ object RotationManager : EventListener {
 
         // Update reset ticks
         rotationTargetHandler.tick()
+    }
+
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
+        val activeRotationTarget = this.activeRotationTarget ?: return@handler
+
+        val matrixStack = event.matrixStack
+        val partialTicks = event.partialTicks
+
+        if (isRotatingAllowed(activeRotationTarget)
+            && activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
+            val playerRotation = playerRotation ?: return@handler
+            val currentRotation = currentRotation ?: return@handler
+            val timerSpeed = Timer.timerSpeed
+
+            val yaw = playerRotation.yaw + (currentRotation.yaw - playerRotation.yaw) * (timerSpeed * partialTicks)
+            val pitch =
+                playerRotation.pitch + (currentRotation.pitch - playerRotation.pitch) * (timerSpeed * partialTicks)
+
+            val interpolated = Rotation(yaw = yaw, pitch = pitch)
+            player.setRotation(interpolated)
+        }
+    }
+
+    @Suppress("unused", "MagicNumber")
+    private val mouseMovement = handler<MouseRotationEvent> { event ->
+        val activeRotationTarget = this.activeRotationTarget ?: return@handler
+        if (!isRotatingAllowed(activeRotationTarget) ||
+            activeRotationTarget.movementCorrection != MovementCorrection.CHANGE_LOOK) {
+            return@handler
+        }
+
+        val f = event.cursorDeltaY.toFloat() * 0.15f
+        val g = event.cursorDeltaX.toFloat() * 0.15f
+
+        fun adjustRotation(rotation: Rotation): Rotation =
+            Rotation(yaw = rotation.yaw + g, pitch = (rotation.pitch + f).coerceIn(-90f, 90f))
+
+        playerRotation?.let { rotation ->
+            playerRotation = adjustRotation(rotation)
+        }
+
+        currentRotation?.let { rotation ->
+            currentRotation = adjustRotation(rotation)
+        }
     }
 
     /**
