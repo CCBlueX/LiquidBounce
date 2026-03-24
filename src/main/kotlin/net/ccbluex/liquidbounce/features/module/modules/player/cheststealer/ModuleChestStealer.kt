@@ -108,7 +108,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
                      * we prioritize item based on how important it is
                      * for example we should prioritize armor over apples
                      */
-                    ItemCategorization(emptyList()).getItemFacets(slot).maxOf { it.category.type.allocationPriority }
+                    ItemCategorization.Default.getItemFacets(slot).maxOf { it.category.type.allocationPriority }
                 )
             } else if (stillRequiredSpace > 0) {
                 // Throw useless items

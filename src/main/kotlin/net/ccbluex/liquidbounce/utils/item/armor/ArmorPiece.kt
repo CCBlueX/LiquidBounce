@@ -16,9 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.item
+package net.ccbluex.liquidbounce.utils.item.armor
 
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.item.armorKnockbackResistance
+import net.ccbluex.liquidbounce.utils.item.armorToughness
+import net.ccbluex.liquidbounce.utils.item.armorValue
+import net.ccbluex.liquidbounce.utils.item.equipmentSlot
 import net.minecraft.world.entity.EquipmentSlot
 
 /**
@@ -38,11 +42,11 @@ value class ArmorPiece(val itemSlot: ItemSlot) {
         get() = itemSlot.slotType == ItemSlot.Type.HOTBAR
 
     val toughness: Float
-        get() = itemSlot.itemStack.armorToughness!!.toFloat()
+        get() = itemSlot.itemStack.armorToughness.toFloat()
 
     val defensePoints: Float
-        get() = itemSlot.itemStack.armorValue!!.toFloat()
+        get() = itemSlot.itemStack.armorValue.toFloat()
 
-    val knockbackResistance: Float?
-        get() = itemSlot.itemStack.armorKnockbackResistance?.toFloat()
+    val knockbackResistance: Float
+        get() = itemSlot.itemStack.armorKnockbackResistance.toFloat()
 }

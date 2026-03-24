@@ -28,7 +28,7 @@ import net.minecraft.world.entity.LivingEntity
 
 enum class EquipmentSlotChoice(
     override val tag: String,
-    val slot: EquipmentSlot,
+    @JvmField val slot: EquipmentSlot,
     override val tagAliases: List<String> = emptyList(),
 ) : Tagged {
     MAINHAND("Mainhand", EquipmentSlot.MAINHAND),

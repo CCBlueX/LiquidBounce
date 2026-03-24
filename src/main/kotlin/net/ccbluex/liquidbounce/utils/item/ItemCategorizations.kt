@@ -25,15 +25,14 @@ import net.minecraft.tags.ItemTags
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.food.FoodProperties
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.Tool
 
 val ItemStack.isConsumable: Boolean
-    get() = this.isFood || this.item == Items.POTION || this.item == Items.MILK_BUCKET
+    get() = this.has(DataComponents.CONSUMABLE)
 
 val ItemStack.isFood: Boolean
-    get() = foodComponent != null && this.useAnimation == ItemUseAnimation.EAT
+    get() = foodComponent != null
 
 val DataComponentGetter.foodComponent: FoodProperties?
     get() = this.get(DataComponents.FOOD)

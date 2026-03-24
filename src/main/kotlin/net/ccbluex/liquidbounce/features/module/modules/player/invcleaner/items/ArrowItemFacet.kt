@@ -21,13 +21,15 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 
 class ArrowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
         private val COMPARATOR =
             ComparatorChain<ArrowItemFacet>(
-                compareBy { it.itemStack.count },
+                PreferStackSize.PREFER_FEWER.asHolderComparator(),
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )

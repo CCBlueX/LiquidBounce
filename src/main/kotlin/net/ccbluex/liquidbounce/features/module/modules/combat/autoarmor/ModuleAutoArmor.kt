@@ -31,7 +31,8 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
-import net.ccbluex.liquidbounce.utils.item.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.item.Items
 
