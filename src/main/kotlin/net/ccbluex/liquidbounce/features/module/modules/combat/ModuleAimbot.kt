@@ -78,6 +78,8 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         )
     }
 
+    private val axis by multiEnumChoice<Axis>("Axis", Axis.HORIZONTAL, Axis.VERTICAL)
+
     private val ignores by multiEnumChoice<IgnoreOpened>("Ignore")
 
     private var targetRotation: Rotation? = null
@@ -132,17 +134,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
             return@handler
         }
 
-        val currentRotation = playerRotation ?: return@handler
-
-        val timerSpeed = Timer.timerSpeed
-        targetRotation?.let { rotation ->
-            val interpolatedRotation = Rotation(
-                currentRotation.yaw + (rotation.yaw - currentRotation.yaw) * (timerSpeed * partialTicks),
-                currentRotation.pitch + (rotation.pitch - currentRotation.pitch) * (timerSpeed * partialTicks)
-            )
-
-            player.setRotation(interpolatedRotation)
-        }
+        lookAt(partialTicks)
     }
 
     @Suppress("unused", "MagicNumber")
@@ -160,6 +152,30 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         targetRotation?.let { rotation ->
             targetRotation = updateRotation(rotation)
         }
+    }
+
+    /**
+     * Looks at the target rotation, with interpolation based on the timer speed and partial ticks to make it smooth.
+     */
+    private fun lookAt(partialTicks: Float) {
+        val playerRotation = playerRotation ?: return
+        val targetRotation = targetRotation ?: return
+        val timerSpeed = Timer.timerSpeed
+
+        val yaw = if (Axis.HORIZONTAL in axis) {
+            playerRotation.yaw + (targetRotation.yaw - playerRotation.yaw) * (timerSpeed * partialTicks)
+        } else {
+            playerRotation.yaw // No difference in horizontal axis
+        }
+
+        val pitch = if (Axis.VERTICAL in axis) {
+            playerRotation.pitch + (targetRotation.pitch - playerRotation.pitch) * (timerSpeed * partialTicks)
+        } else {
+            playerRotation.pitch // No difference in vertical axis
+        }
+
+        val interpolated = Rotation(yaw = yaw, pitch = pitch)
+        player.setRotation(interpolated)
     }
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
@@ -192,5 +208,10 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     ) : Tagged {
         SCREEN("Screen"),
         CONTAINER("Container")
+    }
+
+    private enum class Axis(override val tag: String) : Tagged {
+        HORIZONTAL("Horizontal"),
+        VERTICAL("Vertical")
     }
 }
