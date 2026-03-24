@@ -20,12 +20,12 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
-import net.ccbluex.liquidbounce.features.module.modules.render.*;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
 import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip;
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.Camera;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
@@ -106,22 +106,6 @@ public abstract class MixinCamera {
             this.setPosition(screen.getCameraPos());
             this.setRotation(screen.getCameraRotation().x, screen.getCameraRotation().y);
         }
-
-        var rotationTarget = RotationManager.INSTANCE.getActiveRotationTarget();
-        var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
-        var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-
-        var changeLook = rotationTarget != null &&
-            rotationTarget.getMovementCorrection() == MovementCorrection.CHANGE_LOOK;
-        if (currentRotation == null || previousRotation == null || !changeLook ||
-            !RotationManager.INSTANCE.isRotatingAllowed(rotationTarget)) {
-            return;
-        }
-
-        setRotation(
-            Mth.lerp(tickProgress, previousRotation.yRot(), currentRotation.yRot()),
-            Mth.lerp(tickProgress, previousRotation.xRot(), currentRotation.xRot())
-        );
     }
 
     @Inject(method = "setup", at = @At("TAIL"))
