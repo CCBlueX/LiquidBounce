@@ -68,7 +68,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
     private val requirementsMet
-        get() = requires.all { it.asBoolean }
+        get() = mc.screen == null && requires.all { it.asBoolean }
 
     private var angleSmooth = modes(this, "AngleSmooth") {
         arrayOf(
