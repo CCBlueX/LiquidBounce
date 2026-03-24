@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.world.stronghold
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.minecraft.util.Mth.TWO_PI
+import net.minecraft.world.level.ChunkPos
 import java.util.SplittableRandom
 import kotlin.math.cos
 import kotlin.math.min
@@ -32,12 +33,12 @@ private const val SPREAD = 3
 private const val SNAPPING_OFFSET = 7
 private const val HYPOTHESIS_SEED = 0x51F15EEDL
 
-data class StrongholdHypothesis(
-    val chunkX: IntArray,
-    val chunkZ: IntArray,
+@JvmInline
+value class StrongholdHypothesis(
+    val chunks: LongArray,
 ) {
     init {
-        require(chunkX.size == STRONGHOLD_COUNT && chunkZ.size == STRONGHOLD_COUNT) {
+        require(chunks.size == STRONGHOLD_COUNT) {
             "Stronghold hypothesis needs exactly $STRONGHOLD_COUNT entries"
         }
     }
@@ -84,8 +85,7 @@ object StrongholdHypothesisGenerator {
 
     private fun generateSingle(seed: Long): StrongholdHypothesis {
         val random = SplittableRandom(seed)
-        val xs = IntArray(STRONGHOLD_COUNT)
-        val zs = IntArray(STRONGHOLD_COUNT)
+        val chunks = LongArray(STRONGHOLD_COUNT)
 
         var angle = random.nextDouble() * TWO_PI
         var ring = 0
@@ -100,8 +100,7 @@ object StrongholdHypothesisGenerator {
             chunkX += random.nextInt(-SNAPPING_OFFSET, SNAPPING_OFFSET + 1)
             chunkZ += random.nextInt(-SNAPPING_OFFSET, SNAPPING_OFFSET + 1)
 
-            xs[index] = chunkX
-            zs[index] = chunkZ
+            chunks[index] = ChunkPos.asLong(chunkX, chunkZ)
 
             angle += TWO_PI / currentSpread
             inCurrentRing++
@@ -115,6 +114,6 @@ object StrongholdHypothesisGenerator {
             }
         }
 
-        return StrongholdHypothesis(xs, zs)
+        return StrongholdHypothesis(chunks)
     }
 }
