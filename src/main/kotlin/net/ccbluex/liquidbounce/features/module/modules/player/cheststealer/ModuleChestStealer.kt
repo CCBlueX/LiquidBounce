@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
+import net.ccbluex.fastutil.objectObjectArrayMapOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -274,8 +275,9 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
 
             // todo: hook to schedule and check if swap was successful
             cleanupPlan.remapSlots(
-                hashMapOf(
-                    Pair(hotbarSwap.from, hotbarSwap.to), Pair(hotbarSwap.to, hotbarSwap.from)
+                objectObjectArrayMapOf(
+                    hotbarSwap.from, hotbarSwap.to,
+                    hotbarSwap.to, hotbarSwap.from,
                 )
             )
 
@@ -291,7 +293,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = screen.findItemsInContainer()
 
-            InventoryCleanupPlan(usefulItems.toHashSet(), mutableListOf(), hashMapOf())
+            InventoryCleanupPlan(HashSet(usefulItems), mutableListOf(), hashMapOf())
         } else {
             val availableItems = findNonEmptySlotsInInventory() + screen.findItemsInContainer()
 
