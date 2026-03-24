@@ -112,33 +112,38 @@ class InventoryCleanupPlan(
                 return
             }
 
-            // Remove
+            // Drop target candidates that are already too large to absorb the smallest remaining stack.
+            // The selected double-click target must be able to consume at least one smaller stack.
             while (stacks.isNotEmpty() && stacks.last().count + stacks[0].count > maxStackSize) {
                 stacks.removeLast()
             }
 
-            // Find the biggest stack that can be merged
+            // Pick the largest remaining stack as the double-click target so the merge frees
+            // up as much inventory space as possible with a single action.
             val itemToDbclick = stacks.removeLastOrNull() ?: return
 
             add(itemToDbclick.slot)
 
             var itemsToRemove = maxStackSize - itemToDbclick.count
 
-            // Remove all small stacks that have been removed by last merge
+            // Simulate how smaller stacks are consumed by the target stack after the double-click.
+            // We mutate the temporary counts so recursive calls operate on the post-merge state.
             while (itemsToRemove > 0 && stacks.isNotEmpty()) {
                 val stack = stacks.first()
 
                 val count = stack.count
+                val transferredItems = count.coerceAtMost(itemsToRemove)
 
-                if (count < itemsToRemove) {
+                if (count <= itemsToRemove) {
                     stacks.removeFirst()
                 } else {
-                    stack.count -= itemsToRemove
+                    stack.count -= transferredItems
                 }
 
-                itemsToRemove -= stack.count
+                itemsToRemove -= transferredItems
             }
 
+            // Continue planning additional merges on the updated stack distribution.
             mergeStacks(stacks, maxStackSize)
         }
 
