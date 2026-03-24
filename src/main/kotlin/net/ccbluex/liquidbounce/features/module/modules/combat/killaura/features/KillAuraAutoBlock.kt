@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.range
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.raycast
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -107,13 +106,12 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     var enforcedBlockingHand: InteractionHand? = null
         set(value) {
-            ModuleDebug.debugParameter(this, "enforcedBlockingHand", value)
-            ModuleDebug.debugParameter(this, if (value != null) {
+            debugParameter(this, "EnforcedBlockingHand", value)
+            debugParameter(this, if (value != null) {
                 "Block Age"
             } else {
                 "Unblock Age"
-            }, player.tickCount
-            )
+            }, player.tickCount)
 
             field = value
         }
@@ -136,15 +134,19 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     var hasBlockedSinceAttack = false
 
+    var isInDanger = false
+
     /**
      * This will decrease our CPS and prioritize blocking.
      */
     val isPrioritizingBlocking
-        get() = running && prioritizeBlocking && !hasBlockedSinceAttack && blockMode != BlockMode.FAKE
+        get() = running && prioritizeBlocking && !hasBlockedSinceAttack && blockMode != BlockMode.FAKE &&
+            findBlockableHand() != null && !isInDanger
 
     override fun onDisabled() {
         this.stopBlocking()
         this.hasBlockedSinceAttack = false
+        this.isInDanger = false
         super.onDisabled()
     }
 
@@ -168,7 +170,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             return false
         }
 
-        if (onlyWhenInDanger && !isInDanger()) {
+        if (onlyWhenInDanger && !isInDanger) {
             this.stopBlocking()
             return false
         }
@@ -179,7 +181,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         val blockHand = findBlockableHand() ?: return false
         val rotation = RotationManager.serverRotation
-        debugParameter("blockHand") { blockHand }
+        debugParameter("BlockHand") { blockHand }
 
         when (blockMode) {
             BlockMode.INTERACT -> if (interactWithFacing(rotation, blockHand)) {
@@ -216,6 +218,18 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         if (enforcedBlockingHand != null) {
             blockingTicks++
         }
+
+        // Check if we are in danger by going through all possible targets and checking if they are looking at us.
+        isInDanger = targetTracker.targets().any { target ->
+            isLookingAtEntity(
+                fromEntity = target,
+                toEntity = player,
+                rotation = target.rotation,
+                range = range.interactionRange.toDouble(),
+                throughWallsRange = range.interactionThroughWallsRange.toDouble()
+            ) != null
+        }
+        debugParameter("IsInDanger") { isInDanger }
     }
 
     @Suppress("unused")
@@ -230,20 +244,20 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         fun flush(reason: String) {
-            ModuleDebug.debugParameter(this, "Flush", flushTicks)
-            ModuleDebug.debugParameter(this, "Flush Reason", reason)
+            debugParameter(this, "Flush", flushTicks)
+            debugParameter(this, "Flush Reason", reason)
             flushTicks = 0
         }
 
         when {
             // Not blocking
-            !blockVisual -> flush("N")
+            !blockVisual -> flush("Not blocking")
 
             // Start blocking
-            enforcedBlockingHand != null || event.packet is ServerboundUseItemPacket -> flush("B")
+            enforcedBlockingHand != null || event.packet is ServerboundUseItemPacket -> flush("Start blocking")
 
             // Timeout reached
-            flushTicks >= blink -> flush("T")
+            flushTicks >= blink -> flush("Timed out")
 
             // Start to queue
             else -> event.action = BlinkManager.Action.QUEUE
@@ -372,19 +386,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         } else {
             useItem(blockHand, rotation.yRot, rotation.xRot) is InteractionResult.Success
         }
-    }
-
-    /**
-     * Check if the player is in danger.
-     */
-    private fun isInDanger() = targetTracker.targets().any { target ->
-        isLookingAtEntity(
-            fromEntity = target,
-            toEntity = player,
-            rotation = target.rotation,
-            range = range.interactionRange.toDouble(),
-            throughWallsRange = range.interactionThroughWallsRange.toDouble()
-        ) != null
     }
 
     /**
