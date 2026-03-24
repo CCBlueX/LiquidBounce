@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.fastutil.objectDoubleHashMapOf
 import net.ccbluex.fastutil.objectDoubleMapOf
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import net.ccbluex.liquidbounce.test.assertNotNull
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Test
 
 class GraphSearchTest {
 
@@ -269,8 +269,11 @@ class GraphSearchTest {
             maxCost = 10.0,
         )
 
-        assertEquals(assertNotNull(viaAStar).nodes, assertNotNull(viaDijkstra).nodes)
-        assertEquals(viaAStar.totalCost, viaDijkstra.totalCost)
+        val nonNullAStar = assertNotNull(viaAStar)
+        val nonNullDijkstra = assertNotNull(viaDijkstra)
+
+        assertEquals(nonNullAStar.nodes, nonNullDijkstra.nodes)
+        assertEquals(nonNullAStar.totalCost, nonNullDijkstra.totalCost)
     }
 
     @Test
