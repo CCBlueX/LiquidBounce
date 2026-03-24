@@ -76,8 +76,7 @@ class StrongholdBayesianEstimatorTest {
 
         assertNotNull(posterior)
         val best = posterior!!.candidates.first()
-        assertEquals(ChunkPos.getX(trueHypothesis.chunks[targetIndex]), best.chunkX)
-        assertEquals(ChunkPos.getZ(trueHypothesis.chunks[targetIndex]), best.chunkZ)
+        assertEquals(trueHypothesis.chunks[targetIndex], best.chunkPos.toLong())
     }
 
     @Test

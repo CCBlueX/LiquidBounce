@@ -27,8 +27,10 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.minecraft.util.Mth
 import net.minecraft.util.Mth.wrapDegrees
+import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.ChunkPos.getX
 import net.minecraft.world.level.ChunkPos.getZ
+import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 import kotlin.math.exp
 
@@ -37,17 +39,22 @@ private const val CHUNK_SIZE = 16
 
 @JvmRecord
 data class EyeMeasurement(
-    val throwX: Double,
-    val throwY: Double,
-    val throwZ: Double,
+    val throwPos: Vec3,
     val angleDeg: Float,
     val tick: Int,
-)
+) {
+    constructor(
+        throwX: Double,
+        throwY: Double,
+        throwZ: Double,
+        angleDeg: Float,
+        tick: Int,
+    ) : this(Vec3(throwX, throwY, throwZ), angleDeg, tick)
+}
 
 @JvmRecord
 data class PosteriorCandidate(
-    val chunkX: Int,
-    val chunkZ: Int,
+    val chunkPos: ChunkPos,
     val probability: Double,
 )
 
@@ -83,7 +90,7 @@ object StrongholdBayesianEstimator {
 
             val nearestCounts = IntArray(hypothesis.chunks.size)
             for (measurement in measurements) {
-                val nearestIndex = nearestStrongholdIndex(hypothesis, measurement.throwX, measurement.throwZ)
+                val nearestIndex = nearestStrongholdIndex(hypothesis, measurement.throwPos.x, measurement.throwPos.z)
                 if (nearestIndex == -1) {
                     valid = false
                     break
@@ -102,7 +109,7 @@ object StrongholdBayesianEstimator {
 
                 val targetX = chunkCenter(getX(hypothesis.chunks[nearestIndex]))
                 val targetZ = chunkCenter(getZ(hypothesis.chunks[nearestIndex]))
-                val predictedYaw = angleToYaw(measurement.throwX, measurement.throwZ, targetX, targetZ)
+                val predictedYaw = angleToYaw(measurement.throwPos.x, measurement.throwPos.z, targetX, targetZ)
                 val delta = wrapDegrees(measurement.angleDeg - predictedYaw).toDouble()
                 logWeight -= (delta * delta) / (2.0 * sigmaSquared)
             }
@@ -145,17 +152,12 @@ object StrongholdBayesianEstimator {
         val candidates = chunkWeights.long2DoubleEntrySet()
             .mapToArray {
                 PosteriorCandidate(
-                    getX(it.longKey),
-                    getZ(it.longKey),
+                    ChunkPos(it.longKey),
                     it.doubleValue / weightSum,
                 )
-            }
+            }.ifEmpty { return null }
 
         candidates.sortByDescending { it.probability }
-
-        if (candidates.isEmpty()) {
-            return null
-        }
 
         return PosteriorSnapshot(
             candidates = candidates.asObjectList(length = minOf(candidates.size, topCandidates)),
