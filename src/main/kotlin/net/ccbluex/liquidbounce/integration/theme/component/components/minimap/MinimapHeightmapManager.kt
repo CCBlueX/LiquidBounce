@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.math.chunkPos
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.ChunkPos.containing
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.ChunkAccess
 import net.minecraft.world.level.material.MapColor
@@ -58,7 +58,7 @@ class MinimapHeightmapManager {
      * @return true if the heightmap was changed
      */
     fun updatePosition(pos: BlockPos, newState: BlockState): Boolean {
-        val chunkPos = pos.chunkPos
+        val chunkPos = containing(pos)
         val heightmap = getHeightmap(chunkPos)
 
         val currentHeight = heightmap.getHeight(pos.x and 15, pos.z and 15)

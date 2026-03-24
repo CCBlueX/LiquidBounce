@@ -238,7 +238,7 @@ fun ItemStack.isInteractable(): Boolean {
 
             equippable.swappable
                 && player.canUseSlot(equippable.slot)
-                && equippable.canBeEquippedBy(player.type)
+                && equippable.canBeEquippedBy(player.typeHolder())
                 && !ItemStack.isSameItemSameComponents(this, equippedItem)
                 && (!EnchantmentHelper.has(equippedItem, EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE)
                     || player.isCreative)

@@ -29,12 +29,12 @@ import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.math.chunkPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.ChunkPos.containing
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
@@ -89,7 +89,7 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
                 packet.runUpdates { bp, state ->
                     val fluid = state.fluidState
                     if (!fluid.isEmpty && !fluid.isSource) {
-                        chunks[bp.chunkPos] = true
+                        chunks[containing(bp)] = true
                     }
                 }
             }
@@ -97,7 +97,7 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
             is ClientboundBlockUpdatePacket -> {
                 val fluid = packet.blockState.fluidState
                 if (!fluid.isEmpty && !fluid.isSource) {
-                    chunks[packet.pos.chunkPos] = true
+                    chunks[containing(packet.pos)] = true
                 }
             }
         }

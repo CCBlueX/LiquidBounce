@@ -152,7 +152,7 @@ object StrongholdBayesianEstimator {
         val candidates = chunkWeights.long2DoubleEntrySet()
             .mapToArray {
                 PosteriorCandidate(
-                    ChunkPos(it.longKey),
+                    ChunkPos.unpack(it.longKey),
                     it.doubleValue / weightSum,
                 )
             }.ifEmpty { return null }

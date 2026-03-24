@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.math.chunkPosAsLong
 import net.ccbluex.liquidbounce.utils.math.dotProduct
 import net.ccbluex.liquidbounce.utils.math.similarity
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.ChunkPos.pack
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.level.material.MapColor.Brightness
@@ -86,7 +86,7 @@ object ChunkRenderer {
             for (posToUpdate in positionsToUpdate) {
                 val color = getColor(posToUpdate.x, posToUpdate.z)
 
-                textureAtlasManager.editChunk(posToUpdate.chunkPosAsLong) { texture, atlasPosition ->
+                textureAtlasManager.editChunk(pack(posToUpdate)) { texture, atlasPosition ->
                     val (x, y) = atlasPosition.getPosOnAtlas(posToUpdate.x and 15, posToUpdate.z and 15)
 
                     texture.pixels.setPixel(x, y, color)
