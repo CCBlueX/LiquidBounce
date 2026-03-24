@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.utils.block.liquid
 import net.minecraft.core.BlockPos
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class TimedPickupTrackerTest {
 
@@ -128,7 +128,7 @@ class TimedPickupTrackerTest {
 
     @Test
     fun `capacity must be positive`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertThrows<IllegalArgumentException> {
             TimedPickupTracker(capacity = 0)
         }
     }

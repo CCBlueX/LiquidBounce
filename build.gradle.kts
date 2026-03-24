@@ -167,9 +167,9 @@ dependencies {
     jij(libs.fastutil4k.moreCollections)
 
     // Test libraries
-    testImplementation(kotlin("test"))
+    // testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
-//    testImplementation(libs.fabric.loader.junit)
+    testImplementation(libs.fabric.loader.junit)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

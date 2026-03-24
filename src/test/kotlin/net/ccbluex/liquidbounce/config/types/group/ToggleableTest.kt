@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.config.types.group
 
 import net.ccbluex.liquidbounce.features.misc.Toggleable
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Test
 
 class ToggleableTest {
     private lateinit var testToggleable: TestToggleableImpl

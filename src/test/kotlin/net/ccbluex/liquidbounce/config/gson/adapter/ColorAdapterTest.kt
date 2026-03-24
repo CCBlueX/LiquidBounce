@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.config.gson.adapter
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParseException
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNull
+import net.ccbluex.liquidbounce.test.assertFailsWith
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Test
 
 class ColorAdapterTest {
 

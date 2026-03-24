@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.utils.text
 import kotlinx.coroutines.CompletableDeferred
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class AsyncLoadingTextTest {
 

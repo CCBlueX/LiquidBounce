@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.world.stronghold
 
 import it.unimi.dsi.fastutil.longs.LongDoubleImmutablePair
+import net.ccbluex.fastutil.asObjectList
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.longDoubleHashMapOf
@@ -26,6 +27,10 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.minecraft.util.Mth
 import net.minecraft.util.Mth.wrapDegrees
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.ChunkPos.getX
+import net.minecraft.world.level.ChunkPos.getZ
+import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 import kotlin.math.exp
 
@@ -34,22 +39,24 @@ private const val CHUNK_SIZE = 16
 
 @JvmRecord
 data class EyeMeasurement(
-    val throwX: Double,
-    val throwY: Double,
-    val throwZ: Double,
+    val throwPos: Vec3,
     val angleDeg: Float,
     val tick: Int,
-)
+) {
+    constructor(
+        throwX: Double,
+        throwY: Double,
+        throwZ: Double,
+        angleDeg: Float,
+        tick: Int,
+    ) : this(Vec3(throwX, throwY, throwZ), angleDeg, tick)
+}
 
 @JvmRecord
 data class PosteriorCandidate(
-    val chunkX: Int,
-    val chunkZ: Int,
+    val chunkPos: ChunkPos,
     val probability: Double,
-) {
-    val blockX: Int get() = chunkX * CHUNK_SIZE + CHUNK_CENTER_OFFSET
-    val blockZ: Int get() = chunkZ * CHUNK_SIZE + CHUNK_CENTER_OFFSET
-}
+)
 
 @JvmRecord
 data class PosteriorSnapshot(
@@ -81,9 +88,9 @@ object StrongholdBayesianEstimator {
             var logWeight = 0.0
             var firstNearestIndex = -1
 
-            val nearestCounts = IntArray(hypothesis.chunkX.size)
+            val nearestCounts = IntArray(hypothesis.chunks.size)
             for (measurement in measurements) {
-                val nearestIndex = nearestStrongholdIndex(hypothesis, measurement.throwX, measurement.throwZ)
+                val nearestIndex = nearestStrongholdIndex(hypothesis, measurement.throwPos.x, measurement.throwPos.z)
                 if (nearestIndex == -1) {
                     valid = false
                     break
@@ -100,9 +107,9 @@ object StrongholdBayesianEstimator {
 
                 nearestCounts[nearestIndex]++
 
-                val targetX = chunkCenter(hypothesis.chunkX[nearestIndex])
-                val targetZ = chunkCenter(hypothesis.chunkZ[nearestIndex])
-                val predictedYaw = angleToYaw(measurement.throwX, measurement.throwZ, targetX, targetZ)
+                val targetX = chunkCenter(getX(hypothesis.chunks[nearestIndex]))
+                val targetZ = chunkCenter(getZ(hypothesis.chunks[nearestIndex]))
+                val predictedYaw = angleToYaw(measurement.throwPos.x, measurement.throwPos.z, targetX, targetZ)
                 val delta = wrapDegrees(measurement.angleDeg - predictedYaw).toDouble()
                 logWeight -= (delta * delta) / (2.0 * sigmaSquared)
             }
@@ -121,11 +128,7 @@ object StrongholdBayesianEstimator {
                 continue
             }
 
-            scoredHypotheses +=
-                LongDoubleImmutablePair(
-                    chunkPosAsLong(hypothesis.chunkX[chosenIndex], hypothesis.chunkZ[chosenIndex]),
-                    logWeight,
-                )
+            scoredHypotheses += LongDoubleImmutablePair(hypothesis.chunks[chosenIndex], logWeight)
         }
 
         if (scoredHypotheses.isEmpty()) {
@@ -149,20 +152,15 @@ object StrongholdBayesianEstimator {
         val candidates = chunkWeights.long2DoubleEntrySet()
             .mapToArray {
                 PosteriorCandidate(
-                    chunkPosX(it.longKey),
-                    chunkPosZ(it.longKey),
+                    ChunkPos(it.longKey),
                     it.doubleValue / weightSum,
                 )
-            }
-            .sortedByDescending { it.probability }
-            .take(topCandidates)
+            }.ifEmpty { return null }
 
-        if (candidates.isEmpty()) {
-            return null
-        }
+        candidates.sortByDescending { it.probability }
 
         return PosteriorSnapshot(
-            candidates = candidates,
+            candidates = candidates.asObjectList(length = minOf(candidates.size, topCandidates)),
             confidence = candidates.first().probability,
             sampleCount = measurements.size,
         )
@@ -172,9 +170,9 @@ object StrongholdBayesianEstimator {
         var nearestIndex = -1
         var nearestDistance = Double.POSITIVE_INFINITY
 
-        for (index in hypothesis.chunkX.indices) {
-            val targetX = chunkCenter(hypothesis.chunkX[index])
-            val targetZ = chunkCenter(hypothesis.chunkZ[index])
+        for ((index, chunkPos) in hypothesis.chunks.withIndex()) {
+            val targetX = chunkCenter(getX(chunkPos))
+            val targetZ = chunkCenter(getZ(chunkPos))
             val dx = targetX - throwX
             val dz = targetZ - throwZ
             val distanceSquared = dx * dx + dz * dz
@@ -194,20 +192,5 @@ object StrongholdBayesianEstimator {
         return Mth.wrapDegrees(atan2(dz, dx).toDegrees().toFloat() - 90f)
     }
 
-    /**
-     * ChunkPos breaks test env here
-     */
-    private fun chunkPosAsLong(x: Int, z: Int): Long {
-        return x.toLong() and 4294967295L or ((z.toLong() and 4294967295L) shl 32)
-    }
-
-    private fun chunkPosX(chunkAsLong: Long): Int {
-        return (chunkAsLong and 4294967295L).toInt()
-    }
-
-    private fun chunkPosZ(chunkAsLong: Long): Int {
-        return (chunkAsLong ushr 32 and 4294967295L).toInt()
-    }
-
-    private fun chunkCenter(chunk: Int): Double = chunk * CHUNK_SIZE.toDouble() + CHUNK_CENTER_OFFSET
+    private fun chunkCenter(coordinate: Int): Double = coordinate * CHUNK_SIZE.toDouble() + CHUNK_CENTER_OFFSET
 }
