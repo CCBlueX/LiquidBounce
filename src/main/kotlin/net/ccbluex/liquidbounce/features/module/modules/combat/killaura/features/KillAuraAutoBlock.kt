@@ -180,7 +180,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         val blockHand = findBlockableHand() ?: return false
-        val rotation = RotationManager.serverRotation
+        val rotation = RotationManager.currentRotation ?: player.rotation
         debugParameter("BlockHand") { blockHand }
 
         when (blockMode) {
