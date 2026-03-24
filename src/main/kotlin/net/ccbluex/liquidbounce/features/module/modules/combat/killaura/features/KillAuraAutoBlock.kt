@@ -136,16 +136,19 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     var hasBlockedSinceAttack = false
 
+    var isInDanger = false
+
     /**
      * This will decrease our CPS and prioritize blocking.
      */
     val isPrioritizingBlocking
         get() = running && prioritizeBlocking && !hasBlockedSinceAttack && blockMode != BlockMode.FAKE &&
-            findBlockableHand() != null
+            findBlockableHand() != null && !isInDanger
 
     override fun onDisabled() {
         this.stopBlocking()
         this.hasBlockedSinceAttack = false
+        this.isInDanger = false
         super.onDisabled()
     }
 
@@ -169,7 +172,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             return false
         }
 
-        if (onlyWhenInDanger && !isInDanger()) {
+        if (onlyWhenInDanger && !isInDanger) {
             this.stopBlocking()
             return false
         }
@@ -216,6 +219,17 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         if (enforcedBlockingHand != null) {
             blockingTicks++
+        }
+
+        // Check if we are in danger by going through all possible targets and checking if they are looking at us.
+        isInDanger = targetTracker.targets().any { target ->
+            isLookingAtEntity(
+                fromEntity = target,
+                toEntity = player,
+                rotation = target.rotation,
+                range = range.interactionRange.toDouble(),
+                throughWallsRange = range.interactionThroughWallsRange.toDouble()
+            ) != null
         }
     }
 
@@ -373,19 +387,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         } else {
             useItem(blockHand, rotation.yRot, rotation.xRot) is InteractionResult.Success
         }
-    }
-
-    /**
-     * Check if the player is in danger.
-     */
-    private fun isInDanger() = targetTracker.targets().any { target ->
-        isLookingAtEntity(
-            fromEntity = target,
-            toEntity = player,
-            rotation = target.rotation,
-            range = range.interactionRange.toDouble(),
-            throughWallsRange = range.interactionThroughWallsRange.toDouble()
-        ) != null
     }
 
     /**
