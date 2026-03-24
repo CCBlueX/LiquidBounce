@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
+import net.minecraft.SharedConstants
 
 /**
  * Discord Rich Presence
@@ -66,13 +67,12 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
     private val detailsParts by multiEnumChoice(
         "DetailsParts",
         RichPresencePart.CLIENT_NAME,
-        RichPresencePart.CLIENT_VERSION,
-        RichPresencePart.CLIENT_AUTHOR
+        RichPresencePart.CLIENT_VERSION
     )
     private val stateParts by multiEnumChoice(
         "StateParts",
         RichPresencePart.MODULES_SUMMARY,
-        RichPresencePart.PROTOCOL,
+        RichPresencePart.CLIENT_COMMIT,
     )
 
     private object LargeImageConfig : ToggleableValueGroup(
@@ -83,7 +83,7 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
         val asset by enumChoice("Asset", PresenceAsset.LOGO)
         val parts by multiEnumChoice(
             "Parts",
-            RichPresencePart.PROTOCOL,
+            RichPresencePart.PROTOCOL_VERSION,
         )
     }
 
@@ -95,8 +95,8 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
         val asset by enumChoice("Asset", PresenceAsset.LOGO)
         val parts by multiEnumChoice(
             "Parts",
-            RichPresencePart.BRANCH,
-            RichPresencePart.COMMIT
+            RichPresencePart.CLIENT_BRANCH,
+            RichPresencePart.CLIENT_COMMIT
         )
     }
 
@@ -242,24 +242,26 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
     override val running get() = LiquidBounce.isInitialized
 
     private enum class RichPresencePart(override val tag: String) : Tagged {
-        CLIENT_NAME("Client Name"),
-        CLIENT_VERSION("Client Version"),
-        CLIENT_AUTHOR("Client Author"),
+        CLIENT_NAME("ClientName"),
+        CLIENT_VERSION("ClientVersion"),
+        CLIENT_AUTHOR("ClientAuthor"),
+        CLIENT_BRANCH("ClientBranch"),
+        CLIENT_COMMIT("ClientCommit"),
         MODULES_SUMMARY("Modules"),
-        PROTOCOL("Protocol"),
-        SERVER("Server"),
-        BRANCH("Branch"),
-        COMMIT("Commit");
+        MINECRAFT_VERSION("MinecraftVersion"),
+        PROTOCOL_VERSION("ProtocolVersion"),
+        SERVER("Server");
 
         fun getText(): String? = when (this) {
             CLIENT_NAME -> LiquidBounce.CLIENT_NAME
             CLIENT_VERSION -> clientVersion
             CLIENT_AUTHOR -> LiquidBounce.CLIENT_AUTHOR
             MODULES_SUMMARY -> "${ModuleManager.count { it.running }}/${ModuleManager.count()} modules"
-            PROTOCOL -> protocolVersion.let { "${it.name} (${it.version})" }
+            MINECRAFT_VERSION -> SharedConstants.getCurrentVersion().name().let { "Minecraft $it" }
+            PROTOCOL_VERSION -> protocolVersion.let { "Joined with Minecraft ${it.name}" }
             SERVER -> (mc.currentServer?.ip ?: "none").hideSensitiveAddress()
-            BRANCH -> clientBranch
-            COMMIT -> clientCommit
+            CLIENT_BRANCH -> clientBranch
+            CLIENT_COMMIT -> clientCommit
         }
 
     }
