@@ -52,7 +52,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECIS
 import net.minecraft.client.CameraType
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
+import net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
@@ -149,12 +152,18 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
             }
 
             // Ignore message-related packets
-            is ServerboundChatPacket, is ClientboundSystemChatPacket, is ServerboundChatCommandPacket -> {
+            is ServerboundChatPacket,
+            is ClientboundSystemChatPacket,
+            is ClientboundDisguisedChatPacket,
+            is ServerboundChatCommandPacket -> {
                 return@handler
             }
 
-            // Flush on teleport or disconnect
-            is ClientboundPlayerPositionPacket, is ClientboundDisconnectPacket -> {
+            // Flush on teleport, reconnect, or disconnect
+            is ClientboundPlayerPositionPacket,
+            is ClientboundDisconnectPacket,
+            is ClientboundRespawnPacket,
+            is ClientboundLoginPacket -> {
                 flush(origin)
                 return@handler
             }
@@ -300,4 +309,3 @@ data class PacketSnapshot(
     val origin: TransferOrigin,
     val timestamp: Long
 )
-

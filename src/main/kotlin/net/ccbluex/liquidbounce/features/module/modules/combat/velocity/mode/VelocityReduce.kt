@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import com.google.common.collect.Queues
 import net.ccbluex.fastutil.filterIsInstance
 import net.ccbluex.fastutil.weightedMinByOrNullAtMost
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -48,16 +49,9 @@ import net.ccbluex.liquidbounce.utils.network.isLocalPlayerDamage
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
-import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
-import net.minecraft.network.protocol.game.ClientGamePacketListener
-import net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket
 import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket
-import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.network.protocol.game.ClientboundRespawnPacket
-import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket
 import net.minecraft.network.protocol.game.VecDeltaCodec
 import net.minecraft.world.entity.Entity
@@ -85,7 +79,6 @@ object VelocityReduce : VelocityMode("Reduce") {
     private var receiveDamage = false
     private var alinkTicks = -1
     private var releaseReason: String? = null
-    private val packets = Queues.newConcurrentLinkedQueue<Packet<*>>()
 
 
     val shouldStopBacktrack: Boolean
@@ -99,11 +92,12 @@ object VelocityReduce : VelocityMode("Reduce") {
         receiveDamage = false
         alinkTicks = -1
         releaseReason = null
-        packets.clear()
     }
 
     override fun disable() {
-        handle()
+        if (alinkTicks >= 0) {
+            BlinkManager.flush(TransferOrigin.INCOMING)
+        }
         target = null
         renderTarget = null
         renderTargetPos = null
@@ -111,8 +105,6 @@ object VelocityReduce : VelocityMode("Reduce") {
         receiveDamage = false
         alinkTicks = -1
         releaseReason = null
-        packets.clear()
-
     }
 
     private fun findTarget() {
@@ -154,16 +146,6 @@ object VelocityReduce : VelocityMode("Reduce") {
         }
     }
 
-    private fun handle() {
-        packets.removeIf {
-            if (it is Packet<*>) {
-                @Suppress("UNCHECKED_CAST")
-                (it as Packet<ClientGamePacketListener>).handle(network)
-            }
-            true
-        }
-    }
-
     private fun notifyDebug(message: String) {
         if (notification) {
             notification(ModuleVelocity.name, message, NotificationEvent.Severity.INFO)
@@ -182,21 +164,8 @@ object VelocityReduce : VelocityMode("Reduce") {
 
         if (alinkTicks >= 0) {
             when (packet) {
-                is ClientboundSystemChatPacket,
-                is ClientboundDisguisedChatPacket -> {
-                    return@handler
-                }
-
-                is ClientboundDisconnectPacket,
-                is ClientboundRespawnPacket,
-                is ClientboundLoginPacket -> {
-                    handle()
-                    return@handler
-                }
-
                 is ClientboundPlayerPositionPacket -> {
                     releaseReason = "flag"
-                    return@handler
                 }
 
                 is ClientboundMoveEntityPacket -> {
@@ -218,8 +187,6 @@ object VelocityReduce : VelocityMode("Reduce") {
                 }
             }
 
-            event.cancelEvent()
-            packets.add(packet)
             return@handler
         }
 
@@ -248,11 +215,16 @@ object VelocityReduce : VelocityMode("Reduce") {
                     renderTargetPos = TrackedPosition().apply { this.set(renderTarget!!.position()) }
                 }
                 alinkTicks = alinkMaxDelay
-                event.cancelEvent()
-                packets.add(packet)
             } else if (target != null) {
                 attackQueue = attackCount.random()
             }
+        }
+    }
+
+    @Suppress("unused")
+    private val queuePacketHandler = handler<BlinkPacketEvent> { event ->
+        if (alinkTicks >= 0 && event.origin == TransferOrigin.INCOMING) {
+            event.action = BlinkManager.Action.QUEUE
         }
     }
 
@@ -276,7 +248,7 @@ object VelocityReduce : VelocityMode("Reduce") {
     @Suppress("unused")
     private val tickPacketProcessEventHandler = handler<TickPacketProcessEvent> {
         if (releaseReason != null) {
-            handle()
+            BlinkManager.flush(TransferOrigin.INCOMING)
             alinkTicks = -1
             renderTarget = null
             renderTargetPos = null
@@ -299,12 +271,7 @@ object VelocityReduce : VelocityMode("Reduce") {
             if (player.abilities.flying) {
                 releaseReason = "spectator"
             } else if (target != null) {
-                event.directionalInput = DirectionalInput(
-                    forwards = true,
-                    backwards = false,
-                    left = false,
-                    right = false
-                )
+                event.directionalInput = DirectionalInput.FORWARDS
                 releaseReason = ""
             } else if (player.distanceToSqr(renderTargetPos?.pos ?: Vec3.ZERO) > alinkTargetRange.endInclusive.sq()) {
                 releaseReason = "out of range"
