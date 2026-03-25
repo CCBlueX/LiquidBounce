@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.MoverType
 import net.minecraft.world.phys.Vec3
 import java.lang.Math.toDegrees
 import kotlin.math.atan2
@@ -162,6 +163,10 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         // Event handler for player movement
         @Suppress("unused")
         private val moveHandler = handler<PlayerMoveEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
+            if (event.type != MoverType.SELF) {
+                return@handler
+            }
+
             // If the player is not pressing any movement keys, we exit early
             if (!player.input.initial.anyHorizontal) {
                 return@handler
