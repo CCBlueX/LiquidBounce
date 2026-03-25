@@ -120,8 +120,11 @@ object VelocityReduce : VelocityMode("Reduce") {
         MAX_DELAY("max delay"),
     }
 
-    val shouldStopBacktrack: Boolean
+    val backtrackBlocked: Boolean
         get() = alinkTicks >= 0 || attackQueue > 0
+
+    val ownsIncomingBlinkQueue: Boolean
+        get() = alinkTicks >= 0
 
     private fun resetRenderState() {
         renderTarget = null
