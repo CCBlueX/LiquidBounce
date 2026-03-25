@@ -19,10 +19,24 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
-import net.minecraft.core.component.DataComponents
-import net.minecraft.world.effect.MobEffectInstance
+import com.google.common.base.Predicates
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.MaceItem
+import net.minecraft.world.item.enchantment.Enchantments
+import java.util.function.Predicate
 
-fun ItemStack.getPotionEffects(): Iterable<MobEffectInstance> {
-    return this.get(DataComponents.POTION_CONTENTS)?.allEffects ?: emptyList()
+enum class WeaponType(
+    override val tag: String,
+    private val predicate: Predicate<ItemStack>,
+): Tagged, Predicate<ItemStack> by predicate {
+    ANY("Any", Predicates.alwaysTrue()),
+
+    SWORD("Sword", { it.isSword }),
+    AXE("Axe", { it.isAxe }),
+    MACE("Mace", { it.item is MaceItem }),
+    SPEAR("Spear", { it.isSpear }),
+
+    KNOCKBACK("Knockback", { it.getEnchantment(Enchantments.KNOCKBACK) > 0 }),
+    FIRE_ASPECT("FireAspect", { it.getEnchantment(Enchantments.FIRE_ASPECT) > 0 }),
 }

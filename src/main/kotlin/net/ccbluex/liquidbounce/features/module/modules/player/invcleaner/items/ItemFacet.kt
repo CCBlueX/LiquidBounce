@@ -25,8 +25,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemTy
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.ItemStackHolder
 import net.ccbluex.liquidbounce.utils.item.durability
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.core.component.DataComponents
 
 open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackHolder by itemSlot {
@@ -48,7 +46,7 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackH
      */
     open fun shouldKeep(): Boolean = false
 
-    override fun compareTo(other: ItemFacet): Int = compareValueByCondition(this, other, ItemFacet::isInHotbar)
+    override fun compareTo(other: ItemFacet): Int = compareValuesBy(this, other, ItemFacet::isInHotbar)
 
     companion object {
         @JvmField
@@ -57,7 +55,7 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackH
         }
 
         @JvmField
-        protected val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareByCondition(ItemFacet::isInHotbar)
+        protected val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareBy(ItemFacet::isInHotbar)
 
         @JvmField
         protected val STABILIZE_COMPARISON: Comparator<in ItemStackHolder> = Comparator.comparingInt {

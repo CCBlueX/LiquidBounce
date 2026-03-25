@@ -18,17 +18,28 @@
  */
 package net.ccbluex.liquidbounce.utils.world.stronghold
 
+import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.minecraft.util.Mth
 import net.minecraft.util.Mth.wrapDegrees
+import net.minecraft.world.level.ChunkPos
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.util.Random
 import kotlin.math.atan2
 
 class StrongholdBayesianEstimatorTest {
+
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun bootstrapMinecraft() {
+            MinecraftBootstrap.ensureInitialized()
+        }
+    }
 
     @Test
     fun `angle wrap behaves around -180 and 180 degrees`() {
@@ -65,8 +76,7 @@ class StrongholdBayesianEstimatorTest {
 
         assertNotNull(posterior)
         val best = posterior!!.candidates.first()
-        assertEquals(trueHypothesis.chunkX[targetIndex], best.chunkX)
-        assertEquals(trueHypothesis.chunkZ[targetIndex], best.chunkZ)
+        assertEquals(trueHypothesis.chunks[targetIndex], best.chunkPos.toLong())
     }
 
     @Test
@@ -133,27 +143,24 @@ class StrongholdBayesianEstimatorTest {
     @Test
     fun `nearest stronghold consistency gate can reject inconsistent throws`() {
         val hypothesis = StrongholdHypothesis(
-            chunkX = IntArray(128) { 100000 },
-            chunkZ = IntArray(128) { 100000 }
+            LongArray(128) { ChunkPos.asLong(100000, 100000) },
         ).also {
-            it.chunkX[0] = 0
-            it.chunkZ[0] = 0
-            it.chunkX[1] = 200
-            it.chunkZ[1] = 0
+            it.chunks[0] = ChunkPos.ZERO.toLong()
+            it.chunks[1] = ChunkPos.asLong(200, 0)
         }
 
         val measurementA = EyeMeasurement(
             throwX = 8.0,
             throwY = 64.0,
             throwZ = 8.0,
-            angleDeg = yawToChunkCenter(8.0, 8.0, hypothesis.chunkX[0], hypothesis.chunkZ[0]),
+            angleDeg = yawToChunkCenter(8.0, 8.0, hypothesis.chunks[0]),
             tick = 1
         )
         val measurementB = EyeMeasurement(
             throwX = 200 * 16.0 + 8.0,
             throwY = 64.0,
             throwZ = 8.0,
-            angleDeg = yawToChunkCenter(200 * 16.0 + 8.0, 8.0, hypothesis.chunkX[1], hypothesis.chunkZ[1]),
+            angleDeg = yawToChunkCenter(200 * 16.0 + 8.0, 8.0, hypothesis.chunks[1]),
             tick = 2
         )
 
@@ -184,8 +191,8 @@ class StrongholdBayesianEstimatorTest {
         seed: Long,
     ): List<EyeMeasurement> {
         val random = Random(seed)
-        val targetX = hypothesis.chunkX[targetIndex] * 16.0 + 8.0
-        val targetZ = hypothesis.chunkZ[targetIndex] * 16.0 + 8.0
+        val targetX = ChunkPos.getX(hypothesis.chunks[targetIndex]) * 16.0 + 8.0
+        val targetZ = ChunkPos.getZ(hypothesis.chunks[targetIndex]) * 16.0 + 8.0
 
         return buildList {
             repeat(amount) { index ->
@@ -207,9 +214,9 @@ class StrongholdBayesianEstimatorTest {
         }
     }
 
-    private fun yawToChunkCenter(fromX: Double, fromZ: Double, chunkX: Int, chunkZ: Int): Float {
-        val targetX = chunkX * 16.0 + 8.0
-        val targetZ = chunkZ * 16.0 + 8.0
+    private fun yawToChunkCenter(fromX: Double, fromZ: Double, chunkPos: Long): Float {
+        val targetX = ChunkPos.getX(chunkPos) * 16.0 + 8.0
+        val targetZ = ChunkPos.getZ(chunkPos) * 16.0 + 8.0
         return yawTo(fromX, fromZ, targetX, targetZ)
     }
 

@@ -16,18 +16,40 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.entity
 
-import net.minecraft.world.phys.Vec3
+package net.ccbluex.liquidbounce.test
 
-interface PlayerSimulation {
-    val pos: Vec3
+import net.minecraft.SharedConstants
+import net.minecraft.server.Bootstrap
 
-    fun tick()
+/**
+ * Initializes the minimal vanilla bootstrap required by tests that touch registry-backed or statically bootstrapped
+ * Minecraft classes.
+ *
+ * @see net.minecraft.SharedConstants.tryDetectVersion
+ * @see net.minecraft.server.Bootstrap.bootStrap
+ */
+object MinecraftBootstrap {
 
-    data class Rigid(override val pos: Vec3) : PlayerSimulation {
-        override fun tick() {
-            // Do nothing.
+    private val lock = Any()
+    @Volatile
+    private var initialized = false
+
+    fun ensureInitialized() {
+        if (initialized) {
+            return
+        }
+
+        synchronized(lock) {
+            if (initialized) {
+                return
+            }
+
+            SharedConstants.tryDetectVersion()
+            Bootstrap.bootStrap()
+
+            initialized = true
         }
     }
+
 }

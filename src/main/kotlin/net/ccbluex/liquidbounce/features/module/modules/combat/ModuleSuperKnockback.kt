@@ -39,10 +39,12 @@ import net.ccbluex.liquidbounce.utils.entity.isInsideWaterOrBubbleColumn
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
+import java.util.function.Predicate
 
 /**
  * SuperKnockback module
@@ -60,8 +62,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
     @Suppress("unused")
     private enum class Conditions(
         override val tag: String,
-        val testCondition: (target: Entity) -> Boolean
-    ) : Tagged {
+        private val testCondition: Predicate<Entity>,
+    ) : Tagged, Predicate<Entity> by testCondition {
         ONLY_FACING("OnlyFacing", { target ->
             target.lookAngle.dot(player.position() - target.position()) < 0
         }),
@@ -233,7 +235,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
             }
         }
 
-        return conditions.all { it.testCondition(target) }
+        return conditions.matchesAll(target)
     }
 
 }

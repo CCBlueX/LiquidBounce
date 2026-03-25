@@ -47,7 +47,6 @@ import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.world.forEachSectionBlock
 import net.ccbluex.liquidbounce.utils.world.stronghold.EyeMeasurement
-import net.ccbluex.liquidbounce.utils.world.stronghold.PosteriorCandidate
 import net.ccbluex.liquidbounce.utils.world.stronghold.PosteriorSnapshot
 import net.ccbluex.liquidbounce.utils.world.stronghold.StrongholdBayesianEstimator
 import net.ccbluex.liquidbounce.utils.world.stronghold.StrongholdHypothesis
@@ -227,9 +226,7 @@ object ModuleStrongholdFinder : ClientModule(
             val yaw = vectorToYaw(eyePos.x - throwPos.x, eyePos.z - throwPos.z)
 
             measurements += EyeMeasurement(
-                throwX = throwPos.x,
-                throwY = throwPos.y,
-                throwZ = throwPos.z,
+                throwPos,
                 angleDeg = yaw,
                 tick = nowTick
             )
@@ -264,14 +261,10 @@ object ModuleStrongholdFinder : ClientModule(
                         val color = Color4b.WHITE.alpha(170).argb
                         drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
                             for (measurement in measurements) {
-                                val start = Vec3(measurement.throwX, measurement.throwY, measurement.throwZ)
+                                val start = measurement.throwPos
                                 val yawRad = measurement.angleDeg.toDouble().toRadians()
                                 val direction = Vec3(-sin(yawRad), 0.0, cos(yawRad))
-                                val end = Vec3(
-                                    measurement.throwX,
-                                    measurement.throwY,
-                                    measurement.throwZ
-                                ).add(direction.scale(RAY_RENDER_LENGTH))
+                                val end = measurement.throwPos.add(direction.scale(RAY_RENDER_LENGTH))
                                 addVertex(pose, start).setColor(color)
                                 addVertex(pose, end).setColor(color)
                             }
@@ -284,7 +277,7 @@ object ModuleStrongholdFinder : ClientModule(
             val drawY = player.interpolateCurrentPosition(event.partialTicks).y
             val candidates = snapshot.candidates.take(showTopCandidates)
             candidates.forEachIndexed { index, candidate ->
-                val chunkPos = candidate.toChunkPos()
+                val chunkPos = candidate.chunkPos
                 val minX = chunkPos.minBlockX
                 val minZ = chunkPos.minBlockZ
                 val alpha = (45 + candidate.probability * 170).toInt().coerceIn(30, 200)
@@ -316,7 +309,7 @@ object ModuleStrongholdFinder : ClientModule(
 
         val snapshot = posterior ?: return@handler
         val best = snapshot.candidates.firstOrNull() ?: return@handler
-        val bestChunk = best.toChunkPos()
+        val bestChunk = best.chunkPos
 
         val lines = arrayOf(
             this.name,
@@ -358,7 +351,7 @@ object ModuleStrongholdFinder : ClientModule(
         )
 
         val best = posterior?.candidates?.firstOrNull() ?: return
-        val bestChunk = best.toChunkPos()
+        val bestChunk = best.chunkPos
 
         if (announcePrediction && announce && bestChunk != lastAnnouncedCandidate) {
             notification(
@@ -492,10 +485,6 @@ object ModuleStrongholdFinder : ClientModule(
 
     private fun vectorToYaw(dx: Double, dz: Double): Float {
         return Mth.wrapDegrees(atan2(dz, dx).toDegrees().toFloat() - 90f)
-    }
-
-    private fun PosteriorCandidate.toChunkPos(): ChunkPos {
-        return ChunkPos(chunkX, chunkZ)
     }
 
     private data class PendingThrow(

@@ -127,8 +127,11 @@ class CleanupPlanGenerator(
 
         for (constraintInfo in constraints) {
             val currentCount = this.currentLimit.getOrDefault(constraintInfo.group, 0)
+            val projectedCount = currentCount + constraintInfo.amountAddedByItem
 
-            if (currentCount > constraintInfo.group.acceptableRange.last) {
+            // Evaluate the post-addition state so a single accepted stack cannot push the plan
+            // beyond the configured maximum for this constraint group.
+            if (projectedCount > constraintInfo.group.acceptableRange.last) {
                 return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.OVERSATURATED
             } else if (currentCount < constraintInfo.group.acceptableRange.first) {
                 return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.NOT_SATISFIED
