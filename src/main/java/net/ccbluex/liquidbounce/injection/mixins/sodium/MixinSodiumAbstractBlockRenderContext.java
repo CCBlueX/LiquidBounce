@@ -18,30 +18,36 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.sodium;
 
+import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Pseudo
-@Mixin(targets = "net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockOcclusionCache")
-public abstract class MixinSodiumBlockOcclusionCache {
+@Mixin(AbstractBlockRenderContext.class)
+public abstract class MixinSodiumAbstractBlockRenderContext {
 
-    @Inject(method = "shouldDrawSide", at = @At("RETURN"), cancellable = true)
-    private void injectXRay(BlockState selfState, BlockGetter view, BlockPos pos, Direction facing, CallbackInfoReturnable<Boolean> cir) {
+    @Shadow
+    protected BlockState state;
+
+    @Shadow
+    protected BlockPos pos;
+
+    @Inject(method = "shouldDrawSide", at = @At("HEAD"), cancellable = true)
+    private void injectXRay(Direction facing, CallbackInfoReturnable<Boolean> cir) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning()) {
+        if (!module.getRunning() || this.state == null || this.pos == null) {
             return;
         }
 
-        cir.setReturnValue(module.shouldRender(selfState, pos));
-        cir.cancel();
+        cir.setReturnValue(module.shouldRender(this.state, this.pos));
     }
 
 }

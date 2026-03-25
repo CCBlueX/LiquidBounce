@@ -158,8 +158,8 @@
     "minecraft.util.MixinDownloadQueue",
     "minecraft.util.MixinVec3i",
     "minecraft.world.chuck.MixinSkyLightEngine",
-    "sodium.MixinSodiumBlockOcclusionCache",
-    "sodium.MixinSodiumLightDataAccessMixin",
+    "sodium.MixinSodiumAbstractBlockRenderContext",
+    "sodium.MixinSodiumLightDataAccess",
     "truffle.MixinCommonJSRequireBuiltin",
     "truffle.MixinNpmCompatibleESModuleLoader",
     "truffle.MixinTruffleLanguage"

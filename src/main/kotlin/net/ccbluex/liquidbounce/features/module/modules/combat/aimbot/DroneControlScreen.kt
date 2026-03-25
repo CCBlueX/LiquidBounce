@@ -58,12 +58,12 @@ private const val ZOOM_STEP_BASE = 1.25
 class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
 
     var cameraPos = player.eyePosition.add(0.0, 10.0, 0.0)
-    var cameraRotation = Vec2(Mth.wrapDegrees(player.yRot), player.xRot.coerceIn(-90.0F, 90.0F))
+    var cameraRotation = Rotation(Mth.wrapDegrees(player.yRot), player.xRot.coerceIn(-90.0F, 90.0F))
 
     private var focusedEntity: EntityFocusData? = null
 
     private var dragStartPos: Vector2d? = null
-    private var dragStartRotation: Vec2 = Vec2.ZERO
+    private var dragStartRotation = Rotation.ZERO
 
     private var zoomSteps = 0.0
 
@@ -98,7 +98,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
                 )
             ).toFloat().toDegrees()
 
-        this.cameraRotation = this.dragStartRotation.add(Vec2(-yawDelta, -pitchDelta))
+        this.cameraRotation = this.dragStartRotation.add(y = -yawDelta, x = -pitchDelta)
 
         return true
     }
@@ -141,7 +141,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         if (mc.options.keyShift.isPressedOnAny && focusedEntity != null) {
             val rot = Rotation.lookingAt(point = focusedEntity.entity.box.center, from = this.cameraPos)
 
-            this.cameraRotation = Vec2(rot.yaw, rot.pitch)
+            this.cameraRotation = rot
         }
     }
 

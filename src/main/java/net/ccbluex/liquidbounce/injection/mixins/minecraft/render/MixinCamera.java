@@ -21,10 +21,13 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAspect;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
 import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
@@ -32,7 +35,6 @@ import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -52,13 +54,13 @@ public abstract class MixinCamera {
     private float xRot;
 
     @Shadow
-    protected abstract void setRotation(float yaw, float pitch);
+    protected abstract void setRotation(float yRot, float xRot);
 
     @Shadow
-    protected abstract float getMaxZoom(float f);
+    protected abstract float getMaxZoom(float maxZoom);
 
     @Shadow
-    protected abstract void move(float f, float g, float h);
+    protected abstract void move(float zoom, float dy, float dx);
 
     @Shadow
     public abstract void setPosition(Vec3 pos);
@@ -110,7 +112,7 @@ public abstract class MixinCamera {
 
         if (screen != null) {
             this.setPosition(screen.getCameraPos());
-            this.setRotation(screen.getCameraRotation().x, screen.getCameraRotation().y);
+            this.setRotation(screen.getCameraRotation().yRot(), screen.getCameraRotation().xRot());
         }
 
         var rotationTarget = RotationManager.INSTANCE.getActiveRotationTarget();

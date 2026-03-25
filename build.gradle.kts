@@ -100,13 +100,13 @@ dependencies {
     api(libs.fabric.kotlin)
 
     // Mod menu
-    compileOnly(libs.modmenu)
+    api(libs.modmenu)
 
     // Recommended mods (on IDE)
-//    api(libs.sodium)
-//    api(libs.lithium)
+    api(libs.sodium)
+    api(libs.lithium)
 //    runtimeOnly(libs.immediatelyFast)
-//    runtimeOnly(libs.iris)
+    runtimeOnly(libs.iris)
 
     // ViaFabricPlus
     compileOnlyApi(libs.vfp.api)

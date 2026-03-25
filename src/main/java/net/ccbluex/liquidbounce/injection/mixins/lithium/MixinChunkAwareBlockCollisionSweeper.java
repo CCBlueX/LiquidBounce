@@ -21,29 +21,41 @@ package net.ccbluex.liquidbounce.injection.mixins.lithium;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
+import net.caffeinemc.mods.lithium.common.entity.movement.ChunkAwareBlockCollisionSweeper;
 import net.ccbluex.liquidbounce.common.ShapeFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
+@NullMarked
+@SuppressWarnings("rawtypes")
 @Pseudo
 @Mixin(targets = {
-    "net.caffeinemc.mods.lithium.common.entity.movement.ChunkAwareBlockCollisionSweeper",
     "net.caffeinemc.mods.lithium.common.entity.movement.ChunkAwareBlockCollisionSweeperBlockPos",
     "net.caffeinemc.mods.lithium.common.entity.movement.ChunkAwareBlockCollisionSweeperVoxelShape",
 })
-public abstract class MixinChunkAwareBlockCollisionSweeper {
+public abstract class MixinChunkAwareBlockCollisionSweeper extends ChunkAwareBlockCollisionSweeper {
 
-    @Shadow
-    @Final
-    protected BlockPos.MutableBlockPos pos;
+    public MixinChunkAwareBlockCollisionSweeper(
+        Level world,
+        @Nullable Entity entity,
+        AABB box,
+        boolean hideLastCollision
+    ) {
+        super(world, entity, box, hideLastCollision);
+    }
 
     /**
      * Hook collision shape event
