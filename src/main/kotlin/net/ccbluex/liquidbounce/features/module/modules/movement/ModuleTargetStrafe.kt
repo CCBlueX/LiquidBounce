@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.entity.untransformed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import java.lang.Math.toDegrees
 import kotlin.math.atan2
@@ -250,7 +251,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
             range: Float,
             direction: Int
         ): Vec3 {
-            val yaw = strafeYaw - (0.5f * Math.PI)
+            val yaw = strafeYaw - Mth.HALF_PI
             val encirclement = if (distance - range < -speed) -speed else distance - range
             val encirclementX = -sin(yaw) * encirclement
             val encirclementZ = cos(yaw) * encirclement
