@@ -304,9 +304,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                 withPositionRelativeToCamera(pos) {
                     drawGradientCircle(radius, innerRadius, outerColor, innerColor)
-                    if (!outlineColor.isTransparent) {
-                        drawCircleOutline(radius, outlineColor)
-                    }
+                    drawCircleOutline(radius, outlineColor)
                 }
             }
 
@@ -355,10 +353,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     )
 
                     drawCircle(radius, color)
-
-                    if (!outlineColor.isTransparent) {
-                        drawCircleOutline(radius, outlineColor)
-                    }
+                    drawCircleOutline(radius, outlineColor)
                 }
             }
 
