@@ -103,6 +103,10 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
     private object Visuals : ToggleableValueGroup(ModuleTargetStrafe, "Visuals", true) {
 
+        init {
+            doNotIncludeAlways()
+        }
+
         private val width by float("Width", 0.12f, 0.01f..1.0f)
         private val heightOffset by float("HeightOffset", 0.05f, -1.0f..1.0f)
 
