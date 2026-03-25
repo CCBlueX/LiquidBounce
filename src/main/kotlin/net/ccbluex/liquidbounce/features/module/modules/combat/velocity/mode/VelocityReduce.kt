@@ -28,14 +28,17 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.TrackedEntityPosition
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspBox
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -50,7 +53,6 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerDamage
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
-import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -69,16 +71,6 @@ object VelocityReduce : VelocityMode("Reduce") {
         val chatMessage by boolean("ChatMessage", false)
         val notification by boolean("Notification", false)
 
-        var renderTarget: Entity? = null
-        var renderTargetPos: TrackedEntityPosition? = null
-
-        private val wireframePlayer = WireframePlayer()
-
-        fun reset() {
-            renderTarget = null
-            renderTargetPos = null
-        }
-
         fun notify(message: String) {
             if (!this.enabled) {
                 return
@@ -92,32 +84,29 @@ object VelocityReduce : VelocityMode("Reduce") {
                 chat(message)
             }
         }
-
-        @Suppress("unused")
-        private val renderHandler = handler<WorldRenderEvent> { event ->
-            if (!enabled) {
-                return@handler
-            }
-
-            if (alinkTicks == -1 || renderTarget == null || renderTargetPos == null) return@handler
-
-            wireframePlayer.pos = renderTargetPos!!.base
-            wireframePlayer.yRot = renderTarget!!.yRot
-            wireframePlayer.xRot = renderTarget!!.xRot
-            wireframePlayer.render(
-                event,
-                Color4b.WHITE.alpha(100),
-                outlineColor = Color4b.WHITE,
-            )
-        }
     }
 
-    private val debug = tree(Debug)
+    private val debug = tree(Debug).apply {
+        doNotIncludeAlways()
+    }
+
+    private val espMode = modes("BlinkEsp", 2) {
+        arrayOf(
+            BlinkEspBox(it, ::getEspData),
+            BlinkEspModel(it, getEspData = ::getEspData),
+            BlinkEspWireframe(it, ::getEspData),
+            BlinkEspNone(it),
+        )
+    }.apply {
+        doNotIncludeAlways()
+    }
 
     private val canAlink: Boolean
         get() = !alinkRequireKillAura || ModuleKillAura.running
 
     private var target: Entity? = null
+    private var renderTarget: Entity? = null
+    private var renderTargetPos: TrackedEntityPosition? = null
     private var attackQueue = 0
     private var receiveDamage = false
     private var alinkTicks = -1
@@ -134,9 +123,14 @@ object VelocityReduce : VelocityMode("Reduce") {
     val shouldStopBacktrack: Boolean
         get() = alinkTicks >= 0 || attackQueue > 0
 
+    private fun resetRenderState() {
+        renderTarget = null
+        renderTargetPos = null
+    }
+
     override fun enable() {
         target = null
-        debug.reset()
+        resetRenderState()
         attackQueue = 0
         receiveDamage = false
         alinkTicks = -1
@@ -148,7 +142,7 @@ object VelocityReduce : VelocityMode("Reduce") {
             BlinkManager.flush(TransferOrigin.INCOMING)
         }
         target = null
-        debug.reset()
+        resetRenderState()
         attackQueue = 0
         receiveDamage = false
         alinkTicks = -1
@@ -160,7 +154,7 @@ object VelocityReduce : VelocityMode("Reduce") {
 
         if (ModuleKillAura.running && ModuleKillAura.targetTracker.target != null) {
             if (alinkTicks == -1) {
-                debug.renderTarget = ModuleKillAura.targetTracker.target
+                renderTarget = ModuleKillAura.targetTracker.target
             }
             if (!canAlink ||
                 ModuleKillAura.targetTracker.target!!.squaredBoxedDistanceTo(player) <= alinkTargetRange.start.sq()
@@ -180,18 +174,28 @@ object VelocityReduce : VelocityMode("Reduce") {
         ) { !it.isRemoved && it.shouldBeAttacked() }?.entity
 
         if (alinkTicks == -1) {
-            debug.renderTarget = target
+            renderTarget = target
         }
 
         if (target != null) return
 
         if (alinkTicks >= 0) return
 
-        debug.renderTarget = world.entitiesForRendering().filterIsInstance<LivingEntity> { entity ->
+        renderTarget = world.entitiesForRendering().filterIsInstance<LivingEntity> { entity ->
             !entity.isRemoved && entity.shouldBeAttacked()
         }.weightedMinByOrNullAtMost(alinkTargetRange.endInclusive.sq().toDouble()) { entity ->
             entity.squaredBoxedDistanceTo(player)
         }
+    }
+
+    private fun getEspData(): BlinkEspData? {
+        if (alinkTicks == -1) {
+            return null
+        }
+
+        val renderTarget = renderTarget ?: return null
+        val renderTargetPos = renderTargetPos ?: return null
+        return BlinkEspData(renderTarget, renderTargetPos.base, renderTarget.rotation)
     }
 
     @Suppress("unused")
@@ -205,8 +209,8 @@ object VelocityReduce : VelocityMode("Reduce") {
                 releaseReason = ReleaseReason.FLAG
             }
 
-            val trackedTargetPosition = debug.renderTargetPos
-            val trackedTarget = debug.renderTarget
+            val trackedTargetPosition = renderTargetPos
+            val trackedTarget = renderTarget
             if (trackedTargetPosition != null && trackedTarget != null) {
                 trackedTargetPosition.handlePacket(packet, world, trackedTarget)
             }
@@ -226,7 +230,7 @@ object VelocityReduce : VelocityMode("Reduce") {
 
             findTarget()
 
-            if (debug.renderTarget == null) return@handler
+            if (renderTarget == null) return@handler
 
             if ((target == null && canAlink) || (target != null && !player.isSprinting)) {
                 if (target != null) {
@@ -236,7 +240,7 @@ object VelocityReduce : VelocityMode("Reduce") {
                 }
 
                 if (target == null) {
-                    debug.renderTargetPos = TrackedEntityPosition(debug.renderTarget!!.position())
+                    renderTargetPos = TrackedEntityPosition(renderTarget!!)
                 }
                 alinkTicks = alinkMaxDelay
             } else if (target != null) {
@@ -276,7 +280,7 @@ object VelocityReduce : VelocityMode("Reduce") {
         releaseReason?.let { releaseReason ->
             BlinkManager.flush(TransferOrigin.INCOMING)
             alinkTicks = -1
-            debug.reset()
+            resetRenderState()
             if (releaseReason == ReleaseReason.TARGET_REACHED) {
                 debug.notify("Finish alink")
                 attackQueue = attackCount.random()
@@ -301,7 +305,7 @@ object VelocityReduce : VelocityMode("Reduce") {
                     releaseReason = ReleaseReason.TARGET_REACHED
                 }
 
-                player.distanceToSqr(debug.renderTargetPos?.base ?: Vec3.ZERO) > alinkTargetRange.endInclusive.sq() -> {
+                player.distanceToSqr(renderTargetPos?.base ?: Vec3.ZERO) > alinkTargetRange.endInclusive.sq() -> {
                     releaseReason = ReleaseReason.OUT_OF_RANGE
                 }
 

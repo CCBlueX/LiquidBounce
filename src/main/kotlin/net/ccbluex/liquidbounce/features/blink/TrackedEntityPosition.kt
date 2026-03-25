@@ -37,6 +37,8 @@ import net.minecraft.world.phys.Vec3
  */
 class TrackedEntityPosition(initialPos: Vec3 = Vec3.ZERO) {
 
+    constructor(entity: Entity) : this(entity.positionCodec.base)
+
     private val codec = VecDeltaCodec().apply {
         setBase(initialPos)
     }
@@ -46,6 +48,10 @@ class TrackedEntityPosition(initialPos: Vec3 = Vec3.ZERO) {
         set(value) {
             codec.setBase(value)
         }
+
+    fun setBaseFrom(entity: Entity) {
+        codec.setBase(entity.positionCodec.base)
+    }
 
     fun handlePacket(packet: Packet<*>, level: ClientLevel, target: Entity): Vec3? {
         val trackedPos = when (packet) {

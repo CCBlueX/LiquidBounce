@@ -249,7 +249,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
             clear(resetChronometer = false)
 
             // Instantly set new position, so it does not look like the box was created with delay
-            position.base = enemy.positionCodec.base
+            position.setBaseFrom(enemy)
         }
 
         target = enemy
