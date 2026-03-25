@@ -59,15 +59,25 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
     // Configuration options
     private val modes = choices<Mode>("Mode", MotionMode, arrayOf(MotionMode)).apply { tagBy(this) }
-    private val targetSelector = TargetSelector(range = float("Range", 2.95f, 0.0f..8.0f))
-    private val followRange by float("FollowRange", 4f, 0.0f..10.0f).onChange {
+    private val range = float("Range", 2.95f, 0.0f..8.0f)
+    private val targetSelector = TargetSelector(range = range)
+    private val followRangeValue = float("FollowRange", 4f, 0.0f..10.0f).onChange {
         it.coerceAtLeast(targetSelector.maxRange)
     }
+    private val followRange get() = followRangeValue.get()
 
     private val requirements by multiEnumChoice<Requirements>("Requirements")
 
     private val requirementsMet
         get() = requirements.all { it.meets() }
+
+    init {
+        range.onChanged { updatedRange ->
+            if (followRange < updatedRange) {
+                followRangeValue.set(updatedRange)
+            }
+        }
+    }
 
     object MotionMode : Mode("Motion") {
         override val parent: ModeValueGroup<Mode>
