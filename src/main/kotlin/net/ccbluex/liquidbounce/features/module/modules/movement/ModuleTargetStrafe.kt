@@ -154,7 +154,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
         object AdaptiveRange : ToggleableValueGroup(MotionMode, "AdaptiveRange", false) {
             val maxRange by float("MaxRange", 4f, 1f..5f)
-            val rangeStep by float("RangeStep", 0.5f, 0.0f..1.0f)
+            val rangeStep by float("RangeStep", 0.5f, 0.1f..1.0f)
         }
 
         private var direction = 1
