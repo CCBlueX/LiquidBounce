@@ -32,6 +32,7 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import kotlin.math.abs
+import kotlin.math.hypot
 import kotlin.math.sqrt
 
 inline operator fun Vec2.component1() = this.x
@@ -115,6 +116,8 @@ inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: 
 
 inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
     multiply(factorX, factorY, factorZ)
+
+fun Vec3.horizontalDistanceTo(other: Vec3): Double = hypot(this.x - other.x, this.z - other.z)
 
 inline operator fun Vec3.component1(): Double = this.x
 inline operator fun Vec3.component2(): Double = this.y
