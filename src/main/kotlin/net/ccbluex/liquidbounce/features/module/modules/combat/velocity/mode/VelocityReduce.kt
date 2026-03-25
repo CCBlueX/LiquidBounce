@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.TrackedEntityPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReduce.debug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -96,7 +95,7 @@ object VelocityReduce : VelocityMode("Reduce") {
 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
-            if (!debug.enabled) {
+            if (!enabled) {
                 return@handler
             }
 
@@ -122,7 +121,15 @@ object VelocityReduce : VelocityMode("Reduce") {
     private var attackQueue = 0
     private var receiveDamage = false
     private var alinkTicks = -1
-    private var releaseReason: String? = null
+    private var releaseReason: ReleaseReason? = null
+
+    private enum class ReleaseReason(val debugSuffix: String?) {
+        TARGET_REACHED(null),
+        FLAG("flag"),
+        SPECTATOR("spectator"),
+        OUT_OF_RANGE("out of range"),
+        MAX_DELAY("max delay"),
+    }
 
     val shouldStopBacktrack: Boolean
         get() = alinkTicks >= 0 || attackQueue > 0
@@ -194,10 +201,8 @@ object VelocityReduce : VelocityMode("Reduce") {
         val packet = event.packet
 
         if (alinkTicks >= 0) {
-            when (packet) {
-                is ClientboundPlayerPositionPacket -> {
-                    releaseReason = "flag"
-                }
+            if (packet is ClientboundPlayerPositionPacket) {
+                releaseReason = ReleaseReason.FLAG
             }
 
             val trackedTargetPosition = debug.renderTargetPos
@@ -268,17 +273,17 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     @Suppress("unused")
     private val tickPacketProcessEventHandler = handler<TickPacketProcessEvent> {
-        if (releaseReason != null) {
+        releaseReason?.let { releaseReason ->
             BlinkManager.flush(TransferOrigin.INCOMING)
             alinkTicks = -1
             debug.reset()
-            if (releaseReason!!.isEmpty()) {
+            if (releaseReason == ReleaseReason.TARGET_REACHED) {
                 debug.notify("Finish alink")
                 attackQueue = attackCount.random()
             } else {
-                debug.notify("Finish alink ($releaseReason)")
+                debug.notify("Finish alink (${releaseReason.debugSuffix})")
             }
-            releaseReason = null
+            this.releaseReason = null
         }
     }
 
@@ -288,15 +293,19 @@ object VelocityReduce : VelocityMode("Reduce") {
             alinkTicks--
             findTarget()
 
-            if (player.abilities.flying) {
-                releaseReason = "spectator"
-            } else if (target != null) {
-                event.directionalInput = DirectionalInput.FORWARDS
-                releaseReason = ""
-            } else if (player.distanceToSqr(debug.renderTargetPos?.base ?: Vec3.ZERO) > alinkTargetRange.endInclusive.sq()) {
-                releaseReason = "out of range"
-            } else if (alinkTicks == 0) {
-                releaseReason = "max delay"
+            when {
+                player.abilities.flying -> releaseReason = ReleaseReason.SPECTATOR
+
+                target != null -> {
+                    event.directionalInput = DirectionalInput.FORWARDS
+                    releaseReason = ReleaseReason.TARGET_REACHED
+                }
+
+                player.distanceToSqr(debug.renderTargetPos?.base ?: Vec3.ZERO) > alinkTargetRange.endInclusive.sq() -> {
+                    releaseReason = ReleaseReason.OUT_OF_RANGE
+                }
+
+                alinkTicks == 0 -> releaseReason = ReleaseReason.MAX_DELAY
             }
         }
     }
