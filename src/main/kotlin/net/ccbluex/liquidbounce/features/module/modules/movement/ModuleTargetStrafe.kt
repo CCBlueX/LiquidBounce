@@ -47,6 +47,8 @@ import net.ccbluex.liquidbounce.utils.entity.untransformed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
@@ -68,13 +70,6 @@ import kotlin.math.sin
  */
 object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEMENT) {
 
-    private data class RenderState(
-        val target: LivingEntity,
-        val orbitRadius: Float,
-        val nextPoint: Vec3,
-        val nextPointValid: Boolean,
-    )
-
     private data class StrafePlan(
         val target: LivingEntity,
         val orbitRadius: Float,
@@ -83,11 +78,24 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         val pointValid: Boolean,
     )
 
-    private var renderState: RenderState? = null
+    private val renderState = object {
+        @JvmField var target: LivingEntity? = null
+        @JvmField var orbitRadius: Float = 0F
+        @JvmField var nextPoint: Vec3 = Vec3.ZERO
+        @JvmField var nextPointValid: Boolean = false
+
+        fun reset() {
+            this.target = null
+            this.orbitRadius = 0F
+            this.nextPoint = Vec3.ZERO
+            this.nextPointValid = false
+        }
+    }
+
     private var direction = 1
 
     // Configuration options
-    private val modes = choices<Mode>("Mode", MotionMode, arrayOf(MotionMode, InputMode)).apply { tagBy(this) }
+    private val modes = choices("Mode", MotionMode, arrayOf(MotionMode, InputMode)).apply { tagBy(this) }
     private val range = float("Range", 2.95f, 0.0f..8.0f)
     private val targetSelector = TargetSelector(range = range)
     private val followRangeValue = float("FollowRange", 4f, 0.0f..10.0f).onChange {
@@ -96,6 +104,11 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
     private val followRange get() = followRangeValue.get()
 
     private val requirements by multiEnumChoice<Requirements>("Requirements")
+
+    private fun firstTarget() =
+        ModuleKillAura.targetTracker.target
+            ?: ModuleAimbot.targetTracker.target
+            ?: targetSelector.targets().firstOrNull()
 
     private val requirementsMet
         get() = requirements.all { it.meets() }
@@ -109,10 +122,6 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
         tree(Planner)
         tree(Visuals)
-    }
-
-    override fun onDisabled() {
-        renderState = null
     }
 
     private object Visuals : ToggleableValueGroup(ModuleTargetStrafe, "Visuals", true) {
@@ -135,18 +144,23 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         private val invalidPointColor by color("InvalidPointColor", Color4b(255, 90, 90, 90))
         private val invalidPointOutlineColor by color("InvalidPointOutlineColor", Color4b(255, 90, 90, 180))
 
+        override fun onDisabled() {
+            renderState.reset()
+        }
+
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
-            val state = renderState ?: return@handler
-            if (state.target.isRemoved) {
-                renderState = null
+            val state = renderState
+            val target = state.target ?: return@handler
+            if (target.isRemoved) {
+                renderState.reset()
                 return@handler
             }
 
             renderEnvironmentForWorld(event.matrixStack) {
                 val orbitOuterRadius = state.orbitRadius + width / 2f
                 val orbitInnerRadius = (state.orbitRadius - width / 2f).coerceAtLeast(0f)
-                val orbitPosition = state.target.interpolateCurrentPosition(event.partialTicks)
+                val orbitPosition = target.interpolateCurrentPosition(event.partialTicks)
                     .add(0.0, heightOffset.toDouble(), 0.0)
 
                 withPositionRelativeToCamera(orbitPosition) {
@@ -248,13 +262,13 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
         // Event handler for player movement
         @Suppress("unused")
-        private val moveHandler = handler<PlayerMoveEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
+        private val moveHandler = handler<PlayerMoveEvent>(priority = MODEL_STATE) { event ->
             if (event.type != MoverType.SELF) {
                 return@handler
             }
 
             if (!player.input.initial.anyHorizontal) {
-                renderState = null
+                renderState.reset()
                 return@handler
             }
 
@@ -304,9 +318,9 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
             get() = modes
 
         @Suppress("unused")
-        private val inputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
+        private val inputHandler = handler<MovementInputEvent>(priority = MODEL_STATE) { event ->
             if (!event.directionalInput.isMoving) {
-                renderState = null
+                renderState.reset()
                 return@handler
             }
 
@@ -330,28 +344,26 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
     /**
      * Computes the shared target-strafe plan used by both movement and input modes.
      */
+    @Suppress("CognitiveComplexMethod")
     private fun computeStrafePlan(speed: Double, controlInput: DirectionalInput): StrafePlan? {
         if (!requirementsMet) {
-            renderState = null
+            renderState.reset()
             return null
         }
 
         // Get the target entity, requires a locked target
-        val target = ModuleKillAura.targetTracker.target
-            ?: ModuleAimbot.targetTracker.target
-            ?: targetSelector.targets().firstOrNull()
-            ?: run {
-                renderState = null
-                return null
-            }
+        val target = firstTarget() ?: run {
+            renderState.reset()
+            return null
+        }
 
         val playerPos = player.position()
         val targetPos = target.position()
-        val distance = hypot(playerPos.x - targetPos.x, playerPos.z - targetPos.z)
+        val distance = playerPos.horizontalDistanceTo(targetPos)
 
         // return if we're too far
         if (distance > followRange) {
-            renderState = null
+            renderState.reset()
             return null
         }
 
@@ -368,47 +380,45 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         }
 
         val strafeYaw = atan2(targetPos.z - playerPos.z, targetPos.x - playerPos.x)
-        var orbitRadius = targetSelector.maxRange
-        var strafeVec = computeDirectionVec(strafeYaw, distance, speed, targetSelector.maxRange, direction)
-        var pointCoords = playerPos.add(strafeVec)
-        var pointValid = Planner.Validation.validatePoint(pointCoords)
+        fun createPlan(range: Float): StrafePlan {
+            val strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
+            val pointCoords = playerPos.add(strafeVec)
+            return StrafePlan(
+                target = target,
+                orbitRadius = range,
+                strafeVec = strafeVec,
+                pointCoords = pointCoords,
+                pointValid = Planner.Validation.validatePoint(pointCoords),
+            )
+        }
 
-        if (!pointValid) {
+        var plan = createPlan(targetSelector.maxRange)
+
+        if (!plan.pointValid) {
             if (!Planner.AdaptiveRange.enabled) {
                 direction = -direction
-                strafeVec = computeDirectionVec(strafeYaw, distance, speed, targetSelector.maxRange, direction)
-                pointCoords = playerPos.add(strafeVec)
-                pointValid = Planner.Validation.validatePoint(pointCoords)
+                plan = createPlan(targetSelector.maxRange)
             } else {
                 var currentRange = Planner.AdaptiveRange.rangeStep
-                while (!pointValid) {
-                    orbitRadius = currentRange
-                    strafeVec = computeDirectionVec(strafeYaw, distance, speed, currentRange, direction)
-                    pointCoords = playerPos.add(strafeVec)
-                    pointValid = Planner.Validation.validatePoint(pointCoords)
+                while (!plan.pointValid) {
+                    plan = createPlan(currentRange)
                     currentRange += Planner.AdaptiveRange.rangeStep
 
                     if (currentRange > Planner.AdaptiveRange.maxRange) {
                         direction = -direction
-                        orbitRadius = targetSelector.maxRange
-                        strafeVec = computeDirectionVec(strafeYaw, distance, speed, targetSelector.maxRange, direction)
-                        pointCoords = playerPos.add(strafeVec)
-                        pointValid = Planner.Validation.validatePoint(pointCoords)
+                        plan = createPlan(targetSelector.maxRange)
                         break
                     }
                 }
             }
         }
 
-        val strafePlan = StrafePlan(
-            target = target,
-            orbitRadius = orbitRadius,
-            strafeVec = strafeVec,
-            pointCoords = pointCoords,
-            pointValid = pointValid
-        )
-        renderState = RenderState(strafePlan.target, strafePlan.orbitRadius, strafePlan.pointCoords, strafePlan.pointValid)
-        return strafePlan
+        renderState.target = plan.target
+        renderState.orbitRadius = plan.orbitRadius
+        renderState.nextPoint = plan.pointCoords
+        renderState.nextPointValid = plan.pointValid
+
+        return plan
     }
 
     /**
@@ -422,7 +432,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         direction: Int
     ): Vec3 {
         val yaw = strafeYaw - Mth.HALF_PI
-        val encirclement = if (distance - range < -speed) -speed else distance - range
+        val encirclement = maxOf(-speed, distance - range)
         val encirclementX = -sin(yaw) * encirclement
         val encirclementZ = cos(yaw) * encirclement
         val strafeX = -sin(strafeYaw) * speed * direction
