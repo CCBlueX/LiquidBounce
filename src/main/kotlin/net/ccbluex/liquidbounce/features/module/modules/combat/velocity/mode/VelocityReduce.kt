@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.fastutil.filterIsInstance
 import net.ccbluex.fastutil.weightedMinByOrNullAtMost
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.TrackedEntityPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReduce.debug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -64,15 +66,59 @@ object VelocityReduce : VelocityMode("Reduce") {
     private val horizontal by float("Horizontal", 0.6f, 0f..1f)
     private val vertical by float("Vertical", 1.0f, 0f..1f)
 
-    private val chatMessage by boolean("ChatMessage", false)
-    private val notification by boolean("Notification", false)
+    private object Debug : ToggleableValueGroup(this, "Debug", false) {
+        val chatMessage by boolean("ChatMessage", false)
+        val notification by boolean("Notification", false)
+
+        var renderTarget: Entity? = null
+        var renderTargetPos: TrackedEntityPosition? = null
+
+        private val wireframePlayer = WireframePlayer()
+
+        fun reset() {
+            renderTarget = null
+            renderTargetPos = null
+        }
+
+        fun notify(message: String) {
+            if (!this.enabled) {
+                return
+            }
+
+            if (notification) {
+                notification(ModuleVelocity.name, message, NotificationEvent.Severity.INFO)
+            }
+
+            if (chatMessage) {
+                chat(message)
+            }
+        }
+
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            if (!debug.enabled) {
+                return@handler
+            }
+
+            if (alinkTicks == -1 || renderTarget == null || renderTargetPos == null) return@handler
+
+            wireframePlayer.pos = renderTargetPos!!.base
+            wireframePlayer.yRot = renderTarget!!.yRot
+            wireframePlayer.xRot = renderTarget!!.xRot
+            wireframePlayer.render(
+                event,
+                Color4b.WHITE.alpha(100),
+                outlineColor = Color4b.WHITE,
+            )
+        }
+    }
+
+    private val debug = tree(Debug)
 
     private val canAlink: Boolean
         get() = !alinkRequireKillAura || ModuleKillAura.running
 
     private var target: Entity? = null
-    private var renderTarget: Entity? = null
-    private var renderTargetPos: TrackedEntityPosition? = null
     private var attackQueue = 0
     private var receiveDamage = false
     private var alinkTicks = -1
@@ -83,8 +129,7 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     override fun enable() {
         target = null
-        renderTarget = null
-        renderTargetPos = null
+        debug.reset()
         attackQueue = 0
         receiveDamage = false
         alinkTicks = -1
@@ -96,8 +141,7 @@ object VelocityReduce : VelocityMode("Reduce") {
             BlinkManager.flush(TransferOrigin.INCOMING)
         }
         target = null
-        renderTarget = null
-        renderTargetPos = null
+        debug.reset()
         attackQueue = 0
         receiveDamage = false
         alinkTicks = -1
@@ -109,7 +153,7 @@ object VelocityReduce : VelocityMode("Reduce") {
 
         if (ModuleKillAura.running && ModuleKillAura.targetTracker.target != null) {
             if (alinkTicks == -1) {
-                renderTarget = ModuleKillAura.targetTracker.target
+                debug.renderTarget = ModuleKillAura.targetTracker.target
             }
             if (!canAlink ||
                 ModuleKillAura.targetTracker.target!!.squaredBoxedDistanceTo(player) <= alinkTargetRange.start.sq()
@@ -129,27 +173,17 @@ object VelocityReduce : VelocityMode("Reduce") {
         ) { !it.isRemoved && it.shouldBeAttacked() }?.entity
 
         if (alinkTicks == -1) {
-            renderTarget = target
+            debug.renderTarget = target
         }
 
         if (target != null) return
 
         if (alinkTicks >= 0) return
 
-        renderTarget = world.entitiesForRendering().filterIsInstance<LivingEntity> { entity ->
+        debug.renderTarget = world.entitiesForRendering().filterIsInstance<LivingEntity> { entity ->
             !entity.isRemoved && entity.shouldBeAttacked()
         }.weightedMinByOrNullAtMost(alinkTargetRange.endInclusive.sq().toDouble()) { entity ->
             entity.squaredBoxedDistanceTo(player)
-        }
-    }
-
-    private fun notifyDebug(message: String) {
-        if (notification) {
-            notification(ModuleVelocity.name, message, NotificationEvent.Severity.INFO)
-        }
-
-        if (chatMessage) {
-            chat(message)
         }
     }
 
@@ -166,8 +200,8 @@ object VelocityReduce : VelocityMode("Reduce") {
                 }
             }
 
-            val trackedTargetPosition = renderTargetPos
-            val trackedTarget = renderTarget
+            val trackedTargetPosition = debug.renderTargetPos
+            val trackedTarget = debug.renderTarget
             if (trackedTargetPosition != null && trackedTarget != null) {
                 trackedTargetPosition.handlePacket(packet, world, trackedTarget)
             }
@@ -187,17 +221,17 @@ object VelocityReduce : VelocityMode("Reduce") {
 
             findTarget()
 
-            if (renderTarget == null) return@handler
+            if (debug.renderTarget == null) return@handler
 
             if ((target == null && canAlink) || (target != null && !player.isSprinting)) {
                 if (target != null) {
-                    notifyDebug("Alink... (not sprinting)")
+                    debug.notify("Alink... (not sprinting)")
                 } else {
-                    notifyDebug("Alink...")
+                    debug.notify("Alink...")
                 }
 
                 if (target == null) {
-                    renderTargetPos = TrackedEntityPosition(renderTarget!!.position())
+                    debug.renderTargetPos = TrackedEntityPosition(debug.renderTarget!!.position())
                 }
                 alinkTicks = alinkMaxDelay
             } else if (target != null) {
@@ -215,19 +249,21 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        if (attackQueue > 0) {
-            if (target == null) {
-                attackQueue = 0
-                return@handler
-            }
-            repeat(attackQueue) {
-                if (player.isSprinting) player.isSprinting = false
-                attackEntity(target!!, SwingMode.DO_NOT_HIDE)
-                player.deltaMovement = player.deltaMovement.multiply(horizontal, vertical, horizontal)
-            }
-            attackQueue = 0
-            target = null
+        if (attackQueue <= 0) {
+            return@handler
         }
+
+        if (target == null) {
+            attackQueue = 0
+            return@handler
+        }
+        repeat(attackQueue) {
+            if (player.isSprinting) player.isSprinting = false
+            attackEntity(target!!, SwingMode.DO_NOT_HIDE)
+            player.deltaMovement = player.deltaMovement.multiply(horizontal, vertical, horizontal)
+        }
+        attackQueue = 0
+        target = null
     }
 
     @Suppress("unused")
@@ -235,13 +271,12 @@ object VelocityReduce : VelocityMode("Reduce") {
         if (releaseReason != null) {
             BlinkManager.flush(TransferOrigin.INCOMING)
             alinkTicks = -1
-            renderTarget = null
-            renderTargetPos = null
+            debug.reset()
             if (releaseReason!!.isEmpty()) {
-                notifyDebug("Finish alink")
+                debug.notify("Finish alink")
                 attackQueue = attackCount.random()
             } else {
-                notifyDebug("Finish alink ($releaseReason)")
+                debug.notify("Finish alink ($releaseReason)")
             }
             releaseReason = null
         }
@@ -258,28 +293,12 @@ object VelocityReduce : VelocityMode("Reduce") {
             } else if (target != null) {
                 event.directionalInput = DirectionalInput.FORWARDS
                 releaseReason = ""
-            } else if (player.distanceToSqr(renderTargetPos?.base ?: Vec3.ZERO) > alinkTargetRange.endInclusive.sq()) {
+            } else if (player.distanceToSqr(debug.renderTargetPos?.base ?: Vec3.ZERO) > alinkTargetRange.endInclusive.sq()) {
                 releaseReason = "out of range"
             } else if (alinkTicks == 0) {
                 releaseReason = "max delay"
             }
         }
-    }
-
-    private val wireframePlayer = WireframePlayer()
-
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> { event ->
-        if (alinkTicks == -1 || renderTarget == null || renderTargetPos == null) return@handler
-
-        wireframePlayer.pos = renderTargetPos!!.base
-        wireframePlayer.yRot = renderTarget!!.yRot
-        wireframePlayer.xRot = renderTarget!!.xRot
-        wireframePlayer.render(
-            event,
-            Color4b.WHITE.alpha(100),
-            outlineColor = Color4b.WHITE,
-        )
     }
 
 }
