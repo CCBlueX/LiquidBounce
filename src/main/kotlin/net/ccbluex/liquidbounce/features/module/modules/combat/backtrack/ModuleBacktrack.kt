@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.blink.TrackedEntityPosition
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspBox
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
@@ -50,10 +51,8 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
-import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket
 import net.minecraft.network.protocol.game.ServerboundChatCommandPacket
 import net.minecraft.network.protocol.game.ServerboundChatPacket
-import net.minecraft.network.protocol.game.VecDeltaCodec
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -100,7 +99,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     private var shouldPause = false
 
     private var target: Entity? = null
-    private val position = VecDeltaCodec()
+    private val position = TrackedEntityPosition()
 
     var currentDelay = delay.random()
 
@@ -157,19 +156,8 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
 
         // Update box position with these packets
         val target = target ?: return@handler
-        val entityPacket = packet is ClientboundMoveEntityPacket && packet.getEntity(world) == target
-        val positionPacket = packet is ClientboundTeleportEntityPacket && packet.id == target.id
-        val syncPacket = packet is ClientboundEntityPositionSyncPacket && packet.id == target.id
-        if (entityPacket || positionPacket || syncPacket) {
-            val pos = when (packet) {
-                is ClientboundMoveEntityPacket ->
-                    position.decode(packet.xa.toLong(), packet.ya.toLong(), packet.za.toLong())
-                is ClientboundTeleportEntityPacket ->
-                    packet.change.position
-                else -> (packet as ClientboundEntityPositionSyncPacket).values.position
-            } ?: return@handler
-            position.setBase(pos)
-
+        val pos = position.handlePacket(packet, world, target)
+        if (pos != null) {
             // Is the target's actual position closer than its tracked position?
             if (target.squareBoxedDistanceTo(player, pos) < target.squaredBoxedDistanceTo(player)) {
                 // Process all packets. We want to be able to hit the enemy, not the opposite.

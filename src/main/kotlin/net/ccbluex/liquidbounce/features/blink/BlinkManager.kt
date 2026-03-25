@@ -49,6 +49,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
+import net.ccbluex.liquidbounce.utils.network.position
 import net.minecraft.client.CameraType
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
@@ -66,7 +67,6 @@ import net.minecraft.network.protocol.handshake.ClientIntentionPacket
 import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
 import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
@@ -81,8 +81,8 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     val positions
         get() = packetQueue
             .map { snapshot -> snapshot.packet }
-            .filterIsInstance<ServerboundMovePlayerPacket> { playerMoveC2SPacket -> playerMoveC2SPacket.hasPos }
-            .map { playerMoveC2SPacket -> Vec3(playerMoveC2SPacket.x, playerMoveC2SPacket.y, playerMoveC2SPacket.z) }
+            .filterIsInstance(ServerboundMovePlayerPacket::hasPosition)
+            .map { p -> p.position }
 
     val isLagging
         get() = packetQueue.isNotEmpty()

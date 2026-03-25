@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.blink.TrackedEntityPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -49,11 +50,7 @@ import net.ccbluex.liquidbounce.utils.network.isLocalPlayerDamage
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
-import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket
-import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket
-import net.minecraft.network.protocol.game.VecDeltaCodec
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
@@ -66,6 +63,7 @@ object VelocityReduce : VelocityMode("Reduce") {
     private val alinkRequireKillAura by boolean("AlinkRequireKillAura", true)
     private val horizontal by float("Horizontal", 0.6f, 0f..1f)
     private val vertical by float("Vertical", 1.0f, 0f..1f)
+
     private val chatMessage by boolean("ChatMessage", false)
     private val notification by boolean("Notification", false)
 
@@ -74,12 +72,11 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     private var target: Entity? = null
     private var renderTarget: Entity? = null
-    private var renderTargetPos: TrackedPosition? = null
+    private var renderTargetPos: TrackedEntityPosition? = null
     private var attackQueue = 0
     private var receiveDamage = false
     private var alinkTicks = -1
     private var releaseReason: String? = null
-
 
     val shouldStopBacktrack: Boolean
         get() = alinkTicks >= 0 || attackQueue > 0
@@ -167,24 +164,12 @@ object VelocityReduce : VelocityMode("Reduce") {
                 is ClientboundPlayerPositionPacket -> {
                     releaseReason = "flag"
                 }
+            }
 
-                is ClientboundMoveEntityPacket -> {
-                    if (renderTargetPos != null && packet.getEntity(world) == renderTarget) {
-                        renderTargetPos!!.decode(packet.xa.toLong(), packet.ya.toLong(), packet.za.toLong())
-                    }
-                }
-
-                is ClientboundTeleportEntityPacket -> {
-                    if (renderTargetPos != null && packet.id == renderTarget!!.id) {
-                        renderTargetPos!!.set(packet.change.position)
-                    }
-                }
-
-                is ClientboundEntityPositionSyncPacket -> {
-                    if (renderTargetPos != null && packet.id == renderTarget!!.id) {
-                        renderTargetPos!!.set(packet.values.position)
-                    }
-                }
+            val trackedTargetPosition = renderTargetPos
+            val trackedTarget = renderTarget
+            if (trackedTargetPosition != null && trackedTarget != null) {
+                trackedTargetPosition.handlePacket(packet, world, trackedTarget)
             }
 
             return@handler
@@ -212,7 +197,7 @@ object VelocityReduce : VelocityMode("Reduce") {
                 }
 
                 if (target == null) {
-                    renderTargetPos = TrackedPosition().apply { this.set(renderTarget!!.position()) }
+                    renderTargetPos = TrackedEntityPosition(renderTarget!!.position())
                 }
                 alinkTicks = alinkMaxDelay
             } else if (target != null) {
@@ -273,7 +258,7 @@ object VelocityReduce : VelocityMode("Reduce") {
             } else if (target != null) {
                 event.directionalInput = DirectionalInput.FORWARDS
                 releaseReason = ""
-            } else if (player.distanceToSqr(renderTargetPos?.pos ?: Vec3.ZERO) > alinkTargetRange.endInclusive.sq()) {
+            } else if (player.distanceToSqr(renderTargetPos?.base ?: Vec3.ZERO) > alinkTargetRange.endInclusive.sq()) {
                 releaseReason = "out of range"
             } else if (alinkTicks == 0) {
                 releaseReason = "max delay"
@@ -287,7 +272,7 @@ object VelocityReduce : VelocityMode("Reduce") {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         if (alinkTicks == -1 || renderTarget == null || renderTargetPos == null) return@handler
 
-        wireframePlayer.pos = renderTargetPos!!.pos
+        wireframePlayer.pos = renderTargetPos!!.base
         wireframePlayer.yRot = renderTarget!!.yRot
         wireframePlayer.xRot = renderTarget!!.xRot
         wireframePlayer.render(
@@ -295,20 +280,6 @@ object VelocityReduce : VelocityMode("Reduce") {
             Color4b.WHITE.alpha(100),
             outlineColor = Color4b.WHITE,
         )
-    }
-
-    private class TrackedPosition {
-        private val codec = VecDeltaCodec()
-        val pos: Vec3
-            get() = codec.base
-
-        fun set(pos: Vec3) {
-            codec.setBase(pos)
-        }
-
-        fun decode(xa: Long, ya: Long, za: Long) {
-            codec.setBase(codec.decode(xa, ya, za))
-        }
     }
 
 }
