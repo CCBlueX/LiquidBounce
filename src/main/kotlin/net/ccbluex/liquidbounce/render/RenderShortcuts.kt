@@ -433,7 +433,7 @@ fun WorldRenderEnvironment.drawGradientCircle(
     innerOffset: Vector3fc = Vector3f(),
     noDepthTest: Boolean = true,
 ) {
-    if (outerRadius <= 0f) {
+    if (outerRadius <= 0f || outerColor.isTransparent && innerColor.isTransparent) {
         return
     }
 
@@ -520,7 +520,7 @@ fun WorldRenderEnvironment.drawCircle(
     radius: Float,
     color: Color4b,
 ) {
-    if (radius <= 0f) {
+    if (radius <= 0f || color.isTransparent) {
         return
     }
 
@@ -541,6 +541,10 @@ fun WorldRenderEnvironment.drawCircle(
  */
 @JvmOverloads
 fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b, noDepthTest: Boolean = true) {
+    if (radius <= 0f || color.isTransparent) {
+        return
+    }
+
     drawRoundedRectQuad(
         radius = radius,
         argb = color.argb,
