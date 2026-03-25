@@ -203,6 +203,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
                 if (!AdaptiveRange.enabled) {
                     direction = -direction
                     strafeVec = computeDirectionVec(strafeYaw, distance, speed, targetSelector.maxRange, direction)
+                    pointCoords = player.position().add(strafeVec)
                 } else {
                     var currentRange = AdaptiveRange.rangeStep
                     while (!Validation.validatePoint(pointCoords)) {
@@ -214,9 +215,14 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
                             strafeVec = computeDirectionVec(
                                 strafeYaw, distance, speed, targetSelector.maxRange, direction
                             )
+                            pointCoords = player.position().add(strafeVec)
                             break
                         }
                     }
+                }
+
+                if (!Validation.validatePoint(pointCoords)) {
+                    return@handler
                 }
             }
 
