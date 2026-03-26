@@ -49,16 +49,16 @@ interface BlockIntentProvider<T> {
     fun onIntentFulfilled(intent: BlockChangeIntent<T>)
 }
 
-sealed class BlockChangeInfo {
+sealed interface BlockChangeInfo {
     class PlaceBlock(
         val blockPlacementTarget: BlockPlacementTarget
-    ) : BlockChangeInfo()
+    ) : BlockChangeInfo
 
     class InteractWithBlock(
         val itemPredicate: (Item) -> Boolean,
         val side: Direction,
         val alternativeOffsets: List<Vec3i> = listOf(Vec3i.ZERO)
-    ) : BlockChangeInfo()
+    ) : BlockChangeInfo
 }
 
 enum class IntentTiming {

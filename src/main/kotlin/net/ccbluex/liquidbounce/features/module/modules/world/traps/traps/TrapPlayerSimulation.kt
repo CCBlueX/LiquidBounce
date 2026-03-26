@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -28,7 +29,6 @@ import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
-import kotlin.math.pow
 import kotlin.math.sqrt
 
 object TrapPlayerSimulation {
@@ -37,10 +37,10 @@ object TrapPlayerSimulation {
     private const val SIMULATION_DISTANCE: Double = 10.0
 
     fun runSimulations(enemies: List<LivingEntity>) {
-        val seenPlayers = HashSet<Player>()
+        val seenPlayers = ReferenceOpenHashSet<Player>()
 
         for (enemy in enemies) {
-            if (enemy !is Player || enemy.distanceToSqr(player) > SIMULATION_DISTANCE.pow(2)) {
+            if (enemy !is Player || enemy.distanceToSqr(player) > SIMULATION_DISTANCE * SIMULATION_DISTANCE) {
                 continue
             }
 
@@ -57,7 +57,7 @@ object TrapPlayerSimulation {
                     return@firstNotNullOfOrNull PredictedPlayerPos(it.pos, ticks, enemy.position(), false)
                 }
 
-                wasAirborne = !enemy.onGround()
+                wasAirborne = !it.onGround
                 ticks++
 
                 null
@@ -79,7 +79,7 @@ object TrapPlayerSimulation {
             }
         }
 
-        this.predictedPlayerStatesCache.entries.removeIf { it.key !in seenPlayers }
+        this.predictedPlayerStatesCache.keys.retainAll(seenPlayers)
     }
 
     /**
