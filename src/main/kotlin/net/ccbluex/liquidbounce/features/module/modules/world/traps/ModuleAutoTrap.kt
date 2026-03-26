@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.IgnitionTrapPlanner
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.TrapPlayerSimulation
@@ -115,11 +116,14 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             IntentTiming.INSTANT -> false
 
             // Let ongoing combat modules consume the current hit window first, then place during recovery.
-            IntentTiming.NEXT_PROPITIOUS_MOMENT -> CombatManager.isInCombat && (
-                CombatManager.shouldPauseCombat
-                    || player.getAttackStrengthScale(0.5f) > 0.9f
+            IntentTiming.NEXT_PROPITIOUS_MOMENT -> hasPendingCombatAction() && (
+                player.getAttackStrengthScale(0.5f) > 0.9f
                     || ModuleCriticals.wouldDoCriticalHit(ignoreSprint = true)
                 )
         }
+    }
+
+    private fun hasPendingCombatAction(): Boolean {
+        return ModuleKillAura.running && ModuleKillAura.targetTracker.target != null
     }
 }
