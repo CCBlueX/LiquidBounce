@@ -57,7 +57,7 @@ object TrapPlayerSimulation {
                     return@firstNotNullOfOrNull PredictedPlayerPos(it.pos, ticks, enemy.position(), false)
                 }
 
-                wasAirborne = !enemy.onGround()
+                wasAirborne = !it.onGround
                 ticks++
 
                 null
