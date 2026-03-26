@@ -36,7 +36,6 @@ import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
@@ -97,9 +96,9 @@ abstract class TrapPlanner<T>(
                 return@forEach
             }
 
-            val currentState = bp.getState()?.block
+            val currentState = bp.getState() ?: return@forEach
 
-            if (currentState in trapWorthyBlocks || currentState != Blocks.AIR) {
+            if (currentState.block in trapWorthyBlocks || !currentState.canBeReplaced()) {
                 return@forEach
             }
 
