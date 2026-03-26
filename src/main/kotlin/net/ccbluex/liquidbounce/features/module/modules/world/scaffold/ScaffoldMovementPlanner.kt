@@ -51,13 +51,7 @@ object ScaffoldMovementPlanner {
      * This function calculates this ideal line that the player should move on.
      */
     fun getOptimalMovementLine(directionalInput: DirectionalInput): Line? {
-        val direction =
-            chooseDirection(
-                getMovementDirectionOfInput(
-                    player.yRot,
-                    directionalInput,
-                ),
-            )
+        val direction = chooseDirection(player.getMovementDirectionOfInput(directionalInput))
 
         // Is this a good way to find the block center?
         val blockUnderPlayer = findBlockPlayerStandsOn() ?: return null

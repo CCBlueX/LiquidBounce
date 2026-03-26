@@ -153,13 +153,13 @@ internal object ElytraRotationProcessor : ValueGroup("Rotations"), RotationProce
         calculateRotation(target).let {
             RotationManager.setRotationTarget(
                 /*
-                 * Don't use the RotationConfigurable because I need to superfast rotations.
+                 * Don't use the [RotationsValueGroup] because I need to superfast rotations.
                  * Without any setting and angle smoothing
                  */
                 plan = RotationTarget(
                     rotation = it,
                     entity = target,
-                    processors = listOfNotNull(ElytraRotationProcessor),
+                    processors = listOf(ElytraRotationProcessor),
                     ticksUntilReset = 1,
                     resetThreshold = 1f,
                     considerInventory = true,

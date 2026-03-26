@@ -78,8 +78,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
         val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.WIND_CHARGE) ?: return@tickHandler
 
         val isHorizontalBoost = HorizontalBoost.enabled && HorizontalBoost.boostKey.isPressed
-        val directionYaw = getMovementDirectionOfInput(player.yRot,
-            DirectionalInput(player.input)) - 180f
+        val directionYaw = player.getMovementDirectionOfInput() - 180f
         val directionPitch = when {
             isHorizontalBoost -> HorizontalBoost.pitch
             else -> 90f
