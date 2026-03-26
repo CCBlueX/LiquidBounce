@@ -66,7 +66,7 @@ abstract class TrapPlanner<T>(
         val ticksToLookAhead = 5
         val blockPos = pos.toBlockPos()
         val normalizedStartBB =
-            dims.makeBoundingBox(pos).move(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -pos.z.toInt().toDouble())
+            dims.makeBoundingBox(pos).move(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -blockPos.z.toDouble())
         val normalizedEndBB = normalizedStartBB.move(
             velocity.x * ticksToLookAhead,
             0.0,
