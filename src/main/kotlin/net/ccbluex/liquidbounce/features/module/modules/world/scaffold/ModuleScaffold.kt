@@ -341,6 +341,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     private fun reset() {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
+        ScaffoldMovementPrediction.reset()
         SilentHotbar.resetSlot(this)
         nextBlock = null
         updateRenderCount(null)
