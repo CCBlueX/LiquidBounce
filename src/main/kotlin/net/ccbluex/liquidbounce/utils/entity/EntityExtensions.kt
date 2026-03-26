@@ -171,7 +171,8 @@ val LocalPlayer.direction: Float
 val LocalPlayer.hasCooldown: Boolean
     get() = !isOlderThanOrEqual1_8 && this.getAttributeValue(Attributes.ATTACK_SPEED) < 20.0
 
-fun LocalPlayer.getMovementDirectionOfInput(input: DirectionalInput): Float {
+@JvmOverloads
+fun LocalPlayer.getMovementDirectionOfInput(input: DirectionalInput = DirectionalInput(this.input)): Float {
     return getMovementDirectionOfInput(this.yRot, input)
 }
 
@@ -205,7 +206,7 @@ fun LocalPlayer.isCloseToEdge(
     distance: Double = 0.1,
     pos: Vec3 = this.position(),
 ): Boolean {
-    val alpha = (getMovementDirectionOfInput(this.yRot, directionalInput) + 90.0F).toRadians()
+    val alpha = (getMovementDirectionOfInput(directionalInput) + 90.0F).toRadians()
     val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
     simulatedInput.set(
         jump = false,
@@ -265,7 +266,7 @@ fun LocalPlayer.canStep(height: Double = 1.0): Boolean {
     }
 }
 
-fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
+fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput = DirectionalInput(player.input)): Float {
     var actualYaw = facingYaw
     val forwardMultiplier = when {
         input.backwards && !input.forwards -> {

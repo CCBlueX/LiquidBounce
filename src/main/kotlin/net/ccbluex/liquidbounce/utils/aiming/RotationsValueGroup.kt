@@ -55,8 +55,8 @@ open class RotationsValueGroup(
         ).toTypedArray()
     }
 
-    private var shortStop = ShortStopRotationProcessor(owner).takeIf { combatSpecific }?.also { tree(it) }
-    private val fail = FailRotationProcessor(owner).takeIf { combatSpecific }?.also { tree(it) }
+    private val shortStop = if (combatSpecific) tree(ShortStopRotationProcessor(owner)) else null
+    private val fail = if (combatSpecific) tree(FailRotationProcessor(owner)) else null
 
     private val movementCorrection by enumChoice("MovementCorrection", movementCorrection)
     private val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
@@ -72,8 +72,8 @@ open class RotationsValueGroup(
         entity,
         listOfNotNull(
             angleSmooth.activeMode,
-            fail.takeIf { failFocus -> failFocus?.running == true },
-            shortStop.takeIf { shortStop -> shortStop?.running == true }
+            fail?.takeIf { it.running },
+            shortStop?.takeIf { it.running }
         ),
         ticksUntilReset,
         resetThreshold,

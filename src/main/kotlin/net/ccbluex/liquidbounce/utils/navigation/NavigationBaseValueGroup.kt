@@ -92,7 +92,7 @@ abstract class NavigationBaseValueGroup<T>(
      * @return Movement rotation
      */
     open fun getMovementRotation(): Rotation {
-        val movementYaw = getMovementDirectionOfInput(player.yRot, DirectionalInput(player.input))
+        val movementYaw = player.getMovementDirectionOfInput()
         val movementPitch = 0.0f
 
         return Rotation(movementYaw, movementPitch)

@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.utils.entity.moving
 
-object ScaffoldHeadHitterFeature : ToggleableValueGroup(ModuleScaffold, "HeadHitter", false) {
+object ScaffoldHeadHitterFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "HeadHitter", false) {
     fun canHeadHit() =
         !world.getBlockState(player.blockPosition().offset(0, 2, 0)).isAir && player.onGround()
 

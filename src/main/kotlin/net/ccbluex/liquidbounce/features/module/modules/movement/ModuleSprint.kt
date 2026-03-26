@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 /**
  * Sprint module
@@ -102,7 +101,7 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
     private val jumpHandler = handler<PlayerJumpEvent> { event ->
         if (sprintMode == SprintMode.OMNIDIRECTIONAL && shouldSprintOmnidirectional) {
             // Allows us to sprint boost in every direction
-            event.yaw = getMovementDirectionOfInput(player.yRot, DirectionalInput(player.input))
+            event.yaw = player.getMovementDirectionOfInput()
         }
     }
 
@@ -116,7 +115,7 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
             return@handler
         }
 
-        val yaw = getMovementDirectionOfInput(player.yRot, DirectionalInput(player.input))
+        val yaw = player.getMovementDirectionOfInput()
 
         // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
         val rotation = Rotation(yaw, player.xRot)

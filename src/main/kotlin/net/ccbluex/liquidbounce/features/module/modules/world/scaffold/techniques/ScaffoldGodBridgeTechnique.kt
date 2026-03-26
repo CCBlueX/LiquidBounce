@@ -146,7 +146,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             return getRotationForNoInput(target)
         }
 
-        val direction = getMovementDirectionOfInput(player.yRot, rawInput) + 180
+        val direction = player.getMovementDirectionOfInput(rawInput) + 180
 
         // Round to 45°-steps (NORTH, NORTH_EAST, etc.)
         val movingYaw = round(direction / 45) * 45

@@ -113,8 +113,7 @@ class DodgePlanner(
 
     private fun escalateIfNeeded(dodgePlanWithoutRotationChange: DodgePlan): DodgePlan? {
         // Check if the time is sufficient to dodge and apply another fix that will do the evasion.
-
-        val actualAngle = getMovementDirectionOfInput(player.yRot, dodgePlanWithoutRotationChange.directionalInput)
+        val actualAngle = player.getMovementDirectionOfInput(dodgePlanWithoutRotationChange.directionalInput)
 
         val effectivenessLossByAngle = getEffectiveLossByInoptimalAngle(actualAngle)
         val distanceToTravel = optimalDodgePosRelativeToPlayer.length() - (SAFE_DISTANCE_WITH_PADDING - SAFE_DISTANCE)
