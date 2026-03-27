@@ -27,22 +27,19 @@ class NormalizedPlane(val pos: Vec3, normalVec: Vec3) {
 
     val normalVec: Vec3 = normalVec.normalizeIfNeeded()
 
-    fun intersectionPhi(line: Line): Double? {
-        val d = this.pos.dot(this.normalVec)
-        val e = line.direction.dot(this.normalVec)
+    fun intersectionPhi(geometry: LinearGeometry3): Double? {
+        val d = pos.dot(normalVec)
+        val e = geometry.direction.dot(normalVec)
 
-        // If the line is in the plane or parallel to it, there is no intersection point
         if (Mth.equal(e, 0.0)) {
             return null
         }
 
-        val phi = (d - line.position.dot(this.normalVec)) / e
-
-        return phi
+        return (d - geometry.anchor.dot(normalVec)) / e
     }
 
-    fun intersection(line: Line): Vec3? {
-        return intersectionPhi(line)?.let(line::getPositionChecked)
+    fun intersection(geometry: LinearGeometry3): Vec3? {
+        return intersectionPhi(geometry)?.let(geometry::pointAtOrNull)
     }
 
     fun intersection(other: NormalizedPlane): Line? {
@@ -51,17 +48,17 @@ class NormalizedPlane(val pos: Vec3, normalVec: Vec3) {
         val z1 = other.normalVec.z
         val v1 = other.normalVec.dot(other.pos)
 
-        val x2 = this.normalVec.x
-        val y2 = this.normalVec.y
-        val z2 = this.normalVec.z
-        val v2 = this.normalVec.dot(this.pos)
+        val x2 = normalVec.x
+        val y2 = normalVec.y
+        val z2 = normalVec.z
+        val v2 = normalVec.dot(pos)
 
         val dY = x2 * z1 - x1 * z2
         val dXZ = x2 * y1 - x1 * y2
 
-        when {
+        return when {
             !Mth.equal(dY, 0.0) -> {
-                return Line(
+                Line(
                     Vec3(
                         (-v1 * z2 + v2 * z1) / dY,
                         0.0,
@@ -74,8 +71,9 @@ class NormalizedPlane(val pos: Vec3, normalVec: Vec3) {
                     )
                 )
             }
+
             !Mth.equal(dXZ, 0.0) -> {
-                return Line(
+                Line(
                     Vec3(
                         (-v1 * z2 + v2 * y1) / dXZ,
                         (v1 * x2 - v2 * x1) / dXZ,
@@ -88,17 +86,15 @@ class NormalizedPlane(val pos: Vec3, normalVec: Vec3) {
                     )
                 )
             }
-            else -> return null
+
+            else -> null
         }
     }
 
     companion object {
         @JvmStatic
         fun fromPoints(a: Vec3, b: Vec3, c: Vec3): NormalizedPlane {
-            val ab = b.subtract(a)
-            val ac = c.subtract(a)
-
-            return fromParams(a, ab, ac)
+            return fromParams(a, b.subtract(a), c.subtract(a))
         }
 
         @JvmStatic
@@ -112,5 +108,4 @@ class NormalizedPlane(val pos: Vec3, normalVec: Vec3) {
             return NormalizedPlane(base, normalVec)
         }
     }
-
 }
