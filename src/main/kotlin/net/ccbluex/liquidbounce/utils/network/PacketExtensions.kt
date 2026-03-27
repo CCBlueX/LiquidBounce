@@ -29,7 +29,9 @@ import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.network.protocol.game.ServerboundContainerSlotStateChangedPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
+import net.minecraft.world.phys.Vec3
 
 fun Packet<*>?.isC2SContainerPacket() =
     this is ServerboundContainerClickPacket ||
@@ -50,6 +52,9 @@ fun Packet<*>?.isLocalPlayerVelocity(considerExplosion: Boolean = true): Boolean
         else -> false
     }
 }
+
+val ServerboundMovePlayerPacket.position: Vec3
+    inline get() = Vec3(x, y, z)
 
 fun ClientboundSetEntityMotionPacket.isMovementYFallDamage(): Boolean {
     // >= 1.21.9 -0.0783739241897089

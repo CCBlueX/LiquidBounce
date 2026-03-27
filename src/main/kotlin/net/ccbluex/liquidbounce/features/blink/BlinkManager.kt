@@ -49,10 +49,14 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
+import net.ccbluex.liquidbounce.utils.network.position
 import net.minecraft.client.CameraType
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
+import net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
@@ -63,7 +67,6 @@ import net.minecraft.network.protocol.handshake.ClientIntentionPacket
 import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
 import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
@@ -78,8 +81,8 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     val positions
         get() = packetQueue
             .map { snapshot -> snapshot.packet }
-            .filterIsInstance<ServerboundMovePlayerPacket> { playerMoveC2SPacket -> playerMoveC2SPacket.hasPos }
-            .map { playerMoveC2SPacket -> Vec3(playerMoveC2SPacket.x, playerMoveC2SPacket.y, playerMoveC2SPacket.z) }
+            .filterIsInstance(ServerboundMovePlayerPacket::hasPosition)
+            .map { p -> p.position }
 
     val isLagging
         get() = packetQueue.isNotEmpty()
@@ -149,12 +152,18 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
             }
 
             // Ignore message-related packets
-            is ServerboundChatPacket, is ClientboundSystemChatPacket, is ServerboundChatCommandPacket -> {
+            is ServerboundChatPacket,
+            is ClientboundSystemChatPacket,
+            is ClientboundDisguisedChatPacket,
+            is ServerboundChatCommandPacket -> {
                 return@handler
             }
 
-            // Flush on teleport or disconnect
-            is ClientboundPlayerPositionPacket, is ClientboundDisconnectPacket -> {
+            // Flush on teleport, reconnect, or disconnect
+            is ClientboundPlayerPositionPacket,
+            is ClientboundDisconnectPacket,
+            is ClientboundRespawnPacket,
+            is ClientboundLoginPacket -> {
                 flush(origin)
                 return@handler
             }
@@ -300,4 +309,3 @@ data class PacketSnapshot(
     val origin: TransferOrigin,
     val timestamp: Long
 )
-
