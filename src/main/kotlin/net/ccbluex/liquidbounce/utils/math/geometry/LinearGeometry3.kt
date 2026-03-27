@@ -157,6 +157,7 @@ sealed interface LinearGeometry3 {
     /**
      * Returns the nearest point on this geometry to [box].
      */
+    @Suppress("CognitiveComplexMethod")
     fun getNearestPointTo(box: AABB): Vec3 {
         val px = anchor.x
         val py = anchor.y
