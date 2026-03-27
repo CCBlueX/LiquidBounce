@@ -34,7 +34,7 @@ import kotlin.math.atan2
 
 object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Prediction", true) {
 
-    private val lastPlacementOffsets = ArrayDeque<Vec3>(MAX_PLACEMENT_OFFSETS)
+    private val lastPlacementOffsets = ArrayDeque<Vec3>(MAX_PLACEMENT_OFFSETS + 1)
 
     private const val MAX_PLACEMENT_OFFSETS = 4
 

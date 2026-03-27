@@ -64,6 +64,9 @@ fun Vec3i.lengthSqr(): Long {
 
 inline operator fun Vec3.plus(other: Position): Vec3 = add(other.x(), other.y(), other.z())
 
+inline fun Vec3.addScaled(other: Position, scale: Double): Vec3 =
+    add(other.x() * scale, other.y() * scale, other.z() * scale)
+
 inline operator fun Vec3.plus(other: Vec3i): Vec3 = add(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 
 inline operator fun Vec3.minus(other: Position): Vec3 = subtract(other.x(), other.y(), other.z())
@@ -72,6 +75,8 @@ inline operator fun Vec3.minus(other: Vec3i): Vec3 =
     subtract(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 
 inline operator fun Vec3.times(scalar: Double): Vec3 = scale(scalar)
+
+inline fun Vec3.dot(x: Double, y: Double, z: Double): Double = this.x * x + this.y * y + this.z * z
 
 /**
  * `this.normalize().scale(newLength)`

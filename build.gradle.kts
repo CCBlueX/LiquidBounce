@@ -185,12 +185,21 @@ tasks.processResources {
     val minLoaderVersion = libs.versions.fabric.loaderMin
     val fabricKotlinVersion = libs.versions.fabric.kotlin
     val viafabricplusVersion = libs.versions.viafabricplus
+    val isGitHubCi = providers.environmentVariable("GITHUB_ACTIONS")
+        .map { it.toBoolean() }
+        .orElse(false)
 
-    val contributors = provider {
-        JsonOutput.prettyPrint(
-            JsonOutput.toJson(getContributors("CCBlueX", "LiquidBounce"))
-        )
+    val contributorsJson by lazy {
+        if (!isGitHubCi.get()) {
+            logger.lifecycle("Skipping contributor fetch outside GitHub CI")
+            "[]"
+        } else {
+            val contributors = getContributors("CCBlueX", "LiquidBounce")
+            logger.lifecycle("Fetched ${contributors.size} contributors on GitHub CI")
+            JsonOutput.prettyPrint(JsonOutput.toJson(contributors))
+        }
     }
+    val contributors = provider { contributorsJson }
 
     inputs.property("version", modVersion)
     inputs.property("minecraft_version", minecraftVersion)

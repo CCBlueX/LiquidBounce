@@ -16,27 +16,33 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import net.minecraft.world.phys.AABB
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import net.minecraft.world.phys.Vec3
 
-data class Line(
-    val position: Vec3,
-    override val direction: Vec3,
-) : LinearGeometry3 {
+class AlignedFaceTest {
 
-    init {
-        requireValidDirection(direction)
+    @Test
+    fun `area matches single xy face area`() {
+        val face = AlignedFace(Vec3(0.0, 0.0, 0.0), Vec3(2.0, 3.0, 0.0))
+
+        assertEquals(6.0, face.area, 1e-9)
     }
 
-    override val anchor: Vec3
-        get() = position
+    @Test
+    fun `area matches single yz face area`() {
+        val face = AlignedFace(Vec3(1.0, 0.0, 0.0), Vec3(1.0, 2.0, 4.0))
 
-    companion object {
-        @JvmStatic
-        fun fromPoints(begin: Vec3, end: Vec3): Line {
-            return Line(begin, end.subtract(begin))
-        }
+        assertEquals(8.0, face.area, 1e-9)
+    }
+
+    @Test
+    fun `degenerate edge has zero area`() {
+        val face = AlignedFace(Vec3(1.0, 2.0, 3.0), Vec3(1.0, 2.0, 7.0))
+
+        assertEquals(0.0, face.area, 1e-9)
     }
 }
