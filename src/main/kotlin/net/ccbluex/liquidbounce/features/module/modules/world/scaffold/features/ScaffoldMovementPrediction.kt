@@ -27,21 +27,33 @@ import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.withLength
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 
 object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Prediction", true) {
 
-    private val lastPlacementOffsets = ArrayDeque<Vec3>()
+    private val lastPlacementOffsets = ArrayDeque<Vec3>(MAX_PLACEMENT_OFFSETS)
 
     private const val MAX_PLACEMENT_OFFSETS = 4
 
+    /** How far the bootstrap prediction stays behind the detected edge before placement history exists. */
+    private val bootstrapBackoff by float("BootstrapBackoff", 0.2f, 0.0f..0.4f)
+
+    /** How close to the edge the player can get before future-position prediction is disabled. */
+    private val predictionCutoffDistance by float("PredictionCutoffDistance", 0.05f, 0.0f..0.3f)
+
+    /** How many recorded placements are used to blend from bootstrap prediction into history-based prediction. */
+    private val warmupPlacements by int("WarmupPlacements", 2, 0..MAX_PLACEMENT_OFFSETS)
+
     fun reset() {
         lastPlacementOffsets.clear()
+    }
+
+    override fun onDisabled() {
+        reset()
+        super.onDisabled()
     }
 
     fun onPlace(optimalLine: Line?, lastFallOffPosition: Vec3?) {
@@ -86,10 +98,8 @@ object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Predic
             return null
         }
 
-        val optimalEdgeDist = 0.0
-
         // When we are close to the edge, we are able to place right now. Thus, we don't want to use a future position
-        if (player.isCloseToEdge(DirectionalInput(player.input), distance = optimalEdgeDist)) {
+        if (player.isCloseToEdge(distance = predictionCutoffDistance.toDouble())) {
             return null
         }
 
@@ -97,23 +107,13 @@ object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Predic
         val fallOffPoint = getFallOffPositionOnLine(optimalLine) ?: return null
 
         val fallOffPointToPlayer = fallOffPoint - player.position()
+        val bootstrapPos = getBootstrapPlacementPos(fallOffPoint, fallOffPointToPlayer)
+        val last = getAvgPlacementPos() ?: return bootstrapPos
 
-        val offset = when (val last = getAvgPlacementPos()) {
-            null -> {
-                // Move the point where we want to place a bit more to the player since we ideally want to place at an
-                // edge distance of 0.2 or so
-                fallOffPoint - fallOffPointToPlayer.normalize() * optimalEdgeDist
-            }
-            else -> {
-                val lineDirAngle = atan2(optimalLine.direction.z, optimalLine.direction.x).toFloat()
+        val lineDirAngle = atan2(optimalLine.direction.z, optimalLine.direction.x).toFloat()
+        val predictedPos = fallOffPoint + last.yRot(-lineDirAngle)
 
-                val predictedPos = fallOffPoint + last.yRot(-lineDirAngle)
-
-                predictedPos
-            }
-        }
-
-        return offset
+        return bootstrapPos.lerp(predictedPos, getWarmupBlendFactor())
     }
 
     fun getFallOffPositionOnLine(optimalLine: Line): Vec3? {
@@ -129,6 +129,22 @@ object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Predic
         val fallOffPoint = edgeCollision.copy(y = player.y)
 
         return fallOffPoint
+    }
+
+    private fun getBootstrapPlacementPos(fallOffPoint: Vec3, fallOffPointToPlayer: Vec3): Vec3 {
+        if (bootstrapBackoff <= 0.0f) {
+            return fallOffPoint
+        }
+
+        return fallOffPoint - fallOffPointToPlayer.withLength(bootstrapBackoff.toDouble())
+    }
+
+    private fun getWarmupBlendFactor(): Double {
+        if (warmupPlacements <= 0) {
+            return 1.0
+        }
+
+        return (lastPlacementOffsets.size.toDouble() / warmupPlacements.toDouble()).coerceIn(0.0, 1.0)
     }
 
 }
