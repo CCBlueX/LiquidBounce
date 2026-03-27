@@ -62,11 +62,11 @@ data class Ray(
             return null
         }
 
-        if (exit <= GEOMETRY_PARAMETER_EPSILON) {
+        if (exit < 0.0) {
             return null
         }
 
-        val parameter = if (enter > GEOMETRY_PARAMETER_EPSILON) enter else exit
+        val parameter = if (enter >= 0.0) enter else exit
         return pointAtOrNull(parameter)
     }
 
