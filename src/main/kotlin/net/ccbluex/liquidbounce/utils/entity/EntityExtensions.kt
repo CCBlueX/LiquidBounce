@@ -202,7 +202,7 @@ fun Player.wouldBeCloseToFallOff(position: Vec3): Boolean {
 }
 
 fun LocalPlayer.isCloseToEdge(
-    directionalInput: DirectionalInput,
+    directionalInput: DirectionalInput = DirectionalInput(this.input),
     distance: Double = 0.1,
     pos: Vec3 = this.position(),
 ): Boolean {

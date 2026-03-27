@@ -329,7 +329,6 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         jumps = 2
 
         ScaffoldMovementPlanner.reset()
-        ScaffoldMovementPrediction.reset()
 
         super.onEnabled()
     }
