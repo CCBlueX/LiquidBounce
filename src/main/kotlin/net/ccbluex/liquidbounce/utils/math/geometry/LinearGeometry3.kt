@@ -56,7 +56,8 @@ sealed interface LinearGeometry3 {
      * Returns `null` for out-of-domain or non-finite parameters.
      */
     fun pointAtOrNull(parameter: Double): Vec3? {
-        return parameterDomain().normalize(parameter)?.let(::pointAt)
+        val normalized = parameterDomain().normalize(parameter)
+        return if (normalized.isNaN()) null else pointAt(normalized)
     }
 
     /**
@@ -64,7 +65,9 @@ sealed interface LinearGeometry3 {
      */
     fun getNearestPointTo(point: Vec3): Vec3 {
         val parameter = parameterDomain().project(parameterFor(point))
-            ?: error("Unable to project point $point on geometry $this")
+        if (parameter.isNaN()) {
+            error("Unable to project point $point on geometry $this")
+        }
         return pointAt(parameter)
     }
 
@@ -114,9 +117,13 @@ sealed interface LinearGeometry3 {
         var bestSecondParameter = Double.NaN
         var bestDistance = Double.POSITIVE_INFINITY
 
-        fun addCandidate(firstParameterCandidate: Double?, secondParameterCandidate: Double?) {
-            val firstParameter = firstParameterCandidate?.let(firstDomain::normalize) ?: return
-            val secondParameter = secondParameterCandidate?.let(secondDomain::normalize) ?: return
+        fun addCandidate(firstParameterCandidate: Double, secondParameterCandidate: Double) {
+            val firstParameter = firstDomain.normalize(firstParameterCandidate)
+            val secondParameter = secondDomain.normalize(secondParameterCandidate)
+
+            if (firstParameter.isNaN() || secondParameter.isNaN()) {
+                return
+            }
 
             val dx = deltaX + firstDx * firstParameter - secondDx * secondParameter
             val dy = deltaY + firstDy * firstParameter - secondDy * secondParameter
@@ -198,7 +205,10 @@ sealed interface LinearGeometry3 {
         var bestDistance = Double.POSITIVE_INFINITY
 
         fun evaluate(parameterCandidate: Double) {
-            val parameter = domain.normalize(parameterCandidate) ?: return
+            val parameter = domain.normalize(parameterCandidate)
+            if (parameter.isNaN()) {
+                return
+            }
             val x = px + dx * parameter
             val y = py + dy * parameter
             val z = pz + dz * parameter
@@ -345,22 +355,28 @@ private enum class ParameterDomain(
     FORWARD(0.0, Double.POSITIVE_INFINITY),
     SEGMENT_01(0.0, 1.0);
 
-    fun normalize(parameter: Double): Double? {
+    /**
+     * @return [Double.NaN] if [parameter] out of bounds
+     */
+    fun normalize(parameter: Double): Double {
         if (!parameter.isFinite()) {
-            return null
+            return Double.NaN
         }
 
         if (parameter < lowerBound - GEOMETRY_PARAMETER_EPSILON
             || parameter > upperBound + GEOMETRY_PARAMETER_EPSILON) {
-            return null
+            return Double.NaN
         }
 
         return parameter.coerceIn(lowerBound, upperBound)
     }
 
-    fun project(parameter: Double): Double? {
+    /**
+     * @return [Double.NaN] if [parameter] out of bounds
+     */
+    fun project(parameter: Double): Double {
         if (!parameter.isFinite()) {
-            return null
+            return Double.NaN
         }
 
         return parameter.coerceIn(lowerBound, upperBound)
