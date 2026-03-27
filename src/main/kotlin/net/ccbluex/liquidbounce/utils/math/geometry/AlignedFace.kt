@@ -47,7 +47,7 @@ class AlignedFace(from: Vec3, to: Vec3) {
     val area: Double
         get() {
             val dims = dimensions
-            return (dims.x * dims.y + dims.y * dims.z + dims.x * dims.z) * 2.0
+            return dims.x * dims.y + dims.y * dims.z + dims.x * dims.z
         }
 
     val center: Vec3

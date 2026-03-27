@@ -43,52 +43,23 @@ class NormalizedPlane(val pos: Vec3, normalVec: Vec3) {
     }
 
     fun intersection(other: NormalizedPlane): Line? {
-        val x1 = other.normalVec.x
-        val y1 = other.normalVec.y
-        val z1 = other.normalVec.z
-        val v1 = other.normalVec.dot(other.pos)
+        val firstNormal = other.normalVec
+        val secondNormal = normalVec
+        val direction = firstNormal.cross(secondNormal)
+        val directionLengthSqr = direction.lengthSqr()
 
-        val x2 = normalVec.x
-        val y2 = normalVec.y
-        val z2 = normalVec.z
-        val v2 = normalVec.dot(pos)
-
-        val dY = x2 * z1 - x1 * z2
-        val dXZ = x2 * y1 - x1 * y2
-
-        return when {
-            !Mth.equal(dY, 0.0) -> {
-                Line(
-                    Vec3(
-                        (-v1 * z2 + v2 * z1) / dY,
-                        0.0,
-                        (v1 * x2 - v2 * x1) / dY
-                    ),
-                    Vec3(
-                        (-z1 * y2 + z2 * y1) / dY,
-                        1.0,
-                        (x1 * y2 - x2 * y1) / dY,
-                    )
-                )
-            }
-
-            !Mth.equal(dXZ, 0.0) -> {
-                Line(
-                    Vec3(
-                        (-v1 * z2 + v2 * y1) / dXZ,
-                        (v1 * x2 - v2 * x1) / dXZ,
-                        0.0
-                    ),
-                    Vec3(
-                        (-y1 * z2 + y2 * z1) / dXZ,
-                        (x1 * z2 - x2 * z1) / dXZ,
-                        1.0,
-                    )
-                )
-            }
-
-            else -> null
+        if (Mth.equal(directionLengthSqr, 0.0)) {
+            return null
         }
+
+        val firstDistance = firstNormal.dot(other.pos)
+        val secondDistance = secondNormal.dot(pos)
+
+        val point = secondNormal.cross(direction).scale(firstDistance)
+            .add(direction.cross(firstNormal).scale(secondDistance))
+            .scale(1.0 / directionLengthSqr)
+
+        return Line(point, direction)
     }
 
     companion object {
