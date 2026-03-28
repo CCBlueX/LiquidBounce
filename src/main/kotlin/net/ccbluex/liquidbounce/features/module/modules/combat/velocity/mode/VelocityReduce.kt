@@ -58,6 +58,10 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 
+/**
+ * 遗憾的oneNOXZ已经无法与你互动,所以登场的是perNOXZ
+ * */
+
 object VelocityReduce : VelocityMode("Reduce") {
 
     private val attackCount by intRange("AttackCount", 3..3, 0..20)
@@ -107,7 +111,7 @@ object VelocityReduce : VelocityMode("Reduce") {
     private var target: Entity? = null
     private var renderTarget: Entity? = null
     private var renderTargetPos: TrackedEntityPosition? = null
-    private var attackQueue = 0
+    public var attackQueue = 0
     private var receiveDamage = false
     private var alinkTicks = -1
     private var releaseReason: ReleaseReason? = null
@@ -261,21 +265,24 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        if (attackQueue <= 0) {
-            return@handler
+
+
+        //per
+        if (attackQueue > 0){
+            if (target == null){
+                attackQueue = 0
+                return@handler
+            }
+
         }
 
-        if (target == null) {
-            attackQueue = 0
-            return@handler
-        }
-        repeat(attackQueue) {
             if (player.isSprinting) player.isSprinting = false
             attackEntity(target!!, SwingMode.DO_NOT_HIDE)
             player.deltaMovement = player.deltaMovement.multiply(horizontal, vertical, horizontal)
+        attackQueue --
+        if (attackQueue == 0) {
+            target = null
         }
-        attackQueue = 0
-        target = null
     }
 
     @Suppress("unused")
