@@ -94,6 +94,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoChatGame
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoConfig
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoL
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoPearl
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBookBot
@@ -547,6 +548,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleDebugRecorder,
             ModuleAntiCheatDetect,
             ModuleEasyPearl,
+            ModuleAutoL,
 
             // Movement
             ModuleAirJump,
