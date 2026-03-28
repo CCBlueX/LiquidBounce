@@ -35,7 +35,7 @@ import kotlin.random.Random
 
 object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC){
     private val triggerDelay by intRange("Trigger Delay", 100..100, 0..1000)
-    private val pattern by enumChoice("Pattern", AutoLPattern.RANDOM)
+    private val pattern by enumChoice("Pattern", AutoLPattern.LINEAR)
     private val messages by textList("Messages", mutableListOf(
         "First Break! The Sleeping Dragon Emerges from His Seclusion! You have already been eliminated by LiquidBounce Client!",
         "Double Kill! Rise to Fame with a Single Battle! You have already been eliminated by LiquidBounce Client!",
