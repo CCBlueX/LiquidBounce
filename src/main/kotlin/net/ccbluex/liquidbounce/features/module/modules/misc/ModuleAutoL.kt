@@ -72,10 +72,11 @@ object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = list
             delay(triggerDelay.random().toLong())
             when (pattern) {
                 AutoLPattern.RANDOM ->
-                    network.sendChat(it.name.contents.toString() + messages.random())
+                    network.sendChat(it.name.string + " " + messages.random())
                 AutoLPattern.LINEAR ->
-                    network.sendChat(it.name.contents.toString() + messages[linear.getAndIncrement() % messages.size])
+                    network.sendChat(it.name.string + " " + messages[linear.getAndIncrement() % messages.size])
             }
+            enemies.remove(it)
         }
     }
 
