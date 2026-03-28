@@ -113,6 +113,8 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     var remainingAttackCount = 0
         private set
+    private var currentGameTick = 0L
+    private var forwardInputAttackGameTick = -1L
     private var receiveDamage = false
     private var alinkTicks = -1
     private var releaseReason: ReleaseReason? = null
@@ -140,6 +142,8 @@ object VelocityReduce : VelocityMode("Reduce") {
         target = null
         resetRenderState()
         remainingAttackCount = 0
+        currentGameTick = 0L
+        forwardInputAttackGameTick = -1L
         receiveDamage = false
         alinkTicks = -1
         releaseReason = null
@@ -152,6 +156,8 @@ object VelocityReduce : VelocityMode("Reduce") {
         target = null
         resetRenderState()
         remainingAttackCount = 0
+        currentGameTick = 0L
+        forwardInputAttackGameTick = -1L
         receiveDamage = false
         alinkTicks = -1
         releaseReason = null
@@ -264,6 +270,8 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
+        currentGameTick++
+
         if (remainingAttackCount > 0) {
             if (target == null) {
                 remainingAttackCount = 0
@@ -271,6 +279,7 @@ object VelocityReduce : VelocityMode("Reduce") {
             }
             player.isSprinting = false
             attackEntity(target!!, SwingMode.DO_NOT_HIDE)
+            forwardInputAttackGameTick = currentGameTick
             player.deltaMovement = player.deltaMovement.multiply(horizontal, vertical, horizontal)
             remainingAttackCount--
             if (remainingAttackCount == 0) {
@@ -315,6 +324,13 @@ object VelocityReduce : VelocityMode("Reduce") {
 
                 alinkTicks == 0 -> releaseReason = ReleaseReason.MAX_DELAY
             }
+        }
+
+        if (currentGameTick == forwardInputAttackGameTick) {
+            event.directionalInput = event.directionalInput.copy(
+                forwards = true,
+                backwards = false
+            )
         }
     }
 
