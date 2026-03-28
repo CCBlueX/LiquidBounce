@@ -49,7 +49,10 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
     mc.options.keyAttack,
     KillAuraClickerItemCooldown()
 ) {
-
+    
+    override val isClickTick: Boolean
+        get() = super.isClickTick && (!VelocityReduce.running || VelocityReduce.attackQueue == 0)
+        
     class KillAuraClickerItemCooldown : ItemCooldown() {
 
         private val ignoreOnShieldBreak by boolean("IgnoreOnShieldBreak", true)
