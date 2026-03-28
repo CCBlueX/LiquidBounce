@@ -105,7 +105,7 @@ dependencies {
     // Recommended mods (on IDE)
     api(libs.sodium)
     api(libs.lithium)
-//    runtimeOnly(libs.immediatelyFast)
+    runtimeOnly(libs.immediatelyFast)
     runtimeOnly(libs.iris)
 
     // ViaFabricPlus
@@ -122,7 +122,7 @@ dependencies {
     // LWJGL EGL and WayGL mod for Linux accelerated paint
     jij(libs.lwjgl.egl)
 //    runtimeOnly(libs.waygl)
-//    runtimeOnly(libs.cloth.config)
+    runtimeOnly(libs.cloth.config)
 
     // JCEF Support
     api(libs.mcef)
