@@ -37,13 +37,20 @@ object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = list
     private val triggerDelay by intRange("Trigger Delay", 100..100, 0..1000)
     private val pattern by enumChoice("Pattern", AutoLPattern.LINEAR)
     private val messages by textList("Messages", mutableListOf(
-        "First Break! The Sleeping Dragon Emerges from His Seclusion! You have already been eliminated by LiquidBounce Client!",
-        "Double Kill! Rise to Fame with a Single Battle! You have already been eliminated by LiquidBounce Client!",
-        "Triple Kill! The Whole World is Astounded! You have already been eliminated by LiquidBounce Client!",
-        "Quadra Kill! Unmatched Across All Under Heaven! You have already been eliminated by LiquidBounce Client!",
-        "Penta Kill! Conquer the Heavens and Annihilate the Earth! You have already been eliminated by LiquidBounce Client!",
-        "Hexa Kill! Conquer the Heavens and Annihilate the Earth! You have already been eliminated by LiquidBounce Client!",
-        "Hepta Kill! Conquer the Heavens and Annihilate the Earth! You have already been eliminated by LiquidBounce Client!"
+        "First Break! The Sleeping Dragon Emerges from His Seclusion! " +
+            "You have already been eliminated by LiquidBounce Client!",
+        "Double Kill! Rise to Fame with a Single Battle! " +
+            "You have already been eliminated by LiquidBounce Client!",
+        "Triple Kill! The Whole World is Astounded! " +
+            "You have already been eliminated by LiquidBounce Client!",
+        "Quadra Kill! Unmatched Across All Under Heaven! " +
+            "You have already been eliminated by LiquidBounce Client!",
+        "Penta Kill! Conquer the Heavens and Annihilate the Earth! " +
+            "You have already been eliminated by LiquidBounce Client!",
+        "Hexa Kill! Conquer the Heavens and Annihilate the Earth! " +
+            "You have already been eliminated by LiquidBounce Client!",
+        "Hepta Kill! Conquer the Heavens and Annihilate the Earth! " +
+            "You have already been eliminated by LiquidBounce Client!"
     ))
 
     private val enemies = mutableListOf<Entity>()
