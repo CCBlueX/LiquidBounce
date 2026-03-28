@@ -50,9 +50,6 @@ object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = list
 
     private val linear = atomic(0)
 
-    @Volatile
-    private var lineIndex = intListOf()
-
     @Suppress("unused")
     private val attackEntityEvent = handler<AttackEntityEvent> { event ->
         val entity = event.entity
@@ -66,13 +63,12 @@ object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = list
     private val tickHandler = tickHandler {
         enemies.filter { !it.isAlive }.forEach {
             delay(triggerDelay.random().toLong())
-            val index = when (pattern) {
+            when (pattern) {
                 AutoLPattern.RANDOM ->
-                    lineIndex.getInt(Random.nextInt(lineIndex.size))
+                    network.sendChat(it.name.contents.toString() + messages.random())
                 AutoLPattern.LINEAR ->
-                    lineIndex.getInt(linear.getAndIncrement() % lineIndex.size)
+                    network.sendChat(it.name.contents.toString() + messages[linear.getAndIncrement() % messages.size])
             }
-            network.sendChat(it.name.contents.toString() + messages[index])
         }
     }
 
