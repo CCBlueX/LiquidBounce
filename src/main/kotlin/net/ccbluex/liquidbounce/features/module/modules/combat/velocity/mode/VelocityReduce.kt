@@ -59,9 +59,8 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 
 /**
- * 遗憾的oneNOXZ已经无法与你互动,所以登场的是perNOXZ
- * */
-
+ * Attack Reduce
+ */
 object VelocityReduce : VelocityMode("Reduce") {
 
     private val attackCount by intRange("AttackCount", 3..3, 0..20)
@@ -111,7 +110,9 @@ object VelocityReduce : VelocityMode("Reduce") {
     private var target: Entity? = null
     private var renderTarget: Entity? = null
     private var renderTargetPos: TrackedEntityPosition? = null
-    public var attackQueue = 0
+
+    var remainingAttackCount = 0
+        private set
     private var receiveDamage = false
     private var alinkTicks = -1
     private var releaseReason: ReleaseReason? = null
@@ -125,7 +126,7 @@ object VelocityReduce : VelocityMode("Reduce") {
     }
 
     val backtrackBlocked: Boolean
-        get() = alinkTicks >= 0 || attackQueue > 0
+        get() = alinkTicks >= 0 || remainingAttackCount > 0
 
     val ownsIncomingBlinkQueue: Boolean
         get() = alinkTicks >= 0
@@ -138,7 +139,7 @@ object VelocityReduce : VelocityMode("Reduce") {
     override fun enable() {
         target = null
         resetRenderState()
-        attackQueue = 0
+        remainingAttackCount = 0
         receiveDamage = false
         alinkTicks = -1
         releaseReason = null
@@ -150,7 +151,7 @@ object VelocityReduce : VelocityMode("Reduce") {
         }
         target = null
         resetRenderState()
-        attackQueue = 0
+        remainingAttackCount = 0
         receiveDamage = false
         alinkTicks = -1
         releaseReason = null
@@ -184,9 +185,7 @@ object VelocityReduce : VelocityMode("Reduce") {
             renderTarget = target
         }
 
-        if (target != null) return
-
-        if (alinkTicks >= 0) return
+        if (target != null || alinkTicks >= 0) return
 
         renderTarget = world.entitiesForRendering().filterIsInstance<LivingEntity> { entity ->
             !entity.isRemoved && entity.shouldBeAttacked()
@@ -251,7 +250,7 @@ object VelocityReduce : VelocityMode("Reduce") {
                 }
                 alinkTicks = alinkMaxDelay
             } else if (target != null) {
-                attackQueue = attackCount.random()
+                remainingAttackCount = attackCount.random()
             }
         }
     }
@@ -265,23 +264,18 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-
-
-        //per
-        if (attackQueue > 0){
-            if (target == null){
-                attackQueue = 0
+        if (remainingAttackCount > 0) {
+            if (target == null) {
+                remainingAttackCount = 0
                 return@handler
             }
-
-        }
-
-            if (player.isSprinting) player.isSprinting = false
+            player.isSprinting = false
             attackEntity(target!!, SwingMode.DO_NOT_HIDE)
             player.deltaMovement = player.deltaMovement.multiply(horizontal, vertical, horizontal)
-        attackQueue --
-        if (attackQueue == 0) {
-            target = null
+            remainingAttackCount--
+            if (remainingAttackCount == 0) {
+                target = null
+            }
         }
     }
 
@@ -293,7 +287,7 @@ object VelocityReduce : VelocityMode("Reduce") {
             resetRenderState()
             if (releaseReason == ReleaseReason.TARGET_REACHED) {
                 debug.notify("Finish alink")
-                attackQueue = attackCount.random()
+                remainingAttackCount = attackCount.random()
             } else {
                 debug.notify("Finish alink (${releaseReason.debugSuffix})")
             }
