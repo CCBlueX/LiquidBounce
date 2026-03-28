@@ -56,7 +56,7 @@ object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = list
     @Suppress("unused")
     private val attackEntityEvent = handler<AttackEntityEvent> { event ->
         val entity = event.entity
-        //only player will be added into enemies list
+        //only players will be added into the enemy list
         if (entity is Player && !enemies.contains(entity)){
             enemies.add(entity)
         }
