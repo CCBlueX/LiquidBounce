@@ -520,6 +520,7 @@
   "liquidbounce.module.noMissCooldown.description": "禁用1.8攻擊冷卻時間或完全取消未擊中的攻擊。",
   "liquidbounce.module.maceKill.description": "使用重錘時一擊擊殺",
   "liquidbounce.module.liquidWalk.description": "允許你在水面上行走。",
+  "liquidbounce.module.autoL.description": "自動嘲諷被你殺死的玩家",
   "liquidbounce.module.longJump.description": "允許你跳的更遠。",
   "liquidbounce.module.mobOwners.description": "允許你看到已馴養生物和彈射物屬於哪個玩家。",
   "liquidbounce.module.moreCarry.description": "允許你在合成欄裏儲存更多物品 (僅限多人模式)。",

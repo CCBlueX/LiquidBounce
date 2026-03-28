@@ -33,7 +33,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import kotlin.random.Random
 
-object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC){
+object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = listOf("AutoTaunt")){
     private val triggerDelay by intRange("Trigger Delay", 100..100, 0..1000)
     private val pattern by enumChoice("Pattern", AutoLPattern.LINEAR)
     private val messages by textList("Messages", mutableListOf(
