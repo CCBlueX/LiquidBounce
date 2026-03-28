@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.injection.mixins.lithium;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.caffeinemc.mods.lithium.common.entity.movement.ChunkAwareBlockCollisionSweeper;
+import net.caffeinemc.mods.lithium.common.entity.movement.ChunkAwareBlockCollisionSweeperBlockPos;
 import net.ccbluex.liquidbounce.common.ShapeFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -33,22 +33,17 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 @NullMarked
 @SuppressWarnings("rawtypes")
 @Pseudo
-@Mixin(targets = {
-    "net.caffeinemc.mods.lithium.common.entity.movement.ChunkAwareBlockCollisionSweeperBlockPos",
-    "net.caffeinemc.mods.lithium.common.entity.movement.ChunkAwareBlockCollisionSweeperVoxelShape",
-})
-public abstract class MixinChunkAwareBlockCollisionSweeper extends ChunkAwareBlockCollisionSweeper {
+@Mixin(ChunkAwareBlockCollisionSweeperBlockPos.class)
+public abstract class MixinChunkAwareBlockCollisionSweeperBlockPos extends ChunkAwareBlockCollisionSweeper {
 
-    public MixinChunkAwareBlockCollisionSweeper(
+    public MixinChunkAwareBlockCollisionSweeperBlockPos(
         Level world,
         @Nullable Entity entity,
         AABB box,
@@ -63,7 +58,7 @@ public abstract class MixinChunkAwareBlockCollisionSweeper extends ChunkAwareBlo
      * @param original voxel shape
      * @return possibly modified voxel shape
      */
-    @ModifyExpressionValue(method = "computeNext()Lnet/minecraft/world/phys/shapes/VoxelShape;", at = @At(
+    @ModifyExpressionValue(method = "computeNext()Lnet/minecraft/core/BlockPos$MutableBlockPos;", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/world/phys/shapes/CollisionContext;getCollisionShape(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/CollisionGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/shapes/VoxelShape;"
     ))
