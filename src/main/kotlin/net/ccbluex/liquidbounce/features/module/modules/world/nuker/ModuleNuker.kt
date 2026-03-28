@@ -48,7 +48,7 @@ object ModuleNuker : ClientModule("Nuker", ModuleCategories.WORLD, disableOnQuit
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val blocks by blocks("Blocks", blockSortedSetOf())
 
-    var swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
+    val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private val targetRenderer = tree(

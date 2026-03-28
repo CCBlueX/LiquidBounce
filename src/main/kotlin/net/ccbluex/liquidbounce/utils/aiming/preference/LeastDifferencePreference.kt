@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.geometry.Ray
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -53,8 +53,8 @@ class LeastDifferencePreference(
             return preferredSpot
         }
 
-        val look = Line(eyesPos, preferredSpot - eyesPos)
-        return look.getPointOnBoxInDirection(box)
+        val look = Ray(eyesPos, preferredSpot - eyesPos)
+        return look.firstIntersectionWith(box)
             ?.takeIf { it.distanceToSqr(eyesPos) <= range.sq() }
             ?: preferredSpot
     }

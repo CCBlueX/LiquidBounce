@@ -315,8 +315,8 @@ abstract class BaseYawTargetPositionFactory(
     }
 
     private fun findClosestPointToYaw(lineSegment: LineSegment, targetYaw: Float): Vec3 {
-        val start = lineSegment.endPoints.first
-        val end = lineSegment.endPoints.second
+        val start = lineSegment.start
+        val end = lineSegment.end
         val segmentDelta = end.subtract(start)
 
         val startYaw = calculateYaw(start)

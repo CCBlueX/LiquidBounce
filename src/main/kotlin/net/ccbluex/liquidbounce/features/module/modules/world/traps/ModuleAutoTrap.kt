@@ -24,12 +24,15 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.IgnitionTrapPlanner
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.TrapPlayerSimulation
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTrapPlanner
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -90,6 +93,10 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     private val placementHandler = tickHandler {
         val plan = currentPlan ?: return@tickHandler
 
+        if (shouldWaitForTiming(plan)) {
+            return@tickHandler
+        }
+
         val raycast = traceFromPlayer()
         if (!plan.validate(raycast)) {
             return@tickHandler
@@ -102,5 +109,21 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         plan.onIntentFulfilled()
         waitTicks(delay)
         timeout = false
+    }
+
+    private fun shouldWaitForTiming(plan: BlockChangeIntent<*>): Boolean {
+        return when (plan.timing) {
+            IntentTiming.INSTANT -> false
+
+            // Let ongoing combat modules consume the current hit window first, then place during recovery.
+            IntentTiming.NEXT_PROPITIOUS_MOMENT -> hasPendingCombatAction() && (
+                player.getAttackStrengthScale(0.5f) > 0.9f
+                    || ModuleCriticals.wouldDoCriticalHit(ignoreSprint = true)
+                )
+        }
+    }
+
+    private fun hasPendingCombatAction(): Boolean {
+        return ModuleKillAura.running && ModuleKillAura.targetTracker.target != null
     }
 }

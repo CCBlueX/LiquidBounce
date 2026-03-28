@@ -32,6 +32,7 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import kotlin.math.abs
+import kotlin.math.hypot
 import kotlin.math.sqrt
 
 inline operator fun Vec2.component1() = this.x
@@ -63,6 +64,9 @@ fun Vec3i.lengthSqr(): Long {
 
 inline operator fun Vec3.plus(other: Position): Vec3 = add(other.x(), other.y(), other.z())
 
+inline fun Vec3.addScaled(other: Position, scale: Double): Vec3 =
+    add(other.x() * scale, other.y() * scale, other.z() * scale)
+
 inline operator fun Vec3.plus(other: Vec3i): Vec3 = add(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 
 inline operator fun Vec3.minus(other: Position): Vec3 = subtract(other.x(), other.y(), other.z())
@@ -71,6 +75,8 @@ inline operator fun Vec3.minus(other: Vec3i): Vec3 =
     subtract(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 
 inline operator fun Vec3.times(scalar: Double): Vec3 = scale(scalar)
+
+inline fun Vec3.dot(x: Double, y: Double, z: Double): Double = this.x * x + this.y * y + this.z * z
 
 /**
  * `this.normalize().scale(newLength)`
@@ -115,6 +121,8 @@ inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: 
 
 inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
     multiply(factorX, factorY, factorZ)
+
+fun Vec3.horizontalDistanceTo(other: Vec3): Double = hypot(this.x - other.x, this.z - other.z)
 
 inline operator fun Vec3.component1(): Double = this.x
 inline operator fun Vec3.component2(): Double = this.y

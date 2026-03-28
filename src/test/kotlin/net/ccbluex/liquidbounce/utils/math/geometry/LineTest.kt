@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -40,9 +42,9 @@ class LineTest {
 
         val nearest = line.getNearestPointTo(box)
 
-        assertPointOnLine(line, nearest)
+        assertPointOnGeometry(line, nearest)
         assertTrue(box.contains(nearest), "Expected nearest point to be inside box, got $nearest")
-        assertEquals(0.0, squaredDistanceToBox(nearest, box), 1e-9)
+        assertEquals(0.0, box.distanceToSqr(nearest), 1e-9)
     }
 
     @Test
@@ -52,26 +54,52 @@ class LineTest {
 
         val nearest = line.getNearestPointTo(box)
 
-        assertPointOnLine(line, nearest)
-        val nearestDistance = squaredDistanceToBox(nearest, box)
+        assertPointOnGeometry(line, nearest)
+        val nearestDistance = box.distanceToSqr(nearest)
         assertEquals(1.0, nearestDistance, 1e-8)
         assertNearSampledMinimum(line, box, nearestDistance, -5.0..5.0, 0.01)
     }
 
     @Test
-    fun `line segment nearest point respects phi range and can clamp to endpoint`() {
+    fun `ray uses forward only parameter domain`() {
+        val ray = Ray(origin = Vec3(1.0, 2.0, 3.0), direction = Vec3(2.0, 0.0, 0.0))
+
+        assertNull(ray.pointAtOrNull(-0.1))
+        assertVec3Equals(Vec3(2.0, 2.0, 3.0), ray.pointAtOrNull(0.5)!!, 1e-9)
+    }
+
+    @Test
+    fun `ray first intersection uses positive boundary hit`() {
+        val box = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+        val rayFromOutside = Ray(Vec3(-2.0, 0.5, 0.5), Vec3(1.0, 0.0, 0.0))
+        val rayFromInside = Ray(Vec3(0.25, 0.5, 0.5), Vec3(1.0, 0.0, 0.0))
+
+        assertVec3Equals(Vec3(0.0, 0.5, 0.5), rayFromOutside.firstIntersectionWith(box)!!, 1e-9)
+        assertVec3Equals(Vec3(1.0, 0.5, 0.5), rayFromInside.firstIntersectionWith(box)!!, 1e-9)
+    }
+
+    @Test
+    fun `line segment uses normalized parameter space`() {
+        val segment = LineSegment(start = Vec3(2.0, 2.0, 2.0), end = Vec3(3.0, 2.0, 2.0))
+
+        assertVec3Equals(segment.start, segment.pointAtOrNull(0.0)!!, 1e-9)
+        assertVec3Equals(segment.end, segment.pointAtOrNull(1.0)!!, 1e-9)
+        assertNull(segment.pointAtOrNull(1.5))
+        assertNull(segment.pointAtOrNull(-0.1))
+    }
+
+    @Test
+    fun `line segment nearest point can clamp to endpoint`() {
         val segment = LineSegment(
-            position = Vec3(2.0, 2.0, 2.0),
-            direction = Vec3(1.0, 0.0, 0.0),
-            phiRange = 0.0..1.0
+            start = Vec3(2.0, 2.0, 2.0),
+            end = Vec3(3.0, 2.0, 2.0)
         )
         val box = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
         val nearest = segment.getNearestPointTo(box)
-        val expectedEndpoint = segment.getPosition(0.0)
 
-        assertPointOnLine(segment, nearest)
-        assertVec3Equals(expectedEndpoint, nearest, 1e-8)
+        assertPointOnGeometry(segment, nearest)
+        assertVec3Equals(segment.start, nearest, 1e-8)
     }
 
     @Test
@@ -81,34 +109,9 @@ class LineTest {
 
         val nearest = line.getNearestPointTo(box)
 
-        assertPointOnLine(line, nearest)
+        assertPointOnGeometry(line, nearest)
         assertTrue(box.contains(nearest), "Expected nearest point to stay in box, got $nearest")
         assertEquals(0.0, line.distanceToSqr(box), 1e-9)
-    }
-
-    @Test
-    fun `axis parallel line outside one slab has constant distance`() {
-        val line = Line(position = Vec3(2.0, -5.0, 0.5), direction = Vec3(0.0, 1.0, 0.0))
-        val box = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-
-        val nearest = line.getNearestPointTo(box)
-        val nearestDistance = squaredDistanceToBox(nearest, box)
-
-        assertPointOnLine(line, nearest)
-        assertEquals(1.0, nearestDistance, 1e-8)
-        assertEquals(nearestDistance, line.distanceToSqr(box), 1e-8)
-    }
-
-    @Test
-    fun `line touching box boundary has zero distance`() {
-        val line = Line(position = Vec3(-2.0, 1.0, 0.5), direction = Vec3(1.0, 0.0, 0.0))
-        val box = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-
-        val nearest = line.getNearestPointTo(box)
-
-        assertPointOnLine(line, nearest)
-        assertTrue(nearest.y in 0.0..1.0 && nearest.z in 0.0..1.0, "Unexpected boundary point: $nearest")
-        assertEquals(0.0, squaredDistanceToBox(nearest, box), 1e-9)
     }
 
     @Test
@@ -119,20 +122,63 @@ class LineTest {
         val pointOnLine = line.getNearestPointTo(box)
         val pointOnBox = box.getNearestPoint(pointOnLine)
 
-        assertPointOnLine(line, pointOnLine)
+        assertPointOnGeometry(line, pointOnLine)
         assertPointInOrOnBox(pointOnBox, box)
         assertEquals(pointOnLine.distanceToSqr(pointOnBox), line.distanceToSqr(box), 1e-8)
     }
 
-    private fun assertPointOnLine(line: Line, point: Vec3) {
-        val relative = point.subtract(line.position)
-        val cross = relative.cross(line.direction)
-        assertTrue(cross.lengthSqr() <= eps, "Point $point is not on line $line")
+    @Test
+    fun `segment segment nearest points match sampled minimum on regression case`() {
+        val first = LineSegment(
+            start = Vec3(-0.6781892221070138, 1.1457456837801203, 1.1953346780518554),
+            end = Vec3(-2.872117964915719, 2.6895555516929814, 1.1594944944050666)
+        )
+        val second = LineSegment(
+            start = Vec3(1.8641561164353186, -0.2706235017594425, -2.1760422778755952),
+            end = Vec3(4.450931238944055, -2.3598211303341, -4.671970047762581)
+        )
+
+        val (nearestOnFirst, nearestOnSecond) = first.getNearestPointsTo(second)!!
+        val newDistance = nearestOnFirst.distanceToSqr(nearestOnSecond)
+        val sampledMinimum = sampleSegmentDistanceSqr(first, second, 0.005)
+
+        assertTrue(
+            newDistance <= sampledMinimum + 1e-4,
+            "Expected solver distance $newDistance to match sampled minimum $sampledMinimum",
+        )
     }
 
-    private fun squaredDistanceToBox(point: Vec3, box: AABB): Double {
-        val nearestOnBox = box.getNearestPoint(point)
-        return point.distanceToSqr(nearestOnBox)
+    @Test
+    fun `invalid geometry inputs are rejected`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            Line(Vec3.ZERO, Vec3.ZERO)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            Ray(Vec3.ZERO, Vec3.ZERO)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            LineSegment(Vec3.ZERO, Vec3.ZERO)
+        }
+    }
+
+    @Test
+    fun `pointAtOrNull rejects non finite parameters`() {
+        val line = Line(Vec3.ZERO, Vec3(1.0, 0.0, 0.0))
+        val ray = Ray(Vec3.ZERO, Vec3(1.0, 0.0, 0.0))
+        val segment = LineSegment(Vec3.ZERO, Vec3(1.0, 0.0, 0.0))
+
+        assertNull(line.pointAtOrNull(Double.NaN))
+        assertNull(line.pointAtOrNull(Double.POSITIVE_INFINITY))
+        assertNull(ray.pointAtOrNull(Double.NaN))
+        assertNull(ray.pointAtOrNull(Double.POSITIVE_INFINITY))
+        assertNull(segment.pointAtOrNull(Double.NaN))
+        assertNull(segment.pointAtOrNull(Double.POSITIVE_INFINITY))
+    }
+
+    private fun assertPointOnGeometry(geometry: LinearGeometry3, point: Vec3) {
+        val relative = point.subtract(geometry.anchor)
+        val cross = relative.cross(geometry.direction)
+        assertTrue(cross.lengthSqr() <= eps, "Point $point is not on geometry $geometry")
     }
 
     private fun assertPointInOrOnBox(point: Vec3, box: AABB, tolerance: Double = 1e-9) {
@@ -145,14 +191,14 @@ class LineTest {
         line: Line,
         box: AABB,
         nearestDistance: Double,
-        phiRange: ClosedFloatingPointRange<Double>,
+        parameterRange: ClosedFloatingPointRange<Double>,
         step: Double
     ) {
         var sampledMin = Double.POSITIVE_INFINITY
 
-        (phiRange step step).forEachDouble { phi ->
-            val sampledPoint = line.getPosition(phi)
-            val sampledDistance = squaredDistanceToBox(sampledPoint, box)
+        (parameterRange step step).forEachDouble { phi ->
+            val sampledPoint = line.pointAtOrNull(phi)!!
+            val sampledDistance = box.distanceToSqr(sampledPoint)
             if (sampledDistance < sampledMin) {
                 sampledMin = sampledDistance
             }
@@ -162,5 +208,19 @@ class LineTest {
             nearestDistance <= sampledMin + 1e-6,
             "Expected nearest distance $nearestDistance to be close to sampled minimum $sampledMin"
         )
+    }
+
+    private fun sampleSegmentDistanceSqr(first: LineSegment, second: LineSegment, step: Double): Double {
+        var sampledMin = Double.POSITIVE_INFINITY
+
+        (0.0..1.0 step step).forEachDouble { firstPhi ->
+            val pointOnFirst = first.pointAtOrNull(firstPhi)!!
+            (0.0..1.0 step step).forEachDouble { secondPhi ->
+                val pointOnSecond = second.pointAtOrNull(secondPhi)!!
+                sampledMin = minOf(sampledMin, pointOnFirst.distanceToSqr(pointOnSecond))
+            }
+        }
+
+        return sampledMin
     }
 }

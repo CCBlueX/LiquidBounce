@@ -200,7 +200,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
                             // Cactus damage is handled by entity-inside logic, which can trigger on block-cell
                             // contact. Use the whole block cell for conservative prediction.
                             val expandedBox = boundingBox.inflate(CACTUS_BLOCK_MARGIN, 0.0, CACTUS_BLOCK_MARGIN)
-                            expandedBox.intersects(AABB(pos))
+                            expandedBox.intersects(pos)
                         }
                     }
                     else -> {
