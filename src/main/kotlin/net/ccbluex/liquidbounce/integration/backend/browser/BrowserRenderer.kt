@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
-import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -77,7 +76,7 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
 
     @Suppress("unused")
     private val screenRenderHandler = handler<ScreenRenderEvent>(browser.priority) { event ->
-        if (!browser.visible || rendered || browser.priority > 0 && !ScreenManager.isClientScreen(mc.screen)) {
+        if (!browser.visible || rendered) {
             return@handler
         }
 
