@@ -210,6 +210,17 @@ object VelocityReduce : VelocityMode("Reduce") {
         return BlinkEspData(renderTarget, renderTargetPos.base, renderTarget.rotation)
     }
 
+    private fun hasLostReduceTarget(): Boolean {
+        val reduceTarget = target ?: return true
+
+        if (!ModuleKillAura.running) {
+            return false
+        }
+
+        val killAuraTarget = ModuleKillAura.targetTracker.target ?: return true
+        return killAuraTarget.id != reduceTarget.id
+    }
+
     @Suppress("unused")
     private val packetEventHandler = handler<PacketEvent> { event ->
         if (event.origin != TransferOrigin.INCOMING) return@handler
@@ -273,8 +284,9 @@ object VelocityReduce : VelocityMode("Reduce") {
         currentGameTick++
 
         if (remainingAttackCount > 0) {
-            if (target == null) {
+            if (hasLostReduceTarget()) {
                 remainingAttackCount = 0
+                target = null
                 return@handler
             }
             player.isSprinting = false
