@@ -84,6 +84,11 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
 
         val side = target.direction
         val box = blockState.getShape(this.world, blockPos, CollisionContext.of(mc.cameraEntity!!))
+        if (box.isEmpty) {
+            resetPositions()
+            return@handler
+        }
+
         val finalPosition = (if (sideOnly) flatBox(box, side) else box.bounds()).move(blockPos)
         if (currentPosition != finalPosition) {
             previousPosition = currentPosition
