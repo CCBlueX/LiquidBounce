@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.delay
-import net.ccbluex.fastutil.intListOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -31,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
-import kotlin.random.Random
 
 object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = listOf("AutoTaunt")){
     private val triggerDelay by intRange("Trigger Delay", 100..100, 0..5000)
