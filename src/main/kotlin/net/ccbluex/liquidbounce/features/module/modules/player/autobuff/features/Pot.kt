@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -96,7 +97,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                 )
 
                 tickUntil {
-                    (currentRotation ?: player.rotation).pitch > 85
+                    !inGame || (currentRotation ?: player.rotation).pitch > 85
                 }
 
                 rotation = rotation.normalize()
@@ -114,6 +115,8 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                 rotation = rotation.normalize()
             }
         }
+
+        if (!inGame) return // TODO: I think we should edit the continuation interceptor here
 
         useHotbarSlotOrOffhand(
             slot,

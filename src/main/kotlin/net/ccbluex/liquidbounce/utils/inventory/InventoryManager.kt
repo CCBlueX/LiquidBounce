@@ -60,6 +60,9 @@ import kotlin.random.Random
  */
 object InventoryManager : EventListener {
 
+    override val running: Boolean
+        get() = super.running && inGame
+
     val isInventoryOpen
         get() = isInInventoryScreen || isInventoryOpenServerSide
 
