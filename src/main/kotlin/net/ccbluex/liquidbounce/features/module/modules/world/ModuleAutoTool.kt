@@ -226,5 +226,9 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
         SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
     }
 
+    override fun onDisabled() {
+        SilentHotbar.resetSlot(this)
+    }
+
 
 }

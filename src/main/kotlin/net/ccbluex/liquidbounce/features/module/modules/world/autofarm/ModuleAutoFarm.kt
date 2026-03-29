@@ -355,6 +355,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         ChunkScanner.unsubscribe(AutoFarmBlockTracker)
         currentTarget = null
         AutoUseBoneMeal.reset()
+        SilentHotbar.resetSlot(this)
     }
 
 }

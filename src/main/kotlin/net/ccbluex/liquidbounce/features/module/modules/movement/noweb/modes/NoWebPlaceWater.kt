@@ -91,6 +91,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     )
 
     override fun disable() {
+        SilentHotbar.resetSlot(this)
         resetState()
     }
 
