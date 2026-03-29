@@ -40,6 +40,7 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
 import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityAttachment
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.util.function.Supplier
@@ -142,6 +143,8 @@ class BlinkEspWireframe(
         val (entity, pos, rotation) = this.getEspData.get() ?: return@handler
 
         wireframePlayer.pos = pos
+        wireframePlayer.pose = entity.pose
+        wireframePlayer.swimAmount = (entity as? LivingEntity)?.getSwimAmount(it.partialTicks) ?: 0f
         wireframePlayer.setRotation(rotation)
         wireframePlayer.render(it, color, outlineColor)
     }
