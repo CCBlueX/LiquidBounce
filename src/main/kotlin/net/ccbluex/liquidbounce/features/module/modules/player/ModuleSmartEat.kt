@@ -204,6 +204,9 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
             tree(RenderSlot)
         }
 
+        override fun onDisabled() {
+            SilentHotbar.resetSlot(this)
+        }
     }
 
     private object AutoEat : ToggleableValueGroup(this, "AutoEat", true) {
@@ -234,6 +237,10 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
                 CombatManager.pauseCombatForAtLeast(combatPauseTime)
                 event.isPressed = true
             }
+        }
+
+        override fun onDisabled() {
+            SilentHotbar.resetSlot(this)
         }
 
         fun eat() {

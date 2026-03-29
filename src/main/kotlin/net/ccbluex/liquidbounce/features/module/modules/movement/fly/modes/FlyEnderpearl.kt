@@ -48,14 +48,20 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
     override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
-    val speed by float("Speed", 1f, 0.5f..2f)
+    private val speed by float("Speed", 1f, 0.5f..2f)
 
-    var threwPearl = false
-    var shouldFly = false
+    private var threwPearl = false
+    private var shouldFly = false
 
-    val rotations = tree(RotationsValueGroup(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     override fun enable() {
+        threwPearl = false
+        shouldFly = false
+    }
+
+    override fun disable() {
+        SilentHotbar.resetSlot(this)
         threwPearl = false
         shouldFly = false
     }
