@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
+import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -30,7 +31,6 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.math.max
 
 // Box operators
 
@@ -101,9 +101,9 @@ fun AABB.getNearestPoint(from: Position): Vec3 {
  * @see net.minecraft.world.phys.AABB.distanceToSqr
  */
 fun AABB.distanceToSqr(x: Double, y: Double, z: Double): Double {
-    val dx = max(max(minX - x, x - maxX), 0.0)
-    val dy = max(max(minY - y, y - maxY), 0.0)
-    val dz = max(max(minZ - z, z - maxZ), 0.0)
+    val dx = maxOf(minX - x, x - maxX, 0.0)
+    val dy = maxOf(minY - y, y - maxY, 0.0)
+    val dz = maxOf(minZ - z, z - maxZ, 0.0)
     return Mth.lengthSquared(dx, dy, dz)
 }
 
@@ -138,3 +138,37 @@ private fun AABB.pointOnSide(x: Double, y: Double, z: Double, side: Direction): 
         Direction.WEST -> Vec3(minX, y, z)
         Direction.EAST -> Vec3(maxX, y, z)
     }
+
+fun AABB.getFace(direction: Direction): AlignedFace {
+    return when (direction) {
+        Direction.DOWN -> AlignedFace(
+            Vec3(this.minX, this.minY, this.minZ),
+            Vec3(this.maxX, this.minY, this.maxZ)
+        )
+
+        Direction.UP -> AlignedFace(
+            Vec3(this.minX, this.maxY, this.minZ),
+            Vec3(this.maxX, this.maxY, this.maxZ)
+        )
+
+        Direction.SOUTH -> AlignedFace(
+            Vec3(this.minX, this.minY, this.maxZ),
+            Vec3(this.maxX, this.maxY, this.maxZ)
+        )
+
+        Direction.NORTH -> AlignedFace(
+            Vec3(this.minX, this.minY, this.minZ),
+            Vec3(this.maxX, this.maxY, this.minZ)
+        )
+
+        Direction.EAST -> AlignedFace(
+            Vec3(this.maxX, this.minY, this.minZ),
+            Vec3(this.maxX, this.maxY, this.maxZ)
+        )
+
+        Direction.WEST -> AlignedFace(
+            Vec3(this.minX, this.minY, this.minZ),
+            Vec3(this.minX, this.maxY, this.maxZ)
+        )
+    }
+}

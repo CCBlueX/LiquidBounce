@@ -20,11 +20,7 @@
 @file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
-import net.minecraft.core.Direction
 import net.minecraft.util.Mth
-import net.minecraft.world.phys.AABB
-import net.minecraft.world.phys.Vec3
 import org.joml.Vector2f
 import java.math.RoundingMode
 
@@ -42,40 +38,6 @@ inline fun Float.fastSin() = toDouble().fastSin()
 inline fun Double.fastSin() = Mth.sin(this)
 inline fun Float.fastCos() = toDouble().fastCos()
 inline fun Double.fastCos() = Mth.cos(this)
-
-fun AABB.getFace(direction: Direction): AlignedFace {
-    return when (direction) {
-        Direction.DOWN -> AlignedFace(
-            Vec3(this.minX, this.minY, this.minZ),
-            Vec3(this.maxX, this.minY, this.maxZ)
-        )
-
-        Direction.UP -> AlignedFace(
-            Vec3(this.minX, this.maxY, this.minZ),
-            Vec3(this.maxX, this.maxY, this.maxZ)
-        )
-
-        Direction.SOUTH -> AlignedFace(
-            Vec3(this.minX, this.minY, this.maxZ),
-            Vec3(this.maxX, this.maxY, this.maxZ)
-        )
-
-        Direction.NORTH -> AlignedFace(
-            Vec3(this.minX, this.minY, this.minZ),
-            Vec3(this.maxX, this.maxY, this.minZ)
-        )
-
-        Direction.EAST -> AlignedFace(
-            Vec3(this.maxX, this.minY, this.minZ),
-            Vec3(this.maxX, this.maxY, this.maxZ)
-        )
-
-        Direction.WEST -> AlignedFace(
-            Vec3(this.minX, this.minY, this.minZ),
-            Vec3(this.minX, this.maxY, this.maxZ)
-        )
-    }
-}
 
 /**
  * Rounds the given number to the specified decimal place (the first by default).
