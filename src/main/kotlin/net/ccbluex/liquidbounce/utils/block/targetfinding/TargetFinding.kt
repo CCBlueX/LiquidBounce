@@ -370,7 +370,7 @@ data class BlockPlacementTarget(
 
     val blockHitResult: BlockHitResult
         get() = BlockHitResult(
-            interactedBlockPos.center,
+            AABB(interactedBlockPos).centerOnSide(direction),
             direction,
             interactedBlockPos,
             false
