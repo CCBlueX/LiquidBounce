@@ -247,7 +247,12 @@ private fun getTargetPlanForPositionAndDirection(
     }
 }
 
-private class PointOnFace(val face: AlignedFace, val side: Direction, val point: Vec3)
+private class PointOnFace(
+    val face: AlignedFace,
+    val side: Direction,
+    val point: Vec3,
+    val minPlacementY: Double,
+)
 
 fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFindingOptions): BlockPlacementTarget? {
     val state = pos.stateOrEmpty
@@ -305,7 +310,7 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
             currPos,
             posToInvestigate,
             targetPlan.interactionDirection,
-            pointOnFace.face.from.y + currPos.y,
+            pointOnFace.minPlacementY,
             rotation
         )
     }
@@ -341,10 +346,13 @@ private fun findTargetPointOnFace(
         val targetPos = options.faceHandlingOptions.facePositionFactory.producePositionOnFace(searchFace, currPos)
             ?: return@mapNotNull null
 
+        val minPlacementY = searchFace.from.y + currPos.y
+
         PointOnFace(
             face,
             targetPlan.interactionDirection,
-            targetPos
+            targetPos,
+            minPlacementY
         )
     }.maxWithOrNull(COMPARATOR_POINT_ON_FACE)
 }
