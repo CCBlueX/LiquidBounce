@@ -216,7 +216,7 @@
         position: absolute;
         height: 130px;
         top: -70px;
-        left: -40px;
+        left: -38px;
         transform: rotate(-30deg);
       }
     }
