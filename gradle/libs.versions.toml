@@ -35,7 +35,7 @@ exploit_preventer_api = "0.0.1"
 exploit_preventer_mod = "0.1.10"
 sodium = "mc26.1-0.8.7-fabric"
 lithium = "mc26.1-0.22.0-fabric"
-viafabricplus = "4.4.8"
+viafabricplus = "4.5.0"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.15.0+26.1-fabric"
 iris = "1.10.8+26.1-fabric"

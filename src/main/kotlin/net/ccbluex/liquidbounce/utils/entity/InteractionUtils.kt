@@ -135,24 +135,8 @@ fun interactEntity(
     // Skipped check:
     // player.isWithinEntityInteractionRange(entity, 0.0)
 
-    val result = when {
-//        // ~1.7.10
-//        isOlderThanOrEquals1_7_10 -> gameMode.interact(player, entity, hand)
-//
-//        // 1.8~1.21.11
-//        else -> {
-//            val result = gameMode.interactAt(player, entity, hitResult, hand)
-//            // In vanilla 1.21.11 only ArmorStand can skip this
-//            if (!result.consumesAction()) {
-//                gameMode.interact(player, entity, hand)
-//            } else {
-//                result
-//            }
-//        }
-
-        // 26.1~
-        else -> gameMode.interact(player, entity, hitResult, hand)
-    }
+    // ViaVersion handles 1.7.6/1.21.11/current protocol of this packet
+    val result = gameMode.interact(player, entity, hitResult, hand)
 
     if (result.shouldSwingHand()) {
         swingMode.swing(hand)

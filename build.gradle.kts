@@ -109,8 +109,8 @@ dependencies {
     runtimeOnly(libs.iris)
 
     // ViaFabricPlus
-    compileOnlyApi(libs.vfp.api)
-//    runtimeOnly(libs.vfp)
+    api(libs.vfp.api)
+    runtimeOnly(libs.vfp)
 
     // Exploit Preventer
     api(libs.exploitPreventer.api)
