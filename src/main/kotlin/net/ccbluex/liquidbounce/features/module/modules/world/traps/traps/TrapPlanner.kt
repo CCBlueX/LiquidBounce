@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockIntentProvider
 import net.ccbluex.liquidbounce.utils.block.collidingRegion
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -123,13 +123,13 @@ abstract class TrapPlanner<T>(
                 return@forEach
             }
 
-            val currentState = bp.getState() ?: return@forEach
+            val currentState = bp.state ?: return@forEach
 
             if (currentState.block in trapWorthyBlocks || !currentState.canBeReplaced()) {
                 return@forEach
             }
 
-            if (mustBeOnGround && (bp.below().getState()?.isAir != false)) {
+            if (mustBeOnGround && (bp.below().state?.isAir != false)) {
                 return@forEach
             }
 

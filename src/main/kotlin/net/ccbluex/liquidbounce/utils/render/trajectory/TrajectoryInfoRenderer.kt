@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
@@ -334,7 +335,7 @@ private fun WorldRenderEnvironment.drawHitEntities(
 
 private fun WorldRenderEnvironment.renderHitBlockFace(blockHitResult: BlockHitResult, color: Color4b) {
     val currPos = blockHitResult.blockPos
-    val currState = currPos.getState()!!
+    val currState = currPos.stateOrEmpty
 
     val bestBox = currState.getShape(world, currPos, CollisionContext.of(player)).toAabbs()
         .filter { blockHitResult.location in it.inflate(0.01).move(currPos) }

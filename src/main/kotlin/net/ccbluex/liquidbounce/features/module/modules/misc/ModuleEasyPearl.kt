@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
@@ -151,7 +151,7 @@ object ModuleEasyPearl :
         val matrixStack = event.matrixStack
         val pos = getPositionPlayerLookAt(event.partialTicks)?.location ?: return@handler
         val blockPos = pos.toBlockPos()
-        val state = blockPos.getState() ?: return@handler
+        val state = blockPos.state ?: return@handler
 
         renderEnvironmentForWorld(matrixStack) {
             val color =

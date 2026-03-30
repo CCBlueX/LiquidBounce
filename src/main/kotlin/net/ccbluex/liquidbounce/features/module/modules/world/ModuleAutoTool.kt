@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -221,7 +221,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
             return
         }
 
-        val blockState = pos.getState()!!
+        val blockState = pos.stateOrEmpty
         val slot = toolSelector.activeMode.getTool(blockState) ?: return
         SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
     }

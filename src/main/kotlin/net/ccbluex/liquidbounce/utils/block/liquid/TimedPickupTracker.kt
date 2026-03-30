@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.block.liquid
 
 import com.google.common.base.Predicates
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.material.Fluids
 import java.util.ArrayDeque
@@ -96,13 +96,13 @@ internal class TimedPickupTracker @JvmOverloads constructor(
     enum class PickupFilter : Predicate<BlockPos> {
         WATER {
             override fun test(pos: BlockPos): Boolean {
-                val state = pos.getState() ?: return false
+                val state = pos.state ?: return false
                 return state.fluidState.`is`(Fluids.WATER) && state.fluidState.isSource
             }
         },
         LAVA {
             override fun test(pos: BlockPos): Boolean {
-                val state = pos.getState() ?: return false
+                val state = pos.state ?: return false
                 return state.fluidState.`is`(Fluids.LAVA) && state.fluidState.isSource
             }
         },

@@ -30,7 +30,8 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
 import net.ccbluex.liquidbounce.utils.aiming.preference.RotationPreference
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
@@ -249,7 +250,7 @@ fun raytraceBlockSide(
     wallsRangeSquared: Double,
     collisionContext: CollisionContext,
 ): RotationWithVector? {
-    pos.getState()?.getShape(world, pos, collisionContext)?.let { shape ->
+    pos.state?.getShape(world, pos, collisionContext)?.let { shape ->
         val sortedShapes = shape.toAabbs().sortedByDescending { it.size }
         for (boxShape in sortedShapes) {
             val box = boxShape.move(pos)
@@ -608,7 +609,7 @@ private fun checkCurrentRotation(
         max(range, wallsRange),
         RotationManager.serverRotation,
         expectedTarget,
-        expectedTarget.getState()!!
+        expectedTarget.stateOrEmpty,
     )
 
     if (currentHit == null || currentHit.type != HitResult.Type.BLOCK || currentHit.blockPos != expectedTarget) {
