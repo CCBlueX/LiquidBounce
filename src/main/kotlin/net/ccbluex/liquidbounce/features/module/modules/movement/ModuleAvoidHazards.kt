@@ -216,7 +216,10 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         }
     }
 
-    private enum class AvoidMode(override val tag: String, override val tagAliases: List<String> = emptyList()) : Tagged {
+    private enum class AvoidMode(
+        override val tag: String,
+        override val tagAliases: List<String> = emptyList(),
+    ) : Tagged {
         SHAPE("Shape"),
         INPUT("Input", listOf("Movement")),
     }
