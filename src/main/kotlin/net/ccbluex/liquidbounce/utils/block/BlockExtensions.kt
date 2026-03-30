@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.math.boundsOrNull
 import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -118,13 +119,22 @@ import kotlin.math.floor
 
 fun Vec3i.toBlockPos() = BlockPos(this)
 
-fun BlockPos.getState() = mc.level?.getBlockState(this)
+val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
 
-fun BlockPos.getBlock() = getState()?.block
+@Deprecated(
+    "Use BlockPos.state or BlockPos.stateOrEmpty instead",
+    replaceWith = ReplaceWith("this.state", imports = ["net.ccbluex.liquidbounce.utils.block.state"])
+)
+@JvmName("getState-deprecated")
+inline fun BlockPos.getState() = state
 
-fun BlockPos.getCenterDistanceSquared() = player.distanceToSqr(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+val BlockPos.stateOrEmpty: BlockState get() = state ?: Blocks.VOID_AIR.defaultBlockState()
 
-fun BlockPos.getCenterDistanceSquaredEyes() = player.eyePosition.distanceToSqr(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+fun BlockPos.getBlock(): Block? = state?.block
+
+fun BlockPos.getCenterDistanceSquared() = this.distToCenterSqr(player.position())
+
+fun BlockPos.getCenterDistanceSquaredEyes() = this.distToCenterSqr(player.eyePosition)
 
 val BlockState.isBed: Boolean
     get() = block is BedBlock
@@ -148,30 +158,19 @@ val BlockPos.outlineBox: AABB
         }
 
         val outlineShape = blockState.getShape(world, this)
-        return if (outlineShape.isEmpty) {
-            FULL_BOX
-        } else {
-            outlineShape.bounds()
-        }
+        return outlineShape.boundsOrNull() ?: FULL_BOX
     }
 
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
 
-/**
- * Outline shape
- */
-val BlockPos.shape: VoxelShape
+val BlockPos.outlineShape: VoxelShape
     get() = this.getState()!!.getShape(world, this)
 
 fun BlockState.outlineBox(blockPos: BlockPos): AABB {
     val outlineShape = this.getShape(world, blockPos)
 
-    return if (outlineShape.isEmpty) {
-        FULL_BOX
-    } else {
-        outlineShape.bounds()
-    }
+    return outlineShape.boundsOrNull() ?: FULL_BOX
 }
 
 

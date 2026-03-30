@@ -270,7 +270,7 @@ private fun getDangerZoneBorders(
     baseLine: Line,
     distanceFromBaseLine: Double,
 ): Array<Line> {
-    val orthoVecToBaseLine = baseLine.direction.cross(Vec3(0.0, 1.0, 0.0)).normalize()
+    val orthoVecToBaseLine = baseLine.direction.cross(Vec3.Y_AXIS).normalize()
 
     val orthoOffsetVec = orthoVecToBaseLine.scale(distanceFromBaseLine)
 

@@ -46,7 +46,7 @@ inline fun VoxelShape.ifEmpty(defaultValue: () -> VoxelShape): VoxelShape {
 fun VoxelShape.boundsOrNull(): AABB? = if (isEmpty) null else bounds()
 
 fun VoxelShape.distanceToSqr(position: Vec3): Double =
-    this.closestPointTo(position).orElse(null)?.distanceToSqr(position) ?: Double.MAX_VALUE
+    this.closestPointTo(position).orElse(null)?.distanceToSqr(position) ?: Double.POSITIVE_INFINITY
 
 fun VoxelShape.clipAllBoxes(
     base: BlockPos,

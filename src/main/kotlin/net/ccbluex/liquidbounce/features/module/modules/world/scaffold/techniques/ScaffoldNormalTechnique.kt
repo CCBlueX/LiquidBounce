@@ -53,7 +53,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
-import net.minecraft.core.Vec3i
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
@@ -87,12 +86,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget? {
-        // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
-        val priorityComparator: Comparator<Vec3i> = if (optimalLine != null) {
-            BlockPlacementTargetFindingOptions.leastBlockDistanceToLine(optimalLine)
-        } else {
-            BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos)
-        }
+        val priorityComparator = priorityComparator(predictedPos, optimalLine)
 
         val offsets = if (ModuleFreeze.running) {
             BlockPosOffsets.FULL.offsets

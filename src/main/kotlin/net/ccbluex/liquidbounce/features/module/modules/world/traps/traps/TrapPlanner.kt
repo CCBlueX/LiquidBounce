@@ -19,12 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
 import it.unimi.dsi.fastutil.doubles.DoubleLongPair
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockIntentProvider
 import net.ccbluex.liquidbounce.utils.block.collidingRegion
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -77,6 +79,31 @@ abstract class TrapPlanner<T>(
         }
 
         return findOffsetsBetween(normalizedStartBB, normalizedEndBB, blockPos, mustBeOnGround)
+    }
+
+    protected fun targetOverlapComparator(
+        origin: BlockPos,
+        orderedOffsets: List<BlockPos>,
+        eyePos: Vec3,
+    ): Comparator<BlockPos> {
+        val priorityByPos = Long2IntOpenHashMap(orderedOffsets.size)
+        priorityByPos.defaultReturnValue(Int.MAX_VALUE)
+        orderedOffsets.forEachIndexed { index, offset ->
+            priorityByPos.putIfAbsent(origin.offset(offset).asLong(), index)
+        }
+
+        val eyeDistanceComparator = BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(eyePos)
+
+        return Comparator { first, second ->
+            val firstRank = priorityByPos[first.asLong()]
+            val secondRank = priorityByPos[second.asLong()]
+
+            if (firstRank != secondRank) {
+                secondRank.compareTo(firstRank)
+            } else {
+                eyeDistanceComparator.compare(first, second)
+            }
+        }
     }
 
     private fun findOffsetsBetween(

@@ -107,7 +107,7 @@ object TrapPlayerSimulation {
 
         val avg = positions.average()
         val std = positions
-            .fold(0.0) { acc, vec -> acc + vec.subtract(avg).lengthSqr() }
+            .sumOf { vec -> vec.subtract(avg).lengthSqr() }
             .let { sqrt(it / positions.size) }
 
         ModuleDebug.debugGeometry(

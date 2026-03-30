@@ -49,7 +49,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
     private val ttl by float("TimeToLive", 3F, 0.5F..5.0F, "s")
     private val scale by float("Scale", 2F, 0.25F..4F)
     private val scaleTransition by easing("ScaleTransition", Easing.QUAD_OUT)
-    private val displacement by vec3d("Displacement", Vec3(0.0, 1.0, 0.0))
+    private val displacement by vec3d("Displacement", Vec3.Y_AXIS.scale(1.5))
     private val displacementTransition by easing("DisplacementTransition", Easing.QUAD_OUT)
     private val trackMode by enumChoice("TrackMode", TrackMode.ON_TICK)
 

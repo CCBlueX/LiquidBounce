@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
-import it.unimi.dsi.fastutil.objects.ReferenceSet
+import net.ccbluex.fastutil.referenceSetOf
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
@@ -53,8 +53,8 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
     true
 ) {
 
-    override val trapItems: Set<Item> = ReferenceSet.of(Items.COBWEB)
-    override val trapWorthyBlocks: Set<Block> = ReferenceSet.of(Blocks.COBWEB)
+    override val trapItems: Set<Item> = referenceSetOf(Items.COBWEB)
+    override val trapWorthyBlocks: Set<Block> = referenceSetOf(Blocks.COBWEB)
 
     override fun plan(enemies: List<LivingEntity>): BlockChangeIntent<WebIntentData>? {
         val slot = findSlotForTrap() ?: return null
@@ -96,17 +96,18 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
             target.position().subtract(target.lastPos),
             slot.itemStack.item == Items.COBWEB
         )
+        val placementLocation = PlayerLocationOnPlacement(position = player.position())
 
         val options = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
                 offsetsForTargets,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                targetOverlapComparator(blockPos, offsetsForTargets, placementLocation.eyePos),
             ),
             FaceHandlingOptions(
-                NearestRotationTargetPositionFactory(PositionFactoryConfiguration(player.eyePosition, 0.5))
+                NearestRotationTargetPositionFactory(PositionFactoryConfiguration(placementLocation.eyePos, 0.5))
             ),
             stackToPlaceWith = slot.itemStack,
-            PlayerLocationOnPlacement(position = player.position()),
+            placementLocation,
         )
 
         return findBestBlockPlacementTarget(blockPos, options)

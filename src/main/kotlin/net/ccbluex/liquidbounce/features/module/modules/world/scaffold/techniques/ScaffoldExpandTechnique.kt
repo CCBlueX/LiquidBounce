@@ -50,18 +50,18 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget? {
-        for(i in 0..expandLength) {
-            val position = getTargetedPosition(expandPos(predictedPos, i))
+        val searchOptions = BlockPlacementTargetFindingOptions(
+            BlockOffsetOptions.Default,
+            FaceHandlingOptions(
+                CenterTargetPositionFactory,
+                considerFacingAwayFaces = true
+            ),
+            stackToPlaceWith = bestStack,
+            PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose)
+        )
 
-            val searchOptions = BlockPlacementTargetFindingOptions(
-                BlockOffsetOptions.Default,
-                FaceHandlingOptions(
-                    CenterTargetPositionFactory,
-                    considerFacingAwayFaces = true
-                ),
-                stackToPlaceWith = bestStack,
-                PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose)
-            )
+        for (i in 0..expandLength) {
+            val position = getTargetedPosition(expandPos(predictedPos, i))
 
             return findBestBlockPlacementTarget(position, searchOptions) ?: continue
         }
