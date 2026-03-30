@@ -32,8 +32,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 
 object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = listOf("AutoTaunt")){
-    private val triggerDelay by intRange("Trigger Delay", 100..100, 0..5000)
-    private val pattern by enumChoice("Pattern", AutoLPattern.LINEAR)
     private val messages by textList("Messages", mutableListOf(
         "First Break! The Sleeping Dragon Emerges from His Seclusion! " +
             "You have already been eliminated by LiquidBounce Client!",
@@ -50,10 +48,13 @@ object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = list
         "Hepta Kill! Conquer the Heavens and Annihilate the Earth! " +
             "You have already been eliminated by LiquidBounce Client!"
     ))
+    private val pattern by enumChoice("Pattern", AutoLPattern.LINEAR)
+    private val triggerDelay by intRange("TriggerDelay", 100..100, 0..5000)
+    private val resetIndexWhenWorldChanges by boolean("ResetIndexWhenWorldChanges", true)
 
     private val enemies = mutableListOf<Entity>()
 
-    private val linear = atomic(0)
+    private val index = atomic(0)
 
     @Suppress("unused")
     private val attackEntityEvent = handler<AttackEntityEvent> { event ->
@@ -72,7 +73,7 @@ object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = list
                 AutoLPattern.RANDOM ->
                     network.sendChat(it.name.string + " " + messages.random())
                 AutoLPattern.LINEAR ->
-                    network.sendChat(it.name.string + " " + messages[linear.getAndIncrement() % messages.size])
+                    network.sendChat(it.name.string + " " + messages[index.getAndIncrement() % messages.size])
             }
             enemies.remove(it)
         }
@@ -81,6 +82,9 @@ object ModuleAutoL : ClientModule("AutoL", ModuleCategories.MISC, aliases = list
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
         enemies.clear()
+        if (resetIndexWhenWorldChanges){
+            index.value = 0
+        }
     }
 
     enum class AutoLPattern(override val tag: String) : Tagged {
