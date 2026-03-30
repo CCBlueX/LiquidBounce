@@ -36,7 +36,6 @@
 
         filteredProxies = filteredProxies.filter(p => countries.includes(convertCountryCode(p.ipInfo?.country)));
         filteredProxies = filteredProxies.filter(p => proxyTypes.includes(p.type));
-        console.log(proxies)
         if (favoritesOnly) {
             filteredProxies = filteredProxies.filter(a => a.favorite);
         }
@@ -69,7 +68,7 @@
     });
 
     async function updateIsConnectedToProxy() {
-        isConnectedToProxy = Object.keys(await getCurrentProxy()).length > 0;
+        isConnectedToProxy = await getCurrentProxy() !== null;
     }
 
     function convertCountryCode(code: string | undefined): string {
