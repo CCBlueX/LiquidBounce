@@ -190,7 +190,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
                 ModuleDebug.DebuggedBox(it.entity.box, Color4b.RED.with(a = 127))
             )
 
-            val plane = NormalizedPlane(Vec3(0.0, it.baseY, 0.0), Vec3(0.0, 1.0, 0.0))
+            val plane = NormalizedPlane(Vec3(0.0, it.baseY, 0.0), Vec3.Y_AXIS)
             val intersect = plane.intersection(
                 WorldToScreen.calculateMouseRay(
                     Vec2(mouseX.toFloat(), mouseY.toFloat()),

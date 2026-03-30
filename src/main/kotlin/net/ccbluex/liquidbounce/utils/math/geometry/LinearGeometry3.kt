@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.dot
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.minecraft.core.Direction
+import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -321,11 +322,16 @@ sealed interface LinearGeometry3 {
     /**
      * Returns the unconstrained projection parameter of [point] on the supporting line.
      */
-    fun parameterFor(point: Vec3): Double {
+    fun parameterFor(point: Vec3): Double = parameterFor(point.x, point.y, point.z)
+
+    /**
+     * Returns the unconstrained projection parameter of input position on the supporting line.
+     */
+    fun parameterFor(x: Double, y: Double, z: Double): Double {
         return direction.dot(
-            x = point.x - anchor.x,
-            y = point.y - anchor.y,
-            z = point.z - anchor.z,
+            x = x - anchor.x,
+            y = y - anchor.y,
+            z = z - anchor.z,
         ) / direction.lengthSqr()
     }
 
