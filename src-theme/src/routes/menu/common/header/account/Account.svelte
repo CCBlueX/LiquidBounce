@@ -119,7 +119,6 @@
 
                 {#if isAnniversary()}
                     <img class="party-hat" src="img/anniversary/party-hat.svg" alt="party-hat">
-                    <img class="party-horn" src="img/anniversary/party-horn.png" alt="party-horn">
                 {/if}
             </div>
         {/if}
@@ -218,13 +217,6 @@
         top: -70px;
         left: -40px;
         transform: rotate(-30deg);
-      }
-
-      .party-horn {
-        position: absolute;
-        height: 35px;
-        left: 35px;
-        bottom: -8px;
       }
     }
 
