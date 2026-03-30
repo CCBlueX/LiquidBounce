@@ -141,7 +141,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     val isPrioritizingBlocking
         get() = running && prioritizeBlocking && !hasBlockedSinceAttack && blockMode != BlockMode.FAKE &&
-            findBlockableHand() != null && !isInDanger
+            findBlockableHand() != null && (!onlyWhenInDanger || isInDanger)
 
     override fun onDisabled() {
         this.stopBlocking()
