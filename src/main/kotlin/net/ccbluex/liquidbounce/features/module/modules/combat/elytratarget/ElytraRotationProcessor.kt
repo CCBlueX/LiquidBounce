@@ -32,14 +32,14 @@ import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.RotationProcessor
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.random.Random
 
 private const val BASE_YAW_SPEED = 45.0f
 private const val BASE_PITCH_SPEED = 35.0f
@@ -73,9 +73,9 @@ internal object ElytraRotationProcessor : ValueGroup("Rotations"), RotationProce
     private inline val randomDirectionVector
         get() = with (System.currentTimeMillis() / 1000.0) {
             Vec3(
-                sin(this * 1.8) * 0.04 + (Math.random() - 0.5) * 0.02,
-                sin(this * 2.2) * 0.03 + (Math.random() - 0.5) * 0.015,
-                cos(this * 1.8) * 0.04 + (Math.random() - 0.5) * 0.02,
+                sin(this * 1.8) * 0.04 + (Random.nextDouble() - 0.5) * 0.02,
+                sin(this * 2.2) * 0.03 + (Random.nextDouble() - 0.5) * 0.015,
+                cos(this * 1.8) * 0.04 + (Random.nextDouble() - 0.5) * 0.02,
             )
         }
 
@@ -173,14 +173,14 @@ internal object ElytraRotationProcessor : ValueGroup("Rotations"), RotationProce
 
     @Suppress("NOTHING_TO_INLINE")
     private inline fun calculateRotation(target: LivingEntity): Rotation {
-        var targetPos = prediction.predictPosition(target, rotateAt.position(target)) + randomDirectionVector * 4.0
+        var targetPos = prediction.predictPosition(target, rotateAt.position(target)).fma(4.0, randomDirectionVector)
 
         if (autoDistance) {
             val direction = (targetPos - player.position()).normalize()
             val distance = player.position().distanceToSqr(direction)
 
             if (distance < IDEAL_DISTANCE * IDEAL_DISTANCE) {
-                targetPos -= direction * (IDEAL_DISTANCE - distance)
+                targetPos = targetPos.fma(distance - IDEAL_DISTANCE, direction)
             }
         }
 

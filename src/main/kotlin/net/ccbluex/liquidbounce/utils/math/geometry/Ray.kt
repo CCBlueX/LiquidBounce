@@ -18,11 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import net.minecraft.util.Mth
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.math.max
-import kotlin.math.min
 
 data class Ray(
     val origin: Vec3,
@@ -35,40 +31,6 @@ data class Ray(
 
     override val anchor: Vec3
         get() = origin
-
-    fun firstIntersectionWith(box: AABB): Vec3? {
-        var enter = Double.NEGATIVE_INFINITY
-        var exit = Double.POSITIVE_INFINITY
-
-        fun updateAxis(origin: Double, direction: Double, minBound: Double, maxBound: Double): Boolean {
-            if (Mth.equal(direction, 0.0)) {
-                return origin in minBound..maxBound
-            }
-
-            val t1 = (minBound - origin) / direction
-            val t2 = (maxBound - origin) / direction
-            val axisEnter = min(t1, t2)
-            val axisExit = max(t1, t2)
-
-            enter = max(enter, axisEnter)
-            exit = min(exit, axisExit)
-            return enter <= exit + GEOMETRY_PARAMETER_EPSILON
-        }
-
-        if (!updateAxis(origin.x, direction.x, box.minX, box.maxX) ||
-            !updateAxis(origin.y, direction.y, box.minY, box.maxY) ||
-            !updateAxis(origin.z, direction.z, box.minZ, box.maxZ)
-        ) {
-            return null
-        }
-
-        if (exit < 0.0) {
-            return null
-        }
-
-        val parameter = if (enter >= 0.0) enter else exit
-        return pointAtOrNull(parameter)
-    }
 
     companion object {
         @JvmStatic

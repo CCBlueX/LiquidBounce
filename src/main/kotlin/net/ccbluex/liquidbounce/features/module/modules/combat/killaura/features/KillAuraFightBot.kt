@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
@@ -186,7 +186,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
         return (-180..180 step 45)
             .mapNotNull { yaw ->
                 val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
-                val position = leaderPosition.add(rotation.directionVector * LeaderFollower.radius.toDouble())
+                val position = leaderPosition.fma(LeaderFollower.radius.toDouble(), rotation.directionVector)
                 ModuleDebug.debugGeometry(
                     this,
                     "Possible Position $yaw",
@@ -198,21 +198,21 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
     }
 
     private fun calculateRunawayPosition(context: CombatContext, combatTarget: CombatTarget): Vec3 {
-        return context.playerPosition.add(
-            combatTarget.requiredTargetRotation.directionVector * combatTarget.range.toDouble()
+        return context.playerPosition.fma(
+            combatTarget.range.toDouble(), combatTarget.requiredTargetRotation.directionVector
         )
     }
 
     private fun calculateAttackPosition(context: CombatContext, combatTarget: CombatTarget): Vec3 {
         val target = combatTarget.entity
-        val targetLookPosition = target.position().add(
-            combatTarget.targetRotation.directionVector * combatTarget.range.toDouble()
+        val targetLookPosition = target.position().fma(
+            combatTarget.range.toDouble(), combatTarget.targetRotation.directionVector
         )
 
         return (-180..180 step 10)
             .mapNotNull { yaw ->
                 val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
-                val position = target.position().add(rotation.directionVector * combatTarget.range.toDouble())
+                val position = target.position().fma(combatTarget.range.toDouble(), rotation.directionVector)
 
                 // Check if this point collides with a block
                 if (player.doesCollideAt(position)) {

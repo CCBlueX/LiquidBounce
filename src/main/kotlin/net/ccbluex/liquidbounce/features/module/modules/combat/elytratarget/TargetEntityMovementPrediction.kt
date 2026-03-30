@@ -22,9 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 
@@ -49,7 +48,7 @@ private enum class PredictMode(
     val predict: (target: LivingEntity, targetPosition: Vec3, multiplier: Double) -> Vec3
 ) : Tagged {
     SIMPLE("Simple", { target, targetPosition, multiplier ->
-        targetPosition + target.deltaMovement * multiplier
+        targetPosition.fma(multiplier, target.deltaMovement)
     }),
     WITH_GRAVITY("WithGravity", { target, targetPosition, multiplier ->
         SIMPLE.predict(

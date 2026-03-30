@@ -22,11 +22,10 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.geometry.Ray
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
@@ -40,7 +39,7 @@ class LeastDifferencePreference(
             return basePoint
         }
 
-        return eyesPos + baseRotation.directionVector * range
+        return eyesPos.fma(range, baseRotation.directionVector)
     }
 
     override fun getPreferredSpotOnBox(box: AABB, eyesPos: Vec3, range: Double): Vec3 {
@@ -68,9 +67,11 @@ class LeastDifferencePreference(
 
     companion object {
 
-        val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.currentRotation ?: player.rotation)
+        @JvmStatic
+        fun leastDifferenceToCurrentRotation() =
+            LeastDifferencePreference(RotationManager.currentRotation ?: player.rotation)
 
+        @JvmStatic
         fun leastDifferenceToLastPoint(eyes: Vec3, point: Vec3): LeastDifferencePreference {
             return LeastDifferencePreference(Rotation.lookingAt(point, from = eyes), point)
         }

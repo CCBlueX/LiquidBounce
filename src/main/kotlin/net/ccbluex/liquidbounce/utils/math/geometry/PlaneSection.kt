@@ -24,9 +24,8 @@ import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.forEachDouble
 import net.ccbluex.fastutil.step
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.world.phys.Vec3
 import kotlin.math.sqrt
 
@@ -41,7 +40,7 @@ class PlaneSection(
 
         (0.0..1.0 step dy).forEachDouble { y ->
             (0.0..1.0 step dz).forEachDouble { z ->
-                val point = this.originPoint + this.dirVec1 * y + this.dirVec2 * z
+                val point = this.originPoint.fma(y, this.dirVec1).fma(z, this.dirVec2)
 
                 consumer(point)
             }

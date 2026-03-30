@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
@@ -159,7 +159,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
         particles.forEachIndexed { i, particle ->
             val progress = (now - particle.startTime).toFloat() / (ttl * 1000.0F)
 
-            val currentPos = particle.pos.add(displacement * displacementTransition.transform(progress).toDouble())
+            val currentPos = particle.pos.fma(displacementTransition.transform(progress).toDouble(), displacement)
             val screenPos = WorldToScreen.calculateScreenPos(currentPos) ?: return@forEachIndexed
 
             val currentScale = scale * scaleTransition.transform(progress)
