@@ -26,11 +26,10 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.rangeTo
-import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -91,8 +90,8 @@ fun findEdgeCollision(
     var currentFrom = from
 
     val lineVec = to - from
-    val extendedFrom = from - lineVec * 1000.0
-    val extendedTo = to + lineVec * 1000.0
+    val extendedFrom = from.fma(-1000.0, lineVec)
+    val extendedTo = to.fma(1000.0, lineVec)
 
     val cache = objectHashSetOf<AABB>()
     while (true) {
@@ -147,8 +146,8 @@ private fun collectCollisionBoundingBoxes(
         )
 
     val lineVec = to.subtract(from)
-    val extendedFrom = from - lineVec * 1000.0
-    val extendedTo = to + lineVec * 1000.0
+    val extendedFrom = from.fma(-1000.0, lineVec)
+    val extendedTo = to.fma(1000.0, lineVec)
 
     val foundBoxes = ArrayList<AABB>()
 

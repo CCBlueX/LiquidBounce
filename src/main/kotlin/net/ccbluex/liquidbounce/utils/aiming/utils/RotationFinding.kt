@@ -36,14 +36,13 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.kotlin.range
 import net.ccbluex.liquidbounce.utils.math.firstHit
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.samplePointOnSide
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.times
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.raytracing.clip
 import net.ccbluex.liquidbounce.utils.raytracing.isFacingBlock
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
@@ -256,7 +255,7 @@ fun raytraceBlockSide(
             val box = boxShape.move(pos)
             val visibilityPredicate = VisibilityPredicate.Outline
 
-            val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION)
+            val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.leastDifferenceToCurrentRotation())
 
 //            val nearestSpotOnSide = getNearestPointOnSide(eyes, box, side)
 
@@ -311,7 +310,7 @@ fun raytraceBox(
     range: Double,
     wallsRange: Double,
     visibilityPredicate: VisibilityPredicate = VisibilityPredicate.Outline,
-    rotationPreference: RotationPreference = LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION,
+    rotationPreference: RotationPreference = LeastDifferencePreference.leastDifferenceToCurrentRotation(),
     futureTarget: AABB? = null,
     prioritizeVisible: Boolean = true
 ): RotationWithVector? {
@@ -379,7 +378,7 @@ private fun BestRotationTracker.considerSpot(
     spot: Vec3
 ) {
     // Elongate the line so we have no issues with fp-precision
-    val raycastTarget = (preferredSpot - eyes) * 2.0 + eyes
+    val raycastTarget = eyes.fma(2.0, preferredSpot - eyes)
 
     val spotOnBox = box.firstHit(eyes, raycastTarget) ?: return
     val distSq = eyes.distanceToSqr(spotOnBox)
@@ -466,7 +465,7 @@ fun raytraceUpperBlockSide(
     range: Double,
     wallsRange: Double,
     expectedTarget: BlockPos,
-    rotationPreference: RotationPreference = LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION,
+    rotationPreference: RotationPreference = LeastDifferencePreference.leastDifferenceToCurrentRotation(),
     rotationsNotToMatch: Collection<Rotation>? = null
 ): RotationWithVector? {
     val rangeSquared = range * range

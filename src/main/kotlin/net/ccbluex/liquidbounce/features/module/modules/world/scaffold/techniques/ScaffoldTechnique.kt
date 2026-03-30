@@ -23,8 +23,10 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
+import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
@@ -45,5 +47,17 @@ sealed class ScaffoldTechnique(name: String) : Mode(name) {
 
     open fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
         traceFromPlayer(rotation)
+
+    /**
+     * Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block.
+     */
+    protected fun priorityComparator(
+        predictedPos: Vec3,
+        optimalLine: Line?,
+    ): Comparator<BlockPos> = if (optimalLine != null) {
+        BlockPlacementTargetFindingOptions.leastBlockDistanceToLine(optimalLine)
+    } else {
+        BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos)
+    }
 
 }

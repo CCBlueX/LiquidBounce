@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.unaryMinus
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -168,7 +169,7 @@ class StabilizedRotationTargetPositionFactory(
 
         return NearestRotationTargetPositionFactory(this.config).aimAtNearestPointToRotationLine(
             targetPos,
-            targetFace.offset(Vec3.atLowerCornerOf(targetPos).reverse())
+            targetFace.offset(-targetPos)
         )
     }
 
@@ -178,8 +179,8 @@ class StabilizedRotationTargetPositionFactory(
     ): AlignedFace? {
         val optimalLine = optimalLine ?: return null
 
-        val nearsetPointToOptimalLine = optimalLine.getNearestPointTo(player.position())
-        val directionToOptimalLine = player.position().subtract(nearsetPointToOptimalLine).normalize()
+        val nearestPointToOptimalLine = optimalLine.getNearestPointTo(player.position())
+        val directionToOptimalLine = player.position().subtract(nearestPointToOptimalLine).normalize()
 
         val optimalLineFromPlayer = Line(config.eyePos, optimalLine.direction)
         val collisionWithFacePlane = trimmedFace.toPlane().intersection(optimalLineFromPlayer) ?: return null
@@ -264,14 +265,14 @@ abstract class BaseYawTargetPositionFactory(
 
         val highPlane = NormalizedPlane.fromParams(
             config.eyePos - targetPos,
-            Vec3(0.0, 0.0, 1.0).yRot(highTargetYaw.toRadians()),
-            Vec3(0.0, 1.0, 0.0)
+            Vec3.Z_AXIS.yRot(highTargetYaw.toRadians()),
+            Vec3.Y_AXIS
         )
 
         val lowPlane = NormalizedPlane.fromParams(
             config.eyePos - targetPos,
-            Vec3(0.0, 0.0, 1.0).yRot(lowTargetYaw.toRadians()),
-            Vec3(0.0, 1.0, 0.0)
+            Vec3.Z_AXIS.yRot(lowTargetYaw.toRadians()),
+            Vec3.Y_AXIS
         )
 
         val highIntersectLine = face.toPlane().intersection(highPlane)

@@ -47,7 +47,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
-import net.ccbluex.liquidbounce.utils.block.shape
+import net.ccbluex.liquidbounce.utils.block.outlineShape
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -305,7 +305,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             }
 
             // Any of boxes raycast the line is not null -> need to break
-            return pos.shape.clipAllBoxes(pos, eyePos, targetPoint).isNotEmpty()
+            return pos.outlineShape.clipAllBoxes(pos, eyePos, targetPoint).isNotEmpty()
         }
 
         fun traceSurrounding(pos: Long) {
@@ -375,7 +375,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
     private fun updateSurroundings(initialPosition: BlockPos): Boolean {
         val eyePos = player.eyePosition
-        val targetPoint = initialPosition.shape.move(initialPosition)
+        val targetPoint = initialPosition.outlineShape.move(initialPosition)
             .closestPointTo(eyePos).getOrNull() ?: return false
 
         debugGeometry("targetPos") {
@@ -457,7 +457,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             val cache = BlockPos.MutableBlockPos()
             return DIRECTIONS_EXCLUDING_DOWN.any {
                 val neighbor = cache.setWithOffset(this, it)
-                neighbor.shape.isEmpty && neighbor.getBlock() !== block
+                neighbor.outlineShape.isEmpty && neighbor.getBlock() !== block
             }
         }
 

@@ -36,9 +36,9 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.iterateBottomLayerBlockPos
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.client.player.ClientInput
@@ -228,7 +228,7 @@ fun LocalPlayer.isCloseToEdge(
     }
 
     val from = pos.add(0.0, -0.1, 0.0)
-    val to = from + direction.scale(distance)
+    val to = from.fma(distance, direction)
 
     if (findEdgeCollision(from, to) != null) {
         return true

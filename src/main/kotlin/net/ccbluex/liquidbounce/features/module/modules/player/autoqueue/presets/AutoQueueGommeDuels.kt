@@ -122,6 +122,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
     }
 
     override fun disable() {
+        SilentHotbar.resetSlot(this)
         super.disable()
 
         inMatch = false
