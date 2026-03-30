@@ -48,9 +48,11 @@ import net.ccbluex.liquidbounce.utils.entity.interactBlockLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.interactEntityLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.useItemStrict
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
@@ -234,7 +236,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         // Check if we are in danger by going through all possible targets and checking if they are looking at us.
         isInDanger = targetTracker.targets().any { target ->
-            isLookingAtEntity(
+            player.squaredBoxedDistanceTo(target) <= KillAuraRange.interactionRange.sq() && isLookingAtEntity(
                 fromEntity = target,
                 toEntity = player,
                 rotation = target.rotation,
