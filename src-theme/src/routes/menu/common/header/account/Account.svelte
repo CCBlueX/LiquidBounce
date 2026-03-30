@@ -18,6 +18,7 @@
     import {notification} from "../notification_store";
     import RippleLoader from "../../RippleLoader.svelte";
     import {isLoggingIn} from "../../../altmanager/altmanager_store";
+    import {isAnniversary} from "../../../../../util/utils";
 
     let username = "";
     let service = "";
@@ -34,6 +35,7 @@
     $: renderedAccounts = accounts.filter(a => a.username.toLowerCase().includes(searchQuery.toLowerCase()) || searchQuery === "");
 
     const inAccountManager = $location === "/altmanager";
+    const inTitle = $location === "/title";
 
     async function refreshSession() {
         const session = await getSession();
@@ -107,13 +109,19 @@
 <div class="account" class:expanded bind:this={accountElement} on:click={handleSelectClick}>
     <div class="header" bind:this={headerElement}>
         {#if $isLoggingIn}
-            <div class="avatar" transition:fade={{ duration: 200 }}>
+            <div class="avatar-wrapper" transition:fade={{ duration: 200 }}>
                 <RippleLoader size={68} />
             </div>
         {:else}
-            <object data={avatar} type="image/png" class="avatar" aria-label="avatar" in:fade={{ duration: 200, delay: 200 }}>
-                <img src="img/steve.png" alt=avatar class="avatar">
-            </object>
+            <div class="avatar-wrapper">
+                <object data={avatar} type="image/png" class="avatar" aria-label="avatar" in:fade={{ duration: 200, delay: 200 }}>
+                    <img src="img/steve.png" alt=avatar class="avatar">
+                </object>
+
+                {#if isAnniversary() && inTitle}
+                    <img class="party-hat" src="img/anniversary/party-hat.svg" alt="party-hat">
+                {/if}
+            </div>
         {/if}
         <div class="username">{username}</div>
         <div class="account-type">
@@ -194,11 +202,23 @@
     cursor: pointer;
     transition: ease border-radius .2s;
 
-    .avatar {
-      height: 68px;
-      width: 68px;
-      border-radius: 50%;
+    .avatar-wrapper {
       grid-area: a;
+      position: relative;
+
+      .avatar {
+        height: 68px;
+        width: 68px;
+        border-radius: 50%;
+      }
+
+      .party-hat {
+        position: absolute;
+        height: 130px;
+        top: -70px;
+        left: -38px;
+        transform: rotate(-30deg);
+      }
     }
 
     .username {

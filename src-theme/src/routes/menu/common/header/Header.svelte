@@ -1,13 +1,16 @@
 <script lang="ts">
     import Account from "./account/Account.svelte";
+    import AnimatedLogo from "./AnimatedLogo.svelte";
     import Notifications from "./Notifications.svelte";
     import {listen} from "../../../../integration/ws";
+    import {location} from "svelte-spa-router";
     import type {
         AccountManagerAdditionEvent,
         AccountManagerLoginEvent,
         AccountManagerMessageEvent
     } from "../../../../integration/events";
     import {notification} from "./notification_store";
+    import {isAnniversary} from "../../../../util/utils";
 
     listen("accountManagerAddition", (e: AccountManagerAdditionEvent) => {
         if (!e.error) {
@@ -51,7 +54,11 @@
 </script>
 
 <div class="header">
-    <img class="logo" src="img/lb-logo.svg" alt="logo">
+    {#if $location === "/title" && isAnniversary()}
+        <AnimatedLogo/>
+    {:else}
+        <img class="logo" src="img/lb-logo.svg" alt="LiquidBounce logo">
+    {/if}
 
     <Notifications />
 
@@ -64,5 +71,12 @@
     justify-content: space-between;
     margin-bottom: 60px;
     align-items: center;
+  }
+
+  .logo {
+    display: block;
+    width: 261.263px;
+    height: 98px;
+    flex: 0 0 auto;
   }
 </style>
