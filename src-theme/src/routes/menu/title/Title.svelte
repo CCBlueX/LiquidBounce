@@ -53,7 +53,7 @@
 
 <div class="title-screen">
     {#if isAnniversary()}
-        <ConfettiBackground/>
+        <ConfettiBackground />
     {/if}
 
     <Menu>

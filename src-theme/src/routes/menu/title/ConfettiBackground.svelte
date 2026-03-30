@@ -1,4 +1,6 @@
 <script lang="ts">
+    import {fade} from "svelte/transition";
+
     type ConfettiPiece = {
         id: number;
         shapeClass: string;
@@ -66,7 +68,7 @@
     }
 </script>
 
-<div class="confetti-layer" aria-hidden="true">
+<div class="confetti-layer" aria-hidden="true" transition:fade|global={{duration: 500}}>
     {#each pieces as piece (piece.id)}
         <span class={`confetti-piece ${piece.shapeClass}`} style={piece.style}>
             <span class="confetti-bit"></span>
