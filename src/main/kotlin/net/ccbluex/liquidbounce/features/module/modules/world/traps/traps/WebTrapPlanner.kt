@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeI
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.IntentTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -86,7 +86,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
     ): BlockPlacementTarget? {
         val blockPos = targetPos.toBlockPos()
 
-        if (blockPos.getState()?.block in trapWorthyBlocks) {
+        if (blockPos.state?.block in trapWorthyBlocks) {
             return null
         }
 

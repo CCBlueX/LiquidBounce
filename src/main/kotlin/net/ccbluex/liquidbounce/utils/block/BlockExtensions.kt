@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
@@ -112,6 +113,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.Consumer
 import kotlin.math.ceil
@@ -152,7 +154,7 @@ val BlockPos.immutable: BlockPos get() = if (this is BlockPos.MutableBlockPos) t
  */
 val BlockPos.outlineBox: AABB
     get() {
-        val blockState = getState() ?: return FULL_BOX
+        val blockState = state ?: return FULL_BOX
         if (blockState.isAir) {
             return FULL_BOX
         }
@@ -162,10 +164,10 @@ val BlockPos.outlineBox: AABB
     }
 
 val BlockPos.collisionShape: VoxelShape
-    get() = this.getState()!!.getCollisionShape(world, this)
+    get() = state?.getCollisionShape(world, this) ?: Shapes.empty()
 
 val BlockPos.outlineShape: VoxelShape
-    get() = this.getState()!!.getShape(world, this)
+    get() = state?.getShape(world, this) ?: Shapes.empty()
 
 fun BlockState.outlineBox(blockPos: BlockPos): AABB {
     val outlineShape = this.getShape(world, blockPos)
@@ -200,7 +202,7 @@ inline fun Vec3.searchBlocksInCuboid(
     crossinline filter: (BlockPos, BlockState) -> Boolean
 ): Sequence<Pair<BlockPos, BlockState>> =
     searchBlocksInCuboid(radius).iterator().asSequence().mapNotNull {
-        val state = it.getState() ?: return@mapNotNull null
+        val state = it.state ?: return@mapNotNull null
 
         if (filter(it, state)) {
             it.immutable() to state
@@ -366,7 +368,7 @@ fun BlockGetter.raycast(
 }
 
 fun BlockPos.canStandOn(): Boolean {
-    return this.getState()!!.isFaceSturdy(world, this, Direction.UP, SupportType.CENTER)
+    return this.state?.isFaceSturdy(world, this, Direction.UP, SupportType.CENTER) ?: false
 }
 
 fun BlockState?.anotherChestPartDirection(): Direction? {
@@ -422,7 +424,7 @@ inline fun AABB.collideBlockIntersects(
     isCorrectBlock: (Block) -> Boolean
 ): Boolean {
     for (blockPos in collidingRegion) {
-        val blockState = blockPos.getState()
+        val blockState = blockPos.state
 
         if (blockState == null || !isCorrectBlock(blockState.block)) {
             continue

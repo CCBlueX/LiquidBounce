@@ -40,6 +40,8 @@ inline fun VoxelShape.ifEmpty(defaultValue: () -> VoxelShape): VoxelShape {
     return if (isEmpty) defaultValue() else this
 }
 
+inline fun VoxelShape?.orEmpty(): VoxelShape = this ?: Shapes.empty()
+
 /**
  * @return null if shape is empty
  */

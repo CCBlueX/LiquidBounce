@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -126,7 +126,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
             for (z in blockPos.z..blockPos2.z) {
                 jumpOnPos.x = x
                 jumpOnPos.z = z
-                val jumpOnState = jumpOnPos.getState()!!
+                val jumpOnState = jumpOnPos.stateOrEmpty
 
                 // Simple check that asserts that we can actually reach the block with a jump.
                 if (jumpOnPos.y + 1 - lastGroundPos.y > 1.3) {
@@ -146,14 +146,14 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
                 val canEnterBlockAbove =
                     canPlayerEnterBlockPos(
                         posOneAboveJumpOnBlock,
-                        posOneAboveJumpOnBlock.getState()!!,
+                        posOneAboveJumpOnBlock.stateOrEmpty,
                         currentlyConsideredPlayerBox,
                         tolerateLowBoundingBoxes = true,
                     )
                 val canEnterBlockTwoAbove =
                     canPlayerEnterBlockPos(
                         posTwoAboveJumpOnBlock,
-                        posTwoAboveJumpOnBlock.getState()!!,
+                        posTwoAboveJumpOnBlock.stateOrEmpty,
                         currentlyConsideredPlayerBox,
                         tolerateLowBoundingBoxes = false,
                     )
