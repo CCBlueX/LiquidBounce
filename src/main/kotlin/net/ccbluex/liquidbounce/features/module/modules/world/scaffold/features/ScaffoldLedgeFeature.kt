@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import kotlin.math.max
 
 @JvmRecord
@@ -46,7 +45,7 @@ fun ledge(
     rotation: Rotation,
     extension: ScaffoldLedgeExtension? = null
 ): LedgeAction {
-    if (player.isCloseToEdge(DirectionalInput(player.input))) {
+    if (player.isCloseToEdge()) {
         val ticks = ModuleScaffold.ScaffoldRotationValueGroup.calculateTicks(rotation)
 
         ModuleDebug.debugParameter(ModuleScaffold, "TicksUntilDestination", ticks)

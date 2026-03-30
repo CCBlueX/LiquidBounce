@@ -89,6 +89,10 @@ internal object NoFallMLG : NoFallMode("MLG") {
     override val running: Boolean
         get() = super.running && !ModuleFreeze.running
 
+    override fun disable() {
+        SilentHotbar.resetSlot(this)
+    }
+
     @Suppress("unused")
     private val tickMovementHandler =
         handler<RotationUpdateEvent> {

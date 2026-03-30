@@ -75,6 +75,10 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
         pickupTracker.clear()
     }
 
+    override fun onDisabled() {
+        SilentHotbar.resetSlot(this)
+    }
+
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         // we can't place water in the nether

@@ -36,9 +36,9 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.iterateBottomLayerBlockPos
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.client.player.ClientInput
@@ -171,7 +171,8 @@ val LocalPlayer.direction: Float
 val LocalPlayer.hasCooldown: Boolean
     get() = !isOlderThanOrEqual1_8 && this.getAttributeValue(Attributes.ATTACK_SPEED) < 20.0
 
-fun LocalPlayer.getMovementDirectionOfInput(input: DirectionalInput): Float {
+@JvmOverloads
+fun LocalPlayer.getMovementDirectionOfInput(input: DirectionalInput = DirectionalInput(this.input)): Float {
     return getMovementDirectionOfInput(this.yRot, input)
 }
 
@@ -201,11 +202,11 @@ fun Player.wouldBeCloseToFallOff(position: Vec3): Boolean {
 }
 
 fun LocalPlayer.isCloseToEdge(
-    directionalInput: DirectionalInput,
+    directionalInput: DirectionalInput = DirectionalInput(this.input),
     distance: Double = 0.1,
     pos: Vec3 = this.position(),
 ): Boolean {
-    val alpha = (getMovementDirectionOfInput(this.yRot, directionalInput) + 90.0F).toRadians()
+    val alpha = (getMovementDirectionOfInput(directionalInput) + 90.0F).toRadians()
     val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
     simulatedInput.set(
         jump = false,
@@ -227,7 +228,7 @@ fun LocalPlayer.isCloseToEdge(
     }
 
     val from = pos.add(0.0, -0.1, 0.0)
-    val to = from + direction.scale(distance)
+    val to = from.fma(distance, direction)
 
     if (findEdgeCollision(from, to) != null) {
         return true
@@ -265,7 +266,7 @@ fun LocalPlayer.canStep(height: Double = 1.0): Boolean {
     }
 }
 
-fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
+fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput = DirectionalInput(player.input)): Float {
     var actualYaw = facingYaw
     val forwardMultiplier = when {
         input.backwards && !input.forwards -> {

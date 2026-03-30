@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
-data class Line(
-    val position: Vec3,
+data class Ray(
+    val origin: Vec3,
     override val direction: Vec3,
 ) : LinearGeometry3 {
 
@@ -31,12 +30,12 @@ data class Line(
     }
 
     override val anchor: Vec3
-        get() = position
+        get() = origin
 
     companion object {
         @JvmStatic
-        fun fromPoints(begin: Vec3, end: Vec3): Line {
-            return Line(begin, end.subtract(begin))
+        fun fromPoints(begin: Vec3, end: Vec3): Ray {
+            return Ray(begin, end.subtract(begin))
         }
     }
 }

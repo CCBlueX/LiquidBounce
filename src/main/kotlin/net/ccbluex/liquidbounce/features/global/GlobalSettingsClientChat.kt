@@ -272,7 +272,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private fun writeChat(playerPrefix: Component, message: Component) {
         if (!inGame) {
-            logger.info("[Chat] ${playerPrefix.string} $message")
+            logger.info("[Chat] ${playerPrefix.string} ${message.string}")
         } else {
             chat(prefix, playerPrefix, message, metadata = messageData)
         }

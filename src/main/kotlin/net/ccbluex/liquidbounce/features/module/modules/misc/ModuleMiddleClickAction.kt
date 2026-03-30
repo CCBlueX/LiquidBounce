@@ -55,6 +55,7 @@ object ModuleMiddleClickAction : ClientModule(
     private val mode = modes(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
 
     override fun onDisabled() {
+        SilentHotbar.resetSlot(Pearl)
         Pearl.disable()
     }
 

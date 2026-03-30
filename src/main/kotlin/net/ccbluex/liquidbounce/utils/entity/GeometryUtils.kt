@@ -18,14 +18,13 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.liquidbounce.utils.math.absoluteValue
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.world.phys.Vec3
-import kotlin.math.absoluteValue
 
-fun getLambda(p: Vec3, u: Vec3, vec: Vec3): Double {
-    val uAbs = Vec3(u.x.absoluteValue, u.y.absoluteValue, u.z.absoluteValue)
+private fun getLambda(p: Vec3, u: Vec3, vec: Vec3): Double {
+    val uAbs = u.absoluteValue
 
     val diff = vec - p
 
@@ -52,7 +51,7 @@ fun straightLinePointDistanceSquared(s: Vec3, r: Vec3, p: Vec3): Double {
 
     val lambda = (planeD - r.dot(s)) / r.dot(r)
 
-    return (s + r * lambda).distanceToSqr(p)
+    return s.fma(lambda, r).distanceToSqr(p)
 }
 
 /**
@@ -70,5 +69,5 @@ fun linePointDistanceSquared(l1: Vec3, l2: Vec3, p: Vec3): Double {
     // In this case, the line is limited
     val clampedLambda = lambda.coerceIn(0.0, getLambda(l1, lU, l2))
 
-    return (l1 + lU * clampedLambda).distanceToSqr(p)
+    return l1.fma(clampedLambda, lU).distanceToSqr(p)
 }

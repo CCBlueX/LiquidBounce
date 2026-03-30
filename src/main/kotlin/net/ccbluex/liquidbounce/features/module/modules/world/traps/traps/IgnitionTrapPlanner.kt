@@ -98,17 +98,18 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
             target.position().subtract(target.lastPos),
             slot.itemStack.item == Items.FLINT_AND_STEEL
         )
+        val placementLocation = PlayerLocationOnPlacement(position = player.position())
 
         val options = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
                 offsetsForTargets,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                targetOverlapComparator(blockPos, offsetsForTargets, placementLocation.eyePos),
             ),
             FaceHandlingOptions(
-                NearestRotationTargetPositionFactory(PositionFactoryConfiguration(player.eyePosition, 0.5))
+                NearestRotationTargetPositionFactory(PositionFactoryConfiguration(placementLocation.eyePos, 0.5))
             ),
             stackToPlaceWith = slot.itemStack,
-            PlayerLocationOnPlacement(position = player.position()),
+            placementLocation,
         )
 
         return findBestBlockPlacementTarget(blockPos, options)

@@ -220,7 +220,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
         return world.entitiesForRendering().filter { entity ->
             entity != player &&
                 entity.shouldBeAttacked() &&
-                Line(player.position(), player.rotation.directionVector)
+                Line(player.eyePosition, player.rotation.directionVector)
                     .distanceToSqr(entity.position()) < 10.0 * 10.0
         }.map { entity ->
             val simulation = if (entity is AbstractClientPlayer) {

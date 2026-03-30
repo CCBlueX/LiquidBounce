@@ -32,6 +32,8 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import kotlin.math.abs
+import kotlin.math.absoluteValue
+import kotlin.math.hypot
 import kotlin.math.sqrt
 
 inline operator fun Vec2.component1() = this.x
@@ -42,6 +44,10 @@ inline operator fun BlockPos.rangeTo(other: BlockPos): BoundingBox = BoundingBox
 
 inline fun BlockPos.MutableBlockPos.set(pos: Position): BlockPos.MutableBlockPos = set(pos.x(), pos.y(), pos.z())
 
+inline operator fun Vec3i.unaryMinus(): Vec3i = Vec3i(-x, -y, -z)
+
+inline operator fun BlockPos.unaryMinus(): BlockPos = BlockPos(-x, -y, -z)
+
 inline operator fun Vec3i.component1() = this.x
 inline operator fun Vec3i.component2() = this.y
 inline operator fun Vec3i.component3() = this.z
@@ -49,6 +55,7 @@ inline operator fun Vec3i.component3() = this.z
 inline fun BlockPos.copy(x: Int = this.x, y: Int = this.y, z: Int = this.z) = BlockPos(x, y, z)
 
 inline operator fun Vec3i.plus(other: Vec3i): Vec3i = offset(other)
+inline operator fun BlockPos.plus(other: Vec3i): BlockPos = offset(other)
 
 inline operator fun Vec3i.minus(other: Vec3i): Vec3i = subtract(other)
 
@@ -61,7 +68,20 @@ fun Vec3i.lengthSqr(): Long {
     return x1 * x1 + y1 * y1 + z1 * z1
 }
 
+inline operator fun Vec3.unaryMinus(): Vec3 = this.reverse()
+
 inline operator fun Vec3.plus(other: Position): Vec3 = add(other.x(), other.y(), other.z())
+
+inline val Vec3.absoluteValue: Vec3 get() = Vec3(this.x.absoluteValue, this.y.absoluteValue, this.z.absoluteValue)
+
+/**
+ * @return [this] + [scale] * [other]
+ */
+inline fun Vec3.fma(scale: Double, other: Vec3): Vec3 = Vec3(
+    Math.fma(scale, other.x, this.x),
+    Math.fma(scale, other.y, this.y),
+    Math.fma(scale, other.z, this.z),
+)
 
 inline operator fun Vec3.plus(other: Vec3i): Vec3 = add(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 
@@ -71,6 +91,8 @@ inline operator fun Vec3.minus(other: Vec3i): Vec3 =
     subtract(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 
 inline operator fun Vec3.times(scalar: Double): Vec3 = scale(scalar)
+
+inline fun Vec3.dot(x: Double, y: Double, z: Double): Double = this.x * x + this.y * y + this.z * z
 
 /**
  * `this.normalize().scale(newLength)`
@@ -116,6 +138,8 @@ inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: 
 inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
     multiply(factorX, factorY, factorZ)
 
+fun Vec3.horizontalDistanceTo(other: Vec3): Double = hypot(this.x - other.x, this.z - other.z)
+
 inline operator fun Vec3.component1(): Double = this.x
 inline operator fun Vec3.component2(): Double = this.y
 inline operator fun Vec3.component3(): Double = this.z
@@ -124,13 +148,17 @@ operator fun ChunkPos.contains(blockPos: Long): Boolean =
     BlockPos.getX(blockPos) in minBlockX..maxBlockX && BlockPos.getZ(blockPos) in minBlockZ..maxBlockZ
 
 fun Iterable<Vec3>.average(): Vec3 {
-    val result = Vec3(0.0, 0.0, 0.0)
+    var x = 0.0
+    var y = 0.0
+    var z = 0.0
     var i = 0
     for (vec in this) {
-        result.move(vec)
+        x += vec.x
+        y += vec.y
+        z += vec.z
         i++
     }
-    return result.scaleMut(1.0 / i)
+    return Vec3(x / i, y / i, z / i)
 }
 
 inline fun Vec3i.toVec3d(

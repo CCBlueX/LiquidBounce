@@ -22,14 +22,15 @@ package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
-import kotlin.math.min
 
 // Box operators
 
@@ -73,41 +74,7 @@ fun AABB.centerOnSide(side: Direction): Vec3 {
  * Tests if the infinite line resulting from [start] and the point [p] will intersect this box.
  */
 fun AABB.isHitByLine(start: Vec3, p: Vec3): Boolean {
-    val d = p.subtract(start)
-
-    var tEntry = Double.NEGATIVE_INFINITY
-    var tExit = Double.POSITIVE_INFINITY
-
-    fun checkSide(axis: Direction.Axis): Boolean {
-        val d1 = axis.choose(d.x, d.y, d.z)
-        val min = min(axis)
-        val max = max(axis)
-        val p0 = axis.choose(start.x, start.y, start.z)
-
-        // parallel and outside, no need to check anything else
-        if (d1 == 0.0) {
-            if (p0 < min || p0 > max) {
-                return true
-            }
-            return false
-        }
-
-        val t1 = (min - p0) / d1
-        val t2 = (max - p0) / d1
-        tEntry = maxOf(tEntry, min(t1, t2))
-        tExit = minOf(tExit, max(t1, t2))
-
-        return tEntry > tExit
-    }
-
-    if (checkSide(Direction.Axis.X) ||
-        checkSide(Direction.Axis.Y) ||
-        checkSide(Direction.Axis.Z)
-    ) {
-        return false
-    }
-
-    return tEntry <= tExit
+    return if (start == p) contains(start) else Line.fromPoints(start, p).intersects(this)
 }
 
 fun AABB.getCoordinate(direction: Direction): Double =
@@ -126,6 +93,18 @@ fun AABB.getNearestPoint(from: Position): Vec3 {
         from.y().coerceIn(minY, maxY),
         from.z().coerceIn(minZ, maxZ),
     )
+}
+
+/**
+ * Squared distance from this box to a point without allocating a temporary [Vec3].
+ *
+ * @see net.minecraft.world.phys.AABB.distanceToSqr
+ */
+fun AABB.distanceToSqr(x: Double, y: Double, z: Double): Double {
+    val dx = max(max(minX - x, x - maxX), 0.0)
+    val dy = max(max(minY - y, y - maxY), 0.0)
+    val dz = max(max(minZ - z, z - maxZ), 0.0)
+    return Mth.lengthSquared(dx, dy, dz)
 }
 
 fun AABB.getNearestPointOnSide(from: Vec3, side: Direction): Vec3 {
