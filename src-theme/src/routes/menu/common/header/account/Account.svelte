@@ -35,6 +35,7 @@
     $: renderedAccounts = accounts.filter(a => a.username.toLowerCase().includes(searchQuery.toLowerCase()) || searchQuery === "");
 
     const inAccountManager = $location === "/altmanager";
+    const inTitle = $location === "/title";
 
     async function refreshSession() {
         const session = await getSession();
@@ -117,7 +118,7 @@
                     <img src="img/steve.png" alt=avatar class="avatar">
                 </object>
 
-                {#if isAnniversary()}
+                {#if isAnniversary() && inTitle}
                     <img class="party-hat" src="img/anniversary/party-hat.svg" alt="party-hat">
                 {/if}
             </div>
