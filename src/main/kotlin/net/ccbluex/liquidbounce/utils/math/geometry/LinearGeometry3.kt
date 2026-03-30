@@ -18,17 +18,26 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import net.ccbluex.liquidbounce.utils.math.addScaled
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.dot
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
+import net.minecraft.core.Direction
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.DoubleConsumer
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+
+@JvmRecord
+data class NearestPointResult(
+    val point: Vec3,
+    val distanceSquared: Double,
+)
 
 /**
  * Shared contract for one-dimensional linear geometry in 3D space.
@@ -36,6 +45,7 @@ import kotlin.math.min
  * Implementations define their own valid parameter domain, while [anchor] and [direction]
  * always describe the shared supporting line equation `anchor + direction * t`.
  */
+@Suppress("TooManyFunctions")
 sealed interface LinearGeometry3 {
 
     /**
@@ -65,8 +75,8 @@ sealed interface LinearGeometry3 {
      */
     fun getNearestPointTo(point: Vec3): Vec3 {
         val parameter = parameterDomain().project(parameterFor(point))
-        if (parameter.isNaN()) {
-            error("Unable to project point $point on geometry $this")
+        check(!parameter.isNaN()) {
+            "Unable to project point $point on geometry $this"
         }
         return pointAt(parameter)
     }
@@ -79,11 +89,32 @@ sealed interface LinearGeometry3 {
     }
 
     /**
-     * Returns the squared distance from [box] to this geometry.
+     * Returns the nearest point on this geometry to [shape].
+     *
+     * The [shape] is expected to already be expressed in the same coordinate system as this geometry.
+     * For block-local shapes, call [net.minecraft.world.phys.shapes.VoxelShape.move] before passing them in.
+     *
+     * @return nearest point on this geometry together with squared distance, or `null` if [shape] is empty
      */
-    fun distanceToSqr(box: AABB): Double {
-        val pointOnGeometry = getNearestPointTo(box)
-        return box.distanceToSqr(pointOnGeometry)
+    fun getNearestPointTo(shape: VoxelShape): NearestPointResult? {
+        if (shape.isEmpty) {
+            return null
+        }
+
+        var bestResult: NearestPointResult? = null
+
+        shape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
+            val box = AABB(minX, minY, minZ, maxX, maxY, maxZ)
+            val result = getNearestPointTo(box)
+            val currentBest = bestResult
+
+            if (currentBest == null ||
+                result.distanceSquared < currentBest.distanceSquared - GEOMETRY_PARAMETER_EPSILON) {
+                bestResult = result
+            }
+        }
+
+        return checkNotNull(bestResult) { "Unable to find nearest point on geometry $this" }
     }
 
     /**
@@ -162,43 +193,55 @@ sealed interface LinearGeometry3 {
     }
 
     /**
+     * Returns whether this geometry intersects [box] within its parameter domain.
+     */
+    fun intersects(box: AABB): Boolean {
+        return boxIntersectionInterval(box) != null
+    }
+
+    /**
+     * Returns the first boundary intersection with [box] in parameter order.
+     *
+     * When the geometry starts inside the box, this returns the boundary point where it leaves the box.
+     * If the geometry never reaches a box boundary inside its parameter domain, this returns `null`.
+     */
+    fun firstIntersectionWith(box: AABB): Vec3? {
+        val interval = boxIntersectionInterval(box) ?: return null
+        val parameter = firstIntersectionParameter(interval)
+        return if (parameter.isNaN()) null else pointAtOrNull(parameter)
+    }
+
+    /**
      * Returns the nearest point on this geometry to [box].
      */
     @Suppress("CognitiveComplexMethod")
-    fun getNearestPointTo(box: AABB): Vec3 {
-        val px = anchor.x
-        val py = anchor.y
-        val pz = anchor.z
+    fun getNearestPointTo(box: AABB): NearestPointResult {
+        val position = anchor
+        val directionVector = direction
+        val px = position.x
+        val py = position.y
+        val pz = position.z
 
-        val dx = direction.x
-        val dy = direction.y
-        val dz = direction.z
+        val dx = directionVector.x
+        val dy = directionVector.y
+        val dz = directionVector.z
 
-        val breakpoints = DoubleArray(6)
-        var breakpointCount = 0
-
-        fun addBreakpoint(parameter: Double) {
-            if (!parameter.isFinite()) {
-                return
-            }
-
-            breakpoints[breakpointCount++] = parameter
-        }
+        val breakpoints = DoubleArrayList(6)
 
         if (!Mth.equal(dx, 0.0)) {
-            addBreakpoint((box.minX - px) / dx)
-            addBreakpoint((box.maxX - px) / dx)
+            breakpoints.addFinite((box.minX - px) / dx)
+            breakpoints.addFinite((box.maxX - px) / dx)
         }
         if (!Mth.equal(dy, 0.0)) {
-            addBreakpoint((box.minY - py) / dy)
-            addBreakpoint((box.maxY - py) / dy)
+            breakpoints.addFinite((box.minY - py) / dy)
+            breakpoints.addFinite((box.maxY - py) / dy)
         }
         if (!Mth.equal(dz, 0.0)) {
-            addBreakpoint((box.minZ - pz) / dz)
-            addBreakpoint((box.maxZ - pz) / dz)
+            breakpoints.addFinite((box.minZ - pz) / dz)
+            breakpoints.addFinite((box.maxZ - pz) / dz)
         }
 
-        breakpointCount = sortAndUnique(breakpoints, breakpointCount)
+        breakpoints.sortAndUnique()
 
         val domain = parameterDomain()
         var bestParameter = Double.NaN
@@ -221,12 +264,11 @@ sealed interface LinearGeometry3 {
         }
 
         domain.forEachFiniteBoundary(::evaluate)
-        for (index in 0 until breakpointCount) {
-            evaluate(breakpoints[index])
+        for (index in 0 until breakpoints.size) {
+            evaluate(breakpoints.getDouble(index))
         }
 
-        val markers = DoubleArray(8)
-        var markerCount = 0
+        val markers = DoubleArrayList(8)
 
         fun addMarker(parameter: Double) {
             if (parameter < domain.lowerBound - GEOMETRY_PARAMETER_EPSILON ||
@@ -235,37 +277,36 @@ sealed interface LinearGeometry3 {
                 return
             }
 
-            markers[markerCount++] = parameter
+            markers.add(parameter)
         }
 
-        for (index in 0 until breakpointCount) {
-            addMarker(breakpoints[index])
+        for (index in 0 until breakpoints.size) {
+            addMarker(breakpoints.getDouble(index))
         }
         domain.forEachFiniteBoundary(::addMarker)
 
-        markerCount = sortAndUnique(markers, markerCount)
+        markers.sortAndUnique()
 
         var intervalStart = domain.lowerBound
-        if (markerCount == 0) {
-            evaluateInterval(box, domain, intervalStart, domain.upperBound, px, py, pz, dx, dy, dz, ::evaluate)
-        } else {
-            for (index in 0 until markerCount) {
-                val marker = markers[index]
-                evaluateInterval(box, domain, intervalStart, marker, px, py, pz, dx, dy, dz, ::evaluate)
-                intervalStart = marker
-            }
-            evaluateInterval(box, domain, intervalStart, domain.upperBound, px, py, pz, dx, dy, dz, ::evaluate)
+        for (index in 0 until markers.size) {
+            val marker = markers.getDouble(index)
+            evaluateInterval(box, domain, intervalStart, marker, position, directionVector, ::evaluate)
+            intervalStart = marker
         }
+        evaluateInterval(box, domain, intervalStart, domain.upperBound, position, directionVector, ::evaluate)
 
         if (bestParameter.isNaN()) {
             evaluate(0.0)
         }
 
-        if (bestParameter.isNaN()) {
-            error("Unable to find nearest point on geometry $this")
+        check(!bestParameter.isNaN()) {
+            "Unable to find nearest point on geometry $this"
         }
 
-        return pointAt(bestParameter)
+        return NearestPointResult(
+            point = pointAt(bestParameter),
+            distanceSquared = bestDistance,
+        )
     }
 
     /**
@@ -274,7 +315,7 @@ sealed interface LinearGeometry3 {
      * This method does not validate the parameter domain.
      */
     fun pointAt(parameter: Double): Vec3 {
-        return anchor.addScaled(direction, parameter)
+        return anchor.fma(parameter, direction)
     }
 
     /**
@@ -295,43 +336,88 @@ sealed interface LinearGeometry3 {
             is LineSegment -> ParameterDomain.SEGMENT_01
         }
 
+    private fun boxIntersectionInterval(box: AABB): BoxIntersectionInterval? {
+        var enter = Double.NEGATIVE_INFINITY
+        var exit = Double.POSITIVE_INFINITY
+
+        if (!Direction.Axis.VALUES.all { axis ->
+            val position = anchor[axis]
+            val delta = direction[axis]
+            val minBound = box.min(axis)
+            val maxBound = box.max(axis)
+
+            if (Mth.equal(delta, 0.0)) {
+                return@all position in minBound..maxBound
+            }
+
+            val t1 = (minBound - position) / delta
+            val t2 = (maxBound - position) / delta
+            val axisEnter = min(t1, t2)
+            val axisExit = max(t1, t2)
+
+            enter = max(enter, axisEnter)
+            exit = min(exit, axisExit)
+            enter <= exit + GEOMETRY_PARAMETER_EPSILON
+        }) {
+            return null
+        }
+
+        val domain = parameterDomain()
+        if (exit < domain.lowerBound - GEOMETRY_PARAMETER_EPSILON ||
+            enter > domain.upperBound + GEOMETRY_PARAMETER_EPSILON
+        ) {
+            return null
+        }
+
+        return BoxIntersectionInterval(enter = enter, exit = exit)
+    }
+
+    private fun firstIntersectionParameter(interval: BoxIntersectionInterval): Double {
+        val domain = parameterDomain()
+        val firstParameter = max(interval.enter, domain.lowerBound)
+        val lowerBoundInsideBox = domain.lowerBound.isFinite() &&
+            domain.lowerBound > interval.enter + GEOMETRY_PARAMETER_EPSILON &&
+            domain.lowerBound < interval.exit - GEOMETRY_PARAMETER_EPSILON
+
+        if (lowerBoundInsideBox) {
+            return domain.normalize(interval.exit)
+        }
+
+        return domain.normalize(firstParameter)
+    }
+
     private fun evaluateInterval(
         box: AABB,
         domain: ParameterDomain,
         start: Double,
         end: Double,
-        px: Double,
-        py: Double,
-        pz: Double,
-        dx: Double,
-        dy: Double,
-        dz: Double,
+        position: Vec3,
+        direction: Vec3,
         evaluate: DoubleConsumer,
     ) {
         val intervalStart = max(start, domain.lowerBound)
         val intervalEnd = min(end, domain.upperBound)
-        val sample = sampleOpenInterval(intervalStart, intervalEnd) ?: return
+        val sample = sampleOpenInterval(intervalStart, intervalEnd)
+        if (sample.isNaN()) return
 
-        val sx = px + dx * sample
-        val sy = py + dy * sample
-        val sz = pz + dz * sample
+        val samplePoint = position.fma(sample, direction)
 
         var quadraticA = 0.0
         var quadraticB = 0.0
 
-        fun addAxis(sampleCoord: Double, min: Double, max: Double, dir: Double, pos: Double) {
-            if (sampleCoord < min) {
-                quadraticA += dir * dir
-                quadraticB += dir * (pos - min)
-            } else if (sampleCoord > max) {
-                quadraticA += dir * dir
-                quadraticB += dir * (pos - max)
+        for (axis in Direction.Axis.VALUES) {
+            val sampleCoordinate = samplePoint[axis]
+            val directionCoordinate = direction[axis]
+            val positionCoordinate = position[axis]
+
+            if (sampleCoordinate < box.min(axis)) {
+                quadraticA += directionCoordinate * directionCoordinate
+                quadraticB += directionCoordinate * (positionCoordinate - box.min(axis))
+            } else if (sampleCoordinate > box.max(axis)) {
+                quadraticA += directionCoordinate * directionCoordinate
+                quadraticB += directionCoordinate * (positionCoordinate - box.max(axis))
             }
         }
-
-        addAxis(sx, box.minX, box.maxX, dx, px)
-        addAxis(sy, box.minY, box.maxY, dy, py)
-        addAxis(sz, box.minZ, box.maxZ, dz, pz)
 
         if (abs(quadraticA) <= GEOMETRY_PARAMETER_EPSILON) {
             evaluate.accept(sample)
@@ -345,7 +431,12 @@ sealed interface LinearGeometry3 {
     }
 }
 
-internal const val GEOMETRY_PARAMETER_EPSILON = 1e-9
+private const val GEOMETRY_PARAMETER_EPSILON = 1e-9
+
+private class BoxIntersectionInterval(
+    @JvmField val enter: Double,
+    @JvmField val exit: Double,
+)
 
 private enum class ParameterDomain(
     @JvmField val lowerBound: Double,
@@ -400,7 +491,17 @@ internal fun requireValidDirection(direction: Vec3) {
     }
 }
 
+private fun DoubleArrayList.addFinite(k: Double) = k.isFinite() && add(k)
+
+private fun DoubleArrayList.sortAndUnique() {
+    this.size(sortAndUnique(this.elements(), this.size))
+}
+
 private fun sortAndUnique(values: DoubleArray, size: Int): Int {
+    if (size <= 1) {
+        return size
+    }
+
     for (index in 1 until size) {
         val value = values[index]
         var insertionIndex = index
@@ -411,10 +512,6 @@ private fun sortAndUnique(values: DoubleArray, size: Int): Int {
         }
 
         values[insertionIndex] = value
-    }
-
-    if (size == 0) {
-        return 0
     }
 
     var uniqueCount = 1
@@ -432,9 +529,9 @@ private fun sortAndUnique(values: DoubleArray, size: Int): Int {
     return uniqueCount
 }
 
-private fun sampleOpenInterval(start: Double, end: Double): Double? {
+private fun sampleOpenInterval(start: Double, end: Double): Double {
     if (start.isFinite() && end.isFinite()) {
-        return if (start < end - GEOMETRY_PARAMETER_EPSILON) (start + end) * 0.5 else null
+        return if (start < end - GEOMETRY_PARAMETER_EPSILON) (start + end) * 0.5 else Double.NaN
     }
 
     if (start.isFinite()) {

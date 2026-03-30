@@ -32,6 +32,7 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import kotlin.math.abs
+import kotlin.math.absoluteValue
 import kotlin.math.hypot
 import kotlin.math.sqrt
 
@@ -64,8 +65,16 @@ fun Vec3i.lengthSqr(): Long {
 
 inline operator fun Vec3.plus(other: Position): Vec3 = add(other.x(), other.y(), other.z())
 
-inline fun Vec3.addScaled(other: Position, scale: Double): Vec3 =
-    add(other.x() * scale, other.y() * scale, other.z() * scale)
+inline val Vec3.absoluteValue: Vec3 get() = Vec3(this.x.absoluteValue, this.y.absoluteValue, this.z.absoluteValue)
+
+/**
+ * @return [this] + [scale] * [other]
+ */
+inline fun Vec3.fma(scale: Double, other: Vec3): Vec3 = Vec3(
+    Math.fma(scale, other.x, this.x),
+    Math.fma(scale, other.y, this.y),
+    Math.fma(scale, other.z, this.z),
+)
 
 inline operator fun Vec3.plus(other: Vec3i): Vec3 = add(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 

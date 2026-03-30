@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.render.asTexture
@@ -117,7 +117,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
         chronometer.reset()
 
         val directionVector = (RotationManager.currentRotation ?: player.rotation).directionVector
-        val pos = player.eyePosition.add(directionVector * player.distanceTo(event.entity).toDouble())
+        val pos = player.eyePosition.fma(player.distanceTo(event.entity).toDouble(), directionVector)
 
         repeat(count.random()) {
             particles.add(Particle(pos, builtinParticles.random()))
