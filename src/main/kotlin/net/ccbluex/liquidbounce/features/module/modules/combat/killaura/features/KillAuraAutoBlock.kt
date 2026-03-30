@@ -139,9 +139,21 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     /**
      * This will decrease our CPS and prioritize blocking.
      */
-    val isPrioritizingBlocking
-        get() = running && prioritizeBlocking && !hasBlockedSinceAttack && blockMode != BlockMode.FAKE &&
-            findBlockableHand() != null && !isInDanger
+    val isPrioritizingBlocking: Boolean
+        get() {
+            // Fixes the deadlock caused by [startBlocking]
+            if (player.isUsingItem) {
+                hasBlockedSinceAttack = true
+            }
+
+            // Check if we cannot prioritize blocking
+            if (!running || !prioritizeBlocking || blockMode == BlockMode.FAKE || findBlockableHand() == null) {
+                return false
+            }
+
+            // If we haven't blocked, and we are in danger, prioritize blocking
+            return !hasBlockedSinceAttack && (!onlyWhenInDanger || isInDanger)
+        }
 
     override fun onDisabled() {
         this.stopBlocking()
@@ -176,6 +188,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         if (player.isUsingItem) {
+            hasBlockedSinceAttack = true
             return false
         }
 
