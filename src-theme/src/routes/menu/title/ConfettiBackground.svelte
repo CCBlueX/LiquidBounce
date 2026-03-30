@@ -18,6 +18,10 @@
     ];
 
     const pieceCount = 84;
+    const columnCount = 42;
+    const horizontalPadding = -8;
+    const horizontalSpread = 116;
+    const goldenStep = 0.61803398875;
 
     const pieces: ConfettiPiece[] = Array.from({length: pieceCount}, (_, index) => createPiece(index));
 
@@ -26,19 +30,30 @@
         return value - Math.floor(value);
     }
 
+    function fractional(value: number) {
+        return value - Math.floor(value);
+    }
+
     function createPiece(index: number): ConfettiPiece {
         const shapeValue = random(index + 11);
         const baseSize = 6 + random(index + 23) * 12;
         const isRound = shapeValue > 0.7;
         const isStreamer = shapeValue < 0.2;
+        const columnWidth = horizontalSpread / columnCount;
+        const column = index % columnCount;
+        const layer = Math.floor(index / columnCount);
 
         const width = isRound ? baseSize : isStreamer ? baseSize * 0.45 : baseSize * 0.72;
         const height = isRound ? baseSize : isStreamer ? baseSize * 1.8 : baseSize * 1.24;
         const borderRadius = isRound ? "999px" : `${1 + random(index + 31) * 4}px`;
         const duration = 7 + random(index + 41) * 9;
-        const delay = -(random(index + 53) * duration);
-        const left = -8 + random(index + 67) * 116;
-        const drift = -180 + random(index + 79) * 360;
+        const delayProgress = fractional(index * goldenStep + random(index + 53) * 0.2);
+        const delay = -(delayProgress * duration);
+        const leftJitter = (random(index + 67) - 0.5) * columnWidth * 0.8;
+        const left = horizontalPadding + (column + 0.5) * columnWidth + leftJitter;
+        const driftDirection = (column + layer) % 2 === 0 ? -1 : 1;
+        const driftMagnitude = 34 + random(index + 79) * 74;
+        const drift = driftDirection * driftMagnitude + (random(index + 149) - 0.5) * 12;
         const opacity = 0.45 + random(index + 83) * 0.35;
         const flip = 240 + random(index + 97) * 540;
         const spinDuration = 1.8 + random(index + 101) * 2.8;
