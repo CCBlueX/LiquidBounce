@@ -82,7 +82,7 @@ class BlockPlacementTargetFindingOptions(
                 val blockPos = vec.toBlockPos()
                 val blockState = world.getBlockState(blockPos)
                 val box = blockState.outlineBox(blockPos)
-                -optimalLine.distanceToSqr(box)
+                -optimalLine.getNearestPointTo(box).distanceSquared
             }
 
         @JvmStatic

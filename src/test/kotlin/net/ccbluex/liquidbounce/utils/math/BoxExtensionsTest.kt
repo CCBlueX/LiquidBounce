@@ -24,6 +24,8 @@ import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class BoxExtensionsTest {
@@ -70,5 +72,27 @@ class BoxExtensionsTest {
                 "distance mismatch for $point",
             )
         }
+    }
+
+    @Test
+    fun `isHitByLine returns true when infinite line crosses box`() {
+        val box = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+        assertTrue(box.isHitByLine(Vec3(-2.0, 0.5, 0.5), Vec3(2.0, 0.5, 0.5)))
+    }
+
+    @Test
+    fun `isHitByLine keeps infinite line semantics when target point is in front of start`() {
+        val box = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+        assertTrue(box.isHitByLine(Vec3(2.0, 0.5, 0.5), Vec3(3.0, 0.5, 0.5)))
+    }
+
+    @Test
+    fun `isHitByLine degenerates to point containment when both points match`() {
+        val box = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+        assertTrue(box.isHitByLine(Vec3(0.5, 0.5, 0.5), Vec3(0.5, 0.5, 0.5)))
+        assertFalse(box.isHitByLine(Vec3(1.5, 0.5, 0.5), Vec3(1.5, 0.5, 0.5)))
     }
 }

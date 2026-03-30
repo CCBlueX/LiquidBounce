@@ -67,9 +67,11 @@ class LeastDifferencePreference(
 
     companion object {
 
-        val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.currentRotation ?: player.rotation)
+        @JvmStatic
+        fun leastDifferenceToCurrentRotation() =
+            LeastDifferencePreference(RotationManager.currentRotation ?: player.rotation)
 
+        @JvmStatic
         fun leastDifferenceToLastPoint(eyes: Vec3, point: Vec3): LeastDifferencePreference {
             return LeastDifferencePreference(Rotation.lookingAt(point, from = eyes), point)
         }
