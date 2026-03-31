@@ -19,15 +19,17 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 object ScaffoldHeadHitterFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "HeadHitter", false) {
-    fun canHeadHit() =
-        !world.getBlockState(player.blockPosition().offset(0, 2, 0)).isAir && player.onGround()
+    private fun canHeadHit() =
+        !player.blockPosition().above(2).collisionShape.isEmpty && player.onGround()
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (canHeadHit() && player.moving) {
             player.jumpFromGround()
         }
