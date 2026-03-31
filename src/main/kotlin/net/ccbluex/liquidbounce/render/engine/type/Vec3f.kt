@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.Vec3
+import org.joml.Vector3fc
 import kotlin.math.sqrt
 
 @Suppress("TooManyFunctions")
@@ -30,6 +31,7 @@ import kotlin.math.sqrt
 data class Vec3f(val x: Float, val y: Float, val z: Float) {
     constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
     constructor(vec: Position) : this(vec.x(), vec.y(), vec.z())
+    constructor(vec: Vector3fc) : this(vec.x(), vec.y(), vec.z())
     constructor(vec: Vec3i) : this(vec.x.toFloat(), vec.y.toFloat(), vec.z.toFloat())
 
     fun add(x: Float, y: Float, z: Float): Vec3f {
