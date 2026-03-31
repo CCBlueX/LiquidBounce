@@ -19,7 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.math.multiply
 
@@ -28,9 +29,9 @@ object ScaffoldAccelerationFeature : ToggleableValueGroup(ModuleScaffold, "Accel
     private val onlyOnGround by boolean("OnlyOnGround", false)
 
     @Suppress("unused")
-    val stateUpdateHandler = tickHandler {
+    val stateUpdateHandler = handler<GameTickEvent> {
         if (onlyOnGround && !player.onGround()) {
-            return@tickHandler
+            return@handler
         }
 
         player.deltaMovement = player.deltaMovement.multiply(factorX = speedMultiplier, factorZ = speedMultiplier)
