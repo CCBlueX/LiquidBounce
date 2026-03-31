@@ -61,8 +61,10 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import kotlin.math.max
 
 private val ITERATION_PROPORTIONS_LOOSE = doubleArrayOf(0.1, 0.5, 0.9)
-private val ITERATION_PROPORTIONS = 0.05..0.95 step 0.1
-private val ITERATION_PROPORTIONS_PRECISE = 0.05..0.95 step 0.05
+private val ITERATION_PROPORTIONS = doubleArrayOf(0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95)
+private val ITERATION_PROPORTIONS_PRECISE = doubleArrayOf(
+    0.05, 0.1, 0.15, 0.2, 0.25, 0.30, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95
+)
 
 fun raytraceBlockRotation(
     eyes: Vec3,
@@ -285,18 +287,20 @@ internal fun raytraceBlockSideBoxes(
     for (box in boxes) {
         val boxWithOffset = box + offset
 
-        range(ITERATION_PROPORTIONS, ITERATION_PROPORTIONS) { a, b ->
-            val spot = boxWithOffset.samplePointOnSide(side, a, b)
+        for (a in ITERATION_PROPORTIONS) {
+            for (b in ITERATION_PROPORTIONS) {
+                val spot = boxWithOffset.samplePointOnSide(side, a, b)
 
-            bestRotationTracker.considerSpot(
-                spot,
-                boxWithOffset,
-                eyes,
-                visibilityPredicate,
-                rangeSquared,
-                wallsRangeSquared,
-                spot,
-            )
+                bestRotationTracker.considerSpot(
+                    spot,
+                    boxWithOffset,
+                    eyes,
+                    visibilityPredicate,
+                    rangeSquared,
+                    wallsRangeSquared,
+                    spot,
+                )
+            }
         }
     }
 
@@ -493,8 +497,12 @@ private inline fun scanBoxPoints(
 
     // We cannot project points on something if we are inside the hitbox
     if (!isOutsideBox) {
-        range(ITERATION_PROPORTIONS, ITERATION_PROPORTIONS, ITERATION_PROPORTIONS) { x, y, z ->
-            fn(box.pointAtProportion(x, y, z))
+        for (x in ITERATION_PROPORTIONS) {
+            for (y in ITERATION_PROPORTIONS) {
+                for (z in ITERATION_PROPORTIONS) {
+                    fn(box.pointAtProportion(x, y, z))
+                }
+            }
         }
     }
 }
@@ -519,30 +527,32 @@ fun raytraceUpperBlockSide(
     val bestRotationTracker = BestRotationTracker(rotationPreference)
 
     val proportions = rotationsNotToMatch?.let { ITERATION_PROPORTIONS_PRECISE } ?: ITERATION_PROPORTIONS
-    range(proportions, proportions) { x, z ->
-        val vec3 = vec3d.add(x, 0.9, z)
+    for (x in proportions) {
+        for (z in proportions) {
+            val vec3 = vec3d.add(x, 0.9, z)
 
-        // skip because of out of range
-        val distance = eyes.distanceToSqr(vec3)
+            // skip because of out of range
+            val distance = eyes.distanceToSqr(vec3)
 
-        if (distance > rangeSquared) {
-            return@range
+            if (distance > rangeSquared) {
+                continue
+            }
+
+            // check if target is visible to eyes
+            val visible = player.isFacingBlock(eyes, vec3, expectedTarget, Direction.UP)
+
+            // skip because not visible in range
+            if (!visible && distance > wallsRangeSquared) {
+                continue
+            }
+
+            val rotation = Rotation.lookingAt(point = vec3, from = eyes)
+            if (rotationsNotToMatch != null && rotation in rotationsNotToMatch) {
+                continue
+            }
+
+            bestRotationTracker.considerRotation(RotationWithVector(rotation, vec3), visible)
         }
-
-        // check if target is visible to eyes
-        val visible = player.isFacingBlock(eyes, vec3, expectedTarget, Direction.UP)
-
-        // skip because not visible in range
-        if (!visible && distance > wallsRangeSquared) {
-            return@range
-        }
-
-        val rotation = Rotation.lookingAt(point = vec3, from = eyes)
-        if (rotationsNotToMatch != null && rotation in rotationsNotToMatch) {
-            return@range
-        }
-
-        bestRotationTracker.considerRotation(RotationWithVector(rotation, vec3), visible)
     }
 
     return bestRotationTracker.bestVisible ?: bestRotationTracker.bestInvisible
