@@ -42,8 +42,10 @@ import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.pointAtProportion
 import net.ccbluex.liquidbounce.utils.math.samplePointOnSide
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.toSortedAabbs
 import net.ccbluex.liquidbounce.utils.raytracing.clip
 import net.ccbluex.liquidbounce.utils.raytracing.isFacingBlock
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
@@ -58,6 +60,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import kotlin.math.max
 
+private val ITERATION_PROPORTIONS_LOOSE = doubleArrayOf(0.1, 0.5, 0.9)
 private val ITERATION_PROPORTIONS = 0.05..0.95 step 0.1
 private val ITERATION_PROPORTIONS_PRECISE = 0.05..0.95 step 0.05
 
@@ -70,7 +73,7 @@ fun raytraceBlockRotation(
 ): RotationWithVector? {
     val outlineShape = state.getShape(world, pos, CollisionContext.of(player))
 
-    for (box in outlineShape.toAabbs().sortedByDescending { it.size }) {
+    for (box in outlineShape.toSortedAabbs()) {
         val boxWithOffset = box.move(pos)
         return raytraceBox(
             eyes,
@@ -103,18 +106,16 @@ fun canSeeUpperBlockSide(
     val y = pos.y + 0.99
     val minZ = pos.z.toDouble()
 
-    val rangeXZ = doubleArrayOf(0.1, 0.5, 0.9)
-
-    for (x in rangeXZ) {
-        for (z in rangeXZ) {
-            val vec3 = Vec3(minX + x, y, minZ + z)
-
+    for (x in ITERATION_PROPORTIONS_LOOSE) {
+        for (z in ITERATION_PROPORTIONS_LOOSE) {
             // skip because of out of range
-            val distance = eyes.distanceToSqr(vec3)
+            val distance = eyes.distanceToSqr(minX + x, y, minZ + z)
 
             if (distance > rangeSquared) {
                 continue
             }
+
+            val vec3 = Vec3(minX + x, y, minZ + z)
 
             // check if target is visible to eyes
             val visible = player.isFacingBlock(eyes, vec3, pos, Direction.UP)
@@ -174,10 +175,9 @@ private class PrePlaningTracker(
     ignoreVisibility: Boolean = false
 ) : BestRotationTracker(comparator, ignoreVisibility) {
 
-    private val eyes = player.eyePosition
-
     override fun getIsRotationBetter(base: RotationWithVector?, newRotation: RotationWithVector,
                                      visible: Boolean): Boolean {
+        val eyes = player.eyePosition
         val currentIntersects = base?.let { futureTarget.isHitByLine(eyes, it.vec) } ?: false
         val intersects = futureTarget.isHitByLine(eyes, newRotation.vec)
 
@@ -251,8 +251,7 @@ fun raytraceBlockSide(
     collisionContext: CollisionContext,
 ): RotationWithVector? {
     pos.state?.getShape(world, pos, collisionContext)?.let { shape ->
-        val sortedShapes = shape.toAabbs().sortedByDescending { it.size }
-        for (boxShape in sortedShapes) {
+        for (boxShape in shape.toSortedAabbs()) {
             val box = boxShape.move(pos)
             val visibilityPredicate = VisibilityPredicate.Outline
 
@@ -446,13 +445,7 @@ private inline fun scanBoxPoints(
     // We cannot project points on something if we are inside the hitbox
     if (!isOutsideBox) {
         range(ITERATION_PROPORTIONS, ITERATION_PROPORTIONS, ITERATION_PROPORTIONS) { x, y, z ->
-            val vec3 = Vec3(
-                box.minX + box.xsize * x,
-                box.minY + box.ysize * y,
-                box.minZ + box.zsize * z,
-            )
-
-            fn(vec3)
+            fn(box.pointAtProportion(x, y, z))
         }
     }
 }
