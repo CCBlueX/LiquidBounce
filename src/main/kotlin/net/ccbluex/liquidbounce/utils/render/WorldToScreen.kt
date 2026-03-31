@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.render
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.set
@@ -63,7 +64,11 @@ object WorldToScreen {
         val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
             .mul(guiScaleMul * mc.mainRenderTarget.width, guiScaleMul * mc.mainRenderTarget.height, 1.0F)
 
-        return if (transformedPos.z < 1.0F) Vec3f(screenPos.x, screenPos.y, transformedPos.z) else null
+        return if (screenPos.x.isFinite() && screenPos.y.isFinite() && screenPos.z.isFinite() && screenPos.z < 1.0F) {
+            Vec3f(screenPos)
+        } else {
+            null
+        }
     }
 
     @JvmStatic
