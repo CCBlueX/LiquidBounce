@@ -232,20 +232,25 @@ fun sendPacketSilently(packet: Packet<*>) {
     mc.connection?.connection?.send(packetEvent.packet, null)
 }
 
-enum class MovePacketType(override val tag: String, val generatePacket: () -> ServerboundMovePlayerPacket)
-    : Tagged {
-    ON_GROUND_ONLY("OnGroundOnly", {
-        ServerboundMovePlayerPacket.StatusOnly(player.onGround(), player.horizontalCollision)
-    }),
-    POSITION_AND_ON_GROUND("PositionAndOnGround", {
-        ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, player.onGround(),
-            player.horizontalCollision)
-    }),
-    LOOK_AND_ON_GROUND("LookAndOnGround", {
-        ServerboundMovePlayerPacket.Rot(player.yRot, player.xRot, player.onGround(), player.horizontalCollision)
-    }),
-    FULL("Full", {
-        ServerboundMovePlayerPacket.PosRot(player.x, player.y, player.z, player.yRot, player.xRot, player.onGround(),
-            player.horizontalCollision)
-    });
+enum class MovePacketType(override val tag: String) : Tagged {
+    ON_GROUND_ONLY("OnGroundOnly") {
+        override fun generatePacket() =
+            ServerboundMovePlayerPacket.StatusOnly(player.onGround(), player.horizontalCollision)
+    },
+    POSITION_AND_ON_GROUND("PositionAndOnGround") {
+        override fun generatePacket() =
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z,
+                player.onGround(), player.horizontalCollision)
+    },
+    LOOK_AND_ON_GROUND("LookAndOnGround") {
+        override fun generatePacket() =
+            ServerboundMovePlayerPacket.Rot(player.yRot, player.xRot, player.onGround(), player.horizontalCollision)
+    },
+    FULL("Full") {
+        override fun generatePacket() =
+            ServerboundMovePlayerPacket.PosRot(player.x, player.y, player.z,
+                player.yRot, player.xRot, player.onGround(), player.horizontalCollision)
+    };
+
+    abstract fun generatePacket(): ServerboundMovePlayerPacket
 }
