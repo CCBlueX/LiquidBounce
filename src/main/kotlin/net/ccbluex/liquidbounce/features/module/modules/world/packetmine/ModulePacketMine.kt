@@ -83,7 +83,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
     }
 
     val keepRange by float("KeepRange", 25f, 0f..200f).onChange {
-        maxOf(wallsRange, it)
+        maxOf(range, it)
     }
 
     val swingMode by enumChoice("Swing", SwingMode.HIDE_CLIENT)
