@@ -79,11 +79,11 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
     private val range by float("Range", 4.5f, 1f..6f)
     private val wallsRange by float("WallsRange", 4.5f, 0f..6f).onChange {
-        it.coerceAtLeast(range)
+        minOf(range, it)
     }
 
     val keepRange by float("KeepRange", 25f, 0f..200f).onChange {
-        it.coerceAtLeast(wallsRange)
+        maxOf(range, it)
     }
 
     val swingMode by enumChoice("Swing", SwingMode.HIDE_CLIENT)

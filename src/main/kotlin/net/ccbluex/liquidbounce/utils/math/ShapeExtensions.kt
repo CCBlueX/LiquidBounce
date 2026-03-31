@@ -27,6 +27,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.BooleanOp
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
+import java.util.function.ToDoubleFunction
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -49,6 +50,17 @@ fun VoxelShape.boundsOrNull(): AABB? = if (isEmpty) null else bounds()
 
 fun VoxelShape.distanceToSqr(position: Vec3): Double =
     this.closestPointTo(position).orElse(null)?.distanceToSqr(position) ?: Double.POSITIVE_INFINITY
+
+private val AABB_BIGGER_FIRST = Comparator.comparingDouble(ToDoubleFunction(AABB::getSize)).reversed()
+
+/**
+ * Order: bigger first
+ */
+fun VoxelShape.toSortedAabbs(): MutableList<AABB> {
+    val list: MutableList<AABB> = this.toAabbs() // -> ArrayList
+    list.sortWith(AABB_BIGGER_FIRST)
+    return list
+}
 
 fun VoxelShape.clipAllBoxes(
     base: BlockPos,

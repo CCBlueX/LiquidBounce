@@ -122,12 +122,17 @@ fun AABB.samplePointOnSide(side: Direction, a: Double, b: Double): Vec3 {
         Direction.EAST -> Vec3(1.0, a, b)
     }
 
-    return Vec3(
-        minX + spot.x * xsize,
-        minY + spot.y * ysize,
-        minZ + spot.z * zsize,
-    )
+    return pointAtProportion(spot.x, spot.y, spot.z)
 }
+
+fun AABB.pointAtProportion(p: Double): Vec3 =
+    pointAtProportion(p, p, p)
+
+fun AABB.pointAtProportion(pX: Double, pY: Double, pZ: Double): Vec3 = Vec3(
+    Math.fma(xsize, pX, minX),
+    Math.fma(ysize, pY, minY),
+    Math.fma(zsize, pZ, minZ),
+)
 
 private fun AABB.pointOnSide(x: Double, y: Double, z: Double, side: Direction): Vec3 =
     when (side) {

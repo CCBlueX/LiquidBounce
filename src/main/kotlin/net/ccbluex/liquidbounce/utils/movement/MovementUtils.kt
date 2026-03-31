@@ -158,19 +158,19 @@ private fun collectCollisionBoundingBoxes(
 
         val collisionShape = state.getCollisionShape(world, pos)
 
-        for (boundingBox in collisionShape.toAabbs()) {
+        collisionShape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
             val adjustedBox =
                 AABB(
-                    boundingBox.minX - 0.3,
-                    boundingBox.minY - 1.0,
-                    boundingBox.minZ - 0.3,
-                    boundingBox.maxX + 0.3,
-                    boundingBox.maxY + allowedDropDown + 0.05,
-                    boundingBox.maxZ + 0.3,
+                    minX - 0.3,
+                    minY - 1.0,
+                    minZ - 0.3,
+                    maxX + 0.3,
+                    maxY + allowedDropDown + 0.05,
+                    maxZ + 0.3,
                 ).move(pos)
 
             if (adjustedBox.clip(extendedFrom, extendedTo).isEmpty) {
-                continue
+                return@forAllBoxes
             }
 
             foundBoxes.add(adjustedBox)
