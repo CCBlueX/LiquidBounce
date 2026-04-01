@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
@@ -43,8 +44,10 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.WeaponType
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isSword
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Item
@@ -87,7 +90,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     }
 
     private object Strength : ToggleableValueGroup(this, "StrengthPotion", false) {
-        val onlyWhileHoldingSword by boolean("OnlyWhileHoldingSword", true)
+        val weaponTypes by multiEnumChoice("WeaponTypes", enumSetOf(WeaponType.SWORD), canBeNone = false)
         val onlyWhileKa by boolean("OnlyWhileKillAura", true)
         val strengthBind by key("StrengthBind")
     }
@@ -273,7 +276,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
                     return false
                 }
 
-                return player.mainHandItem.isSword || !Strength.onlyWhileHoldingSword
+                return Strength.weaponTypes.matchesAny(player.mainHandItem)
             }
         },
         GAPPLE("Gapple", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE) {
