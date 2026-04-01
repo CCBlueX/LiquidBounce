@@ -87,6 +87,8 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         val onlyWhileCa by boolean("OnlyWhileCrystalAura", false)
         val whenNoTotems by boolean("WhenNoTotems", true)
         val crystalBind by key("CrystalBind")
+
+        fun canBeSelected(): Boolean = enabled && (!onlyWhileCa || ModuleCrystalAura.running)
     }
 
     private object Strength : ToggleableValueGroup(this, "StrengthPotion", false) {
@@ -167,7 +169,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
 
     @Suppress("unused")
     private val autoTotemHandler = handler<ScheduleInventoryActionEvent>(priority = 100) {
-        activeMode = Mode.entries.firstOrNull(Mode::shouldEquip) ?: staticMode
+        activeMode = Mode.entries.firstOrNull(Mode::shouldEquip) ?: staticMode.takeIf(Mode::isAvailable) ?: Mode.NONE
         if (activeMode == Mode.NONE && Totem.Health.switchBack && lastMode == Mode.TOTEM) {
             activeMode = Mode.BACK
         }
@@ -258,7 +260,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
 
             override fun getSlot(): ItemSlot? {
                 val slot = super.getSlot()
-                if (slot == null && Crystal.enabled && Crystal.whenNoTotems) {
+                if (slot == null && Crystal.whenNoTotems && CRYSTAL.isAvailable()) {
                     return CRYSTAL.getSlot()
                 }
 
@@ -299,7 +301,9 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             override fun canCycleTo() = Gapple.enabled
         },
         CRYSTAL("Crystal", Items.END_CRYSTAL) {
-            override fun canCycleTo() = Crystal.enabled && (!Crystal.onlyWhileCa || ModuleCrystalAura.running)
+            override fun isAvailable() = Crystal.canBeSelected()
+
+            override fun canCycleTo() = isAvailable()
         },
         BLOCK("Block", ScaffoldBlockItemSelection::isValidBlock) {
             override fun shouldEquip(): Boolean =
@@ -330,6 +334,8 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         open fun getDelay() = switchDelay
 
         open fun canCycleTo() = false
+
+        open fun isAvailable() = true
 
         /**
          * 0 = Main inventory
