@@ -204,8 +204,13 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             return@handler
         }
 
-        if (Totem.Health.switchBack) {
-            last = slot.itemStack.item to slot
+        if (Totem.Health.switchBack && activeMode == Mode.TOTEM) {
+            val previousOffhand = OffHandSlot.itemStack
+            last = if (previousOffhand.isEmpty) {
+                null
+            } else {
+                previousOffhand.item to slot
+            }
         }
 
         val actions = switchMode.performSwitch(slot)
