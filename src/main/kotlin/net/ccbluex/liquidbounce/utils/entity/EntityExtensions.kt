@@ -35,10 +35,12 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.math.anyNotEmpty
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.iterateBottomLayerBlockPos
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.allEmpty
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.client.player.ClientInput
@@ -79,7 +81,6 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.EntityCollisionContext
-import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.scores.DisplaySlot
 import kotlin.math.cos
 import kotlin.math.floor
@@ -259,11 +260,8 @@ fun LocalPlayer.canStep(height: Double = 1.0): Boolean {
     val offsetBox = box.move(xOffset, 0.0, zOffset)
     val stepBox = offsetBox.move(0.0, height, 0.0)
 
-    return this.level().getBlockCollisions(this, stepBox).all { shape ->
-        shape == Shapes.empty()
-    } && this.level().getBlockCollisions(this, offsetBox).all { shape ->
-        shape != Shapes.empty()
-    }
+    return this.level().getBlockCollisions(this, stepBox).allEmpty()
+        && this.level().getBlockCollisions(this, offsetBox).anyNotEmpty()
 }
 
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput = DirectionalInput(player.input)): Float {
@@ -621,15 +619,14 @@ fun Entity.doesNotCollideBelow(until: Double = -64.0): Boolean {
     }
 
     val offsetBb = boundingBox.setMinY(until)
-    return this.level().getBlockCollisions(this, offsetBb)
-        .all(Shapes.empty()::equals)
+    return this.level().getBlockCollisions(this, offsetBb).allEmpty()
 }
 
 /**
  * Check if the entity box collides with any block in the world at the given [pos].
  */
 fun Entity.doesCollideAt(pos: Vec3 = player.position()): Boolean {
-    return !this.level().getBlockCollisions(this, getBoundingBoxAt(pos)).all(Shapes.empty()::equals)
+    return !this.level().getBlockCollisions(this, getBoundingBoxAt(pos)).allEmpty()
 }
 
 /**
@@ -648,8 +645,7 @@ fun Entity.wouldFallIntoVoid(pos: Vec3, voidLevel: Double = -64.0, safetyExpand:
         .setMinY(voidLevel)
         // Expand the bounding box to check if there might be blocks to safely land on
         .inflate(safetyExpand, 0.0, safetyExpand)
-    return this.level().getBlockCollisions(this, boundingBox)
-        .all(Shapes.empty()::equals)
+    return this.level().getBlockCollisions(this, boundingBox).allEmpty()
 }
 
 

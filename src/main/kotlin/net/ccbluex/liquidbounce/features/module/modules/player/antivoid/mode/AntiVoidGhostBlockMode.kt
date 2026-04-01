@@ -41,7 +41,7 @@ object AntiVoidGhostBlockMode : AntiVoidMode("GhostBlock") {
 
         // We only want to place a fake-block collision below the player if the collision shape is empty.
         var safePosition = rescuePosition
-        if (event.shape != Shapes.empty() || safePosition == null || event.pos.y >= floor(safePosition.y)) {
+        if (!event.shape.isEmpty || safePosition == null || event.pos.y >= floor(safePosition.y)) {
             return@handler
         }
 

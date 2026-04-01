@@ -34,10 +34,10 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.anyNotEmpty
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * NCP Clip Fly
@@ -200,13 +200,9 @@ object FlyNcpClip : Mode("NcpClip") {
      * Check if there is a vertical collision possible above the player
      */
     private fun collidesVertical() =
-        world.getBlockCollisions(player, player.boundingBox.move(0.0, 0.5, 0.0)).any { shape ->
-            shape != Shapes.empty()
-        }
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, 0.5, 0.0)).anyNotEmpty()
 
     private fun collidesBottomVertical() =
-        world.getBlockCollisions(player, player.boundingBox.move(0.0, -0.4, 0.0)).any { shape ->
-            shape != Shapes.empty()
-        }
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, -0.4, 0.0)).anyNotEmpty()
 
 }

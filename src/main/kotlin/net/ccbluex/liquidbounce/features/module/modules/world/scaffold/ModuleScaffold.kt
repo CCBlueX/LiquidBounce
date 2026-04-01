@@ -90,6 +90,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.allEmpty
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
@@ -107,7 +108,6 @@ import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
-import net.minecraft.world.phys.shapes.Shapes
 import kotlin.math.abs
 
 /**
@@ -288,10 +288,10 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             // In this case we expand the bounding box by 0.5 in all directions and check if there is a collision
             // This might cause for "Spider-like" behavior, but it's the most reliable way to check
             // and usually the scaffold should start placing blocks
-            return world.getBlockCollisions(
+            return !world.getBlockCollisions(
                 player,
                 player.boundingBox.inflate(0.5, 0.0, 0.5).move(0.0, -1.05, 0.0)
-            ).any { shape -> shape != Shapes.empty() }
+            ).allEmpty()
         }
 
     /**
