@@ -43,6 +43,19 @@ inline fun VoxelShape.ifEmpty(defaultValue: () -> VoxelShape): VoxelShape {
 
 inline fun VoxelShape?.orEmpty(): VoxelShape = this ?: Shapes.empty()
 
+fun Iterable<VoxelShape>.allEmpty(): Boolean {
+    if (this is Collection && isEmpty()) return true
+
+    val iterator = this.iterator()
+    while (iterator.hasNext()) {
+        val element = iterator.next()
+        if (!element.isEmpty) return false
+    }
+    return true
+}
+
+fun Iterable<VoxelShape>.anyNotEmpty(): Boolean = any { !it.isEmpty }
+
 /**
  * @return null if shape is empty
  */
@@ -109,7 +122,7 @@ fun VoxelShape.clipAllBoxes(
 @Suppress("CognitiveComplexMethod")
 fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelShape {
     return when {
-        this.isEmpty -> Shapes.empty()
+        this.isEmpty -> this
         this == Shapes.block() -> Shapes.box(
             x, y, z,
             1.0 - x, 1.0 - y, 1.0 - z
