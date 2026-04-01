@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -38,6 +39,8 @@ import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
 import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.liquidbounce.utils.combat.getEntitiesInCuboid
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
@@ -49,12 +52,22 @@ import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.core.component.DataComponents
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.world.item.component.KineticWeapon
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.phys.EntityHitResult
+import net.minecraft.world.phys.Vec3
 import org.lwjgl.glfw.GLFW
+import java.util.Optional
 import java.util.function.Predicate
+import kotlin.math.max
 
 /**
  * Offhand module
@@ -102,9 +115,235 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         val whileEagle by boolean("WhileEagle", true)
     }
 
+    private object Spear : ToggleableValueGroup(ModuleOffhand, "Spear", false) {
+        private enum class ConditionType(override val tag: String) : Tagged {
+            DAMAGE("Damage"),
+            KNOCKBACK("Knockback"),
+            DISMOUNT("Dismount"),
+            ANY("Any"),
+        }
+
+        private data class RestorableOffhand(val stack: ItemStack, val slot: ItemSlot)
+
+        private object TargetWindow : ToggleableValueGroup(this, "TargetWindow", true) {
+            val conditionType by enumChoice("ConditionType", ConditionType.DAMAGE)
+            val useCurrentAttackLine by boolean("UseCurrentAttackLine", true)
+        }
+
+        val whileFallFlying by boolean("WhileFallFlying", true)
+        val whileRiding by boolean("WhileRiding", true)
+        val minLookSpeed by float("MinLookSpeed", 4.6f, 0f..40f)
+        val minHorizontalSpeed by float("MinHorizontalSpeed", 0.0f, 0f..40f)
+        val lockWhileUsing by boolean("LockWhileUsing", true)
+        val holdMs by int("HoldMs", 150, 0..1000, "ms")
+        val switchBack by boolean("SwitchBack", true)
+
+        private val hold = Chronometer()
+        // Snapshot the replaced offhand item so transient trigger loss can switch back cleanly.
+        private var restoreSnapshot: RestorableOffhand? = null
+        private var restorePending = false
+
+        init {
+            tree(TargetWindow)
+        }
+
+        fun resetState() {
+            hold.reset(0)
+            restoreSnapshot = null
+            restorePending = false
+        }
+
+        fun rememberOffhandSnapshot(targetSlot: ItemSlot) {
+            // Only remember the previous offhand when kinetic mode actively takes it over.
+            if (!switchBack || targetSlot === OffHandSlot) {
+                restoreSnapshot = null
+                return
+            }
+
+            val previousOffhand = OffHandSlot.itemStack
+            restoreSnapshot = if (previousOffhand.isEmpty || previousOffhand.has(DataComponents.KINETIC_WEAPON)) {
+                null
+            } else {
+                RestorableOffhand(previousOffhand.copy(), targetSlot)
+            }
+        }
+
+        fun onSwitchCompleted(targetSlot: ItemSlot) {
+            if (restorePending && restoreSnapshot?.slot == targetSlot) {
+                restorePending = false
+                restoreSnapshot = null
+                hold.reset(0)
+            }
+        }
+
+        fun shouldEquip(): Boolean {
+            if (!enabled || player.isCreative || player.isSpectator || player.isDeadOrDying) {
+                restorePending = false
+                return false
+            }
+
+            val candidateSlot = getCandidateSlot() ?: run {
+                restorePending = false
+                return false
+            }
+
+            if (isLockingCurrentUse()) {
+                restorePending = false
+                hold.reset()
+                return true
+            }
+
+            val selfMotion = getSelfMotion()
+            val selfLookSpeed = player.lookAngle.dot(selfMotion)
+
+            val hasSelfTrigger =
+                (whileFallFlying && player.isFallFlying)
+                    || (whileRiding && player.vehicle != null)
+                    || (minLookSpeed > 0f && selfLookSpeed >= minLookSpeed)
+                    || (minHorizontalSpeed > 0f && selfMotion.horizontalDistance() >= minHorizontalSpeed)
+
+            if (hasSelfTrigger) {
+                val currentKineticWeapon = candidateSlot.itemStack[DataComponents.KINETIC_WEAPON] ?: return false
+                if (!TargetWindow.enabled || hasMatchingTarget(currentKineticWeapon, selfLookSpeed)) {
+                    restorePending = false
+                    hold.reset()
+                    return true
+                }
+            }
+
+            if (lastMode != Mode.KINETIC_WEAPON) {
+                restorePending = false
+                return false
+            }
+
+            // Hold the offhand briefly after the raw trigger drops to avoid speed-threshold flicker.
+            if (!hold.hasAtLeastElapsed(holdMs.toLong())) {
+                return true
+            }
+
+            restorePending = switchBack && canRestoreSnapshot()
+            return restorePending
+        }
+
+        fun getSwitchSlot(): ItemSlot? {
+            if (!restorePending) {
+                return null
+            }
+
+            val snapshot = restoreSnapshot ?: return null
+            return snapshot.slot.takeIf { ItemStack.isSameItemSameComponents(snapshot.stack, it.itemStack) }
+        }
+
+        private fun isLockingCurrentUse(): Boolean {
+            // Do not pull the weapon away while an offhand kinetic use is already in progress.
+            return lockWhileUsing
+                && player.isUsingItem
+                && player.usingItemHand === InteractionHand.OFF_HAND
+                && player.useItem.has(DataComponents.KINETIC_WEAPON)
+        }
+
+        private fun getCandidateSlot(): ItemSlot? {
+            if (OffHandSlot.itemStack.has(DataComponents.KINETIC_WEAPON)) {
+                return OffHandSlot
+            }
+
+            return INVENTORY_HOTBAR_PRIORITY.findSlot { it.has(DataComponents.KINETIC_WEAPON) }
+        }
+
+        /**
+         * Mirrors vanilla kinetic motion checks by using mounted movement when the player has a vehicle.
+         *
+         * @see net.minecraft.world.item.component.KineticWeapon.getMotion
+         */
+        private fun getSelfMotion(): Vec3 {
+            val motionOwner = player.rootVehicle.takeIf { player.vehicle != null } ?: player
+            return motionOwner.deltaMovement.scale(20.0)
+        }
+
+        private fun hasMatchingTarget(kineticWeapon: KineticWeapon, selfLookSpeed: Double): Boolean {
+            val targets = if (TargetWindow.useCurrentAttackLine) {
+                getTargetsOnCurrentAttackLine()
+            } else {
+                getTargetsInCurrentAttackRange()
+            }
+
+            return targets.any { target ->
+                val targetLookSpeed = player.lookAngle.dot(target.deltaMovement.scale(20.0))
+                val relativeSpeed = max(0.0, selfLookSpeed - targetLookSpeed)
+                matchesCondition(kineticWeapon, selfLookSpeed, relativeSpeed)
+            }
+        }
+
+        /**
+         * Reuses the current attack line as a lightweight approximation of vanilla forward hit discovery.
+         *
+         * @see net.minecraft.world.item.component.KineticWeapon.damageEntities
+         */
+        private fun getTargetsOnCurrentAttackLine(): Set<LivingEntity> {
+            val hits = ProjectileUtil.getHitEntitiesAlong(
+                player,
+                player.entityAttackRange(),
+                ::isValidTarget,
+                ClipContext.Block.COLLIDER
+            ).right().orElse(emptyList()).ifEmpty { return emptySet() }
+
+            val entities = ReferenceOpenHashSet<LivingEntity>(hits.size)
+            for (entityHitResult in hits) {
+                val entity = entityHitResult.entity
+                if (entity is LivingEntity) entities.add(entity)
+            }
+
+            return entities
+        }
+
+        private fun getTargetsInCurrentAttackRange(): List<LivingEntity> {
+            val attackRange = player.entityAttackRange()
+            val maxRange = attackRange.effectiveMaxRange(player).toDouble()
+
+            @Suppress("UNCHECKED_CAST")
+            return world.getEntitiesInCuboid(player.eyePosition, maxRange) { entity ->
+                isValidTarget(entity) && attackRange.isInRange(player, entity.boundingBox, 0.0)
+            } as List<LivingEntity>
+        }
+
+        private fun isValidTarget(entity: Entity): Boolean {
+            return entity is LivingEntity && entity.shouldBeAttacked()
+        }
+
+        /**
+         * Tests the selected kinetic condition at duration `0` because this mode only preselects the offhand item.
+         *
+         * @see net.minecraft.world.item.component.KineticWeapon.Condition.test
+         */
+        private fun matchesCondition(
+            kineticWeapon: KineticWeapon,
+            selfLookSpeed: Double,
+            relativeSpeed: Double,
+        ): Boolean {
+            fun Optional<KineticWeapon.Condition>.matches() =
+                isPresent && get().test(0, selfLookSpeed, relativeSpeed, 1.0)
+
+            return when (TargetWindow.conditionType) {
+                ConditionType.DAMAGE -> kineticWeapon.damageConditions.matches()
+                ConditionType.KNOCKBACK -> kineticWeapon.knockbackConditions.matches()
+                ConditionType.DISMOUNT -> kineticWeapon.dismountConditions.matches()
+                ConditionType.ANY ->
+                    kineticWeapon.damageConditions.matches()
+                        || kineticWeapon.knockbackConditions.matches()
+                        || kineticWeapon.dismountConditions.matches()
+            }
+        }
+
+        private fun canRestoreSnapshot(): Boolean {
+            val snapshot = restoreSnapshot ?: return false
+            return ItemStack.isSameItemSameComponents(snapshot.stack, snapshot.slot.itemStack)
+        }
+    }
+
     init {
         treeAll(
             Totem,
+            Spear,
             Crystal,
             Gapple,
             Strength,
@@ -125,12 +364,22 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         get() = activeMode.modeName
 
     override fun onEnabled() {
+        Spear.resetState()
         staticMode = when {
             Crystal.enabled && Mode.CRYSTAL.canCycleTo() -> Mode.CRYSTAL
             Gapple.enabled -> Mode.GAPPLE
             Totem.enabled && !Totem.Health.enabled -> Mode.TOTEM
             else -> Mode.NONE
         }
+    }
+
+    override fun onDisabled() {
+        activeMode = Mode.NONE
+        lastMode = null
+        lastTagMode = Mode.NONE
+        staticMode = Mode.NONE
+        last = null
+        Spear.resetState()
     }
 
     @Suppress("unused")
@@ -169,6 +418,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
 
     @Suppress("unused")
     private val autoTotemHandler = handler<ScheduleInventoryActionEvent>(priority = 100) {
+        val previousMode = lastMode
         activeMode = Mode.entries.firstOrNull(Mode::shouldEquip) ?: staticMode.takeIf(Mode::isAvailable) ?: Mode.NONE
         if (activeMode == Mode.NONE && Totem.Health.switchBack && lastMode == Mode.TOTEM) {
             activeMode = Mode.BACK
@@ -179,7 +429,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             lastTagMode = activeMode
         }
 
-        if (activeMode != lastMode && lastMode == Mode.TOTEM) {
+        if (activeMode != previousMode && previousMode == Mode.TOTEM) {
             if (!Totem.switchBackStarted) {
                 Totem.switchBack.reset()
             }
@@ -213,14 +463,25 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             }
         }
 
+        if (activeMode == Mode.KINETIC_WEAPON && previousMode != Mode.KINETIC_WEAPON) {
+            Spear.rememberOffhandSnapshot(slot)
+        }
+
         val actions = switchMode.performSwitch(slot)
         if (actions.isEmpty()) {
+            if (activeMode == Mode.KINETIC_WEAPON) {
+                Spear.onSwitchCompleted(slot)
+            }
             chronometer.reset()
             return@handler
         }
 
         if (activeMode != Mode.TOTEM || !Totem.send(actions)) {
             it.schedule(inventoryConstraints, actions)
+        }
+
+        if (activeMode == Mode.KINETIC_WEAPON) {
+            Spear.onSwitchCompleted(slot)
         }
 
         chronometer.reset()
@@ -273,6 +534,13 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             }
 
             override fun canCycleTo() = Totem.enabled
+        },
+        KINETIC_WEAPON("Spear", Predicate { it.has(DataComponents.KINETIC_WEAPON) }) {
+            override fun shouldEquip() = Spear.shouldEquip()
+
+            override fun getPrioritizedInventoryPart() = 1
+
+            override fun getSlot(): ItemSlot? = Spear.getSwitchSlot() ?: super.getSlot()
         },
         STRENGTH("Strength", Predicate { stack ->
             stack.`is`(Items.POTION) && stack.getPotionEffects().any { it.effect == MobEffects.STRENGTH }
