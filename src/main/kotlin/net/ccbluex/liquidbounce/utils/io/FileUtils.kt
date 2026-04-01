@@ -54,19 +54,6 @@ fun RandomAccessFile.skipLine(): Long {
     return read
 }
 
-@JvmField
-val ILLEGAL_FILE_NAME_CHARS_WINDOWS = BitSet(128).apply {
-    set('\\'.code)
-    set('/'.code)
-    set(':'.code)
-    set('*'.code)
-    set('?'.code)
-    set('"'.code)
-    set('<'.code)
-    set('>'.code)
-    set('|'.code)
-}
-
 @Suppress("ThrowsCount")
 @Throws(IOException::class, IllegalArgumentException::class)
 fun BufferedSource.ensurePngOrConvertJpeg(): BufferedSource {
