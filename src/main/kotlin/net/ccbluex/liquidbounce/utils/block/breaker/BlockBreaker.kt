@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.HitResult
+import java.util.function.BooleanSupplier
 import kotlin.math.max
 
 /**
@@ -56,23 +57,30 @@ class BlockBreaker(
     name: String,
     private val owner: EventListener,
     private val defaultPriority: Priority = Priority.IMPORTANT_FOR_USAGE_1,
+    private val ignoreOpenInventorySupplier: BooleanSupplier? = null,
 ) : ValueGroup(name), EventListener, MinecraftShortcuts {
 
     val range by float("Range", 5f, 1f..6f)
     val wallRange by float("WallRange", 0f, 0f..6f).onChange {
         minOf(range, it)
     }
+
     val switchDelay by int("SwitchDelay", 0, 0..20, "ticks")
     val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-    val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    private val localIgnoreOpenInventoryValue = if (ignoreOpenInventorySupplier == null) {
+        boolean("IgnoreOpenInventory", true)
+    } else {
+        null
+    }
+    val ignoreOpenInventory: Boolean
+        get() = ignoreOpenInventorySupplier?.asBoolean ?: localIgnoreOpenInventoryValue!!.get()
     val ignoreUsingItem by boolean("IgnoreUsingItem", true)
     val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
     val rotations = tree(RotationsValueGroup(this))
 
-    private var currentTargetInternal: PreparedTarget? = null
-    val currentTarget: PreparedTarget?
-        get() = currentTargetInternal
+    var currentTarget: PreparedTarget? = null
+        private set
 
     private var targetChanged = false
     private var trackedPacketMineTarget: BlockPos? = null
@@ -127,11 +135,11 @@ class BlockBreaker(
      * interaction before the new target becomes active.
      */
     fun setTarget(target: PreparedTarget?) {
-        val currentPos = currentTargetInternal?.pos
+        val currentPos = currentTarget?.pos
         val nextPos = target?.pos
 
         if (currentPos == nextPos) {
-            currentTargetInternal = target
+            currentTarget = target
             return
         }
 
@@ -139,7 +147,7 @@ class BlockBreaker(
             interaction.stopDestroyBlock()
         }
 
-        currentTargetInternal = target
+        currentTarget = target
 
         if (target == null) {
             targetChanged = false
@@ -174,7 +182,7 @@ class BlockBreaker(
             return@handler
         }
 
-        val target = currentTargetInternal ?: return@handler
+        val target = currentTarget ?: return@handler
         RotationManager.setRotationTarget(
             target.rotation,
             considerInventory = !ignoreOpenInventory,
@@ -202,7 +210,7 @@ class BlockBreaker(
             }
         }
 
-        val target = currentTargetInternal ?: return@tickHandler
+        val target = currentTarget ?: return@tickHandler
         if (ModulePacketMine.running) {
             ModulePacketMine.setTarget(target.pos)
             trackedPacketMineTarget = target.pos
@@ -235,7 +243,7 @@ class BlockBreaker(
 
     @Suppress("unused")
     private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> { event ->
-        if (currentTargetInternal != null && !ModulePacketMine.running) {
+        if (currentTarget != null && !ModulePacketMine.running) {
             event.cancelEvent()
         }
     }

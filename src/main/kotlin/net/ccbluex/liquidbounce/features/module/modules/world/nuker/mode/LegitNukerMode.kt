@@ -31,11 +31,16 @@ import net.ccbluex.liquidbounce.utils.block.breaker.BlockBreaker
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.block.state
 import net.minecraft.core.BlockPos
+import java.util.function.BooleanSupplier
 
 object LegitNukerMode : Mode("Legit") {
 
     private var currentTarget: BlockPos? = null
-    private val blockBreaker = tree(BlockBreaker("Breaker", this))
+    private val blockBreaker = tree(BlockBreaker(
+        "Breaker",
+        this,
+        ignoreOpenInventorySupplier = BooleanSupplier { ModuleNuker.ignoreOpenInventory }
+    ))
 
     override val parent: ModeValueGroup<Mode>
         get() = mode
