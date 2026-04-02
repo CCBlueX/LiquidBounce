@@ -20,164 +20,66 @@ package net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
-import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.ignoreOpenInventory
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.mode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
-import net.ccbluex.liquidbounce.utils.block.doBreak
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.breaker.BlockBreaker
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.ccbluex.liquidbounce.utils.block.state
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.HitResult
-import kotlin.math.max
 
 object LegitNukerMode : Mode("Legit") {
 
     private var currentTarget: BlockPos? = null
+    private val blockBreaker = tree(BlockBreaker("Breaker", this))
 
     override val parent: ModeValueGroup<Mode>
         get() = mode
 
-    private val range by float("Range", 5F, 1F..6F)
-    private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
-        minOf(it, range)
+    override fun disable() {
+        currentTarget = null
+        wasTarget = null
+        blockBreaker.disable()
     }
-
-    private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-    private val rotations = tree(RotationsValueGroup(this))
-    private val switchDelay by int("SwitchDelay", 0, 0..20, "ticks")
 
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
-        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
-            this.currentTarget = null
+        if (blockBreaker.isBlocked()) {
             return@handler
         }
 
-        if (ModuleBlink.running) {
-            this.currentTarget = null
-            return@handler
-        }
+        val target = lookupTarget()
+        currentTarget = target?.pos
+        blockBreaker.setTarget(target)
 
-        this.currentTarget = lookupTarget()
-
-        val currentTarget = currentTarget
-        if (currentTarget == null) {
+        if (!ModulePacketMine.running) {
+            wasTarget = currentTarget
+        } else if (target == null) {
             wasTarget = null
-            return@handler
-        }
-
-        if (ModulePacketMine.running) {
-            ModulePacketMine.setTarget(currentTarget)
-        }
-    }
-
-    @Suppress("unused")
-    private val tickHandler = tickHandler {
-        val currentTarget = currentTarget ?: return@tickHandler
-        val state = currentTarget.getState() ?: return@tickHandler
-
-        if (ModulePacketMine.running) {
-            return@tickHandler
-        }
-
-        // Wait for the switch delay to pass
-        if (wasTarget != null && currentTarget != wasTarget) {
-            waitTicks(switchDelay)
-        }
-
-        val rayTraceResult = raytraceBlock(
-            max(range, wallRange).toDouble() + 1.0,
-            pos = currentTarget,
-            state = state
-        ) ?: return@tickHandler
-
-        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != currentTarget) {
-            return@tickHandler
-        }
-
-        doBreak(rayTraceResult, forceImmediateBreak)
-        wasTarget = currentTarget
-    }
-
-    @Suppress("unused")
-    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> { event ->
-        if (currentTarget != null && !ModulePacketMine.running) {
-            event.cancelEvent()
         }
     }
 
     /**
      * Chooses the best block to break next and aims at it.
      */
-    private fun lookupTarget(): BlockPos? {
-        val eyes = player.eyePosition
-        val packetMine = ModulePacketMine.running
-
+    private fun lookupTarget(): BlockBreaker.PreparedTarget? {
         // Check if the current target is still valid
         currentTarget?.let { pos ->
-            val blockState = pos.getState() ?: return@let
+            val blockState = pos.state ?: return@let
 
             if (blockState.isNotBreakable(pos) || !ModuleNuker.isValid(blockState)) {
                 return@let
             }
 
-            val raytraceResult = raytraceBlockRotation(
-                eyes = eyes,
-                pos = pos,
-                state = blockState,
-                range = range.toDouble(),
-                wallsRange = wallRange.toDouble(),
-            ) ?: return@let
-
-            if (!packetMine) {
-                RotationManager.setRotationTarget(
-                    raytraceResult.rotation,
-                    considerInventory = !ignoreOpenInventory,
-                    valueGroup = rotations,
-                    priority = Priority.IMPORTANT_FOR_USAGE_1,
-                    ModuleNuker
-                )
-            }
-
-            // We don't need to update the target if it's still valid
-            return pos
+            blockBreaker.prepareTarget(pos)?.let { return it }
         }
 
-        for ((pos, blockState) in areaMode.activeMode.lookupTargets(range)) {
-            val raytraceResult = raytraceBlockRotation(
-                eyes = eyes,
-                pos = pos,
-                state = blockState,
-                range = range.toDouble(),
-                wallsRange = wallRange.toDouble(),
-            ) ?: continue
-
-            if (!packetMine) {
-                RotationManager.setRotationTarget(
-                    raytraceResult.rotation,
-                    considerInventory = !ignoreOpenInventory,
-                    valueGroup = rotations,
-                    priority = Priority.IMPORTANT_FOR_USAGE_1,
-                    ModuleNuker
-                )
-            }
-
-            return pos
+        for ((pos, _) in areaMode.activeMode.lookupTargets(blockBreaker.range)) {
+            blockBreaker.prepareTarget(pos)?.let { return it }
         }
 
         return null

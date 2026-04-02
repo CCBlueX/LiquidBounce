@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
-import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -115,7 +114,7 @@ object RotationManager : EventListener {
         considerInventory: Boolean = true,
         valueGroup: RotationsValueGroup,
         priority: Priority,
-        provider: ClientModule,
+        provider: EventListener,
         whenReached: RestrictedSingleUseAction? = null
     ) {
         setRotationTarget(valueGroup.toRotationTarget(
@@ -123,7 +122,7 @@ object RotationManager : EventListener {
         ), priority, provider)
     }
 
-    fun setRotationTarget(plan: RotationTarget, priority: Priority, provider: ClientModule) {
+    fun setRotationTarget(plan: RotationTarget, priority: Priority, provider: EventListener) {
         if (!allowedToUpdate()) {
             return
         }

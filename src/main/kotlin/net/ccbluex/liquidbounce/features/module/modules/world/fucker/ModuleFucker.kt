@@ -21,41 +21,33 @@ package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
-import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.block.breaker.BlockBreaker
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
-import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.outlineShape
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.clipAllBoxes
 import net.ccbluex.liquidbounce.utils.raytracing.clip
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.InteractionHand
@@ -77,11 +69,6 @@ import kotlin.math.max
  */
 object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = listOf("BedBreaker", "IdNuker")) {
 
-    private val range by float("Range", 5F, 1F..6F)
-    private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
-        minOf(range, it)
-    }
-
     /**
      * Entrance requires the target block to have an entrance. It does not matter if we can see it or not.
      * If this condition is true, it will override the wall range to range
@@ -102,18 +89,10 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
     private val surroundings by boolean("Surroundings", true)
     private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG"))
-    private val delay by int("Delay", 0, 0..20, "ticks")
     private val action by enumChoice("Action", DestroyAction.DESTROY).apply(::tagBy)
-    private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-
-    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    private val ignoreUsingItem by boolean("IgnoreUsingItem", true)
-    private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
-
-    // Rotation
-    private val rotations = tree(RotationsValueGroup(this))
+    private val blockBreaker = tree(BlockBreaker("Breaker", this))
     private val targetRenderer = tree(
         PlacementRenderer("TargetRendering", true, this,
             defaultColor = Color4b(255, 0, 0, 90)
@@ -129,131 +108,81 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
     override fun onDisabled() {
         clearCurrentTarget()
         oldTarget = null
+        blockBreaker.disable()
         targetRenderer.clearSilently()
     }
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
-            return@handler
-        }
-
-        if (!ignoreUsingItem && player.isUsingItem) {
+        if (blockBreaker.isBlocked()) {
             return@handler
         }
 
         oldTarget = currentTarget
         updateCurrentTarget()
+
+        if (oldTarget?.pos != currentTarget?.pos) {
+            oldTarget?.let { targetRenderer.removeBlock(it.pos) }
+            currentTarget?.let { targetRenderer.addBlock(it.pos) }
+        }
     }
 
     @Suppress("unused")
-    private val breaker = tickHandler {
-        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
-            return@tickHandler
-        }
-
-        // If we don't have any new target, and we had one before, stop breaking.
-        if (oldTarget != null && currentTarget == null) {
-            interaction.stopDestroyBlock()
-            return@tickHandler
-        } else if (oldTarget != currentTarget && delay > 0) {
-            interaction.stopDestroyBlock()
-            waitTicks(delay)
-        }
-
-        // Check if blink is enabled - if so, we don't want to do anything.
-        if (ModuleBlink.running) {
+    private val useHandler = tickHandler {
+        if (blockBreaker.isBlocked()) {
             return@tickHandler
         }
 
         val destroyerTarget = currentTarget ?: return@tickHandler
-        val currentRotation = RotationManager.serverRotation
-        targetRenderer.addBlock(destroyerTarget.pos)
-
-        if (ModulePacketMine.running && destroyerTarget.action == DestroyAction.DESTROY) {
-            ModulePacketMine.setTarget(destroyerTarget.pos)
+        if (destroyerTarget.action != DestroyAction.USE) {
             return@tickHandler
         }
 
-        // Check if we are already looking at the block
+        if (oldTarget != currentTarget && blockBreaker.switchDelay > 0) {
+            waitTicks(blockBreaker.switchDelay)
+            if (currentTarget != destroyerTarget) {
+                return@tickHandler
+            }
+        }
+
+        val currentRotation = RotationManager.serverRotation
+
         val rayTraceResult = raytraceBlock(
-            max(range, wallRange).toDouble(),
+            max(blockBreaker.range, blockBreaker.wallRange).toDouble(),
             currentRotation,
             destroyerTarget.pos,
             destroyerTarget.pos.getState() ?: return@tickHandler
         ) ?: return@tickHandler
 
-        val raytracePos = rayTraceResult.blockPos
-
-        // Check if the raytrace result includes a block, if not we don't want to deal with it.
-        if (rayTraceResult.type != HitResult.Type.BLOCK ||
-            raytracePos != destroyerTarget.pos || raytracePos.getState()!!.isNotBreakable(raytracePos)
-        ) {
+        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != destroyerTarget.pos) {
             return@tickHandler
         }
 
-        // Use action should be used if the block is the same as the current target and the action is set to use.
-        if (destroyerTarget.action == DestroyAction.USE) {
-            if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult) == InteractionResult.SUCCESS) {
-                player.swing(InteractionHand.MAIN_HAND)
-            }
-
-            waitTicks(delay)
-        } else {
-            doBreak(rayTraceResult, immediate = forceImmediateBreak)
+        if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult) == InteractionResult.SUCCESS) {
+            player.swing(InteractionHand.MAIN_HAND)
         }
-    }
 
-    @Suppress("unused")
-    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> { event ->
-        if (currentTarget != null && !ModulePacketMine.running) {
-            event.cancelEvent()
-        }
+        waitTicks(blockBreaker.switchDelay)
     }
 
     private fun updateCurrentTarget() {
         val possibleBlocks = searchPossibleTargetPositions()
+        val selection = selectTarget(possibleBlocks)
 
-        validateCurrentTarget(possibleBlocks)
-
-        if (possibleBlocks.isEmpty()) {
-            return
-        }
-
-        val range = range.toDouble()
-
-        // Find direct targets first
-        if (possibleBlocks.any { pos ->
-            // If the block has an entrance, we should ignore the wall range and act as if we are breaking normally.
-            val wallRange = if (FuckerEntrance.enabled && pos.hasEntrance) range else wallRange.toDouble()
-            considerAsTarget(DestroyerTarget(pos, action, isTarget = true), range, wallRange) == true
-        } || currentTarget != null) {
-            return
-        }
-
-        // Surrounding / Entrance
-        for (pos in possibleBlocks) {
-            // Is there any block in the way?
-            if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
-                val weakBlock = pos.weakestNeighbor ?: continue
-                considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
-            } else if (surroundings && updateSurroundings(pos)) {
-                break
-            }
-        }
+        currentTarget = selection?.target
+        blockBreaker.setTarget(selection?.takeIf { it.target.action == DestroyAction.DESTROY }?.preparedTarget)
     }
 
     private fun clearCurrentTarget() {
-        interaction.stopDestroyBlock()
-
         currentTarget?.let { target ->
             targetRenderer.removeBlock(target.pos)
         }
         currentTarget = null
+        blockBreaker.clear()
     }
 
     private fun searchPossibleTargetPositions(): List<BlockPos> {
-        return player.eyePosition.searchBlocksInRangeSorted(range) { pos, state ->
+        return player.eyePosition.searchBlocksInRangeSorted(blockBreaker.range) { pos, state ->
             when (val block = state.block) {
                 !in targets -> false
                 is BedBlock if isSelfBedMode.activeMode.isSelfBed(block, pos) -> false
@@ -262,31 +191,44 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
         }.map { it.first }
     }
 
-    private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {
-        val possibleBlocks = possibleBlocks.let {
-            if (it is Set || it.size <= 4) it else it.toHashSet() // for performance of contains
-        }
-        val currentTarget = currentTarget ?: return
+    @Suppress("ReturnCount")
+    private fun selectTarget(possibleBlocks: List<BlockPos>): TargetSelection? {
+        validateCurrentTarget(possibleBlocks)?.let { return it }
 
-        var removed = false
+        val range = blockBreaker.range.toDouble()
+
+        for (pos in possibleBlocks) {
+            val wallRange = if (FuckerEntrance.enabled && pos.hasEntrance) range else blockBreaker.wallRange.toDouble()
+            val preparedTarget = blockBreaker.prepareTarget(pos, wallRange) ?: continue
+            return TargetSelection(DestroyerTarget(pos, action, isTarget = true), preparedTarget)
+        }
+
+        for (pos in possibleBlocks) {
+            if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
+                val weakBlock = pos.weakestNeighbor ?: continue
+                val preparedTarget = blockBreaker.prepareTarget(weakBlock, range) ?: continue
+                return TargetSelection(DestroyerTarget(weakBlock, DestroyAction.DESTROY), preparedTarget)
+            }
+
+            if (surroundings) {
+                selectSurroundingTarget(pos)?.let { return it }
+            }
+        }
+
+        return null
+    }
+
+    private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>): TargetSelection? {
+        val currentTarget = currentTarget ?: return null
         if (currentTarget.pos !in possibleBlocks) {
-            removed = true
+            return null
         }
         if (currentTarget.isTarget && currentTarget.action != action) {
-            removed = true
+            return null
         }
 
-        // Stick with the current target because it's still valid.
-        val validationResult =
-            considerAsTarget(currentTarget, range.toDouble(), wallRange.toDouble(), isCurrentTarget = true)
-
-        if (validationResult == false) {
-            removed = true
-        }
-
-        if (removed) {
-            clearCurrentTarget()
-        }
+        val preparedTarget = blockBreaker.prepareTarget(currentTarget.pos) ?: return null
+        return TargetSelection(currentTarget, preparedTarget)
     }
 
     private fun traceWayToTarget(
@@ -328,55 +270,11 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
         return result
     }
 
-    /**
-     * @return true if it is the best target, false if it's invalid and null if it's not better than the current target
-     */
-    private fun considerAsTarget(
-        target: DestroyerTarget,
-        range: Double,
-        throughWallsRange: Double,
-        isCurrentTarget: Boolean = false
-    ): Boolean? {
-        val state = target.pos.getState()
-
-        if (state == null || state.isAir) {
-            return false
-        }
-
-        val raytrace = raytraceBlockRotation(
-            player.eyePosition,
-            target.pos,
-            state,
-            range = range,
-            wallsRange = throughWallsRange
-        ) ?: return false
-
-        val currentTarget = currentTarget
-
-        if (!isCurrentTarget && currentTarget != null && target <= currentTarget) {
-            return null
-        }
-
-        if (!ModulePacketMine.running) {
-            RotationManager.setRotationTarget(
-                raytrace.rotation,
-                considerInventory = !ignoreOpenInventory,
-                valueGroup = rotations,
-                if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
-                this@ModuleFucker
-            )
-        }
-
-        clearCurrentTarget()
-        ModuleFucker.currentTarget = target
-
-        return true
-    }
-
-    private fun updateSurroundings(initialPosition: BlockPos): Boolean {
+    @Suppress("ReturnCount")
+    private fun selectSurroundingTarget(initialPosition: BlockPos): TargetSelection? {
         val eyePos = player.eyePosition
         val targetPoint = initialPosition.outlineShape.move(initialPosition)
-            .closestPointTo(eyePos).getOrNull() ?: return false
+            .closestPointTo(eyePos).getOrNull() ?: return null
 
         debugGeometry("targetPos") {
             ModuleDebug.DebuggedPoint(targetPoint, Color4b.RED.alpha(100))
@@ -388,7 +286,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             ClipContext.Block.OUTLINE,
             ClipContext.Fluid.NONE,
             player,
-        ).takeIf { it.type == HitResult.Type.BLOCK } ?: return false
+        ).takeIf { it.type == HitResult.Type.BLOCK } ?: return null
 
         val blockPos = raytraceResult.blockPos
 
@@ -400,7 +298,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             ModuleDebug.DebuggedBox(blockPos.outlineBox.move(blockPos), Color4b.BLUE.alpha(50))
         }
 
-        val arr = traceWayToTarget(initialPosition, targetPoint, blockPos).ifEmpty { return false }
+        val arr = traceWayToTarget(initialPosition, targetPoint, blockPos).ifEmpty { return null }
 
         debugParameter("wayToTarget") { arr }
 
@@ -408,13 +306,11 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             it to (it.getState()?.takeUnless { state -> state.isAir } ?: return@mapNotNull null)
         }.sumOf(::miningDuration)
 
-        considerAsTarget(
+        val preparedTarget = blockBreaker.prepareTarget(blockPos) ?: return null
+        return TargetSelection(
             DestroyerTarget(blockPos, DestroyAction.DESTROY, SurroundingInfo(initialPosition, resistance)),
-            range.toDouble(),
-            wallRange.toDouble(),
+            preparedTarget
         )
-
-        return true
     }
 
     @JvmRecord
@@ -445,6 +341,11 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
     private data class SurroundingInfo(
         val actualTargetPos: BlockPos,
         val resistance: Double
+    )
+
+    private data class TargetSelection(
+        val target: DestroyerTarget,
+        val preparedTarget: BlockBreaker.PreparedTarget
     )
 
     private enum class DestroyAction(override val tag: String) : Tagged {

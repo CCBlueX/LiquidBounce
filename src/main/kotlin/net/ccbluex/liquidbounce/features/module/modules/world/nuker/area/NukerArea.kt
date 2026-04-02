@@ -48,11 +48,7 @@ sealed class NukerArea(name: String) : Mode(name) {
 
         val shape = state.getShape(world, pos, CollisionContext.of(player))
 
-        if (shape.isEmpty) {
-            return false
-        }
-
-        val vec3d = shape.move(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+        val vec3d = shape.move(pos)
             .closestPointTo(eyesPos)
             .orElse(null) ?: return false
 
