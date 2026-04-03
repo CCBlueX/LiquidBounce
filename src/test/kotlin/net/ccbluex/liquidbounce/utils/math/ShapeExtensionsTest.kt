@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.math
 
+import net.ccbluex.fastutil.objectHashSetOf
 import net.minecraft.core.Direction
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
@@ -130,19 +132,19 @@ class ShapeExtensionsTest {
             Shapes.box(0.0, 0.0, 0.6, 0.5, 1.0, 1.0),
         )
 
-        val lines = mutableListOf<Line3>()
+        val lines = objectHashSetOf<Line3>()
         shape.forAllSideOutlineEdges(Direction.WEST, Vec3(0.0, 0.5, 0.2)) { startX, startY, startZ, endX, endY, endZ ->
             lines += Line3(startX, startY, startZ, endX, endY, endZ)
         }
 
         assertEquals(
-            setOf(
+            objectHashSetOf(
                 Line3(0.0, 0.0, 0.0, 0.0, 0.0, 0.4),
                 Line3(0.0, 1.0, 0.0, 0.0, 1.0, 0.4),
                 Line3(0.0, 0.0, 0.0, 0.0, 1.0, 0.0),
                 Line3(0.0, 0.0, 0.4, 0.0, 1.0, 0.4),
             ),
-            lines.toSet(),
+            lines,
         )
     }
 
