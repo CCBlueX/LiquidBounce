@@ -19,14 +19,13 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.fastutil.objectHashSetOf
+import net.ccbluex.liquidbounce.test.assertIn
+import net.ccbluex.liquidbounce.test.assertNotIn
 import net.minecraft.core.Direction
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class ShapeExtensionsTest {
@@ -36,12 +35,12 @@ class ShapeExtensionsTest {
         val faces = Shapes.block().collectFaces()
 
         assertEquals(6, faces.size)
-        assertTrue(faces.contains(FaceRect(Direction.DOWN, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0)))
-        assertTrue(faces.contains(FaceRect(Direction.UP, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0)))
-        assertTrue(faces.contains(FaceRect(Direction.NORTH, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0)))
-        assertTrue(faces.contains(FaceRect(Direction.SOUTH, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0)))
-        assertTrue(faces.contains(FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0)))
-        assertTrue(faces.contains(FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0)))
+        assertIn(faces, FaceRect(Direction.DOWN, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0))
+        assertIn(faces, FaceRect(Direction.UP, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0))
+        assertIn(faces, FaceRect(Direction.NORTH, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0))
+        assertIn(faces, FaceRect(Direction.SOUTH, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0))
+        assertIn(faces, FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0))
+        assertIn(faces, FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0))
     }
 
     @Test
@@ -50,10 +49,10 @@ class ShapeExtensionsTest {
         val faces = slab.collectFaces()
 
         assertEquals(6, faces.size)
-        assertTrue(faces.contains(FaceRect(Direction.UP, 0.0, 0.5, 0.0, 1.0, 0.5, 1.0)))
-        assertTrue(faces.contains(FaceRect(Direction.DOWN, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0)))
-        assertTrue(faces.contains(FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0)))
-        assertTrue(faces.contains(FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 0.5, 1.0)))
+        assertIn(faces, FaceRect(Direction.UP, 0.0, 0.5, 0.0, 1.0, 0.5, 1.0))
+        assertIn(faces, FaceRect(Direction.DOWN, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0))
+        assertIn(faces, FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0))
+        assertIn(faces, FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 0.5, 1.0))
     }
 
     @Test
@@ -68,14 +67,14 @@ class ShapeExtensionsTest {
         val eastFaces = faces.filter { it.direction == Direction.EAST }
 
         assertEquals(1, westFaces.size)
-        assertTrue(westFaces.contains(FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0)))
+        assertIn(westFaces, FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0))
 
         assertEquals(2, eastFaces.size)
-        assertTrue(eastFaces.contains(FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 0.5, 1.0)))
-        assertTrue(eastFaces.contains(FaceRect(Direction.EAST, 0.5, 0.5, 0.0, 0.5, 1.0, 1.0)))
+        assertIn(eastFaces, FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 0.5, 1.0))
+        assertIn(eastFaces, FaceRect(Direction.EAST, 0.5, 0.5, 0.0, 0.5, 1.0, 1.0))
 
-        assertFalse(faces.contains(FaceRect(Direction.UP, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0)))
-        assertFalse(faces.contains(FaceRect(Direction.DOWN, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0)))
+        assertNotIn(faces, FaceRect(Direction.UP, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0))
+        assertNotIn(faces, FaceRect(Direction.DOWN, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0))
     }
 
     @Test
@@ -88,8 +87,8 @@ class ShapeExtensionsTest {
         val westFaces = shape.collectFaces().filter { it.direction == Direction.WEST }
 
         assertEquals(2, westFaces.size)
-        assertTrue(westFaces.contains(FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 0.4)))
-        assertTrue(westFaces.contains(FaceRect(Direction.WEST, 0.0, 0.0, 0.6, 0.0, 1.0, 1.0)))
+        assertIn(westFaces, FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 0.4))
+        assertIn(westFaces, FaceRect(Direction.WEST, 0.0, 0.0, 0.6, 0.0, 1.0, 1.0))
     }
 
     @Test
@@ -103,11 +102,11 @@ class ShapeExtensionsTest {
         val southFaces = shape.collectFaces().filter { it.direction == Direction.SOUTH }
 
         assertEquals(2, eastFaces.size)
-        assertTrue(eastFaces.contains(FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 1.0, 0.5)))
-        assertTrue(eastFaces.contains(FaceRect(Direction.EAST, 0.5, 0.0, 0.5, 0.5, 1.0, 1.0)))
+        assertIn(eastFaces, FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 1.0, 0.5))
+        assertIn(eastFaces, FaceRect(Direction.EAST, 0.5, 0.0, 0.5, 0.5, 1.0, 1.0))
         assertEquals(2, southFaces.size)
-        assertTrue(southFaces.contains(FaceRect(Direction.SOUTH, 0.5, 0.0, 0.5, 1.0, 1.0, 0.5)))
-        assertTrue(southFaces.contains(FaceRect(Direction.SOUTH, 0.0, 0.0, 1.0, 0.5, 1.0, 1.0)))
+        assertIn(southFaces, FaceRect(Direction.SOUTH, 0.5, 0.0, 0.5, 1.0, 1.0, 0.5))
+        assertIn(southFaces, FaceRect(Direction.SOUTH, 0.0, 0.0, 1.0, 0.5, 1.0, 1.0))
     }
 
     @Test
