@@ -22,7 +22,6 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
@@ -98,11 +97,6 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
         if (inGame) {
             refresh()
         }
-    }
-
-    @Suppress("unused")
-    private val perspectiveChangeHandler = handler<PerspectiveEvent> {
-        refresh()
     }
 
     @Suppress("unused")

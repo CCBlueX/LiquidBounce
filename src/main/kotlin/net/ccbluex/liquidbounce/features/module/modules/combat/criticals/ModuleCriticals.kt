@@ -57,10 +57,6 @@ import net.minecraft.world.level.block.WebBlock
  */
 object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
-    val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
-        EntityType.PLAYER
-    ))
-
     val modes = choices("Mode", 1) {
         arrayOf(
             NoneMode(it),

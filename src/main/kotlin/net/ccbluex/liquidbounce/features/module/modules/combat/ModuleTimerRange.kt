@@ -43,10 +43,6 @@ import kotlin.random.Random
 
 object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
 
-    private val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
-        EntityType.PLAYER
-    ))
-
     private val chance by int("Chance", 100, 0..100, "%")
     private val timerBalanceLimit by float("TimerBalanceLimit", 20f, 0f..50f)
     private val normalSpeed by float("NormalSpeed", 0.9F, 0.1F..10F)

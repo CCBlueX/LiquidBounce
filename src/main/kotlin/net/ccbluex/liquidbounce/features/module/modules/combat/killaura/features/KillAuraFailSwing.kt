@@ -44,10 +44,6 @@ import kotlin.math.pow
 
 internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSwing", false) {
 
-    private val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
-        EntityType.PLAYER
-    ))
-
     /**
      * Additional range for fail swing to work
      */

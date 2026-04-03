@@ -58,7 +58,15 @@ object ModuleCombineMobs : ClientModule("CombineMobs", ModuleCategories.RENDER) 
     private val combineMinecarts by boolean("CombineMinecarts", false)
 
     private fun defaultEntityTypes(): SequencedSet<EntityType<*>> =
-        objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(), EntityType.PLAYER)
+        objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
+            EntityType.ZOMBIE, EntityType.SKELETON, EntityType.CREEPER, EntityType.SPIDER,
+            EntityType.CAVE_SPIDER, EntityType.HUSK, EntityType.STRAY, EntityType.DROWNED,
+            EntityType.SLIME, EntityType.MAGMA_CUBE, EntityType.SILVERFISH,
+            EntityType.ENDERMITE, EntityType.SHULKER, EntityType.VEX,
+            EntityType.CHICKEN, EntityType.COW, EntityType.PIG, EntityType.SHEEP,
+            EntityType.HORSE, EntityType.DONKEY, EntityType.MULE, EntityType.LLAMA,
+            EntityType.ARMOR_STAND,
+        )
 
     private val entityTypes by entityTypes("Entities", defaultEntityTypes())
 

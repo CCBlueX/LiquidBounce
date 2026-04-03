@@ -35,11 +35,11 @@ import net.ccbluex.liquidbounce.utils.combat.Targets
  *
  * Provides subcommands for enemy configuration.
  *
- * NOTE: This command configures the GLOBAL defaults via [GlobalSettingsTarget.combatChoices] and
- * [GlobalSettingsTarget.visualChoices]. Individual modules that use [TargetTracker] have their own
- * per-module `entityTypes` setting (inherited from TargetSelector) which can override these global
- * defaults. The global settings serve as a fallback for modules that do not define their own entity
- * type filter.
+ * NOTE: This command configures the GLOBAL target filters via [GlobalSettingsTarget.combatChoices]
+ * and [GlobalSettingsTarget.visualChoices]. These global settings remain active filters that all
+ * modules respect. Individual modules that use [TargetTracker] also define their own per-module
+ * `entityTypes` setting (inherited from TargetSelector), which provides an additional filter on
+ * top of the global settings. Both filters must pass for an entity to be considered.
  */
 object CommandTargets : Command.Factory {
 

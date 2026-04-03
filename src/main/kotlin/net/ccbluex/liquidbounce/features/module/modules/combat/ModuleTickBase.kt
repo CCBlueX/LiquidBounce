@@ -54,10 +54,6 @@ import kotlin.math.min
  */
 internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBAT) {
 
-    private val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
-        EntityType.PLAYER
-    ))
-
     private val mode by enumChoice("Mode", TickBaseMode.PAST)
         .apply { tagBy(this) }
     private val call by enumChoice("Call", TickBaseCall.GAME)
