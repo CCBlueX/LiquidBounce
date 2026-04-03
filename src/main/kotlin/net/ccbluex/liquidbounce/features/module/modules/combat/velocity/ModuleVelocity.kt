@@ -41,8 +41,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.Vel
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReduce
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReversal
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityStrafe
+import net.ccbluex.fastutil.objectRBTreeSetOf
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.Packet
+import net.minecraft.world.entity.EntityType
 import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
@@ -53,6 +57,10 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  */
 
 object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliases = listOf("AntiKnockBack")) {
+
+    val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
+        EntityType.PLAYER
+    ))
 
     val modes = choices(
         "Mode", VelocityModify, arrayOf(

@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.fastutil.Pool
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -26,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
@@ -34,8 +36,11 @@ import net.ccbluex.liquidbounce.utils.render.entity
 import net.ccbluex.liquidbounce.utils.render.isCustom
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.renderer.entity.state.EntityRenderState
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.entity.EntityType
 import org.joml.Vector2f
 import org.joml.Vector2fc
+import java.util.SequencedSet
 
 /**
  * Nametags module
@@ -58,6 +63,11 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
         yAxis = "Scale" axis 0.25f..4f,
     )
     internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
+
+    private fun defaultEntityTypes(): SequencedSet<EntityType<*>> =
+        objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(), EntityType.PLAYER, EntityType.ITEM)
+
+    private val entityTypes by entityTypes("Entities", defaultEntityTypes())
 
     val fontRenderer
         get() = FontManager.FONT_RENDERER
@@ -104,6 +114,7 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
         nametagPool.recycleAll(nametagsToRender)
         nametagsToRender.clear()
         for (entity in RenderedEntities) {
+            if (entity.type !in entityTypes) continue
             val distance = entity.position().cameraDistance().toFloat()
             val scale = scale.transform(distance)
             if (scale > 0.01f) {

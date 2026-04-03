@@ -58,7 +58,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                 // This means we will only care about entities that are our enemies and are close enough to us
                 // That means we will still throw the potion if there is a friendly friend or team member nearby
                 val benefits = world.entitiesForRendering().any {
-                    it is LivingEntity && it.shouldBeAttacked() && hasBenefit(it)
+                    it is LivingEntity && it.shouldBeAttacked() && it.type in ModuleAutoBuff.entityTypes && hasBenefit(it)
                 }
 
                 if (benefits) {

@@ -25,12 +25,9 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.combat.Targets
-import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.world.entity.LivingEntity
 
@@ -84,7 +81,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
         val shouldCheckCombineMobs = ModuleCombineMobs.running
 
         for (entity in mc.level?.entitiesForRendering() ?: return) {
-            if (entity is LivingEntity && entity.shouldBeShown()) {
+            if (entity is LivingEntity && entity !== mc.player) {
                 if (shouldCheckCombineMobs && ModuleCombineMobs.trackEntity(entity, true)) {
                     continue
                 }
@@ -105,9 +102,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
 
     @Suppress("unused")
     private val perspectiveChangeHandler = handler<PerspectiveEvent> {
-        if (GlobalSettingsTarget.visual.contains(Targets.SELF)) {
-            refresh()
-        }
+        refresh()
     }
 
     @Suppress("unused")

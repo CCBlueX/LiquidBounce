@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.platform.NativeImage
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.Mode
@@ -41,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.client.scaledDimension
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -51,10 +53,13 @@ import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.client.CameraType
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.renderer.texture.AbstractTexture
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.player.Player
 import org.joml.Matrix3x2f
 import org.joml.Vector2f
+import java.util.SequencedSet
 import kotlin.math.atan2
 
 /**
@@ -106,6 +111,11 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
     private val radius by float("Radius", 40f, 2f..200f)
 
     private val onlyPlayers by boolean("OnlyPlayers", false)
+
+    private fun defaultEntityTypes(): SequencedSet<EntityType<*>> =
+        objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(), EntityType.PLAYER)
+
+    private val entityTypes by entityTypes("Entities", defaultEntityTypes())
 
     private val pointerModes = choices("PointerMode", 0) {
         arrayOf(
@@ -221,7 +231,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 rotate(-yawRad)
 
                 for (entity in RenderedEntities) {
-                    if (entity === player || (onlyPlayers && entity !is Player)) continue
+                    if (entity === player || (onlyPlayers && entity !is Player) || entity.type !in entityTypes) continue
                     val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
 
                     val cameraDistance = entityPos.cameraDistance().toFloat()

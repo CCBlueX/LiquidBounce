@@ -20,17 +20,21 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.Mob
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart
+import java.util.SequencedSet
 
 /**
  * Combine Mobs
@@ -52,6 +56,11 @@ object ModuleCombineMobs : ClientModule("CombineMobs", ModuleCategories.RENDER) 
 
     private val combineArmorStands by boolean("CombineArmorStands", false)
     private val combineMinecarts by boolean("CombineMinecarts", false)
+
+    private fun defaultEntityTypes(): SequencedSet<EntityType<*>> =
+        objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(), EntityType.PLAYER)
+
+    private val entityTypes by entityTypes("Entities", defaultEntityTypes())
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
@@ -80,6 +89,7 @@ object ModuleCombineMobs : ClientModule("CombineMobs", ModuleCategories.RENDER) 
 
     @JvmOverloads
     fun trackEntity(entity: Entity, forNametag: Boolean = false): Boolean {
+        if (entity.type !in entityTypes) return false
         val canCombine = entity is Mob ||
             (entity is ArmorStand && combineArmorStands) ||
             (entity is AbstractMinecart && combineMinecarts)

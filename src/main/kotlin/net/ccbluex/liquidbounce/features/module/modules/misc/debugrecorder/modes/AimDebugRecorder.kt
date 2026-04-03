@@ -58,7 +58,7 @@ object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim
             })
 
             world.entitiesForRendering().filter {
-                it.shouldBeAttacked() && it.distanceTo(player) < 10.0f
+                it.shouldBeAttacked() && it.type in ModuleDebugRecorder.entityTypes && it.distanceTo(player) < 10.0f
             }.minByOrNull {
                 it.distanceTo(player)
             }?.let {

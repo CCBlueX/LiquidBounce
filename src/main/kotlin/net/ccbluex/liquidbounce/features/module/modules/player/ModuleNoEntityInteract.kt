@@ -41,7 +41,7 @@ object ModuleNoEntityInteract : ClientModule("NoEntityInteract", ModuleCategorie
     private fun defaultEntityTypes(): SequencedSet<EntityType<*>> {
         return objectRBTreeSetOf(
             BuiltInRegistries.ENTITY_TYPE.asComparator(),
-            EntityType.VILLAGER, EntityType.ARMOR_STAND
+            EntityType.PLAYER
         )
     }
 

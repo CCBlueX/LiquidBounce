@@ -37,11 +37,16 @@ import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.NeutralMob
 import net.minecraft.world.entity.monster.Monster
 import net.minecraft.world.entity.player.Player
+import java.util.SequencedSet
 import java.util.function.Predicate
+
+private fun defaultEntityTypes(): SequencedSet<EntityType<*>> =
+    objectLinkedSetOf(EntityType.PLAYER)
 
 /**
  * A target tracker to choose the best enemy to attack
@@ -102,6 +107,7 @@ open class TargetSelector(
     private val range = rangeValue.register(this)
     private val fov by float("FOV", 180f, 0f..180f)
     private val hurtTime by int("HurtTime", 10, 0..10)
+    private val entityTypes by entityTypes("Entities", defaultEntityTypes())
 
     @Suppress("unused", "UnusedPrivateProperty")
     private val priority by multiEnumChoice(
@@ -150,6 +156,7 @@ open class TargetSelector(
             && !entity.isRemoved
             && entity.hurtTime <= hurtTime
             && validateRange(entity)
+            && entity.type in entityTypes
             && entity.shouldBeAttacked()
             && fov >= RotationUtil.crosshairAngleToEntity(entity)
 

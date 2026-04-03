@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -37,6 +38,7 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -46,9 +48,12 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.EntityType
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
+import java.util.SequencedSet
 import kotlin.math.max
 
 /**
@@ -82,6 +87,11 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
 
+    private fun defaultEntityTypes(): SequencedSet<EntityType<*>> =
+        objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(), EntityType.PLAYER)
+
+    private val entityTypes by entityTypes("Entities", defaultEntityTypes())
+
     private val gravity: Double
         get() = physicalSettings.gravityFactor.toDouble() * 0.03125
 
@@ -110,7 +120,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
 
     @Suppress("unused")
     private val attackEvent = handler<AttackEntityEvent> { event ->
-        if (!event.entity.shouldBeShown() || !chronometer.hasElapsed(230)) {
+        if (!event.entity.shouldBeShown() || event.entity.type !in entityTypes || !chronometer.hasElapsed(230)) {
             return@handler
         }
 

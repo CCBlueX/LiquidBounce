@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
@@ -34,13 +35,20 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.entity.EntityType
 
 object ModuleAutoBuff : ClientModule(
     name = "AutoBuff",
     category = ModuleCategories.PLAYER,
     aliases = listOf("AutoPot", "AutoGapple", "AutoSoup")
 ) {
+
+    val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
+        EntityType.PLAYER
+    ))
 
     /**
      * All buff features

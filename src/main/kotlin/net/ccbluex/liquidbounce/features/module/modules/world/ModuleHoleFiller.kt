@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import it.unimi.dsi.fastutil.booleans.BooleanDoubleImmutablePair
 import it.unimi.dsi.fastutil.doubles.DoubleLongPair
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -42,7 +44,9 @@ import net.ccbluex.liquidbounce.utils.math.from
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityType
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.levelgen.structure.BoundingBox
 import org.joml.Vector2d
@@ -58,6 +62,10 @@ import kotlin.math.max
  * @author ccetl
  */
 object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), HoleManagerSubscriber {
+
+    private val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
+        EntityType.PLAYER
+    ))
 
     private val features by multiEnumChoice("Features",
         Features.SMART,
@@ -168,7 +176,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         var remainingItems = availableItems
 
         world.entitiesForRendering().forEach { entity ->
-            if (entity.distanceToSqr(player) > range || entity == player || !entity.shouldBeAttacked()) {
+            if (entity.distanceToSqr(player) > range || entity == player || !entity.shouldBeAttacked() || entity.type !in entityTypes) {
                 return@forEach
             }
 

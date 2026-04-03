@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp
 
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -31,11 +32,15 @@ import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
+import java.util.SequencedSet
 
 /**
  * ESP module
@@ -67,6 +72,11 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
 
     internal val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
+    private fun defaultEntityTypes(): SequencedSet<EntityType<*>> =
+        objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(), EntityType.PLAYER)
+
+    val entityTypes by entityTypes("Entities", defaultEntityTypes())
+
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
     }
@@ -95,6 +105,6 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
      * Check if the entity requires true sight to be shown with the current ESP mode
      */
     fun requiresTrueSight(entity: LivingEntity) =
-        modes.activeMode.requiresTrueSight && entity.shouldBeShown()
+        modes.activeMode.requiresTrueSight && entity.shouldBeShown() && entity.type in entityTypes
 
 }

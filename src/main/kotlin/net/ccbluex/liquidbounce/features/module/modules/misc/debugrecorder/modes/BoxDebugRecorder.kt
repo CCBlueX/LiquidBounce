@@ -39,7 +39,7 @@ object BoxDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Box
 
         recordPacket(JsonObject().apply {
             world.entitiesForRendering().filter {
-                it.shouldBeAttacked() && it.distanceTo(player) < 10.0f && crosshairTarget.entity.id == it.id
+                it.shouldBeAttacked() && it.type in ModuleDebugRecorder.entityTypes && it.distanceTo(player) < 10.0f && crosshairTarget.entity.id == it.id
             }.minByOrNull {
                 it.distanceTo(player)
             }?.let {

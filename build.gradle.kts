@@ -136,6 +136,8 @@ dependencies {
     modApi(libs.mcef)
     include(libs.mcef)
     jij(libs.httpServer)
+    // Tika is required by netty-httpserver for MIME type detection
+    jij("org.apache.tika:tika-core:3.2.2")
 
     // Discord RPC Support
     jij(libs.discordIpc)
