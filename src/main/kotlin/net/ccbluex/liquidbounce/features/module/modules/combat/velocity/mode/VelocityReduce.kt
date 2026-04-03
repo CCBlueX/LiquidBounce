@@ -65,8 +65,8 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     private val attackCount by intRange("AttackCount", 3..3, 0..20)
     private val alinkTargetRange by floatRange("AlinkTargetRange", 2.5f..6f, 0f..20f)
-    private val alinkMaxDelay by int("AlinkMaxDelay", 20, 1..100, "ticks")
-    private val alinkRequireKillAura by boolean("AlinkRequireKillAura", true)
+    private val alinkMaxDelay by int("AlinkMaxDelay", 10, 1..100, "ticks")
+    private val alinkRequireKillAura by boolean("AlinkRequireKillAura", false)
     private val horizontal by float("Horizontal", 0.6f, 0f..1f)
     private val vertical by float("Vertical", 1.0f, 0f..1f)
 
