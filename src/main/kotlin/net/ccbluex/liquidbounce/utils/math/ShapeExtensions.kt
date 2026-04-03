@@ -261,7 +261,7 @@ private class ShapeSurfaceMesh(
 
         for (planeIndex in facePlaneIndices(direction)) {
             val mask = buildFaceMask(direction, planeIndex)
-            if (!mask.hasAny()) {
+            if (!mask.hasAny) {
                 continue
             }
 
@@ -275,7 +275,7 @@ private class ShapeSurfaceMesh(
     private fun findConnectedComponent(direction: Direction, hitPos: Vec3): FaceComponent? {
         for (planeIndex in facePlaneIndices(direction)) {
             val mask = buildFaceMask(direction, planeIndex)
-            if (!mask.hasAny()) {
+            if (!mask.hasAny) {
                 continue
             }
 
@@ -305,22 +305,22 @@ private class ShapeSurfaceMesh(
 
     private fun faceContainsPoint(direction: Direction, planeIndex: Int, u: Int, v: Int, hitPos: Vec3): Boolean {
         val face = faceBounds(direction, planeIndex, u, v, u + 1, v + 1)
-        return when (direction) {
-            Direction.DOWN, Direction.UP ->
+        return when (direction.axis) {
+            Direction.Axis.Y ->
                 approximatelyEquals(hitPos.y, face.minY) &&
                     hitPos.x >= face.minX - SHAPE_EPSILON &&
                     hitPos.x <= face.maxX + SHAPE_EPSILON &&
                     hitPos.z >= face.minZ - SHAPE_EPSILON &&
                     hitPos.z <= face.maxZ + SHAPE_EPSILON
 
-            Direction.NORTH, Direction.SOUTH ->
+            Direction.Axis.Z ->
                 approximatelyEquals(hitPos.z, face.minZ) &&
                     hitPos.x >= face.minX - SHAPE_EPSILON &&
                     hitPos.x <= face.maxX + SHAPE_EPSILON &&
                     hitPos.y >= face.minY - SHAPE_EPSILON &&
                     hitPos.y <= face.maxY + SHAPE_EPSILON
 
-            Direction.WEST, Direction.EAST ->
+            Direction.Axis.X ->
                 approximatelyEquals(hitPos.x, face.minX) &&
                     hitPos.z >= face.minZ - SHAPE_EPSILON &&
                     hitPos.z <= face.maxZ + SHAPE_EPSILON &&
@@ -415,27 +415,34 @@ private class ShapeSurfaceMesh(
         return PlaneMask(width, height, mask, hasAny)
     }
 
-    private fun faceBounds(direction: Direction, planeIndex: Int, startU: Int, startV: Int, endU: Int, endV: Int): AABB = when (direction) {
-        Direction.DOWN, Direction.UP -> {
+    private fun faceBounds(
+        direction: Direction,
+        planeIndex: Int,
+        startU: Int,
+        startV: Int,
+        endU: Int,
+        endV: Int,
+    ): AABB = when (direction.axis) {
+        Direction.Axis.Y -> {
             val y = ys[planeIndex]
             AABB(xs[startU], y, zs[startV], xs[endU], y, zs[endV])
         }
 
-        Direction.NORTH, Direction.SOUTH -> {
+        Direction.Axis.Z -> {
             val z = zs[planeIndex]
             AABB(xs[startU], ys[startV], z, xs[endU], ys[endV], z)
         }
 
-        Direction.WEST, Direction.EAST -> {
+        Direction.Axis.X -> {
             val x = xs[planeIndex]
             AABB(x, ys[startV], zs[startU], x, ys[endV], zs[endU])
         }
     }
 
-    private fun planePoint(direction: Direction, planeIndex: Int, u: Int, v: Int): Vec3 = when (direction) {
-        Direction.DOWN, Direction.UP -> Vec3(xs[u], ys[planeIndex], zs[v])
-        Direction.NORTH, Direction.SOUTH -> Vec3(xs[u], ys[v], zs[planeIndex])
-        Direction.WEST, Direction.EAST -> Vec3(xs[planeIndex], ys[v], zs[u])
+    private fun planePoint(direction: Direction, planeIndex: Int, u: Int, v: Int): Vec3 = when (direction.axis) {
+        Direction.Axis.Y -> Vec3(xs[u], ys[planeIndex], zs[v])
+        Direction.Axis.Z -> Vec3(xs[u], ys[v], zs[planeIndex])
+        Direction.Axis.X -> Vec3(xs[planeIndex], ys[v], zs[u])
     }
 
     private fun isFull(x: Int, y: Int, z: Int): Boolean = occupancy[index(x, y, z)]
@@ -481,17 +488,16 @@ private class ShapeSurfaceMesh(
 }
 
 private class PlaneMask(
-    val width: Int,
-    val height: Int,
-    val mask: BooleanArray,
-    private val hasAny: Boolean,
+    @JvmField val width: Int,
+    @JvmField val height: Int,
+    @JvmField val mask: BooleanArray,
+    @JvmField val hasAny: Boolean,
 ) {
     operator fun get(u: Int, v: Int): Boolean = mask[index(u, v)]
 
     fun index(u: Int, v: Int): Int = v * width + u
 
-    fun hasAny(): Boolean = hasAny
-
+    @Suppress("NestedBlockDepth", "CognitiveComplexMethod")
     inline fun forEachMergedRect(action: (startU: Int, startV: Int, endU: Int, endV: Int) -> Unit) {
         val visited = BooleanArray(mask.size)
 

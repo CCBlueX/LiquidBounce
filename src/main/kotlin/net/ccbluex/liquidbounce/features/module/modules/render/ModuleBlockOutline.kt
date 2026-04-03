@@ -95,7 +95,7 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
         if (singleBox == null) {
             resetPositions()
 
-            val localHitPos = target.location.subtract(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
+            val localHitPos = target.location - blockPos
 
             renderEnvironmentForWorld(event.matrixStack) {
                 withPositionRelativeToCamera(blockPos) {
