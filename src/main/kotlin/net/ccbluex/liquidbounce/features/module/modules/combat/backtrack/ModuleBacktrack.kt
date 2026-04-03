@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReduce
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
@@ -104,6 +105,10 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     @Suppress("unused")
     private val queuePacketHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin != TransferOrigin.INCOMING) {
+            return@handler
+        }
+
+        if (VelocityReduce.ownsIncomingBlinkQueue) {
             return@handler
         }
 
@@ -188,6 +193,10 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     private val tickPacketProcessHandler = handler<TickPacketProcessEvent> {
         if (!inGame) {
             clear(clearOnly = true)
+            return@handler
+        }
+
+        if (VelocityReduce.ownsIncomingBlinkQueue) {
             return@handler
         }
 
@@ -289,7 +298,8 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
             currentChance < chance &&
             chronometer.hasElapsed() &&
             !shouldPause() &&
-            !attackChronometer.hasElapsed(lastAttackTimeToWork.toLong())
+            !attackChronometer.hasElapsed(lastAttackTimeToWork.toLong()) &&
+            !VelocityReduce.backtrackBlocked
     }
 
     fun isLagging() = running && hasQueuedIncoming()
