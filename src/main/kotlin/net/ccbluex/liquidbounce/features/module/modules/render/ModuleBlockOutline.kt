@@ -27,8 +27,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLevelRenderer
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
+import net.ccbluex.liquidbounce.render.drawShape
+import net.ccbluex.liquidbounce.render.drawShapeSide
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.core.Direction
@@ -37,7 +40,6 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.world.phys.shapes.VoxelShape
 
 /**
  * Block Outline module
@@ -89,7 +91,25 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
             return@handler
         }
 
-        val finalPosition = (if (sideOnly) flatBox(shape, side) else shape.bounds()).move(blockPos)
+        val singleBox = shape.toAabbs().singleOrNull()
+        if (singleBox == null) {
+            resetPositions()
+
+            val localHitPos = target.location - blockPos
+
+            renderEnvironmentForWorld(event.matrixStack) {
+                withPositionRelativeToCamera(blockPos) {
+                    if (sideOnly) {
+                        drawShapeSide(shape, side, localHitPos, color, outlineColor)
+                    } else {
+                        drawShape(shape, color, outlineColor)
+                    }
+                }
+            }
+            return@handler
+        }
+
+        val finalPosition = (if (sideOnly) flatBox(singleBox, side) else singleBox).move(blockPos)
         if (currentPosition != finalPosition) {
             previousPosition = currentPosition
             currentPosition = finalPosition
@@ -132,39 +152,39 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
         }
     }
 
-    private fun flatBox(shape: VoxelShape, side: Direction) = when (side) {
-        Direction.UP -> shape.boxWithBoundsY(shape.max(Direction.Axis.Y))
-        Direction.DOWN -> shape.boxWithBoundsY(shape.min(Direction.Axis.Y))
-        Direction.NORTH -> shape.boxWithBoundsZ(shape.min(Direction.Axis.Z))
-        Direction.SOUTH -> shape.boxWithBoundsZ(shape.max(Direction.Axis.Z))
-        Direction.WEST -> shape.boxWithBoundsX(shape.min(Direction.Axis.X))
-        Direction.EAST -> shape.boxWithBoundsX(shape.max(Direction.Axis.X))
+    private fun flatBox(box: AABB, side: Direction) = when (side) {
+        Direction.UP -> boxWithBoundsY(box, box.maxY)
+        Direction.DOWN -> boxWithBoundsY(box, box.minY)
+        Direction.NORTH -> boxWithBoundsZ(box, box.minZ)
+        Direction.SOUTH -> boxWithBoundsZ(box, box.maxZ)
+        Direction.WEST -> boxWithBoundsX(box, box.minX)
+        Direction.EAST -> boxWithBoundsX(box, box.maxX)
     }
 
-    private fun VoxelShape.boxWithBoundsX(x: Double) = AABB(
+    private fun boxWithBoundsX(box: AABB, x: Double) = AABB(
         x,
-        min(Direction.Axis.Y),
-        min(Direction.Axis.Z),
+        box.minY,
+        box.minZ,
         x,
-        max(Direction.Axis.Y),
-        max(Direction.Axis.Z)
+        box.maxY,
+        box.maxZ
     )
 
-    private fun VoxelShape.boxWithBoundsY(y: Double) = AABB(
-        min(Direction.Axis.X),
+    private fun boxWithBoundsY(box: AABB, y: Double) = AABB(
+        box.minX,
         y,
-        min(Direction.Axis.Z),
-        max(Direction.Axis.X),
+        box.minZ,
+        box.maxX,
         y,
-        max(Direction.Axis.Z)
+        box.maxZ
     )
 
-    private fun VoxelShape.boxWithBoundsZ(z: Double) = AABB(
-        min(Direction.Axis.X),
-        min(Direction.Axis.Y),
+    private fun boxWithBoundsZ(box: AABB, z: Double) = AABB(
+        box.minX,
+        box.minY,
         z,
-        max(Direction.Axis.X),
-        max(Direction.Axis.Y),
+        box.maxX,
+        box.maxY,
         z
     )
 

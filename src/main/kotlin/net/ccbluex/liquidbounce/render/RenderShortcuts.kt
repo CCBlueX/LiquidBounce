@@ -40,6 +40,7 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
@@ -344,6 +345,44 @@ fun WorldRenderEnvironment.drawBox(
     if (outlineColor != null && !outlineColor.isTransparent) {
         drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
             addBoxOutlines(pose.pose(), box, outlineColor, outlineVertices)
+        }
+    }
+}
+
+fun WorldRenderEnvironment.drawShape(
+    shape: VoxelShape,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) {
+    if (faceColor != null && !faceColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+            addShapeFaces(pose.pose(), shape, color = faceColor)
+        }
+    }
+
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+            addShapeOutlines(pose.pose(), shape, outlineColor)
+        }
+    }
+}
+
+fun WorldRenderEnvironment.drawShapeSide(
+    shape: VoxelShape,
+    side: Direction,
+    hitPos: Vec3,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) {
+    if (faceColor != null && !faceColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+            addShapeSideFaces(pose.pose(), shape, side, hitPos, color = faceColor)
+        }
+    }
+
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+            addShapeSideOutlines(pose.pose(), shape, side, hitPos, outlineColor)
         }
     }
 }
