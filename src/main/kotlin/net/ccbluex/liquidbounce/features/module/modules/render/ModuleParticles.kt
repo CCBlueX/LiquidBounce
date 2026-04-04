@@ -46,12 +46,9 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.util.Mth
-import net.minecraft.world.entity.EntityType
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
-import java.util.SequencedSet
 import kotlin.math.max
 
 /**
