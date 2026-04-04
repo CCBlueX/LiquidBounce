@@ -89,7 +89,7 @@ object CombatManager : EventListener {
     val attackHandler = handler<AttackEntityEvent> { event ->
         val entity = event.entity
 
-        if (entity is LivingEntity && entity.shouldBeAttacked()) {
+        if (entity is LivingEntity && ModuleKillAura.isEligibleTarget(entity)) {
             duringCombat = PAUSE_COMBAT
 
             if (entity is Player) {

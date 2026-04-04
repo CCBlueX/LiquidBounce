@@ -75,7 +75,6 @@
   "liquidbounce.command.enchant.result.mustBeCreative": "需要創造模式！",
   "liquidbounce.command.coordinates.description": "顯示你的座標，將其複製到你的剪貼簿或使用 /msg 將其發送給其他玩家。",
   "liquidbounce.command.coordinates.subcommand.copy.result.success": "已成功將您的座標複製到剪貼簿。",
-  "liquidbounce.command.targets.description": "允許你管理將哪些實體視為敵人。",
   "liquidbounce.command.friend.description": "允許你管理好友列表。",
   "liquidbounce.command.friend.subcommand.add.description": "添加新好友到你的好友列表。",
   "liquidbounce.command.friend.subcommand.add.parameter.alias.description": "好友的暱稱。",
@@ -651,5 +650,11 @@
   "liquidbounce.module.anchor.description": "讓你移動到水晶PvP的安全點里。",
   "liquidbounce.module.macros.description": "允許你透過自訂按鍵快速執行聊天訊息或物品操作。",
   "liquidbounce.module.autoGolemRepair.description": "自動使用鐵錠修復附近受損的鐵魔像。",
-  "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect 將嘗試在你下次加入任何伺服器/遊戲時，通過監控 ping 參數來檢測伺服器的反作弊系統。請注意，結果可能不準確，特別是當伺服器上有多個反作弊系統時。"
+  "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect 將嘗試在你下次加入任何伺服器/遊戲時，通過監控 ping 參數來檢測伺服器的反作弊系統。請注意，結果可能不準確，特別是當伺服器上有多個反作弊系統時。",
+  "liquidbounce.command.module.description": "提供模組專用子命令。",
+  "liquidbounce.command.module.subcommand.targets.description": "在模組本地目標篩選器中切換實體類型。",
+  "liquidbounce.command.module.subcommand.targets.result.enabled": "已啟用",
+  "liquidbounce.command.module.subcommand.targets.result.disabled": "已停用",
+  "liquidbounce.command.module.subcommand.targets.result.targetToggled": "實體類型 %s 現已在 %s 個模組目標篩選器中%s。",
+  "liquidbounce.command.module.subcommand.targets.result.noEntityFilter": "沒有可用的模組本地實體篩選器。"
 }

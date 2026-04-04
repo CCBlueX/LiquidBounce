@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
@@ -66,6 +67,13 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
     private val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
         EntityType.PLAYER
     ))
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
 
     private val features by multiEnumChoice("Features",
         Features.SMART,
@@ -176,7 +184,21 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         var remainingItems = availableItems
 
         world.entitiesForRendering().forEach { entity ->
-            if (entity.distanceToSqr(player) > range || entity == player || !entity.shouldBeAttacked() || entity.type !in entityTypes) {
+            if (
+                entity.distanceToSqr(player) > range
+                || entity == player
+                || !entity.shouldBeAttacked(includeFriends = allowFriends)
+                || entity.type !in entityTypes
+                || !entity.matchesTargetState(
+                    allowInvisible = allowInvisible,
+                    allowSleeping = allowSleeping,
+                    allowDead = allowDead,
+                    allowCustomNamed = allowCustomNamed,
+                    allowTamed = allowTamed,
+                    allowTeamMates = allowTeamMates,
+                    allowFriends = allowFriends
+                )
+            ) {
                 return@forEach
             }
 

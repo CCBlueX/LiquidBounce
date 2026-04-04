@@ -23,6 +23,7 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.lastPos
@@ -58,7 +59,18 @@ object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim
             })
 
             world.entitiesForRendering().filter {
-                it.shouldBeAttacked() && it.type in ModuleDebugRecorder.entityTypes && it.distanceTo(player) < 10.0f
+                it.shouldBeAttacked(includeFriends = ModuleDebugRecorder.allowFriends)
+                    && it.type in ModuleDebugRecorder.entityTypes
+                    && it.matchesTargetState(
+                        allowInvisible = ModuleDebugRecorder.allowInvisible,
+                        allowSleeping = ModuleDebugRecorder.allowSleeping,
+                        allowDead = ModuleDebugRecorder.allowDead,
+                        allowCustomNamed = ModuleDebugRecorder.allowCustomNamed,
+                        allowTamed = ModuleDebugRecorder.allowTamed,
+                        allowTeamMates = ModuleDebugRecorder.allowTeamMates,
+                        allowFriends = ModuleDebugRecorder.allowFriends
+                    )
+                    && it.distanceTo(player) < 10.0f
             }.minByOrNull {
                 it.distanceTo(player)
             }?.let {

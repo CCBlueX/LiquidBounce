@@ -203,7 +203,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             raycast != TRACE_NONE -> {
                 findEntityInCrosshair(range.interactionRange.toDouble(), rotation, predicate = {
                     when (raycast) {
-                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
+                        TRACE_ONLYENEMY -> isEligibleTarget(it)
                         TRACE_ALL -> true
                         else -> false
                     }
@@ -212,12 +212,15 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             else -> target
         }
 
-        if (crosshairTarget is LivingEntity && crosshairTarget.shouldBeAttacked() && crosshairTarget != target) {
-            targetTracker.target = crosshairTarget
+        if (isEligibleTarget(crosshairTarget) && crosshairTarget != target) {
+            targetTracker.target = crosshairTarget as LivingEntity
         }
 
         attackTarget(crosshairTarget, rotation)
     }
+
+    internal fun isEligibleTarget(entity: Entity): Boolean =
+        entity is LivingEntity && entity.shouldBeAttacked() && targetTracker.validate(entity)
 
     val shouldBlockSprinting
         get() = !ModuleElytraTarget.running

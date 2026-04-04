@@ -78,14 +78,7 @@
   "liquidbounce.command.enchant.result.mustBeCreative": "需要创造模式！",
   "liquidbounce.command.coordinates.description": "显示你的坐标，将其复制到你的剪贴板或使用 /msg 将其发送给其他玩家.",
   "liquidbounce.command.coordinates.subcommand.copy.result.success": "已成功将您的坐标复制到剪贴板.",
-  "liquidbounce.command.targets.description": "允许你管理将哪些实体视为敌人。",
   "liquidbounce.command.translate.description": "使用在线 API 和指定的参数翻译文本。",
-  "liquidbounce.command.targets.subcommand.combat.description": "允许您切换战斗模块的目标。",
-  "liquidbounce.command.targets.subcommand.combat.result.disabled": "属于类型 \"%s\" 的实体不再被视为您的目标。",
-  "liquidbounce.command.targets.subcommand.combat.result.enabled": "属于类型 \"%s\" 的实体现被视为您需要关注的目标。",
-  "liquidbounce.command.targets.subcommand.visual.description": "允许您切换视觉模块的目标。",
-  "liquidbounce.command.targets.subcommand.visual.result.disabled": "属于类型 \"%s\" 的实体不再被视为您的目标。",
-  "liquidbounce.command.targets.subcommand.visual.result.enabled": "属于类型 \"%s\" 的实体现被视为您需要关注的目标。",
   "liquidbounce.command.translate.parameter.sourceLanguage.description": "源语言代码，如 en-US。",
   "liquidbounce.command.translate.parameter.targetLanguage.description": "目标语言代码，如 zh-CN。",
   "liquidbounce.command.translate.parameter.text.description": "要翻译的文本。",
@@ -791,6 +784,12 @@
   "liquidbounce.module.newChunks.description": "高亮显示可能是新生成的区块。",
   "liquidbounce.module.strongholdFinder.description": "跟踪末影之眼投掷并预测最可能的要塞区块候选。",
   "liquidbounce.module.strongholdFinder.messages.sampleCaptured": "已采集样本（#%s）。",
-  "liquidbounce.module.strongholdFinder.messages.bestChunk": "最佳区块：%s, %s（p=%s%%）。"
+  "liquidbounce.module.strongholdFinder.messages.bestChunk": "最佳区块：%s, %s（p=%s%%）。",
+  "liquidbounce.command.module.description": "提供模块专用子命令。",
+  "liquidbounce.command.module.subcommand.targets.description": "在模块本地目标过滤器中切换实体类型。",
+  "liquidbounce.command.module.subcommand.targets.result.enabled": "已启用",
+  "liquidbounce.command.module.subcommand.targets.result.disabled": "已禁用",
+  "liquidbounce.command.module.subcommand.targets.result.targetToggled": "实体类型 %s 现已在 %s 个模块目标过滤器中%s。",
+  "liquidbounce.command.module.subcommand.targets.result.noEntityFilter": "没有可用的模块本地实体过滤器。"
 
 }

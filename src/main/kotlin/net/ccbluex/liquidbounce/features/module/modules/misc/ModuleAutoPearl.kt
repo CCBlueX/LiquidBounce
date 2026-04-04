@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
@@ -75,6 +76,13 @@ object ModuleAutoPearl : ClientModule(
     ))
 
     private val mode by enumChoice("Mode", Modes.TRIGGER)
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
 
     private object Limits : ToggleableValueGroup(this, "Limits", true) {
         val angle by int("Angle", 180, 0..180, suffix = "°")
@@ -206,7 +214,17 @@ object ModuleAutoPearl : ClientModule(
         }
 
         return when(mode) {
-            Modes.TRIGGER -> pearl.owner!!.shouldBeAttacked() && pearl.owner!!.type in entityTypes
+            Modes.TRIGGER -> pearl.owner!!.shouldBeAttacked(includeFriends = allowFriends)
+                && pearl.owner!!.type in entityTypes
+                && pearl.owner!!.matchesTargetState(
+                    allowInvisible = allowInvisible,
+                    allowSleeping = allowSleeping,
+                    allowDead = allowDead,
+                    allowCustomNamed = allowCustomNamed,
+                    allowTamed = allowTamed,
+                    allowTeamMates = allowTeamMates,
+                    allowFriends = allowFriends
+                )
             Modes.TARGET -> ModuleKillAura.targetTracker.target === pearl.owner
         }
     }

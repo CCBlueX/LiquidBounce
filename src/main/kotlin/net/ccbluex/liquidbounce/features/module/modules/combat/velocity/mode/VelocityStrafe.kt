@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -58,7 +59,7 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         if (!OnlyFacing.enabled) return@handler
-        val target = world.findEnemy(0f..OnlyFacing.range) ?: return@handler
+        val target = world.findEnemy(0f..OnlyFacing.range, ModuleVelocity::isValidTarget) ?: return@handler
 
         shouldStrafe = isLookingAtEntity(
             target,

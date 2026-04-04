@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleHitbox;
-import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.renderer.debug.EntityHitboxDebugRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
@@ -48,7 +47,7 @@ public abstract class MixinEntityHitboxDebugRenderer {
     private AABB getBoundingBox(AABB original, @Local(argsOnly = true) Entity entity) {
         var moduleHitBox = ModuleHitbox.INSTANCE;
         if (entity != null && moduleHitBox.getRunning()
-            && moduleHitBox.getApplyToDebugHitbox() && CombatExtensionsKt.shouldBeAttacked(entity)) {
+            && moduleHitBox.getApplyToDebugHitbox() && moduleHitBox.shouldAffect(entity)) {
             var expansion = moduleHitBox.getSize();
             return original.inflate(expansion);
         }

@@ -29,6 +29,8 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.Timer.timerSpeed
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -42,6 +44,10 @@ import kotlin.random.Random
  */
 
 object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
+
+    private val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
+        EntityType.PLAYER
+    ))
 
     private val chance by int("Chance", 100, 0..100, "%")
     private val timerBalanceLimit by float("TimerBalanceLimit", 20f, 0f..50f)
@@ -57,6 +63,13 @@ object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
     private val onlyOnGround by boolean("OnlyOnGround", false)
 
     private val requiresKillAura by boolean("RequiresKillAura", true)
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
 
     private var reachedTheLimit = false
     private var balanceTimer = 0f
@@ -93,17 +106,17 @@ object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
     }
 
     private fun updateTimerSpeed(): Float? {
-        if (world.findEnemy(0f..distanceToPause) != null) {
+        if (world.findEnemy(0f..distanceToPause, ::isValidTarget) != null) {
             return 1.0f
         }
 
-        if (world.findEnemy(0f..distanceToStartWorking) == null
+        if (world.findEnemy(0f..distanceToStartWorking, ::isValidTarget) == null
             || chance != 100 && Random.nextInt(100) > chance)
         {
             return null
         }
 
-        if (world.findEnemy(0f..distanceToSpeedUp) == null) {
+        if (world.findEnemy(0f..distanceToSpeedUp, ::isValidTarget) == null) {
             return normalSpeed
         }
 
@@ -122,5 +135,18 @@ object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
         }
         // Stops speeding up when you get flagged
     }
+
+    private fun isValidTarget(entity: net.minecraft.world.entity.Entity): Boolean =
+        entity.type in entityTypes
+            && entity.shouldBeAttacked(includeFriends = allowFriends)
+            && entity.matchesTargetState(
+                allowInvisible = allowInvisible,
+                allowSleeping = allowSleeping,
+                allowDead = allowDead,
+                allowCustomNamed = allowCustomNamed,
+                allowTamed = allowTamed,
+                allowTeamMates = allowTeamMates,
+                allowFriends = allowFriends
+            )
 
 }

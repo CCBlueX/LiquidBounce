@@ -36,6 +36,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
 import net.minecraft.world.level.block.Block
+import net.minecraft.world.entity.EntityType
 import kotlin.jvm.optionals.getOrNull
 
 private fun <V : Value<*>> ParameterBuilder.Companion.value(
@@ -196,6 +197,22 @@ fun ParameterBuilder.Companion.enchantment(
 fun ParameterBuilder.Companion.block(
     name: String = "block",
 ) = fromRegistry<Block>(name, "Block", BuiltInRegistries.BLOCK)
+
+fun ParameterBuilder.Companion.entityType(
+    name: String = "entity",
+) = begin<EntityType<*>>(name)
+    .verifiedBy { sourceText ->
+        val id = Identifier.tryParse(sourceText)
+            ?: Identifier.tryParse("minecraft:$sourceText")
+            ?: return@verifiedBy Result.Error("'$sourceText' is not a valid Identifier")
+
+        Result.ofNullable(
+            BuiltInRegistries.ENTITY_TYPE.getOptional(id).getOrNull()
+        ) { "$sourceText is not a valid EntityType" }
+    }
+    .autocompletedFrom(minecraftPlaceholders = true) {
+        BuiltInRegistries.ENTITY_TYPE.keySet().map { it.toString() }
+    }
 
 fun ParameterBuilder.Companion.item(
     name: String = "item",

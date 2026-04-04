@@ -62,7 +62,6 @@
   "liquidbounce.command.enchant.result.mustBeCreative": "Yaratıcı mod gerekli!",
   "liquidbounce.command.coordinates.description": "Koordinatlarınızı gösterir, panoya kopyalar veya /msg ile diğer oyunculara gönderir.",
   "liquidbounce.command.coordinates.subcommand.copy.result.success": "Koordinatlarınız panoya başarıyla kopyalandı.",
-  "liquidbounce.command.targets.description": "Hangi varlıkların hedef sayılacağını yönetmenizi sağlar.",
   "liquidbounce.command.give.description": "Kendinize bir eşya verir.",
   "liquidbounce.command.give.parameter.amount.description": "İsteğe bağlı miktar.",
   "liquidbounce.command.give.parameter.item.description": "Eşyanın adı.",
@@ -553,5 +552,11 @@
   "liquidbounce.module.betterTab.description": "Sekme listesine çeşitli iyileştirmeler yapar.",
   "liquidbounce.module.autoPearl.description": "Bir düşmanın inci yoluna nişan alır ve inci atar.",
   "liquidbounce.module.replenish.description": "Hızlı erişim çubuğunuzdaki eşya sayısı belirli bir seviyenin altına düştüğünde envanterinizden otomatik olarak doldurur.",
-  "liquidbounce.module.anchor.description": "Sizi kristal PvP için güvenli deliklere çeker."
+  "liquidbounce.module.anchor.description": "Sizi kristal PvP için güvenli deliklere çeker.",
+  "liquidbounce.command.module.description": "Modüle özel alt komutlar sağlar.",
+  "liquidbounce.command.module.subcommand.targets.description": "Bir varlık türünü modül-yerel hedef filtrelerinde değiştirir.",
+  "liquidbounce.command.module.subcommand.targets.result.enabled": "etkin",
+  "liquidbounce.command.module.subcommand.targets.result.disabled": "devre dışı",
+  "liquidbounce.command.module.subcommand.targets.result.targetToggled": "Varlık türü %s artık %s durumda (%s modül hedef filtresi).",
+  "liquidbounce.command.module.subcommand.targets.result.noEntityFilter": "Modül-yerel varlık filtresi yok."
 }

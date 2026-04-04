@@ -59,7 +59,6 @@
 	"liquidbounce.command.enchant.result.enchantedItem": "アイテムは %s の %s レベルでエンチャントされました。",
 	"liquidbounce.command.enchant.result.enchantmentNotExists": "エンチャント名 「%s」 は存在しません。",
 	"liquidbounce.command.enchant.result.mustBeCreative": "クリエイティブモードである必要があります！",
-	"liquidbounce.command.targets.description": "どのエンティティを敵と見なすかを管理できます。",
 	"liquidbounce.command.friend.description": "フレンドリストを管理できます。",
 	"liquidbounce.command.friend.subcommand.add.description": "フレンドリストに名前を追加します。",
 	"liquidbounce.command.friend.subcommand.add.parameter.alias.description": "フレンドのオプションのあだ名。",
@@ -447,5 +446,11 @@
 	"modmenu.descriptionTranslation.liquidbounce": "無料でオープンソースのハッククライアント",
     "liquidbounce.module.betterTab.description": "タブリストに複数の改良を加えました。",
     "liquidbounce.module.logoffSpot.description": "サーバーから退出したプレイヤーや、描画範囲外のプレイヤーを表示できるようにします。",
-    "liquidbounce.module.autoPearl.description": "敵の真珠の軌道に向けて真珠を狙い投げる."
+    "liquidbounce.module.autoPearl.description": "敵の真珠の軌道に向けて真珠を狙い投げる.",
+    "liquidbounce.command.module.description": "モジュール固有のサブコマンドを提供します。",
+    "liquidbounce.command.module.subcommand.targets.description": "モジュールローカルのターゲットフィルタ全体でエンティティタイプを切り替えます。",
+    "liquidbounce.command.module.subcommand.targets.result.enabled": "有効",
+    "liquidbounce.command.module.subcommand.targets.result.disabled": "無効",
+    "liquidbounce.command.module.subcommand.targets.result.targetToggled": "エンティティタイプ %s は、%s 個のモジュールターゲットフィルタで %s になりました。",
+    "liquidbounce.command.module.subcommand.targets.result.noEntityFilter": "モジュールローカルのエンティティフィルタがありません。"
 }

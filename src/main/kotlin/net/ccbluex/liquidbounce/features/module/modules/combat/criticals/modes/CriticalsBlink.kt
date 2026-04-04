@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.wouldDoCriticalHit
-import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
@@ -49,7 +48,7 @@ object CriticalsBlink : Mode("Blink") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        enemyInRange = world.findEnemy(0.0f..range) != null
+        enemyInRange = ModuleCriticals.hasEnemyInRange(range)
     }
 
     @Suppress("unused")
@@ -81,5 +80,3 @@ object CriticalsBlink : Mode("Blink") {
     }
 
 }
-
-

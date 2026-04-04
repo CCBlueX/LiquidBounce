@@ -152,7 +152,7 @@ open class TargetSelector(
             && !entity.isRemoved
             && entity.hurtTime <= hurtTime
             && validateRange(entity)
-            && entityFilter.matchesLiving(entity)
+            && entityFilter.matchesLiving(entity, ignorePassive = false)
             && fov >= RotationUtil.crosshairAngleToEntity(entity)
 
     private fun validateRange(entity: LivingEntity): Boolean {

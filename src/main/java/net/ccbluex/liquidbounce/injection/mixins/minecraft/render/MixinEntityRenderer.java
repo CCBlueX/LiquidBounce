@@ -134,7 +134,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     private static boolean liquid_bounce$shouldRenderOutline(Entity entity) {
         if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
             return true;
-        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
+        } else if (EspGlowMode.INSTANCE.getRunning() && ModuleESP.INSTANCE.getEntityFilter().matches(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
             return true;
         } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof PrimedTnt) {
             return true;

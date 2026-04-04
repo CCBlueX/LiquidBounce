@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -82,6 +83,13 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
 
     private val targetMode by enumChoice("TargetMode", Mode.ATTACK)
     private val lastAttackTimeToWork by int("LastAttackTimeToWork", 1000, 0..5000)
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
 
     enum class Mode(override val tag: String) : Tagged {
         ATTACK("Attack"),
@@ -242,7 +250,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     private val rangeTargetHandler = handler<GameTickEvent> {
         if (targetMode != Mode.RANGE) return@handler
 
-        val enemy = world.findEnemy(range)
+        val enemy = world.findEnemy(range, ::isValidTarget)
 
         if (enemy == null) {
             clear()
@@ -301,8 +309,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         }
 
         return (inRange || !trackingBufferChronometer.hasElapsed(trackingBuffer.toLong())) &&
-            target.shouldBeAttacked() &&
-            target.type in entityTypes &&
+            isValidTarget(target) &&
             player.tickCount > 10 &&
             currentChance < chance &&
             chronometer.hasElapsed() &&
@@ -310,6 +317,19 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
             !attackChronometer.hasElapsed(lastAttackTimeToWork.toLong()) &&
             !VelocityReduce.backtrackBlocked
     }
+
+    private fun isValidTarget(entity: Entity): Boolean =
+        entity.type in entityTypes
+            && entity.shouldBeAttacked(includeFriends = allowFriends)
+            && entity.matchesTargetState(
+                allowInvisible = allowInvisible,
+                allowSleeping = allowSleeping,
+                allowDead = allowDead,
+                allowCustomNamed = allowCustomNamed,
+                allowTamed = allowTamed,
+                allowTeamMates = allowTeamMates,
+                allowFriends = allowFriends
+            )
 
     fun isLagging() = running && hasQueuedIncoming()
 

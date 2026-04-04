@@ -264,7 +264,6 @@
   "liquidbounce.command.stack.result.hasAlreadyAmount": "Количество предметов уже составляет %s",
   "liquidbounce.command.stack.result.mustBeCreative": "Требуется творческий режим!",
   "liquidbounce.command.stack.result.noItem": "В вашей руке нет предмета.",
-  "liquidbounce.command.targets.description": "Позволяет выбрать, какие сущности будут считаться враждебными.",
   "liquidbounce.command.teleport.result.invalidCoordinates": "Неверные координаты. Пожалуйста, введите правильные числа.",
   "liquidbounce.command.toggle.description": "Переключает модуль.",
   "liquidbounce.command.toggle.parameter.name.description": "Имя модуля.",
@@ -631,5 +630,11 @@
   "liquidbounce.scripts.debug.inspect.url": "Нажмите, чтобы скопировать URL отладчика и вставьте его в браузер (к сожалению, работают только браузеры на основе Chromium).",
   "liquidbounce.scripts.debug.support": "Скрипт %s настроен на запуск с поддержкой отладчика на: ",
   "liquidbounce.tooltip.clickToCopy": "Кликни для копирования",
-  "liquidbounce.unsupportedDeepLearning": "Движок нейросети не инициализирован. Твоя система, возможно, не поддерживается."
+  "liquidbounce.unsupportedDeepLearning": "Движок нейросети не инициализирован. Твоя система, возможно, не поддерживается.",
+  "liquidbounce.command.module.description": "Предоставляет подкоманды, специфичные для модулей.",
+  "liquidbounce.command.module.subcommand.targets.description": "Переключает тип сущности во всех локальных фильтрах целей модулей.",
+  "liquidbounce.command.module.subcommand.targets.result.enabled": "включено",
+  "liquidbounce.command.module.subcommand.targets.result.disabled": "выключено",
+  "liquidbounce.command.module.subcommand.targets.result.targetToggled": "Тип сущности %s теперь %s в %s фильтрах целей модулей.",
+  "liquidbounce.command.module.subcommand.targets.result.noEntityFilter": "Локальный фильтр сущностей модуля недоступен."
 }

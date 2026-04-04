@@ -33,7 +33,11 @@ import net.minecraft.world.entity.LivingEntity
 private val entities = ReferenceArrayList<LivingEntity>()
 
 /**
- * A readonly [Collection] containing all [LivingEntity] instances that meet the [shouldBeShown] condition.
+ * A readonly [Collection] containing all [LivingEntity] instances from the world (excluding the local player).
+ *
+ * NOTE: This collection does NOT apply [shouldBeShown] or any global target filters.
+ * Modules iterating over this collection are responsible for their own filtering (e.g., entity type,
+ * visual settings, friend lists).
  *
  * This collection will be auto updated on [GameTickEvent],
  * and be cleared on [WorldChangeEvent] or at the unsubscription of last [EventListener].

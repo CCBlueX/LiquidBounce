@@ -20,15 +20,22 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.rendertype.RenderSetup
 import net.minecraft.client.renderer.rendertype.RenderSetup.OutlineProperty
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityType
 import java.util.function.BiFunction
 import java.util.function.Function
 
@@ -36,6 +43,30 @@ import java.util.function.Function
  * TODO: Known issue: player armor + hand items
  */
 object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER) {
+
+    private val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
+        EntityType.PLAYER
+    ))
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
+
+    fun shouldRender(entity: Entity): Boolean =
+        entity.type in entityTypes
+            && entity.shouldBeAttacked(includeFriends = allowFriends)
+            && entity.matchesTargetState(
+                allowInvisible = allowInvisible,
+                allowSleeping = allowSleeping,
+                allowDead = allowDead,
+                allowCustomNamed = allowCustomNamed,
+                allowTamed = allowTamed,
+                allowTeamMates = allowTeamMates,
+                allowFriends = allowFriends
+            )
 
     private inline fun RenderPipeline.Builder.forChams() {
 //        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)

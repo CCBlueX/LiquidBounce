@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.MobCategory
 import net.minecraft.world.entity.TamableAnimal
 import net.minecraft.world.entity.player.Player
 import java.util.SequencedSet
@@ -51,6 +52,7 @@ class EntityCategoryFilter : ValueGroup("Entities") {
         if (ignoreInvisible && entity.isInvisible) return false
         if (ignoreSleeping && entity is Player && entity.isSleeping) return false
         if (ignoreCustomNamed && entity.customName != null) return false
+        if (ignorePassive && entity.type.category == MobCategory.CREATURE) return false
         if (ignoreTamed && entity is TamableAnimal) {
             val owner = entity.ownerReference?.uuid
             if (owner != null && owner != player.uuid) return false

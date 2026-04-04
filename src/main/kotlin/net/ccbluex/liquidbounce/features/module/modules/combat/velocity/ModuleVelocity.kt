@@ -43,6 +43,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.Vel
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityStrafe
 import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.Packet
@@ -61,6 +63,26 @@ object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliase
     val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
         EntityType.PLAYER
     ))
+    val allowInvisible by boolean("Invisible", false)
+    val allowSleeping by boolean("Sleeping", false)
+    val allowDead by boolean("Dead", false)
+    val allowCustomNamed by boolean("CustomNamed", true)
+    val allowTamed by boolean("Tamed", false)
+    val allowTeamMates by boolean("TeamMates", false)
+    val allowFriends by boolean("Friends", false)
+
+    fun isValidTarget(entity: net.minecraft.world.entity.Entity) =
+        entity.type in entityTypes
+            && entity.shouldBeAttacked(includeFriends = allowFriends)
+            && entity.matchesTargetState(
+                allowInvisible = allowInvisible,
+                allowSleeping = allowSleeping,
+                allowDead = allowDead,
+                allowCustomNamed = allowCustomNamed,
+                allowTamed = allowTamed,
+                allowTeamMates = allowTeamMates,
+                allowFriends = allowFriends
+            )
 
     val modes = choices(
         "Mode", VelocityModify, arrayOf(

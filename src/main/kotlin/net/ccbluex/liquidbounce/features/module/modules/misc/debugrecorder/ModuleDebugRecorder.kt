@@ -52,6 +52,13 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", ModuleCategories.MISC
     val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
         EntityType.PLAYER
     ))
+    val allowInvisible by boolean("Invisible", false)
+    val allowSleeping by boolean("Sleeping", false)
+    val allowDead by boolean("Dead", false)
+    val allowCustomNamed by boolean("CustomNamed", true)
+    val allowTamed by boolean("Tamed", false)
+    val allowTeamMates by boolean("TeamMates", false)
+    val allowFriends by boolean("Friends", false)
 
     init {
         // [Debug Recorder] is usually used by developers and testers and is not needed in the auto config.

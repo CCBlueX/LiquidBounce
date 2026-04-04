@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.EntityType
@@ -55,6 +56,13 @@ object ModuleNoEntityInteract : ClientModule("NoEntityInteract", ModuleCategorie
 
     private val entityTypeFilter by enumChoice("EntityTypeFilter", Filter.BLACKLIST)
     private val entityTypes by entityTypes("EntityTypes", defaultEntityTypes())
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
 
     private val holdingItemFilter by enumChoice("HoldingItemFilter", Filter.WHITELIST)
     private val holdingItems by items("HoldingItems", defaultHoldingItems())
@@ -62,6 +70,15 @@ object ModuleNoEntityInteract : ClientModule("NoEntityInteract", ModuleCategorie
     fun test(entity: EntityHitResult): Boolean {
         return !running ||
             entityTypeFilter(entity.entity, entityTypes) &&
+            entity.entity.matchesTargetState(
+                allowInvisible = allowInvisible,
+                allowSleeping = allowSleeping,
+                allowDead = allowDead,
+                allowCustomNamed = allowCustomNamed,
+                allowTamed = allowTamed,
+                allowTeamMates = allowTeamMates,
+                allowFriends = allowFriends
+            ) &&
             holdingItemFilter(player.mainHandItem.item, holdingItems)
     }
 

@@ -60,7 +60,6 @@
   "liquidbounce.command.enchant.result.enchantedItem": "Das Item wurde mit der Verzauberung %s auf der Stufe %s verzaubert.",
   "liquidbounce.command.enchant.result.enchantmentNotExists": "Verzauberung \"%s\" existiert nicht.",
   "liquidbounce.command.enchant.result.mustBeCreative": "Kreativmodus erforderlich!",
-  "liquidbounce.command.targets.description": "Ermöglicht dir Einzustellen, welche Entities als dein Ziel zählen.",
   "liquidbounce.command.friend.description": "Ermöglicht dir die Verwaltung deiner Freundesliste.",
   "liquidbounce.command.friend.subcommand.add.description": "Fügt der Freundesliste einen Namen hinzu.",
   "liquidbounce.command.friend.subcommand.add.parameter.alias.description": "Optionaler Alias für den Freund.",
@@ -650,6 +649,12 @@
   "liquidbounce.module.betterTitle.description": "Verbesserungen am Titel und Untertitel.",
   "liquidbounce.module.potionSpoof.description": "Erlaubt dem Spieler, Effekte zu erhalten, ohne einen Trank zu benutzen.",
   "liquidbounce.module.macros.description": "Ermöglicht dir, per benutzerdefinierter Taste Chat-Nachrichten oder Item-Aktionen auszuführen.",
-  "liquidbounce.module.newChunks.description": "Hebt Chunks hervor, die wahrscheinlich neu generiert wurden."
+  "liquidbounce.module.newChunks.description": "Hebt Chunks hervor, die wahrscheinlich neu generiert wurden.",
+  "liquidbounce.command.module.description": "Bietet modulspezifische Unterbefehle.",
+  "liquidbounce.command.module.subcommand.targets.description": "Schaltet einen Entitätstyp über modul-lokale Zielfilter um.",
+  "liquidbounce.command.module.subcommand.targets.result.enabled": "aktiviert",
+  "liquidbounce.command.module.subcommand.targets.result.disabled": "deaktiviert",
+  "liquidbounce.command.module.subcommand.targets.result.targetToggled": "Entitätstyp %s ist nun %s über %s Modul-Zielfilter.",
+  "liquidbounce.command.module.subcommand.targets.result.noEntityFilter": "Kein modul-lokaler Entitätsfilter verfügbar."
 
 }

@@ -38,6 +38,8 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
@@ -53,6 +55,10 @@ import kotlin.math.min
  * Calls tick function to speed up, when needed
  */
 internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBAT) {
+
+    private val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
+        EntityType.PLAYER
+    ))
 
     private val mode by enumChoice("Mode", TickBaseMode.PAST)
         .apply { tagBy(this) }
@@ -75,6 +81,13 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
         .doNotIncludeAlways()
 
     private val requiresKillAura by boolean("RequiresKillAura", true)
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
 
     private var ticksToSkip = 0
 
@@ -110,7 +123,19 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
             return@tickHandler
         }
 
-        val nearbyEnemy = world.findEnemy(0f..range.endInclusive) ?: return@tickHandler
+        val nearbyEnemy = world.findEnemy(0f..range.endInclusive) {
+            it.shouldBeAttacked(includeFriends = allowFriends)
+                && it.type in entityTypes
+                && it.matchesTargetState(
+                    allowInvisible = allowInvisible,
+                    allowSleeping = allowSleeping,
+                    allowDead = allowDead,
+                    allowCustomNamed = allowCustomNamed,
+                    allowTamed = allowTamed,
+                    allowTeamMates = allowTeamMates,
+                    allowFriends = allowFriends
+                )
+        } ?: return@tickHandler
         val currentDistance = player.position().distanceToSqr(nearbyEnemy.position())
         val rangeSq = range.start.sq()..range.endInclusive.sq()
 

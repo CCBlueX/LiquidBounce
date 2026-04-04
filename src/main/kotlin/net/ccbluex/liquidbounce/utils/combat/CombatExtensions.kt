@@ -24,10 +24,8 @@ import it.unimi.dsi.fastutil.objects.ObjectDoublePair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
@@ -46,32 +44,17 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.entity.AgeableMob
 import net.minecraft.world.entity.Attackable
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.NeutralMob
+import net.minecraft.world.entity.TamableAnimal
 import net.minecraft.world.entity.ai.attributes.Attributes
-import net.minecraft.world.entity.ambient.Bat
-import net.minecraft.world.entity.animal.allay.Allay
-import net.minecraft.world.entity.animal.fish.WaterAnimal
-import net.minecraft.world.entity.monster.Enemy
-import net.minecraft.world.entity.monster.Monster
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.GameType
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import java.util.EnumSet
 import java.util.function.Predicate
 
-/**
- * Global target configurable
- *
- * Modules can have their own enemy configurable if required. If not, they should use this as default.
- * Global enemy configurable can be used to configure which entities should be considered as a target.
- *
- * This can be adjusted by the .target command and the panel inside the ClickGUI.
- */
 data class EntityTargetingInfo(val classification: EntityTargetClassification, val isFriend: Boolean) {
     companion object {
         @JvmField
@@ -85,108 +68,91 @@ enum class EntityTargetClassification {
     IGNORED
 }
 
-/**
- * Configurable to configure which entities and their state (like being dead) should be considered as a target
- */
-enum class Targets(override val tag: String) : Tagged {
-    SELF("Self"),
-    PLAYERS("Players"),
-    HOSTILE("Hostile"),
-    ANGERABLE("Angerable"),
-    WATER_CREATURE("WaterCreature"),
-    PASSIVE("Passive"),
-    INVISIBLE("Invisible"),
-    DEAD("Dead"),
-    SLEEPING("Sleeping"),
-    FRIENDS("Friends");
-}
-
-private fun Set<Targets>.shouldAttack(entity: Entity): Boolean {
-    if (entity === player || entity.hasPassenger(player)) {
-        return false
-    }
-
-    val info = EntityTaggingManager.getTag(entity).targetingInfo
-
-    return when {
-        info.isFriend && Targets.FRIENDS !in this -> false
-        info.classification === EntityTargetClassification.TARGET -> isInteresting(entity)
-        else -> false
-    }
-}
-
-private fun Set<Targets>.shouldShow(entity: Entity): Boolean {
-    if (entity === player || entity.hasPassenger(player)) {
-        return Targets.SELF in this &&
-            (mc.options.cameraType !== CameraType.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled)
-    }
-
-    val info = EntityTaggingManager.getTag(entity).targetingInfo
-
-    return when {
-        info.isFriend && Targets.FRIENDS !in this -> false
-        info.classification !== EntityTargetClassification.IGNORED -> isInteresting(entity)
-        else -> false
-    }
-}
-
-/**
- * Check if an entity is considered a target
- */
-@Suppress("CyclomaticComplexMethod", "ReturnCount")
-private fun Set<Targets>.isInteresting(suspect: Entity): Boolean {
-    // Check if the enemy is living and not dead (or ignore being dead)
-    if (suspect !is LivingEntity || !(Targets.DEAD in this || suspect.isAlive)) {
-        return false
-    }
-
-    // Check if enemy is invisible (or ignore being invisible)
-    if (Targets.INVISIBLE !in this && suspect.isInvisible) {
-        return false
-    }
-
-    // Check if enemy is a player and should be considered as a target
-    return when (suspect) {
-        is Player -> when {
-            suspect === mc.player -> false
-            // Check if enemy is sleeping (or ignore being sleeping)
-            suspect.isSleeping && Targets.SLEEPING !in this -> false
-            else -> Targets.PLAYERS in this
-        }
-        is WaterAnimal -> Targets.WATER_CREATURE in this
-        is AgeableMob, is Bat, is Allay -> Targets.PASSIVE in this
-        is Monster, is Enemy -> Targets.HOSTILE in this
-        is NeutralMob -> Targets.ANGERABLE in this
-
-        else -> false
-    }
-}
-
 // Extensions
-@JvmOverloads
-fun Entity.shouldBeShown(enemyConf: Set<Targets> = GlobalSettingsTarget.visual) =
-    enemyConf.shouldShow(this)
+fun Entity.shouldBeShown(): Boolean {
+    if (this === player || this.hasPassenger(player)) {
+        return mc.options.cameraType !== CameraType.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled
+    }
 
-@JvmOverloads
-fun Entity?.shouldBeAttacked(enemyConf: Set<Targets> = GlobalSettingsTarget.combat) =
-    this is Attackable && enemyConf.shouldAttack(this)
+    val info = EntityTaggingManager.getTag(this).targetingInfo
+    return !info.isFriend && info.classification !== EntityTargetClassification.IGNORED
+}
+
+fun Entity?.shouldBeAttacked(includeFriends: Boolean = false) =
+    this is Attackable
+        && this !== player
+        && !this.hasPassenger(player)
+        && EntityTaggingManager.getTag(this).targetingInfo.let { info ->
+            (includeFriends || !info.isFriend) && info.classification === EntityTargetClassification.TARGET
+        }
+
+fun Entity.matchesTargetState(
+    allowInvisible: Boolean = false,
+    allowSleeping: Boolean = false,
+    allowDead: Boolean = false,
+    allowCustomNamed: Boolean = true,
+    allowTamed: Boolean = false,
+    allowTeamMates: Boolean = false,
+    allowFriends: Boolean = false
+): Boolean {
+    return isAllowedByLifeState(allowDead)
+        && isAllowedByVisibility(allowInvisible)
+        && isAllowedBySleepingState(allowSleeping)
+        && isAllowedByCustomName(allowCustomNamed)
+        && isAllowedByTeam(allowTeamMates)
+        && isAllowedByTamed(allowTamed)
+        && isAllowedByFriends(allowFriends)
+}
+
+private fun Entity.isAllowedByLifeState(allowDead: Boolean) =
+    !(this is LivingEntity && !allowDead && !this.isAlive)
+
+private fun Entity.isAllowedByVisibility(allowInvisible: Boolean) =
+    allowInvisible || !this.isInvisible
+
+private fun Entity.isAllowedBySleepingState(allowSleeping: Boolean) =
+    allowSleeping || this !is Player || !this.isSleeping
+
+private fun Entity.isAllowedByCustomName(allowCustomNamed: Boolean) =
+    allowCustomNamed || this.customName == null
+
+private fun Entity.isAllowedByTeam(allowTeamMates: Boolean) =
+    allowTeamMates || !this.isAlliedTo(player)
+
+private fun Entity.isAllowedByTamed(allowTamed: Boolean): Boolean {
+    if (allowTamed || this !is TamableAnimal) {
+        return true
+    }
+
+    val owner = this.ownerReference?.uuid
+    return owner == null || owner == player.uuid
+}
+
+private fun Entity.isAllowedByFriends(allowFriends: Boolean): Boolean {
+    if (allowFriends) {
+        return true
+    }
+
+    val info = EntityTaggingManager.getTag(this).targetingInfo
+    return !info.isFriend
+}
 
 /**
  * Find the best enemy in the current world in a specific range.
  */
 fun ClientLevel.findEnemy(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: Set<Targets> = GlobalSettingsTarget.combat
-) = findEnemies(range, enemyConf).minByOrNull { (_, distance) -> distance }?.key()
+    predicate: (Entity) -> Boolean = { it.shouldBeAttacked() }
+) = findEnemies(range, predicate).minByOrNull { (_, distance) -> distance }?.key()
 
 fun ClientLevel.findEnemies(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: Set<Targets> = GlobalSettingsTarget.combat
+    predicate: (Entity) -> Boolean = { it.shouldBeAttacked() }
 ): List<ObjectDoublePair<Entity>> {
     val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
 
     return getEntitiesInCuboid(player.eyePosition, squaredRange.endInclusive)
-        .filter { it.shouldBeAttacked(enemyConf) }
+        .filter(predicate)
         .mapToArray { ObjectDoublePair.of(it, it.squaredBoxedDistanceTo(player)) }
         .filter { (_, distance) -> distance in squaredRange }
 }

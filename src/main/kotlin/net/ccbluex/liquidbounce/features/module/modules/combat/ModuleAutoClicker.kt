@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.WeaponType
@@ -68,6 +69,13 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
         ))
 
         val clicker = tree(Clicker(this, mc.options.keyAttack, simulateAttackKeyDown = true))
+        private val allowInvisible by boolean("Invisible", false)
+        private val allowSleeping by boolean("Sleeping", false)
+        private val allowDead by boolean("Dead", false)
+        private val allowCustomNamed by boolean("CustomNamed", true)
+        private val allowTamed by boolean("Tamed", false)
+        private val allowTeamMates by boolean("TeamMates", false)
+        private val allowFriends by boolean("Friends", false)
 
         internal val requiresNoInput by boolean("RequiresNoInput", false)
         internal val delayOnBroken by boolean("DelayOnBroken", true)
@@ -94,7 +102,20 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
             val crosshair = mc.hitResult
 
             return when (objectiveType) {
-                ObjectiveType.ENEMY -> crosshair is EntityHitResult && crosshair.entity.shouldBeAttacked() && crosshair.entity.type in entityTypes
+                ObjectiveType.ENEMY -> {
+                    crosshair is EntityHitResult
+                        && crosshair.entity.shouldBeAttacked(includeFriends = allowFriends)
+                        && crosshair.entity.type in entityTypes
+                        && crosshair.entity.matchesTargetState(
+                            allowInvisible = allowInvisible,
+                            allowSleeping = allowSleeping,
+                            allowDead = allowDead,
+                            allowCustomNamed = allowCustomNamed,
+                            allowTamed = allowTamed,
+                            allowTeamMates = allowTeamMates,
+                            allowFriends = allowFriends
+                        )
+                }
                 ObjectiveType.ENTITY -> crosshair is EntityHitResult
                 ObjectiveType.BLOCK -> crosshair is BlockHitResult
                 ObjectiveType.ANY -> true

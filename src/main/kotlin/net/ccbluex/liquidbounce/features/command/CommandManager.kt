@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandHide
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandLocalConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandPanic
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandScript
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
 import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
@@ -59,6 +58,7 @@ import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.Comm
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
+import net.ccbluex.liquidbounce.features.command.commands.module.CommandModule
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandTeleport
@@ -132,12 +132,12 @@ object CommandManager : Collection<Command> by commandSet {
             CommandClear,
             CommandHide,
             CommandInvsee,
+            CommandModule,
             CommandPanic,
             CommandValue,
             CommandPing,
             CommandRemoteView,
             CommandXRay,
-            CommandTargets,
             CommandConfig,
             CommandLocalConfig,
             CommandAutoDisable,

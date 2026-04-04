@@ -185,7 +185,7 @@ object VelocityReduce : VelocityMode("Reduce") {
                 ModuleKillAura.range.interactionRange.toDouble()
             }),
             RotationManager.currentRotation ?: player.rotation
-        ) { !it.isRemoved && it.shouldBeAttacked() && it.type in ModuleVelocity.entityTypes }?.entity
+        ) { !it.isRemoved && ModuleVelocity.isValidTarget(it) }?.entity
 
         if (alinkTicks == -1) {
             renderTarget = target
@@ -194,7 +194,7 @@ object VelocityReduce : VelocityMode("Reduce") {
         if (target != null || alinkTicks >= 0) return
 
         renderTarget = world.entitiesForRendering().filterIsInstance<LivingEntity> { entity ->
-            !entity.isRemoved && entity.shouldBeAttacked() && entity.type in ModuleVelocity.entityTypes
+            !entity.isRemoved && ModuleVelocity.isValidTarget(entity)
         }.weightedMinByOrNullAtMost(alinkTargetRange.endInclusive.sq().toDouble()) { entity ->
             entity.squaredBoxedDistanceTo(player)
         }

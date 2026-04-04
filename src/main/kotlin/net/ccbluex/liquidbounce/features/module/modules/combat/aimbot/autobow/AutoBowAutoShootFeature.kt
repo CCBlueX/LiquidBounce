@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
@@ -67,6 +68,13 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
     private val aimThreshold by float("AimThreshold", 1.5F, 1.0F..4.0F, suffix = "°")
     private val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", false)
     private val usePrechargedCrossbow by boolean("UsePrechargedCrossbow", false)
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
 
     private var currentChargeRandom: Int? = null
 
@@ -133,7 +141,20 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
         if (requiresHypotheticalHit) {
             val hypotheticalHit = getHypotheticalHit()
 
-            if (hypotheticalHit == null || !hypotheticalHit.shouldBeAttacked() || hypotheticalHit.type !in entityTypes) {
+            if (
+                hypotheticalHit == null
+                || !hypotheticalHit.shouldBeAttacked(includeFriends = allowFriends)
+                || hypotheticalHit.type !in entityTypes
+                || !hypotheticalHit.matchesTargetState(
+                    allowInvisible = allowInvisible,
+                    allowSleeping = allowSleeping,
+                    allowDead = allowDead,
+                    allowCustomNamed = allowCustomNamed,
+                    allowTamed = allowTamed,
+                    allowTeamMates = allowTeamMates,
+                    allowFriends = allowFriends
+                )
+            ) {
                 return@handler
             }
         } else if (AutoBowAimbotFeature.enabled) {
@@ -226,9 +247,18 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
     private fun findAndBuildSimulatedEntities(): List<Pair<Entity, SimulatedPlayerCache?>> {
         return world.entitiesForRendering().filter { entity ->
-            entity != player &&
-                entity.shouldBeAttacked() &&
+                entity != player &&
+                entity.shouldBeAttacked(includeFriends = allowFriends) &&
                 entity.type in entityTypes &&
+                entity.matchesTargetState(
+                    allowInvisible = allowInvisible,
+                    allowSleeping = allowSleeping,
+                    allowDead = allowDead,
+                    allowCustomNamed = allowCustomNamed,
+                    allowTamed = allowTamed,
+                    allowTeamMates = allowTeamMates,
+                    allowFriends = allowFriends
+                ) &&
                 Line(player.eyePosition, player.rotation.directionVector)
                     .distanceToSqr(entity.position()) < 10.0 * 10.0
         }.map { entity ->

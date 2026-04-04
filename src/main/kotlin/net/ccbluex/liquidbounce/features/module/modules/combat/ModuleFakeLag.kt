@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
@@ -68,6 +69,13 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     ))
 
     private val range by floatRange("Range", 2f..5f, 0f..10f)
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
     private val delay by intRange("Delay", 300..600, 0..1000, "ms")
     private val recoilTime by int("RecoilTime", 250, 0..1000, "ms")
     private val mode by enumChoice("Mode", Mode.DYNAMIC).apply { tagBy(this) }
@@ -103,7 +111,19 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
 
     @Suppress("unused")
     private val gameTickHandler = tickHandler {
-        isEnemyNearby = world.findEnemy(range) != null
+        isEnemyNearby = world.findEnemy(range) {
+            it.type in entityTypes
+                && it.shouldBeAttacked(includeFriends = allowFriends)
+                && it.matchesTargetState(
+                    allowInvisible = allowInvisible,
+                    allowSleeping = allowSleeping,
+                    allowDead = allowDead,
+                    allowCustomNamed = allowCustomNamed,
+                    allowTamed = allowTamed,
+                    allowTeamMates = allowTeamMates,
+                    allowFriends = allowFriends
+                )
+        } != null
 
         if (ModuleAutoDodge.enabled) {
             val position = positions.firstOrNull() ?: return@tickHandler
@@ -223,8 +243,19 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
                 // todo: implement if enemy is facing old player position
 
                 val entities = world.getEntitiesBoxInRange(position, range.endInclusive.toDouble()) {
-                    it != player && it.shouldBeAttacked() && it.type in entityTypes
-                }
+            it != player
+                && it.shouldBeAttacked(includeFriends = allowFriends)
+                && it.type in entityTypes
+                && it.matchesTargetState(
+                    allowInvisible = allowInvisible,
+                    allowSleeping = allowSleeping,
+                    allowDead = allowDead,
+                    allowCustomNamed = allowCustomNamed,
+                    allowTamed = allowTamed,
+                    allowTeamMates = allowTeamMates,
+                    allowFriends = allowFriends
+                )
+        }
 
                 // If there are no entities, we don't want to lag.
                 if (entities.isEmpty()) {

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
@@ -56,6 +57,13 @@ object ModuleCombineMobs : ClientModule("CombineMobs", ModuleCategories.RENDER) 
 
     private val combineArmorStands by boolean("CombineArmorStands", false)
     private val combineMinecarts by boolean("CombineMinecarts", false)
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
 
     private fun defaultEntityTypes(): SequencedSet<EntityType<*>> =
         objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
@@ -98,6 +106,18 @@ object ModuleCombineMobs : ClientModule("CombineMobs", ModuleCategories.RENDER) 
     @JvmOverloads
     fun trackEntity(entity: Entity, forNametag: Boolean = false): Boolean {
         if (entity.type !in entityTypes) return false
+        if (!entity.matchesTargetState(
+                allowInvisible = allowInvisible,
+                allowSleeping = allowSleeping,
+                allowDead = allowDead,
+                allowCustomNamed = allowCustomNamed,
+                allowTamed = allowTamed,
+                allowTeamMates = allowTeamMates,
+                allowFriends = allowFriends
+            )) {
+            return false
+        }
+
         val canCombine = entity is Mob ||
             (entity is ArmorStand && combineArmorStands) ||
             (entity is AbstractMinecart && combineMinecarts)

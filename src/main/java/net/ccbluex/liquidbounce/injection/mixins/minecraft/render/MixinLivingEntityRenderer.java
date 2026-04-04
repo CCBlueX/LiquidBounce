@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
-import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.Model;
@@ -194,7 +193,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
 
-        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity)) {
+        if (ModuleChams.INSTANCE.getRunning() && ModuleChams.INSTANCE.shouldRender(entity)) {
             RenderSetup renderSetup = ((MixinRenderTypeAccessor) original).getState();
             boolean affectsOutline = ((MixinRenderSetupAccessor) (Object) renderSetup).getOutlineProperty() == RenderSetup.OutlineProperty.AFFECTS_OUTLINE;
 

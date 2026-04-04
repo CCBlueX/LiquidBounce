@@ -62,7 +62,6 @@
     "liquidbounce.command.enchant.result.mustBeCreative": "Creatieve modus is vereist!",
     "liquidbounce.command.coordinates.description": "Toont je coördinaten, kopieert ze naar het klembord of stuurt ze via /msg.",
     "liquidbounce.command.coordinates.subcommand.copy.result.success": "Je coördinaten zijn naar het klembord gekopieerd.",
-    "liquidbounce.command.targets.description": "Beheer welke entiteiten als doelwit worden beschouwd.",
     "liquidbounce.command.friend.description": "Beheer je vriendenlijst.",
     "liquidbounce.command.friend.subcommand.add.description": "Voegt een naam toe aan de vriendenlijst.",
     "liquidbounce.command.friend.subcommand.add.parameter.alias.description": "Optionele alias voor de vriend.",
@@ -574,5 +573,11 @@
     "liquidbounce.module.betterTab.description": "Diverse verbeteringen aan de tablijst.",
     "liquidbounce.module.autoPearl.description": "Richt en werpt een enderparel in de baan van de enderparel van de vijand.",
     "liquidbounce.module.replenish.description": "Vult automatisch je hotbar bij vanuit je inventaris als het aantal te laag wordt.",
-    "liquidbounce.module.anchor.description": "Trek jezelf in een veilig gat voor crystal-PvP."
+    "liquidbounce.module.anchor.description": "Trek jezelf in een veilig gat voor crystal-PvP.",
+    "liquidbounce.command.module.description": "Biedt module-specifieke subcommando's.",
+    "liquidbounce.command.module.subcommand.targets.description": "Schakelt een entiteitstype over module-lokale doelfilters.",
+    "liquidbounce.command.module.subcommand.targets.result.enabled": "ingeschakeld",
+    "liquidbounce.command.module.subcommand.targets.result.disabled": "uitgeschakeld",
+    "liquidbounce.command.module.subcommand.targets.result.targetToggled": "Entiteitstype %s is nu %s over %s module-doelfilters.",
+    "liquidbounce.command.module.subcommand.targets.result.noEntityFilter": "Geen module-lokale entiteitsfilter beschikbaar."
 }

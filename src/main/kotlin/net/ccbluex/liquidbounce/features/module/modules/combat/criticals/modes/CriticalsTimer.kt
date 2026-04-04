@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.wouldDoCriticalHit
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 object CriticalsTimer : Mode("Timer") {
@@ -38,7 +37,7 @@ object CriticalsTimer : Mode("Timer") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        world.findEnemy(0.0f..range) ?: return@handler
+        if (!ModuleCriticals.hasEnemyInRange(range)) return@handler
 
         if (wouldDoCriticalHit(ignoreSprint = true)) {
             Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleCriticals)
@@ -47,5 +46,3 @@ object CriticalsTimer : Mode("Timer") {
     }
 
 }
-
-

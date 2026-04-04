@@ -34,11 +34,13 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.C
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.sendStopSprinting
-import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.minecraft.core.registries.BuiltInRegistries
@@ -56,6 +58,17 @@ import net.minecraft.world.level.block.WebBlock
  * Automatically crits every time you attack someone.
  */
 object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
+
+    val entityTypes by entityTypes("Entities", objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(),
+        EntityType.PLAYER
+    ))
+    private val allowInvisible by boolean("Invisible", false)
+    private val allowSleeping by boolean("Sleeping", false)
+    private val allowDead by boolean("Dead", false)
+    private val allowCustomNamed by boolean("CustomNamed", true)
+    private val allowTamed by boolean("Tamed", false)
+    private val allowTeamMates by boolean("TeamMates", false)
+    private val allowFriends by boolean("Friends", false)
 
     val modes = choices("Mode", 1) {
         arrayOf(
@@ -79,7 +92,7 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
         override val running: Boolean
             get() = super.running && wouldDoCriticalHit(true)
-                && world.findEnemy(0.0f..enemyInRange) != null
+                && hasEnemyInRange(enemyInRange)
 
         val stopSprinting by enumChoice("StopSprinting", StopSprintingMode.LEGIT)
         private val enemyInRange by float("Range", 4.0f, 0.0f..10.0f)
@@ -226,5 +239,19 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
     fun wouldDoCriticalHit(ignoreSprint: Boolean = false) =
         canDoCriticalHit(false, ignoreSprint) && player.fallDistance > 0.0
+
+    fun hasEnemyInRange(range: Float) = world.findEnemy(0.0f..range) {
+        it.shouldBeAttacked(includeFriends = allowFriends)
+            && it.type in entityTypes
+            && it.matchesTargetState(
+                allowInvisible = allowInvisible,
+                allowSleeping = allowSleeping,
+                allowDead = allowDead,
+                allowCustomNamed = allowCustomNamed,
+                allowTamed = allowTamed,
+                allowTeamMates = allowTeamMates,
+                allowFriends = allowFriends
+            )
+    } != null
 
 }

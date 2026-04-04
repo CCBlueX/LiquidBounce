@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.combat.matchesTargetState
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -58,7 +59,19 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                 // This means we will only care about entities that are our enemies and are close enough to us
                 // That means we will still throw the potion if there is a friendly friend or team member nearby
                 val benefits = world.entitiesForRendering().any {
-                    it is LivingEntity && it.shouldBeAttacked() && it.type in ModuleAutoBuff.entityTypes && hasBenefit(it)
+                    it is LivingEntity
+                        && it.shouldBeAttacked(includeFriends = ModuleAutoBuff.allowFriends)
+                        && it.type in ModuleAutoBuff.entityTypes
+                        && it.matchesTargetState(
+                            allowInvisible = ModuleAutoBuff.allowInvisible,
+                            allowSleeping = ModuleAutoBuff.allowSleeping,
+                            allowDead = ModuleAutoBuff.allowDead,
+                            allowCustomNamed = ModuleAutoBuff.allowCustomNamed,
+                            allowTamed = ModuleAutoBuff.allowTamed,
+                            allowTeamMates = ModuleAutoBuff.allowTeamMates,
+                            allowFriends = ModuleAutoBuff.allowFriends
+                        )
+                        && hasBenefit(it)
                 }
 
                 if (benefits) {
