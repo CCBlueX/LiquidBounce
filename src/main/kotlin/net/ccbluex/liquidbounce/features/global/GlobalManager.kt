@@ -34,7 +34,6 @@ object GlobalManager : Config("Settings") {
     init {
         tree(LanguageManager)
         tree(CommandManager.GlobalSettings)
-        tree(GlobalSettingsTarget)
         tree(BlinkManager)
         tree(GlobalSettingsAutoTranslate)
         tree(GlobalBrowserSettings)

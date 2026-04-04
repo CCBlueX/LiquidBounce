@@ -35,16 +35,13 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.entity.filter.EntityCategoryFilter
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.world.entity.EntityType
-import java.util.SequencedSet
 
 /**
  * Tracers module
@@ -67,10 +64,7 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
 
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
-    private fun defaultEntityTypes(): SequencedSet<EntityType<*>> =
-        objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(), EntityType.PLAYER)
-
-    private val entityTypes by entityTypes("Entities", defaultEntityTypes())
+    private val entityFilter = tree(EntityCategoryFilter())
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
@@ -95,7 +89,7 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
             longLines {
                 val maxDistanceSq = maximumDistance.sq()
                 for (entity in RenderedEntities) {
-                    if (entity.type !in entityTypes) continue
+                    if (!entityFilter.matches(entity)) continue
                     val distanceSq = entity.position().cameraDistanceSq().toFloat()
                     if (distanceSq > maxDistanceSq) {
                         continue

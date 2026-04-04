@@ -54,7 +54,7 @@ sealed class EspMode(
             pool.recycleAll(prepared)
             prepared.clear()
             for (entity in RenderedEntities) {
-                if (!shouldRender(entity) || entity.type !in ModuleESP.entityTypes) continue
+                if (!shouldRender(entity) || !ModuleESP.entityFilter.matches(entity)) continue
 
                 val dimensions = entity.getDimensions(entity.pose)
                 val halfWidth = dimensions.width.toDouble() / 2.0

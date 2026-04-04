@@ -38,7 +38,7 @@ object EspLegacy2DMode : EspMode("Legacy2D") {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             for (entity in RenderedEntities) {
-                if (!shouldRender(entity) || entity.type !in ModuleESP.entityTypes) continue
+                if (!shouldRender(entity) || !ModuleESP.entityFilter.matches(entity)) continue
 
                 val pos = entity.interpolateCurrentPosition(event.partialTicks).add(0.0, yOffset.toDouble(), 0.0)
                 val color = getColor(entity).argb

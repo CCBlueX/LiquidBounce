@@ -42,8 +42,8 @@ import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.client.scaledDimension
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.entity.filter.EntityCategoryFilter
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.unaryMinus
@@ -110,12 +110,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
 
     private val radius by float("Radius", 40f, 2f..200f)
 
-    private val onlyPlayers by boolean("OnlyPlayers", false)
-
-    private fun defaultEntityTypes(): SequencedSet<EntityType<*>> =
-        objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(), EntityType.PLAYER)
-
-    private val entityTypes by entityTypes("Entities", defaultEntityTypes())
+    private val entityFilter = tree(EntityCategoryFilter())
 
     private val pointerModes = choices("PointerMode", 0) {
         arrayOf(
@@ -231,7 +226,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 rotate(-yawRad)
 
                 for (entity in RenderedEntities) {
-                    if (entity === player || (onlyPlayers && entity !is Player) || entity.type !in entityTypes) continue
+                    if (entity === player || !entityFilter.matches(entity)) continue
                     val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
 
                     val cameraDistance = entityPos.cameraDistance().toFloat()
