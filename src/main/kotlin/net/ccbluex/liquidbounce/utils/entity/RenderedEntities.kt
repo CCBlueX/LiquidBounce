@@ -35,7 +35,7 @@ private val entities = ReferenceArrayList<LivingEntity>()
 /**
  * A readonly [Collection] containing all [LivingEntity] instances from the world (excluding the local player).
  *
- * NOTE: This collection does NOT apply [shouldBeShown] or any global target filters.
+ * NOTE: This collection does NOT apply [net.ccbluex.liquidbounce.utils.combat.shouldBeShown] or any global target filters.
  * Modules iterating over this collection are responsible for their own filtering (e.g., entity type,
  * visual settings, friend lists).
  *
