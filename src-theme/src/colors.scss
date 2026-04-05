@@ -5,7 +5,7 @@
     --text-dimmed-color: #d3d3d3;
     --text-soft-color: #cbd1e3;
 
-    --accent-color: red;
+    --accent-color: #4677ff;
     --accent-hover-color: color-mix(in srgb, var(--accent-color) 82%, black);
     --accent-soft-background-color: color-mix(in srgb, var(--accent-color) 10%, transparent);
     --accent-muted-background-color: color-mix(in srgb, var(--accent-color) 15%, transparent);
@@ -124,13 +124,19 @@
     --menu-icon-text-button-background-color: var(--menu-base-36-color);
     --menu-icon-text-button-accent-color: var(--accent-color);
     --menu-icon-text-button-icon-background-color: var(--accent-color);
+    --menu-title-button-icon-color: var(--menu-text-color);
+    --menu-title-button-icon-hover-color: var(--accent-color);
     --menu-main-button-background-color: var(--menu-base-68-color);
     --menu-main-button-accent-color: var(--accent-color);
     --menu-main-button-icon-background-color: var(--accent-color);
     --menu-main-button-icon-hover-background-color: var(--menu-text-color);
+    --menu-main-button-icon-foreground-color: var(--menu-title-button-icon-color);
+    --menu-main-button-icon-hover-foreground-color: var(--menu-title-button-icon-hover-color);
     --menu-main-button-text-color: var(--menu-text-color);
     --menu-child-button-background-color: var(--accent-color);
     --menu-child-button-hover-background-color: var(--menu-text-color);
+    --menu-child-button-icon-color: var(--menu-title-button-icon-color);
+    --menu-child-button-icon-hover-color: var(--menu-title-button-icon-hover-color);
     --menu-child-button-hover-text-color: var(--accent-color);
     --menu-input-background-color: var(--menu-base-36-color);
     --menu-input-divider-color: var(--menu-base-color);

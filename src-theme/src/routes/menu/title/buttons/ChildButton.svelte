@@ -1,7 +1,7 @@
 <script lang="ts">
-    import {fade} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
     import ToolTip from "../../common/ToolTip.svelte";
+    import TitleButtonIcon from "./TitleButtonIcon.svelte";
 
     export let title: string;
     export let icon: string;
@@ -16,11 +16,7 @@
     <ToolTip color="var(--menu-base-color)" text="Join Realms server" />
 
     <div class="icon">
-        {#if parentHovered}
-            <img transition:fade="{{ duration: 200 }}" src="img/menu/icon-{icon}-hover.svg" alt={title}>
-        {:else}
-            <img transition:fade="{{ duration: 200 }}" src="img/menu/icon-{icon}.svg" alt={title}>
-        {/if}
+        <TitleButtonIcon {icon} />
     </div>
 
     <div class="title">{title}</div>
@@ -40,6 +36,10 @@
       &.parent-hovered {
         background-color: var(--menu-child-button-hover-background-color);
 
+        .icon {
+          color: var(--menu-child-button-icon-hover-color);
+        }
+
         .title {
           color: var(--menu-child-button-hover-text-color);
         }
@@ -55,15 +55,9 @@
     }
 
     .icon { /* necessary because svelte's transition system sucks */
+      color: var(--menu-child-button-icon-color);
       width: 28px;
       height: 28px;
-      position: relative;
-
-      img {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
+      transition: ease color 0.2s;
     }
 </style>
