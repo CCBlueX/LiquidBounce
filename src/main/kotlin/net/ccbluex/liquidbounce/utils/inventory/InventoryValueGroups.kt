@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.ValueType
@@ -66,10 +67,8 @@ open class InventoryConstraints : ValueGroup("Constraints") {
         choices = requirementChoices(),
     )
 
-    protected open fun requirementChoices(): EnumSet<InventoryRequirements> = enumSetOf(
-        InventoryRequirements.NO_MOVEMENT,
-        InventoryRequirements.NO_ROTATION
-    )
+    protected open fun requirementChoices(): EnumSet<InventoryRequirements> =
+        enumSetAllOf<InventoryRequirements>().also { it.remove(InventoryRequirements.OPEN_INVENTORY) }
 
     /**
      * Whether the constraints are met, this will be checked before any inventory actions are performed.
@@ -86,9 +85,7 @@ open class InventoryConstraints : ValueGroup("Constraints") {
 class PlayerInventoryConstraints : InventoryConstraints() {
     val requiresOpenInventory get() = InventoryRequirements.OPEN_INVENTORY in requirements
 
-    override fun requirementChoices(): EnumSet<InventoryRequirements> {
-        return super.requirementChoices().also { it += InventoryRequirements.OPEN_INVENTORY }
-    }
+    override fun requirementChoices(): EnumSet<InventoryRequirements> = enumSetAllOf()
 }
 
 enum class InventoryRequirements(
@@ -97,6 +94,8 @@ enum class InventoryRequirements(
     NO_MOVEMENT("NoMovement"),
 
     NO_ROTATION("NoRotation"),
+
+    NOT_USING_ITEM("NotUsingItem"),
 
     /**
      * When this option is not enabled, the inventory will be opened silently
@@ -118,6 +117,7 @@ enum class InventoryRequirements(
         NO_MOVEMENT -> player.input.moveVector.isLikelyZero && !player.jumping
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
         OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
+        NOT_USING_ITEM -> !player.isUsingItem
     }
 }
 
