@@ -12,7 +12,6 @@
     <LiquidBounceLogo
         width="261.263px"
         height="98px"
-        foregroundFill="var(--animated-logo-foreground-color)"
         badgeFill={`url(#${bannerGradientId})`}
         badgeTextFill={`url(#${bannerTextGradientId})`}
         badgeGroupClass="bounce-part"

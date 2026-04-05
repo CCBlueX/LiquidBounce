@@ -61,9 +61,7 @@
         <LiquidBounceLogo
             width="261.263px"
             height="98px"
-            foregroundFill="var(--text-color)"
             badgeFill="var(--accent-color)"
-            badgeTextFill="var(--text-color)"
         />
     {/if}
 

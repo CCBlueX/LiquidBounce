@@ -1,12 +1,9 @@
 <script lang="ts">
     export let width = "261.263px";
     export let height = "98px";
-    export let foregroundFill = "var(--text-color)";
     export let badgeFill = "var(--accent-color)";
-    export let badgeTextFill: string | null = null;
+    export let badgeTextFill = "var(--text-color)";
     export let badgeGroupClass = "";
-
-    $: resolvedBadgeTextFill = badgeTextFill ?? foregroundFill;
 </script>
 
 <svg
@@ -20,7 +17,7 @@
         <slot name="defs" />
     </defs>
 
-    <g fill={foregroundFill}>
+    <g fill="#ffffff">
         <path
             d="M79.9,39.948A39.967,39.967,0,0,0,39.947,0H0V39.948a39.948,39.948,0,1,0,79.9,0Z"
             fill-rule="evenodd"
@@ -49,7 +46,7 @@
             fill={badgeFill}
         />
 
-        <g fill={resolvedBadgeTextFill}>
+        <g fill={badgeTextFill}>
             <path
                 d="M107.571,51.278a3.158,3.158,0,0,1,1.68,2.922,3.434,3.434,0,0,1-1.151,2.666,4.06,4.06,0,0,1-2.83,1.041H99.846V45.123h5.04a3.922,3.922,0,0,1,2.758,1.023,3.285,3.285,0,0,1,1.132,2.575A3.115,3.115,0,0,1,107.571,51.278Zm-2.685-3.8h-2.519v2.812h2.519a1.279,1.279,0,0,0,.968-.4,1.36,1.36,0,0,0,.4-1,1.4,1.4,0,0,0-.384-1A1.3,1.3,0,0,0,104.886,47.479Zm.384,8.072a1.437,1.437,0,0,0,1.059-.42,1.52,1.52,0,0,0,.421-1.1,1.435,1.435,0,0,0-.421-1.059,1.407,1.407,0,0,0-1.059-.438h-2.9v3.013Z"
                 transform="translate(68.86 31.12)"
