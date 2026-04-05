@@ -33,6 +33,17 @@
         "/browser": Browser
     };
 
+    const foundationColorMixes = {
+        surface: 18,
+        text: 8,
+        "text-dimmed": 14
+    } as const;
+
+    type FoundationColorName = keyof typeof foundationColorMixes;
+    type FoundationColors = Record<FoundationColorName | "accent", string>;
+
+    let foundationColors: FoundationColors | null = null;
+
     async function changeRoute(name: string) {
         cleanupListeners();
         console.log(`[Router] Redirecting to ${name}`);
@@ -43,14 +54,61 @@
         return `${name}-color`;
     }
 
+    function setThemeColor(name: string, value: string) {
+        document.documentElement.style.setProperty(`--${formatColorKey(name)}`, value);
+    }
+
+    function getThemeColor(name: string) {
+        return getComputedStyle(document.documentElement).getPropertyValue(`--${formatColorKey(name)}`).trim();
+    }
+
+    function getFoundationColors() {
+        if (foundationColors !== null) {
+            return foundationColors;
+        }
+
+        foundationColors = {
+            accent: getThemeColor("accent"),
+            surface: getThemeColor("surface"),
+            text: getThemeColor("text"),
+            "text-dimmed": getThemeColor("text-dimmed")
+        };
+
+        return foundationColors;
+    }
+
+    function themeColorToHex(value: number) {
+        return rgbaToHex(intToRgba(value));
+    }
+
+    function getTintedFoundationColor(name: FoundationColorName, accentColor: string) {
+        const colors = getFoundationColors();
+
+        if (accentColor === colors.accent) {
+            return colors[name];
+        }
+
+        const accentMix = foundationColorMixes[name];
+        return `color-mix(in srgb, ${colors[name]} ${100 - accentMix}%, ${accentColor})`;
+    }
+
+    function applyAccentTint(accentColor: string) {
+        setThemeColor("accent", accentColor);
+        setThemeColor("surface", getTintedFoundationColor("surface", accentColor));
+        setThemeColor("text", getTintedFoundationColor("text", accentColor));
+        setThemeColor("text-dimmed", getTintedFoundationColor("text-dimmed", accentColor));
+    }
+
     async function applyColors(id: string) {
         let theme = await getTheme(id);
-        for (const [key, value] of Object.entries(theme.colors)) {
-            document.documentElement.style.setProperty(`--${formatColorKey(key)}`, rgbaToHex(intToRgba(value)));
-        }
+        let accentValue = Object.values(theme.colors)[0];
+        let accentColor = accentValue === undefined ? getFoundationColors().accent : themeColorToHex(accentValue);
+        applyAccentTint(accentColor);
     }
 
     onMount(async () => {
+        getFoundationColors();
+
         let metadata = await getMetadata();
 
         await applyColors(metadata.id);
@@ -62,7 +120,7 @@
                 return;
             }
 
-            document.documentElement.style.setProperty(`--${formatColorKey(event.name)}`, rgbaToHex(intToRgba(event.value)));
+            applyAccentTint(themeColorToHex(event.value));
         });
 
         if (isStatic) {
