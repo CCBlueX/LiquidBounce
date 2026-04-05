@@ -373,6 +373,7 @@ export interface GameWindow {
 export interface Theme {
     name: string;
     id: string;
+    colors: { [name: string]: number };
     settings: { [name: string]: any };
 }
 

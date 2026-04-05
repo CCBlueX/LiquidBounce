@@ -3,6 +3,12 @@
   "name": "LiquidBounce",
   "version": "0.1.0",
   "authors": ["CCBlueX"],
+  "colors": {
+    "accent": "#4677ff",
+    "surface": "#000000",
+    "text": "#ffffff",
+    "text-dimmed": "#d3d3d3"
+  },
   "screens": [
     "clickgui",
     "title",

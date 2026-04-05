@@ -1,7 +1,7 @@
 <script lang="ts">
     import Router, {push} from "svelte-spa-router";
     import Hud from "./routes/hud/Hud.svelte";
-    import {getVirtualScreen} from "./integration/rest";
+    import {getMetadata, getTheme, getVirtualScreen} from "./integration/rest";
     import {cleanupListeners, listenAlways} from "./integration/ws";
     import {onMount} from "svelte";
     import {insertPersistentData} from "./integration/persistent_storage";
@@ -16,6 +16,8 @@
     import Disconnected from "./routes/menu/disconnected/Disconnected.svelte";
     import Browser from "./routes/browser/Browser.svelte";
     import TabbedClickGui from "./routes/clickgui/TabbedClickGui.svelte";
+    import {intToRgba, rgbaToHex} from "./integration/util";
+    import type {ThemeColorChangeEvent} from "./integration/events";
 
     const routes = {
         "/clickgui": TabbedClickGui,
@@ -37,8 +39,31 @@
         await push(`/${name}`);
     }
 
+    function formatColorKey(name: string) {
+        return `${name}-color`;
+    }
+
+    async function applyColors(id: string) {
+        let theme = await getTheme(id);
+        for (const [key, value] of Object.entries(theme.colors)) {
+            document.documentElement.style.setProperty(`--${formatColorKey(key)}`, rgbaToHex(intToRgba(value)));
+        }
+    }
+
     onMount(async () => {
+        let metadata = await getMetadata();
+
+        await applyColors(metadata.id);
         await insertPersistentData();
+
+        listenAlways("themeColorChange", async (event: ThemeColorChangeEvent) => {
+            console.log(JSON.stringify(event));
+            if (event.themeId !== metadata.id) {
+                return;
+            }
+
+            document.documentElement.style.setProperty(`--${formatColorKey(event.name)}`, rgbaToHex(intToRgba(event.value)));
+        });
 
         if (isStatic) {
             return;

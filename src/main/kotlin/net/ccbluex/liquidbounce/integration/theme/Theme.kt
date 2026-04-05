@@ -31,11 +31,13 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.ThemeColorChangeEvent
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory.JsonHudComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.server.packs.resources.ResourceManager
@@ -93,6 +95,10 @@ class Theme private constructor(val origin: Origin, url: String) :
     val settings: ValueGroup
         get() = requireNotNull(_settings) { "settings not loaded" }
 
+    private var _colors: ValueGroup? = null
+    val colors: ValueGroup
+        get() = requireNotNull(_colors) { "colors not loaded" }
+
     private suspend fun loadComponents() {
         _components = metadata.components.mapNotNull { name ->
             val componentFactory = runCatching {
@@ -114,6 +120,19 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
 
         _settings = ValueGroup(metadata.id.capitalize()).apply {
+            _colors = ValueGroup("Colors")
+            metadata.colors?.let { values ->
+                for ((name, value) in values) {
+                    val color4b = Color4b.fromHex(value)
+                    colors.color(name, color4b).apply {
+                        onChanged { color ->
+                            EventManager.callEvent(ThemeColorChangeEvent(metadata.id, name, color))
+                        }
+                    }
+                }
+            }
+            tree(colors)
+
             metadata.values?.let { values ->
                 for (value in values) {
                     json(value)
