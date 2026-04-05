@@ -7,9 +7,7 @@
 
     --accent-color: #4677ff;
     --accent-hover-color: color-mix(in srgb, var(--accent-color) 82%, black);
-    --accent-soft-background-color: color-mix(in srgb, var(--accent-color) 10%, transparent);
-    --accent-muted-background-color: color-mix(in srgb, var(--accent-color) 15%, transparent);
-    --accent-outline-color: color-mix(in srgb, var(--accent-color) 80%, transparent);
+    --accent-subtle-background-color: color-mix(in srgb, var(--accent-color) 12%, transparent);
 
     --success-color: #4dac68;
     --error-color: #fc4130;
@@ -59,13 +57,13 @@
     --clickgui-tabs-background-color: var(--clickgui-base-85-color);
     --clickgui-tabs-shadow-color: var(--clickgui-base-50-color);
     --clickgui-tab-hover-background-color: var(--clickgui-base-70-color);
-    --clickgui-tab-active-background-color: var(--accent-muted-background-color);
-    --clickgui-tab-active-border-color: var(--accent-outline-color);
+    --clickgui-tab-active-background-color: var(--accent-subtle-background-color);
+    --clickgui-tab-active-border-color: var(--accent-color);
 
     --clickgui-window-background-color: var(--clickgui-base-80-color);
     --clickgui-window-shadow-color: var(--clickgui-base-50-color);
     --clickgui-window-header-background-color: var(--clickgui-base-90-color);
-    --clickgui-window-header-border-color: var(--accent-outline-color);
+    --clickgui-window-header-border-color: var(--accent-color);
 
     --clickgui-global-settings-divider-color: color-mix(in srgb, var(--clickgui-text-color) 12%, transparent);
     --clickgui-input-background-color: var(--clickgui-base-36-color);
@@ -81,7 +79,7 @@
     --clickgui-dropdown-option-selected-color: var(--accent-color);
     --clickgui-selection-chip-background-color: var(--clickgui-base-30-color);
     --clickgui-selection-chip-color: var(--clickgui-text-dimmed-color);
-    --clickgui-selection-chip-selected-background-color: var(--accent-soft-background-color);
+    --clickgui-selection-chip-selected-background-color: var(--accent-subtle-background-color);
     --clickgui-selection-chip-selected-color: var(--accent-color);
     --clickgui-selection-chip-remove-background-color: color-mix(in srgb, var(--error-color) 10%, transparent);
     --clickgui-selection-chip-remove-color: var(--error-color);
