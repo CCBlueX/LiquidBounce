@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
@@ -97,6 +98,8 @@ enum class InventoryRequirements(
 
     NOT_USING_ITEM("NotUsingItem"),
 
+    NOT_BREAKING("NotBreaking"),
+
     /**
      * When this option is not enabled, the inventory will be opened silently
      * depending on the Minecraft version chosen using ViaFabricPlus.
@@ -116,8 +119,9 @@ enum class InventoryRequirements(
     override fun test(action: InventoryAction): Boolean = when (this) {
         NO_MOVEMENT -> player.input.moveVector.isLikelyZero && !player.jumping
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
-        OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
         NOT_USING_ITEM -> !player.isUsingItem
+        NOT_BREAKING -> mc.gameMode?.isDestroying == false
+        OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
     }
 }
 
