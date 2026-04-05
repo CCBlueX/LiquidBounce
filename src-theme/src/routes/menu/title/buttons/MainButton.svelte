@@ -19,7 +19,7 @@
      on:click={() => dispatch("click")} out:fly|global={{duration: 400, x: -500, delay: index * 100, easing: backIn}}
      in:fly|global={{duration: 400, x: -500, delay: index * 100, easing: backOut}}>
     <div class="icon">
-        <TitleButtonIcon {icon} size="40px" />
+        <TitleButtonIcon {icon} />
     </div>
 
     <div class="title">{title}</div>
