@@ -198,19 +198,18 @@
 </div>
 
 <style lang="scss">
-  @use "../../colors.scss" as *;
 
   .search {
     position: fixed;
     left: 50%;
     top: 70px;
     transform: translateX(-50%);
-    background-color: rgba($clickgui-base-color, 0.9);
+    background-color: var(--clickgui-search-background-color);
     width: 600px;
     border-radius: 30px;
     overflow: hidden;
     transition: ease border-radius 0.2s;
-    box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
+    box-shadow: 0 0 10px var(--clickgui-search-shadow-color);
 
     &.has-results {
       border-radius: 10px;
@@ -223,7 +222,7 @@
   }
 
   .results {
-    border-top: solid 2px $accent-color;
+    border-top: solid 2px var(--clickgui-search-border-color);
     padding: 5px 25px;
     max-height: 250px;
     overflow: auto;
@@ -237,18 +236,18 @@
       grid-template-columns: max-content 1fr max-content;
 
       .module-name {
-        color: $clickgui-text-dimmed-color;
+        color: var(--clickgui-text-dimmed-color);
         transition: ease color 0.2s;
       }
 
       &.enabled {
         .module-name {
-          color: $accent-color;
+          color: var(--clickgui-search-enabled-color);
         }
       }
 
       .aliases {
-        color: rgba($clickgui-text-dimmed-color, .6);
+        color: var(--clickgui-search-alias-color);
         margin-left: 10px;
       }
 
@@ -257,18 +256,18 @@
       }
 
       &:hover {
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
 
         &::after {
           content: "Right-click to locate";
-          color: rgba($clickgui-text-color, 0.4);
+          color: var(--clickgui-search-hint-color);
           font-size: 12px;
         }
       }
     }
 
     .placeholder {
-      color: $clickgui-text-dimmed-color;
+      color: var(--clickgui-text-dimmed-color);
       font-size: 16px;
       padding: 10px 0;
     }
@@ -284,7 +283,7 @@
     border: none;
     font-family: "Inter", sans-serif;
     font-size: 16px;
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     width: 100%;
   }
 </style>

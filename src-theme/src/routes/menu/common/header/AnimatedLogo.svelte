@@ -19,9 +19,9 @@
         <defs>
             <linearGradient id={bannerGradientId} gradientUnits="userSpaceOnUse" spreadMethod="repeat"
                             x1="48" y1="16" x2="372" y2="164">
-                <stop offset="0%" stop-color="#4677ff"/>
-                <stop offset="50%" stop-color="#fc4130"/>
-                <stop offset="100%" stop-color="#4677ff"/>
+                <stop offset="0%" stop-color="var(--animated-logo-banner-start-color)"/>
+                <stop offset="50%" stop-color="var(--animated-logo-banner-middle-color)"/>
+                <stop offset="100%" stop-color="var(--animated-logo-banner-end-color)"/>
                 <animateTransform
                         attributeName="gradientTransform"
                         type="translate"
@@ -34,9 +34,9 @@
 
             <linearGradient id={bannerTextGradientId} gradientUnits="userSpaceOnUse" spreadMethod="repeat"
                             x1="72" y1="34" x2="324" y2="149">
-                <stop offset="0%" stop-color="#dbe6ff"/>
-                <stop offset="50%" stop-color="#ffd4cf"/>
-                <stop offset="100%" stop-color="#dbe6ff"/>
+                <stop offset="0%" stop-color="var(--animated-logo-text-start-color)"/>
+                <stop offset="50%" stop-color="var(--animated-logo-text-middle-color)"/>
+                <stop offset="100%" stop-color="var(--animated-logo-text-end-color)"/>
                 <animateTransform
                         attributeName="gradientTransform"
                         type="translate"
@@ -48,7 +48,7 @@
             </linearGradient>
         </defs>
 
-        <g fill="#fff">
+        <g fill="var(--animated-logo-foreground-color)">
             <path d="M79.9,39.948A39.967,39.967,0,0,0,39.947,0H0V39.948a39.948,39.948,0,1,0,79.9,0Z"
                   fill-rule="evenodd"/>
             <path d="M62.357,42.2H76.984v7.232H54.8V11.078h7.56Z" transform="translate(37.791 7.64)"/>
@@ -106,13 +106,13 @@
     }
 
     .divider {
-        background-color: white;
+        background-color: var(--animated-logo-divider-color);
         width: 2px;
         flex: 1;
     }
 
     .message {
-        color: white;
+        color: var(--animated-logo-foreground-color);
         font-size: 25px;
         font-weight: 500;
         line-height: 40px;
@@ -121,12 +121,13 @@
         flex-direction: column;
 
         span {
-            color: #EFBF04;
+            color: var(--animated-logo-anniversary-highlight-color);
             font-weight: 600;
         }
     }
 
     .bounce-part {
-        filter: drop-shadow(0 0 16px rgba(70, 119, 255, 0.22)) drop-shadow(0 0 30px rgba(252, 65, 48, 0.12));
+        filter: drop-shadow(0 0 16px var(--animated-logo-glow-primary-color))
+            drop-shadow(0 0 30px var(--animated-logo-glow-secondary-color));
     }
 </style>

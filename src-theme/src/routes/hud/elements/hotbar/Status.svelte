@@ -24,10 +24,9 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
 
   .label {
-    color: $hotbar-text-color;
+    color: var(--hotbar-text-color);
     position: absolute;
     font-size: 14px;
     right: 5px;
@@ -45,7 +44,7 @@
   .progress {
     position: relative;
     border-radius: 5px;
-    background-color: rgba($hotbar-base-color, .68);
+    background-color: var(--hotbar-status-background-color);
 
     &.align-right {
       .label {

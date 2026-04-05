@@ -3,7 +3,7 @@
     import {afterUpdate} from "svelte";
 
     export let text: string;
-    export let color = "#4677ff";
+    export let color = "var(--tooltip-background-color)";
 
     let element: HTMLElement;
     let shown = false;
@@ -26,10 +26,9 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .tooltip {
-    color: white;
+    color: var(--tooltip-text-color);
     padding: 10px 15px;
     border-radius: 20px;
     font-size: 16px;

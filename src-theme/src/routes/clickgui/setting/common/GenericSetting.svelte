@@ -73,6 +73,6 @@
     {:else if setting.valueType === "CURVE"}
         <CurveSetting {path} bind:setting={setting} on:change/>
     {:else}
-        <div style="color: white">Unsupported setting {setting.valueType}</div>
+        <div style="color: var(--clickgui-text-color)">Unsupported setting {setting.valueType}</div>
     {/if}
 </div>

@@ -175,7 +175,6 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../../colors" as *;
 
   .account {
     width: 488px;
@@ -189,7 +188,7 @@
   }
 
   .header {
-    background-color: rgba($hotbar-base-color, 0.68);
+    background-color: var(--menu-account-header-background-color);
     padding: 15px 18px;
     border-radius: 5px;
     align-items: center;
@@ -223,7 +222,7 @@
 
     .username {
       font-weight: 600;
-      color: $menu-text-color;
+      color: var(--menu-text-color);
       font-size: 20px;
       grid-area: b;
       align-self: flex-end;
@@ -236,11 +235,11 @@
       align-self: flex-start;
 
       .online {
-        color: $menu-account-premium-color;
+        color: var(--menu-account-premium-color);
       }
 
       .offline {
-        color: $menu-text-dimmed-color;
+        color: var(--menu-text-dimmed-color);
       }
     }
 
@@ -272,24 +271,24 @@
     z-index: 1000;
     width: 100%;
     border-radius: 0 0 5px 5px;
-    background-color: rgba($menu-base-color, 0.9);
+    background-color: var(--menu-account-switcher-background-color);
 
     .placeholder {
       font-weight: 500;
       font-size: 20px;
-      color: $menu-text-dimmed-color;
+      color: var(--menu-text-dimmed-color);
       padding: 15px 20px;
     }
 
     .account-search {
-      background-color: rgba($menu-base-color, .36);
+      background-color: var(--menu-account-search-background-color);
       border: none;
-      color: $menu-text-color;
+      color: var(--menu-text-color);
       font-family: "Inter", sans-serif;
       padding: 15px 15px 15px 50px;
       width: 100%;
       font-size: 18px;
-      border-bottom: solid 4px $accent-color;
+      border-bottom: solid 4px var(--menu-account-search-border-color);
       background-image: url("/img/menu/icon-search.svg");
       background-repeat: no-repeat;
       background-position: 18px center;
@@ -302,7 +301,7 @@
     }
 
     .account-item {
-      color: $menu-text-dimmed-color;
+      color: var(--menu-text-dimmed-color);
       font-size: 20px;
       padding: 15px 20px;
       transition: ease color .2s;
@@ -326,12 +325,12 @@
       }
 
       &:hover {
-        color: $menu-text-color;
+        color: var(--menu-text-color);
       }
 
       &.active {
         .username {
-          color: $accent-color;
+          color: var(--accent-color);
         }
       }
     }

@@ -44,12 +44,11 @@
 </WindowPanel>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .settings-grid {
     column-count: 2;
     column-gap: 25px;
-    column-rule: 1px solid rgba($clickgui-text-color, 0.12);
+    column-rule: 1px solid var(--clickgui-global-settings-divider-color);
     column-fill: balance;
     overflow: visible;
   }

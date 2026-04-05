@@ -75,10 +75,9 @@
 {/if}
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
 
     .targethud {
-        background-color: rgba($targethud-base-color, 0.68);
+        background-color: var(--targethud-background-color);
         border-radius: 5px;
         overflow: hidden;
     }
@@ -94,7 +93,7 @@
 
     .name {
         grid-area: b;
-        color: $targethud-text-color;
+        color: var(--targethud-text-color);
         font-weight: 500;
         align-self: flex-end;
     }
@@ -106,7 +105,7 @@
 
         .stat {
             .value {
-                color: $targethud-text-dimmed-color;
+                color: var(--targethud-text-dimmed-color);
                 font-size: 14px;
                 min-width: 18px;
                 display: inline-block;

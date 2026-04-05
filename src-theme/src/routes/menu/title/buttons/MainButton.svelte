@@ -33,10 +33,9 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
 
   .main-button {
-    background-color: rgba($menu-base-color, 0.68);
+    background-color: var(--menu-main-button-background-color);
     width: 590px;
     padding: 25px 35px;
     display: grid;
@@ -46,7 +45,7 @@
     border-radius: 5px;
     column-gap: 25px;
 
-    background: linear-gradient(to left, rgba($menu-base-color, .68) 50%, $accent-color 50%);
+    background: linear-gradient(to left, var(--menu-main-button-background-color) 50%, var(--menu-main-button-accent-color) 50%);
     background-size: 200% 100%;
     background-position: right bottom;
     will-change: background-position;
@@ -56,13 +55,13 @@
       background-position: left bottom;
 
       .icon {
-        background-color: $menu-text-color;
+        background-color: var(--menu-main-button-icon-hover-background-color);
       }
     }
   }
 
   .icon {
-    background-color: $accent-color;
+    background-color: var(--menu-main-button-icon-background-color);
     width: 90px;
     height: 90px;
     border-radius: 50%;
@@ -79,7 +78,7 @@
 
   .title {
     font-size: 26px;
-    color: $menu-text-color;
+    color: var(--menu-main-button-text-color);
     font-weight: 600;
   }
 </style>
