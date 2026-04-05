@@ -3,7 +3,6 @@
     --surface-dark-color: #000000;
     --text-color: #ffffff;
     --text-dimmed-color: #d3d3d3;
-    --text-soft-color: #cbd1e3;
 
     --accent-color: #4677ff;
     --accent-hover-color: color-mix(in srgb, var(--accent-color) 82%, black);
@@ -252,7 +251,7 @@
     --notification-info-color: var(--accent-color);
     --notification-toggle-knob-color: var(--text-color);
     --notification-title-color: var(--text-color);
-    --notification-message-color: var(--text-soft-color);
+    --notification-message-color: var(--text-dimmed-color);
 
     /* Special visuals */
     --tooltip-background-color: var(--accent-color);
