@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.text.StringMatchMode
@@ -100,6 +101,8 @@ enum class InventoryRequirements(
 
     NOT_BREAKING("NotBreaking"),
 
+    NOT_DURING_COMBAT("NotDuringCombat"),
+
     /**
      * When this option is not enabled, the inventory will be opened silently
      * depending on the Minecraft version chosen using ViaFabricPlus.
@@ -121,6 +124,7 @@ enum class InventoryRequirements(
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
         NOT_USING_ITEM -> !player.isUsingItem
         NOT_BREAKING -> mc.gameMode?.isDestroying == false
+        NOT_DURING_COMBAT -> !CombatManager.isInCombat
         OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
     }
 }
