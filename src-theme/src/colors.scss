@@ -1,6 +1,6 @@
 :root {
     /* Foundation */
-    --surface-dark-color: #000000;
+    --surface-color: #000000;
     --text-color: #ffffff;
     --text-dimmed-color: #d3d3d3;
 
@@ -15,7 +15,7 @@
     --grid-color: color-mix(in srgb, #808080 25%, transparent);
 
     /* ClickGUI */
-    --clickgui-base-color: var(--surface-dark-color);
+    --clickgui-base-color: var(--surface-color);
     --clickgui-text-color: var(--text-color);
     --clickgui-text-dimmed-color: var(--text-dimmed-color);
     --clickgui-grid-color: var(--grid-color);
@@ -95,7 +95,7 @@
     --clickgui-curve-axis-color: var(--clickgui-text-dimmed-color);
 
     /* Menu */
-    --menu-base-color: var(--surface-dark-color);
+    --menu-base-color: var(--surface-color);
     --menu-text-color: var(--text-color);
     --menu-text-dimmed-color: var(--text-dimmed-color);
     --menu-error-color: var(--error-color);
@@ -168,7 +168,7 @@
     --menu-account-search-border-color: var(--accent-color);
 
     /* HUD */
-    --tabgui-base-color: var(--surface-dark-color);
+    --tabgui-base-color: var(--surface-color);
     --tabgui-text-color: var(--text-color);
     --tabgui-text-dimmed-color: var(--text-dimmed-color);
     --tabgui-base-36-color: color-mix(in srgb, var(--tabgui-base-color) 36%, transparent);
@@ -180,13 +180,13 @@
     --tabgui-module-selected-background-color: var(--tabgui-base-36-color);
     --tabgui-modules-background-color: var(--tabgui-base-50-color);
 
-    --arraylist-base-color: var(--surface-dark-color);
+    --arraylist-base-color: var(--surface-color);
     --arraylist-text-color: var(--text-color);
     --arraylist-tag-color: #aaaaaa;
     --arraylist-background-color: color-mix(in srgb, var(--arraylist-base-color) 68%, transparent);
     --arraylist-border-color: var(--accent-color);
 
-    --targethud-base-color: var(--surface-dark-color);
+    --targethud-base-color: var(--surface-color);
     --targethud-text-color: var(--text-color);
     --targethud-text-dimmed-color: var(--text-dimmed-color);
     --targethud-base-30-color: color-mix(in srgb, var(--targethud-base-color) 30%, transparent);
@@ -196,10 +196,10 @@
     --targethud-armor-point-active-color: var(--accent-color);
     --targethud-health-progress-color: var(--hotbar-health-color);
 
-    --blockcounter-base-color: var(--surface-dark-color);
+    --blockcounter-base-color: var(--surface-color);
     --blockcounter-background-color: color-mix(in srgb, var(--blockcounter-base-color) 68%, transparent);
 
-    --hotbar-base-color: var(--surface-dark-color);
+    --hotbar-base-color: var(--surface-color);
     --hotbar-text-color: var(--text-color);
     --hotbar-base-68-color: color-mix(in srgb, var(--hotbar-base-color) 68%, transparent);
     --hotbar-armor-color: #49ead6;
@@ -213,25 +213,25 @@
     --hotbar-slot-border-color: var(--accent-color);
     --hotbar-item-name-background-color: var(--hotbar-base-68-color);
 
-    --scoreboard-base-color: var(--surface-dark-color);
+    --scoreboard-base-color: var(--surface-color);
     --scoreboard-base-50-color: color-mix(in srgb, var(--scoreboard-base-color) 50%, transparent);
     --scoreboard-base-68-color: color-mix(in srgb, var(--scoreboard-base-color) 68%, transparent);
     --scoreboard-header-background-color: var(--scoreboard-base-68-color);
     --scoreboard-body-background-color: var(--scoreboard-base-50-color);
 
-    --keystrokes-base-color: var(--surface-dark-color);
+    --keystrokes-base-color: var(--surface-color);
     --keystrokes-text-color: var(--text-color);
     --keystrokes-background-color: color-mix(in srgb, var(--keystrokes-base-color) 68%, transparent);
     --keystrokes-active-color: var(--accent-color);
 
-    --item-damage-base-color: var(--surface-dark-color);
+    --item-damage-base-color: var(--surface-color);
     --item-damage-background-color: color-mix(in srgb, var(--item-damage-base-color) 68%, transparent);
     --item-enchant-glow-start-color: rgba(112, 48, 160, 0.8);
     --item-enchant-glow-end-color: rgba(255, 105, 180, 0);
     --item-count-shadow-color: #000000;
-    --inventory-background-color: color-mix(in srgb, var(--surface-dark-color) 50%, transparent);
+    --inventory-background-color: color-mix(in srgb, var(--surface-color) 50%, transparent);
 
-    --keybinds-base-color: var(--surface-dark-color);
+    --keybinds-base-color: var(--surface-color);
     --keybinds-text-color: var(--text-color);
     --keybinds-enabled-color: var(--success-color);
     --keybinds-base-68-color: color-mix(in srgb, var(--keybinds-base-color) 68%, transparent);
@@ -242,10 +242,10 @@
 
     --effects-amplifier-color: var(--error-color);
     --effects-name-color: var(--text-color);
-    --effects-background-color: color-mix(in srgb, var(--surface-dark-color) 50%, transparent);
+    --effects-background-color: color-mix(in srgb, var(--surface-color) 50%, transparent);
     --effects-duration-color: var(--text-color);
 
-    --notification-background-color: color-mix(in srgb, var(--surface-dark-color) 68%, transparent);
+    --notification-background-color: color-mix(in srgb, var(--surface-color) 68%, transparent);
     --notification-success-color: var(--success-color);
     --notification-error-color: var(--error-color);
     --notification-info-color: var(--accent-color);
