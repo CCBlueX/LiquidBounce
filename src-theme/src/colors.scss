@@ -272,12 +272,12 @@
     --animated-logo-glow-primary-color: color-mix(in srgb, var(--accent-color) 22%, transparent);
     --animated-logo-glow-secondary-color: color-mix(in srgb, var(--error-color) 12%, transparent);
 
-    --confetti-color-1: var(--accent-color);
-    --confetti-color-2: var(--error-color);
-    --confetti-color-3: var(--premium-color);
+    --confetti-color-1: #4677ff;
+    --confetti-color-2: #fc4130;
+    --confetti-color-3: #67d24a;
     --confetti-color-4: #ffd166;
-    --confetti-color-5: var(--text-color);
+    --confetti-color-5: #ffffff;
     --confetti-color-6: #8ad9ff;
     --confetti-color-7: #ff8fab;
-    --confetti-shadow-color: color-mix(in srgb, var(--text-color) 12%, transparent);
+    --confetti-shadow-color: rgba(255, 255, 255, 0.12);
 }
