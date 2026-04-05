@@ -64,9 +64,9 @@ import net.minecraft.world.phys.Vec3
 object VelocityReduce : VelocityMode("Reduce") {
 
     private val attackCount by intRange("AttackCount", 3..3, 0..20)
-    private val alinkTargetRange by floatRange("AlinkTargetRange", 2.5f..6f, 0f..20f)
-    private val alinkMaxDelay by int("AlinkMaxDelay", 10, 1..100, "ticks")
-    private val alinkRequireKillAura by boolean("AlinkRequireKillAura", false)
+    private val lagTargetRange by floatRange("LagTargetRange", 2f..6f, 0f..20f)
+    private val lagMaxDelay by int("LagMaxDelay", 10, 1..1000, "ticks")
+    private val lagRequireKillAura by boolean("LagRequireKillAura", false)
     private val horizontal by float("Horizontal", 0.6f, 0f..1f)
     private val vertical by float("Vertical", 1.0f, 0f..1f)
 
@@ -104,8 +104,8 @@ object VelocityReduce : VelocityMode("Reduce") {
         doNotIncludeAlways()
     }
 
-    private val canAlink: Boolean
-        get() = !alinkRequireKillAura || ModuleKillAura.running
+    private val canLag: Boolean
+        get() = !lagRequireKillAura || ModuleKillAura.running
 
     private var target: Entity? = null
     private var renderTarget: Entity? = null
@@ -116,7 +116,7 @@ object VelocityReduce : VelocityMode("Reduce") {
     private var currentGameTick = 0L
     private var forwardInputAttackGameTick = -1L
     private var receiveDamage = false
-    private var alinkTicks = -1
+    private var lagTicks = -1
     private var releaseReason: ReleaseReason? = null
 
     private enum class ReleaseReason(val debugSuffix: String?) {
@@ -128,10 +128,10 @@ object VelocityReduce : VelocityMode("Reduce") {
     }
 
     val backtrackBlocked: Boolean
-        get() = alinkTicks >= 0 || remainingAttackCount > 0
+        get() = lagTicks >= 0 || remainingAttackCount > 0
 
     val ownsIncomingBlinkQueue: Boolean
-        get() = alinkTicks >= 0
+        get() = lagTicks >= 0
 
     private fun resetRenderState() {
         renderTarget = null
@@ -145,12 +145,12 @@ object VelocityReduce : VelocityMode("Reduce") {
         currentGameTick = 0L
         forwardInputAttackGameTick = -1L
         receiveDamage = false
-        alinkTicks = -1
+        lagTicks = -1
         releaseReason = null
     }
 
     override fun disable() {
-        if (alinkTicks >= 0) {
+        if (lagTicks >= 0) {
             BlinkManager.flush(TransferOrigin.INCOMING)
         }
         target = null
@@ -159,49 +159,51 @@ object VelocityReduce : VelocityMode("Reduce") {
         currentGameTick = 0L
         forwardInputAttackGameTick = -1L
         receiveDamage = false
-        alinkTicks = -1
+        lagTicks = -1
         releaseReason = null
     }
 
     private fun findTarget() {
-        if (!canAlink && alinkTicks >= 0) return
+        if (!canLag && lagTicks >= 0) return
 
         if (ModuleKillAura.running && ModuleKillAura.targetTracker.target != null) {
-            if (alinkTicks == -1) {
+            if (lagTicks == -1) {
                 renderTarget = ModuleKillAura.targetTracker.target
             }
-            if (!canAlink ||
-                ModuleKillAura.targetTracker.target!!.squaredBoxedDistanceTo(player) <= alinkTargetRange.start.sq()
+            if (!canLag ||
+                ModuleKillAura.targetTracker.target!!.squaredBoxedDistanceTo(player) <= lagTargetRange.start.sq()
             ) {
                 target = ModuleKillAura.targetTracker.target
             }
             return
         }
 
+
         target = findEntityInCrosshair(
-            (if (canAlink) {
-                alinkTargetRange.start.toDouble()
+            (if (canLag) {
+                lagTargetRange.start.toDouble()
             } else {
                 ModuleKillAura.range.interactionRange.toDouble()
             }),
             RotationManager.currentRotation ?: player.rotation
         ) { !it.isRemoved && it.shouldBeAttacked() }?.entity
 
-        if (alinkTicks == -1) {
+        if (lagTicks == -1) {
             renderTarget = target
         }
 
-        if (target != null || alinkTicks >= 0) return
+        if (target != null || lagTicks >= 0) return
 
         renderTarget = world.entitiesForRendering().filterIsInstance<LivingEntity> { entity ->
             !entity.isRemoved && entity.shouldBeAttacked()
-        }.weightedMinByOrNullAtMost(alinkTargetRange.endInclusive.sq().toDouble()) { entity ->
+        }.weightedMinByOrNullAtMost(lagTargetRange.endInclusive.sq().toDouble()) { entity ->
             entity.squaredBoxedDistanceTo(player)
         }
     }
 
+
     private fun getEspData(): BlinkEspData? {
-        if (alinkTicks == -1) {
+        if (lagTicks == -1) {
             return null
         }
 
@@ -227,7 +229,7 @@ object VelocityReduce : VelocityMode("Reduce") {
 
         val packet = event.packet
 
-        if (alinkTicks >= 0) {
+        if (lagTicks >= 0) {
             if (packet is ClientboundPlayerPositionPacket) {
                 releaseReason = ReleaseReason.FLAG
             }
@@ -255,17 +257,17 @@ object VelocityReduce : VelocityMode("Reduce") {
 
             if (renderTarget == null) return@handler
 
-            if ((target == null && canAlink) || (target != null && !player.isSprinting)) {
+            if ((target == null && canLag) || (target != null && !player.isSprinting)) {
                 if (target != null) {
-                    debug.notify("Alink... (not sprinting)")
+                    debug.notify("Lag... (not sprinting)")
                 } else {
-                    debug.notify("Alink...")
+                    debug.notify("Lag...")
                 }
 
                 if (target == null) {
                     renderTargetPos = TrackedEntityPosition(renderTarget!!)
                 }
-                alinkTicks = alinkMaxDelay
+                lagTicks = lagMaxDelay
             } else if (target != null) {
                 remainingAttackCount = attackCount.random()
             }
@@ -274,7 +276,7 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     @Suppress("unused")
     private val queuePacketHandler = handler<BlinkPacketEvent> { event ->
-        if (alinkTicks >= 0 && event.origin == TransferOrigin.INCOMING) {
+        if (lagTicks >= 0 && event.origin == TransferOrigin.INCOMING) {
             event.action = BlinkManager.Action.QUEUE
         }
     }
@@ -304,13 +306,13 @@ object VelocityReduce : VelocityMode("Reduce") {
     private val tickPacketProcessEventHandler = handler<TickPacketProcessEvent> {
         releaseReason?.let { releaseReason ->
             BlinkManager.flush(TransferOrigin.INCOMING)
-            alinkTicks = -1
+            lagTicks = -1
             resetRenderState()
             if (releaseReason == ReleaseReason.TARGET_REACHED) {
-                debug.notify("Finish alink")
+                debug.notify("Finish lag")
                 remainingAttackCount = attackCount.random()
             } else {
-                debug.notify("Finish alink (${releaseReason.debugSuffix})")
+                debug.notify("Finish lag (${releaseReason.debugSuffix})")
             }
             this.releaseReason = null
         }
@@ -318,8 +320,8 @@ object VelocityReduce : VelocityMode("Reduce") {
 
     @Suppress("unused")
     private val movementInputEventHandler = handler<MovementInputEvent> { event ->
-        if (alinkTicks > 0 && releaseReason == null) {
-            alinkTicks--
+        if (lagTicks > 0 && releaseReason == null) {
+            lagTicks--
             findTarget()
 
             when {
@@ -330,11 +332,11 @@ object VelocityReduce : VelocityMode("Reduce") {
                     releaseReason = ReleaseReason.TARGET_REACHED
                 }
 
-                player.distanceToSqr(renderTargetPos?.base ?: Vec3.ZERO) > alinkTargetRange.endInclusive.sq() -> {
+                player.distanceToSqr(renderTargetPos?.base ?: Vec3.ZERO) > lagTargetRange.endInclusive.sq() -> {
                     releaseReason = ReleaseReason.OUT_OF_RANGE
                 }
 
-                alinkTicks == 0 -> releaseReason = ReleaseReason.MAX_DELAY
+                lagTicks == 0 -> releaseReason = ReleaseReason.MAX_DELAY
             }
         }
 
