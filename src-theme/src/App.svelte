@@ -80,14 +80,19 @@
         return rgbaToHex(intToRgba(value));
     }
 
+
     function getThemeColorValue(theme: Theme, name: string, fallback: string) {
-        const value = theme.colors[name];
+        const value = theme.colors[name.toLowerCase()];
 
         if (value === undefined) {
             return fallback;
         }
 
         return themeColorToHex(value);
+    }
+
+    function isThemeColorName(actualName: string, expectedName: string) {
+        return actualName.toLowerCase() === expectedName.toLowerCase();
     }
 
     function getMetadataColorValue(metadata: Metadata, name: string, fallback: string) {
@@ -117,7 +122,6 @@
 
     onMount(async () => {
         const colors = getFoundationColors();
-
         let metadata = await getMetadata();
         defaultAccentColor = getMetadataColorValue(metadata, ACCENT_THEME_COLOR_NAME, colors["accent-color"]);
         defaultTintColor = getMetadataColorValue(metadata, TINT_THEME_COLOR_NAME, defaultTintColor);
@@ -126,17 +130,16 @@
         await insertPersistentData();
 
         listenAlways("themeColorChange", async (event: ThemeColorChangeEvent) => {
-            console.log(JSON.stringify(event));
             if (event.themeId !== metadata.id) {
                 return;
             }
 
-            if (event.name === ACCENT_THEME_COLOR_NAME) {
+            if (isThemeColorName(event.name, ACCENT_THEME_COLOR_NAME)) {
                 applyThemeColors(themeColorToHex(event.value), currentTintColor);
                 return;
             }
 
-            if (event.name === TINT_THEME_COLOR_NAME) {
+            if (isThemeColorName(event.name, TINT_THEME_COLOR_NAME)) {
                 applyThemeColors(currentAccentColor, themeColorToHex(event.value));
                 return;
             }
