@@ -39,8 +39,16 @@
         "text-dimmed-color": 14
     } as const;
 
+    const foundationColorNames = [
+        "accent-color",
+        "surface-color",
+        "text-color",
+        "text-dimmed-color"
+    ] as const;
+
     type FoundationColorName = keyof typeof foundationColorMixes;
-    type FoundationColors = Record<FoundationColorName | "accent-color", string>;
+    type FoundationColorVariable = typeof foundationColorNames[number];
+    type FoundationColors = Record<FoundationColorVariable, string>;
 
     let foundationColors: FoundationColors | null = null;
 
@@ -58,17 +66,42 @@
         return getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
     }
 
+    function readDefaultFoundationColors(): FoundationColors {
+        const rootStyle = document.documentElement.style;
+        const inlineOverrides = new Map<FoundationColorVariable, string>();
+
+        for (const name of foundationColorNames) {
+            inlineOverrides.set(name, rootStyle.getPropertyValue(`--${name}`));
+            rootStyle.removeProperty(`--${name}`);
+        }
+
+        try {
+            return {
+                "accent-color": getThemeColor("accent-color"),
+                "surface-color": getThemeColor("surface-color"),
+                "text-color": getThemeColor("text-color"),
+                "text-dimmed-color": getThemeColor("text-dimmed-color")
+            };
+        } finally {
+            for (const name of foundationColorNames) {
+                const value = inlineOverrides.get(name);
+
+                if (value) {
+                    rootStyle.setProperty(`--${name}`, value);
+                    continue;
+                }
+
+                rootStyle.removeProperty(`--${name}`);
+            }
+        }
+    }
+
     function getFoundationColors() {
         if (foundationColors !== null) {
             return foundationColors;
         }
 
-        foundationColors = {
-            "accent-color": getThemeColor("accent-color"),
-            "surface-color": getThemeColor("surface-color"),
-            "text-color": getThemeColor("text-color"),
-            "text-dimmed-color": getThemeColor("text-dimmed-color")
-        };
+        foundationColors = readDefaultFoundationColors();
 
         return foundationColors;
     }
