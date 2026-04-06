@@ -33,7 +33,7 @@
     --clickgui-description-shadow-color: var(--clickgui-base-50-color);
     --clickgui-description-arrow-color: var(--clickgui-description-background-color);
 
-    --clickgui-overlay-background-color: var(--clickgui-base-60-color);
+    --clickgui-overlay-background-color: color-mix(in srgb, black 60%, transparent);
     --clickgui-panel-shadow-color: var(--clickgui-base-50-color);
     --clickgui-panel-header-background-color: var(--clickgui-base-90-color);
     --clickgui-panel-header-border-color: var(--accent-color);

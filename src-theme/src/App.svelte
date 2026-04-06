@@ -89,10 +89,10 @@
     }
 
     function applyAccentTint(accentColor: string) {
-        setThemeColor("accent", accentColor);
-        setThemeColor("surface", getTintedFoundationColor("surface-color", accentColor));
-        setThemeColor("text", getTintedFoundationColor("text-color", accentColor));
-        setThemeColor("text-dimmed", getTintedFoundationColor("text-dimmed-color", accentColor));
+        setThemeColor("accent-color", accentColor);
+        setThemeColor("surface-color", getTintedFoundationColor("surface-color", accentColor));
+        setThemeColor("text-color", getTintedFoundationColor("text-color", accentColor));
+        setThemeColor("text-dimmed-color", getTintedFoundationColor("text-dimmed-color", accentColor));
     }
 
     async function applyColors(id: string) {
