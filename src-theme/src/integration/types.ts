@@ -4,6 +4,7 @@ export interface Metadata {
     name: string;
     version: string;
     authors: string[];
+    colors?: Record<string, string>;
     screens: string[];
     overlays: string[];
     components: string[];

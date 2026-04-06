@@ -18,6 +18,7 @@
     import TabbedClickGui from "./routes/clickgui/TabbedClickGui.svelte";
     import {intToRgba, rgbaToHex} from "./integration/util";
     import type {ThemeColorChangeEvent} from "./integration/events";
+    import type {Metadata, Theme} from "./integration/types";
 
     const routes = {
         "/clickgui": TabbedClickGui,
@@ -33,24 +34,20 @@
         "/browser": Browser
     };
 
-    const foundationColorMixes = {
-        "surface-color": 18,
-        "text-color": 8,
-        "text-dimmed-color": 14
-    } as const;
+    const ACCENT_THEME_COLOR_NAME = "Accent";
+    const TINT_THEME_COLOR_NAME = "Tint";
+    const SURFACE_TINT_MIX = 18;
 
-    const foundationColorNames = [
-        "accent-color",
-        "surface-color",
-        "text-color",
-        "text-dimmed-color"
-    ] as const;
-
-    type FoundationColorName = keyof typeof foundationColorMixes;
-    type FoundationColorVariable = typeof foundationColorNames[number];
-    type FoundationColors = Record<FoundationColorVariable, string>;
+    type FoundationColors = {
+        "accent-color": string;
+        "surface-color": string;
+    };
 
     let foundationColors: FoundationColors | null = null;
+    let defaultAccentColor = "";
+    let defaultTintColor = "#000000";
+    let currentAccentColor = "";
+    let currentTintColor = "#000000";
 
     async function changeRoute(name: string) {
         cleanupListeners();
@@ -66,42 +63,15 @@
         return getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
     }
 
-    function readDefaultFoundationColors(): FoundationColors {
-        const rootStyle = document.documentElement.style;
-        const inlineOverrides = new Map<FoundationColorVariable, string>();
-
-        for (const name of foundationColorNames) {
-            inlineOverrides.set(name, rootStyle.getPropertyValue(`--${name}`));
-            rootStyle.removeProperty(`--${name}`);
-        }
-
-        try {
-            return {
-                "accent-color": getThemeColor("accent-color"),
-                "surface-color": getThemeColor("surface-color"),
-                "text-color": getThemeColor("text-color"),
-                "text-dimmed-color": getThemeColor("text-dimmed-color")
-            };
-        } finally {
-            for (const name of foundationColorNames) {
-                const value = inlineOverrides.get(name);
-
-                if (value) {
-                    rootStyle.setProperty(`--${name}`, value);
-                    continue;
-                }
-
-                rootStyle.removeProperty(`--${name}`);
-            }
-        }
-    }
-
     function getFoundationColors() {
         if (foundationColors !== null) {
             return foundationColors;
         }
 
-        foundationColors = readDefaultFoundationColors();
+        foundationColors = {
+            "accent-color": getThemeColor("accent-color"),
+            "surface-color": getThemeColor("surface-color")
+        };
 
         return foundationColors;
     }
@@ -110,37 +80,47 @@
         return rgbaToHex(intToRgba(value));
     }
 
-    function getTintedFoundationColor(name: FoundationColorName, accentColor: string) {
-        const colors = getFoundationColors();
+    function getThemeColorValue(theme: Theme, name: string, fallback: string) {
+        const value = theme.colors[name];
 
-        if (accentColor === colors["accent-color"]) {
-            return colors[name];
+        if (value === undefined) {
+            return fallback;
         }
 
-        const accentMix = foundationColorMixes[name];
-        return `color-mix(in srgb, ${colors[name]} ${100 - accentMix}%, ${accentColor})`;
+        return themeColorToHex(value);
     }
 
-    function applyAccentTint(accentColor: string) {
+    function getMetadataColorValue(metadata: Metadata, name: string, fallback: string) {
+        return metadata.colors?.[name] ?? fallback;
+    }
+
+    function getTintedSurfaceColor(tintColor: string) {
+        const surfaceColor = getFoundationColors()["surface-color"];
+        return `color-mix(in srgb, ${surfaceColor} ${100 - SURFACE_TINT_MIX}%, ${tintColor})`;
+    }
+
+    function applyThemeColors(accentColor: string, tintColor: string) {
+        currentAccentColor = accentColor;
+        currentTintColor = tintColor;
+
         setThemeColor("accent-color", accentColor);
-        setThemeColor("surface-color", getTintedFoundationColor("surface-color", accentColor));
-        setThemeColor("text-color", getTintedFoundationColor("text-color", accentColor));
-        setThemeColor("text-dimmed-color", getTintedFoundationColor("text-dimmed-color", accentColor));
+        setThemeColor("surface-color", getTintedSurfaceColor(tintColor));
     }
 
     async function applyColors(id: string) {
-        let theme = await getTheme(id);
-        let accentValue = Object.values(theme.colors)[0];
-        let accentColor = accentValue === undefined
-            ? getFoundationColors()["accent-color"]
-            : themeColorToHex(accentValue);
-        applyAccentTint(accentColor);
+        const theme = await getTheme(id);
+        const accentColor = getThemeColorValue(theme, ACCENT_THEME_COLOR_NAME, defaultAccentColor);
+        const tintColor = getThemeColorValue(theme, TINT_THEME_COLOR_NAME, defaultTintColor);
+
+        applyThemeColors(accentColor, tintColor);
     }
 
     onMount(async () => {
-        getFoundationColors();
+        const colors = getFoundationColors();
 
         let metadata = await getMetadata();
+        defaultAccentColor = getMetadataColorValue(metadata, ACCENT_THEME_COLOR_NAME, colors["accent-color"]);
+        defaultTintColor = getMetadataColorValue(metadata, TINT_THEME_COLOR_NAME, defaultTintColor);
 
         await applyColors(metadata.id);
         await insertPersistentData();
@@ -151,7 +131,17 @@
                 return;
             }
 
-            applyAccentTint(themeColorToHex(event.value));
+            if (event.name === ACCENT_THEME_COLOR_NAME) {
+                applyThemeColors(themeColorToHex(event.value), currentTintColor);
+                return;
+            }
+
+            if (event.name === TINT_THEME_COLOR_NAME) {
+                applyThemeColors(currentAccentColor, themeColorToHex(event.value));
+                return;
+            }
+
+            await applyColors(metadata.id);
         });
 
         if (isStatic) {
