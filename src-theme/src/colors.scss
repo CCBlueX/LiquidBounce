@@ -106,6 +106,7 @@
     --menu-base-50-color: color-mix(in srgb, var(--menu-base-color) 50%, transparent);
     --menu-base-68-color: color-mix(in srgb, var(--menu-base-color) 68%, transparent);
     --menu-base-70-color: color-mix(in srgb, var(--menu-base-color) 70%, transparent);
+    --menu-base-80-color: color-mix(in srgb, var(--menu-base-color) 80%, transparent);
     --menu-base-90-color: color-mix(in srgb, var(--menu-base-color) 90%, transparent);
 
     --menu-search-background-color: var(--menu-base-36-color);
@@ -147,8 +148,8 @@
     --menu-button-hover-background-color: var(--accent-hover-color);
     --menu-button-secondary-background-color: var(--menu-base-36-color);
     --menu-button-secondary-hover-background-color: var(--menu-base-color);
-    --menu-modal-backdrop-color: var(--menu-base-50-color);
-    --menu-modal-background-color: var(--menu-base-70-color);
+    --menu-modal-backdrop-color: color-mix(in srgb, black 60%, transparent);
+    --menu-modal-background-color: var(--menu-base-80-color);
     --menu-modal-shadow-color: var(--menu-base-50-color);
     --menu-modal-title-accent-color: var(--accent-color);
     --menu-modal-close-border-color: var(--menu-text-color);
