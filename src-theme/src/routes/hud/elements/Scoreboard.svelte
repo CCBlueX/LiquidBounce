@@ -39,7 +39,6 @@
 {/if}
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .scoreboard {
     width: max-content;
@@ -49,7 +48,7 @@
   }
 
   .entries {
-    background-color: rgba($scoreboard-base-color, 0.5);
+    background-color: var(--scoreboard-body-background-color);
     padding: 10px;
   }
 
@@ -61,7 +60,7 @@
 
   .header {
     text-align: center;
-    background-color: rgba($scoreboard-base-color, 0.68);
+    background-color: var(--scoreboard-header-background-color);
     padding: 7px 10px;
   }
 </style>

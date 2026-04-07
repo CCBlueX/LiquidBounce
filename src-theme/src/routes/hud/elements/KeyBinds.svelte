@@ -45,7 +45,6 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .keybinds {
     width: max-content;
@@ -57,14 +56,14 @@
   }
 
   .header {
-    background-color: rgba($keybinds-base-color, 0.68);
+    background-color: var(--keybinds-background-color);
     padding: 7px 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 
     .title {
-      color: $keybinds-text-color;
+      color: var(--keybinds-text-color);
       font-weight: 600;
     }
 
@@ -75,9 +74,9 @@
   }
 
   .entries {
-    background-color: rgba($scoreboard-base-color, 0.5);
+    background-color: var(--keybinds-header-background-color);
     padding: 6px 10px;
-    color: $keybinds-text-color;
+    color: var(--keybinds-text-color);
 
     .no-binds {
       font-style: italic;
@@ -99,13 +98,13 @@
 
     &.enabled {
       .module-name {
-        color: $keybinds-enabled-color;
+        color: var(--keybinds-enabled-color);
         font-weight: 500;
       }
     }
 
     .module-name {
-      color: $keybinds-text-color;
+      color: var(--keybinds-text-color);
       font-size: 14px;
       flex: 1;
       min-width: 0;
@@ -119,13 +118,13 @@
       align-items: center;
       font-family: monospace;
       font-size: 11px;
-      color: $accent-color;
+      color: var(--keybinds-accent-color);
       font-weight: 600;
       flex-shrink: 0;
       min-width: max-content;
 
       &.muted {
-        color: rgba($keybinds-text-color, 0.65);
+        color: var(--keybinds-text-muted-color);
         font-weight: 500;
       }
     }

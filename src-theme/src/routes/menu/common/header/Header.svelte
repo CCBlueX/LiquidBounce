@@ -1,4 +1,5 @@
 <script lang="ts">
+    import LiquidBounceLogo from "../../../../components/LiquidBounceLogo.svelte";
     import Account from "./account/Account.svelte";
     import AnimatedLogo from "./AnimatedLogo.svelte";
     import Notifications from "./Notifications.svelte";
@@ -57,7 +58,11 @@
     {#if $location === "/title" && isAnniversary()}
         <AnimatedLogo/>
     {:else}
-        <img class="logo" src="img/lb-logo.svg" alt="LiquidBounce logo">
+        <LiquidBounceLogo
+            width="261.263px"
+            height="98px"
+            badgeFill="var(--accent-color)"
+        />
     {/if}
 
     <Notifications />
@@ -71,12 +76,5 @@
     justify-content: space-between;
     margin-bottom: 60px;
     align-items: center;
-  }
-
-  .logo {
-    display: block;
-    width: 261.263px;
-    height: 98px;
-    flex: 0 0 auto;
   }
 </style>

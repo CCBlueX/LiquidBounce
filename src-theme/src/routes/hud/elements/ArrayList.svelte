@@ -70,20 +70,19 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .module {
-    background-color: rgba($arraylist-base-color, 0.68);
-    color: $arraylist-text-color;
+    background-color: var(--arraylist-background-color);
+    color: var(--arraylist-text-color);
     font-size: 14px;
     border-radius: 4px 0 0 4px;
     padding: 5px 8px;
-    border-left: solid 4px $accent-color;
+    border-left: solid 4px var(--arraylist-border-color);
     width: max-content;
     font-weight: 500;
   }
 
   .tag {
-    color: $arraylist-tag-color;
+    color: var(--arraylist-tag-color);
   }
 </style>

@@ -18,7 +18,6 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
 
     .armor-status {
         display: flex;
@@ -38,14 +37,14 @@
         row-gap: 1px;
 
         .point {
-            background-color: rgba($targethud-base-color, 0.3);
+            background-color: var(--targethud-armor-point-background-color);
             height: 3px;
             width: 5px;
             border-radius: 1px;
             transition: ease background-color 0.7s;
 
             &.active {
-                background-color: $accent-color;
+                background-color: var(--targethud-armor-point-active-color);
             }
         }
     }

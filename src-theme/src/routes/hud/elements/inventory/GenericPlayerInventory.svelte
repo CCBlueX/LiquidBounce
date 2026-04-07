@@ -7,7 +7,7 @@
     import {getPlayerInventory} from "../../../../integration/rest";
 
     export let rowLength: number;
-    export let backgroundColor: string = "rgba(0,0,0,0.5)";
+    export let backgroundColor: string = "var(--inventory-background-color)";
     export let gap: string = "0.5rem";
     export let getRenderedStacks: (inventory: PlayerInventory) => ItemStack[];
 

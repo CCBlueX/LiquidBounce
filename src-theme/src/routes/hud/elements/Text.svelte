@@ -73,7 +73,6 @@
 </div>
 
 <style lang="scss">
-    @use "../../../colors.scss" as *;
 
     .text {
         position: absolute;

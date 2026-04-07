@@ -8,13 +8,13 @@
     };
 
     const colors = [
-        "#4677ff",
-        "#fc4130",
-        "#67d24a",
-        "#ffd166",
-        "#ffffff",
-        "#8ad9ff",
-        "#ff8fab"
+        "var(--confetti-color-1)",
+        "var(--confetti-color-2)",
+        "var(--confetti-color-3)",
+        "var(--confetti-color-4)",
+        "var(--confetti-color-5)",
+        "var(--confetti-color-6)",
+        "var(--confetti-color-7)"
     ];
 
     const pieceCount = 84;
@@ -118,7 +118,7 @@
         background: var(--color);
         border-radius: var(--border-radius);
         filter: blur(var(--blur));
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
+        box-shadow: 0 0 10px var(--confetti-shadow-color);
         transform-origin: center;
         transform-style: preserve-3d;
         backface-visibility: hidden;

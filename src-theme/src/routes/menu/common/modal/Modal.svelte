@@ -30,7 +30,6 @@
 {/if}
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
 
   .modal-wrapper {
     position: fixed;
@@ -38,12 +37,12 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba($menu-base-color, 0.5);
+    background-color: var(--menu-modal-backdrop-color);
     z-index: 99999;
   }
 
   .modal {
-    background-color: rgba($menu-base-color, 0.7);
+    background-color: var(--menu-modal-background-color);
     min-width: 500px;
     position: fixed;
     left: 50%;
@@ -53,11 +52,11 @@
     display: flex;
     flex-direction: column;
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba($menu-base-color, 0.5);
+    box-shadow: 0 0 10px var(--menu-modal-shadow-color);
   }
 
   .title {
-    color: $menu-text-color;
+    color: var(--menu-text-color);
     font-size: 34px;
     position: relative;
     width: max-content;
@@ -70,7 +69,7 @@
       display: block;
       height: 8px;
       width: calc(90%);
-      background-color: $accent-color;
+      background-color: var(--menu-modal-title-accent-color);
       bottom: -25px;
       left: 50%;
       transform: translateX(-50%);
@@ -91,7 +90,7 @@
     align-items: center;
     justify-content: center;
     background-color: transparent;
-    border: solid 2px $menu-text-color;
+    border: solid 2px var(--menu-modal-close-border-color);
     border-radius: 50%;
     cursor: pointer;
     top: 20px;
@@ -100,7 +99,7 @@
     transition: ease background-color .2s;
 
     &:hover {
-      background-color: rgba($menu-text-color, 0.1);
+      background-color: var(--menu-modal-close-hover-background-color);
     }
   }
 

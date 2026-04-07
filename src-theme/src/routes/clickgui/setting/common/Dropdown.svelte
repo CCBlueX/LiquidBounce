@@ -52,7 +52,6 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
   @use "../../icon-settings-expand" as *;
 
   .dropdown {
@@ -71,7 +70,7 @@
   }
 
   .head {
-    background-color: $accent-color;
+    background-color: var(--clickgui-dropdown-trigger-background-color);
     padding: 6px 10px;
     cursor: pointer;
     display: flex;
@@ -82,7 +81,7 @@
 
     .text {
       font-weight: 500;
-      color: $clickgui-text-color;
+      color: var(--clickgui-text-color);
       font-size: 12px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -97,8 +96,8 @@
 
   .options {
     padding: 6px 10px;
-    background-color: $clickgui-base-color;
-    border: solid 1px $accent-color;
+    background-color: var(--clickgui-dropdown-background-color);
+    border: solid 1px var(--clickgui-dropdown-border-color);
     border-top: none;
     border-radius: 0 0 3px 3px;
     z-index: 9999;
@@ -106,7 +105,7 @@
     position: absolute;
 
     .option {
-      color: $clickgui-text-dimmed-color;
+      color: var(--clickgui-dropdown-option-color);
       font-weight: 500;
       font-size: 12px;
       padding: 5px 0;
@@ -115,11 +114,11 @@
       transition: ease color 0.2s;
 
       &:hover {
-        color: $clickgui-text-color;
+        color: var(--clickgui-dropdown-option-hover-color);
       }
 
       &.active {
-        color: $accent-color;
+        color: var(--clickgui-dropdown-option-selected-color);
       }
     }
   }

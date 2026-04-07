@@ -85,7 +85,6 @@
 </div>
 
 <style lang="scss">
-    @use "../../../colors.scss" as *;
 
     .setting {
         display: grid;
@@ -98,7 +97,7 @@
     .name {
         grid-area: a;
         font-weight: 500;
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
         font-size: 12px;
     }
 
@@ -109,7 +108,7 @@
 
     .value {
         font-weight: 500;
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
         text-align: right;
         font-size: 12px;
         cursor: text;

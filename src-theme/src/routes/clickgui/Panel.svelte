@@ -228,14 +228,13 @@
 </div>
 
 <style lang="scss">
-  @use "../../colors.scss" as *;
 
   .panel {
     border-radius: 5px;
     width: 250px;
     position: absolute;
     overflow: hidden;
-    box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
+    box-shadow: 0 0 10px var(--clickgui-panel-shadow-color);
     will-change: transform;
     transition: none;
     user-select: none;
@@ -246,14 +245,14 @@
     grid-template-columns: max-content 1fr max-content;
     align-items: center;
     column-gap: 12px;
-    background-color: rgba($clickgui-base-color, 0.9);
-    border-bottom: solid 2px $accent-color;
+    background-color: var(--clickgui-panel-header-background-color);
+    border-bottom: solid 2px var(--clickgui-panel-header-border-color);
     padding: 10px 15px;
     cursor: grab;
 
     .category {
       font-size: 14px;
-      color: $clickgui-text-color;
+      color: var(--clickgui-text-color);
       font-weight: 500;
     }
   }
@@ -264,7 +263,7 @@
     max-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: rgba($clickgui-base-color, 0.8);
+    background-color: var(--clickgui-panel-body-background-color);
 
     &.expanded {
       max-height: 545px;
@@ -288,7 +287,7 @@
       &::before {
         content: "";
         position: absolute;
-        background-color: white;
+        background-color: var(--clickgui-panel-toggle-icon-color);
         transition: transform 0.4s ease-out;
         top: 0;
         left: 50%;
@@ -300,7 +299,7 @@
       &::after {
         content: "";
         position: absolute;
-        background-color: white;
+        background-color: var(--clickgui-panel-toggle-icon-color);
         transition: transform 0.4s ease-out;
         top: 50%;
         left: 0;
