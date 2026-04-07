@@ -4,7 +4,10 @@ export interface Metadata {
     name: string;
     version: string;
     authors: string[];
-    colors?: Record<string, string>;
+    colors: {
+        Accent: string;
+        Tint: string;
+    }
     screens: string[];
     overlays: string[];
     components: string[];
@@ -374,7 +377,10 @@ export interface GameWindow {
 export interface Theme {
     name: string;
     id: string;
-    colors: { [name: string]: number };
+    colors: {
+        accent: number;
+        tint: number;
+    };
     settings: { [name: string]: any };
 }
 

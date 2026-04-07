@@ -80,7 +80,7 @@ export interface EventMap {
 
 export interface ThemeColorChangeEvent {
     themeId: string;
-    name: string;
+    name: "Accent" | "Tint";
     value: number;
 }
 
