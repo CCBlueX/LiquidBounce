@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  * jumps while consuming, useful for incorrect anticheat configurations
  */
 
-internal class NoSlowConsumeRelease(override val parent: ModeValueGroup<*>) : Mode("Release") {
+internal class NoSlowConsumeJump(override val parent: ModeValueGroup<*>) : Mode("Jump") {
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
