@@ -46,7 +46,7 @@ object SpooferClient : ToggleableValueGroup(name = "ClientSpoofer", enabled = fa
     }
 
     private object Lunar : SpoofMode("Lunar") {
-        override fun getBrand(): String = "lunarclient:v2.16.8-2433"
+        override fun getBrand(): String = "lunarclient:v2.21.33-2612"
     }
 
     private object Cheatbreaker : SpoofMode("Cheatbreaker") {
