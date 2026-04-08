@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.entity.isInHole
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.world.bedRule
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
 import net.minecraft.core.BlockPos
@@ -239,7 +238,14 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
                 }
 
                 maxDamage = maxDamage.coerceAtLeast(
-                    player.getDamageFromExplosion(pos.toVec3d(), 5f, 10f, 100f, exclude)
+                    player.getDamageFromExplosion(
+                        pos = pos.center,
+                        power = 5f,
+                        explosionRange = 10f,
+                        damageDistance = 100f,
+                        exclude = exclude,
+                        damageSource = player.damageSources().badRespawnPointExplosion(pos.center)
+                    )
                 )
 
                 if (maxDamage >= allowedDamage) {
