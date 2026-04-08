@@ -20,16 +20,21 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 
 object InventoryMoveSprintControlFeature : ToggleableValueGroup(ModuleInventoryMove, "SprintControl", false) {
 
     private val clientMode by enumChoice("Client", SprintMode.DO_NOT_CHANGE)
     private val serverMode by enumChoice("Server", SprintMode.DO_NOT_CHANGE)
+    private val noSprintPacketOnClick by boolean("NoSprintPacketOnClick", false)
 
     private enum class SprintMode(override val tag: String) : Tagged {
 
@@ -56,6 +61,30 @@ object InventoryMoveSprintControlFeature : ToggleableValueGroup(ModuleInventoryM
 
     override val running: Boolean
         get() = super.running && InventoryManager.isHandledScreenOpen
+
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
+
+        if (packet is ServerboundContainerClickPacket && player.isSprinting && noSprintPacketOnClick) {
+            event.cancelEvent()
+            sendPacketSilently(
+                ServerboundPlayerCommandPacket(
+                    player,
+                    ServerboundPlayerCommandPacket.Action.STOP_SPRINTING
+                )
+            )
+            sendPacketSilently(packet)
+            sendPacketSilently(
+                ServerboundPlayerCommandPacket(
+                    player,
+                    ServerboundPlayerCommandPacket.Action.START_SPRINTING
+                )
+            )
+
+            return@handler
+        }
+    }
 
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(
