@@ -51,6 +51,7 @@ import net.minecraft.core.Vec3i
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.tags.DamageTypeTags
 import net.minecraft.util.Mth
 import net.minecraft.world.Difficulty
@@ -72,7 +73,7 @@ import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.component.UseEffects
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.ClipContext
-import net.minecraft.world.level.ExplosionDamageCalculator
+import net.minecraft.world.level.Explosion
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerExplosion
 import net.minecraft.world.level.block.Blocks
@@ -376,18 +377,35 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
 }
 
 /**
- * Applies armor, enchantments, effects, etc. to the damage and returns the damage
- * that is actually applied. This function is so damn ugly that I turned off code smell analysis for it.
+ * Mirrors the vanilla damage-reduction pipeline after the base amount is known.
+ *
+ * By default, this returns the remaining damage before absorption so callers can compare it
+ * against `health + absorptionAmount`. Pass [includeAbsorption] to mirror the final health
+ * loss applied by vanilla.
+ *
+ * @see net.minecraft.world.entity.player.Player#hurtServer
+ * @see net.minecraft.world.entity.LivingEntity#hurtServer
+ * @see net.minecraft.world.entity.LivingEntity#getDamageAfterArmorAbsorb
+ * @see net.minecraft.world.entity.LivingEntity#getDamageAfterMagicAbsorb
+ * @see net.minecraft.world.entity.LivingEntity#actuallyHurt
  */
 @Suppress("detekt:all")
-fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreShield: Boolean = false): Float {
+@JvmOverloads
+fun LivingEntity.getEffectiveDamage(
+    source: DamageSource,
+    damage: Float,
+    ignoreShield: Boolean = false,
+    includeAbsorption: Boolean = false
+): Float {
     val level = this.level()
+    val serverLevel = level as? ServerLevel
 
-    if (this.isInvulnerableToBase(source)) {
+    if ((serverLevel != null && this.isInvulnerableTo(serverLevel, source)) ||
+        (serverLevel == null && this.isInvulnerableToBase(source))
+    ) {
         return 0.0F
     }
 
-    // EDGE CASE!!! Might cause weird bugs
     if (this.isDeadOrDying) {
         return 0.0F
     }
@@ -395,7 +413,7 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     var amount = damage
 
     if (this is Player) {
-        if (this.abilities.invulnerable && source.type().msgId != level.damageSources().fellOutOfWorld().type().msgId)
+        if (this.abilities.invulnerable && !source.`is`(DamageTypeTags.BYPASSES_INVULNERABILITY))
             return 0.0F
 
         if (source.scalesWithDifficulty()) {
@@ -417,7 +435,7 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     if (amount == 0.0F)
         return 0.0F
 
-    if (source == level.damageSources().onFire() && this.hasEffect(MobEffects.FIRE_RESISTANCE))
+    if (source.`is`(DamageTypeTags.IS_FIRE) && this.hasEffect(MobEffects.FIRE_RESISTANCE))
         return 0.0F
 
     if (!ignoreShield && blockedByShield(source))
@@ -428,21 +446,54 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     amount = this.getDamageAfterArmorAbsorb(source, amount)
     amount = this.getDamageAfterMagicAbsorb(source, amount)
 
+    if (includeAbsorption) {
+        amount = (amount - this.absorptionAmount).coerceAtLeast(0.0F)
+    }
+
     return amount
 }
 
+/**
+ * Mirrors the vanilla blast-power setup of explosive entities.
+ *
+ * TNT minecarts use the current speed to reproduce vanilla's upper-bound radius because
+ * `net.minecraft.world.entity.vehicle.minecart.MinecartTNT#explode` multiplies the speed
+ * term by server-side randomness.
+ *
+ * @see net.minecraft.world.entity.boss.enderdragon.EndCrystal.hurtServer
+ * @see net.minecraft.world.entity.item.PrimedTnt
+ * @see net.minecraft.world.entity.vehicle.minecart.MinecartTNT.explode
+ * @see net.minecraft.world.entity.monster.Creeper
+ */
 fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
     return when (entity) {
-        is EndCrystal -> getDamageFromExplosion(entity.position(), 6f, 12f, 144f)
-        is PrimedTnt -> getDamageFromExplosion(entity.position().add(0.0, 0.0625, 0.0), 4f, 8f, 64f)
-        is MinecartTNT -> {
-            val d = 5f
-            getDamageFromExplosion(entity.position(), 4f + d * 1.5f)
-        }
+        is EndCrystal -> getDamageFromExplosion(
+            pos = entity.position(),
+            power = 6f,
+            explosionRange = 12f,
+            damageDistance = 144f,
+            damageSource = Explosion.getDefaultDamageSource(this.level(), entity)
+        )
+        is PrimedTnt -> getDamageFromExplosion(
+            pos = entity.position().add(0.0, 0.0625, 0.0),
+            power = 4f,
+            explosionRange = 8f,
+            damageDistance = 64f,
+            damageSource = Explosion.getDefaultDamageSource(this.level(), entity)
+        )
+        is MinecartTNT -> getDamageFromExplosion(
+            pos = entity.position(),
+            power = entity.getMaximumPotentialExplosionPower(),
+            damageSource = Explosion.getDefaultDamageSource(this.level(), entity)
+        )
 
         is Creeper -> {
             val f = if (entity.isPowered) 2f else 1f
-            getDamageFromExplosion(entity.position(), entity.explosionRadius * f)
+            getDamageFromExplosion(
+                pos = entity.position(),
+                power = entity.explosionRadius * f,
+                damageSource = Explosion.getDefaultDamageSource(this.level(), entity)
+            )
         }
 
         else -> 0f
@@ -450,7 +501,13 @@ fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
 }
 
 /**
- * See [ExplosionDamageCalculator.getEntityDamageAmount].
+ * Mirrors the vanilla entity damage formula for explosions.
+ *
+ * Pass [damageSource] when the original explosion type is known so shield checks and
+ * source-sensitive tags stay aligned with vanilla.
+ *
+ * @see net.minecraft.world.level.ExplosionDamageCalculator#getEntityDamageAmount
+ * @see net.minecraft.world.level.ServerExplosion#getSeenPercent
  */
 @Suppress("LongParameterList")
 fun LivingEntity.getDamageFromExplosion(
@@ -461,10 +518,10 @@ fun LivingEntity.getDamageFromExplosion(
     exclude: Array<BlockPos>? = null,
     include: BlockPos? = null,
     maxBlastResistance: Float? = null,
-    entityBoundingBox: AABB? = null
+    entityBoundingBox: AABB? = null,
+    damageSource: DamageSource? = null,
 ): Float {
-    // no damage will be dealt if the entity is outside the explosion range or when the difficulty is peaceful
-    if (this.distanceToSqr(pos) > damageDistance || this.level().difficulty == Difficulty.PEACEFUL) {
+    if (this.distanceToSqr(pos) > damageDistance) {
         return 0f
     }
 
@@ -490,7 +547,9 @@ fun LivingEntity.getDamageFromExplosion(
             return 0f
         }
 
-        return getEffectiveDamage(this.level().damageSources().explosion(null), preprocessedDamage.toFloat())
+        val actualDamageSource = damageSource
+            ?: DamageSource(this.level().damageSources().explosion(null).typeHolder(), pos)
+        return getEffectiveDamage(actualDamageSource, preprocessedDamage.toFloat())
     } finally {
         ShapeFlag.noShapeChange = false
     }
@@ -498,6 +557,8 @@ fun LivingEntity.getDamageFromExplosion(
 
 /**
  * Basically [ServerExplosion.getSeenPercent] but this method allows us to exclude blocks using [exclude].
+ *
+ * @see net.minecraft.world.level.ServerExplosion.getSeenPercent
  */
 @Suppress("NestedBlockDepth")
 fun LivingEntity.getExposureToExplosion(
@@ -510,7 +571,7 @@ fun LivingEntity.getExposureToExplosion(
     val entityBoundingBox1 = entityBoundingBox ?: boundingBox
     val shapeContext = EntityCollisionContext(
         isDescending,
-        false, // TODO: is this correct?
+        false,
         entityBoundingBox1.minY,
         mainHandItem,
         false,
@@ -568,6 +629,16 @@ fun LivingEntity.getExposureToExplosion(
     }
 
     return hits.toFloat() / totalRays.toFloat()
+}
+
+/**
+ * Uses the current horizontal speed to reproduce the vanilla TNT minecart blast upper bound.
+ *
+ * @see net.minecraft.world.entity.vehicle.minecart.MinecartTNT.explode
+ */
+private fun MinecartTNT.getMaximumPotentialExplosionPower(): Float {
+    val currentHorizontalSpeed = sqrt(this.deltaMovement.horizontalDistanceSqr()).coerceAtMost(5.0).toFloat()
+    return 4f + currentHorizontalSpeed * 1.5f
 }
 
 /**
