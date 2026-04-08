@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
-import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import java.util.function.Predicate
 
@@ -46,6 +45,8 @@ object ModuleEagle : ClientModule(
         .onChanged {
             currentEdgeDistance = it.random()
         }
+
+    private val forceSneak by enumChoice("ForceSneak", ForceSneak.DEFAULT)
 
     private var currentEdgeDistance: Float = edgeDistance.random()
     private var wasSneaking = false
@@ -88,9 +89,9 @@ object ModuleEagle : ClientModule(
     }
 
     private object Conditional : ToggleableValueGroup(this, "Conditional", true) {
-        private val conditions by multiEnumChoice(
+        private val conditions by multiEnumChoice<Condition>(
             "Conditions",
-            Condition.ON_GROUND
+            emptySet()
         )
 
         val pitch by floatRange("Pitch", -90f..90f, -90f..90f)
@@ -98,8 +99,8 @@ object ModuleEagle : ClientModule(
         val controlsSneak
             get() = enabled && Condition.SNEAK in conditions
 
-        fun shouldSneak(event: MovementInputEvent) =
-            !enabled || player.xRot in pitch && conditions.matchesAll(event)
+        fun shouldSneak(event: MovementInputEvent): Boolean =
+            !enabled || player.xRot in pitch && conditions.all { condition -> condition.test(event) }
 
         @Suppress("unused")
         private enum class Condition(override val tag: String) : Tagged, Predicate<MovementInputEvent> {
@@ -108,7 +109,6 @@ object ModuleEagle : ClientModule(
             FORWARDS("Forwards"),
             BACKWARDS("Backwards"),
             HOLDING_BLOCKS("HoldingBlocks"),
-            ON_GROUND("OnGround"),
             SNEAK("Sneak");
 
             override fun test(event: MovementInputEvent): Boolean = when (this) {
@@ -117,7 +117,6 @@ object ModuleEagle : ClientModule(
                 FORWARDS -> event.directionalInput.forwards
                 BACKWARDS -> event.directionalInput.backwards
                 HOLDING_BLOCKS -> isValidBlock(player.mainHandItem) || isValidBlock(player.offhandItem)
-                ON_GROUND -> player.onGround()
                 SNEAK -> event.sneak
             }
         }
@@ -152,6 +151,20 @@ object ModuleEagle : ClientModule(
         }
 
         updateSneakState(event.sneak)
+
+        if (!player.onGround() && conditionsMet) {
+            when (forceSneak) {
+                ForceSneak.FORCE_SNEAK -> event.sneak = true
+                ForceSneak.FORCE_NO_SNEAK -> event.sneak = false
+                ForceSneak.DEFAULT -> {}
+            }
+        }
+    }
+
+    private enum class ForceSneak(override val tag: String) : Tagged {
+        DEFAULT("Default"),
+        FORCE_SNEAK("ForceSneak"),
+        FORCE_NO_SNEAK("ForceNoSneak");
     }
 
 }
