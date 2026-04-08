@@ -24,12 +24,14 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.math.lengthSqr
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
+import java.util.function.ToIntFunction
+import java.util.function.ToLongFunction
 
 private val COMPARATOR: Comparator<in Vec3i> =
-    Comparator.comparingLong(Vec3i::lengthSqr)
-        .thenComparingInt(Vec3i::getY)
-        .thenComparingInt(Vec3i::getX)
-        .thenComparingInt(Vec3i::getZ)
+    Comparator.comparingLong(ToLongFunction(Vec3i::lengthSqr))
+        .thenComparingInt(ToIntFunction(Vec3i::getY))
+        .thenComparingInt(ToIntFunction(Vec3i::getX))
+        .thenComparingInt(ToIntFunction(Vec3i::getZ))
 
 private fun generateScaffoldOffsets(vararg xzValues: Int): List<BlockPos> {
     val longs = LongOpenHashSet(xzValues.size * xzValues.size * 2)

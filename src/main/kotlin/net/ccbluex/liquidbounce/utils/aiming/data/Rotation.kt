@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
+import java.lang.Math.fma
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -137,11 +138,17 @@ data class Rotation @JvmOverloads constructor(
         )
     }
 
+    /**
+     * Interpolates this rotation towards [other] using the given [factor].
+     */
+    fun interpolateTo(other: Rotation, factor: Float): Rotation = Rotation(
+        fma(factor, other.yaw - yaw, yaw),
+        fma(factor, other.pitch - pitch, pitch),
+    )
+
     @JvmOverloads
     fun approximatelyEquals(other: Rotation, tolerance: Float = 2f): Boolean {
         return angleTo(other) <= tolerance
     }
 
 }
-
-

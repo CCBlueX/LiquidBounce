@@ -49,7 +49,6 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -338,9 +337,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         if (types.isEmpty()) return@handler
 
         renderEnvironmentForWorld(event.matrixStack) {
-            val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotateX(-camera.xRot().toRadians())
-                .rotateY(-camera.yRot().toRadians())
+            val eyeVector = Vec3f.eyeVector(camera)
 
             longLines {
                 for (type in types) {

@@ -161,21 +161,14 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         val playerRotation = playerRotation ?: return
         val targetRotation = targetRotation ?: return
         val timerSpeed = Timer.timerSpeed
+        val interpolatedRotation = playerRotation.interpolateTo(targetRotation, timerSpeed * partialTicks)
 
-        val yaw = if (Axis.HORIZONTAL in axis) {
-            playerRotation.yaw + (targetRotation.yaw - playerRotation.yaw) * (timerSpeed * partialTicks)
-        } else {
-            playerRotation.yaw // No difference in horizontal axis
-        }
-
-        val pitch = if (Axis.VERTICAL in axis) {
-            playerRotation.pitch + (targetRotation.pitch - playerRotation.pitch) * (timerSpeed * partialTicks)
-        } else {
-            playerRotation.pitch // No difference in vertical axis
-        }
-
-        val interpolated = Rotation(yaw = yaw, pitch = pitch)
-        player.setRotation(interpolated)
+        player.setRotation(
+            Rotation(
+                yaw = if (Axis.HORIZONTAL in axis) interpolatedRotation.yaw else playerRotation.yaw,
+                pitch = if (Axis.VERTICAL in axis) interpolatedRotation.pitch else playerRotation.pitch,
+            )
+        )
     }
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {

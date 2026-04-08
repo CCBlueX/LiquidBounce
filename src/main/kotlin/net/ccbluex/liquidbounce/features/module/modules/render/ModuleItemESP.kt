@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.render.drawLegacy2DMarker
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
@@ -107,9 +106,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
         renderEnvironmentForWorld(event.matrixStack) {
             // We calculate the gaze vector (where the camera is looking)
-            val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotateX(-camera.xRot().toRadians())
-                .rotateY(-camera.yRot().toRadians())
+            val eyeVector = Vec3f.eyeVector(camera)
 
             longLines {
                 // Using entitiesForRendering() to get a list of entities around
