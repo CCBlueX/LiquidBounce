@@ -82,6 +82,7 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.EntityCollisionContext
 import net.minecraft.world.scores.DisplaySlot
+import java.lang.Math.fma
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
@@ -354,10 +355,12 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
         return this.position()
     }
 
+    val tickDelta = tickDelta.toDouble()
+
     return Vec3(
-        this.xOld + (this.x - this.xOld) * tickDelta,
-        this.yOld + (this.y - this.yOld) * tickDelta,
-        this.zOld + (this.z - this.zOld) * tickDelta
+        fma(tickDelta, this.x - this.xOld, this.xOld),
+        fma(tickDelta, this.y - this.yOld, this.yOld),
+        fma(tickDelta, this.z - this.zOld, this.zOld),
     )
 }
 
@@ -367,8 +370,8 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
     }
 
     return Rotation(
-        yRotO + (this.yRot - yRotO) * tickDelta,
-        xRotO + (this.xRot - xRotO) * tickDelta,
+        fma(tickDelta, this.yRot - this.yRotO, this.yRotO),
+        fma(tickDelta, this.xRot - this.xRotO, this.xRotO),
     )
 }
 

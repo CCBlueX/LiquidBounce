@@ -209,11 +209,7 @@ object RotationManager : EventListener {
             val currentRotation = currentRotation ?: return@handler
             val timerSpeed = Timer.timerSpeed
 
-            val yaw = playerRotation.yaw + (currentRotation.yaw - playerRotation.yaw) * (timerSpeed * partialTicks)
-            val pitch =
-                playerRotation.pitch + (currentRotation.pitch - playerRotation.pitch) * (timerSpeed * partialTicks)
-
-            val interpolated = Rotation(yaw = yaw, pitch = pitch)
+            val interpolated = playerRotation.interpolateTo(currentRotation, timerSpeed * partialTicks)
             player.setRotation(interpolated)
         }
     }

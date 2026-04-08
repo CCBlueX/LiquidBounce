@@ -26,6 +26,7 @@ import net.minecraft.util.ARGB
 import net.minecraft.world.item.DyeColor
 import org.joml.Vector4f
 import java.awt.Color
+import java.lang.Math.fma
 import java.util.function.ToIntFunction
 
 @JvmRecord
@@ -204,10 +205,10 @@ data class Color4b(val argb: Int) {
         tB: Double,
         tA: Double
     ): Color4b = Color4b(
-        (r + (other.r - r) * tR).toInt().coerceIn(0, 255),
-        (g + (other.g - g) * tG).toInt().coerceIn(0, 255),
-        (b + (other.b - b) * tB).toInt().coerceIn(0, 255),
-        (a + (other.a - a) * tA).toInt().coerceIn(0, 255)
+        fma(tR, (other.r - r).toDouble(), r.toDouble()).toInt().coerceIn(0, 255),
+        fma(tG, (other.g - g).toDouble(), g.toDouble()).toInt().coerceIn(0, 255),
+        fma(tB, (other.b - b).toDouble(), b.toDouble()).toInt().coerceIn(0, 255),
+        fma(tA, (other.a - a).toDouble(), a.toDouble()).toInt().coerceIn(0, 255),
     )
 
     /**
