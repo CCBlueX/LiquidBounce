@@ -36,11 +36,28 @@ object CoroutineTicker {
 
     private val logger = LoggerFactory.getLogger("$CLIENT_NAME/CoroutineTicker")
 
+    // Tracks nested Minecraft.tick() calls. Only the outermost tick may advance coroutine waiters.
+    private var minecraftTickDepth = 0
+
     // Running callbacks
     private val runningList = ReferenceArrayList<BooleanSupplier>()
 
     // Next tick callbacks
     private val pendingList = ReferenceArrayList<BooleanSupplier>()
+
+    fun beginMinecraftTick() {
+        minecraftTickDepth++
+    }
+
+    fun endMinecraftTick() {
+        if (minecraftTickDepth <= 0) {
+            logger.warn("CoroutineTicker minecraftTickDepth underflow")
+            minecraftTickDepth = 0
+            return
+        }
+
+        minecraftTickDepth--
+    }
 
     /**
      * Registers a task to be ticked.
@@ -56,6 +73,10 @@ object CoroutineTicker {
      * new ones are added and might be ticked in the same tick
      */
     fun tick() {
+        if (minecraftTickDepth > 1) {
+            return
+        }
+
         runningList.addAll(pendingList)
         pendingList.clear()
         runningList.removeIf(Predicate {
