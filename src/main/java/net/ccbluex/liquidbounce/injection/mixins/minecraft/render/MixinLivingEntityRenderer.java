@@ -194,7 +194,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
 
-        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity)) {
+        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity)) {
             RenderSetup renderSetup = ((MixinRenderTypeAccessor) original).getState();
             boolean affectsOutline = ((MixinRenderSetupAccessor) (Object) renderSetup).getOutlineProperty() == RenderSetup.OutlineProperty.AFFECTS_OUTLINE;
 
