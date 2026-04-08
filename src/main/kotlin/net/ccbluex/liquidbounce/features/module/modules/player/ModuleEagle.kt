@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import java.util.function.Predicate
 
@@ -89,10 +90,7 @@ object ModuleEagle : ClientModule(
     }
 
     private object Conditional : ToggleableValueGroup(this, "Conditional", true) {
-        private val conditions by multiEnumChoice<Condition>(
-            "Conditions",
-            emptySet()
-        )
+        private val conditions by multiEnumChoice<Condition>("Conditions")
 
         val pitch by floatRange("Pitch", -90f..90f, -90f..90f)
 
@@ -100,7 +98,7 @@ object ModuleEagle : ClientModule(
             get() = enabled && Condition.SNEAK in conditions
 
         fun shouldSneak(event: MovementInputEvent): Boolean =
-            !enabled || player.xRot in pitch && conditions.all { condition -> condition.test(event) }
+            !enabled || player.xRot in pitch && conditions.matchesAll(event)
 
         @Suppress("unused")
         private enum class Condition(override val tag: String) : Tagged, Predicate<MovementInputEvent> {
