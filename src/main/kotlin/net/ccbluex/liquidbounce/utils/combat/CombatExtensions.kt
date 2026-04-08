@@ -165,7 +165,7 @@ private fun Set<Targets>.isInteresting(suspect: Entity): Boolean {
 // Extensions
 @JvmOverloads
 fun Entity.shouldBeShown(enemyConf: Set<Targets> = GlobalSettingsTarget.visual) =
-    enemyConf.shouldShow(this)
+    this?.let { enemyConf.shouldShow(it) } ?: false
 
 @JvmOverloads
 fun Entity?.shouldBeAttacked(enemyConf: Set<Targets> = GlobalSettingsTarget.combat) =
