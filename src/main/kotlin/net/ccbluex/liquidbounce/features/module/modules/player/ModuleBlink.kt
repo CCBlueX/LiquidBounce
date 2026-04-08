@@ -45,10 +45,12 @@ import java.util.UUID
 /**
  * Blink module
  *
- * Makes it look as if you were teleporting to other players.
+ * Suspends packets before they are sent to/received from the server.
  */
 
 object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
+
+    private val directions by multiEnumChoice("Directions", TransferOrigin.OUTGOING, canBeNone = false)
 
     private val dummy by boolean("Dummy", false)
     private val ambush by boolean("Ambush", false)
@@ -60,12 +62,14 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     }
 
     private var dummyPlayer: RemotePlayer? = null
+    private var tickCounter = 0
 
     init {
         tree(AutoResetOption)
     }
 
     override fun onEnabled() {
+        tickCounter = 0
         if (dummy) {
             val clone = RemotePlayer(world, player.gameProfile)
 
@@ -83,7 +87,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     }
 
     override fun onDisabled() {
-        BlinkManager.flush(TransferOrigin.OUTGOING)
+        directions.forEach { BlinkManager.flush(it) }
         removeClone()
     }
 
@@ -97,7 +101,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         val packet = event.packet
 
-        if (event.isCancelled || event.origin != TransferOrigin.OUTGOING) {
+        if (event.isCancelled || !directions.contains(event.origin)) {
             return@handler
         }
 
@@ -138,11 +142,14 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
     @Suppress("unused")
     private val playerMoveHandler = handler<PlayerMovementTickEvent> {
-        if (AutoResetOption.enabled && positions.count() > AutoResetOption.resetAfter) {
+        tickCounter++
+
+        if (AutoResetOption.enabled && tickCounter > AutoResetOption.resetAfter) {
+            tickCounter = 0
             when (AutoResetOption.action) {
                 ResetAction.RESET -> BlinkManager.cancel()
                 ResetAction.BLINK -> {
-                    BlinkManager.flush(TransferOrigin.OUTGOING)
+                    directions.forEach { BlinkManager.flush(it) }
                     dummyPlayer?.copyPosition(player)
                 }
             }
@@ -156,7 +163,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
-        if (event.origin == TransferOrigin.OUTGOING) {
+        if (directions.contains(event.origin)) {
             event.action = Action.QUEUE
         }
     }
