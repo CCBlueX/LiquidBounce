@@ -302,6 +302,7 @@ public abstract class MixinMinecraft {
      */
     @Inject(method = "tick", at = @At("HEAD"))
     private void hookTickEvent(CallbackInfo callbackInfo) {
+        CoroutineTicker.INSTANCE.beginMinecraftTick();
         TickLoopTaskExecutor.INSTANCE.onTickLoopStart();
         CoroutineTicker.INSTANCE.tick();
         EventManager.INSTANCE.callEvent(GameTickEvent.INSTANCE);
@@ -321,6 +322,8 @@ public abstract class MixinMinecraft {
         if (TickLoopTaskExecutor.INSTANCE.isInTickLoop()) {
             TickLoopTaskExecutor.INSTANCE.onTickLoopCompleted();
         }
+
+        CoroutineTicker.INSTANCE.endMinecraftTick();
     }
 
     /**
