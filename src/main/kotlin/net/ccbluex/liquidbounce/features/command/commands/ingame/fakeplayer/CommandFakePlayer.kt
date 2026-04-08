@@ -395,7 +395,8 @@ object CommandFakePlayer : Command.Factory, EventListener {
             player.getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
         }
         val damageSource = player.damageSources().playerAttack(player)
-        var enchantAttackDamage = player.getEnchantedDamage(fakePlayer, genericAttackDamage, damageSource) - genericAttackDamage
+        var enchantAttackDamage =
+            player.getEnchantedDamage(fakePlayer, genericAttackDamage, damageSource) - genericAttackDamage
 
         val attackCooldown = player.getAttackStrengthScale(0.5f)
         genericAttackDamage *= 0.2f + attackCooldown * attackCooldown * 0.8f
