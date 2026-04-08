@@ -50,7 +50,7 @@ import java.util.UUID
 
 object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
-    private val direction by multiEnumChoice("Direction", TransferOrigin.entries)
+    private val direction by multiEnumChoice("Direction", TransferOrigin.entries, canBeNone = false)
 
     private val dummy by boolean("Dummy", false)
     private val ambush by boolean("Ambush", false)
