@@ -45,12 +45,12 @@ import java.util.UUID
 /**
  * Blink module
  *
- * Makes it look as if you were teleporting to other players.
+ * Suspends packets before they are sent to/received from the server.
  */
 
 object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
-    private val direction by multiEnumChoice("Direction", TransferOrigin.entries, canBeNone = false)
+    private val directions by multiEnumChoice("Directions", TransferOrigin.OUTGOING, canBeNone = false)
 
     private val dummy by boolean("Dummy", false)
     private val ambush by boolean("Ambush", false)
@@ -87,7 +87,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     }
 
     override fun onDisabled() {
-        direction.forEach { BlinkManager.flush(it) }
+        directions.forEach { BlinkManager.flush(it) }
         removeClone()
     }
 
@@ -101,7 +101,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         val packet = event.packet
 
-        if (event.isCancelled || !direction.contains(event.origin)) {
+        if (event.isCancelled || !directions.contains(event.origin)) {
             return@handler
         }
 
@@ -149,7 +149,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
             when (AutoResetOption.action) {
                 ResetAction.RESET -> BlinkManager.cancel()
                 ResetAction.BLINK -> {
-                    direction.forEach { BlinkManager.flush(it) }
+                    directions.forEach { BlinkManager.flush(it) }
                     dummyPlayer?.copyPosition(player)
                 }
             }
@@ -163,7 +163,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
-        if (direction.contains(event.origin)) {
+        if (directions.contains(event.origin)) {
             event.action = Action.QUEUE
         }
     }
