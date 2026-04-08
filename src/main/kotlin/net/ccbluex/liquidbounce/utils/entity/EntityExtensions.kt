@@ -69,7 +69,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.entity.vehicle.minecart.MinecartTNT
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.component.UseEffects
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.ClipContext
@@ -84,6 +83,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.EntityCollisionContext
 import net.minecraft.world.scores.DisplaySlot
 import java.lang.Math.fma
+import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
@@ -116,29 +116,51 @@ val LivingEntity.armorItems: Array<ItemStack>
         getItemBySlot(EquipmentSlot.HEAD),
     )
 
-fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
-    val entity = source.directEntity
-    var bl = false
-    if (entity is AbstractArrow) {
-        if (entity.pierceLevel > 0.toByte()) {
-            bl = true
-        }
-    }
-
-    val itemStack = itemBlockingWith
-    if (!source.`is`(DamageTypeTags.BYPASSES_SHIELD) && itemStack?.item is ShieldItem && !bl) {
-        val vec3d = source.sourcePosition
-        if (vec3d != null) {
-            val vec3d2 = calculateViewVector(0f, yHeadRot)
-            val vec3d3 = vec3d.vectorTo(position()).copy(y = 0.0).normalize()
-            return vec3d3.dot(vec3d2) < 0.0
-        }
-    }
-
-    return false
-}
-
 // Copied from 1.21.4 END
+
+/**
+ * Mirrors the blocking-angle and bypass checks from
+ * `net.minecraft.world.entity.LivingEntity#applyItemBlocking`.
+ *
+ * @see net.minecraft.world.entity.LivingEntity#applyItemBlocking
+ */
+@JvmOverloads
+fun LivingEntity.blockedByShield(source: DamageSource, damageAmount: Float = 1.0F): Boolean =
+    getBlockedDamage(source, damageAmount) > 0.0F
+
+/**
+ * Mirrors the client-computable part of `net.minecraft.world.entity.LivingEntity#applyItemBlocking`.
+ *
+ * @see net.minecraft.world.entity.LivingEntity#applyItemBlocking
+ */
+private fun LivingEntity.getBlockedDamage(source: DamageSource, damageAmount: Float): Float {
+    if (damageAmount <= 0.0F) {
+        return 0.0F
+    }
+
+    val itemStack = itemBlockingWith ?: return 0.0F
+    val blocksAttacks = itemStack[DataComponents.BLOCKS_ATTACKS] ?: return 0.0F
+
+    if (blocksAttacks.bypassedBy().orElse(null)?.let(source::`is`) ?: false) {
+        return 0.0F
+    }
+
+    val entity = source.directEntity
+    if (entity is AbstractArrow && entity.pierceLevel > 0.toByte()) {
+        return 0.0F
+    }
+
+    val horizontalAngle = source.sourcePosition?.let { sourcePosition ->
+        val viewVector = calculateViewVector(0.0F, yHeadRot)
+        val sourceDirection = sourcePosition
+            .subtract(position())
+            .copy(y = 0.0)
+            .normalize()
+        acos(sourceDirection.dot(viewVector))
+    } ?: Math.PI
+
+    return blocksAttacks.resolveBlockedDamage(source, damageAmount, horizontalAngle)
+}
 
 val Entity.netherPosition: Vec3
     get() = if (this.level().dimension() == Level.NETHER) {
@@ -438,8 +460,12 @@ fun LivingEntity.getEffectiveDamage(
     if (source.`is`(DamageTypeTags.IS_FIRE) && this.hasEffect(MobEffects.FIRE_RESISTANCE))
         return 0.0F
 
-    if (!ignoreShield && blockedByShield(source))
-        return 0.0F
+    if (!ignoreShield) {
+        amount -= getBlockedDamage(source, amount)
+        if (amount == 0.0F) {
+            return 0.0F
+        }
+    }
 
     // Do we need to take the timeUntilRegen mechanic into account?
 
