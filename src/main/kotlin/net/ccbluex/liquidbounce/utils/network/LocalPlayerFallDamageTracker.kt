@@ -26,51 +26,81 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.world.damagesource.DamageTypes
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Tracks whether the local player's current client-side hurt window comes from vanilla fall damage.
+ * Tracks whether the local player's current knockback/hurt cycle was caused by vanilla fall damage.
  *
- * The server sends [net.minecraft.network.protocol.game.ClientboundDamageEventPacket] for
- * [DamageTypes.FALL] before the later `hurtMarked`-driven motion sync, while the client keeps the
- * currently active damage window in `hurtTime`.
+ * Vanilla sends the local player's fall [net.minecraft.network.protocol.game.ClientboundDamageEventPacket]
+ * before the matching `hurtMarked`-driven [ClientboundSetEntityMotionPacket]. We only confirm fall damage
+ * after seeing that following motion packet.
  *
  * @see net.minecraft.world.entity.LivingEntity#hurt
  * @see net.minecraft.server.level.ServerLevel#broadcastDamageEvent
- * @see net.minecraft.world.entity.LivingEntity#handleDamageEvent
  * @see net.minecraft.server.level.ServerEntity#sendChanges
  */
 object LocalPlayerFallDamageTracker : EventListener {
 
     @Volatile
-    private var currentDamageState = DamageState.NONE
+    private var state = State.NONE
+
+    private val activeTicks = AtomicInteger()
+    private val pendingTicks = AtomicInteger()
 
     val isCurrentFallDamage: Boolean
-        get() = currentDamageState == DamageState.FALL && (mc.player?.hurtTime ?: 0) > 0
+        get() = state == State.CONFIRMED_FALL_DAMAGE && activeTicks.get() > 0
 
     private fun reset() {
-        currentDamageState = DamageState.NONE
+        state = State.NONE
+        activeTicks.set(0)
+        pendingTicks.set(0)
     }
 
     @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        if (event.origin != TransferOrigin.INCOMING) {
+    private val packetHandler = handler<PacketEvent>(READ_FINAL_STATE) { event ->
+        if (event.origin != TransferOrigin.INCOMING || !event.original || event.isCancelled) {
             return@handler
         }
 
         val packet = event.packet
         when {
             packet.isLocalPlayerDamage() -> {
-                currentDamageState =
-                    if (packet.sourceType.`is`(DamageTypes.FALL)) DamageState.FALL else DamageState.OTHER
+                activeTicks.set(0)
+                pendingTicks.set(0)
+                state = if (packet.sourceType.`is`(DamageTypes.FALL)) State.AWAITING_FALL_DAMAGE_MOTION else State.NONE
+            }
+
+            packet is ClientboundSetEntityMotionPacket && packet.id == mc.player?.id -> {
+                if (state == State.AWAITING_FALL_DAMAGE_MOTION) {
+                    state = State.CONFIRMED_FALL_DAMAGE
+                    activeTicks.set(DAMAGE_WINDOW_TICKS)
+                }
             }
         }
     }
 
     @Suppress("unused")
     private val gameTickHandler = handler<GameTickEvent> {
-        if ((mc.player?.hurtTime ?: 0) <= 0) {
-            reset()
+        when (state) {
+            State.AWAITING_FALL_DAMAGE_MOTION -> {
+                if (pendingTicks.incrementAndGet() > FOLLOWING_MOTION_TIMEOUT_TICKS) {
+                    reset()
+                }
+            }
+
+            State.CONFIRMED_FALL_DAMAGE -> {
+                val remainingTicks = activeTicks.updateAndGet { ticks ->
+                    if (ticks > 0) ticks - 1 else 0
+                }
+                if (remainingTicks <= 0) {
+                    reset()
+                }
+            }
+
+            State.NONE -> {}
         }
     }
 
@@ -79,10 +109,13 @@ object LocalPlayerFallDamageTracker : EventListener {
         reset()
     }
 
-    private enum class DamageState {
+    private enum class State {
         NONE,
-        FALL,
-        OTHER,
+        AWAITING_FALL_DAMAGE_MOTION,
+        CONFIRMED_FALL_DAMAGE,
     }
+
+    private const val FOLLOWING_MOTION_TIMEOUT_TICKS = 1
+    private const val DAMAGE_WINDOW_TICKS = 10
 
 }
