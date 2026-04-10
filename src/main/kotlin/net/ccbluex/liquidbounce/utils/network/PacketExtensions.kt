@@ -31,7 +31,6 @@ import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.network.protocol.game.ServerboundContainerSlotStateChangedPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
-import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.phys.Vec3
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -69,15 +68,4 @@ fun ClientboundSetEntityMotionPacket.isMovementYFallDamage(): Boolean {
     // < 1.21.9 -0.07825184642617344
     return this.movement.y.toRawBits() ==
         (if (isNewerThanOrEquals1_21_9) -4633060179779189496L else -4633068976409115392L)
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Packet<*>?.isLocalPlayerFallDamageEvent(): Boolean {
-    contract {
-        returns(true) implies (this@isLocalPlayerFallDamageEvent is ClientboundDamageEventPacket)
-    }
-
-    return this is ClientboundDamageEventPacket
-        && this.entityId == mc.player?.id
-        && this.sourceType.`is`(DamageTypes.FALL)
 }

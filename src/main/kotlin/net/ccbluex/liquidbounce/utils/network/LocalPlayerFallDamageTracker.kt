@@ -26,12 +26,13 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.world.damagesource.DamageTypes
 
 /**
  * Tracks whether the local player's current client-side hurt window comes from vanilla fall damage.
  *
- * The server sends `net.minecraft.network.protocol.game.ClientboundDamageEventPacket` for
- * `minecraft:fall` before the later `hurtMarked`-driven motion sync, while the client keeps the
+ * The server sends [net.minecraft.network.protocol.game.ClientboundDamageEventPacket] for
+ * [DamageTypes.FALL] before the later `hurtMarked`-driven motion sync, while the client keeps the
  * currently active damage window in `hurtTime`.
  *
  * @see net.minecraft.world.entity.LivingEntity#hurt
@@ -58,11 +59,12 @@ object LocalPlayerFallDamageTracker : EventListener {
         }
 
         val packet = event.packet
-        if (!packet.isLocalPlayerDamage()) {
-            return@handler
+        when {
+            packet.isLocalPlayerDamage() -> {
+                currentDamageState =
+                    if (packet.sourceType.`is`(DamageTypes.FALL)) DamageState.FALL else DamageState.OTHER
+            }
         }
-
-        currentDamageState = if (packet.isLocalPlayerFallDamageEvent()) DamageState.FALL else DamageState.OTHER
     }
 
     @Suppress("unused")
