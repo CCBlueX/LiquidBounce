@@ -147,8 +147,10 @@ object Esp2DMode : EspMode.BoxBased("2D") {
                             h(-outlineThickness / 2, cw, rectHeight - outlineThickness / 2, outlineColor)
                             v(-outlineThickness / 2, rectHeight - ch, rectHeight + outlineThickness / 2, outlineColor)
 
-                            h(rectWidth - cw, rectWidth + outlineThickness / 2, rectHeight - outlineThickness / 2, outlineColor)
-                            v(rectWidth - outlineThickness / 2, rectHeight - ch, rectHeight + outlineThickness / 2, outlineColor)
+                            h(rectWidth - cw, rectWidth + outlineThickness / 2,
+                              rectHeight - outlineThickness / 2, outlineColor)
+                            v(rectWidth - outlineThickness / 2, rectHeight - ch,
+                              rectHeight + outlineThickness / 2, outlineColor)
 
                         } else {
                             if (Border.enabled) {
