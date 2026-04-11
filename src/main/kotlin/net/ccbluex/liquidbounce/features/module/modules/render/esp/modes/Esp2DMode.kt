@@ -38,7 +38,7 @@ object Esp2DMode : EspMode.BoxBased("2D") {
     }
 
     object Corner : ToggleableValueGroup(this, "Corner", true) {
-        val corner by float("Gap", 50f, 1f..100f, "pct")
+        val corner by float("Gap", 50f, 1f..100f, "%")
     }
 
     object Border : ToggleableValueGroup(this, "Border", true) {
