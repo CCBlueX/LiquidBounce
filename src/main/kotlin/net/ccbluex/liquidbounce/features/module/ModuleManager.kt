@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoGolemRep
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoLeave
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoShoot
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleHitbox
@@ -464,6 +465,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleAutoBuff,
             ModuleAutoRod,
             ModuleAutoWeapon,
+            ModuleAutoTrigger,
             ModuleFakeLag,
             ModuleCriticals,
             ModuleHitbox,
