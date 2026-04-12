@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
@@ -52,6 +53,7 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.useItemStrict
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
@@ -97,6 +99,9 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private val prioritizeBlocking by boolean("PrioritizeBlocking", true)
     val onScanRange by boolean("OnScanRange", true)
     private val onlyWhenInDanger by boolean("OnlyWhenInDanger", false)
+
+    /** For 1.9~1.21.4 protocol on 1.8 server, server will send a shield to your offhand on using item */
+    private val assumeShield by boolean("AssumeShield", false)
 
     private var blockingTicks = 0
 
@@ -411,6 +416,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         itemStack.has(BLOCKS_ATTACKS)
             && itemStack.isItemEnabled(world.enabledFeatures())
             && !player.cooldowns.isOnCooldown(itemStack)
+    } ?: if (assumeShield && !isOlderThanOrEqual1_8 && !isNewerThanOrEquals1_21_5 && player.mainHandItem.isSword) {
+        InteractionHand.MAIN_HAND
+    } else {
+        null
     }
 
     enum class BlockMode(override val tag: String) : Tagged {
