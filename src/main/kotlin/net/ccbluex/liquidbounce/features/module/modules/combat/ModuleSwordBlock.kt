@@ -48,7 +48,8 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
     private val LivingEntity.shouldApplySwordBlockAnimation
         get() = (isUsingItem && offhandItem.item is ShieldItem &&
             // I don't know why but if you join 1.8 server with 1.21.11 client + 1.20.x protocol [useItem] will be same as [mainHandItem]
-            (useItem === offhandItem || !isOlderThanOrEqual1_8 && !isNewerThanOrEquals1_21_5 && useItem === mainHandItem))
+            (useItem === offhandItem ||
+                !isOlderThanOrEqual1_8 && !isNewerThanOrEquals1_21_5 && useItem === mainHandItem))
             || (fakeOnPressing && mc.options.keyUse.isPressedOnAny)
 
     /**
