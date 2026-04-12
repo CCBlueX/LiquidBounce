@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.client.send1_11_1OpenInventory
 import net.ccbluex.liquidbounce.utils.client.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
+import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
@@ -119,7 +120,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
         }
 
         // 1. Stop blocking
-        if (player.isBlocking) {
+        if (player.isBlockingServerside) {
             if (!KillAuraAutoBlock.enabled && !ModuleMultiActions.mayAttackWhileUsing()) {
                 return
             }

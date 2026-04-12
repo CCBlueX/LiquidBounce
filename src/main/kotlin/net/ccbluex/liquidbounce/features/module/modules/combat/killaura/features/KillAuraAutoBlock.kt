@@ -38,8 +38,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.client.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.entity.interactBlock
 import net.ccbluex.liquidbounce.utils.entity.interactBlockLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.interactEntityLikeVanilla
+import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.useItem
@@ -59,12 +60,12 @@ import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.client.renderer.ItemInHandRenderer
-import net.minecraft.core.component.DataComponents.BLOCKS_ATTACKS
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.phys.HitResult
 import kotlin.random.Random
 
@@ -294,7 +295,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         // We do not want the player to stop eating or else. Only when he blocks.
-        if (!player.isBlocking) {
+        if (!player.isBlockingServerside) {
             return false
         }
 
@@ -413,10 +414,11 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     private fun findBlockableHand() = InteractionHand.entries.find {
         val itemStack = player.getItemInHand(it)
-        itemStack.has(BLOCKS_ATTACKS)
+        // 1.21.4 swords or normal shields
+        itemStack.useAnimation == ItemUseAnimation.BLOCK
             && itemStack.isItemEnabled(world.enabledFeatures())
             && !player.cooldowns.isOnCooldown(itemStack)
-    } ?: if (assumeShield && !isOlderThanOrEqual1_8 && !isNewerThanOrEquals1_21_5 && player.mainHandItem.isSword) {
+    } ?: if (assumeShield && !isBlocksAttacksExisting && player.mainHandItem.isSword) {
         InteractionHand.MAIN_HAND
     } else {
         null
