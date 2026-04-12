@@ -60,7 +60,8 @@ object InteractionTracker : EventListener {
 
         when (val packet = it.packet) {
             is ServerboundPlayerActionPacket -> {
-                if (packet.action == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM) {
+                if (packet.action == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM ||
+                    packet.action == ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND) {
                     currentInteraction = null
                 }
             }
@@ -75,7 +76,9 @@ object InteractionTracker : EventListener {
             }
 
             is ServerboundSetCarriedItemPacket -> {
-                currentInteraction = null
+                if (currentInteraction?.hand == InteractionHand.MAIN_HAND) {
+                    currentInteraction = null
+                }
             }
 
         }
