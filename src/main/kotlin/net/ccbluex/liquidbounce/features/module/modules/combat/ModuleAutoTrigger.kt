@@ -111,10 +111,11 @@ object ModuleAutoTrigger : ClientModule(
         val hasValidTarget = entity?.shouldBeAttacked() == true
 
         consecutiveTargetTicks =
-            if (hasValidTarget)
+            if (hasValidTarget) {
                 consecutiveTargetTicks + 1
-            else
+            } else {
                 0
+            }
 
         val cooldownProgress =
             player.attackStrengthTicker
