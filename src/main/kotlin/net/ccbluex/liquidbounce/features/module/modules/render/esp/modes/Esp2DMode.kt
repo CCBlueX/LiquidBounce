@@ -33,11 +33,15 @@ import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 
 object Esp2DMode : EspMode.BoxBased("2D") {
 
-    object Outline : ToggleableValueGroup(this, "Outline", true) {
+    private object Outline : ToggleableValueGroup(this, "Outline", true) {
         val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
 
-    object Border : ToggleableValueGroup(this, "Border", true) {
+    private object Corner : ToggleableValueGroup(this, "Corner", false) {
+        val corner by float("Gap", 50f, 1f..100f, "%")
+    }
+
+    private object Border : ToggleableValueGroup(this, "Border", true) {
         val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
 
@@ -49,6 +53,7 @@ object Esp2DMode : EspMode.BoxBased("2D") {
 
     init {
         tree(Outline)
+        tree(Corner)
         tree(Border)
         tree(HealthBar)
     }
@@ -86,57 +91,136 @@ object Esp2DMode : EspMode.BoxBased("2D") {
                     }
 
                     if (Outline.enabled) {
-                        if (Border.enabled) {
+
+                        val gapPercent = (Corner.corner / 100f).coerceIn(0f, 1f)
+                        val useCorner = Corner.enabled && gapPercent > 0f
+
+                        if (useCorner) {
+
+                            val cw = rectWidth * (1f - gapPercent) / 2f
+                            val ch = rectHeight * (1f - gapPercent) / 2f
+
+                            fun h(x1: Float, x2: Float, y: Float, color: Color4b) =
+                                drawHorizontalLine(x1, x2, y, outlineThickness, color)
+
+                            fun v(x: Float, y1: Float, y2: Float, color: Color4b) =
+                                drawVerticalLine(x, y1, y2, outlineThickness, color)
+
+                            fun hb(x1: Float, x2: Float, y: Float) =
+                                drawHorizontalLine(
+                                    x1 - borderThickness,
+                                    x2 + borderThickness,
+                                    y - borderThickness,
+                                    outlineThickness + 2 * borderThickness,
+                                    black
+                                )
+
+                            fun vb(x: Float, y1: Float, y2: Float) =
+                                drawVerticalLine(
+                                    x - borderThickness,
+                                    y1 - borderThickness,
+                                    y2 + borderThickness,
+                                    outlineThickness + 2 * borderThickness,
+                                    black
+                                )
+
+                            if (Border.enabled) {
+                                hb(-outlineThickness / 2, cw, -outlineThickness / 2)
+                                vb(-outlineThickness / 2, -outlineThickness / 2, ch)
+
+                                hb(rectWidth - cw, rectWidth + outlineThickness / 2, -outlineThickness / 2)
+                                vb(rectWidth - outlineThickness / 2, -outlineThickness / 2, ch)
+
+                                hb(-outlineThickness / 2, cw, rectHeight - outlineThickness / 2)
+                                vb(-outlineThickness / 2, rectHeight - ch, rectHeight + outlineThickness / 2)
+
+                                hb(rectWidth - cw, rectWidth + outlineThickness / 2, rectHeight - outlineThickness / 2)
+                                vb(rectWidth - outlineThickness / 2, rectHeight - ch, rectHeight + outlineThickness / 2)
+                            }
+
+                            h(-outlineThickness / 2, cw, -outlineThickness / 2, outlineColor)
+                            v(-outlineThickness / 2, -outlineThickness / 2, ch, outlineColor)
+
+                            h(rectWidth - cw, rectWidth + outlineThickness / 2, -outlineThickness / 2, outlineColor)
+                            v(rectWidth - outlineThickness / 2, -outlineThickness / 2, ch, outlineColor)
+
+                            h(-outlineThickness / 2, cw, rectHeight - outlineThickness / 2, outlineColor)
+                            v(-outlineThickness / 2, rectHeight - ch, rectHeight + outlineThickness / 2, outlineColor)
+
+                            h(rectWidth - cw, rectWidth + outlineThickness / 2,
+                                rectHeight - outlineThickness / 2, outlineColor)
+                            v(rectWidth - outlineThickness / 2, rectHeight - ch,
+                                rectHeight + outlineThickness / 2, outlineColor)
+
+                        } else {
+                            if (Border.enabled) {
+                                val t = outlineThickness + 2 * borderThickness
+
+                                drawHorizontalLine(
+                                    -outlineThickness / 2 - borderThickness,
+                                    rectWidth + outlineThickness / 2 + borderThickness,
+                                    -outlineThickness / 2 - borderThickness,
+                                    t,
+                                    black
+                                )
+
+                                drawVerticalLine(
+                                    -outlineThickness / 2 - borderThickness,
+                                    -outlineThickness / 2 - borderThickness,
+                                    rectHeight + outlineThickness / 2 + borderThickness,
+                                    t,
+                                    black
+                                )
+
+                                drawHorizontalLine(
+                                    -outlineThickness / 2 - borderThickness,
+                                    rectWidth + outlineThickness / 2 + borderThickness,
+                                    rectHeight - outlineThickness / 2 - borderThickness,
+                                    t,
+                                    black
+                                )
+
+                                drawVerticalLine(
+                                    rectWidth - outlineThickness / 2 - borderThickness,
+                                    -outlineThickness / 2 - borderThickness,
+                                    rectHeight + outlineThickness / 2 + borderThickness,
+                                    t,
+                                    black
+                                )
+                            }
+
                             drawHorizontalLine(
-                                x1 = -outlineThickness / 2 - borderThickness,
-                                x2 = rectWidth + outlineThickness / 2 + borderThickness,
-                                y = -outlineThickness / 2 - borderThickness,
-                                outlineThickness + 2 * borderThickness, black
+                                -outlineThickness / 2,
+                                rectWidth + outlineThickness / 2,
+                                -outlineThickness / 2,
+                                outlineThickness,
+                                outlineColor
                             )
-                            drawVerticalLine(
-                                x = -outlineThickness / 2 - borderThickness,
-                                y1 = -outlineThickness / 2 - borderThickness,
-                                y2 = rectHeight + outlineThickness / 2 + borderThickness,
-                                outlineThickness + 2 * borderThickness, black
-                            )
+
                             drawHorizontalLine(
-                                x1 = -outlineThickness / 2 - borderThickness,
-                                x2 = rectWidth + outlineThickness / 2 + borderThickness,
-                                y = rectHeight - outlineThickness / 2 - borderThickness,
-                                outlineThickness + 2 * borderThickness, black
+                                -outlineThickness / 2,
+                                rectWidth + outlineThickness / 2,
+                                rectHeight - outlineThickness / 2,
+                                outlineThickness,
+                                outlineColor
                             )
+
                             drawVerticalLine(
-                                x = rectWidth - outlineThickness / 2 - borderThickness,
-                                y1 = -outlineThickness / 2 - borderThickness,
-                                y2 = rectHeight + outlineThickness / 2 + borderThickness,
-                                outlineThickness + 2 * borderThickness, black
+                                -outlineThickness / 2,
+                                -outlineThickness / 2,
+                                rectHeight + outlineThickness / 2,
+                                outlineThickness,
+                                outlineColor
+                            )
+
+                            drawVerticalLine(
+                                rectWidth - outlineThickness / 2,
+                                -outlineThickness / 2,
+                                rectHeight + outlineThickness / 2,
+                                outlineThickness,
+                                outlineColor
                             )
                         }
-
-                        drawHorizontalLine(
-                            x1 = -outlineThickness / 2,
-                            x2 = rectWidth + outlineThickness / 2,
-                            y = -outlineThickness / 2,
-                            outlineThickness, outlineColor
-                        )
-                        drawHorizontalLine(
-                            x1 = -outlineThickness / 2,
-                            x2 = rectWidth + outlineThickness / 2,
-                            y = rectHeight - outlineThickness / 2,
-                            outlineThickness, outlineColor
-                        )
-                        drawVerticalLine(
-                            x = -outlineThickness / 2,
-                            y1 = -outlineThickness / 2,
-                            y2 = rectHeight + outlineThickness / 2,
-                            outlineThickness, outlineColor
-                        )
-                        drawVerticalLine(
-                            x = rectWidth - outlineThickness / 2,
-                            y1 = -outlineThickness / 2,
-                            y2 = rectHeight + outlineThickness / 2,
-                            outlineThickness, outlineColor
-                        )
 
                         if (Border.enabled) {
                             translate(-2 * borderThickness, 0.0f)
