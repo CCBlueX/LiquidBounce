@@ -37,7 +37,7 @@ object Esp2DMode : EspMode.BoxBased("2D") {
         val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
 
-    private object Corner : ToggleableValueGroup(this, "Corner", true) {
+    private object Corner : ToggleableValueGroup(this, "Corner", false) {
         val corner by float("Gap", 50f, 1f..100f, "%")
     }
 
