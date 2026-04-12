@@ -83,6 +83,9 @@ val isEqual1_8: Boolean
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
 
+val isBlocksAttacksExisting: Boolean
+    get() = isOlderThanOrEqual1_8 || isNewerThanOrEquals1_21_5
+
 val isOlderThanOrEqual1_8: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
@@ -105,6 +108,19 @@ val isNewerThanOrEquals1_16: Boolean
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_16
     }.onFailure {
         logger.error("Failed to check if the server is using 1.16+", it)
+    }.getOrDefault(false)
+
+/**
+ * 1.21.4 client + 1.8 server can block with sword,
+ * but the [net.minecraft.world.item.ItemStack] has no
+ * [net.minecraft.core.component.DataComponents.BLOCKS_ATTACKS]
+ */
+val isEqual1_21_4: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isEqual1_21_4
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.4", it)
     }.getOrDefault(false)
 
 /**

@@ -18,13 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
+import com.google.common.base.Predicates
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.item.ItemUseAnimation
+import java.util.function.Predicate
 
 /**
  * Cancels block interactions allowing to bypass certain anti-cheats
@@ -34,7 +36,7 @@ import net.minecraft.world.item.ItemUseAnimation
  */
 internal class NoSlowNoBlockInteract(
     parent: EventListener? = null,
-    actionFilter: (ItemUseAnimation) -> Boolean = { true }
+    actionFilter: Predicate<ItemUseAnimation> = Predicates.alwaysTrue(),
 ) : ToggleableValueGroup(parent, "NoBlockInteract", true) {
 
     val packetHandler = handler<PacketEvent> { event ->
@@ -42,15 +44,15 @@ internal class NoSlowNoBlockInteract(
 
         if (packet is ServerboundUseItemOnPacket) {
             val useAction =
-                player.getItemInHand(packet.hand)?.useAnimation ?: return@handler
-            val blockPos = packet.hitResult?.blockPos
+                player.getItemInHand(packet.hand).useAnimation
+            val blockPos = packet.hitResult.blockPos
 
             // Check if we might click a block that is not air
-            if (blockPos != null && blockPos.getState()?.isAir != true) {
+            if (!blockPos.stateOrEmpty.isAir) {
                 return@handler
             }
 
-            if (actionFilter(useAction)) {
+            if (actionFilter.test(useAction)) {
                 event.cancelEvent()
             }
         }

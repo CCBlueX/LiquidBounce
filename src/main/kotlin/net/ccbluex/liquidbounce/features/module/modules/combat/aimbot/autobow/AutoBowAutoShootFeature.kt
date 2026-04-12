@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.useItem
+import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.minecraft.client.player.AbstractClientPlayer
@@ -92,7 +93,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                 return@handler
             }
 
-        val usingItemStack = if (player.isUsingItem) player.useItem else player.getItemInHand(usingItemHand)
+        val usingItemStack = player.usingItemOrNull ?: player.getItemInHand(usingItemHand)
 
         when (usingItemStack.item) {
             is CrossbowItem -> {
