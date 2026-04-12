@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
@@ -185,15 +186,15 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
         }
 
         @Suppress("unused")
-        private val tickHandler = tickHandler {
+        private val tickHandler = handler<GameTickEvent> {
             val useAction = player.useItem.useAnimation
 
             if (useAction != ItemUseAnimation.EAT && useAction != ItemUseAnimation.DRINK) {
-                return@tickHandler
+                return@handler
             }
 
             if (!SilentHotbar.isSlotModifiedBy(this@SilentOffhand)) {
-                return@tickHandler
+                return@handler
             }
 
             // if we are already eating, we want to keep the silent slot

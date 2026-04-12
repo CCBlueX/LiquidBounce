@@ -19,12 +19,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
-
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.BowItem
 
@@ -45,21 +46,21 @@ object AutoBowFastChargeFeature : ToggleableValueGroup(ModuleAutoBow, "FastCharg
     private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
     @Suppress("unused")
-    private val tickRepeatable = tickHandler {
-        val currentItem = if (player.isUsingItem) player.useItem else return@tickHandler
+    private val tickRepeatable = handler<GameTickEvent> {
+        val currentItem = player.usingItemOrNull ?: return@handler
 
         // Should speed up game ticks when using bow
-        if (currentItem?.item is BowItem) {
+        if (currentItem.item is BowItem) {
             if (notInTheAir && !player.onGround()) {
-                return@tickHandler
+                return@handler
             }
 
             if (notDuringMove && player.moving) {
-                return@tickHandler
+                return@handler
             }
 
             if (notDuringRegeneration && player.hasEffect(MobEffects.REGENERATION)) {
-                return@tickHandler
+                return@handler
             }
 
             repeat(speed) {
