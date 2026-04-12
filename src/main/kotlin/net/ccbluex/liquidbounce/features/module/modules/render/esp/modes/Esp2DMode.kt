@@ -33,15 +33,15 @@ import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 
 object Esp2DMode : EspMode.BoxBased("2D") {
 
-    object Outline : ToggleableValueGroup(this, "Outline", true) {
+    private object Outline : ToggleableValueGroup(this, "Outline", true) {
         val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
 
-    object Corner : ToggleableValueGroup(this, "Corner", true) {
+    private object Corner : ToggleableValueGroup(this, "Corner", true) {
         val corner by float("Gap", 50f, 1f..100f, "%")
     }
 
-    object Border : ToggleableValueGroup(this, "Border", true) {
+    private object Border : ToggleableValueGroup(this, "Border", true) {
         val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
 
