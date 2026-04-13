@@ -33,12 +33,12 @@ fastutil4k = "0.2.7"
 modmenu = "17.0.0-beta.2"
 exploit_preventer_api = "0.0.1"
 exploit_preventer_mod = "0.1.10"
-sodium = "mc1.21.11-0.8.2-fabric"
-lithium = "mc1.21.11-0.21.3-fabric"
+sodium = "mc1.21.11-0.8.7-fabric"
+lithium = "mc1.21.11-0.21.4-fabric"
 viafabricplus = "4.4.8"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.14.1+1.21.11-fabric"
-iris = "1.10.3+1.21.11-fabric"
+iris = "1.10.7+1.21.11-fabric"
 waygl = "xN3H7oME"
 
 # Kotlin
