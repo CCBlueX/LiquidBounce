@@ -37,63 +37,29 @@ object ModuleAutoTrigger : ClientModule(
     aliases = listOf("TriggerBot")
 ) {
 
-    private val clicker =
-        Clicker(this, mc.options.keyAttack)
+    private val clicker = Clicker(this, mc.options.keyAttack)
 
-    private object Critical : ToggleableValueGroup(
-        this,
-        "Critical",
-        true
-    ) {
-
-        val selectionMode by enumChoice(
-            "Mode",
-            CriticalsSelectionMode.SMART
-        )
-
-    }
+    private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
 
     private object PostTrigger :
-        ToggleableValueGroup(
-            this,
-            "PostTrigger",
-            true
-        ) {
+        ToggleableValueGroup(this, "PostTrigger", true) {
+        val trackingTicks by int("TrackingTicks", 2, 1..10, "ticks")
 
-        val trackingTicks by int(
-            "TrackingTicks",
-            2,
-            1..10,
-            "ticks"
-        )
-
-        val triggerWindowTicks by int(
-            "TriggerWindowTicks",
-            3,
-            1..10,
-            "ticks"
-        )
+        val triggerWindowTicks by int("TriggerWindowTicks", 3, 1..10, "ticks")
     }
 
-    private val hitRate by int(
-        "HitRate",
-        70,
-        0..100,
-        "%"
-    )
-
-    init {
-        treeAll(Critical)
-        treeAll(PostTrigger)
-    }
+    private val hitRate by int("HitRate", 70, 0..100, "%")
 
     private var lastCooldownProgress = 1.0f
     private var postTriggerConsumed = false
     private var consecutiveTargetTicks = 0
     private var trackedTargetInWindow = false
 
-    private val tickHandler = tickHandler {
+    init {
+        tree(PostTrigger)
+    }
 
+    private val tickHandler = tickHandler {
         val player = mc.player ?: return@tickHandler
 
         if (mc.screen is AbstractContainerScreen<*>) {
@@ -129,8 +95,7 @@ object ModuleAutoTrigger : ClientModule(
 
         lastCooldownProgress = cooldownProgress
 
-        val precisionTicks = 1 + ((hitRate - 50)
-                    .coerceAtLeast(0) / 10)
+        val precisionTicks = 1 + ((hitRate - 50).coerceAtLeast(0) / 10)
 
         val canDirectTrigger =
             hasValidTarget &&
@@ -152,8 +117,7 @@ object ModuleAutoTrigger : ClientModule(
             trackedTargetInWindow = true
         }
 
-        val cooldownJustReady =
-            cooldownRemainingTicks <= 0
+        val cooldownJustReady = cooldownRemainingTicks <= 0
 
         val canPostTrigger =
             PostTrigger.enabled &&
@@ -163,14 +127,13 @@ object ModuleAutoTrigger : ClientModule(
                 !postTriggerConsumed
 
         clicker.click {
-
             if (!canDirectTrigger && !canPostTrigger) {
                 return@click false
             }
 
-            if (Critical.enabled && entity != null) {
+            if (entity != null) {
                 val isCritical =
-                    Critical.selectionMode
+                    criticalsSelectionMode
                         .isCriticalHit(entity)
 
                 if (!isCritical) {
