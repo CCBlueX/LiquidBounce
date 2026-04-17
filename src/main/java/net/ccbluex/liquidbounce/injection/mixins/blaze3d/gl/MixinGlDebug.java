@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.gl;
+package net.ccbluex.liquidbounce.injection.mixins.blaze3d.gl;
 
 import com.mojang.blaze3d.opengl.GlDebug;
 import org.slf4j.Logger;

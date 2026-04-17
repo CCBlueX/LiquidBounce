@@ -17,11 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.gl;
+package net.ccbluex.liquidbounce.injection.mixins.blaze3d.gl;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.opengl.GlRenderPass;
 import com.mojang.blaze3d.textures.GpuTexture;
 import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import org.spongepowered.asm.mixin.Final;
@@ -46,7 +45,7 @@ import static net.ccbluex.liquidbounce.utils.client.GenericPools.HASH_SET;
  * @author MukjepScarlet
  */
 @SuppressWarnings("rawtypes")
-@Mixin(GlRenderPass.class)
+@Mixin(targets = "com.mojang.blaze3d.opengl.GlRenderPass")
 public abstract class MixinGlRenderPass {
 
     @Shadow
