@@ -114,14 +114,14 @@ dependencies {
 
     // Exploit Preventer
     api(libs.exploitPreventer.api)
-//    runtimeOnly(libs.exploitPreventer)
+//    runtimeOnly(libs.exploitPreventer) TODO
 
     // Minecraft Authlib
     jij(libs.mcAuthlib)
 
     // LWJGL EGL and WayGL mod for Linux accelerated paint
     jij(libs.lwjgl.egl)
-//    runtimeOnly(libs.waygl)
+//    runtimeOnly(libs.waygl) TODO
     runtimeOnly(libs.cloth.config)
 
     // JCEF Support

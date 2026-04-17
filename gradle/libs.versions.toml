@@ -31,14 +31,14 @@ fastutil4k = "0.2.7"
 
 # Recommended mods
 modmenu = "18.0.0-alpha.7"
-exploit_preventer_api = "0.0.1"
-exploit_preventer_mod = "0.1.10"
-sodium = "mc26.1-0.8.7-fabric"
-lithium = "mc26.1-0.22.0-fabric"
+exploit_preventer_api = "1.0.0"
+exploit_preventer_mod = "1.0.2+26.1"
+sodium = "mc26.1.1-0.8.9-fabric"
+lithium = "mc26.1.2-0.24.1-fabric"
 viafabricplus = "4.5.2"
 # Mods for compatibility test (runtime only)
-immediatelyFast = "1.15.0+26.1-fabric"
-iris = "1.10.8+26.1-fabric"
+immediatelyFast = "1.15.2+26.1.2-fabric"
+iris = "1.10.9+26.1-fabric"
 clothConfig = "26.1.154+fabric"
 waygl = "xN3H7oME"
 
