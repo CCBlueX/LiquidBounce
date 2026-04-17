@@ -106,7 +106,7 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
             return@tickHandler
         }
 
-        val nearbyEnemy = world.findEnemy(0f..range.endInclusive) ?: return@tickHandler
+        val nearbyEnemy = world.findEnemy(0f, range.endInclusive) ?: return@tickHandler
         val currentDistance = player.position().distanceToSqr(nearbyEnemy.position())
         val rangeSq = range.start.sq()..range.endInclusive.sq()
 

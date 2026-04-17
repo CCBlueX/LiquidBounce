@@ -20,10 +20,10 @@
 
 package net.ccbluex.liquidbounce.utils.combat
 
+import it.unimi.dsi.fastutil.objects.ObjectDoubleImmutablePair
 import it.unimi.dsi.fastutil.objects.ObjectDoublePair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.kotlin.toDouble
+import net.ccbluex.liquidbounce.utils.world.getEntitiesInCuboid
 import net.minecraft.client.CameraType
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.component.DataComponents
@@ -59,10 +59,7 @@ import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.monster.Monster
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.GameType
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import java.util.EnumSet
-import java.util.function.Predicate
 
 /**
  * Global target configurable
@@ -164,7 +161,7 @@ private fun Set<Targets>.isInteresting(suspect: Entity): Boolean {
 
 // Extensions
 @JvmOverloads
-fun Entity.shouldBeShown(enemyConf: Set<Targets> = GlobalSettingsTarget.visual) =
+fun Entity?.shouldBeShown(enemyConf: Set<Targets> = GlobalSettingsTarget.visual) =
     this?.let { enemyConf.shouldShow(it) } ?: false
 
 @JvmOverloads
@@ -174,30 +171,43 @@ fun Entity?.shouldBeAttacked(enemyConf: Set<Targets> = GlobalSettingsTarget.comb
 /**
  * Find the best enemy in the current world in a specific range.
  */
+@JvmOverloads
 fun ClientLevel.findEnemy(
     range: ClosedFloatingPointRange<Float>,
     enemyConf: Set<Targets> = GlobalSettingsTarget.combat
-) = findEnemies(range, enemyConf).minByOrNull { (_, distance) -> distance }?.key()
+) = findEnemy(range.start, range.endInclusive, enemyConf)
 
+/**
+ * Find the best enemy in the current world in a specific range.
+ */
+@JvmOverloads
+fun ClientLevel.findEnemy(
+    minRange: Float,
+    maxRange: Float,
+    enemyConf: Set<Targets> = GlobalSettingsTarget.combat
+) = findEnemies(minRange, maxRange, enemyConf)
+    .minByOrNull { (_, distSqr) -> distSqr }?.key()
+
+@JvmOverloads
 fun ClientLevel.findEnemies(
-    range: ClosedFloatingPointRange<Float>,
+    minRange: Float,
+    maxRange: Float,
     enemyConf: Set<Targets> = GlobalSettingsTarget.combat
 ): List<ObjectDoublePair<Entity>> {
-    val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
+    val minRangeSqr = minRange * minRange
+    val maxRangeSqr = maxRange * maxRange
+    val result = ArrayList<ObjectDoubleImmutablePair<Entity>>()
 
-    return getEntitiesInCuboid(player.eyePosition, squaredRange.endInclusive)
-        .filter { it.shouldBeAttacked(enemyConf) }
-        .mapToArray { ObjectDoublePair.of(it, it.squaredBoxedDistanceTo(player)) }
-        .filter { (_, distance) -> distance in squaredRange }
-}
+    getEntitiesInCuboid(player.eyePosition, maxRange.toDouble()) {
+        it.shouldBeAttacked(enemyConf)
+    }.forEach { entity ->
+        val distSqr = entity.squaredBoxedDistanceTo(player)
+        if (distSqr in minRangeSqr..maxRangeSqr) {
+            result += ObjectDoubleImmutablePair(entity, distSqr)
+        }
+    }
 
-fun ClientLevel.getEntitiesInCuboid(
-    midPos: Vec3,
-    range: Double,
-    predicate: Predicate<Entity> = Predicate { true }
-): MutableList<Entity> {
-    return getEntities(null, AABB(midPos.subtract(range, range, range),
-        midPos.add(range, range, range)), predicate)
+    return result
 }
 
 inline fun ClientLevel.getEntitiesBoxInRange(
@@ -207,7 +217,9 @@ inline fun ClientLevel.getEntitiesBoxInRange(
 ): MutableList<Entity> {
     val rangeSquared = range * range
 
-    return getEntitiesInCuboid(midPos, range) { predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared }
+    return getEntitiesInCuboid(midPos, range) {
+        predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared
+    }
 }
 
 /**

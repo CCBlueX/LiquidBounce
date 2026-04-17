@@ -50,10 +50,10 @@ object CriticalsJump : Mode("Jump") {
     //   Hop: 0.1 (like in Wurst-Client)
     //   LowJump: 0.3425 (for some weird AAC version)
     //
-    val height by float("Height", 0.42f, 0.1f..0.42f)
+    private val height by float("Height", 0.42f, 0.1f..0.42f)
 
     // Jump crit should just be active until an enemy is in your reach to be attacked
-    val range by float("Range", 4f, 1f..6f)
+    private val range by float("Range", 4f, 1f..6f)
 
     private val optimizeForCooldown by boolean("OptimizeForCooldown", true)
 
@@ -83,7 +83,7 @@ object CriticalsJump : Mode("Jump") {
             return@handler
         }
 
-        val enemies = world.findEnemies(0f..range)
+        val enemies = world.findEnemies(0f, range)
             .filter { (entity, _) -> !canBeSeen || player.hasLineOfSight(entity) }
 
         // Change the jump motion only if the jump is a normal jump (small jumps, i.e. honey blocks

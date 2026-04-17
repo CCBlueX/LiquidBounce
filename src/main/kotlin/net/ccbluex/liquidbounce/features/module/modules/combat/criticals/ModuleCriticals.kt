@@ -75,7 +75,7 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
         override val running: Boolean
             get() = super.running && wouldDoCriticalHit(true)
-                && world.findEnemy(0.0f..enemyInRange) != null
+                && world.findEnemy(0.0f, enemyInRange) != null
 
         val stopSprinting by enumChoice("StopSprinting", StopSprintingMode.LEGIT)
         private val enemyInRange by float("Range", 4.0f, 0.0f..10.0f)

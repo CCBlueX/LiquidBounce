@@ -69,7 +69,7 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
         }
 
         val range = ModuleKillAura.range.interactionRange + currentAdditionalRange
-        val entity = target ?: world.findEnemy(0f..range) ?: return
+        val entity = target ?: world.findEnemy(0f, range) ?: return
         val raycastType = mc.hitResult?.type
 
         if (entity.isRemoved || entity.squaredBoxedDistanceTo(player) > range.pow(2)

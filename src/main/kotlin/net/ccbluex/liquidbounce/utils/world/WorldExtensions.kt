@@ -19,14 +19,21 @@
 
 package net.ccbluex.liquidbounce.utils.world
 
+import com.google.common.base.Predicates
 import net.ccbluex.fastutil.asObjectList
 import net.minecraft.core.BlockPos
 import net.minecraft.world.attribute.BedRule
 import net.minecraft.world.attribute.EnvironmentAttributes
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.EntityGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.ChunkAccess
 import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.level.chunk.LevelChunkSection
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import java.util.function.Predicate
 
 /**
  * @return if water and ice evaporates in this world (e.g. nether)
@@ -41,9 +48,9 @@ val Level.respawnAnchorWorks: Boolean
     get() = this.environmentAttributes().getDimensionValue(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS)
 
 /**
- * Returns the loaded section slice from section 0 through [LevelChunk.highestFilledSectionIndex].
+ * Returns the loaded section slice from section 0 through [ChunkAccess.highestFilledSectionIndex].
  */
-val LevelChunk.filledSections: List<LevelChunkSection>
+val ChunkAccess.filledSections: List<LevelChunkSection>
     get() = this.sections.asObjectList(offset = 0, length = this.highestFilledSectionIndex + 1)
 
 /**
@@ -60,7 +67,7 @@ inline fun LevelChunk.forEachSectionBlock(
 ) {
     val section = this.getSection(sectionIndex)
     val startX = this.pos.minBlockX
-    val startY = this.sectionBottonY(sectionIndex)
+    val startY = this.sectionBottomY(sectionIndex)
     val startZ = this.pos.minBlockZ
     section.forEachBlock { localX, localY, localZ, state ->
         action(mutable.set(startX or localX, startY or localY, startZ or localZ), state)
@@ -88,4 +95,15 @@ inline fun LevelChunkSection.forEachBlock(action: (localX: Int, localY: Int, loc
  *
  * `index == (y >> 4) - (bottomY >> 4)`
  */
-fun LevelChunk.sectionBottonY(index: Int): Int = (index + (this.minY shr 4)) shl 4
+fun ChunkAccess.sectionBottomY(index: Int): Int = (index + (this.minY shr 4)) shl 4
+
+fun EntityGetter.getEntitiesInCuboid(
+    midPos: Vec3,
+    range: Double,
+    exclusion: Entity? = null,
+    predicate: Predicate<Entity> = Predicates.alwaysTrue(),
+): MutableList<Entity> {
+    val size = range * 2.0
+    val box = AABB.ofSize(midPos, size, size, size)
+    return getEntities(exclusion, box, predicate) // -> ArrayList
+}
