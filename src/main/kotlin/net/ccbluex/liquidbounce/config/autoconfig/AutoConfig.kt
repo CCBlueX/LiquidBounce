@@ -71,7 +71,7 @@ object AutoConfig {
             }
         }
 
-    var includeConfiguration = IncludeConfiguration.Companion.DEFAULT
+    var includeConfiguration = IncludeConfiguration.DEFAULT
 
     @Volatile
     var configs: Array<AutoSettings>? = null
@@ -256,7 +256,7 @@ object AutoConfig {
      */
     fun serializeAutoConfig(
         writer: Writer,
-        includeConfiguration: IncludeConfiguration = IncludeConfiguration.Companion.DEFAULT,
+        includeConfiguration: IncludeConfiguration = IncludeConfiguration.DEFAULT,
         autoSettingsType: AutoSettingsType = AutoSettingsType.RAGE,
         statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING
     ) {
@@ -304,7 +304,7 @@ object AutoConfig {
             publicGson.toJson(jsonObject, it)
         }
 
-        this.includeConfiguration = IncludeConfiguration.Companion.DEFAULT
+        this.includeConfiguration = IncludeConfiguration.DEFAULT
     }
 
     /**

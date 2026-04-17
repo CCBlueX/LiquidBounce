@@ -229,7 +229,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
             override fun rotationFor(target: LivingEntity): Rotation? = null
         },
         LINEAR("Linear") {
-            override fun rotationFor(target: LivingEntity): Rotation? {
+            override fun rotationFor(target: LivingEntity): Rotation {
                 // On linear we likely don't need to care about gravity,
                 // but instead aim exactly at the hitbox of the target.
                 val eyes = player.eyePosition
