@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -94,14 +94,14 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     private var isEnemyNearby = false
 
     @Suppress("unused")
-    private val gameTickHandler = tickHandler {
+    private val gameTickHandler = handler<GameTickEvent> {
         isEnemyNearby = world.findEnemy(range) != null
 
         if (ModuleAutoDodge.enabled) {
-            val position = positions.firstOrNull() ?: return@tickHandler
+            val position = positions.firstOrNull() ?: return@handler
 
             if (ModuleAutoDodge.getInflictedHit(position) == null) {
-                return@tickHandler
+                return@handler
             }
 
             val evadingPacket = ModuleAutoDodge.findAvoidingArrowPosition()

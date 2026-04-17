@@ -58,7 +58,7 @@ data class DirectionalInput(
     }
 
     val isMoving: Boolean
-        get() = forwards xor backwards || left xor right
+        get() = forwards != backwards || left != right
 
     companion object {
         @JvmField

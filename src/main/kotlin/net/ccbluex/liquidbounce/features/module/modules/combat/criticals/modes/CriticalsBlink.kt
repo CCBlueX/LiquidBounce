@@ -49,7 +49,7 @@ object CriticalsBlink : Mode("Blink") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        enemyInRange = world.findEnemy(0.0f..range) != null
+        enemyInRange = world.findEnemy(0.0f, range) != null
     }
 
     @Suppress("unused")
