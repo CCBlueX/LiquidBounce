@@ -69,7 +69,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
         currentChargeRandom =
             (mid + ModuleAutoBow.random.nextGaussian() * lenHalf).toInt()
-                .coerceIn(chargedRandom.start.toInt()..chargedRandom.endInclusive.toInt())
+                .coerceIn(chargedRandom.start.toInt(), chargedRandom.endInclusive.toInt())
     }
 
     private fun getChargedRandom(): Int {

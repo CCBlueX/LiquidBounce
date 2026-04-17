@@ -55,7 +55,7 @@ enum class Easing(override val tag: String) : Tagged {
 
     open fun getFactor(startTime: Long, currentTime: Long, time: Float): Float {
         val delta = currentTime - startTime
-        val factor = (delta / time.toDouble()).toFloat().coerceIn(0F..1F)
+        val factor = (delta / time.toDouble()).toFloat().coerceIn(0F, 1F)
         return transform(factor)
     }
 

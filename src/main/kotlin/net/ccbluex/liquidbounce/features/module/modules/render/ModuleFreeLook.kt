@@ -60,7 +60,7 @@ object ModuleFreeLook : ClientModule(
         cameraPitch += event.cursorDeltaY.toFloat() * 0.15f * senseBoost
 
         if (!noPitchLimit) {
-            cameraPitch = cameraPitch.coerceIn(-90f..90f)
+            cameraPitch = cameraPitch.coerceIn(-90f, 90f)
         }
 
         event.cancelEvent()

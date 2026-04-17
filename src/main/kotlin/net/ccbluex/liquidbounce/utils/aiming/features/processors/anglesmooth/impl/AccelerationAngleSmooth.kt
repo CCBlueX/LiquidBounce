@@ -71,9 +71,7 @@ class AccelerationAngleSmooth(parent: ModeValueGroup<*>) : AngleSmooth("Accelera
             val scaledDifference = rotationDifference / 120f
             val sigmoid = 1 / (1 + exp((-steepness * (scaledDifference - midpoint)).toDouble()))
 
-            return sigmoid.toFloat()
-                .coerceAtLeast(0f)
-                .coerceAtMost(180f)
+            return sigmoid.toFloat().coerceIn(0f, 180f)
         }
     }
 

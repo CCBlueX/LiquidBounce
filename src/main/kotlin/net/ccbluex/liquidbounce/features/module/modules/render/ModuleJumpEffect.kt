@@ -59,7 +59,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
             circles.forEach {
                 val progress = animCurve
                     .transform((lifetime - circles.timeToDie(it) + event.partialTicks) / lifetime)
-                    .coerceIn(0f..1f)
+                    .coerceIn(0f, 1f)
 
                 withPositionRelativeToCamera(it.value) {
                     drawGradientCircle(

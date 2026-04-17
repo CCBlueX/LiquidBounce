@@ -55,7 +55,7 @@ object CommandItemStack : Command.Factory, MinecraftShortcuts {
                 }
 
                 val amount = (args.getOrElse(0, defaultValue = { 64 }) as Int)
-                    .coerceIn(1..64)
+                    .coerceIn(1, 64)
 
                 if (mainHandStack.count == amount) {
                     chat(regular(command.result("hasAlreadyAmount", variable(amount.toString()))), command)

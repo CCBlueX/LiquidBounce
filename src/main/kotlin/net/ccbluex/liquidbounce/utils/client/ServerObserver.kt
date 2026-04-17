@@ -216,7 +216,7 @@ object ServerObserver : EventListener {
                 val averageInterval = intervals.average()
                 mc.execute {
                     tps = if (averageInterval > 0 && !averageInterval.isNaN()) {
-                        (20.0 / (averageInterval / 1000.0)).coerceIn(0.0..20.0)
+                        (20.0 / (averageInterval / 1000.0)).coerceIn(0.0, 20.0)
                     } else {
                         Double.NaN
                     }

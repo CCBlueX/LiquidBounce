@@ -55,7 +55,7 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
         val yaw = yawMode.activeMode.yaw
         val pitch = pitchMode.activeMode.pitch.let {
             if (safePitch) {
-                it.coerceIn(-90f..90f)
+                it.coerceIn(-90f, 90f)
             } else {
                 it
             }

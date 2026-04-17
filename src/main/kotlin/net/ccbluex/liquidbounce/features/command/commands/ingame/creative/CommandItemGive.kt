@@ -58,7 +58,7 @@ object CommandItemGive : Command.Factory {
                 val item = args[0] as String
                 val amount = args.getOrElse(1, defaultValue = { 1 }) as Int // default one
 
-                val itemStack = createItem(item, amount.coerceIn(1..64))
+                val itemStack = createItem(item, amount.coerceIn(1, 64))
                 val emptySlot = player.inventory.freeSlot
 
                 if (emptySlot == -1) {

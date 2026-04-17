@@ -113,6 +113,11 @@ fun Vec3.isNormalized(tolerance: Double = 1e-4): Boolean =
 fun Vec3.normalizeIfNeeded(tolerance: Double = 1e-4): Vec3 =
     if (isNormalized(tolerance)) this else normalize()
 
+fun Vec3.equals(other: Vec3, tolerance: Double): Boolean =
+    abs(this.x - other.x()) < tolerance &&
+        abs(this.y - other.y()) < tolerance &&
+        abs(this.z - other.z()) < tolerance
+
 inline val Vec3.isLikelyZero: Boolean
     get() = Mth.equal(this.lengthSqr(), 0.0)
 

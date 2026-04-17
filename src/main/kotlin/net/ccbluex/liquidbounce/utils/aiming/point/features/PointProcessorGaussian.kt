@@ -24,10 +24,11 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.math.equals
+import net.minecraft.util.Mth.lerp
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import java.security.SecureRandom
-import kotlin.math.abs
 
 internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(parent, "Gaussian", false) {
 
@@ -47,14 +48,14 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
 
     }
 
-    var currentOffset: Vec3 = Vec3.ZERO
+    private var currentOffset: Vec3 = Vec3.ZERO
     private var targetOffset: Vec3 = Vec3.ZERO
 
-    val yawFactor by floatRange("YawOffset", 0f..0f, 0.0f..1.0f)
-    val pitchFactor by floatRange("PitchOffset", 0f..0f, 0.0f..1.0f)
-    val chance by int("Chance", 100, 0..100, "%")
-    val speed by floatRange("Speed", 0.1f..0.2f, 0.01f..1f)
-    val tolerance by float("Tolerance", 0.05f, 0.01f..0.1f)
+    private val yawFactor by floatRange("YawOffset", 0f..0f, 0.0f..1.0f)
+    private val pitchFactor by floatRange("PitchOffset", 0f..0f, 0.0f..1.0f)
+    private val chance by int("Chance", 100, 0..100, "%")
+    private val speed by floatRange("Speed", 0.1f..0.2f, 0.01f..1f)
+    private val tolerance by float("Tolerance", 0.05f, 0.01f..0.1f)
 
     private inner class Dynamic : ToggleableValueGroup(this, "Dynamic", false) {
         val hurtTime by int("HurtTime", 10, 0..10)
@@ -65,14 +66,6 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
     }
 
     private val dynamic = tree(Dynamic())
-
-    private fun interpolate(start: Double, end: Double, f: Double) = start + (end - start) * f
-
-    private fun gaussianHasReachedTarget(vec1: Vec3, vec2: Vec3, tolerance: Float): Boolean {
-        return abs(vec1.x - vec2.x) < tolerance &&
-            abs(vec1.y - vec2.y) < tolerance &&
-            abs(vec1.z - vec2.z) < tolerance
-    }
 
     @Suppress("CognitiveComplexMethod")
     fun updateGaussianOffset(entity: Any?) {
@@ -92,10 +85,9 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
                 pitchFactor.random()
             }.toDouble()
 
-        if (gaussianHasReachedTarget(
-                currentOffset,
+        if (currentOffset.equals(
                 targetOffset,
-                if (dynamicCheck) dynamic.tolerance else tolerance
+                if (dynamicCheck) dynamic.tolerance.toDouble() else tolerance.toDouble()
             )
         ) {
             if (random.nextInt(100) <= chance) {
@@ -107,20 +99,20 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
             }
         } else {
             currentOffset = Vec3(
-                interpolate(
+                lerp(
+                    if (dynamicCheck) dynamic.speed.random().toDouble() else speed.random().toDouble(),
                     currentOffset.x,
-                    targetOffset.x,
-                    if (dynamicCheck) dynamic.speed.random().toDouble() else speed.random().toDouble()
+                    targetOffset.x
                 ),
-                interpolate(
+                lerp(
+                    if (dynamicCheck) dynamic.speed.random().toDouble() else speed.random().toDouble(),
                     currentOffset.y,
-                    targetOffset.y,
-                    if (dynamicCheck) dynamic.speed.random().toDouble() else speed.random().toDouble()
+                    targetOffset.y
                 ),
-                interpolate(
+                lerp(
+                    if (dynamicCheck) dynamic.speed.random().toDouble() else speed.random().toDouble(),
                     currentOffset.z,
-                    targetOffset.z,
-                    if (dynamicCheck) dynamic.speed.random().toDouble() else speed.random().toDouble()
+                    targetOffset.z
                 )
             )
         }
