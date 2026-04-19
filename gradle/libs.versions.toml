@@ -13,7 +13,7 @@ fabric-loaderMin = "0.16.14"
 fabric-api = "0.145.4+26.1.2"
 
 # mcef
-mcef = "3.3.0-26.1-alpha.1-SNAPSHOT"
+mcef = "3.3.0-26.1-SNAPSHOT"
 # mc-authlib
 mc_authlib = "1.7.0"
 # Polyglot
