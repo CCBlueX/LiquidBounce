@@ -280,10 +280,13 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
     }
 
     private fun WorldRenderEnvironment.drawTrajectoryForProjectile(positions: List<Vec3>, argb: Int) {
+        val renderedPositions = if (positions.size and 1 != 0) positions.subList(1) else positions
+        val origin = renderedPositions.firstOrNull() ?: return
+
         // Don't use LineStrip because in batch mode
         poseStack.pushPose()
-        poseStack.translate(renderOffset - camera.position())
-        drawLineStripAsLines(argb, if (positions.size and 1 != 0) positions.subList(1) else positions)
+        poseStack.translate(origin.add(renderOffset).subtract(camera.position()))
+        drawLineStripAsLines(argb, renderedPositions.map { it - origin })
         poseStack.popPose()
     }
 
