@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAu
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.minecraft.world.item.ItemStack
@@ -35,7 +34,7 @@ abstract class Buff(
 ) : ToggleableValueGroup(ModuleAutoBuff, name, true) {
 
     internal open val passesRequirements: Boolean
-        get() = enabled && !InventoryManager.isInventoryOpen
+        get() = enabled && (ModuleAutoBuff.ignoreInventoryOpen || !ModuleAutoBuff.isInventoryOpenForCheck)
 
     /**
      * Try to run feature if possible, otherwise return false
