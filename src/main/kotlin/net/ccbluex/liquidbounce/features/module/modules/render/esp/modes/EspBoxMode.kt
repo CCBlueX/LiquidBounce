@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.KeyedAabb
 import net.ccbluex.liquidbounce.utils.math.mergeIntersectingAabbsSweep
+import net.ccbluex.liquidbounce.utils.math.worldToLocal
 import net.minecraft.world.phys.AABB
 
 object EspBoxMode : EspMode.BoxBased("Box") {
@@ -56,9 +57,10 @@ object EspBoxMode : EspMode.BoxBased("Box") {
                 }.asList()
             )
 
-            withPositionRelativeToCamera {
-                for ((box, color) in mergedBoxes) {
-                    drawColoredBox(box, color)
+            for ((box, color) in mergedBoxes) {
+                val (origin, localBox) = box.worldToLocal()
+                withPositionRelativeToCamera(origin) {
+                    drawColoredBox(localBox, color)
                 }
             }
         }
