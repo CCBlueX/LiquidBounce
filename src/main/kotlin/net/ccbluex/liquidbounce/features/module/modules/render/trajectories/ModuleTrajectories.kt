@@ -209,7 +209,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                 partialTicks,
                 trajectoryColor = Color4b.WHITE,
                 blockHitColor = Color4b(0, 160, 255, 150),
-                entityHitColor = Color4b(255, 0, 0, 100),
+                entityHitColor = Color4b.RED.alpha(100),
             )
         }
     }
