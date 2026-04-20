@@ -36,12 +36,15 @@ operator fun BoundingBox.iterator(): Iterator<BlockPos> = iterate().iterator()
 private inline val BoundingBox.lengthX: Int get() = maxX() - minX() + 1
 private inline val BoundingBox.lengthY: Int get() = maxY() - minY() + 1
 private inline val BoundingBox.lengthZ: Int get() = maxZ() - minZ() + 1
+private inline val BoundingBox.centerX: Double get() = minX() + lengthX * 0.5
+private inline val BoundingBox.centerY: Double get() = minY() + lengthY * 0.5
+private inline val BoundingBox.centerZ: Double get() = minZ() + lengthZ * 0.5
 
 val BoundingBox.size: Int get() = lengthX * lengthY * lengthZ
 
 val BoundingBox.from: BlockPos get() = BlockPos(minX(), minY(), minZ())
 
-val BoundingBox.to: BlockPos get() = BlockPos(minX(), minY(), minZ())
+val BoundingBox.to: BlockPos get() = BlockPos(maxX(), maxY(), maxZ())
 
 operator fun BoundingBox.contains(other: BoundingBox): Boolean =
     other.minX() >= this.minX() &&
@@ -77,12 +80,12 @@ val BoundingBox.box: AABB
 
 fun BoundingBox.centerOnSide(side: Direction): Vec3 =
     when (side) {
-        Direction.DOWN  -> Vec3(lengthX * 0.5, minY() - 0.5, lengthZ * 0.5)
-        Direction.UP    -> Vec3(lengthX * 0.5, maxY() + 0.5, lengthZ * 0.5)
-        Direction.EAST  -> Vec3(maxX() + 0.5, lengthY * 0.5, lengthZ * 0.5)
-        Direction.WEST  -> Vec3(minX() - 0.5, lengthY * 0.5, lengthZ * 0.5)
-        Direction.SOUTH -> Vec3(lengthX * 0.5, lengthY * 0.5, maxZ() + 0.5)
-        Direction.NORTH -> Vec3(lengthX * 0.5, lengthY * 0.5, minZ() - 0.5)
+        Direction.DOWN  -> Vec3(centerX, minY() - 0.5, centerZ)
+        Direction.UP    -> Vec3(centerX, maxY() + 0.5, centerZ)
+        Direction.EAST  -> Vec3(maxX() + 0.5, centerY, centerZ)
+        Direction.WEST  -> Vec3(minX() - 0.5, centerY, centerZ)
+        Direction.SOUTH -> Vec3(centerX, centerY, maxZ() + 0.5)
+        Direction.NORTH -> Vec3(centerX, centerY, minZ() - 0.5)
     }
 
 @JvmSynthetic
