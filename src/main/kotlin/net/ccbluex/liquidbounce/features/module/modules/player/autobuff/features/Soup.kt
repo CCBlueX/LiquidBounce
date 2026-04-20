@@ -53,7 +53,7 @@ internal object Soup : HealthBasedBuff("Soup") {
         if (DropAfterUse.enabled) {
             waitTicks(wait.random())
 
-            if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot !is OffHandSlot) {
+            if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot != OffHandSlot) {
                 if (player.drop(true)) {
                     player.swing(InteractionHand.MAIN_HAND)
                 }

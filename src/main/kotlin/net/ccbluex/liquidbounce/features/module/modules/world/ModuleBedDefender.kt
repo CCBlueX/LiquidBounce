@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -47,54 +48,23 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
 
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
+    private fun blockHardness(slot: HotbarItemSlot): Float =
+        (slot.itemStack.item as BlockItem).block.defaultDestroyTime()
+
+    private val blockSlotComparator =
+        compareByDescending<HotbarItemSlot> { blockHardness(it) == -1f }
+            .thenByDescending { blockHardness(it) }
+            .then(ItemSlot.PREFER_MORE_ITEM)
+            .then(HotbarItemSlot.PREFER_NEARBY)
+
+    private fun findBestBlockSlot(): HotbarItemSlot? {
+        return Slots.OffhandWithHotbar
+            .filter { it.itemStack.isFullBlock() }
+            .minWithOrNull(blockSlotComparator)
+    }
+
     private val placer = tree(BlockPlacer("Place", this, Priority.NOT_IMPORTANT, {
-        val selected = player.inventory.selectedSlot
-        var maxHardness = Float.MIN_VALUE
-        var maxCount = 0
-        var best: HotbarItemSlot? = null
-
-        Slots.OffhandWithHotbar.forEach {
-            if (!it.itemStack.isFullBlock()) {
-                return@forEach
-            }
-
-            val hardness = (it.itemStack.item as BlockItem).block.defaultDestroyTime()
-            // -1 is unbreakable
-            if (hardness < maxHardness && hardness != -1f || maxHardness == -1f && hardness != -1f) {
-                return@forEach
-            }
-
-            // prioritize blocks with a higher hardness
-            if (hardness > maxHardness || hardness == -1f && maxHardness != -1f) {
-                best = it
-                maxHardness = hardness
-                return@forEach
-            }
-
-            // prioritize stacks with a higher count
-            val count = it.itemStack.count
-            if (count > maxCount) {
-                best = it
-                maxCount = count
-            }
-
-            best!!
-
-            // prioritize stacks closer to the selected slot
-            val distance1a = (it.hotbarSlot - selected + 9) % 9
-            val distance1b = (selected - it.hotbarSlot + 9) % 9
-            val distance1 = minOf(distance1a, distance1b)
-
-            val distance2a = (best.hotbarSlot - selected + 9) % 9
-            val distance2b = (selected - best.hotbarSlot + 9) % 9
-            val distance2 = minOf(distance2a, distance2b)
-
-            if (distance1 < distance2) {
-                best = it
-            }
-        }
-
-        best
+        findBestBlockSlot()
     }, false))
 
     private val requiresSneak by boolean("RequiresSneak", false)

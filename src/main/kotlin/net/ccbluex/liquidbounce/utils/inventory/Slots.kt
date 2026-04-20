@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.utils.inventory
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.tags.TagKey
-import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 
@@ -41,9 +40,7 @@ inline fun <T : HotbarItemSlot> Iterable<T>.findClosestSlot(predicate: (ItemStac
     return this.filter { predicate(it.itemStack) }.minWithOrNull(HotbarItemSlot.PREFER_NEARBY)
 }
 
-fun Slots<*>.hasItem(item: Item): Boolean = has(item)
-
-class Slots<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
+class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
     val stacks: Array<ItemStack>
         get() = slots.mapToArray { it.itemStack }
 
@@ -72,7 +69,7 @@ class Slots<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
          */
         @JvmField
         val Hotbar = Slots(
-            List(9) { HotbarItemSlot(it) }
+            HotbarItemSlot.mainHandSlots
         )
 
         /**
@@ -84,39 +81,23 @@ class Slots<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
         )
 
         /**
-         * Offhand (singleton list)
-         */
-        @JvmField
-        val OffHand = Slots(
-            listOf(OffHandSlot)
-        )
-
-        /**
          * Armor slots 0~3
          *
          * Boots/Leggings/Chestplate/Helmet
          */
         @JvmField
-        val Armor = Slots(
-            listOf(
-                ArmorItemSlot(EquipmentSlot.FEET), // 0
-                ArmorItemSlot(EquipmentSlot.LEGS), // 1
-                ArmorItemSlot(EquipmentSlot.CHEST), // 2
-                ArmorItemSlot(EquipmentSlot.HEAD), // 3
-            )
-        )
+        val Armor = Slots(ArmorItemSlot.entries)
 
         /**
          * Offhand + Hotbar
          */
-        @Suppress("UNCHECKED_CAST")
         @JvmField
-        val OffhandWithHotbar = (OffHand + Hotbar) as Slots<HotbarItemSlot>
+        val OffhandWithHotbar = Slots(HotbarItemSlot.entries)
 
         /**
          * Hotbar + OffHand + Inventory + Armor
          */
         @JvmField
-        val All = Hotbar + OffHand + Inventory + Armor
+        val All = Hotbar + HotbarItemSlot.OFFHAND + Inventory + Armor
     }
 }

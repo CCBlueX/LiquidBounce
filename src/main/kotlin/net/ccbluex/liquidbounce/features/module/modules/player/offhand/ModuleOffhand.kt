@@ -219,7 +219,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     private fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {
         return if (smart && from is HotbarItemSlot) {
             val selectedSlot = player.inventory.selectedSlot
-            val targetSlot = from.hotbarSlot
+            val targetSlot = from.inventorySlot
             if (selectedSlot != targetSlot) {
                 network.sendHeldItemChange(targetSlot)
             }

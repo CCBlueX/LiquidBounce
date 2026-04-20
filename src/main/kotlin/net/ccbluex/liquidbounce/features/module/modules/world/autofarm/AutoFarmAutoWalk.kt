@@ -74,7 +74,8 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
 
         allowedStates.add(AutoFarmTrackedState.ReadyForHarvest)
 
-        for (item in Slots.OffhandWithHotbar.items) {
+        for (slot in Slots.OffhandWithHotbar) {
+            val item = slot.itemStack.item
             AutoFarmTrackedState.Plantable.entries.filterTo(allowedStates) { it.items.contains(item) }
 
             if (item is BoneMealItem && ModuleAutoFarm.AutoUseBoneMeal.enabled) {

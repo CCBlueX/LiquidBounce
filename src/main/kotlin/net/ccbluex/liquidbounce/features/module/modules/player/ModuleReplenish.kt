@@ -86,8 +86,8 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
 
         chronometer.reset()
 
-        Slots.OffhandWithHotbar.slots.forEach { slot ->
-            val idx = if (slot is OffHandSlot) trackedHotbarItems.lastIndex else slot.hotbarSlot
+        Slots.OffhandWithHotbar.forEach { slot ->
+            val idx = if (slot == OffHandSlot) trackedHotbarItems.lastIndex else slot.hotbarIndex!!
 
             val currentStack = slot.itemStack
             val currentStackNotEmpty = !currentStack.isEmpty
@@ -117,7 +117,7 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
             }
 
             // find replacement items
-            val inventorySlots = Slots.Inventory.slots
+            val inventorySlots = Slots.Inventory
                 .filterTo(mutableListOf()) { it.itemStack.isMergeable(itemStack) }
 
             // no stack to refill found
