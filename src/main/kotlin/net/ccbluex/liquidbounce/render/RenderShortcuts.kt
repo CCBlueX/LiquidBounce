@@ -156,6 +156,7 @@ internal inline fun RenderTarget.drawGenericBlockESP(
         pass.bindProjectionUniform()
         pass.bindGlobalsUniform()
         pass.bindDynamicTransformsUniform(dynamicTransforms)
+        renderState.setBaseBlockPosUniform(pass)
         distanceFade.bindUniform(pass)
         renderState.bindAndDraw(pass)
     }

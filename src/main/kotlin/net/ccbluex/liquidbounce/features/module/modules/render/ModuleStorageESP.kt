@@ -179,7 +179,9 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                     pipeline = ClientRenderPipelines.relativeLines(useColor = true),
                     distanceFade = distanceFade,
                 ) {
-                    getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
+                    getDynamicTransformsUniform(
+                        modelView = event.matrixStack.last().pose(),
+                    )
                 }
             }
 
@@ -188,7 +190,9 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
                 distanceFade = distanceFade,
             ) {
-                getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
+                getDynamicTransformsUniform(
+                    modelView = event.matrixStack.last().pose(),
+                )
             }
 
             if (entityBoxes.isEmpty()) return@handler
@@ -240,12 +244,15 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 return@handler
             }
 
+            val origin = BlockPos.containing(player.position())
+
             blockFacesRenderState.buildMesh(
                 pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
+                origin = origin,
             ) { pose ->
                 forEachTrackedBlockShapes { blockPos, type, outlineShape ->
                     pose.withPush {
-                        translate(blockPos)
+                        translate(blockPos.subtract(origin))
                         addShapeFaces(last().pose(), outlineShape, type.color.alpha(50))
                     }
                 }
@@ -254,10 +261,11 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             if (outline) {
                 blockOutlinesRenderState.buildMesh(
                     pipeline = ClientRenderPipelines.relativeLines(useColor = true),
+                    origin = origin,
                 ) { pose ->
                     forEachTrackedBlockShapes { blockPos, type, outlineShape ->
                         pose.withPush {
-                            translate(blockPos)
+                            translate(blockPos.subtract(origin))
                             addShapeOutlines(last().pose(), outlineShape, type.color.alpha(100))
                         }
                     }
@@ -316,12 +324,14 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor = true),
+                origin = player.blockPosition(),
             ) { pose ->
+                val origin = renderState.baseBlockPos
                 // non-model blocks are already processed by WorldRenderer where we injected code which renders
                 // their outline
                 forEachTrackedBlockShapes({ it.renderShape != RenderShape.MODEL }) { blockPos, type, outlineShape ->
                     pose.withPush {
-                        translate(blockPos)
+                        translate(blockPos.subtract(origin))
                         addShapeFaces(last().pose(), outlineShape, type.color)
                     }
                 }

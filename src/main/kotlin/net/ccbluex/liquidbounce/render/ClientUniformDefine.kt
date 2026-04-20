@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
+import com.mojang.blaze3d.systems.RenderPass
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.render.std140Size
@@ -29,6 +30,7 @@ import java.util.function.Supplier
 
 enum class ClientUniformDefine(val uboName: String, val size: Int) {
     DISTANCE_FADE("u_DistanceFade", std140Size { vec4 }),
+    MESH_BASE_BLOCK_POS("u_MeshBaseBlockPos", std140Size { ivec3 }),
     ROUNDED_RECT("u_RoundedRect", std140Size { vec2 + float }),
     HAND_ITEM_LIGHTMAP("ItemChamsData", std140Size { int + float + vec4 + float + vec4 + float + int }),
     GUI_BLUR("BlurData", std140Size { float + float + float }),
@@ -58,6 +60,10 @@ enum class ClientUniformDefine(val uboName: String, val size: Int) {
             GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
             this.size,
         )
+    }
+
+    fun setTo(renderPass: RenderPass, slice: GpuBufferSlice) {
+        renderPass.setUniform(this.uboName, slice)
     }
 
 }

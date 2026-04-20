@@ -29,10 +29,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.addVertex
-import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.longLines
@@ -45,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.world.forEachSectionBlock
 import net.ccbluex.liquidbounce.utils.world.stronghold.EyeMeasurement
 import net.ccbluex.liquidbounce.utils.world.stronghold.PosteriorSnapshot
@@ -256,19 +255,19 @@ object ModuleStrongholdFinder : ClientModule(
             }
 
             if (renderRays) {
-                withPositionRelativeToCamera {
-                    longLines {
-                        val color = Color4b.WHITE.alpha(170).argb
-                        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
-                            for (measurement in measurements) {
-                                val start = measurement.throwPos
-                                val yawRad = measurement.angleDeg.toDouble().toRadians()
-                                val direction = Vec3(-sin(yawRad), 0.0, cos(yawRad))
-                                val end = measurement.throwPos.add(direction.scale(RAY_RENDER_LENGTH))
-                                addVertex(pose, start).setColor(color)
-                                addVertex(pose, end).setColor(color)
-                            }
-                        }
+                longLines {
+                    val color = Color4b.WHITE.alpha(170).argb
+                    for (measurement in measurements) {
+                        val start = measurement.throwPos
+                        val yawRad = measurement.angleDeg.toDouble().toRadians()
+                        val direction = Vec3(-sin(yawRad), 0.0, cos(yawRad))
+                        val end = measurement.throwPos.add(direction.scale(RAY_RENDER_LENGTH))
+
+                        drawLine(
+                            relativeToCamera(start).toVec3f(),
+                            relativeToCamera(end).toVec3f(),
+                            color,
+                        )
                     }
                 }
             }
@@ -446,26 +445,22 @@ object ModuleStrongholdFinder : ClientModule(
         val start = playerPos.add(0.0, 0.05, 0.0)
         val target = closestPortalPos.center
 
-        withPositionRelativeToCamera {
-            longLines {
-                drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
-                    val lineColor = Color4b(255, 80, 80, 220).argb
-                    addVertex(pose, start).setColor(lineColor)
-                    addVertex(pose, target).setColor(lineColor)
+        longLines {
+            val lineColor = Color4b(255, 80, 80, 220).argb
+            val startRelative = relativeToCamera(start).toVec3f()
 
-                    val deltaX = target.x - start.x
-                    val deltaZ = target.z - start.z
-                    val horizontalLength = hypot(deltaX, deltaZ)
-                    if (horizontalLength > 1e-6) {
-                        val markerEnd = Vec3(
-                            start.x + deltaX / horizontalLength * 2.0,
-                            start.y,
-                            start.z + deltaZ / horizontalLength * 2.0
-                        )
-                        addVertex(pose, start).setColor(lineColor)
-                        addVertex(pose, markerEnd).setColor(lineColor)
-                    }
-                }
+            drawLine(startRelative, relativeToCamera(target).toVec3f(), lineColor)
+
+            val deltaX = target.x - start.x
+            val deltaZ = target.z - start.z
+            val horizontalLength = hypot(deltaX, deltaZ)
+            if (horizontalLength > 1e-6) {
+                val markerEnd = Vec3(
+                    start.x + deltaX / horizontalLength * 2.0,
+                    start.y,
+                    start.z + deltaZ / horizontalLength * 2.0
+                )
+                drawLine(startRelative, relativeToCamera(markerEnd).toVec3f(), lineColor)
             }
         }
     }

@@ -106,7 +106,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
             } else {
                 val color = colorMode.activeMode.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
                 if (colorModulatorAlpha == -1) color else color.alpha(colorModulatorAlpha)
-            }
+            },
         )
     }
 
@@ -147,7 +147,9 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 ClientRenderPipelines.relativeQuads(useColor),
                 distanceFade,
             ) {
-                getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
+                getDynamicTransformsUniform(
+                    modelView = event.matrixStack.last().pose(),
+                )
             }
         }
 
@@ -165,15 +167,17 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
             val colorMode = colorMode.activeMode
             useColor = colorMode.isParamSensitive
+            val origin = player.blockPosition()
 
             facesRenderState.buildMesh(
                 pipeline = ClientRenderPipelines.relativeQuads(useColor),
+                origin = origin,
             ) { pose ->
                 forEachTrackedBlocks { blockPos, blockState, outlineShape ->
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                     pose.withPush {
-                        translate(blockPos)
+                        translate(blockPos.subtract(origin))
                         addShapeFaces(last().pose(), outlineShape, color)
                     }
                 }
@@ -182,12 +186,13 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
             if (outline) {
                 outlinesRenderState.buildMesh(
                     pipeline = ClientRenderPipelines.relativeLines(useColor),
+                    origin = origin,
                 ) { pose ->
                     forEachTrackedBlocks { blockPos, blockState, outlineShape ->
                         val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                         pose.withPush {
-                            translate(blockPos)
+                            translate(blockPos.subtract(origin))
                             addShapeOutlines(last().pose(), outlineShape, color)
                         }
                     }
@@ -217,7 +222,9 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 ClientRenderPipelines.outlineQuads(useColor),
                 distanceFade,
             ) {
-                getDynamicTransformsUniform(colorModulatorAlpha = 255)
+                getDynamicTransformsUniform(
+                    colorModulatorAlpha = 255,
+                )
             }
 
             if (dirty) {
@@ -238,15 +245,17 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
             val colorMode = colorMode.activeMode
             useColor = colorMode.isParamSensitive
+            val origin = player.blockPosition()
 
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor),
+                origin = origin,
             ) { pose ->
                 forEachTrackedBlocks { blockPos, blockState, outlineShape ->
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                     pose.withPush {
-                        translate(blockPos)
+                        translate(blockPos.subtract(origin))
                         addShapeFaces(last().pose(), outlineShape, color?.alpha(255))
                     }
                 }

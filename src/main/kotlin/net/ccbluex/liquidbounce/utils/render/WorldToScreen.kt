@@ -23,8 +23,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.set
-import net.ccbluex.liquidbounce.utils.math.sub
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
@@ -54,8 +52,11 @@ object WorldToScreen {
         pos: Vec3,
         cameraPos: Vec3 = mc.gameRenderer.mainCamera.position(),
     ): Vec3f? {
-        val transformedPos = cacheVec3f.set(pos).sub(cameraPos)
-            .mulProject(this.projModelViewMatrix)
+        val transformedPos = cacheVec3f.set(
+            pos.x - cameraPos.x,
+            pos.y - cameraPos.y,
+            pos.z - cameraPos.z
+        ).mulProject(this.projModelViewMatrix)
 
         val scaleFactor = mc.window.guiScale
         val guiScaleMul = 0.5f / scaleFactor.toFloat()

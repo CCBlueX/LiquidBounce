@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.KeyedAabb
 import net.ccbluex.liquidbounce.utils.math.mergeIntersectingAabbsSweep
 import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.ccbluex.liquidbounce.utils.math.worldToLocal
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow.Pickup
@@ -180,9 +181,10 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                     }.asList()
                 )
 
-                withPositionRelativeToCamera {
-                    for ((mergedBox, _) in mergedBoxes) {
-                        drawBox(mergedBox, faceColor, outlineColor)
+                for ((mergedBox, _) in mergedBoxes) {
+                    val (origin, localBox) = mergedBox.worldToLocal()
+                    withPositionRelativeToCamera(origin) {
+                        drawBox(localBox, faceColor, outlineColor)
                     }
                 }
             }
