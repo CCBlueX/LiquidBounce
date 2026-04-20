@@ -20,11 +20,16 @@
 package net.ccbluex.liquidbounce.render;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -39,8 +44,11 @@ public final class StaticMeshStorage {
     public final ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(0xC0000);
     private final GrowableMappableRingBuffer vboStorage;
     private final GrowableMappableRingBuffer iboStorage;
+    private final GpuBufferSlice baseBlockPosUniform;
 
     private @Nullable MeshDraw meshDraw;
+    private final BlockPos.MutableBlockPos baseBlockPos = new BlockPos.MutableBlockPos();
+    private boolean hasBaseBlockPosUniformValue;
 
     public final String label;
 
@@ -53,11 +61,40 @@ public final class StaticMeshStorage {
             label + " IBO",
             GpuBuffer.USAGE_INDEX
         );
+        this.baseBlockPosUniform = ClientUniformDefine.MESH_BASE_BLOCK_POS.createSingleBuffer(() -> label + " BaseBlockPos UBO");
         this.label = label;
     }
 
     public boolean isReady() {
         return this.meshDraw != null;
+    }
+
+    public BlockPos getBaseBlockPos() {
+        return this.baseBlockPos;
+    }
+
+    public GpuBufferSlice getBaseBlockPosUniform() {
+        return this.baseBlockPosUniform;
+    }
+
+    public void setBaseBlockPosUniform(RenderPass renderPass) {
+        ClientUniformDefine.MESH_BASE_BLOCK_POS.setTo(renderPass, this.baseBlockPosUniform);
+    }
+
+    public void setBaseBlockPos(Vec3i baseBlockPos) {
+        if (this.hasBaseBlockPosUniformValue && baseBlockPos.equals(this.baseBlockPos)) {
+            return;
+        }
+
+        this.writeBaseBlockPosUniform(this.baseBlockPos.set(baseBlockPos));
+        this.hasBaseBlockPosUniformValue = true;
+    }
+
+    private void writeBaseBlockPosUniform(BlockPos baseBlockPos) {
+        try (var view = RenderSystem.getDevice().createCommandEncoder().mapBuffer(this.baseBlockPosUniform, false, true)) {
+            Std140Builder.intoBuffer(view.data())
+                .putIVec3(baseBlockPos.getX(), baseBlockPos.getY(), baseBlockPos.getZ());
+        }
     }
 
     /**
@@ -92,6 +129,8 @@ public final class StaticMeshStorage {
      * Clear the render state. This won't close the buffers.
      */
     public void clearStates() {
+        this.baseBlockPos.set(0, 0, 0);
+        this.hasBaseBlockPosUniformValue = false;
         this.meshDraw = null;
     }
 

@@ -206,6 +206,7 @@ object ClientRenderPipelines {
     private val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         relativePosColorSnippet(VertexFormat.Mode.DEBUG_LINES)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
@@ -213,6 +214,7 @@ object ClientRenderPipelines {
     private val LinesRelativeToCameraNoColor = newPipeline("lines_relative_to_camera_no_color") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         relativePosColorSnippet(VertexFormat.Mode.DEBUG_LINES)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
@@ -254,6 +256,7 @@ object ClientRenderPipelines {
     private val QuadsRelativeToCamera = newPipeline("quads_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         relativePosColorSnippet(VertexFormat.Mode.QUADS)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
@@ -261,6 +264,7 @@ object ClientRenderPipelines {
     private val QuadsRelativeToCameraNoColor = newPipeline("quads_relative_to_camera_no_color") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         relativePosSnippet(VertexFormat.Mode.QUADS)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
@@ -277,6 +281,7 @@ object ClientRenderPipelines {
         withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
         withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         withBlend(BlendFunction.TRANSLUCENT)
     }
@@ -287,6 +292,7 @@ object ClientRenderPipelines {
         withVertexShader(ClientShaders.Vertex.PosRelativeToCamera)
         withFragmentShader(ClientShaders.Fragment.PosRelativeToCamera)
         withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         withBlend(BlendFunction.TRANSLUCENT)
     }

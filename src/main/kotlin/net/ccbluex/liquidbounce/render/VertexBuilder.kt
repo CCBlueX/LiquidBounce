@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.math.forAllFaces
 import net.ccbluex.liquidbounce.utils.math.forAllSideFaces
 import net.ccbluex.liquidbounce.utils.math.forAllSideOutlineEdges
 import net.ccbluex.liquidbounce.utils.render.begin
+import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -230,9 +231,11 @@ private fun VertexConsumer.addColoredVertex(
 inline fun StaticMeshStorage.buildMesh(
     pipeline: RenderPipeline,
     rotate: Boolean = true,
+    origin: BlockPos = BlockPos.ZERO,
     block: VertexConsumer.(pose: PoseStack) -> Unit,
 ) {
     clearStates()
+    this.setBaseBlockPos(origin)
 
     val bufferBuilder = this.byteBufferBuilder.begin(pipeline)
     usePoseStack {
