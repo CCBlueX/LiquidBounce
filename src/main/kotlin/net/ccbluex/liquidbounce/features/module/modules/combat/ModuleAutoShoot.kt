@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -34,12 +36,13 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.entity.useItem
@@ -49,6 +52,7 @@ import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.EggItem
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
 import net.minecraft.world.item.SnowballItem
 
 /**
@@ -63,7 +67,11 @@ import net.minecraft.world.item.SnowballItem
  */
 object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
-    private val throwableType by enumChoice("ThrowableType", ThrowableType.EGG_AND_SNOWBALL)
+    private val throwableType = choices(
+        "ThrowableType",
+        EggAndSnowball,
+        arrayOf(EggAndSnowball, Custom),
+    )
     private val gravityType by enumChoice("GravityType", GravityType.AUTO).apply { tagBy(this) }
 
     private val clicker = tree(Clicker(this, mc.options.keyUse, itemCooldown = null))
@@ -126,7 +134,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
     }
 
     private fun getThrowableSlot(): HotbarItemSlot? {
-        val slot = throwableType.findSlot() ?: return null
+        val slot = throwableType.activeMode.findSlot() ?: return null
 
         return slot.takeIf {
             it.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)
@@ -207,21 +215,29 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
         }
     }
 
-    private enum class ThrowableType(override val tag: String) : Tagged {
-        EGG_AND_SNOWBALL("EggAndSnowball") {
-            override fun findSlot(): HotbarItemSlot? = Slots.OffhandWithHotbar.findClosestSlot {
-                it.item is EggItem || it.item is SnowballItem
-            }
-        },
-        ANYTHING("Anything") {
-            override fun findSlot(): HotbarItemSlot? = when {
-                !player.mainHandItem.isEmpty -> Slots.Hotbar[player.inventory.selectedSlot]
-                !player.offhandItem.isEmpty -> OffHandSlot
-                else -> null
-            }
-        };
+    private sealed class ThrowableTypeMode(
+        name: String,
+        aliases: List<String> = emptyList(),
+    ) : Mode(name, aliases) {
+        final override val parent: ModeValueGroup<*>
+            get() = throwableType
 
         abstract fun findSlot(): HotbarItemSlot?
+    }
+
+    private object EggAndSnowball : ThrowableTypeMode("EggAndSnowball") {
+        override fun findSlot(): HotbarItemSlot? = Slots.OffhandWithHotbar.findClosestSlot {
+            it.item is EggItem || it.item is SnowballItem
+        }
+    }
+
+    private object Custom : ThrowableTypeMode("Custom", aliases = listOf("Anything")) {
+        private val filter by enumChoice("Filter", Filter.WHITELIST)
+        private val items by items("Items", itemSortedSetOf(Items.EGG, Items.SNOWBALL))
+
+        override fun findSlot(): HotbarItemSlot? = Slots.OffhandWithHotbar.findClosestSlot {
+            !it.isEmpty && filter(it.item, items)
+        }
     }
 
     private enum class GravityType(override val tag: String) : Tagged {
