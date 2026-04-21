@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
 import net.ccbluex.liquidbounce.utils.inventory.InventoryItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isMergeable
@@ -87,7 +86,7 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
         chronometer.reset()
 
         Slots.OffhandWithHotbar.forEach { slot ->
-            val idx = if (slot == OffHandSlot) trackedHotbarItems.lastIndex else slot.hotbarIndex!!
+            val idx = if (slot.isOffHand) trackedHotbarItems.lastIndex else slot.hotbarIndex!!
 
             val currentStack = slot.itemStack
             val currentStackNotEmpty = !currentStack.isEmpty

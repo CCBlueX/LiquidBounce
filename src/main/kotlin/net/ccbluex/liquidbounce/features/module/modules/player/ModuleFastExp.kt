@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.item.durability
@@ -256,7 +255,7 @@ object ModuleFastExp : ClientModule(
             player.getItemBySlot(EquipmentSlot.LEGS),
             player.getItemBySlot(EquipmentSlot.FEET),
             // an item in the other hand, not holding the exp bottle could also get repaired
-            if (slot == OffHandSlot) {
+            if (slot.isOffHand) {
                 player.getItemBySlot(EquipmentSlot.MAINHAND)
             } else {
                 player.getItemBySlot(EquipmentSlot.OFFHAND)

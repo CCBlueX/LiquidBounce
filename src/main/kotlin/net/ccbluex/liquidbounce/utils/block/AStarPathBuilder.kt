@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.math.allEmpty
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.AABB
@@ -49,13 +50,14 @@ interface AStarPathBuilder {
 
     val stopRange: Double get() = 2.0
 
-    val Vec3i.isPassable: Boolean
+    private val Vec3i.isPassable: Boolean
         get() {
             val box = AABB(x.toDouble(), y.toDouble(), z.toDouble(), x + 1.0, y + 2.0, z + 1.0)
 
-            val collisions = world.getBlockCollisions(player, box)
+            // 1. no block collision
+            if (!world.getBlockCollisions(player, box).allEmpty()) return false
 
-            return collisions.none()
+            return true
         }
 
     fun findPath(start: Vec3i, end: Vec3i, maxCost: Int): List<Vec3i> {

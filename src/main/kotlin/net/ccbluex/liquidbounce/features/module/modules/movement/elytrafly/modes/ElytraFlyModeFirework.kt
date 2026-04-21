@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
@@ -73,9 +72,9 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
             useHotbarSlotOrOffhand(fireworkSlot)
         } else {
             val actions = listOf<InventoryAction>(
-                InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
-                InventoryAction.UseItem(OffHandSlot, this),
-                InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
+                InventoryAction.Click.performSwap(from = fireworkSlot, to = HotbarItemSlot.OFFHAND),
+                InventoryAction.UseItem(HotbarItemSlot.OFFHAND, this),
+                InventoryAction.Click.performSwap(from = fireworkSlot, to = HotbarItemSlot.OFFHAND),
             )
             event.schedule(ConsiderInventory.constraints, actions)
         }
