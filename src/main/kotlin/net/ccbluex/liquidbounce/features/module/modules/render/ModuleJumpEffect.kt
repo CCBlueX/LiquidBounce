@@ -44,6 +44,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
     private val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
 
     private val lifetime by int("Lifetime", 15, 1..30)
+    private val canBeCovered by boolean("CanBeCovered", false)
 
     private val circles = ExpiringList<Vec3>()
 
@@ -66,7 +67,8 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
                         endRadius.endInclusive * progress,
                         endRadius.start * progress,
                         animateColor(outerColor, progress),
-                        animateColor(innerColor, progress)
+                        animateColor(innerColor, progress),
+                        noDepthTest = !canBeCovered
                     )
                 }
             }
