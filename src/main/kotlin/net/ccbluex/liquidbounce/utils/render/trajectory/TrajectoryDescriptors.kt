@@ -43,6 +43,9 @@ data class TrajectoryDescriptor(
         val BOW_ARROW = TrajectoryDescriptor(TrajectoryInfo.BOW_FULL_PULL, TrajectoryType.Arrow)
 
         @JvmField
+        val CROSSBOW_ARROW = TrajectoryDescriptor(TrajectoryInfo.CROSSBOW_ARROW, TrajectoryType.Arrow)
+
+        @JvmField
         val ENTITY_ARROW = TrajectoryDescriptor(TrajectoryInfo(0.05, 0.3), TrajectoryType.Arrow)
 
         @JvmField

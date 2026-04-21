@@ -83,7 +83,7 @@ object HeldItemTrajectoryResolver {
                 val trajectoryDescriptor = if (isCrossbowFirework(chargedProjectiles)) {
                     TrajectoryDescriptor.FIREWORK_ROCKET
                 } else {
-                    TrajectoryDescriptor.BOW_ARROW
+                    TrajectoryDescriptor.CROSSBOW_ARROW
                 }
 
                 getShotYawOffsets(shotCount).map { yawOffsetDegrees ->
