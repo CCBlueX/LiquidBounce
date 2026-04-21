@@ -123,7 +123,7 @@ fun LocalPlayer.clickBlockWithSlot(
     switchMode: SwitchMode = SwitchMode.SILENT,
     sequenced: Boolean = true,
 ) {
-    val hand = if (slot == OffHandSlot.hotbarSlotForServer) {
+    val hand = if (slot == OffHandSlot.inventorySlot) {
         InteractionHand.OFF_HAND
     } else {
         InteractionHand.MAIN_HAND

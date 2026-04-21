@@ -103,7 +103,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
     val constantLag by boolean("ConstantLag", false)
 
     private val HotbarItemSlot.isSelectionNeeded: Boolean
-        get() = this != OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
+        get() = hotbarIndex != null && hotbarIndex != SilentHotbar.serversideSlot
 
     private fun HotbarItemSlot.trySelect(silentHotbarRequester: Any?, select: Boolean, tickUntilReset: Int): Boolean {
         // Select the slot if we are not holding it.

@@ -22,6 +22,8 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
@@ -48,8 +50,8 @@ object ModuleElytraSwap : ClientModule(
 
     private val constraints = tree(PlayerInventoryConstraints())
 
-    private val slotsToSearch = Slots.Hotbar + Slots.Inventory + Slots.OffHand
-    private val chestplateSlot = Slots.Armor[2]
+    private val slotsToSearch = Slots.Hotbar + Slots.Inventory + HotbarItemSlot.OFFHAND
+    private val chestplateSlot get() = ArmorItemSlot.CHEST
 
     @Suppress("unused")
     private val scheduleInventoryActionHandler = handler<ScheduleInventoryActionEvent>(

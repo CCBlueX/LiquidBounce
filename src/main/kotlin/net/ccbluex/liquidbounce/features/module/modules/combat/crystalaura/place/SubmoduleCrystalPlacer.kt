@@ -209,7 +209,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     }
 
     private fun getSlot(): Int? {
-        return Slots.OffhandWithHotbar.findClosestSlot(Items.END_CRYSTAL)?.hotbarSlotForServer
+        return Slots.OffhandWithHotbar.findClosestSlot(Items.END_CRYSTAL)?.inventorySlot
     }
 
     fun getMaxRange() = max(range, wallsRange)

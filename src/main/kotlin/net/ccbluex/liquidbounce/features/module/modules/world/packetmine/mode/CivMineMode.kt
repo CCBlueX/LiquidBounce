@@ -91,7 +91,7 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
             val slot1 = Slots.Hotbar.findBestToolToMineBlock(
                 state,
                 predicate = ItemStack::isCorrectToolForDrops,
-            )?.hotbarSlot
+            )?.inventorySlot
             if (slot1 != null && slot1 != oldSlot) {
                 network.sendHeldItemChange(slot1)
             } else {

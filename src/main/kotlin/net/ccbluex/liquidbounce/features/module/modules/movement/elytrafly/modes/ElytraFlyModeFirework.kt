@@ -44,7 +44,7 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
     private val cooldown by intRange("Cooldown", 20..20, 0..300, "ticks")
 
-    private val ALL_WITHOUT_ARMOR = Slots.OffHand + Slots.Hotbar + Slots.Inventory
+    private val ALL_WITHOUT_ARMOR = Slots.OffhandWithHotbar + Slots.Inventory
     private val slotsToSearch get() = if (ConsiderInventory.enabled) ALL_WITHOUT_ARMOR else Slots.OffhandWithHotbar
 
     private fun shouldUseFirework(): Boolean {

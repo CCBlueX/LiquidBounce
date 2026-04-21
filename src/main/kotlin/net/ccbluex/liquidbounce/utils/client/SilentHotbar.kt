@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 
 /**
  * Manages things like [ModuleScaffold]'s silent mode.
@@ -40,9 +39,6 @@ object SilentHotbar : EventListener {
     /**
      * Returns the slot that interactions would take place with
      */
-    /**
-     * Returns the slot that interactions would take place with
-     */
     val serversideSlot: Int
         get() = hotbarState?.enforcedHotbarSlot ?: mc.player?.inventory?.realSelectedSlot ?: 0
 
@@ -50,11 +46,12 @@ object SilentHotbar : EventListener {
         get() = hotbarState?.clientsideSlot ?: mc.player?.inventory?.realSelectedSlot ?: 0
 
     /**
-     * If [slot] is not [OffHandSlot], select it silently for duration of [ticksUntilReset].
+     * Silently selects a main-hand hotbar slot for duration of [ticksUntilReset].
+     * Offhand is ignored because it is not selected through held-item changes.
      */
     fun selectSlotSilently(requester: Any?, slot: HotbarItemSlot, ticksUntilReset: Int) {
-        if (slot !is OffHandSlot) {
-            selectSlotSilently(requester, slot.hotbarSlot, ticksUntilReset)
+        slot.hotbarIndex?.let {
+            selectSlotSilently(requester, it, ticksUntilReset)
         }
     }
 

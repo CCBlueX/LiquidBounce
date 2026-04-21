@@ -44,7 +44,7 @@ enum class SwitchMethod(override val tag: String, val shouldSync: Boolean) : Tag
                 return
             }
 
-            SilentHotbar.selectSlotSilently(ModulePacketMine, slot.hotbarSlot, 1)
+            SilentHotbar.selectSlotSilently(ModulePacketMine, slot.inventorySlot, 1)
         }
 
         override fun switchBack() {
@@ -58,7 +58,7 @@ enum class SwitchMethod(override val tag: String, val shouldSync: Boolean) : Tag
 
         override fun switch(slot: HotbarItemSlot, mineTarget: MineTarget) {
             val selectedSlot = SilentHotbar.serversideSlot
-            val desiredSlot = slot.hotbarSlot
+            val desiredSlot = slot.inventorySlot
             if (selectedSlot == desiredSlot) {
                 return
             }
@@ -95,9 +95,9 @@ enum class SwitchMethod(override val tag: String, val shouldSync: Boolean) : Tag
                 return
             }
 
-            exchanged = slot.hotbarSlot
+            exchanged = slot.inventorySlot
             network.sendPacket(
-                PickFromInventoryPacket(slot.hotbarSlot - 1),
+                PickFromInventoryPacket(slot.inventorySlot - 1),
                 onFailure = {
                     chat(
                         markAsError(

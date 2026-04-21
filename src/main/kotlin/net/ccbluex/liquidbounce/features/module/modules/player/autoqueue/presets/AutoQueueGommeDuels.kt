@@ -158,7 +158,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
                 ModuleKillAura.enabled = false
             }
 
-            val headSlot = Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.hotbarSlot ?: return
+            val headSlot = Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot ?: return
 
             if (headSlot != player.inventory.selectedSlot) {
                 SilentHotbar.selectSlotSilently(this, headSlot, 20)

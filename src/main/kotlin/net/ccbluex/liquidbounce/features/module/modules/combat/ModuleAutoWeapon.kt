@@ -129,7 +129,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         val entity = event.entity as? LivingEntity ?: return@handler
-        val weaponSlot = determineWeaponSlot(entity)?.hotbarSlot ?: return@handler
+        val weaponSlot = determineWeaponSlot(entity)?.inventorySlot ?: return@handler
 
         if (isBusy || ChangeOnAction.ON_ATTACK !in changeOnActions) {
             return@handler
@@ -158,7 +158,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         determineWeaponSlot(entity)?.let { slot ->
             SilentHotbar.selectSlotSilently(
                 this,
-                slot.hotbarSlot,
+                slot.inventorySlot,
                 switchBack
             )
         }

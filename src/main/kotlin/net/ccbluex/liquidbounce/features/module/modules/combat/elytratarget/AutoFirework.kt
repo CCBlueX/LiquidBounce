@@ -113,11 +113,12 @@ internal object AutoFirework : ToggleableValueGroup(ModuleElytraTarget, "AutoFir
         PACKET("Packet") {
             override fun useFireworkSlot(slot: HotbarItemSlot, resetDelay: Int) {
                 val curSlot = player.inventory.selectedSlot
-                val slotUpdateFlag = slot !is OffHandSlot && slot.hotbarSlotForServer != curSlot
+                val hotbarIndex = slot.hotbarIndex
+                val slotUpdateFlag = hotbarIndex != null && hotbarIndex != curSlot
 
                 if (slotUpdateFlag) {
-                    player.inventory.selectedSlot = slot.hotbarSlotForServer
-                    network.sendHeldItemChange(slot.hotbarSlotForServer)
+                    player.inventory.selectedSlot = hotbarIndex!!
+                    network.sendHeldItemChange(hotbarIndex)
                 }
 
                 interaction.startPrediction(world) { sequence ->

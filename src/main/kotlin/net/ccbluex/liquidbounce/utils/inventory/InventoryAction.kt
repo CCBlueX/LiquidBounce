@@ -77,7 +77,7 @@ sealed interface InventoryAction {
             ) = Click(
                 screen,
                 slot = from,
-                button = to.hotbarSlotForServer,
+                button = to.inventorySlot,
                 actionType = ClickType.SWAP
             )
 
