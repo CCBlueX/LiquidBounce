@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 
 class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventListener {
 
@@ -121,10 +122,16 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
     private fun AABB.getPseudoClosest(eyes: Vec3) = getNearestPoint(eyes)
 
     private fun AABB.getPseudoFurthest(eyes: Vec3) = Vec3(
-        eyes.x.coerceAtLeast(maxX).coerceAtMost(minX),
-        eyes.y.coerceAtLeast(maxY).coerceAtMost(minY),
-        eyes.z.coerceAtLeast(maxZ).coerceAtMost(minZ)
+        farthestAxis(eyes.x, minX, maxX),
+        farthestAxis(eyes.y, minY, maxY),
+        farthestAxis(eyes.z, minZ, maxZ),
     )
+
+    private fun farthestAxis(value: Double, min: Double, max: Double): Double {
+        val distToMin = abs(value - min)
+        val distToMax = abs(value - max)
+        return if (distToMin > distToMax) min else max
+    }
 
     // For debug visuals
     private fun calculateDistancePercentage(point: Vec3, eyes: Vec3, bestHitVector: Vec3,
