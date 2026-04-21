@@ -48,20 +48,46 @@ data class TrajectoryInfo(
     )
 
     companion object {
+        /**
+         * @see net.minecraft.world.entity.projectile.ThrowableProjectile.getDefaultGravity
+         * @see net.minecraft.world.entity.projectile.ThrowableProjectile.tick
+         */
         @JvmField
-        val GENERIC = TrajectoryInfo(0.03, 0.25)
+        val GENERIC = TrajectoryInfo(
+            gravity = 0.03,
+            hitboxRadius = 0.25,
+            dragInWater = 0.8,
+        )
         @JvmField
         val PERSISTENT = TrajectoryInfo(0.05, 0.5)
         @JvmField
         val POTION = GENERIC.copy(gravity = 0.05, initialVelocity = 0.5, roll = -20.0F)
+        /**
+         * @see net.minecraft.world.item.ExperienceBottleItem.use
+         * @see net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownExperienceBottle.getDefaultGravity
+         */
         @JvmField
-        val EXP_BOTTLE = POTION.copy(initialVelocity = 0.7)
+        val EXP_BOTTLE = POTION.copy(gravity = 0.07, initialVelocity = 0.7)
+        /**
+         * @see net.minecraft.world.entity.projectile.FishingHook.tick
+         */
         @JvmField
-        val FISHING_ROD = GENERIC.copy(gravity = 0.04, drag = 0.92)
+        val FISHING_ROD = GENERIC.copy(gravity = 0.04, drag = 0.92, dragInWater = 0.92)
         @JvmField
         val TRIDENT = PERSISTENT.copy(initialVelocity = 2.5, gravity = 0.05, dragInWater = 0.99)
         @JvmField
         val BOW_FULL_PULL = PERSISTENT.copy(initialVelocity = 3.0)
+        /**
+         * Note: Player only
+         *
+         * @see net.minecraft.world.item.CrossbowItem.performShooting
+         * @see net.minecraft.world.item.CrossbowItem.ARROW_POWER
+         */
+        @JvmField
+        val CROSSBOW_ARROW = PERSISTENT.copy(
+            initialVelocity = 3.15,
+            copiesPlayerVelocity = false
+        )
         @JvmField
         val FIREWORK_ROCKET = TrajectoryInfo(
             gravity = 0.0,
@@ -73,8 +99,18 @@ data class TrajectoryInfo(
         )
         @JvmField
         val FIREBALL = TrajectoryInfo(gravity = 0.0, hitboxRadius = 1.0)
+        /**
+         * @see net.minecraft.world.item.WindChargeItem.use
+         * @see net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.AbstractWindCharge.getInertia
+         */
         @JvmField
-        val WIND_CHARGE = TrajectoryInfo(gravity = 0.0, hitboxRadius = 1.0, copiesPlayerVelocity = false)
+        val WIND_CHARGE = TrajectoryInfo(
+            gravity = 0.0,
+            hitboxRadius = 1.0,
+            drag = 1.0,
+            dragInWater = 1.0,
+            copiesPlayerVelocity = true
+        )
 
         @JvmStatic
         @JvmOverloads
