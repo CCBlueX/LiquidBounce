@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBa
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.assumeEmptyBowl
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.wait
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
@@ -53,7 +52,7 @@ internal object Soup : HealthBasedBuff("Soup") {
         if (DropAfterUse.enabled) {
             waitTicks(wait.random())
 
-            if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot != OffHandSlot) {
+            if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot != HotbarItemSlot.OFFHAND) {
                 if (player.drop(true)) {
                     player.swing(InteractionHand.MAIN_HAND)
                 }

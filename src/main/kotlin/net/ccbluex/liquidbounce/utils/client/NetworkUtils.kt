@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
@@ -51,6 +50,7 @@ import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.GameType
@@ -123,7 +123,7 @@ fun LocalPlayer.clickBlockWithSlot(
     switchMode: SwitchMode = SwitchMode.SILENT,
     sequenced: Boolean = true,
 ) {
-    val hand = if (slot == OffHandSlot.inventorySlot) {
+    val hand = if (slot == Inventory.SLOT_OFFHAND) {
         InteractionHand.OFF_HAND
     } else {
         InteractionHand.MAIN_HAND

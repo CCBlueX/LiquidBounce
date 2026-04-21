@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
@@ -195,7 +194,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         lastMode = activeMode
 
         // the item is already located in Off-hand slot
-        if (slot == OffHandSlot) {
+        if (slot == HotbarItemSlot.OFFHAND) {
             return@handler
         }
 
@@ -231,8 +230,8 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         } else {
             buildList(3) {
                 this += InventoryAction.Click.performPickup(slot = from)
-                this += InventoryAction.Click.performPickup(slot = OffHandSlot)
-                if (!OffHandSlot.itemStack.isEmpty) {
+                this += InventoryAction.Click.performPickup(slot = HotbarItemSlot.OFFHAND)
+                if (!player.offhandItem.isEmpty) {
                     this += InventoryAction.Click.performPickup(slot = from)
                 }
             }
@@ -352,7 +351,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             }
 
             if (item.test(player.offhandItem)) {
-                return OffHandSlot
+                return HotbarItemSlot.OFFHAND
             }
 
             val slots = if (getPrioritizedInventoryPart() == 0) {
@@ -364,7 +363,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             var itemSlot = slots.findSlot(item::test)
             if (itemSlot == null && fallBackItem != null) {
                 if (fallBackItem.test(player.offhandItem)) {
-                    return OffHandSlot
+                    return HotbarItemSlot.OFFHAND
                 }
 
                 itemSlot = slots.findSlot(fallBackItem::test)
@@ -395,7 +394,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             override fun performSwitch(from: ItemSlot) = listOf(
                 InventoryAction.Click.performSwap(
                     from = from,
-                    to = OffHandSlot
+                    to = HotbarItemSlot.OFFHAND
                 )
             )
         },

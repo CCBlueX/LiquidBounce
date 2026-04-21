@@ -257,8 +257,6 @@ enum class HotbarItemSlot(
     }
 }
 
-val OffHandSlot: HotbarItemSlot get() = HotbarItemSlot.OFFHAND
-
 class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot {
     override val itemStack: ItemStack
         get() = player.inventory.getItem(Inventory.getSelectionSize() + this.inventorySlot)

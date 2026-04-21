@@ -154,7 +154,7 @@ class CleanupPlanPlacementTemplate(
     /**
      * Contains requests for each slot (e.g. Slot 1 -> SWORD, Slot 8 -> BLOCK, etc.)
      */
-    val slotContentMap: Map<ItemSlot, ItemSortChoice>,
+    val slotContentMap: Map<out ItemSlot, ItemSortChoice>,
     /**
      * A function which provides constraint groups for each item category and the number which the item counts against
      * the given constraint. More info on how constraints work at [ItemNumberConstraintGroup].
