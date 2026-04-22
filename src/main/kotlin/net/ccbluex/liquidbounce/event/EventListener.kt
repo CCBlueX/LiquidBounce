@@ -20,6 +20,12 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.plus
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
 import java.util.function.Consumer
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -66,6 +72,13 @@ interface EventListener : DebuggedOwner {
             child.unregister()
         }
     }
+
+    override val debugDisplayName: Component
+        get() = listOfNotNull(
+            this.parent()?.debugDisplayName,
+            "::".asPlainText(ChatFormatting.GRAY),
+            this.javaClass.simpleName.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.ITALIC),
+        ).asText()
 
 }
 
