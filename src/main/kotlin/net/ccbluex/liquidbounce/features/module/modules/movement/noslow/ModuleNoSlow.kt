@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow
 
-import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair
-import it.unimi.dsi.fastutil.floats.FloatFloatPair
 import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -37,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sn
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.soulsand.NoSlowSoulsand
 import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
 import net.minecraft.world.item.ItemUseAnimation
+import net.minecraft.world.phys.Vec2
 
 /**
  * NoSlow module
@@ -63,11 +62,11 @@ object ModuleNoSlow : ClientModule("NoSlow", ModuleCategories.MOVEMENT) {
     private val multiplierHandler = handler<PlayerUseMultiplier> { event ->
         val mul = multiplier(event.forward, event.sideways)
 
-        event.forward = mul.firstFloat()
-        event.sideways = mul.secondFloat()
+        event.forward = mul.x
+        event.sideways = mul.y
     }
 
-    private fun multiplier(forward: Float, sideways: Float): FloatFloatPair {
+    private fun multiplier(forward: Float, sideways: Float): Vec2 {
         val itemStack = player.useItem
         if (player.isBlockingServerside) {
             return NoSlowBlock.getMultiplier(
@@ -77,7 +76,7 @@ object ModuleNoSlow : ClientModule("NoSlow", ModuleCategories.MOVEMENT) {
         }
 
         return when (itemStack.useAnimation) {
-            ItemUseAnimation.NONE -> FloatFloatImmutablePair(forward, sideways)
+            ItemUseAnimation.NONE -> Vec2(forward, sideways)
             ItemUseAnimation.EAT, ItemUseAnimation.DRINK -> NoSlowConsume.getMultiplier(forward, sideways)
             ItemUseAnimation.BLOCK, ItemUseAnimation.SPYGLASS,
             ItemUseAnimation.TOOT_HORN, ItemUseAnimation.BRUSH -> NoSlowBlock.getMultiplier(
@@ -94,7 +93,7 @@ object ModuleNoSlow : ClientModule("NoSlow", ModuleCategories.MOVEMENT) {
             ItemUseAnimation.BUNDLE -> NoSlowBundle.getMultiplier(forward, sideways)
 
             // Vanilla spear doesn't make player slow down
-            ItemUseAnimation.SPEAR -> FloatFloatImmutablePair(1F, 1F)
+            ItemUseAnimation.SPEAR -> Vec2.ONE
         }
     }
 
