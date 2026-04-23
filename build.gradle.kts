@@ -83,6 +83,9 @@ allprojects {
             name = "Lenni0451"
             url = uri("https://maven.lenni0451.net/everything")
         }
+        maven {
+            url = uri("https://maven.shedaniel.me/")
+        }
     }
 }
 
@@ -121,7 +124,7 @@ dependencies {
 
     // LWJGL EGL and WayGL mod for Linux accelerated paint
     jij(libs.lwjgl.egl)
-//    runtimeOnly(libs.waygl) TODO
+    runtimeOnly(libs.waygl)
     runtimeOnly(libs.cloth.config)
 
     // JCEF Support
