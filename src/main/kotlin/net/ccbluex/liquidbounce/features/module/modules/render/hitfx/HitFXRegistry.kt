@@ -20,18 +20,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.hitfx
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executor
 
 @Suppress("unused")
 enum class HitFXRegistry(

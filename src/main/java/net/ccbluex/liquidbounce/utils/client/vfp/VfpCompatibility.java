@@ -29,8 +29,6 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jspecify.annotations.Nullable;
 
-import java.util.function.Predicate;
-
 /**
  * Compatibility layer for ViaFabricPlus
  * <p>

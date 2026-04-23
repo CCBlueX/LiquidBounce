@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;

@@ -29,9 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
@@ -52,7 +50,6 @@ import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.context.UseOnContext

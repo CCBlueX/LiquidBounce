@@ -46,7 +46,6 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.untransformed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -60,7 +59,6 @@ import java.lang.Math.toDegrees
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.hypot
 import kotlin.math.sin
 
 /**

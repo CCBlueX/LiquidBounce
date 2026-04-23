@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.mode
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
@@ -30,7 +31,7 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Generic") {
 
-    data class ScheduledEntityDebug(var ticksLeft: Int, val entityId: Int)
+    private data class ScheduledEntityDebug(var ticksLeft: Int, val entityId: Int)
 
     private val waitingEntities = CopyOnWriteArraySet<ScheduledEntityDebug>()
 
@@ -39,7 +40,7 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
     }
 
     val repeatable = tickHandler {
-        val due = waitingEntities.filter {
+        val due = waitingEntities.filterTo(objectHashSetOf()) {
             it.ticksLeft--
             it.ticksLeft <= 0
         }

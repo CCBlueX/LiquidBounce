@@ -125,7 +125,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     )
     public MobEffectInstance hookTravelStatusEffect(MobEffectInstance original) {
         // If we get anyting other than levitation, the injection went wrong
-        assert original != MobEffects.LEVITATION;
+        assert original.getEffect() == MobEffects.LEVITATION;
 
         if (ModuleAntiLevitation.INSTANCE.getRunning()) {
             return null;

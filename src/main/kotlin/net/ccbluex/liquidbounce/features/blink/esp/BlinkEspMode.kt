@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.ccbluex.liquidbounce.utils.render.isCustom
 import net.ccbluex.liquidbounce.utils.render.scaleLightCoords

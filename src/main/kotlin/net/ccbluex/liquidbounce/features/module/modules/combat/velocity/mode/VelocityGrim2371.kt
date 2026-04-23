@@ -33,9 +33,6 @@ import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
-import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
-import net.minecraft.network.protocol.game.ClientboundExplodePacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket

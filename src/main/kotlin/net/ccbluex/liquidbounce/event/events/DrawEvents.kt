@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.Event
 import net.minecraft.client.Camera
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.renderer.state.level.CameraRenderState
-import org.joml.Matrix4fc
 
 @Tag("gameRender")
 object GameRenderEvent : Event()
