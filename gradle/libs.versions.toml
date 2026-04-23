@@ -17,7 +17,7 @@ mcef = "3.3.0-1.21.11"
 # mc-authlib
 mc_authlib = "1.7.0"
 # Polyglot
-polyglot = "25.0.2"
+polyglot = "25.0.3"
 # djl
 djl = "0.36.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
