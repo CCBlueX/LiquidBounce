@@ -37,20 +37,22 @@ import java.text.NumberFormat
 object WorldToScreen {
 
     private val projModelViewMatrix = Matrix4f()
+    private var cachedCameraPos: Vec3 = Vec3.ZERO
 
     private val cacheMat4f = Matrix4f()
     private val cacheVec3f = Vector3f()
 
     @JvmStatic
-    fun setMatrices(projectionMatrix: Matrix4fc, modelViewMatrix: Matrix4fc) {
+    fun setMatrices(projectionMatrix: Matrix4fc, modelViewMatrix: Matrix4fc, cameraPos: Vec3) {
         this.projModelViewMatrix.set(projectionMatrix).mul(modelViewMatrix)
+        this.cachedCameraPos = cameraPos
     }
 
     @JvmStatic
     @JvmOverloads
     fun calculateScreenPos(
         pos: Vec3,
-        cameraPos: Vec3 = mc.gameRenderer.mainCamera.position(),
+        cameraPos: Vec3 = this.cachedCameraPos,
     ): Vec3f? {
         val transformedPos = cacheVec3f.set(
             pos.x - cameraPos.x,
@@ -73,7 +75,7 @@ object WorldToScreen {
 
     @JvmStatic
     @JvmOverloads
-    fun calculateMouseRay(posOnScreen: Vec2, cameraPos: Vec3 = mc.gameRenderer.mainCamera.position()): Line {
+    fun calculateMouseRay(posOnScreen: Vec2, cameraPos: Vec3 = this.cachedCameraPos): Line {
         val screenVec = cacheVec3f.set(posOnScreen.x, posOnScreen.y, 1.0F)
 
         val scaleFactor = mc.window.guiScale

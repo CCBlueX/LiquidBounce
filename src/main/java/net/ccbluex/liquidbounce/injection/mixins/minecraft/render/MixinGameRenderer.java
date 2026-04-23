@@ -88,6 +88,17 @@ public abstract class MixinGameRenderer {
         EventManager.INSTANCE.callEvent(GameRenderEvent.INSTANCE);
     }
 
+    @Inject(method = "extractCamera", at = @At("TAIL"))
+    private void hookWorldToScreenMatricesInExtract(
+        DeltaTracker deltaTracker,
+        float worldPartialTicks,
+        float cameraEntityPartialTicks,
+        CallbackInfo ci,
+        @Local(name = "cameraState") CameraRenderState cameraState
+    ) {
+        WorldToScreen.setMatrices(cameraState.projectionMatrix, cameraState.viewRotationMatrix, cameraState.pos);
+    }
+
     /**
      * Hook world render event
      */
@@ -98,8 +109,6 @@ public abstract class MixinGameRenderer {
         @Local(name = "projectionMatrix") Matrix4f projectionMatrix,
         @Local(name = "modelViewMatrix") Matrix4fc modelViewMatrix
     ) {
-        WorldToScreen.setMatrices(projectionMatrix, modelViewMatrix);
-
         var newMatStack = Pools.MatStack.borrow();
         try {
             newMatStack.mulPose(modelViewMatrix);
