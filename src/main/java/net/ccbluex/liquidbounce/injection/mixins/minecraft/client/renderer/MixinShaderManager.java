@@ -19,10 +19,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.renderer;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
 import net.minecraft.client.renderer.ShaderManager;
-import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -32,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinShaderManager {
 
     @Inject(method = "apply(Lnet/minecraft/client/renderer/ShaderManager$Configs;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At("TAIL"))
-    private void reloadClientPipelines(CallbackInfo info, @Local(argsOnly = true) ResourceManager resourceManager) {
+    private void reloadClientPipelines(CallbackInfo info) {
         ClientRenderPipelines.INSTANCE.precompile();
     }
 

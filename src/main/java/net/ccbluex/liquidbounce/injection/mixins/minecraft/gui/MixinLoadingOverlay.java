@@ -68,22 +68,20 @@ public abstract class MixinLoadingOverlay {
 
     @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/packs/resources/ReloadInstance;getActualProgress()F"))
     private void drawClientLogo(
-            GuiGraphicsExtractor context,
+            GuiGraphicsExtractor graphics,
             int mouseX,
             int mouseY,
-            float delta,
+            float a,
             CallbackInfo ci,
-            @Local(name = "i", index = 5) int scaledWindowWidth,
-            @Local(name = "j", index = 6) int scaledWindowHeight,
-            @Local(name = "s", index = 20) int color
+            @Local(name = "color") int color
     ) {
         // Don't draw the logo if the appearance is hidden
         if (HideAppearance.INSTANCE.isHidingNow()) {
             return;
         }
 
-        int screenWidth = context.guiWidth();
-        int screenHeight = context.guiHeight();
+        int screenWidth = graphics.guiWidth();
+        int screenHeight = graphics.guiHeight();
 
         float scaleFactor = Math.min(screenWidth * 0.4f / ClientLogoTexture.WIDTH, screenHeight * 0.25f / ClientLogoTexture.HEIGHT);
 
@@ -94,7 +92,7 @@ public abstract class MixinLoadingOverlay {
         int y = (screenHeight - displayHeight) / 2;
 
         // TODO: Draw as SVG instead of PNG
-        context.blit(
+        graphics.blit(
             ClientRenderPipelines.JCEF.SMOOTH_TEXTURE,
                 ClientLogoTexture.CLIENT_LOGO,
                 x,

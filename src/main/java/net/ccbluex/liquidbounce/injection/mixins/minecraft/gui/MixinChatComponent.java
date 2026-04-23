@@ -110,20 +110,20 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
      * forwarded and if {@link ModuleBetterChat} is enabled, older lines won't be removed.
      */
     @Inject(method = "addMessageToDisplayQueue", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;isChatFocused()Z", shift = At.Shift.BEFORE), cancellable = true)
-    public void hookAddVisibleMessage(GuiMessage message, CallbackInfo ci, @Local List<FormattedCharSequence> list) {
+    public void hookAddVisibleMessage(GuiMessage message, CallbackInfo ci, @Local(name = "lines") List<FormattedCharSequence> lines) {
         var focused = isChatFocused();
         var removable = ((GuiMessageLineAddition) (Object) message);
         //noinspection DataFlowIssue
         var id = removable.liquid_bounce$getId();
 
-        for(int j = 0; j < list.size(); ++j) {
-            FormattedCharSequence orderedText = list.get(j);
+        for(int j = 0; j < lines.size(); ++j) {
+            FormattedCharSequence orderedText = lines.get(j);
             if (focused && chatScrollbarPos > 0) {
                 newMessageSinceScroll = true;
                 scrollChat(1);
             }
 
-            boolean last = j == list.size() - 1;
+            boolean last = j == lines.size() - 1;
             //noinspection DataFlowIssue
             var visible = new GuiMessage.Line(message, orderedText, last);
             ((GuiMessageLineAddition) (Object) visible).liquid_bounce$setId(id);

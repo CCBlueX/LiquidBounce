@@ -94,7 +94,7 @@ public abstract class MixinPlayerTabOverlay {
     }
 
     @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay$ScoreDisplayEntry;name:Lnet/minecraft/network/chat/Component;", opcode = Opcodes.GETFIELD))
-    private Component hookVisibilityName(Component original, @Local(ordinal = 0) PlayerInfo entry) {
+    private Component hookVisibilityName(Component original, @Local(name = "info") PlayerInfo entry) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return original;
         }
@@ -104,7 +104,7 @@ public abstract class MixinPlayerTabOverlay {
     }
 
     @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;getNameForDisplay(Lnet/minecraft/client/multiplayer/PlayerInfo;)Lnet/minecraft/network/chat/Component;"))
-    private Component hookWidthVisibilityName(Component original, @Local(ordinal = 0) PlayerInfo entry) {
+    private Component hookWidthVisibilityName(Component original, @Local(name = "info") PlayerInfo entry) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return original;
         }
@@ -113,7 +113,7 @@ public abstract class MixinPlayerTabOverlay {
     }
 
     @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I", shift = At.Shift.BEFORE))
-    private void hookTabColumnHeight(CallbackInfo ci, @Local(ordinal = 5) LocalIntRef o, @Local(ordinal = 6) LocalIntRef p) {
+    private void hookTabColumnHeight(CallbackInfo ci, @Local(name = "rows") LocalIntRef o, @Local(name = "cols") LocalIntRef p) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return;
         }
@@ -157,12 +157,12 @@ public abstract class MixinPlayerTabOverlay {
 
     // ModifyArg breaks lunar compatibility as of 17.1.2025 (minecraft 1.21.4); that's why WrapOperation is used
     @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V", ordinal = 2))
-    private void hookRenderPlayerBackground(GuiGraphicsExtractor instance, int x1, int y1, int x2, int y2, int color, Operation<Void> original, @Local(ordinal = 13) int w, @Local(ordinal = 0) List<PlayerInfo> entries) {
-        var drawColor = color;
+    private void hookRenderPlayerBackground(GuiGraphicsExtractor instance, int x0, int y0, int x1, int y1, int col, Operation<Void> original, @Local(name = "i") int i, @Local(name = "playerInfos") List<PlayerInfo> playerInfos) {
+        var drawColor = col;
 
         var highlight = ModuleBetterTab.Highlight.INSTANCE;
-        if (ModuleBetterTab.INSTANCE.getRunning() && highlight.getRunning() && w < entries.size()) {
-            var entry = entries.get(w);
+        if (ModuleBetterTab.INSTANCE.getRunning() && highlight.getRunning() && i < playerInfos.size()) {
+            var entry = playerInfos.get(i);
             var others = highlight.getOthers();
 
             //noinspection DataFlowIssue
@@ -175,7 +175,7 @@ public abstract class MixinPlayerTabOverlay {
             }
         }
 
-        original.call(instance, x1, y1, x2, y2, drawColor);
+        original.call(instance, x0, y0, x1, y1, drawColor);
     }
 
     @ModifyReturnValue(method = "getNameForDisplay", at = @At("RETURN"))

@@ -235,12 +235,12 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
     @Inject(method = "handleMovePlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;setValuesFromPositionPacket(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;Lnet/minecraft/world/entity/Entity;Z)Z"))
     private void injectPlayerPositionLook(
-        ClientboundPlayerPositionPacket packet, CallbackInfo ci, @Local Player playerEntity) {
+        ClientboundPlayerPositionPacket packet, CallbackInfo ci, @Local(name = "player") Player playerEntity) {
         rotationThreadLocal.set(new Rotation(playerEntity.getYRot(), playerEntity.getXRot(), true));
     }
 
     @Inject(method = "handleMovePlayer", at = @At("RETURN"))
-    private void injectNoRotateSet(ClientboundPlayerPositionPacket packet, CallbackInfo ci, @Local Player playerEntity) {
+    private void injectNoRotateSet(ClientboundPlayerPositionPacket packet, CallbackInfo ci, @Local(name = "player") Player playerEntity) {
         if (!ModuleNoRotateSet.INSTANCE.getRunning() || Minecraft.getInstance().screen instanceof LevelLoadingScreen) {
             return;
         }

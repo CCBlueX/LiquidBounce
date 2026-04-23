@@ -55,7 +55,7 @@ public abstract class MixinEntityFluidInteraction {
     }
 
     @ModifyExpressionValue(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 hookNoPushInLiquids(Vec3 original, @Local(argsOnly = true) Entity entity) {
+    private Vec3 hookNoPushInLiquids(Vec3 original, @Local(argsOnly = true, name = "entity") Entity entity) {
         if (entity != Minecraft.getInstance().player) {
             return original;
         }

@@ -432,7 +432,7 @@ public abstract class MixinMinecraft {
      * Alternative input handler of [handleInputEvents] while being inside a client-side screen.
      */
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 4, shift = At.Shift.BEFORE, opcode = Opcodes.GETFIELD), locals = LocalCapture.CAPTURE_FAILSOFT)
-    private void passthroughInputHandler(CallbackInfo ci, @Local ProfilerFiller profiler) {
+    private void passthroughInputHandler(CallbackInfo ci, @Local(name = "profiler") ProfilerFiller profiler) {
         if (this.overlay == null && this.player != null && this.level
             != null && ScreenManager.isClientScreen(this.screen)) {
             profiler.popPush("Keybindings");

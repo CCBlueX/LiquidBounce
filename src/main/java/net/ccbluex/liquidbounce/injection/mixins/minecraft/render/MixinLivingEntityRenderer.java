@@ -136,15 +136,15 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         int overlay, int tintedColor,
         TextureAtlasSprite sprite, int outlineColor,
         ModelFeatureRenderer.CrumblingOverlay crumblingOverlayCommand, Operation<Void> original,
-        @Local(argsOnly = true) S livingEntityRenderState
+        @Local(argsOnly = true, name = "state") S state
     ) {
-        if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(livingEntityRenderState)) {
+        if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
             tintedColor = ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
         }
 
         var trueSightModule = ModuleTrueSight.INSTANCE;
         var trueSight = trueSightModule.getRunning() && trueSightModule.getEntities();
-        if (ModuleTrueSight.canRenderEntities(livingEntityRenderState)) {
+        if (ModuleTrueSight.canRenderEntities(state)) {
             tintedColor = trueSight ? trueSightModule.getEntityColor().argb() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
         }
         original.call(
@@ -187,8 +187,8 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     )
     private @Nullable RenderType render_Chams(
         @Nullable RenderType original,
-        @Local(argsOnly = true) S state,
-        @Local Identifier identifier
+        @Local(argsOnly = true, name = "state") S state,
+        @Local(name = "texture") Identifier texture
     ) {
         if (original == null) return null;
 
@@ -200,13 +200,13 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
             switch (((MixinRenderTypeAccessor) original).getName()) {
                 case "entity_translucent" -> {
-                    return ModuleChams.ENTITY_TRANSLUCENT.apply(identifier, affectsOutline);
+                    return ModuleChams.ENTITY_TRANSLUCENT.apply(texture, affectsOutline);
                 }
                 case "entity_cutout" -> {
-                    return ModuleChams.ENTITY_CUTOUT.apply(identifier);
+                    return ModuleChams.ENTITY_CUTOUT.apply(texture);
                 }
                 case "entity_cutout_no_cull" -> {
-                    return ModuleChams.ENTITY_CUTOUT_NO_CULL.apply(identifier, affectsOutline);
+                    return ModuleChams.ENTITY_CUTOUT_NO_CULL.apply(texture, affectsOutline);
                 }
                 default -> {
                     return original;

@@ -98,18 +98,18 @@ public abstract class MixinEntity {
     }
 
     @WrapOperation(method = "setXRot", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/Entity;xRot:F", opcode = Opcodes.PUTFIELD))
-    public void hookNoPitchLimit2(Entity instance, float clamped, Operation<Void> original, @Local(argsOnly = true) float xRot) {
+    public void hookNoPitchLimit2(Entity instance, float clamped, Operation<Void> original, @Local(argsOnly = true, name = "xRot") float xRot) {
         boolean noLimit = ModuleNoPitchLimit.INSTANCE.getRunning();
         original.call(instance, noLimit ? xRot : clamped);
     }
 
     @ModifyExpressionValue(method = "moveRelative", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getInputVector(Lnet/minecraft/world/phys/Vec3;FF)Lnet/minecraft/world/phys/Vec3;"))
-    public Vec3 hookVelocity(Vec3 original, @Local(argsOnly = true) Vec3 movementInput, @Local(argsOnly = true) float speed, @Local(argsOnly = true) float yaw) {
+    public Vec3 hookVelocity(Vec3 original, @Local(argsOnly = true, name = "input") Vec3 input, @Local(argsOnly = true, name = "speed") float speed) {
         if ((Object) this != Minecraft.getInstance().player) {
             return original;
         }
 
-        var event = new PlayerVelocityStrafe(movementInput, speed, yaw, original);
+        var event = new PlayerVelocityStrafe(input, speed, this.getYRot(), original);
         EventManager.INSTANCE.callEvent(event);
         return event.getVelocity();
     }

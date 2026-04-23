@@ -68,7 +68,7 @@ public abstract class MixinGuiRenderer {
         GpuBuffer gpuBuffer,
         VertexFormat.IndexType indexType,
         Operation<Void> original,
-        @Local(argsOnly = true) GuiRenderer.Draw draw
+        @Local(argsOnly = true, name = "draw") GuiRenderer.Draw draw
     ) {
         var pipeline = draw.pipeline();
         if (pipeline.getVertexFormatMode() != VertexFormat.Mode.QUADS) {

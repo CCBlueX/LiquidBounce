@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -47,8 +46,8 @@ public abstract class MixinFogRenderer {
         method = "updateBuffer(Lnet/minecraft/client/renderer/fog/FogData;)V",
         at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;mapBuffer(Lcom/mojang/blaze3d/buffers/GpuBuffer;ZZ)Lcom/mojang/blaze3d/buffers/GpuBuffer$MappedView;")
     )
-    private void editFogData(FogData fog, CallbackInfo ci, @Local(argsOnly = true) FogData fogData) {
-        ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyFogData(fogData);
+    private void editFogData(FogData fog, CallbackInfo ci) {
+        ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyFogData(fog);
     }
 
 }

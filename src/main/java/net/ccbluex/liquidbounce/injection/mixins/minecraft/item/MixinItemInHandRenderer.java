@@ -182,7 +182,7 @@ public abstract class MixinItemInHandRenderer {
         target = "Lnet/minecraft/world/item/ItemStack;getUseAnimation()Lnet/minecraft/world/item/ItemUseAnimation;",
         ordinal = 0
     ))
-    private ItemUseAnimation hookUseAction(ItemUseAnimation original, @Local(argsOnly = true) ItemStack itemStack, @Local(argsOnly = true) AbstractClientPlayer entity) {
+    private ItemUseAnimation hookUseAction(ItemUseAnimation original, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack, @Local(argsOnly = true, name = "player") AbstractClientPlayer entity) {
         if (ModuleSwordBlock.shouldAnimateSwordBlock(entity, itemStack)) {
             return ItemUseAnimation.BLOCK;
         }
@@ -194,7 +194,7 @@ public abstract class MixinItemInHandRenderer {
         target = "Lnet/minecraft/client/player/AbstractClientPlayer;isUsingItem()Z",
         ordinal = 1
     ))
-    private boolean hookIsUseItem(boolean original, @Local(argsOnly = true) AbstractClientPlayer entity) {
+    private boolean hookIsUseItem(boolean original, @Local(argsOnly = true, name = "player") AbstractClientPlayer entity) {
         if (ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
             return true;
         }
@@ -207,7 +207,7 @@ public abstract class MixinItemInHandRenderer {
         target = "Lnet/minecraft/client/player/AbstractClientPlayer;getUsedItemHand()Lnet/minecraft/world/InteractionHand;",
         ordinal = 1
     ))
-    private InteractionHand hookActiveHand(InteractionHand original, @Local(argsOnly = true) AbstractClientPlayer entity) {
+    private InteractionHand hookActiveHand(InteractionHand original, @Local(argsOnly = true, name = "player") AbstractClientPlayer entity) {
         if (ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
             return InteractionHand.MAIN_HAND;
         }
@@ -220,7 +220,7 @@ public abstract class MixinItemInHandRenderer {
         target = "Lnet/minecraft/client/player/AbstractClientPlayer;getUseItemRemainingTicks()I",
         ordinal = 2
     ))
-    private int hookItemUseItem(int original, @Local(argsOnly = true) AbstractClientPlayer entity) {
+    private int hookItemUseItem(int original, @Local(argsOnly = true, name = "player") AbstractClientPlayer entity) {
         if (ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
             return 7200;
         }
