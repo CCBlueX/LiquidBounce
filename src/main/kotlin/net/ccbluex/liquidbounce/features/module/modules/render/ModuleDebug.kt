@@ -19,20 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.fastutil.forEachFloat
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -46,11 +42,7 @@ import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.bold
-import net.ccbluex.liquidbounce.utils.client.italic
 import net.ccbluex.liquidbounce.utils.client.textOf
-import net.ccbluex.liquidbounce.utils.client.underline
 import net.ccbluex.liquidbounce.utils.client.vector2f
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -222,29 +214,12 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
         val currentTime = System.currentTimeMillis()
 
-        fun ownerName(owner: DebuggedOwner): Component {
-            return when (owner) {
-                is ClientModule -> owner.name.asText().withStyle(ChatFormatting.GOLD).bold(true)
-                is Command -> "Command ${owner.name}".asText().withStyle(ChatFormatting.GOLD).underline(true)
-                is EventListener -> listOfNotNull(
-                    owner.parent()?.let { ownerName(it) },
-                    "::".asPlainText(ChatFormatting.GRAY),
-                    owner.javaClass.simpleName.asText().withStyle(ChatFormatting.DARK_AQUA).italic(true),
-                ).asText()
+        debuggedOwners.forEach { (owner, parameters) ->
+            textList += owner.debugDisplayName
 
-                is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asPlainText(ChatFormatting.GRAY)
-                    ?: owner.toString().asPlainText()
-
-                else -> owner.javaClass.simpleName.asPlainText(ChatFormatting.BLUE)
-            }
-        }
-
-        debuggedOwners.forEach { (owner, parameter) ->
-            textList += ownerName(owner)
-
-            parameter.forEach { debuggedParameter ->
+            for (debuggedParameter in parameters) {
                 val parameterName = debuggedParameter.name
-                val parameterCapture = debugParameters[debuggedParameter] ?: return@forEach
+                val parameterCapture = debugParameters[debuggedParameter] ?: continue
                 val duration = (currentTime - parameterCapture.time) / 1000
                 textList += textOf(
                     "$parameterName: ".asPlainText(ChatFormatting.WHITE),
