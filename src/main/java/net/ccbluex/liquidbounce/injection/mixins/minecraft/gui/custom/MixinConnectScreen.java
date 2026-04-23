@@ -55,7 +55,7 @@ import static net.ccbluex.liquidbounce.utils.client.TextExtensionsKt.hideSensiti
 public abstract class MixinConnectScreen extends MixinScreen {
 
     @Shadow
-    volatile @Nullable Connection connection;
+    private volatile @Nullable Connection connection;
 
     @Shadow
     public abstract void connect(
