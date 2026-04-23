@@ -45,7 +45,7 @@ public abstract class MixinKeyboardHandler {
     /**
      * Hook key event
      */
-    @Inject(method = "keyPress", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", shift = At.Shift.BEFORE, ordinal = 0))
+    @Inject(method = "keyPress", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", shift = At.Shift.BEFORE, ordinal = 0, opcode = Opcodes.GETFIELD))
     private void hookKeyboardKey(long l, int action, net.minecraft.client.input.KeyEvent keyEvent, CallbackInfo ci) {
         // does if (window == this.client.getWindow().getHandle())
         var inputKey = InputConstants.getKey(keyEvent);

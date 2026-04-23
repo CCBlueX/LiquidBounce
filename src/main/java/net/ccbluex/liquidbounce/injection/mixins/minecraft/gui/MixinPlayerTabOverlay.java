@@ -35,6 +35,7 @@ import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Mth;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -74,7 +75,7 @@ public abstract class MixinPlayerTabOverlay {
         return original.call(hidden, comparator);
     }
 
-    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;header:Lnet/minecraft/network/chat/Component;", ordinal = 0))
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;header:Lnet/minecraft/network/chat/Component;", ordinal = 0, opcode = Opcodes.GETFIELD))
     private Component hookHeader(Component original) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return original;
@@ -83,7 +84,7 @@ public abstract class MixinPlayerTabOverlay {
         return ModuleBetterTab.isVisible(Visibility.HEADER) ? original : null;
     }
 
-    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;footer:Lnet/minecraft/network/chat/Component;", ordinal = 0))
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;footer:Lnet/minecraft/network/chat/Component;", ordinal = 0, opcode = Opcodes.GETFIELD))
     private Component hookFooter(Component original) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return original;
@@ -92,7 +93,7 @@ public abstract class MixinPlayerTabOverlay {
         return ModuleBetterTab.isVisible(Visibility.FOOTER) ? original : null;
     }
 
-    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay$ScoreDisplayEntry;name:Lnet/minecraft/network/chat/Component;"))
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay$ScoreDisplayEntry;name:Lnet/minecraft/network/chat/Component;", opcode = Opcodes.GETFIELD))
     private Component hookVisibilityName(Component original, @Local(ordinal = 0) PlayerInfo entry) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return original;

@@ -335,7 +335,7 @@ public abstract class MixinMinecraft {
     /**
      * Hook item use cooldown
      */
-    @Inject(method = "startUseItem", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelay:I", shift = At.Shift.AFTER))
+    @Inject(method = "startUseItem", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelay:I", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void hookItemUseCooldown(CallbackInfo callbackInfo) {
         UseCooldownEvent useCooldownEvent = new UseCooldownEvent(rightClickDelay);
         EventManager.INSTANCE.callEvent(useCooldownEvent);
@@ -350,7 +350,7 @@ public abstract class MixinMinecraft {
     }
 
     @ModifyExpressionValue(method = "startAttack",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0))
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0, opcode = Opcodes.GETFIELD))
     private int injectNoMissCooldown(int original) {
         if (ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown()) {
             return 0;
@@ -382,7 +382,7 @@ public abstract class MixinMinecraft {
     }
 
     @WrapWithCondition(method = "startAttack", at = @At(value = "FIELD",
-            target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 1))
+        target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 1, opcode = Opcodes.PUTFIELD))
     private boolean disableAttackCooldown(Minecraft instance, int value) {
         return !(ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown());
     }
@@ -431,7 +431,7 @@ public abstract class MixinMinecraft {
     /**
      * Alternative input handler of [handleInputEvents] while being inside a client-side screen.
      */
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 4, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 4, shift = At.Shift.BEFORE, opcode = Opcodes.GETFIELD), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void passthroughInputHandler(CallbackInfo ci, @Local ProfilerFiller profiler) {
         if (this.overlay == null && this.player != null && this.level
             != null && ScreenManager.isClientScreen(this.screen)) {
@@ -461,7 +461,7 @@ public abstract class MixinMinecraft {
         return false;
     }
 
-    @WrapWithCondition(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0))
+    @WrapWithCondition(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0, opcode = Opcodes.PUTFIELD))
     private boolean injectFixAttackCooldownOnVirtualBrowserScreen(Minecraft instance, int value) {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.

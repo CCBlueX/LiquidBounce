@@ -39,7 +39,7 @@ public abstract class MixinEndCrystalModel {
         return original;
     }
 
-    @ModifyVariable(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/EndCrystalRenderState;)V", at = @At(value = "STORE", opcode = Opcodes.FSTORE, ordinal = 0))
+    @ModifyVariable(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/EndCrystalRenderState;)V", at = @At(value = "STORE", ordinal = 0), name = "animationSpeed")
     public float injectSpinSpeedMultiplier(float original) {
         var crystalView = ModuleCrystalView.INSTANCE;
         if (crystalView.getRunning()) {

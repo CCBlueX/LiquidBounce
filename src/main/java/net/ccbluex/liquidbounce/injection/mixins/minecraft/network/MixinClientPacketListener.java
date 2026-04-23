@@ -268,7 +268,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         playerEntity.setXRot(prevRotation.xRot() + 0.000001f);
     }
 
-    @ModifyVariable(method = "sendChat", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    @ModifyVariable(method = "sendChat", at = @At("HEAD"), argsOnly = true, name = "content")
     private String handleSendMessage(String content) {
         var result = ModuleBetterChat.INSTANCE.modifyMessage(content);
 
