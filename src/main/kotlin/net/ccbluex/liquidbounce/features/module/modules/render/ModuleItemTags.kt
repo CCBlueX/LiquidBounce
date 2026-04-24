@@ -130,7 +130,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
         }),
 
         /**
-         * [ItemStack]s with same [Item] and same [DataComponentPatch] will be merged.
+         * [ItemStack]s with same [Item] and same [net.minecraft.core.component.DataComponentPatch] will be merged.
          */
         BY_COMPONENTS("ByComponents", { stacks ->
             val map = Object2IntOpenHashMap<ItemAndComponents>()
