@@ -95,9 +95,9 @@ enum class SwitchMethod(override val tag: String, val shouldSync: Boolean) : Tag
                 return
             }
 
-            exchanged = slot.inventorySlot
+            exchanged = slot.hotbarIndex ?: return
             network.sendPacket(
-                PickFromInventoryPacket(slot.inventorySlot - 1),
+                PickFromInventoryPacket(slot.hotbarIndex),
                 onFailure = {
                     chat(
                         markAsError(

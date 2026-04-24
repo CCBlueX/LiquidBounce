@@ -137,7 +137,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val interpolated = entity.lastRenderPos().lerp(entity.position(), partialTicks.toDouble())
                     .add(0.2, 1.25, 0.0)
 
-                poseStack.translate(interpolated - mc.gameRenderer.mainCamera.position())
+                poseStack.translate(interpolated - camera.position())
 
                 drawParticle(
                     { sin, cos -> Vec3(sin, cos, -cos) },
