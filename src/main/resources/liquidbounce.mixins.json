@@ -56,7 +56,6 @@
     "minecraft.entity.MixinEntityFluidInteractionAccessor",
     "minecraft.entity.MixinEntityFluidInteraction",
     "minecraft.entity.MixinEntityFluidInteractionTrackerAccessor",
-    "minecraft.entity.MixinEntityRenderer",
     "minecraft.entity.MixinExperienceOrbAccessor",
     "minecraft.entity.MixinFoodData",
     "minecraft.entity.MixinHumanoidArmorLayer",

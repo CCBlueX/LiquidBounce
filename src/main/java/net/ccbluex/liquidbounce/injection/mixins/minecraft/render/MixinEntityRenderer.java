@@ -42,6 +42,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
@@ -66,6 +67,10 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private void shouldRender(T entity, Frustum frustum, double x, double y, double z, CallbackInfoReturnable<Boolean> cir) {
         if (ModuleCombineMobs.INSTANCE.getRunning() && ModuleCombineMobs.INSTANCE.trackEntity(entity)) {
+            cir.setReturnValue(false);
+        }
+
+        if (entity instanceof FallingBlockEntity && !ModuleAntiBlind.canRender(DoRender.FALLING_BLOCKS)) {
             cir.setReturnValue(false);
         }
     }
