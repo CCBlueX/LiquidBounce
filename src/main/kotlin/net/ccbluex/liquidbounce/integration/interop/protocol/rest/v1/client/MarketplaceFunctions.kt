@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 
 /**
@@ -83,7 +84,7 @@ suspend fun getMarketplaceItemRevisions(requestObject: RequestObject) = run {
     val limit = requestObject.queryParams.getOrDefault("limit", "10").toInt()
 
     val response = MarketplaceApi.getMarketplaceItemRevisions(id, page, limit)
-    httpOk(interopGson.toJsonTree(response))
+    httpOk(response, interopGson)
 }
 
 /**
@@ -95,7 +96,7 @@ suspend fun getMarketplaceItemRevision(requestObject: RequestObject) = run {
         ?: return@run httpForbidden("Invalid revision ID")
 
     val response = MarketplaceApi.getMarketplaceItemRevision(id, revisionId)
-    httpOk(interopGson.toJsonTree(response))
+    httpOk(response, interopGson)
 }
 
 /**
@@ -116,7 +117,7 @@ suspend fun subscribeMarketplaceItem(requestObject: RequestObject) = run {
         }
 
         MarketplaceManager.subscribe(item)
-        httpOk(interopGson.toJsonTree(item))
+        httpNoContent()
     } catch (e: Exception) {
         logger.error("Failed to subscribe to marketplace item", e)
         httpForbidden("Failed to subscribe: ${e.message}")
@@ -135,7 +136,7 @@ suspend fun unsubscribeMarketplaceItem(requestObject: RequestObject) = run {
         }
 
         MarketplaceManager.unsubscribe(id)
-        httpOk(interopGson.toJsonTree(requestObject))
+        httpOk(requestObject, interopGson)
     } catch (e: Exception) {
         logger.error("Failed to unsubscribe from marketplace item", e)
         httpForbidden("Failed to unsubscribe: ${e.message}")
@@ -151,7 +152,7 @@ suspend fun getMarketplaceItemReviews(requestObject: RequestObject) = run {
     val limit = requestObject.queryParams.getOrDefault("limit", "10").toInt()
 
     val response = MarketplaceApi.getReviews(id, page, limit)
-    httpOk(interopGson.toJsonTree(response))
+    httpOk(response, interopGson)
 }
 
 /**
@@ -173,5 +174,5 @@ suspend fun postMarketplaceItemReview(requestObject: RequestObject) = run {
     }
 
     val response = MarketplaceApi.createReview(clientAccount.takeSession(), id, review.rating, review.comment)
-    httpOk(interopGson.toJsonTree(response))
+    httpOk(response, interopGson)
 }

@@ -19,9 +19,12 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import com.google.gson.JsonObject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.browserBrowsers
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpBadRequest
 import net.ccbluex.netty.http.util.httpNoContent
@@ -53,10 +56,13 @@ private data class Navigate(val url: String)
 
 // POST /api/v1/client/browser/close
 @Suppress("UNUSED_PARAMETER")
-fun postBrowserClose(requestObject: RequestObject) = with(requestObject) {
-    if (mc.screen !is InternetExplorerScreen) return@with httpBadRequest("No browser screen")
-    mc.setScreen(null)
-    httpNoContent()
+suspend fun postBrowserClose(requestObject: RequestObject) = withContext(Dispatchers.Minecraft) {
+    if (mc.screen !is InternetExplorerScreen) {
+        httpBadRequest("No browser screen")
+    } else {
+        mc.setScreen(null)
+        httpNoContent()
+    }
 }
 
 // POST /api/v1/client/browser/reload
@@ -109,13 +115,14 @@ fun postBrowserBack(requestObject: RequestObject) = with(requestObject) {
 
 // POST /api/v1/client/browser/closeTab
 @Suppress("UNUSED_PARAMETER")
-fun postBrowserCloseTab(requestObject: RequestObject) = with(requestObject) {
+suspend fun postBrowserCloseTab(requestObject: RequestObject) = with(requestObject) {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
         ?: return@with httpBadRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
         ?: return@with httpBadRequest("No browser tab")
-
-    browser.close()
-    browserBrowsers.remove(browser)
+    withContext(Dispatchers.Minecraft) {
+        browser.close()
+        browserBrowsers.remove(browser)
+    }
     httpNoContent()
 }

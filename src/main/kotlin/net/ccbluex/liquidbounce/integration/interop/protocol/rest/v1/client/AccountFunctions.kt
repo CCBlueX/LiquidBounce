@@ -181,7 +181,7 @@ fun postLoginSessionAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postRestoreInitial(requestObject: RequestObject): FullHttpResponse {
     AccountManager.restoreInitial()
-    return httpOk(interopGson.toJsonTree(mc.user))
+    return httpOk(mc.user, interopGson)
 }
 
 // PUT /api/v1/client/accounts/favorite

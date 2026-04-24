@@ -23,6 +23,7 @@ import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.netty.http.model.RequestObject
@@ -62,11 +63,7 @@ fun postToggleShader(requestObject: RequestObject): FullHttpResponse {
 
 // GET /api/v1/client/fonts
 @Suppress("UNUSED_PARAMETER")
-fun getFonts(requestObject: RequestObject): FullHttpResponse = httpOk(JsonArray().apply {
-    FontManager.fontFaces.forEach { (name, _) ->
-        add(name)
-    }
-})
+fun getFonts(requestObject: RequestObject): FullHttpResponse = httpOk(FontManager.fontFaces.keys, interopGson)
 
 // GET /api/v1/client/fonts/:name
 @Suppress("UNUSED_PARAMETER")

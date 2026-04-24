@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.config.gson.adapter.CodecBasedAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.ColorAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.IdentifierWithRegistryAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.InputBindAdapter
+import net.ccbluex.liquidbounce.config.gson.adapter.InstantAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.IntRangeAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.LocalDateAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.LocalDateTimeAdapter
@@ -82,6 +83,7 @@ import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector2fc
 import java.io.File
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -145,6 +147,7 @@ private fun GsonBuilder.registerCommonTypeAdapters() =
     registerTypeAdapter(LocalDate::class.java, LocalDateAdapter)
         .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter)
         .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter)
+        .registerTypeAdapter(Instant::class.java, InstantAdapter)
         .registerTypeAdapter(Regex::class.java, SimpleStringTypeAdapter.KT_REGEX)
         .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
