@@ -49,7 +49,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 
-import static net.ccbluex.liquidbounce.utils.client.TextExtensionsKt.hideSensitiveAddress;
+import static net.ccbluex.liquidbounce.utils.text.TextExtensionsKt.hideSensitiveAddress;
 
 @Mixin(ConnectScreen.class)
 public abstract class MixinConnectScreen extends MixinScreen {
@@ -134,12 +134,12 @@ public abstract class MixinConnectScreen extends MixinScreen {
         }
         textParts.add(spacer);
 
-        var socket = Component.literal(socketAddr);
-        if (ProxyManager.INSTANCE.getCurrentProxy() != null) {
-            socket.withStyle(ChatFormatting.GOLD); // Proxy good
-        } else {
-            socket.withStyle(ChatFormatting.RED); // No proxy - shows server address
-        }
+        var socket = PlainText.of(
+            socketAddr,
+            ProxyManager.INSTANCE.getCurrentProxy() != null
+                ? ChatFormatting.GOLD // No proxy - shows server address
+                : ChatFormatting.RED // Proxy good
+        );
         textParts.add(socket);
         textParts.add(spacer);
 

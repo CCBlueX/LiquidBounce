@@ -40,7 +40,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
-import net.ccbluex.liquidbounce.utils.client.textLoadingBar
+import net.ccbluex.liquidbounce.utils.text.textLoadingBar
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.MutableComponent

@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.misc
 
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 

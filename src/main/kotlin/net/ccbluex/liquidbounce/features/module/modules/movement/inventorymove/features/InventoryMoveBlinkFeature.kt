@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.formatAsTime
+import net.ccbluex.liquidbounce.utils.text.formatAsTime
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen

@@ -28,11 +28,14 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab;
 import net.ccbluex.liquidbounce.features.module.modules.misc.Visibility;
+import net.ccbluex.liquidbounce.utils.text.PlainText;
+import net.ccbluex.liquidbounce.utils.text.TextList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Mth;
 import org.objectweb.asm.Opcodes;
@@ -181,7 +184,10 @@ public abstract class MixinPlayerTabOverlay {
     @ModifyReturnValue(method = "getNameForDisplay", at = @At("RETURN"))
     private Component modifyPlayerName(Component original, PlayerInfo entry) {
         if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().name())) {
-            return original.copy().append(Component.literal(" - (Staff)").withColor(CommonColors.SOFT_RED));
+            return TextList.of(
+                original,
+                PlainText.of(" - (Staff)", TextColor.fromRgb(CommonColors.SOFT_RED))
+            );
         }
 
         return original;
