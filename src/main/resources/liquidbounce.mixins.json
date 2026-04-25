@@ -22,6 +22,7 @@
     "minecraft.block.MixinWebBlock",
     "minecraft.client.MinecraftAccessor",
     "minecraft.client.MixinAddressCheck",
+    "minecraft.client.MixinClientClockManager",
     "minecraft.client.MixinClientInput",
     "minecraft.client.MixinClientLevel",
     "minecraft.client.MixinClientLevelData",
