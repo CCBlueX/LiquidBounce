@@ -240,19 +240,16 @@ class CefBrowser(
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {
-        println("Pressed keyCode=$keyCode, scanCode=$scanCode, modifiers=$modifiers")
         browserApi.setFocus(true)
         browserApi.sendKeyPress(keyCode, scanCode.toLong(), modifiers)
     }
 
     override fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int) {
-        println("Released keyCode=$keyCode, scanCode=$scanCode, modifiers=$modifiers")
         browserApi.setFocus(true)
         browserApi.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
     }
 
     override fun charTyped(codepoint: Int) {
-        println("CharTyped codepoint=$codepoint")
         browserApi.setFocus(true)
         browserApi.sendKeyTyped(codepoint.toChar(), 0) // TODO: GLFW update removed modifiers here
     }
