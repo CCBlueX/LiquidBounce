@@ -117,7 +117,7 @@ dependencies {
 
     // Exploit Preventer
     api(libs.exploitPreventer.api)
-//    runtimeOnly(libs.exploitPreventer) TODO
+    runtimeOnly(libs.exploitPreventer)
 
     // Minecraft Authlib
     jij(libs.mcAuthlib)
