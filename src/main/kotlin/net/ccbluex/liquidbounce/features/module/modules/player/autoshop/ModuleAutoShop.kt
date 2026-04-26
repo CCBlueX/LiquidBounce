@@ -50,6 +50,7 @@ import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.world.inventory.ContainerInput
 import kotlin.math.ceil
 import kotlin.math.min
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * AutoShop module
@@ -167,7 +168,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
             (mc.screen as ContainerScreen).menu.containerId,
             nextCategorySlot,
             0,
-            ContainerInput.PICKUP,
+            NormalPurchaseMode.action.input,
             mc.player!!
         )
 
@@ -187,7 +188,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
             (mc.screen as ContainerScreen).menu.containerId,
             itemSlot,
             0,
-            ContainerInput.PICKUP,
+            NormalPurchaseMode.action.input,
             mc.player!!
         )
 
@@ -228,7 +229,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
                 return@forEachInt // it looks as if it doesn't require to switch an item category anymore
             }
 
-            delay(QuickPurchaseMode.delay.random().toLong())
+            delay(QuickPurchaseMode.delayMs.random().milliseconds)
 
             interaction.handleContainerInput(
                 (mc.screen as ContainerScreen).menu.containerId,
