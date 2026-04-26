@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.fastutil.asShortList
+import net.ccbluex.fastutil.mapToShortArray
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertSame
@@ -56,16 +58,16 @@ class EventHookRegistryTest {
         list.addIfAbsent(hook3)
 
         // Verify sizes are equal
-        assertEquals(list.size, registry.count())
+        assertEquals(list.size, registry.snapshot.count())
 
         list.sortBy { -it.priority }
 
         // Verify iteration order (should be sorted by priority descending)
-        val registryIterator = registry.iterator()
+        val registryIterator = registry.snapshot.iterator()
         val listIterator = list.iterator()
 
         while (registryIterator.hasNext() && listIterator.hasNext()) {
-            assertEquals(listIterator.next().priority, registryIterator.next().priority)
+            assertEquals(listIterator.next().priority, (registryIterator.next() as EventHook<*>).priority)
         }
 
         assertFalse(registryIterator.hasNext())
@@ -93,14 +95,14 @@ class EventHookRegistryTest {
         list.remove(hook1)
 
         // Verify sizes are equal
-        assertEquals(list.size, registry.count())
+        assertEquals(list.size, registry.snapshot.count())
 
         // Verify remaining elements
-        val registryIterator = registry.iterator()
+        val registryIterator = registry.snapshot.iterator()
         val listIterator = list.iterator()
 
         while (registryIterator.hasNext() && listIterator.hasNext()) {
-            assertEquals(listIterator.next().priority, registryIterator.next().priority)
+            assertEquals(listIterator.next().priority, (registryIterator.next() as EventHook<*>).priority)
         }
 
         assertFalse(registryIterator.hasNext())
@@ -128,8 +130,8 @@ class EventHookRegistryTest {
         list.removeIf { it.handlerClass == TestEventListener }
 
         // Verify sizes are equal
-        assertEquals(list.size, registry.count())
-        assertEquals(0, registry.count())
+        assertEquals(list.size, registry.snapshot.size)
+        assertEquals(0, registry.snapshot.size)
         assertEquals(0, list.size)
     }
 
@@ -154,7 +156,7 @@ class EventHookRegistryTest {
         list.clear()
 
         // Verify both are empty
-        assertEquals(0, registry.count())
+        assertEquals(0, registry.snapshot.size)
         assertEquals(0, list.size)
     }
 
@@ -174,9 +176,9 @@ class EventHookRegistryTest {
 
         // Test concurrent modification during iteration
         assertDoesNotThrow {
-            val iterator = registry.iterator()
+            val iterator = registry.snapshot.iterator()
             while (iterator.hasNext()) {
-                val hook = iterator.next()
+                val hook = iterator.next() as EventHook<*>
                 // Try to modify while iterating
                 if (hook.priority.toInt() == 10) {
                     registry.remove(hook1)
@@ -202,7 +204,7 @@ class EventHookRegistryTest {
         list.addIfAbsent(hook)
 
         // Should only contain one instance
-        assertEquals(1, registry.count())
+        assertEquals(1, registry.snapshot.size)
         assertEquals(1, list.size)
     }
 
@@ -223,8 +225,8 @@ class EventHookRegistryTest {
         hooks.forEach { registry.addIfAbsent(it) }
 
         // Verify they are sorted by priority descending
-        val priorities = registry.map { it.priority.toInt() }.toList()
-        val expectedPriorities = listOf(100, 10, 5, 1, -5)
+        val priorities = registry.snapshot.mapToShortArray { (it as EventHook<*>).priority }.asShortList()
+        val expectedPriorities = shortArrayOf(100, 10, 5, 1, -5).asShortList()
 
         assertEquals(expectedPriorities, priorities)
     }
@@ -235,11 +237,11 @@ class EventHookRegistryTest {
         val list = CopyOnWriteArrayList<EventHook<TestEvent>>()
 
         // Both should be empty
-        assertEquals(0, registry.count())
+        assertEquals(0, registry.snapshot.size)
         assertEquals(0, list.size)
 
         // Iteration should work on empty collection
-        assertFalse(registry.iterator().hasNext())
+        assertFalse(registry.snapshot.iterator().hasNext())
         assertFalse(list.iterator().hasNext())
     }
 
@@ -263,8 +265,8 @@ class EventHookRegistryTest {
         registry.remove(TestEventListener)
 
         // Should only have the hook with OtherEventListener left
-        assertEquals(1, registry.count())
-        assertEquals(otherEventListener, registry.first().handlerClass)
+        assertEquals(1, registry.snapshot.size)
+        assertEquals(otherEventListener, (registry.snapshot.first() as EventHook<*>).handlerClass)
     }
 
     @Test
@@ -279,13 +281,13 @@ class EventHookRegistryTest {
         registry.addIfAbsent(hookB)
 
         // Both should be present
-        assertEquals(2, registry.count())
+        assertEquals(2, registry.snapshot.size)
         // Ensure both references present (identity)
-        assertTrue(registry.any { it === hookA })
-        assertTrue(registry.any { it === hookB })
+        assertTrue(registry.snapshot.any { it === hookA })
+        assertTrue(registry.snapshot.any { it === hookB })
 
         // Because we insert after equal-range, order should be hookA then hookB
-        val list = registry.toList()
+        val list = registry.snapshot.toList()
         assertSame(hookA, list[0])
         assertSame(hookB, list[1])
     }
@@ -305,8 +307,8 @@ class EventHookRegistryTest {
         registry.remove(hookA)
 
         // hookB should remain
-        assertEquals(1, registry.count())
-        val remaining = registry.first()
+        assertEquals(1, registry.snapshot.size)
+        val remaining = registry.snapshot.first()
         assertSame(hookB, remaining)
     }
 
@@ -329,8 +331,8 @@ class EventHookRegistryTest {
         }
 
         // Registry unchanged
-        assertEquals(1, registry.count())
-        assertSame(hook, registry.first())
+        assertEquals(1, registry.snapshot.size)
+        assertSame(hook, registry.snapshot.first())
     }
 
 }

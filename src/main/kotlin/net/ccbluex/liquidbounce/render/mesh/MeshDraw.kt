@@ -75,7 +75,7 @@ data class MeshDraw(
                 GrowableMappableRingBuffer(
                     "${LiquidBounce.CLIENT_NAME} Shared IBO for $it",
                     GpuBuffer.USAGE_INDEX,
-                    GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 7, min = 1 shl 10),
+                    GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 7, min = 1 shl 11),
                 )
             }
 

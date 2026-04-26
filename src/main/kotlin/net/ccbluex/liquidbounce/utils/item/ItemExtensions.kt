@@ -42,7 +42,6 @@ import net.minecraft.resources.ResourceKey
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attribute
-import net.minecraft.world.entity.ai.attributes.AttributeInstance
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.ArmorStandItem
@@ -86,7 +85,6 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
-import org.apache.commons.lang3.function.Consumers
 import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
 
@@ -167,24 +165,41 @@ val ItemStack.attackSpeed: Double
 val ItemStack.durability
     get() = this.maxDamage - this.damageValue
 
+/**
+ * @param slot if null, all modifiers for the attribute will be applied, otherwise only modifiers for the specified slot
+ *
+ * @see net.minecraft.world.item.component.ItemAttributeModifiers
+ * @see net.minecraft.world.entity.ai.attributes.AttributeInstance
+ */
 @JvmOverloads
 fun DataComponentGetter.getAttributeValue(
     attribute: Holder<Attribute>,
     slot: EquipmentSlot? = null,
     baseValue: Double = attribute.value().defaultValue,
 ): Double {
-    val attribInstance = AttributeInstance(attribute, Consumers.nop())
-    attribInstance.baseValue = baseValue
+    val attributeModifiers = this[DataComponents.ATTRIBUTE_MODIFIERS]
+        ?: return attribute.value().sanitizeValue(baseValue)
 
-    val attributeModifiers = this[DataComponents.ATTRIBUTE_MODIFIERS] ?: return attribInstance.value
+    if (slot != null) {
+        return attribute.value().sanitizeValue(attributeModifiers.compute(attribute, baseValue, slot))
+    }
+
+    var value = baseValue
 
     for (entry in attributeModifiers.modifiers) {
-        if ((slot?.let(entry.slot::test) ?: true) && entry.attribute == attribute) {
-            attribInstance.addTransientModifier(entry.modifier)
+        if (entry.attribute == attribute) {
+            val modifier = entry.modifier
+            val amount = modifier.amount
+
+            value += when (modifier.operation) {
+                AttributeModifier.Operation.ADD_VALUE -> amount
+                AttributeModifier.Operation.ADD_MULTIPLIED_BASE -> amount * baseValue
+                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL -> amount * value
+            }
         }
     }
 
-    return attribInstance.value
+    return attribute.value().sanitizeValue(value)
 }
 
 fun <E : Any> ResourceKey<Registry<E>>.getOrNull(): Registry<E>? =
