@@ -39,8 +39,6 @@ viafabricplus = "4.5.2"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.15.2+26.1.2-fabric"
 iris = "1.10.9+26.1-fabric"
-clothConfig = "26.1.154+fabric"
-waygl = "1.2.0+26.1.x-SNAPSHOT"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
@@ -103,8 +101,6 @@ exploitPreventer-api = { group = "com.nikoverflow", name = "exploit-preventer-ap
 exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
 immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
 iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
-waygl = { group = "net.wiredtomato", name = "waygl-fabric", version.ref = "waygl" }
-cloth-config = { group = "maven.modrinth", name = "cloth-config", version.ref = "clothConfig" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

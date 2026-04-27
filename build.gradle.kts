@@ -122,10 +122,8 @@ dependencies {
     // Minecraft Authlib
     jij(libs.mcAuthlib)
 
-    // LWJGL EGL and WayGL mod for Linux accelerated paint
+    // LWJGL EGL
     jij(libs.lwjgl.egl)
-    runtimeOnly(libs.waygl)
-    runtimeOnly(libs.cloth.config)
 
     // JCEF Support
     api(libs.mcef)
