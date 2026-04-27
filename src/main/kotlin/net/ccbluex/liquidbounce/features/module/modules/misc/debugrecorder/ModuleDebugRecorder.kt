@@ -105,7 +105,7 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", ModuleCategories.MISC
                 }
                 file.absolutePath
             }.onFailure {
-                chat(markAsError("Failed to write log to file $it".asText()))
+                chat(markAsError("Failed to write log to file $it"))
             }.onSuccess { path ->
                 val text = path.asText()
                     .underline(true)
