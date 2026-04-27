@@ -28,8 +28,11 @@ import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.item.createItem
+import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
+import net.minecraft.world.item.ItemStack
 
 /**
  * ItemGive Command
@@ -51,31 +54,51 @@ object CommandItemGive : Command.Factory {
                     .build()
             )
             .handler {
-                if (!player.isCreative) {
+                if (!player.hasInfiniteMaterials()) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
                 val item = args[0] as String
                 val amount = args.getOrElse(1, defaultValue = { 1 }) as Int // default one
 
-                val itemStack = createItem(item, amount.coerceIn(1, 64))
-                val emptySlot = player.inventory.freeSlot
-
-                if (emptySlot == -1) {
-                    throw CommandException(command.result("noEmptySlot"))
+                val itemStack = world.createItem(item)
+                if (!network.isFeatureEnabled(itemStack.item.requiredFeatures())) {
+                    throw CommandException(command.result("mustBeCreative"))
                 }
 
-                player.inventory.setItem(emptySlot, itemStack)
-                network.send(
-                    ServerboundSetCreativeModeSlotPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot,
-                    itemStack))
+                val giveAmount = player.giveItem(itemStack, amount)
+                if (giveAmount == 0) throw CommandException(command.result("noEmptySlot"))
+
                 chat(
-                    regular(command.result("itemGiven", itemStack.displayName,
-                        variable(itemStack.count.toString()))),
-                    command
+                    regular(
+                        command.result(
+                            "itemGiven",
+                            variable(itemStack.displayName.string),
+                            variable(giveAmount.toString())
+                        )
+                    )
                 )
             }
             .build()
+    }
+
+    fun LocalPlayer.giveItem(item: ItemStack, amount: Int): Int {
+        var remaining = amount
+
+        while (remaining > 0) {
+            val emptySlot = inventory.freeSlot
+            if (emptySlot == -1) break
+
+            val size = minOf(item.maxStackSize, remaining)
+            remaining -= size
+            val fillItemStack = item.copyWithCount(size)
+
+            inventory.setItem(emptySlot, fillItemStack)
+            val packetSlot = if (emptySlot < 9) emptySlot + 36 else emptySlot
+            connection.send(ServerboundSetCreativeModeSlotPacket(packetSlot, fillItemStack))
+        }
+
+        return amount - remaining
     }
 
 }
