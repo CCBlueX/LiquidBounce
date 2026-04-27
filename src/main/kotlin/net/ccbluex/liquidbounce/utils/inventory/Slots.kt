@@ -68,17 +68,13 @@ class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
          * Hotbar 0~8
          */
         @JvmField
-        val Hotbar = Slots(
-            HotbarItemSlot.mainHandSlots
-        )
+        val Hotbar = Slots(HotbarItemSlot.mainHandSlots)
 
         /**
          * Inventory 0~26
          */
         @JvmField
-        val Inventory = Slots(
-            List(27) { InventoryItemSlot(it) }
-        )
+        val Inventory = Slots(InventoryItemSlot.ALL)
 
         /**
          * Armor slots 0~3

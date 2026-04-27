@@ -93,13 +93,13 @@ val DataComponentGetter.equipmentSlot
     get() = this.equippableComponent?.slot
 
 val DataComponentGetter.armorToughness
-    get() = this.getAttributeValue(Attributes.ARMOR_TOUGHNESS)
+    get() = this.getAttributeValue(Attributes.ARMOR_TOUGHNESS, this.equipmentSlot)
 
 val DataComponentGetter.armorValue
-    get() = this.getAttributeValue(Attributes.ARMOR)
+    get() = this.getAttributeValue(Attributes.ARMOR, this.equipmentSlot)
 
 val DataComponentGetter.armorKnockbackResistance
-    get() = this.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE)
+    get() = this.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE, this.equipmentSlot)
 
 // Shield
 

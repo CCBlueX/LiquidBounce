@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
+import net.ccbluex.fastutil.asObjectList
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -117,10 +118,9 @@ class VirtualItemSlot(
 }
 
 class ContainerItemSlot(val slotInContainer: Int) : ItemSlot {
-    private val screen: AbstractContainerScreen<*>
-        get() = mc.screen as AbstractContainerScreen<*>
+
     override val itemStack: ItemStack
-        get() = this.screen.menu.slots[this.slotInContainer].item
+        get() = (mc.screen as AbstractContainerScreen<*>).menu.slots[this.slotInContainer].item
 
     override val slotType: ItemSlot.Type
         get() = ItemSlot.Type.CONTAINER
@@ -221,7 +221,7 @@ enum class HotbarItemSlot(
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Int? {
         return when {
             screen == null -> playerInventoryMenuSlot
-            hotbarIndex != null -> screen.itemCount() - Inventory.getSelectionSize() + hotbarIndex
+            hotbarIndex != null -> screen.itemCount() - Inventory.SELECTION_SIZE + hotbarIndex
             else -> null
         }
     }
@@ -232,14 +232,12 @@ enum class HotbarItemSlot(
          * Entries corresponding to vanilla selectable hotbar slots `0..8`, excluding offhand.
          */
         @JvmStatic
-        val mainHandSlots: List<HotbarItemSlot>
-            get() = entries.subList(1, 1 + Inventory.getSelectionSize())
+        val mainHandSlots: List<HotbarItemSlot> = entries.subList(1, 1 + Inventory.SELECTION_SIZE)
 
         @JvmStatic
         @JvmName("of")
         operator fun invoke(hotbarIndex: Int): HotbarItemSlot {
-            return entries.firstOrNull { it.hotbarIndex == hotbarIndex }
-                ?: error("Invalid hotbar index: $hotbarIndex")
+            return mainHandSlots.getOrNull(hotbarIndex) ?: error("Invalid hotbar index: $hotbarIndex")
         }
 
         /**
@@ -247,26 +245,31 @@ enum class HotbarItemSlot(
          * current hand -> offhand -> other slots
          */
         @JvmField
-        val PREFER_NEARBY: Comparator<HotbarItemSlot> = Comparator.comparingInt<HotbarItemSlot> {
-            when {
-                it == OFFHAND -> Int.MIN_VALUE + 1
-                it.hotbarIndex == SilentHotbar.serversideSlot -> Int.MIN_VALUE
-                else -> abs(SilentHotbar.serversideSlot - (it.hotbarIndex ?: 0))
+        val PREFER_NEARBY: Comparator<HotbarItemSlot> = Comparator.comparingInt {
+            val selected = SilentHotbar.serversideSlot
+            when (val hotbarIndex = it.hotbarIndex) {
+                // Offhand
+                null -> Int.MIN_VALUE + 1
+                // Selected
+                selected -> Int.MIN_VALUE
+                // Other
+                else -> abs(selected - hotbarIndex)
             }
         }
     }
 }
 
-class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot {
+class InventoryItemSlot private constructor(private val inventorySlot: Int) : ItemSlot {
+
     override val itemStack: ItemStack
-        get() = player.inventory.getItem(Inventory.getSelectionSize() + this.inventorySlot)
+        get() = player.inventory.getItem(Inventory.SELECTION_SIZE + this.inventorySlot)
 
     override val slotType: ItemSlot.Type
         get() = ItemSlot.Type.INVENTORY
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Int {
         return if (screen == null) {
-            Inventory.getSelectionSize() + inventorySlot
+            Inventory.SELECTION_SIZE + inventorySlot
         } else {
             screen.itemCount() - Inventory.INVENTORY_SIZE + this.inventorySlot
         }
@@ -286,6 +289,18 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot {
     }
 
     override fun toString(): String = "ItemSlot/Inventory(inventorySlot=$inventorySlot)"
+
+    companion object {
+        @JvmField
+        val ALL: List<InventoryItemSlot> =
+            Array(Inventory.INVENTORY_SIZE - Inventory.SELECTION_SIZE, ::InventoryItemSlot).asObjectList()
+
+        @JvmStatic
+        @JvmName("of")
+        operator fun invoke(inventorySlot: Int): InventoryItemSlot {
+            return ALL.getOrNull(inventorySlot) ?: error("Invalid inventory slot: $inventorySlot")
+        }
+    }
 }
 
 enum class ArmorItemSlot(@JvmField val equipmentSlot: EquipmentSlot) : ItemSlot {
