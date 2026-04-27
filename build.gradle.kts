@@ -161,8 +161,9 @@ dependencies {
     // Test libraries
     // testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.fabric.loader.junit)
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 addResolvedDependencies(jij, "compileOnly", "include", "api")
