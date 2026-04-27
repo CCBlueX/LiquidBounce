@@ -22,12 +22,11 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.math.multiply
+import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import kotlin.random.Random
 
 object VelocityIntave : VelocityMode("Intave") {
 
@@ -68,13 +67,14 @@ object VelocityIntave : VelocityMode("Intave") {
         }
 
         private val randomize = tree(Randomize())
-        private var isFallDamage = false
         private var currentDelay = 0
         private var delayCounter = 0
 
         @Suppress("unused")
         private val tickJumpHandler = handler<MovementInputEvent> {
-            val shouldJump = Math.random() * 100 < chance && player.hurtTime > 5 && !isFallDamage
+            val shouldJump = Random.nextInt(100) < chance
+                && player.hurtTime > 5
+                && !LocalPlayerFallDamageTracker.isCurrentFallDamage
             val canJump = player.onGround() && mc.screen !is InventoryScreen
             val shouldFinallyJump = shouldJump && canJump
 
@@ -88,26 +88,6 @@ object VelocityIntave : VelocityMode("Intave") {
                 }
             } else {
                 if (shouldFinallyJump) it.jump = true
-            }
-        }
-
-        @Suppress("unused")
-        private val packetHandler = handler<PacketEvent> { event ->
-            val packet = event.packet
-
-            if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
-                val velocityX = packet.movement.x
-                val velocityY = packet.movement.y
-                val velocityZ = packet.movement.z
-
-                // Check if the player is taking fall damage
-                // We set this on every packet, because if the player gets hit afterward,
-                // we will know that from the velocity.
-                isFallDamage = velocityX == 0.0 && velocityZ == 0.0 && velocityY < 0
-                ModuleDebug.debugParameter(this, "VelocityX", velocityX)
-                ModuleDebug.debugParameter(this, "VelocityY", velocityY)
-                ModuleDebug.debugParameter(this, "VelocityZ", velocityZ)
-                ModuleDebug.debugParameter(this, "IsFallDamage", isFallDamage)
             }
         }
 
