@@ -53,7 +53,7 @@ import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Scoreboard
 import kotlin.math.min
 
-private fun nullableResponse(item: Any?) = item?.let { httpOk(interopGson.toJsonTree(it)) } ?: httpNoContent()
+private fun nullableResponse(item: Any?) = item?.let { httpOk(it, interopGson) } ?: httpNoContent()
 
 // GET /api/v1/client/player
 @Suppress("UNUSED_PARAMETER")

@@ -44,10 +44,8 @@ suspend fun getUser(requestObject: RequestObject): FullHttpResponse {
         return httpUnauthorized("Not logged in")
     }
 
-    val userInformation = if (clientAccount.userInformation == null) {
+    val userInformation = clientAccount.userInformation ?: run {
         clientAccount.updateInfo()
-        clientAccount.userInformation
-    } else {
         clientAccount.userInformation
     }
 

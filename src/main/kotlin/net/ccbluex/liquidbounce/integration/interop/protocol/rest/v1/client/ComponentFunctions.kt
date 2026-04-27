@@ -28,8 +28,7 @@ import net.ccbluex.netty.http.util.httpOk
 @Suppress("UNUSED_PARAMETER")
 fun getComponents(requestObject: RequestObject) =
     httpOk(
-        accessibleInteropGson.toJsonTree(
-            HudComponentManager.getComponents(requestObject.params["id"])
-        ).asJsonArray
+        HudComponentManager.getComponents(requestObject.params["id"]),
+        accessibleInteropGson,
     )
 
