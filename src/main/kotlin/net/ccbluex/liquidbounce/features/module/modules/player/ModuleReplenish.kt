@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -25,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
@@ -53,12 +55,11 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
     private val features by multiEnumChoice("Features", Features.CLEANUP)
     private val insideOf by multiEnumChoice<InsideOf>("InsideOf")
 
-    // 0..8 -> hotbar, 9 -> offHand
-    private val trackedHotbarItems = Array(10) { Items.AIR }
+    private val trackedHotbarItems = enumMapOf<HotbarItemSlot, ItemAndComponents>()
     private val chronometer = Chronometer()
 
     private fun clear() {
-        trackedHotbarItems.fill(Items.AIR)
+        trackedHotbarItems.clear()
     }
 
     override fun onEnabled() {
@@ -85,14 +86,12 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
 
         chronometer.reset()
 
-        Slots.OffhandWithHotbar.forEach { slot ->
-            val idx = if (slot.isOffHand) trackedHotbarItems.lastIndex else slot.hotbarIndex!!
-
+        HotbarItemSlot.entries.forEach { slot ->
             val currentStack = slot.itemStack
             val currentStackNotEmpty = !currentStack.isEmpty
 
             if (!currentStackNotEmpty && !replenishEmpty) {
-                trackedHotbarItems[idx] = Items.AIR
+                trackedHotbarItems.remove(slot)
                 return@forEach
             }
 
@@ -100,18 +99,18 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
             val itemStack = if (currentStackNotEmpty) {
                 currentStack
             } else {
-                val trackedItem = trackedHotbarItems[idx]
-                if (trackedItem == Items.AIR) {
+                val trackedItem = trackedHotbarItems[slot]
+                if (trackedItem == null || trackedItem.item == Items.AIR) {
                     return@forEach
                 }
 
-                trackedItem.defaultInstance
+                trackedItem.toItemStack(1)
             }
 
             // check if the current stack, if not empty, is allowed to be refilled
             val unsupportedStackSize = itemStack.maxStackSize <= itemThreshold
             if (currentStackNotEmpty && (unsupportedStackSize || itemStack.count > itemThreshold)) {
-                trackedHotbarItems[idx] = itemStack.item
+                trackedHotbarItems[slot] = ItemAndComponents(itemStack)
                 return@forEach
             }
 
@@ -121,7 +120,7 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
 
             // no stack to refill found
             if (inventorySlots.isEmpty()) {
-                trackedHotbarItems[idx] = itemStack.item
+                trackedHotbarItems[slot] = ItemAndComponents(itemStack)
                 return@forEach
             }
 
@@ -156,7 +155,7 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
                 )
             }
 
-            trackedHotbarItems[idx] = itemStack.item
+            trackedHotbarItems[slot] = ItemAndComponents(itemStack)
             return@handler
         }
     }
