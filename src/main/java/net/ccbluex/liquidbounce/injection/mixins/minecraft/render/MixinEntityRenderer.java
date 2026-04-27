@@ -37,11 +37,12 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
@@ -66,6 +67,10 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private void shouldRender(T entity, Frustum frustum, double x, double y, double z, CallbackInfoReturnable<Boolean> cir) {
         if (ModuleCombineMobs.INSTANCE.getRunning() && ModuleCombineMobs.INSTANCE.trackEntity(entity)) {
+            cir.setReturnValue(false);
+        }
+
+        if (entity instanceof FallingBlockEntity && !ModuleAntiBlind.canRender(DoRender.FALLING_BLOCKS)) {
             cir.setReturnValue(false);
         }
     }
@@ -115,8 +120,8 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
         matrices.popPose();
     }
 
-    @WrapWithCondition(method = "submitNameTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitNameTag(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/phys/Vec3;ILnet/minecraft/network/chat/Component;ZIDLnet/minecraft/client/renderer/state/CameraRenderState;)V"))
-    private boolean disableVanillaNametag(SubmitNodeCollector instance, PoseStack poseStack, Vec3 vec3, int i, Component component, boolean b, int j, double v, CameraRenderState cameraRenderState, @Local(argsOnly = true) S state) {
+    @WrapWithCondition(method = "submitNameDisplay(Lnet/minecraft/client/renderer/entity/state/EntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitNameTag(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/phys/Vec3;ILnet/minecraft/network/chat/Component;ZIDLnet/minecraft/client/renderer/state/level/CameraRenderState;)V"))
+    private boolean disableVanillaNametag(SubmitNodeCollector instance, PoseStack poseStack, Vec3 vec3, int i, Component component, boolean b, int j, double v, CameraRenderState cameraRenderState, @Local(argsOnly = true, name = "state") S state) {
         return ModuleNametags.INSTANCE.shouldRenderVanillaNametag(state);
     }
 

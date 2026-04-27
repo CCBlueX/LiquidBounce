@@ -146,7 +146,7 @@ private fun LivingEntity.getBlockedDamage(source: DamageSource, damageAmount: Fl
     val itemStack = itemBlockingWith ?: return 0.0F
     val blocksAttacks = itemStack[DataComponents.BLOCKS_ATTACKS] ?: return 0.0F
 
-    if (blocksAttacks.bypassedBy().orElse(null)?.let(source::`is`) ?: false) {
+    if (blocksAttacks.bypassedBy().orElse(null)?.contains(source.typeHolder()) ?: false) {
         return 0.0F
     }
 

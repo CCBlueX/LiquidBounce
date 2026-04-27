@@ -22,13 +22,13 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.translateColorCodes
+import net.ccbluex.liquidbounce.utils.text.translateColorCodes
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
@@ -67,12 +67,12 @@ object CommandItemRename : Command.Factory {
                     .joinToString(" ") { it as String }
                 when (name) {
                     "" -> {
-                        itemStack!!.remove(DataComponents.CUSTOM_NAME)
+                        itemStack.remove(DataComponents.CUSTOM_NAME)
                         chat(regular(command.result("nameReset")), command)
                     }
                     else -> {
-                        itemStack!!.set(DataComponents.CUSTOM_NAME, name.translateColorCodes().asPlainText())
-                        chat(regular(command.result("renamedItem", itemStack.item.name, variable(name))), command)
+                        itemStack.set(DataComponents.CUSTOM_NAME, name.translateColorCodes().asPlainText())
+                        chat(regular(command.result("renamedItem", itemStack.itemName, variable(name))), command)
                     }
                 }
                 network.send(ServerboundSetCreativeModeSlotPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))

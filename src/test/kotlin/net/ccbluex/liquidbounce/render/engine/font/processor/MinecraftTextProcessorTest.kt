@@ -23,6 +23,7 @@ import net.ccbluex.fastutil.asIntList
 import net.ccbluex.fastutil.intListOf
 import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -35,10 +36,10 @@ class MinecraftTextProcessorTest {
     @Test
     fun testProcessMapsFontStyles() {
         val text = Component.empty()
-            .append(Component.literal("p"))
-            .append(Component.literal("b").withStyle(Style.EMPTY.withBold(true)))
-            .append(Component.literal("i").withStyle(Style.EMPTY.withItalic(true)))
-            .append(Component.literal("x").withStyle(Style.EMPTY.withBold(true).withItalic(true)))
+            .append("p".asPlainText())
+            .append("b".asPlainText(Style.EMPTY.withBold(true)))
+            .append("i".asPlainText(Style.EMPTY.withItalic(true)))
+            .append("x".asPlainText(Style.EMPTY.withBold(true).withItalic(true)))
 
         val processed = MinecraftTextProcessor.process(text, Color4b(1, 2, 3, 4))
 
@@ -53,8 +54,8 @@ class MinecraftTextProcessorTest {
     fun testProcessAppliesDefaultAndStyledColors() {
         val defaultColor = Color4b(10, 20, 30, 40)
         val text = Component.empty()
-            .append(Component.literal("a"))
-            .append(Component.literal("b").withStyle(Style.EMPTY.withColor(0x336699)))
+            .append("a".asPlainText())
+            .append("b".asPlainText(Style.EMPTY.withColor(0x336699)))
 
         val processed = MinecraftTextProcessor.process(text, defaultColor)
 
@@ -65,8 +66,8 @@ class MinecraftTextProcessorTest {
     @Test
     fun testProcessTracksUnderlineAndStrikethroughRanges() {
         val text = Component.empty()
-            .append(Component.literal("ab").withStyle(Style.EMPTY.withUnderlined(true)))
-            .append(Component.literal("cd").withStyle(Style.EMPTY.withStrikethrough(true)))
+            .append("ab".asPlainText(Style.EMPTY.withUnderlined(true)))
+            .append("cd".asPlainText(Style.EMPTY.withStrikethrough(true)))
 
         val processed = MinecraftTextProcessor.process(text, Color4b(255, 255, 255, 255))
 
@@ -76,7 +77,7 @@ class MinecraftTextProcessorTest {
 
     @Test
     fun testProcessUsesObfuscationCharsetWhenRequested() {
-        val text = Component.literal("abcd").withStyle(Style.EMPTY.withObfuscated(true))
+        val text = "abcd".asPlainText(Style.EMPTY.withObfuscated(true))
         val processed = MinecraftTextProcessor.process(text, Color4b(255, 255, 255, 255))
         val randomChars = TextProcessor.RANDOM_CHARS.toSet()
 

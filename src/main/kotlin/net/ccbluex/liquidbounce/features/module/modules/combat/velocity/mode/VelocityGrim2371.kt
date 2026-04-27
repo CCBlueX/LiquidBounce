@@ -33,8 +33,10 @@ import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundSpectateEntityPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
@@ -73,7 +75,10 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
         val packet = event.packet
 
         when (packet) {
-            is ServerboundInteractPacket, is ServerboundUseItemOnPacket ->
+            is ServerboundInteractPacket,
+            is ServerboundAttackPacket,
+            is ServerboundSpectateEntityPacket,
+            is ServerboundUseItemOnPacket ->
                 shouldSkip = true
 
             is ServerboundMovePlayerPacket if packet.hasPosition() && waitForUpdate ->

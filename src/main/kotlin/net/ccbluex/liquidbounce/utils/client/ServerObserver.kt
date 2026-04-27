@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.TitleScreen

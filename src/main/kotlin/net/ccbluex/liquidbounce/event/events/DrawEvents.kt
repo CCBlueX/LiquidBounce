@@ -24,13 +24,14 @@ import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.Event
 import net.minecraft.client.Camera
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.renderer.state.level.CameraRenderState
 
 @Tag("gameRender")
 object GameRenderEvent : Event()
 
 @Tag("screenRender")
-class ScreenRenderEvent(val context: GuiGraphics, val partialTicks: Float) : Event()
+class ScreenRenderEvent(val context: GuiGraphicsExtractor, val partialTicks: Float) : Event()
 
 @Tag("worldRender")
 class WorldRenderEvent(val matrixStack: PoseStack, val camera: Camera, val partialTicks: Float) : Event()
@@ -45,7 +46,7 @@ class WorldRenderEvent(val matrixStack: PoseStack, val camera: Camera, val parti
 class DrawOutlinesEvent(
     val renderTarget: RenderTarget,
     val pose: PoseStack,
-    val camera: Camera,
+    val cameraState: CameraRenderState,
     val partialTicks: Float,
     val type: OutlineType,
 ) : Event() {
@@ -67,6 +68,6 @@ class DrawOutlinesEvent(
 
 @Tag("overlayRender")
 class OverlayRenderEvent(
-    val context: GuiGraphics,
+    val context: GuiGraphicsExtractor,
     val tickDelta: Float,
 ) : Event()

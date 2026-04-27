@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.ccbluex.liquidbounce.utils.render.isCustom
 import net.ccbluex.liquidbounce.utils.render.scaleLightCoords
@@ -116,7 +115,7 @@ class BlinkEspModel(
             rs.setRotation(rotation)
         }
 
-        val cameraState = mc.gameRenderer.levelRenderState.cameraRenderState
+        val cameraState = mc.gameRenderer.gameRenderState.levelRenderState.cameraRenderState
         mc.entityRenderDispatcher.submit(
             rs,
             cameraState,

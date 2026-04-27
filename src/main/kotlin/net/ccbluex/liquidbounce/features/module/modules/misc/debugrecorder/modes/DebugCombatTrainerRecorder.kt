@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.Entity
@@ -113,16 +113,13 @@ object DebugCombatTrainerRecorder : ModuleDebugRecorder.DebugRecorderMode<Combat
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        val packet = event.packet
+        val targetEntity = target ?: return@handler
+        val interactEntityId = event.packet.entityIdC2SInteractOrAttack ?: return@handler
 
-        if (packet is ServerboundInteractPacket) {
-            val targetEntity = target ?: return@handler
-
-            if (packet.entityId == targetEntity.id) {
-                world.removeEntity(targetEntity.id, Entity.RemovalReason.DISCARDED)
-                target = null
-                event.cancelEvent()
-            }
+        if (interactEntityId == targetEntity.id) {
+            world.removeEntity(targetEntity.id, Entity.RemovalReason.DISCARDED)
+            target = null
+            event.cancelEvent()
         }
     }
 

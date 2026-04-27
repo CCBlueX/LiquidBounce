@@ -24,7 +24,7 @@ import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.additions.isSafeForClose
-import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
+import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.mapBuffer
 import net.minecraft.client.renderer.MappableRingBuffer

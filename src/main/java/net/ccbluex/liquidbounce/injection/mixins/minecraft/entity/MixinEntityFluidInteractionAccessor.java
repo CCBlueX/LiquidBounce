@@ -17,11 +17,21 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.interfaces;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import java.lang.reflect.Member;
+import java.util.Map;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EntityFluidInteraction;
+import net.minecraft.world.level.material.Fluid;
+import org.jspecify.annotations.NullMarked;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-@FunctionalInterface
-public interface MemberRetriever {
-    Member getMember(Object o) throws ReflectiveOperationException;
+@NullMarked
+@Mixin(EntityFluidInteraction.class)
+public interface MixinEntityFluidInteractionAccessor {
+
+    @Accessor("trackerByFluid")
+    Map<TagKey<Fluid>, Object> trackerByFluid();
+
 }

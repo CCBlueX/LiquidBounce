@@ -39,11 +39,11 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.plus
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.text.plus
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component

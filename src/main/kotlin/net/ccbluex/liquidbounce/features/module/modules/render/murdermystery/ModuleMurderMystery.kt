@@ -31,10 +31,8 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.ChatFormatting
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.network.protocol.game.ClientboundLoginPacket

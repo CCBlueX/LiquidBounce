@@ -31,11 +31,11 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
+import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.world.InteractionHand
 
 /**
  * Vehicle control module
@@ -158,7 +158,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
 
                     // Enter the vehicle again
                     if (!forceAttempt) {
-                        interaction.interact(player, vehicle, InteractionHand.MAIN_HAND)
+                        interactEntity(vehicle)
                         forceAttempt = true
                     } else {
                         // We are already in the vehicle on the server-side, but our client does not know that, so

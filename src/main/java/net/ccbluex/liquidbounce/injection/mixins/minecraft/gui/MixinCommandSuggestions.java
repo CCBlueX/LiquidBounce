@@ -39,7 +39,7 @@ import java.util.concurrent.CompletableFuture;
 public abstract class MixinCommandSuggestions {
     @Shadow
     @Final
-    EditBox input;
+    private EditBox input;
     @Shadow
     private CompletableFuture<Suggestions> pendingSuggestions;
     @Shadow

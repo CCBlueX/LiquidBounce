@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.render.entity
 import net.ccbluex.liquidbounce.utils.render.isCustom
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.renderer.entity.state.EntityRenderState
 import org.joml.Vector2f
 import org.joml.Vector2fc
@@ -86,7 +86,7 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
         event.context.drawNametags(event.tickDelta)
     }
 
-    private fun GuiGraphics.drawNametags(tickDelta: Float) {
+    private fun GuiGraphicsExtractor.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
 
         for (nametagInfo in nametagsToRender) {

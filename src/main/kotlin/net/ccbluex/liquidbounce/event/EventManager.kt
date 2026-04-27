@@ -339,7 +339,9 @@ object EventManager {
         val target = registry[eventType] ?: return event
 
         event.isCompleted = false
-        for (eventHook in target) {
+        for (eventHook in target.snapshot) {
+            @Suppress("UNCHECKED_CAST")
+            eventHook as EventHook<T>
             if (!eventHook.handlerClass.running) {
                 continue
             }

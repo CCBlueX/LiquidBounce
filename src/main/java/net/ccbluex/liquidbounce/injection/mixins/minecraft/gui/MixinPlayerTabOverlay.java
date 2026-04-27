@@ -28,13 +28,17 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab;
 import net.ccbluex.liquidbounce.features.module.modules.misc.Visibility;
+import net.ccbluex.liquidbounce.utils.text.PlainText;
+import net.ccbluex.liquidbounce.utils.text.TextList;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Mth;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -74,7 +78,7 @@ public abstract class MixinPlayerTabOverlay {
         return original.call(hidden, comparator);
     }
 
-    @ModifyExpressionValue(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;header:Lnet/minecraft/network/chat/Component;", ordinal = 0))
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;header:Lnet/minecraft/network/chat/Component;", ordinal = 0, opcode = Opcodes.GETFIELD))
     private Component hookHeader(Component original) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return original;
@@ -83,7 +87,7 @@ public abstract class MixinPlayerTabOverlay {
         return ModuleBetterTab.isVisible(Visibility.HEADER) ? original : null;
     }
 
-    @ModifyExpressionValue(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;footer:Lnet/minecraft/network/chat/Component;", ordinal = 0))
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;footer:Lnet/minecraft/network/chat/Component;", ordinal = 0, opcode = Opcodes.GETFIELD))
     private Component hookFooter(Component original) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return original;
@@ -92,8 +96,8 @@ public abstract class MixinPlayerTabOverlay {
         return ModuleBetterTab.isVisible(Visibility.FOOTER) ? original : null;
     }
 
-    @ModifyExpressionValue(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay$ScoreDisplayEntry;name:Lnet/minecraft/network/chat/Component;"))
-    private Component hookVisibilityName(Component original, @Local(ordinal = 0) PlayerInfo entry) {
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay$ScoreDisplayEntry;name:Lnet/minecraft/network/chat/Component;", opcode = Opcodes.GETFIELD))
+    private Component hookVisibilityName(Component original, @Local(name = "info") PlayerInfo entry) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return original;
         }
@@ -102,8 +106,8 @@ public abstract class MixinPlayerTabOverlay {
 
     }
 
-    @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;getNameForDisplay(Lnet/minecraft/client/multiplayer/PlayerInfo;)Lnet/minecraft/network/chat/Component;"))
-    private Component hookWidthVisibilityName(Component original, @Local(ordinal = 0) PlayerInfo entry) {
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;getNameForDisplay(Lnet/minecraft/client/multiplayer/PlayerInfo;)Lnet/minecraft/network/chat/Component;"))
+    private Component hookWidthVisibilityName(Component original, @Local(name = "info") PlayerInfo entry) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return original;
         }
@@ -111,8 +115,8 @@ public abstract class MixinPlayerTabOverlay {
         return ModuleBetterTab.isVisible(Visibility.NAME_ONLY) ? Component.nullToEmpty(entry.getProfile().name()) : original;
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I", shift = At.Shift.BEFORE))
-    private void hookTabColumnHeight(CallbackInfo ci, @Local(ordinal = 5) LocalIntRef o, @Local(ordinal = 6) LocalIntRef p) {
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I", shift = At.Shift.BEFORE))
+    private void hookTabColumnHeight(CallbackInfo ci, @Local(name = "rows") LocalIntRef o, @Local(name = "cols") LocalIntRef p) {
         if (!ModuleBetterTab.INSTANCE.getRunning()) {
             return;
         }
@@ -130,7 +134,7 @@ public abstract class MixinPlayerTabOverlay {
      * @contributor sqlerrorthing (<a href="https://github.com/CCBlueX/LiquidBounce/pull/5077">pull request</a>)
      * @author Paul1365972 (on Meteor Client)
      */
-    @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I"), index = 0)
+    @ModifyArg(method = "extractRenderState", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I"), index = 0)
     private int hookWidth(int width) {
         return ModuleBetterTab.INSTANCE.getRunning() && ModuleBetterTab.AccurateLatency.INSTANCE.getRunning() ? width + 30 : width;
     }
@@ -140,8 +144,8 @@ public abstract class MixinPlayerTabOverlay {
      * @contributor sqlerrorthing (<a href="https://github.com/CCBlueX/LiquidBounce/pull/5077">pull request</a>)
      * @author Paul1365972 (on Meteor Client)
      */
-    @Inject(method = "renderPingIcon", at = @At("HEAD"), cancellable = true)
-    private void hookOnRenderLatencyIcon(GuiGraphics context, int width, int x, int y, PlayerInfo entry, CallbackInfo ci) {
+    @Inject(method = "extractPingIcon", at = @At("HEAD"), cancellable = true)
+    private void hookOnRenderLatencyIcon(GuiGraphicsExtractor context, int width, int x, int y, PlayerInfo entry, CallbackInfo ci) {
         var accurateLatency = ModuleBetterTab.AccurateLatency.INSTANCE;
         if (ModuleBetterTab.INSTANCE.getRunning() && accurateLatency.getRunning()) {
             var textRenderer = Minecraft.getInstance().font;
@@ -149,19 +153,19 @@ public abstract class MixinPlayerTabOverlay {
             var latency = Mth.clamp(entry.getLatency(), 0, 9999);
             var color = latency < 150 ? 0xFF00E970 : latency < 300 ? 0xFFE7D020 : 0xFFD74238;
             var text = latency + (accurateLatency.getSuffix() ? "ms" : "");
-            context.drawString(textRenderer, text, x + width - textRenderer.width(text), y, color);
+            context.text(textRenderer, text, x + width - textRenderer.width(text), y, color);
             ci.cancel();
         }
     }
 
     // ModifyArg breaks lunar compatibility as of 17.1.2025 (minecraft 1.21.4); that's why WrapOperation is used
-    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V", ordinal = 2))
-    private void hookRenderPlayerBackground(GuiGraphics instance, int x1, int y1, int x2, int y2, int color, Operation<Void> original, @Local(ordinal = 13) int w, @Local(ordinal = 0) List<PlayerInfo> entries) {
-        var drawColor = color;
+    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V", ordinal = 2))
+    private void hookRenderPlayerBackground(GuiGraphicsExtractor instance, int x0, int y0, int x1, int y1, int col, Operation<Void> original, @Local(name = "i") int i, @Local(name = "playerInfos") List<PlayerInfo> playerInfos) {
+        var drawColor = col;
 
         var highlight = ModuleBetterTab.Highlight.INSTANCE;
-        if (ModuleBetterTab.INSTANCE.getRunning() && highlight.getRunning() && w < entries.size()) {
-            var entry = entries.get(w);
+        if (ModuleBetterTab.INSTANCE.getRunning() && highlight.getRunning() && i < playerInfos.size()) {
+            var entry = playerInfos.get(i);
             var others = highlight.getOthers();
 
             //noinspection DataFlowIssue
@@ -174,13 +178,16 @@ public abstract class MixinPlayerTabOverlay {
             }
         }
 
-        original.call(instance, x1, y1, x2, y2, drawColor);
+        original.call(instance, x0, y0, x1, y1, drawColor);
     }
 
     @ModifyReturnValue(method = "getNameForDisplay", at = @At("RETURN"))
     private Component modifyPlayerName(Component original, PlayerInfo entry) {
         if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().name())) {
-            return original.copy().append(Component.literal(" - (Staff)").withColor(CommonColors.SOFT_RED));
+            return TextList.of(
+                original,
+                PlainText.of(" - (Staff)", TextColor.fromRgb(CommonColors.SOFT_RED))
+            );
         }
 
         return original;

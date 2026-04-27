@@ -55,7 +55,7 @@ public abstract class MixinScreenRectangle {
         at = @At("RETURN")
     )
     private void recycleVec_transform(
-        Matrix3x2fc matrix, CallbackInfoReturnable<ScreenRectangle> cir, @Local(ordinal = 0) Vector2f v0, @Local(ordinal = 1) Vector2f v1
+        Matrix3x2fc matrix, CallbackInfoReturnable<ScreenRectangle> cir, @Local(name = "topLeft") Vector2f v0, @Local(name = "bottomRight") Vector2f v1
     ) {
         Pools.Vec2f.recycle(v0);
         Pools.Vec2f.recycle(v1);
@@ -66,8 +66,8 @@ public abstract class MixinScreenRectangle {
         at = @At("RETURN")
     )
     private void recycleVec_transformEachVertex(
-        Matrix3x2fc matrix, CallbackInfoReturnable<ScreenRectangle> cir, @Local(ordinal = 0) Vector2f v0,
-        @Local(ordinal = 1) Vector2f v1, @Local(ordinal = 2) Vector2f v2, @Local(ordinal = 3) Vector2f v3
+        Matrix3x2fc matrix, CallbackInfoReturnable<ScreenRectangle> cir, @Local(name = "topLeft") Vector2f v0,
+        @Local(name = "topRight") Vector2f v1, @Local(name = "bottomLeft") Vector2f v2, @Local(name = "bottomRight") Vector2f v3
     ) {
         Pools.Vec2f.recycle(v0);
         Pools.Vec2f.recycle(v1);

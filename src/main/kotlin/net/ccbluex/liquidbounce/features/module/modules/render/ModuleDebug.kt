@@ -41,8 +41,8 @@ import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.textOf
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.client.vector2f
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY

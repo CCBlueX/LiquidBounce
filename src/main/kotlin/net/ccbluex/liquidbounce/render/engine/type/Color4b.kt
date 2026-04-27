@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.network.chat.TextColor
 import net.minecraft.util.ARGB
 import net.minecraft.world.item.DyeColor
+import org.joml.Vector3f
 import org.joml.Vector4f
 import java.awt.Color
 import java.lang.Math.fma
@@ -246,4 +247,10 @@ data class Color4b(val argb: Int) {
     fun toVector4f(dest: Vector4f = Vector4f()): Vector4f {
         return dest.set(r / 255f, g / 255f, b / 255f, a / 255f)
     }
+
+    @JvmOverloads
+    fun toRgbVector3f(dest: Vector3f = Vector3f()): Vector3f {
+        return dest.set(r / 255f, g / 255f, b / 255f)
+    }
+
 }

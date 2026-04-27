@@ -36,6 +36,12 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
+val browserBackend = env("LB_BROWSER_BACKEND", "net.ccbluex.liquidbounce.browser.backend") ?: "cef"
+var isBrowserDisabled = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
+    ?: false
+val isBrowserAccelerationDisabled = env("LB_BROWSER_DISABLE_ACCELERATION",
+    "net.ccbluex.liquidbounce.browser.disableAcceleration")?.toBoolean() ?: false
+
 object BrowserBackendManager : EventListener {
 
     private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/BrowserBackendManager")
@@ -43,12 +49,6 @@ object BrowserBackendManager : EventListener {
     val isInitialized: Boolean
         get() = backend?.isInitialized ?: false
     var backend: BrowserBackend? = null
-
-    var isSkipping = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
-        ?: false
-    val backendName = env("LB_BROWSER_BACKEND", "net.ccbluex.liquidbounce.browser.backend") ?: "cef"
-    val disableAcceleration = env("LB_BROWSER_DISABLE_ACCELERATION",
-        "net.ccbluex.liquidbounce.browser.disableAcceleration")?.toBoolean() ?: false
 
     fun init() {
         PersistentLocalStorage
@@ -59,20 +59,20 @@ object BrowserBackendManager : EventListener {
      * when the dependencies are available.
      */
     fun makeDependenciesAvailable(taskManager: TaskManager) {
-        if (isSkipping) {
+        if (isBrowserDisabled) {
             logger.warn("Environment variable 'LB_BROWSER_SKIP' is set to 'true'.")
             return
         }
 
-        val browserBackend = when (backendName) {
+        val browserBackend = when (browserBackend) {
             "none" -> {
                 logger.warn("Environment variable 'LB_BROWSER_BACKEND' is set to 'none'.")
-                isSkipping = true
+                isBrowserDisabled = true
                 return
             }
             "cef" -> CefBrowserBackend()
             "external" -> ExternalSystemBrowserBackend()
-            else -> error("Unknown browser backend: $backendName")
+            else -> error("Unknown browser backend: $browserBackend")
         }
         this.backend = browserBackend
         browserBackend.makeDependenciesAvailable(taskManager, ::start)
@@ -91,7 +91,7 @@ object BrowserBackendManager : EventListener {
         val browserBackend = backend ?: return
         browserBackend.start()
 
-        if (disableAcceleration) {
+        if (isBrowserAccelerationDisabled) {
             logger.warn("Environment variable 'LB_BROWSER_DISABLE_ACCELERATION' is set to 'true'.")
         }
         GlobalBrowserSettings

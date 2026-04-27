@@ -29,8 +29,6 @@ import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
-import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.Minecraft;
 import net.minecraft.tags.TagKey;
@@ -62,9 +60,6 @@ public abstract class MixinEntity {
     public abstract boolean isPassenger();
 
     @Shadow
-    public abstract boolean isAlwaysTicking();
-
-    @Shadow
     public abstract Level level();
 
     @Shadow
@@ -93,16 +88,6 @@ public abstract class MixinEntity {
         callback.setReturnValue(marginEvent.getMargin());
     }
 
-    @ModifyExpressionValue(method = "updateFluidHeightAndDoFluidPushing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 hookNoPushInLiquids(Vec3 original) {
-        if ((Object) this != Minecraft.getInstance().player) {
-            return original;
-        }
-
-        return ModuleNoPush.canPush(NoPushBy.LIQUIDS)
-                ? original : Vec3.ZERO;
-    }
-
     /**
      * Hook no pitch limit exploit
      */
@@ -113,18 +98,18 @@ public abstract class MixinEntity {
     }
 
     @WrapOperation(method = "setXRot", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/Entity;xRot:F", opcode = Opcodes.PUTFIELD))
-    public void hookNoPitchLimit2(Entity instance, float clamped, Operation<Void> original, @Local(argsOnly = true) float xRot) {
+    public void hookNoPitchLimit2(Entity instance, float clamped, Operation<Void> original, @Local(argsOnly = true, name = "xRot") float xRot) {
         boolean noLimit = ModuleNoPitchLimit.INSTANCE.getRunning();
         original.call(instance, noLimit ? xRot : clamped);
     }
 
     @ModifyExpressionValue(method = "moveRelative", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getInputVector(Lnet/minecraft/world/phys/Vec3;FF)Lnet/minecraft/world/phys/Vec3;"))
-    public Vec3 hookVelocity(Vec3 original, @Local(argsOnly = true) Vec3 movementInput, @Local(argsOnly = true) float speed, @Local(argsOnly = true) float yaw) {
+    public Vec3 hookVelocity(Vec3 original, @Local(argsOnly = true, name = "input") Vec3 input, @Local(argsOnly = true, name = "speed") float speed) {
         if ((Object) this != Minecraft.getInstance().player) {
             return original;
         }
 
-        var event = new PlayerVelocityStrafe(movementInput, speed, yaw, original);
+        var event = new PlayerVelocityStrafe(input, speed, this.getYRot(), original);
         EventManager.INSTANCE.callEvent(event);
         return event.getVelocity();
     }
@@ -173,17 +158,6 @@ public abstract class MixinEntity {
 
         if (isPassenger()) {
             ci.cancel();
-        }
-    }
-
-    @Inject(method = "updateFluidHeightAndDoFluidPushing", at = @At("HEAD"), cancellable = true)
-    private void hookFluidMovement(TagKey<Fluid> tag, double speed, CallbackInfoReturnable<Boolean> cir) {
-        if ((Object) this == Minecraft.getInstance().player) {
-            var event = EventManager.INSTANCE.callEvent(new PlayerFluidCollisionCheckEvent(tag));
-
-            if (event.isCancelled()) {
-                cir.setReturnValue(false);
-            }
         }
     }
 

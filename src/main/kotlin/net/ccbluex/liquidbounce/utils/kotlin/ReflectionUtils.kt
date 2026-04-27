@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import java.lang.reflect.AnnotatedType
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
@@ -67,6 +66,6 @@ fun Type.toFullString(): String =
         }
 
         is GenericArrayType -> "${genericComponentType.toFullString()}[]"
-        is Class<*> -> EnvironmentRemapper.remapClass(this).substringAfterLast('.')
+        is Class<*> -> this.name.substringAfterLast('.')
         else -> this.toString()
     }

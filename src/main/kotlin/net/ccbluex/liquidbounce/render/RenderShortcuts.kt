@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.Camera
@@ -56,8 +57,8 @@ import org.lwjgl.opengl.GL11C
  * But as of now, 01.02.2025, they haven't.
  */
 @JvmField
-val HAS_AMD_VEGA_APU = (GL11C.glGetString(GL11C.GL_RENDERER)?.startsWith("AMD Radeon(TM) RX Vega") ?: false) &&
-    GL11C.glGetString(GL11C.GL_VENDOR) == "ATI Technologies Inc."
+val HAS_AMD_VEGA_APU = (gpuDevice.renderer?.startsWith("AMD Radeon(TM) RX Vega") ?: false) &&
+    gpuDevice.vendor == "ATI Technologies Inc."
 
 @JvmField
 val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)

@@ -17,21 +17,29 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.truffle;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
+import net.minecraft.client.ClientClockManager;
+import net.minecraft.core.Holder;
+import net.minecraft.world.clock.WorldClock;
+import net.minecraft.world.clock.WorldClocks;
+import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-@Pseudo
-@Mixin(targets = "com/oracle/truffle/host/HostContext", remap = false)
-public abstract class MixinHostContext {
+@NullMarked
+@Mixin(ClientClockManager.class)
+public abstract class MixinClientClockManager {
 
-    @ModifyVariable(method = "findClassImpl", at = @At("HEAD"), argsOnly = true, remap = false)
-    private String remapClassName(String value) {
-        return EnvironmentRemapper.INSTANCE.remapClassName(value);
+    @ModifyReturnValue(method = "getTotalTicks", at = @At("RETURN"))
+    private long injectOverrideClockTime(long original, Holder<WorldClock> definition) {
+        if (!definition.is(WorldClocks.OVERWORLD)) {
+            return original;
+        }
+
+        return ModuleCustomAmbience.getTime(original);
     }
 
 }

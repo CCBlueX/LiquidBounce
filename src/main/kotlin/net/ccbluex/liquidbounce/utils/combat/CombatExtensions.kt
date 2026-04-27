@@ -43,7 +43,7 @@ import net.ccbluex.liquidbounce.utils.world.getEntitiesInCuboid
 import net.minecraft.client.CameraType
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.component.DataComponents
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.AgeableMob
@@ -249,7 +249,7 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) 
         }
 
         interaction.ensureHasSentCarriedItem()
-        network.send(ServerboundInteractPacket.createAttackPacket(entity, isShiftKeyDown))
+        network.send(ServerboundAttackPacket(entity.id))
 
         if (keepSprint) {
             var genericAttackDamage =

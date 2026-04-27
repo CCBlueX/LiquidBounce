@@ -18,7 +18,7 @@
  */
 @file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 
-package net.ccbluex.liquidbounce.utils.client
+package net.ccbluex.liquidbounce.utils.text
 
 import com.google.common.base.CaseFormat
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
@@ -26,8 +26,6 @@ import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.ccbluex.liquidbounce.utils.text.PlainText
-import net.ccbluex.liquidbounce.utils.text.TextList
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component

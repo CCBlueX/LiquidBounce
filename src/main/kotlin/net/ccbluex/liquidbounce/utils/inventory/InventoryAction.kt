@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.ItemStack
 
 sealed interface InventoryAction {
@@ -42,7 +42,7 @@ sealed interface InventoryAction {
         val screen: AbstractContainerScreen<*>? = null,
         val slot: ItemSlot,
         val button: Int,
-        val actionType: ClickType,
+        val actionType: ContainerInput,
     ) : InventoryAction {
 
         companion object {
@@ -55,7 +55,7 @@ sealed interface InventoryAction {
                 screen,
                 slot = slot,
                 button = 1,
-                actionType = ClickType.THROW
+                actionType = ContainerInput.THROW
             )
 
             @JvmStatic
@@ -66,7 +66,7 @@ sealed interface InventoryAction {
                 screen,
                 slot = slot,
                 button = 0,
-                actionType = ClickType.QUICK_MOVE
+                actionType = ContainerInput.QUICK_MOVE
             )
 
             @JvmStatic
@@ -78,7 +78,7 @@ sealed interface InventoryAction {
                 screen,
                 slot = from,
                 button = to.inventorySlot,
-                actionType = ClickType.SWAP
+                actionType = ContainerInput.SWAP
             )
 
             @JvmStatic
@@ -89,7 +89,7 @@ sealed interface InventoryAction {
                 screen,
                 slot = slot,
                 button = 0,
-                actionType = ClickType.PICKUP_ALL
+                actionType = ContainerInput.PICKUP_ALL
             )
 
             @JvmStatic
@@ -100,7 +100,7 @@ sealed interface InventoryAction {
                 screen,
                 slot = slot,
                 button = 0,
-                actionType = ClickType.PICKUP
+                actionType = ContainerInput.PICKUP
             )
 
             /**
@@ -138,7 +138,7 @@ sealed interface InventoryAction {
 
         override fun performAction(): Boolean {
             val slotId = slot.getIdForServer(screen) ?: return false
-            interaction.handleInventoryMouseClick(screen?.syncId ?: 0, slotId, button, actionType, player)
+            interaction.handleContainerInput(screen?.syncId ?: 0, slotId, button, actionType, player)
             InventoryManager.lastClickedSlot = slotId
 
             return true
@@ -156,7 +156,7 @@ sealed interface InventoryAction {
                 .minByOrNull { slot.distance(it) } ?: return false
 
             val slotId = closestEmptySlot.getIdForServer(screen)
-            interaction.handleInventoryMouseClick(screen.syncId, slotId, 0, ClickType.PICKUP, player)
+            interaction.handleContainerInput(screen.syncId, slotId, 0, ContainerInput.PICKUP, player)
             InventoryManager.lastClickedSlot = slotId
             return true
         }

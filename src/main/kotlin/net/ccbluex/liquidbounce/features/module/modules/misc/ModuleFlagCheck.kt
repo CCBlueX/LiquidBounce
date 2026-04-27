@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.world.phys.Vec3
 import org.apache.commons.lang3.StringUtils
 import kotlin.math.abs
 import kotlin.math.roundToLong

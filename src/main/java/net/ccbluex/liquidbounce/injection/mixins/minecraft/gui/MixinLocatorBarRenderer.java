@@ -30,14 +30,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LocatorBarRenderer.class)
 public abstract class MixinLocatorBarRenderer {
 
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
     private void hookDisableLocatorBarTweak(final CallbackInfo ci) {
         if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_LOCATOR_BAR)) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractBackground", at = @At("HEAD"), cancellable = true)
     private void hookDisableLocatorBarTweakOnBackground(final CallbackInfo ci) {
         if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_LOCATOR_BAR)) {
             ci.cancel();

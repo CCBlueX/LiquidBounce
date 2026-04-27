@@ -100,7 +100,7 @@ object StrongholdHypothesisGenerator {
             chunkX += random.nextInt(-SNAPPING_OFFSET, SNAPPING_OFFSET + 1)
             chunkZ += random.nextInt(-SNAPPING_OFFSET, SNAPPING_OFFSET + 1)
 
-            chunks[index] = ChunkPos.asLong(chunkX, chunkZ)
+            chunks[index] = ChunkPos.pack(chunkX, chunkZ)
 
             angle += TWO_PI / currentSpread
             inCurrentRing++

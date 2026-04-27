@@ -20,15 +20,16 @@
 package net.ccbluex.liquidbounce.integration.task
 
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.isBrowserDisabled
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.integration.task.type.Task
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
 import net.minecraft.ChatFormatting
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.network.chat.Component
@@ -45,8 +46,8 @@ class TaskProgressScreen(
 
     private val percentFormat = DecimalFormat("0.0")
 
-    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, partialTick: Float) {
-        renderMenuBackground(context)
+    override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+        extractMenuBackground(context)
 
         val cx = width / 2.0
         val cy = height / 2.0
@@ -64,7 +65,7 @@ class TaskProgressScreen(
         var yOffset = (cy - textHeight / 2).toInt() - 40
 
         // Draw title
-        context.drawString(
+        context.text(
             font,
             title.string.asPlainText(ChatFormatting.GOLD),
             (cx - font.width(title.string) / 2).toInt(),
@@ -77,7 +78,7 @@ class TaskProgressScreen(
 
         // Draw task information
         for (line in textLines) {
-            context.drawString(
+            context.text(
                 font,
                 line,
                 (cx - font.width(line) / 2).toInt(),
@@ -161,8 +162,7 @@ class TaskProgressScreen(
     }
 
     override fun tick() {
-        if (taskManager.isCompleted && (BrowserBackendManager.backend?.isInitialized == true ||
-                BrowserBackendManager.isSkipping)) {
+        if (taskManager.isCompleted && (BrowserBackendManager.backend?.isInitialized == true || isBrowserDisabled)) {
             mc.setScreen(TitleScreen())
         }
     }

@@ -21,8 +21,10 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.BlendFunction
+import com.mojang.blaze3d.pipeline.ColorTargetState
+import com.mojang.blaze3d.pipeline.DepthStencilState
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.DepthTestFunction
+import com.mojang.blaze3d.platform.CompareOp
 import com.mojang.blaze3d.shaders.UniformType
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat
@@ -31,6 +33,7 @@ import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 
@@ -69,8 +72,8 @@ object ClientRenderPipelines {
 
     private inline fun RenderPipeline.Builder.forWorldRender(noDepthTest: Boolean = true) {
         withCull(false)
-        withBlend(BlendFunction.TRANSLUCENT)
-        if (noDepthTest) withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        if (noDepthTest) withDepthStencilState(optional())
     }
 
     inline fun RenderPipeline.Builder.screenQuadSnippet() = apply {
@@ -99,29 +102,26 @@ object ClientRenderPipelines {
         @JvmField
         val SMOOTH_TEXTURE = newPipeline("jcef/smooth_texture") {
             withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withBlend(BlendFunction.TRANSLUCENT)
-            withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+            withDepthStencilState(optional())
         }
 
         @JvmField
         val BLURRED_TEXTURE = newPipeline("jcef/blurred_texture") {
             withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withBlend(JCEF_COMPATIBLE_BLEND)
-            withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
         }
 
         @JvmField
         val BGRA_TEXTURE = newPipeline("jcef/bgra_texture") {
             bgraPosTexColorQuads()
-            withBlend(JCEF_COMPATIBLE_BLEND)
-            withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
         }
 
         @JvmField
         val BGRA_BLURRED_TEXTURE = newPipeline("jcef/bgra_blurred_texture") {
             bgraPosTexColorQuads()
-            withBlend(JCEF_COMPATIBLE_BLEND)
-            withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
         }
 
         /**
@@ -132,10 +132,8 @@ object ClientRenderPipelines {
             screenQuadSnippet()
             withFragmentShader("core/blit_screen")
             withSampler("InSampler")
-            withBlend(JCEF_COMPATIBLE_BLEND)
-            withDepthWrite(false)
-            withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-            withColorWrite(true, false)
+            withColorTargetState(ColorTargetState(optional(JCEF_COMPATIBLE_BLEND), ColorTargetState.WRITE_COLOR))
+            withDepthStencilState(optional())
         }
     }
 
@@ -193,7 +191,7 @@ object ClientRenderPipelines {
     @JvmField
     val LinesWithWidth = newPipeline("lines_with_width") {
         withSnippet(RenderPipelines.LINES_SNIPPET)
-        withDepthWrite(false)
+        withDepthStencilState(DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
         forWorldRender()
     }
 
@@ -283,7 +281,7 @@ object ClientRenderPipelines {
         withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
         withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
-        withBlend(BlendFunction.TRANSLUCENT)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
     }
 
     private val OutlineQuadsNoColor = newPipeline("outline_quads_no_color") {
@@ -294,7 +292,7 @@ object ClientRenderPipelines {
         withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
         withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
-        withBlend(BlendFunction.TRANSLUCENT)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
     }
 
     @JvmStatic
@@ -358,9 +356,13 @@ object ClientRenderPipelines {
         screenQuadSnippet()
         withFragmentShader(ClientShaders.Fragment.EntityOutline)
         withSampler("InSampler")
-        withBlend(BlendFunction.ENTITY_OUTLINE_BLIT)
-        withDepthWrite(false)
-        withColorWrite(true, false)
+        withColorTargetState(
+            ColorTargetState(
+                optional(BlendFunction.ENTITY_OUTLINE_BLIT),
+                ColorTargetState.WRITE_COLOR,
+            )
+        )
+        withDepthStencilState(optional())
     }
 
     @JvmField
@@ -370,9 +372,8 @@ object ClientRenderPipelines {
         withSampler("texture0")
         withSampler("image")
         withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
-        withoutBlend()
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withDepthWrite(false)
+        withColorTargetState(ColorTargetState.DEFAULT)
+        withDepthStencilState(optional())
     }
 
     @JvmField
@@ -383,9 +384,8 @@ object ClientRenderPipelines {
         withSampler("overlay")
         withUniformBuffer(ClientUniformDefine.GUI_BLUR)
         withCull(false)
-        withoutBlend()
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withDepthWrite(false)
+        withColorTargetState(ColorTargetState.DEFAULT)
+        withDepthStencilState(optional())
     }
 
     @JvmField
@@ -395,7 +395,7 @@ object ClientRenderPipelines {
         withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.TRIANGLES)
         withSampler("texture0")
         withUniformBuffer(ClientUniformDefine.BLEND)
-        withoutBlend()
+        withColorTargetState(ColorTargetState.DEFAULT)
     }
 
     /**

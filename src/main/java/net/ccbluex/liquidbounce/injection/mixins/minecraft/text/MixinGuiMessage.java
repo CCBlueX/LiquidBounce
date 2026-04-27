@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.text;
 
 import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition;
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition;
-import net.minecraft.client.GuiMessage;
+import net.minecraft.client.multiplayer.chat.GuiMessage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 

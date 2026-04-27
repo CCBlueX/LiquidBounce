@@ -1,4 +1,4 @@
-accessWidener	v1	named
+accessWidener	v1	official
 
 accessible field net/minecraft/world/entity/AreaEffectCloud potionContents Lnet/minecraft/world/item/alchemy/PotionContents;
 accessible field net/minecraft/client/Minecraft user Lnet/minecraft/client/User;
@@ -11,6 +11,8 @@ mutable field net/minecraft/client/Minecraft services Lnet/minecraft/server/Serv
 
 accessible method net/minecraft/world/entity/LivingEntity updatingUsingItem ()V
 accessible field net/minecraft/world/entity/HumanoidArm id I
+
+accessible class net/minecraft/world/item/CreativeModeTab$Output
 
 mutable field net/minecraft/world/phys/Vec3 x D
 mutable field net/minecraft/world/phys/Vec3 y D
@@ -110,8 +112,7 @@ accessible method net/minecraft/world/entity/LivingEntity getDamageAfterMagicAbs
 accessible method net/minecraft/world/item/BlockItem getPlacementState (Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/level/block/state/BlockState;
 
 accessible field net/minecraft/world/entity/Entity dimensions Lnet/minecraft/world/entity/EntityDimensions;
-accessible field net/minecraft/world/entity/Entity fluidHeight Lit/unimi/dsi/fastutil/objects/Object2DoubleMap;
-accessible field net/minecraft/world/entity/Entity fluidOnEyes Ljava/util/Set;
+accessible field net/minecraft/world/entity/Entity fluidInteraction Lnet/minecraft/world/entity/EntityFluidInteraction;
 
 accessible field net/minecraft/network/protocol/game/VecDeltaCodec base Lnet/minecraft/world/phys/Vec3;
 
@@ -123,18 +124,13 @@ mutable field net/minecraft/network/protocol/common/ClientboundPingPacket id I
 
 accessible field net/minecraft/world/entity/WalkAnimationState position F
 
-accessible field net/minecraft/network/protocol/game/ServerboundInteractPacket entityId I
-accessible method net/minecraft/network/protocol/game/ServerboundInteractPacket <init> (IZLnet/minecraft/network/protocol/game/ServerboundInteractPacket$Action;)V
-accessible class net/minecraft/network/protocol/game/ServerboundInteractPacket$Action
-accessible field net/minecraft/network/protocol/game/ServerboundInteractPacket ATTACK_ACTION Lnet/minecraft/network/protocol/game/ServerboundInteractPacket$Action;
-
 accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket sectionPos Lnet/minecraft/core/SectionPos;
 
 accessible field net/minecraft/client/gui/components/ChatComponent allMessages Ljava/util/List;
 accessible field net/minecraft/client/gui/components/ChatComponent trimmedMessages Ljava/util/List;
-accessible method net/minecraft/client/gui/components/ChatComponent logChatMessage (Lnet/minecraft/client/GuiMessage;)V
-accessible method net/minecraft/client/gui/components/ChatComponent addMessageToDisplayQueue (Lnet/minecraft/client/GuiMessage;)V
-accessible method net/minecraft/client/gui/components/ChatComponent addMessageToQueue (Lnet/minecraft/client/GuiMessage;)V
+accessible method net/minecraft/client/gui/components/ChatComponent logChatMessage (Lnet/minecraft/client/multiplayer/chat/GuiMessage;)V
+accessible method net/minecraft/client/gui/components/ChatComponent addMessageToDisplayQueue (Lnet/minecraft/client/multiplayer/chat/GuiMessage;)V
+accessible method net/minecraft/client/gui/components/ChatComponent addMessageToQueue (Lnet/minecraft/client/multiplayer/chat/GuiMessage;)V
 
 accessible method net/minecraft/network/chat/TextColor <init> (ILjava/lang/String;)V
 
@@ -157,7 +153,7 @@ accessible method com/mojang/blaze3d/platform/NativeImage writeToChannel (Ljava/
 accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder <init> ()V
 accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder withSnippet (Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;)V
 
-accessible class net/minecraft/client/gui/render/state/GuiRenderState$Node
+accessible class net/minecraft/client/renderer/state/gui/GuiRenderState$Node
 accessible class net/minecraft/client/gui/render/GuiRenderer$Draw
 accessible class net/minecraft/client/gui/Gui$ContextualInfo
 
@@ -182,8 +178,8 @@ accessible field net/minecraft/client/renderer/RenderPipelines GLOBALS_SNIPPET L
 
 accessible method net/minecraft/client/renderer/rendertype/RenderType create (Ljava/lang/String;Lnet/minecraft/client/renderer/rendertype/RenderSetup;)Lnet/minecraft/client/renderer/rendertype/RenderType;
 
-accessible class net/minecraft/client/gui/GuiGraphics$ScissorStack
-accessible field net/minecraft/client/gui/GuiGraphics scissorStack Lnet/minecraft/client/gui/GuiGraphics$ScissorStack;
-accessible field net/minecraft/client/gui/GuiGraphics guiRenderState Lnet/minecraft/client/gui/render/state/GuiRenderState;
+accessible class net/minecraft/client/gui/GuiGraphicsExtractor$ScissorStack
+accessible field net/minecraft/client/gui/GuiGraphicsExtractor scissorStack Lnet/minecraft/client/gui/GuiGraphicsExtractor$ScissorStack;
+accessible field net/minecraft/client/gui/GuiGraphicsExtractor guiRenderState Lnet/minecraft/client/renderer/state/gui/GuiRenderState;
 
 accessible method net/minecraft/world/item/enchantment/EnchantmentHelper getComponentType (Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/core/component/DataComponentType;

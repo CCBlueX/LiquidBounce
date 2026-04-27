@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.text.PlainText;
 import net.ccbluex.liquidbounce.utils.text.TextList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.TransferState;
@@ -49,13 +49,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 
-import static net.ccbluex.liquidbounce.utils.client.TextExtensionsKt.hideSensitiveAddress;
+import static net.ccbluex.liquidbounce.utils.text.TextExtensionsKt.hideSensitiveAddress;
 
 @Mixin(ConnectScreen.class)
 public abstract class MixinConnectScreen extends MixinScreen {
 
     @Shadow
-    volatile @Nullable Connection connection;
+    private volatile @Nullable Connection connection;
 
     @Shadow
     public abstract void connect(
@@ -64,8 +64,8 @@ public abstract class MixinConnectScreen extends MixinScreen {
     @Unique
     private ServerAddress serverAddress = null;
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
-    private void injectRender(GuiGraphics context, int mouseX, int mouseY, float delta, final CallbackInfo callback) {
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;centeredText(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+    private void injectRender(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, final CallbackInfo callback) {
         /*
          * Make a text demonstration of the connection status
          * This is useful for debugging the connection trace
@@ -85,7 +85,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
         }
 
         var connectionDetails = getConnectionDetails(clientConnection, serverAddress);
-        context.drawCenteredString(this.font, connectionDetails, this.width / 2,
+        context.centeredText(this.font, connectionDetails, this.width / 2,
             this.height / 2 - 60, -1);
     }
 
@@ -100,7 +100,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
         }
     }
 
-    @ModifyConstant(method = "render", constant = @Constant(intValue = 50))
+    @ModifyConstant(method = "extractRenderState", constant = @Constant(intValue = 50))
     private int modifyStatusY(int original) {
         return original + 30;
     }
@@ -134,12 +134,12 @@ public abstract class MixinConnectScreen extends MixinScreen {
         }
         textParts.add(spacer);
 
-        var socket = Component.literal(socketAddr);
-        if (ProxyManager.INSTANCE.getCurrentProxy() != null) {
-            socket.withStyle(ChatFormatting.GOLD); // Proxy good
-        } else {
-            socket.withStyle(ChatFormatting.RED); // No proxy - shows server address
-        }
+        var socket = PlainText.of(
+            socketAddr,
+            ProxyManager.INSTANCE.getCurrentProxy() != null
+                ? ChatFormatting.GOLD // No proxy - shows server address
+                : ChatFormatting.RED // Proxy good
+        );
         textParts.add(socket);
         textParts.add(spacer);
 

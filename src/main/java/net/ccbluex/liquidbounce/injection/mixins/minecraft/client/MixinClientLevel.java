@@ -62,8 +62,8 @@ public abstract class MixinClientLevel {
     }
 
     @Inject(method = "removeEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;onClientRemoval()V"))
-    private void injectRemoveEntity(int entityId, Entity.RemovalReason removalReason, CallbackInfo ci, @Local Entity entity) {
-        EventManager.INSTANCE.callEvent(new WorldEntityRemoveEvent(entity));
+    private void injectRemoveEntity(int id, Entity.RemovalReason reason, CallbackInfo ci, @Local(name = "entity") Entity entity) {
+        EventManager.INSTANCE.callEvent(new WorldEntityRemoveEvent(entity, reason));
     }
 
     @Inject(method = "trackExplosionEffects", at = @At("HEAD"), cancellable = true)

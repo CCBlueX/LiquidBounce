@@ -53,6 +53,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -83,7 +84,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     public abstract void tick();
 
     @Shadow
-    public abstract void swing(InteractionHand hand, boolean fromServerPlayer);
+    public abstract void swing(InteractionHand hand, boolean sendToSwingingEntity);
 
     @Shadow
     public abstract void setHealth(float health);
@@ -125,7 +126,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     )
     public MobEffectInstance hookTravelStatusEffect(MobEffectInstance original) {
         // If we get anyting other than levitation, the injection went wrong
-        assert original != MobEffects.LEVITATION;
+        assert original.getEffect() == MobEffects.LEVITATION;
 
         if (ModuleAntiLevitation.INSTANCE.getRunning()) {
             return null;
@@ -246,7 +247,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
     }
 
-    @Inject(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;jumping:Z"))
+    @Inject(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;jumping:Z", opcode = Opcodes.GETFIELD))
     private void hookAirJump(CallbackInfo callbackInfo) {
         if (ModuleAirJump.INSTANCE.getAllowJump() && jumping && noJumpDelay == 0) {
             this.jumpFromGround();
@@ -294,8 +295,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
     }
 
     @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
-    private void hookEatParticles(ItemStack stack, int count, CallbackInfo ci) {
-        if (stack.getComponents().has(DataComponents.FOOD) && !ModuleAntiBlind.canRender(DoRender.EAT_PARTICLES)) {
+    private void hookEatParticles(ItemStack itemStack, int count, CallbackInfo ci) {
+        if (itemStack.getComponents().has(DataComponents.FOOD) && !ModuleAntiBlind.canRender(DoRender.EAT_PARTICLES)) {
             ci.cancel();
         }
     }
@@ -356,8 +357,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
     }
 
     @Inject(method = "setItemSlot", at = @At("HEAD"))
-    private void hookEquipmentChange(EquipmentSlot slot, ItemStack stack, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, stack));
+    private void hookEquipmentChange(EquipmentSlot slot, ItemStack itemStack, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, itemStack));
     }
 
     @ModifyExpressionValue(method = "getCurrentSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)

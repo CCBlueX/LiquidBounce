@@ -36,11 +36,11 @@ import net.ccbluex.liquidbounce.render.gui.element.QuadGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.TexQuadGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.TriangleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.render.TextureSetup
-import net.minecraft.client.gui.render.state.BlitRenderState
 import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.renderer.state.gui.BlitRenderState
 import net.minecraft.world.phys.Vec2
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
@@ -80,7 +80,7 @@ private fun Matrix3x2fc.transformMaxBounds(
 /**
  * @see net.minecraft.client.gui.render.state.ColoredRectangleRenderState.getBounds
  */
-fun GuiGraphics.getBounds(left: Float, top: Float, right: Float, bottom: Float): ScreenRectangle {
+fun GuiGraphicsExtractor.getBounds(left: Float, top: Float, right: Float, bottom: Float): ScreenRectangle {
     val rect = this.pose().transformMaxBounds(left, top, right, bottom)
     return this.scissorStack.peek()?.intersection(rect) ?: rect
 }
@@ -88,16 +88,16 @@ fun GuiGraphics.getBounds(left: Float, top: Float, right: Float, bottom: Float):
 /**
  * @see net.minecraft.client.gui.render.state.ColoredRectangleRenderState.getBounds
  */
-fun GuiGraphics.getBoundsXYWH(x: Float, y: Float, w: Float, h: Float): ScreenRectangle {
+fun GuiGraphicsExtractor.getBoundsXYWH(x: Float, y: Float, w: Float, h: Float): ScreenRectangle {
     return getBounds(x, y, x + w, y + h)
 }
 
-fun GuiGraphics.getBounds(box: BoundingBox2f): ScreenRectangle =
+fun GuiGraphicsExtractor.getBounds(box: BoundingBox2f): ScreenRectangle =
     getBounds(box.xMin, box.yMin, box.xMax, box.yMax)
 
-inline fun GuiGraphics.copyPosePooled(): Matrix3x2f = Pools.Mat3x2f.borrow().set(this.pose())
+inline fun GuiGraphicsExtractor.copyPosePooled(): Matrix3x2f = Pools.Mat3x2f.borrow().set(this.pose())
 
-inline fun GuiGraphics.copyPose(): Matrix3x2f = Matrix3x2f(this.pose())
+inline fun GuiGraphicsExtractor.copyPose(): Matrix3x2f = Matrix3x2f(this.pose())
 
 inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
     pushMatrix()
@@ -108,7 +108,10 @@ inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
     }
 }
 
-inline fun GuiGraphics.ScissorStack.withPush(rect: ScreenRectangle, block: GuiGraphics.ScissorStack.() -> Unit) {
+inline fun GuiGraphicsExtractor.ScissorStack.withPush(
+    rect: ScreenRectangle,
+    block: GuiGraphicsExtractor.ScissorStack.() -> Unit,
+) {
     push(rect)
     try {
         block()
@@ -117,13 +120,13 @@ inline fun GuiGraphics.ScissorStack.withPush(rect: ScreenRectangle, block: GuiGr
     }
 }
 
-inline fun GuiGraphics.drawCustomElement(
+inline fun GuiGraphicsExtractor.drawCustomElement(
     pipeline: RenderPipeline = RenderPipelines.GUI, // PosColor + QUADS
     textureSetup: TextureSetup = TextureSetup.noTexture(),
     scissorArea: ScreenRectangle? = this.scissorStack.peek(),
     bounds: ScreenRectangle? = null,
     verticesSetupHandler: VerticesSetupHandler,
-) = this.guiRenderState.submitGuiElement(
+) = this.guiRenderState.addGuiElement(
     LambdaSimpleGuiElementRenderState(
         pipeline,
         textureSetup,
@@ -134,13 +137,13 @@ inline fun GuiGraphics.drawCustomElement(
     )
 )
 
-fun GuiGraphics.drawLines(
+fun GuiGraphicsExtractor.drawLines(
     points: FloatArray,
     argb: Int,
     bounds: ScreenRectangle,
     cull: Boolean = true,
 ) {
-    this.guiRenderState.submitGuiElement(
+    this.guiRenderState.addGuiElement(
         LineGuiElementRenderState(
             points,
             argb,
@@ -152,7 +155,7 @@ fun GuiGraphics.drawLines(
     )
 }
 
-fun GuiGraphics.drawQuad(
+fun GuiGraphicsExtractor.drawQuad(
     x1: Float,
     y1: Float,
     x2: Float,
@@ -168,7 +171,7 @@ fun GuiGraphics.drawQuad(
     val bounds = getBounds(x11, y11, x21, y21)
 
     if (fillColor != null && !fillColor.isTransparent) {
-        this.guiRenderState.submitGuiElement(
+        this.guiRenderState.addGuiElement(
             QuadGuiElementRenderState(
                 x11,
                 y11,
@@ -201,7 +204,7 @@ fun GuiGraphics.drawQuad(
     }
 }
 
-inline fun GuiGraphics.drawQuadXYWH(
+inline fun GuiGraphicsExtractor.drawQuadXYWH(
     x: Float,
     y: Float,
     w: Float,
@@ -211,21 +214,21 @@ inline fun GuiGraphics.drawQuadXYWH(
 ) = drawQuad(x, y, x + w, y + h, fillColor, outlineColor)
 
 /**
- * Float version of [GuiGraphics.drawHorizontalLine]
+ * Float version of [GuiGraphicsExtractor.drawHorizontalLine]
  */
-fun GuiGraphics.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Color4b) {
+fun GuiGraphicsExtractor.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Color4b) {
     this.drawQuad(x1, y, x2, y + thickness, color)
 }
 
 /**
- * Float version of [GuiGraphics.drawVerticalLine]
+ * Float version of [GuiGraphicsExtractor.drawVerticalLine]
  */
-fun GuiGraphics.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Color4b) {
+fun GuiGraphicsExtractor.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Color4b) {
     this.drawQuad(x, y1, x + thickness, y2, color)
 }
 
 @Suppress("LongParameterList")
-fun GuiGraphics.drawTriangle(
+fun GuiGraphicsExtractor.drawTriangle(
     x0: Float, y0: Float, x1: Float, y1: Float, x2: Float, y2: Float,
     fillColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
@@ -238,7 +241,7 @@ fun GuiGraphics.drawTriangle(
     val bounds = getBounds(minX, minY, maxX, maxY)
 
     if (fillColor != null && !fillColor.isTransparent) {
-        this.guiRenderState.submitGuiElement(
+        this.guiRenderState.addGuiElement(
             TriangleGuiElementRenderState(
                 x0, y0, x1, y1, x2, y2,
                 fillColor.argb,
@@ -266,7 +269,7 @@ fun GuiGraphics.drawTriangle(
     }
 }
 
-fun GuiGraphics.drawTriangle(
+fun GuiGraphicsExtractor.drawTriangle(
     p1: Vec2, p2: Vec2, p3: Vec2,
     fillColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
@@ -276,7 +279,7 @@ fun GuiGraphics.drawTriangle(
 )
 
 @Suppress("LongParameterList")
-inline fun GuiGraphics.drawGlyphOnCurrentLayer(
+inline fun GuiGraphicsExtractor.drawGlyphOnCurrentLayer(
     textureSetup: TextureSetup,
     x0: Float,
     y0: Float,
@@ -289,7 +292,7 @@ inline fun GuiGraphics.drawGlyphOnCurrentLayer(
     argb: Int = -1,
     pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
 ) {
-    this.guiRenderState.submitGlyphToCurrentLayer(
+    this.guiRenderState.addGlyphToCurrentLayer(
         TexQuadGuiElementRenderState(
             x0,
             y0,
@@ -310,7 +313,7 @@ inline fun GuiGraphics.drawGlyphOnCurrentLayer(
 }
 
 @Suppress("LongParameterList")
-inline fun GuiGraphics.drawTexQuad(
+inline fun GuiGraphicsExtractor.drawTexQuad(
     textureSetup: TextureSetup,
     x0: Float,
     y0: Float,
@@ -323,7 +326,7 @@ inline fun GuiGraphics.drawTexQuad(
     argb: Int = -1,
     pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
 ) {
-    this.guiRenderState.submitGuiElement(
+    this.guiRenderState.addGuiElement(
         TexQuadGuiElementRenderState(
             x0,
             y0,
@@ -344,7 +347,7 @@ inline fun GuiGraphics.drawTexQuad(
 }
 
 @Suppress("LongParameterList")
-inline fun GuiGraphics.drawBlitOnCurrentLayer(
+inline fun GuiGraphicsExtractor.drawBlitOnCurrentLayer(
     textureSetup: TextureSetup,
     x0: Int,
     y0: Int,
@@ -357,11 +360,11 @@ inline fun GuiGraphics.drawBlitOnCurrentLayer(
     argb: Int = -1,
     pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
 ) {
-    this.guiRenderState.submitBlitToCurrentLayer(
+    this.guiRenderState.addBlitToCurrentLayer(
         BlitRenderState(
             pipeline,
             textureSetup,
-            copyPosePooled(),
+            copyPose(),
             x0,
             y0,
             x1,
@@ -377,7 +380,7 @@ inline fun GuiGraphics.drawBlitOnCurrentLayer(
     )
 }
 
-fun GuiGraphics.drawCircle(
+fun GuiGraphicsExtractor.drawCircle(
     x: Float,
     y: Float,
     radius: Float,
@@ -392,7 +395,7 @@ fun GuiGraphics.drawCircle(
     val innerRatio = (innerRadius / radius).coerceIn(0f, 1f)
     val bounds = getBoundsXYWH(x - radius, y - radius, radius * 2, radius * 2)
 
-    this.guiRenderState.submitGuiElement(
+    this.guiRenderState.addGuiElement(
         CircleGuiElementRenderState(
             x,
             y,

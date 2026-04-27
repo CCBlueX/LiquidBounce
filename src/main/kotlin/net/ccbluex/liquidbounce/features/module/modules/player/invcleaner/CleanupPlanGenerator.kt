@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 
@@ -99,7 +100,7 @@ class CleanupPlanGenerator(
     }
 
     private fun groupItemsByType(): MutableMap<ItemAndComponents, MutableList<ItemSlot>> {
-        val itemsByType = HashMap<ItemAndComponents, MutableList<ItemSlot>>()
+        val itemsByType = Object2ObjectOpenHashMap<ItemAndComponents, MutableList<ItemSlot>>()
 
         for (availableSlot in this.availableItems) {
             val stack = availableSlot.itemStack

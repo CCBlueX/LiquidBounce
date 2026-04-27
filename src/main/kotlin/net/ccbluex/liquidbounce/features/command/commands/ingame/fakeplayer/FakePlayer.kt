@@ -35,7 +35,7 @@ import java.util.function.Consumer
  * attackability and assured totem pops instead of death
  * into [RemotePlayer].
  */
-open class FakePlayer(
+open class FakePlayer @JvmOverloads constructor(
     level: ClientLevel,
     gameProfile: GameProfile,
     var onRemoval: Consumer<in FakePlayer>? = null,

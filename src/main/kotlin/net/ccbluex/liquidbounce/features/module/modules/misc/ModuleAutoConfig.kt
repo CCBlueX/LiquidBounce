@@ -28,11 +28,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.client.dropPort
+import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.rootDomain
+import net.ccbluex.liquidbounce.utils.text.rootDomain
 import net.minecraft.client.gui.screens.ConnectScreen
 
 object ModuleAutoConfig : ClientModule(

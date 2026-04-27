@@ -38,16 +38,14 @@ public abstract class MixinBlockEntityRenderDispatcher {
      */
     @ModifyArg(
             method = "submit",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderer;submit(Lnet/minecraft/client/renderer/blockentity/state/BlockEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V")
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderer;submit(Lnet/minecraft/client/renderer/blockentity/state/BlockEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V")
     )
-    private static <S extends BlockEntityRenderState> S render(
-        S state, @Local(argsOnly = true) S blockEntityRenderState
-    ) {
+    private static <S extends BlockEntityRenderState> S render(S state) {
         var client = Minecraft.getInstance();
         if (ModuleStorageESP.GlowMode.INSTANCE.getRunning() && client.level != null) {
-            var type = ModuleStorageESP.categorize(client.level.getBlockEntity(blockEntityRenderState.blockPos));
+            var type = ModuleStorageESP.categorize(client.level.getBlockEntity(state.blockPos));
 
-            if (type != null && type.shouldRender(blockEntityRenderState.blockPos)) {
+            if (type != null && type.shouldRender(state.blockPos)) {
                 var color = type.getColor();
 
                 if (!color.isTransparent()) {

@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStackTemplate
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.EntityHitResult
 import java.util.SequencedSet
@@ -49,7 +50,9 @@ object ModuleNoEntityInteract : ClientModule("NoEntityInteract", ModuleCategorie
         val set = itemSortedSetOf(
             Items.AIR, Items.SHEARS, Items.TNT, Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.COBWEB
         )
-        BuiltInRegistries.ITEM.filterTo(set) { it.defaultInstance.isMiningTool }
+        BuiltInRegistries.ITEM.filterTo(set) {
+            it !in set && ItemStackTemplate(it).isMiningTool
+        }
         return set
     }
 

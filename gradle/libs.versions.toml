@@ -1,19 +1,19 @@
 [versions]
 # Minecraft 1.21.1 upwards uses Java 21
 # 26.1 upwards uses Java 25
-jdk = "21"
+jdk = "25"
 
 # Fabric Properties
 # Check these on https://fabricmc.net/versions.html
 # https://mods.upcraft.dev/dev/versions
-minecraft = "1.21.11"
+minecraft = "26.1.2"
 fabric-loom = "1.15-SNAPSHOT"
-fabric-loader = "0.18.4"
-fabric-loaderMin = "0.16.14"
-fabric-api = "0.140.0+1.21.11"
+fabric-loader = "0.19.2"
+fabric-loaderMin = "0.18.4"
+fabric-api = "0.146.1+26.1.2"
 
 # mcef
-mcef = "3.3.0-1.21.11"
+mcef = "3.3.0-26.1-SNAPSHOT"
 # mc-authlib
 mc_authlib = "1.7.0"
 # Polyglot
@@ -30,20 +30,22 @@ ahocorasick = "0.6.3"
 fastutil4k = "0.2.7"
 
 # Recommended mods
-modmenu = "17.0.0-beta.2"
-exploit_preventer_api = "0.0.1"
-exploit_preventer_mod = "0.1.10"
-sodium = "mc1.21.11-0.8.2-fabric"
-lithium = "mc1.21.11-0.21.3-fabric"
-viafabricplus = "4.4.8"
+modmenu = "18.0.0-alpha.7"
+exploit_preventer_api = "1.0.0"
+exploit_preventer_mod = "1.0.2+26.1"
+sodium = "mc26.1.1-0.8.9-fabric"
+lithium = "mc26.1.2-0.24.1-fabric"
+viafabricplus = "4.5.2"
 # Mods for compatibility test (runtime only)
-immediatelyFast = "1.14.1+1.21.11-fabric"
-iris = "1.10.3+1.21.11-fabric"
-waygl = "xN3H7oME"
+immediatelyFast = "1.15.2+26.1.2-fabric"
+iris = "1.10.9+26.1-fabric"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
 kotlin = "2.3.10"
+# JUnit
+junit = "5.10.0"
+junit-platform = "1.10.0"
 # https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test/overview
 kotlinx-coroutines = "1.10.2"
 # https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
@@ -54,7 +56,7 @@ fabric-kotlin = "1.13.9+kotlin.2.3.10"
 netty = "4.2.7.Final"
 
 # LWJGL
-lwjgl = "3.3.3"
+lwjgl = "3.4.1"
 
 # Other plugins
 detekt = "2.0.0-alpha.2"
@@ -69,6 +71,9 @@ fabric-api = { group = "net.fabricmc.fabric-api", name = "fabric-api", version.r
 fabric-kotlin = { group = "net.fabricmc", name = "fabric-language-kotlin", version.ref = "fabric-kotlin" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 fabric-loader-junit = { group = "net.fabricmc", name = "fabric-loader-junit", version.ref = "fabric-loader" }
+junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-platform" }
 
 netty-handler-proxy = { group = "io.netty", name = "netty-handler-proxy", version.ref = "netty" }
 lwjgl-egl = { group = "org.lwjgl", name = "lwjgl-egl", version.ref = "lwjgl" }
@@ -102,11 +107,9 @@ exploitPreventer-api = { group = "com.nikoverflow", name = "exploit-preventer-ap
 exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
 immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
 iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
-waygl = { group = "maven.modrinth", name = "waygl", version.ref = "waygl" }
-cloth-config = { group = "maven.modrinth", name = "cloth-config", version = "21.11.153+fabric" }
 
 [plugins]
-fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 gradleGitProperties = { id = "com.gorylenko.gradle-git-properties", version.ref = "gradleGitProperties" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }

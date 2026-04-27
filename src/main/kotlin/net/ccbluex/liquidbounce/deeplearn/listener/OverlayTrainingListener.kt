@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.deeplearn.listener
 import ai.djl.training.Trainer
 import ai.djl.training.listener.TrainingListener
 import ai.djl.training.listener.TrainingListenerAdapter
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.textOf
+import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.ChatFormatting
 

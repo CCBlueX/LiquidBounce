@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.engine.font.processor.LegacyTextSanitizer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
-import net.ccbluex.liquidbounce.utils.client.toText
+import net.ccbluex.liquidbounce.utils.text.toText
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style

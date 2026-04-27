@@ -61,6 +61,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -207,7 +208,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     /**
      * Hook move function to modify movement
      */
-    @ModifyVariable(method = "move", at = @At("HEAD"), name = "arg2", ordinal = 0, index = 2, argsOnly = true)
+    @ModifyVariable(method = "move", at = @At("HEAD"), name = "delta", argsOnly = true)
     private Vec3 hookMove(Vec3 movement, MoverType type) {
         return EventManager.INSTANCE.callEvent(new PlayerMoveEvent(type, movement)).getMovement();
     }
@@ -400,12 +401,12 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return original;
     }
 
-    @ModifyExpressionValue(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Abilities;mayfly:Z"))
+    @ModifyExpressionValue(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Abilities;mayfly:Z", opcode = Opcodes.GETFIELD))
     private boolean hookFreeCamPreventCreativeFly(boolean original) {
         return !ModuleFreeCam.INSTANCE.getRunning() && original;
     }
 
-    @ModifyVariable(method = "sendPosition", at = @At("STORE"), ordinal = 1)
+    @ModifyVariable(method = "sendPosition", at = @At("STORE"), name = "rot")
     private boolean hookFreeCamPreventRotations(boolean bl4) {
         // Prevent rotation changes when free cam is active, unless a rotation is being set via the rotation manager
         return (!ModuleFreeCam.INSTANCE.getRunning() ||
@@ -426,7 +427,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return event.getSprint();
     }
 
-    @ModifyExpressionValue(method = "shouldStopRunSprinting", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;horizontalCollision:Z"))
+    @ModifyExpressionValue(method = "shouldStopRunSprinting", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;horizontalCollision:Z", opcode = Opcodes.GETFIELD))
     private boolean hookSprintIgnoreCollision(boolean original) {
         return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
     }

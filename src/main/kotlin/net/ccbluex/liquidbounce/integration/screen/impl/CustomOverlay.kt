@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.isBrowserDisabled
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -54,7 +55,7 @@ class CustomOverlay(
         }
 
         if (!BrowserBackendManager.isInitialized) {
-            if (!BrowserBackendManager.isSkipping) {
+            if (!isBrowserDisabled) {
                 logger.error("Could not open custom overlay because the browser backend is not initialized.")
             }
             return

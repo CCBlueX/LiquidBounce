@@ -22,6 +22,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager;
 import net.minecraft.client.gui.screens.ConnectScreen;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -33,10 +34,10 @@ import java.net.Proxy;
 public abstract class MixinMinecraftClient {
 
     @ModifyExpressionValue(method = "createUrlConnection", at = @At(
-            value = "FIELD",
-            target = "Lcom/mojang/authlib/minecraft/client/MinecraftClient;proxy:Ljava/net/Proxy;",
-            remap = false
-    ))
+        value = "FIELD",
+        target = "Lcom/mojang/authlib/minecraft/client/MinecraftClient;proxy:Ljava/net/Proxy;",
+        remap = false,
+        opcode = Opcodes.GETFIELD))
     private Proxy hookClientProxy(Proxy proxy) {
         // We only want to use the proxy when connecting to a server
         if (!(net.minecraft.client.Minecraft.getInstance().screen instanceof ConnectScreen)) {

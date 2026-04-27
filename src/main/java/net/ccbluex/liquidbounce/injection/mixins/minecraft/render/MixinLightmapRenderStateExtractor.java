@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFullBright;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.LightmapRenderStateExtractor;
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffects;
@@ -35,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @NullMarked
-@Mixin(LightTexture.class)
+@Mixin(LightmapRenderStateExtractor.class)
 public abstract class MixinLightmapRenderStateExtractor {
 
     /**
@@ -44,7 +44,7 @@ public abstract class MixinLightmapRenderStateExtractor {
      *     float brightnessOption = ((Double)this.minecraft.options.gamma().get()).floatValue();
      * </pre>
      */
-    @ModifyExpressionValue(method = "updateLightTexture", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/OptionInstance;get()Ljava/lang/Object;", ordinal = 2))
+    @ModifyExpressionValue(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/OptionInstance;get()Ljava/lang/Object;", ordinal = 1))
     private Object injectXRayFullBright(Object original) {
         // If fullBright is enabled, we need to return our own gamma value
         if (ModuleFullBright.FullBrightGamma.INSTANCE.getRunning()) {
@@ -63,7 +63,7 @@ public abstract class MixinLightmapRenderStateExtractor {
     }
 
     // Turns off blinking when the darkness effect is active.
-    @Redirect(method = "updateLightTexture", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEffectBlendFactor(Lnet/minecraft/core/Holder;F)F"))
+    @Redirect(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEffectBlendFactor(Lnet/minecraft/core/Holder;F)F"))
     private float injectAntiDarkness(LocalPlayer instance, Holder<MobEffect> registryEntry, float v) {
         if (!ModuleAntiBlind.canRender(DoRender.DARKNESS) && registryEntry == MobEffects.DARKNESS) {
             return 0f;

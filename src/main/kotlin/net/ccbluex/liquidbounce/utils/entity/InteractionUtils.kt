@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.entity
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.useItem
@@ -135,21 +134,8 @@ fun interactEntity(
     // Skipped check:
     // player.isWithinEntityInteractionRange(entity, 0.0)
 
-    val result = when {
-        // ~1.7.10
-        isOlderThanOrEquals1_7_10 -> gameMode.interact(player, entity, hand)
-
-        // 1.8~1.21.11
-        else -> {
-            val result = gameMode.interactAt(player, entity, hitResult, hand)
-            // In vanilla 1.21.11 only ArmorStand can skip this
-            if (!result.consumesAction()) {
-                gameMode.interact(player, entity, hand)
-            } else {
-                result
-            }
-        }
-    }
+    // ViaVersion handles 1.7.6/1.21.11/current protocol of this packet
+    val result = gameMode.interact(player, entity, hitResult, hand)
 
     if (result.shouldSwingHand()) {
         swingMode.swing(hand)

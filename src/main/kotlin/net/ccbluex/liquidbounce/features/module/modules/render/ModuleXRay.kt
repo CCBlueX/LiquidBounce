@@ -136,6 +136,7 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
     // Lighting of blocks through walls
     val fullBright by boolean("FullBright", true)
+        .onChanged(::valueChangedReload)
 
     // Only render blocks with non-solid blocks around
     private val exposedOnly by boolean("ExposedOnly", false)

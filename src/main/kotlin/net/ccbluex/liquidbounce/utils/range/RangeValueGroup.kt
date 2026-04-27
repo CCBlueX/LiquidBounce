@@ -88,10 +88,10 @@ open class RangeValueGroup(
 
     fun adjustAttackRange(attackRange: AttackRange = AttackRange.defaultFor(player)) =
         AttackRange(
-            max(0f, attackRange.minRange/* - minRangeDecrease*/),
-            attackRange.maxRange + this@RangeValueGroup.maxRangeIncrease,
-            max(0f, attackRange.minCreativeRange/* - minRangeDecrease*/),
-            attackRange.maxCreativeRange + this@RangeValueGroup.maxRangeIncrease,
+            max(0f, attackRange.minReach/* - minRangeDecrease*/),
+            attackRange.maxReach + this@RangeValueGroup.maxRangeIncrease,
+            max(0f, attackRange.minCreativeReach/* - minRangeDecrease*/),
+            attackRange.maxCreativeReach + this@RangeValueGroup.maxRangeIncrease,
             attackRange.hitboxMargin,
             attackRange.mobFactor
         )

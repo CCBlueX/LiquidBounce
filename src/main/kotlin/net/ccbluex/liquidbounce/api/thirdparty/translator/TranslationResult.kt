@@ -19,17 +19,17 @@
 
 package net.ccbluex.liquidbounce.api.thirdparty.translator
 
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.network.chat.MutableComponent
+import net.ccbluex.liquidbounce.utils.text.textOf
+import net.minecraft.network.chat.Component
 
 sealed class TranslationResult(
     val isValid: Boolean
 ) {
-    abstract fun toResultText(): MutableComponent
+    abstract fun toResultText(): Component
 
     data class Success(
         val origin: String,
@@ -39,19 +39,19 @@ sealed class TranslationResult(
     ) : TranslationResult(
         origin != translation && fromLanguage != toLanguage
     ) {
-        override fun toResultText(): MutableComponent = "".asText()
-            .append(regular("("))
-            .append(variable(fromLanguage.literal))
-            .append(regular("->"))
-            .append(variable(toLanguage.literal))
-            .append(regular(") "))
-            .append(regular(translation).copyable(copyContent = translation))
+        override fun toResultText() = textOf(
+            regular("("),
+            variable(fromLanguage.literal),
+            regular("->"),
+            variable(toLanguage.literal),
+            regular(") "),
+            regular(translation).copyable(copyContent = translation),
+        )
     }
 
     data class Failure(
         val ex: Exception,
     ) : TranslationResult(false) {
-        override fun toResultText(): MutableComponent = "".asText()
-            .append(markAsError("Failed to translate (${ex.javaClass.simpleName}): ${ex.message}"))
+        override fun toResultText() = markAsError("Failed to translate (${ex.javaClass.simpleName}): ${ex.message}")
     }
 }

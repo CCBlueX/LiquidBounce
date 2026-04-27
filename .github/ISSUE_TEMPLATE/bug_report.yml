@@ -64,7 +64,7 @@ body:
     attributes:
       label: Minecraft Version
       description: Which Minecraft-Version and protocol version does this bug affect?
-      placeholder: e.g. 1.21.11 + 1.8.9 protocol
+      placeholder: e.g. 26.1 + 1.8 protocol
     validations:
       required: true
 

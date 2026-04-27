@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -33,27 +33,27 @@ import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
 @Mixin(GuiRenderState.Node.class)
 public abstract class MixinGuiRenderStateLayer {
 
-    @WrapOperation(method = "submitItem", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "addItem", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addItem(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "submitText", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "addText", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addText(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "submitPicturesInPictureState", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "addPicturesInPictureState", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addSpecialElement(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "submitGuiElement", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "addGuiElement", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addSimpleElement(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "submitGlyph", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "addGlyph", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addPreparedText(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }

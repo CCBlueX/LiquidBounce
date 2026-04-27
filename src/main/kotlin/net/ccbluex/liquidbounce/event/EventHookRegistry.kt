@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.event
 import it.unimi.dsi.fastutil.objects.ObjectArrays
 import kotlinx.atomicfu.atomic
 import kotlinx.atomicfu.update
-import java.util.Collections.emptyIterator
 
 /**
  * A special [java.util.concurrent.CopyOnWriteArrayList] that stores [EventHook]s.
@@ -31,10 +30,13 @@ import java.util.Collections.emptyIterator
  *
  * Equality of [EventHook]s is defined by reference equality.
  */
-class EventHookRegistry<E : Event> : Iterable<EventHook<E>> {
+class EventHookRegistry<E : Event> {
 
     // sorted descending by EventHook.priority
     private val array = atomic(ObjectArrays.EMPTY_ARRAY)
+
+    val snapshot: Array<Any>
+        get() = array.value
 
     fun addIfAbsent(eventHook: EventHook<E>) {
         array.update { curr ->
@@ -111,16 +113,6 @@ class EventHookRegistry<E : Event> : Iterable<EventHook<E>> {
 
     fun clear() {
         array.value = ObjectArrays.EMPTY_ARRAY
-    }
-
-    override fun iterator(): Iterator<EventHook<E>> {
-        val snapshot = array.value
-        @Suppress("UNCHECKED_CAST")
-        return if (snapshot.isEmpty()) {
-            emptyIterator()
-        } else {
-            snapshot.iterator() as Iterator<EventHook<E>>
-        }
     }
 
     companion object {

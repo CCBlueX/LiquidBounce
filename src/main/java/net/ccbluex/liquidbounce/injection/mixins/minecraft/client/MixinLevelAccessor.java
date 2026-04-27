@@ -17,21 +17,19 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.truffle;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
+import net.minecraft.world.level.LevelAccessor;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-@Pseudo
-@Mixin(targets = "com/oracle/truffle/host/HostClassLoader", remap = false)
-public abstract class MixinHostClassLoader {
+@Mixin(LevelAccessor.class)
+public interface MixinLevelAccessor {
 
-    @ModifyVariable(method = "findClass", at = @At("HEAD"), argsOnly = true, remap = false)
-    private String remapClassName(String value) {
-        return EnvironmentRemapper.INSTANCE.remapClassName(value);
+    @ModifyReturnValue(method = "getGameTime", at = @At("RETURN"))
+    private long injectOverrideTime(long original) {
+        return ModuleCustomAmbience.getTime(original);
     }
-
 }

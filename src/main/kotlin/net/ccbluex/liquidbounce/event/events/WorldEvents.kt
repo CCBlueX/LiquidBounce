@@ -73,4 +73,4 @@ class EntityEquipmentChangeEvent(
 class FluidPushEvent : CancellableEvent()
 
 @Tag("worldEntityRemove")
-class WorldEntityRemoveEvent(val entity: Entity) : Event()
+class WorldEntityRemoveEvent(val entity: Entity, val reason: Entity.RemovalReason) : Event()

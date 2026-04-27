@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.world.item.Items
 
 /**

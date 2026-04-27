@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.world.entity.LivingEntity
 
 internal object NametagEquipment : ValueGroup("Equipment") {
@@ -46,7 +46,7 @@ internal object NametagEquipment : ValueGroup("Equipment") {
         private val fillColor by color("FillColor", Color4b.RED.alpha(100))
         private val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
 
-        context(guiGraphics: GuiGraphics)
+        context(guiGraphics: GuiGraphicsExtractor)
         fun draw(x: Float, y: Float) {
             guiGraphics.drawQuad(
                 x,

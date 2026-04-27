@@ -19,8 +19,9 @@
 package net.ccbluex.liquidbounce.api.services.client
 
 import com.vdurmont.semver4j.Semver
+import kotlinx.coroutines.async
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.core.AsyncLazy
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.time.OffsetDateTime
@@ -28,7 +29,7 @@ import java.time.format.DateTimeFormatter
 
 object ClientUpdate {
 
-    val update by AsyncLazy {
+    val update = ioScope.async {
         runCatching {
             val newestBuild = runCatching {
                 ClientApi.requestNewestBuildEndpoint(
@@ -37,7 +38,7 @@ object ClientUpdate {
                 )
             }.onFailure { exception ->
                 logger.error("Unable to receive update information", exception)
-            }.getOrNull() ?: return@AsyncLazy null
+            }.getOrNull() ?: return@async null
 
             val newestSemVersion = Semver(newestBuild.lbVersion, Semver.SemverType.LOOSE)
 

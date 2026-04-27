@@ -18,12 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.textures.GpuTexture
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.renderer.fog.FogData
+import net.minecraft.client.renderer.state.LightmapRenderState
 
 /**
  * CustomAmbience module
@@ -85,11 +89,52 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
 
     /**
      * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmap
-     *
-     * FIXME: redesign
      */
     object CustomLightmap : ToggleableValueGroup(this, "CustomLightmap", false) {
-        val color by color("Color", Color4b.LIQUID_BOUNCE)
+        val mode = choices("Mode", 0) {
+            arrayOf(EditorMode.SingleColor, )
+        }
+
+        sealed class EditorMode(name: String) : Mode(name) {
+            final override val parent: ModeValueGroup<*>
+                get() = mode
+
+            abstract fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean
+
+            object SingleColor : EditorMode("SingleColor") {
+                private val color by color("Color", Color4b.BLUE)
+
+                override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
+                    gpuDevice.createCommandEncoder().clearColorTexture(texture, color.argb)
+                    return true
+                }
+            }
+
+            object Custom : EditorMode("Custom") {
+                private val blockLightTint by color("BlockLightTint", Color4b.WHITE.alpha(0))
+                private val skyLightColor by color("SkyLightColor", Color4b.BLUE.alpha(0))
+                private val ambientColor by color("AmbientColor", Color4b.BLUE.alpha(0))
+                private val nightVisionColor by color("NightVisionColor", Color4b.WHITE.alpha(0))
+
+                override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
+                    if (!blockLightTint.isTransparent) {
+                        lightmapRenderState.blockLightTint = blockLightTint.toRgbVector3f()
+                    }
+                    if (!skyLightColor.isTransparent) {
+                        lightmapRenderState.skyLightColor = skyLightColor.toRgbVector3f()
+                    }
+                    if (!ambientColor.isTransparent) {
+                        lightmapRenderState.ambientColor = ambientColor.toRgbVector3f()
+                    }
+                    if (!nightVisionColor.isTransparent) {
+                        lightmapRenderState.nightVisionColor = nightVisionColor.toRgbVector3f()
+                    }
+
+                    return false
+                }
+            }
+
+        }
     }
 
     object SkyColor : ToggleableValueGroup(this, "SkyColor", false) {

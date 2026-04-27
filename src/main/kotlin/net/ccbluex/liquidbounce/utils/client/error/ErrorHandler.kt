@@ -212,8 +212,8 @@ class ErrorHandler private constructor(
                     message,
                     "yesno",
                     "error",
-                    true
-                )
+                    1,
+                ) == 1
             }
             else -> {
                 TinyFileDialogs.tinyfd_messageBox(
@@ -221,7 +221,7 @@ class ErrorHandler private constructor(
                     message,
                     "ok",
                     "error",
-                    true
+                    1,
                 )
 
                 false

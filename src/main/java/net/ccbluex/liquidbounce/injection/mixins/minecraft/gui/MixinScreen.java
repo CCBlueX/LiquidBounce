@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager;
 import net.ccbluex.liquidbounce.utils.text.RunnableClickEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -82,22 +82,22 @@ public abstract class MixinScreen implements ScreenAddition {
         ThemeManager.INSTANCE.loadBackgroundAsync();
     }
 
-    @Inject(method = "renderTransparentBackground", at = @At("HEAD"), cancellable = true)
-    private void hookRenderInGameBackground(GuiGraphics context, CallbackInfo ci) {
+    @Inject(method = "extractTransparentBackground", at = @At("HEAD"), cancellable = true)
+    private void hookRenderInGameBackground(GuiGraphicsExtractor context, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.GUI_BACKGROUND)) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "renderWithTooltipAndSubtitles", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractRenderStateWithTooltipAndSubtitles", at = @At("HEAD"), cancellable = true)
     private void cancelRenderByChestStealer(CallbackInfo ci) {
         if (LiquidBounce.INSTANCE.isInitialized() && FeatureSilentScreen.INSTANCE.getShouldHide()) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
-    private void renderBackgroundTexture(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    @Inject(method = "extractBackground", at = @At("HEAD"), cancellable = true)
+    private void renderBackgroundTexture(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (this.minecraft != null && this.minecraft.level == null && !HideAppearance.INSTANCE.isHidingNow()) {
             if (!LiquidBounce.INSTANCE.isInitialized()) {
                 return;

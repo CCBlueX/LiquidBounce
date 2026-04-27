@@ -23,7 +23,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
 import net.minecraft.client.renderer.SkyRenderer;
-import net.minecraft.client.renderer.state.SkyRenderState;
+import net.minecraft.client.renderer.state.level.SkyRenderState;
 import org.jspecify.annotations.NullMarked;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,7 +35,7 @@ public abstract class MixinSkyRenderer {
 
     @WrapOperation(
         method = "extractRenderState",
-        at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/SkyRenderState;skyColor:I", opcode = Opcodes.PUTFIELD)
+        at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/SkyRenderState;skyColor:I", opcode = Opcodes.PUTFIELD)
     )
     private void applyCustomSkyColor(SkyRenderState instance, int value, Operation<Void> original) {
         var customSkyColor = ModuleCustomAmbience.SkyColor.INSTANCE;

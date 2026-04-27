@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath

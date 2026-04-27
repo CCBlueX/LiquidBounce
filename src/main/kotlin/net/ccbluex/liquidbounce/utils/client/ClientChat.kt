@@ -30,6 +30,9 @@ import net.ccbluex.liquidbounce.interfaces.TextColorAddition
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.text.RunnableClickEvent
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asText
+import net.ccbluex.liquidbounce.utils.text.plus
 import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
@@ -162,8 +165,9 @@ fun MutableComponent.bypassNameProtection(): MutableComponent = withStyle {
  * Open a [ChatScreen] with given text,
  * or set the text of current [ChatScreen]
  */
-fun Minecraft.openChat(text: String, draft: Boolean = false) = schedule {
-    (screen as? MixinChatScreenAccessor)?.input?.setValue(text) ?: setScreen(ChatScreen(text, draft))
+fun Minecraft.openChat(text: String, draft: Boolean = false, closeOnSubmit: Boolean = true) = schedule {
+    (screen as? MixinChatScreenAccessor)?.input?.setValue(text)
+        ?: setScreen(ChatScreen(text, draft, closeOnSubmit))
 }
 
 private val defaultMessageMetadata = MessageMetadata()

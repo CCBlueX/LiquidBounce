@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.utils.io
 
 import java.io.IOException
 import java.io.RandomAccessFile
-import java.util.BitSet
 import javax.imageio.ImageIO
 import okio.Buffer
 import okio.BufferedSource

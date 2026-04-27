@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
@@ -67,6 +66,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -101,29 +101,18 @@ public abstract class MixinMinecraft {
     @Nullable
     public MultiPlayerGameMode gameMode;
 
-    @Inject(method = "useAmbientOcclusion()Z", at = @At("HEAD"), cancellable = true)
-    private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
-        ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning() || !module.getFullBright()) {
-            return;
-        }
-
-        callback.setReturnValue(false);
-        callback.cancel();
-    }
-
     @Shadow
     @Nullable
     public abstract ClientPacketListener getConnection();
 
     @Shadow
-    public abstract @org.jetbrains.annotations.Nullable ServerData getCurrentServer();
+    public abstract @Nullable ServerData getCurrentServer();
 
     @Shadow
     public abstract Window getWindow();
 
     @Shadow
-    public abstract void setScreen(@org.jetbrains.annotations.Nullable Screen screen);
+    public abstract void setScreen(@Nullable Screen screen);
 
     @Shadow
     public abstract int getFps();
@@ -132,33 +121,29 @@ public abstract class MixinMinecraft {
     public abstract User getUser();
 
     @Shadow
-    @org.jetbrains.annotations.Nullable
+    @Nullable
     public Screen screen;
 
     @Shadow
     protected abstract void continueAttack(boolean breaking);
 
     @Shadow
-    private @org.jetbrains.annotations.Nullable Overlay overlay;
+    private @Nullable Overlay overlay;
 
     @Shadow
-    @org.jetbrains.annotations.Nullable
+    @Nullable
     public ClientLevel level;
 
     /**
-     * Entry point of our hacked client
-     *
-     * @param callback not needed
+     * Entry point
      */
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;resizeDisplay()V"))
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;resizeGui()V"))
     private void startClient(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(ClientStartEvent.INSTANCE);
     }
 
     /**
-     * Exit point of our hacked client
-     *
-     * @param callback not needed
+     * Exit point
      */
     @Inject(method = "destroy", at = @At("HEAD"))
     private void stopClient(CallbackInfo callback) {
@@ -166,8 +151,8 @@ public abstract class MixinMinecraft {
     }
 
     @Inject(method = "<init>", at = @At(value = "FIELD",
-            target = "Lnet/minecraft/client/Minecraft;profileKeyPairManager:Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;",
-            ordinal = 0, shift = At.Shift.AFTER))
+        target = "Lnet/minecraft/client/Minecraft;profileKeyPairManager:Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;",
+        ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void onSessionInit(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(new SessionEvent(getUser()));
     }
@@ -350,14 +335,14 @@ public abstract class MixinMinecraft {
     /**
      * Hook item use cooldown
      */
-    @Inject(method = "startUseItem", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelay:I", shift = At.Shift.AFTER))
+    @Inject(method = "startUseItem", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelay:I", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void hookItemUseCooldown(CallbackInfo callbackInfo) {
         UseCooldownEvent useCooldownEvent = new UseCooldownEvent(rightClickDelay);
         EventManager.INSTANCE.callEvent(useCooldownEvent);
         rightClickDelay = useCooldownEvent.getCooldown();
     }
 
-    @Inject(method = "pickBlock", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "pickBlockOrEntity", at = @At("HEAD"), cancellable = true)
     private void hookItemPick(CallbackInfo ci) {
         if (ModuleMiddleClickAction.Pearl.INSTANCE.cancelPick()) {
             ci.cancel();
@@ -365,7 +350,7 @@ public abstract class MixinMinecraft {
     }
 
     @ModifyExpressionValue(method = "startAttack",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0))
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0, opcode = Opcodes.GETFIELD))
     private int injectNoMissCooldown(int original) {
         if (ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown()) {
             return 0;
@@ -397,7 +382,7 @@ public abstract class MixinMinecraft {
     }
 
     @WrapWithCondition(method = "startAttack", at = @At(value = "FIELD",
-            target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 1))
+        target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 1, opcode = Opcodes.PUTFIELD))
     private boolean disableAttackCooldown(Minecraft instance, int value) {
         return !(ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown());
     }
@@ -422,8 +407,8 @@ public abstract class MixinMinecraft {
         EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
     }
 
-    @Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I",
-            ordinal = 0, shift = At.Shift.AFTER))
+    @Inject(method = "renderFrame", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I",
+        ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTSTATIC))
     private void hookFpsChange(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new FpsChangeEvent(this.getFps()));
     }
@@ -446,8 +431,8 @@ public abstract class MixinMinecraft {
     /**
      * Alternative input handler of [handleInputEvents] while being inside a client-side screen.
      */
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 4, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
-    private void passthroughInputHandler(CallbackInfo ci, @Local ProfilerFiller profiler) {
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 4, shift = At.Shift.BEFORE, opcode = Opcodes.GETFIELD), locals = LocalCapture.CAPTURE_FAILSOFT)
+    private void passthroughInputHandler(CallbackInfo ci, @Local(name = "profiler") ProfilerFiller profiler) {
         if (this.overlay == null && this.player != null && this.level
             != null && ScreenManager.isClientScreen(this.screen)) {
             profiler.popPush("Keybindings");
@@ -476,7 +461,7 @@ public abstract class MixinMinecraft {
         return false;
     }
 
-    @WrapWithCondition(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0))
+    @WrapWithCondition(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0, opcode = Opcodes.PUTFIELD))
     private boolean injectFixAttackCooldownOnVirtualBrowserScreen(Minecraft instance, int value) {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.

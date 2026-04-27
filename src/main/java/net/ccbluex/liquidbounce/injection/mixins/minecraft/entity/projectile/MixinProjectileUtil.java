@@ -37,7 +37,7 @@ public abstract class MixinProjectileUtil {
         method = "getHitEntitiesAlong(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/item/component/AttackRange;Ljava/util/function/Predicate;Lnet/minecraft/world/level/ClipContext$Block;)Lcom/mojang/datafixers/util/Either;",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/AttackRange;hitboxMargin()F")
     )
-    private static float applyHitboxMargin(float original, @Local(argsOnly = true) Entity entity) {
+    private static float applyHitboxMargin(float original, @Local(argsOnly = true, name = "attacker") Entity entity) {
         if (entity == Minecraft.getInstance().player && ModuleHitbox.INSTANCE.getRunning() && ModuleHitbox.INSTANCE.getApplyToComponent()) {
             return ModuleHitbox.INSTANCE.getSize() + original;
         }

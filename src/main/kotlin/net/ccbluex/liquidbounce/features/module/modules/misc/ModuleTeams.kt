@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny

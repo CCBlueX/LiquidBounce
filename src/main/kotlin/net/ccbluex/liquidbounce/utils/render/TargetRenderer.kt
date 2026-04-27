@@ -44,9 +44,9 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.AnimatedValueGroup
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
-import net.ccbluex.liquidbounce.utils.client.plus
+import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -54,7 +54,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
@@ -137,7 +137,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val interpolated = entity.lastRenderPos().lerp(entity.position(), partialTicks.toDouble())
                     .add(0.2, 1.25, 0.0)
 
-                poseStack.translate(interpolated - mc.gameRenderer.mainCamera.position())
+                poseStack.translate(interpolated - camera.position())
 
                 drawParticle(
                     { sin, cos -> Vec3(sin, cos, -cos) },
@@ -361,7 +361,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
     }
 
-    sealed class Gui(name: String) : TargetRenderAppearance<GuiGraphics>(name) {
+    sealed class Gui(name: String) : TargetRenderAppearance<GuiGraphicsExtractor>(name) {
 
         class Text(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) : Gui("Text2D") {
 
@@ -383,7 +383,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
             private val fontRenderer get() = FontManager.FONT_RENDERER
 
-            override fun GuiGraphics.render(entity: Entity, partialTicks: Float) {
+            override fun GuiGraphicsExtractor.render(entity: Entity, partialTicks: Float) {
                 val height = heightMode.activeMode.getHeight(entity, partialTicks)
                 val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
                 val screenPos = calculateScreenPos(pos) ?: return
@@ -407,7 +407,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
             private val size by float("Size", 1.5f, 0.5f..20f)
 
-            override fun GuiGraphics.render(entity: Entity, partialTicks: Float) {
+            override fun GuiGraphicsExtractor.render(entity: Entity, partialTicks: Float) {
                 val pos = entity.interpolateCurrentPosition(partialTicks)
                     .add(0.0, entity.bbHeight.toDouble(), 0.0)
 

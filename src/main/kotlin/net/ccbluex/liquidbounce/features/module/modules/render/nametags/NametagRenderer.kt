@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.world.entity.LivingEntity
 
 private const val NAMETAG_PADDING: Int = 15
@@ -35,7 +35,7 @@ private const val BACKGROUND_Y_OFFSET_TOP = -0.1f
 private const val BACKGROUND_Y_OFFSET_BOTTOM = 1.1f
 private const val BACKGROUND_X_PADDING = 0.2f * FONT_SIZE
 
-internal fun GuiGraphics.drawNametag(nametag: NametagRenderState, posX: Float, posY: Float) {
+internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX: Float, posY: Float) {
     val entity = nametag.entity ?: return
     if (nametag.equipments.itemStacks.any { !it.isEmpty }) {
         drawItemStackList(nametag.equipments.itemStacks)

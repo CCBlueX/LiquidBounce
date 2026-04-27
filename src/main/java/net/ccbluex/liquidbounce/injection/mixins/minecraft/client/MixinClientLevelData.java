@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(ClientLevel.ClientLevelData.class)
 public abstract class MixinClientLevelData {
 
-    @ModifyReturnValue(method = {"getGameTime", "getDayTime"}, at = @At("RETURN"))
+    @ModifyReturnValue(method = "getGameTime", at = @At("RETURN"))
     private long injectOverrideTime(long original) {
         return ModuleCustomAmbience.getTime(original);
     }

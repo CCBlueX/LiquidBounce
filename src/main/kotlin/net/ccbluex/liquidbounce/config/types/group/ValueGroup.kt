@@ -50,7 +50,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.asTagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputBind

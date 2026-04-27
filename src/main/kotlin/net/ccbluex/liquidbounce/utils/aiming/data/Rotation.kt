@@ -151,4 +151,8 @@ data class Rotation @JvmOverloads constructor(
         return angleTo(other) <= tolerance
     }
 
+    fun add(x: Float, y: Float): Rotation {
+        return Rotation(yaw = this.yRot + y, pitch = this.xRot + x)
+    }
+
 }

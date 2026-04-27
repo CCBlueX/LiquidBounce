@@ -43,13 +43,14 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializ
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionCalculator
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import kotlin.math.ceil
 import kotlin.math.min
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * AutoShop module
@@ -163,11 +164,11 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         }
 
         val prevShopStacks = (mc.screen as ContainerScreen).stacks()
-        interaction.handleInventoryMouseClick(
+        interaction.handleContainerInput(
             (mc.screen as ContainerScreen).menu.containerId,
             nextCategorySlot,
             0,
-            ClickType.PICKUP,
+            NormalPurchaseMode.action.input,
             mc.player!!
         )
 
@@ -183,11 +184,11 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     private suspend fun buyItem(itemSlot: Int, shopElement: ShopElement) {
         val currentInventory = AutoShopInventoryManager.getInventoryItems()
 
-        interaction.handleInventoryMouseClick(
+        interaction.handleContainerInput(
             (mc.screen as ContainerScreen).menu.containerId,
             itemSlot,
             0,
-            ClickType.PICKUP,
+            NormalPurchaseMode.action.input,
             mc.player!!
         )
 
@@ -228,13 +229,13 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
                 return@forEachInt // it looks as if it doesn't require to switch an item category anymore
             }
 
-            delay(QuickPurchaseMode.delay.random().toLong())
+            delay(QuickPurchaseMode.delayMs.random().milliseconds)
 
-            interaction.handleInventoryMouseClick(
+            interaction.handleContainerInput(
                 (mc.screen as ContainerScreen).menu.containerId,
                 slot,
                 0,
-                ClickType.PICKUP,
+                ContainerInput.PICKUP,
                 mc.player!!
             )
 

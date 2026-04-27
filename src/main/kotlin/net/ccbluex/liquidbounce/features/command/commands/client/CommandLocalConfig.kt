@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.features.command.builder.boolean
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.highlight
@@ -44,9 +44,9 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
-import net.ccbluex.liquidbounce.utils.client.plus
+import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.textOf
+import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.text.AsyncLoadingText

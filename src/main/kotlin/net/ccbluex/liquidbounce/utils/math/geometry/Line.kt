@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 data class Line(

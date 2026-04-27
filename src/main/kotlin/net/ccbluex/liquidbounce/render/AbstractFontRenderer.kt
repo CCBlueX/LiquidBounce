@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.minecraft.client.gui.GuiGraphics
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 
 abstract class AbstractFontRenderer<T : ProcessedText> {
@@ -39,21 +39,21 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
     abstract val height: Float
 
     /**
-     * Draws a string with minecraft font markup on GUI with [GuiGraphics].
+     * Draws a string with minecraft font markup on GUI with [GuiGraphicsExtractor].
      *
      * @return The unscaled width of [text]
      */
-    context(ctx: GuiGraphics)
+    context(ctx: GuiGraphicsExtractor)
     abstract fun draw(text: T, parameters: DrawParameters): Float
 
-    context(ctx: GuiGraphics)
+    context(ctx: GuiGraphicsExtractor)
     inline fun draw(text: T, parameters: DrawParameters.() -> Unit = {}): Float {
         DrawParameters.reset2D()
         parameters(DrawParameters)
         return draw(text, DrawParameters)
     }
 
-    context(ctx: GuiGraphics)
+    context(ctx: GuiGraphicsExtractor)
     inline fun draw(text: Component, parameters: DrawParameters.() -> Unit = {}): Float =
         draw(process(text), parameters)
 

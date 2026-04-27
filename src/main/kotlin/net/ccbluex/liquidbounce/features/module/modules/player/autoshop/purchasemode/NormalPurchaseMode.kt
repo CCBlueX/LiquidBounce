@@ -20,11 +20,19 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchas
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
+import net.minecraft.world.inventory.ContainerInput
 
 object NormalPurchaseMode : Mode("Normal") {
     override val parent: ModeValueGroup<*>
         get() = ModuleAutoShop.purchaseMode
 
     val extraDelay by intRange("ExtraDelay", 2..3, 0..10, "ticks")
+    val action by enumChoice("Action", ActionType.PICK_UP)
+
+    enum class ActionType(override val tag: String, val input: ContainerInput): Tagged {
+        PICK_UP("PickUp", ContainerInput.PICKUP),
+        THROW("Throw", ContainerInput.THROW),
+    }
 }

@@ -23,7 +23,6 @@ import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.kotlin.getValue
 import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox

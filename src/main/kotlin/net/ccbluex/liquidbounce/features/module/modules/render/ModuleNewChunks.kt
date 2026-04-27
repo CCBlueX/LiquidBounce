@@ -34,6 +34,7 @@ import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.ChunkPos.containing
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
@@ -88,7 +89,7 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
                 packet.runUpdates { bp, state ->
                     val fluid = state.fluidState
                     if (!fluid.isEmpty && !fluid.isSource) {
-                        chunks[ChunkPos(bp)] = true
+                        chunks[containing(bp)] = true
                     }
                 }
             }
@@ -96,7 +97,7 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
             is ClientboundBlockUpdatePacket -> {
                 val fluid = packet.blockState.fluidState
                 if (!fluid.isEmpty && !fluid.isSource) {
-                    chunks[ChunkPos(packet.pos)] = true
+                    chunks[containing(packet.pos)] = true
                 }
             }
         }

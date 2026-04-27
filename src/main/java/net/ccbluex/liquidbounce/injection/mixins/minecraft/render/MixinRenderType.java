@@ -38,7 +38,7 @@ public abstract class MixinRenderType {
 
     @SuppressWarnings("rawtypes")
     @Inject(method = "draw", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;close()V"))
-    private void recycleHashMap(MeshData meshData, CallbackInfo ci, @Local(ordinal = 0) Map textures) {
+    private void recycleHashMap(MeshData mesh, CallbackInfo ci, @Local(name = "textures") Map textures) {
         if (textures instanceof HashMap hashMap) {
             GenericPools.HASH_MAP.recycle(hashMap);
         }
