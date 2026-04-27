@@ -91,7 +91,7 @@
   "liquidbounce.command.give.parameter.amount.description": "An optionyaw amwount of teh item",
   "liquidbounce.command.give.result.mustBeCreative": "U nyeed two be in cweatiwe mwode >w<",
   "liquidbounce.command.give.result.noEmptySlot": "Thewe awe nywo empty swots in ywouw inwentwowwy (* ^ ω ^)",
-  "liquidbounce.command.give.result.itemGiven": "Gawe u %s * %d ヽ(*・ω・)ﾉ",
+  "liquidbounce.command.give.result.itemGiven": "Gawe u %s * %s ヽ(*・ω・)ﾉ",
   "liquidbounce.command.rename.description": "Awwows u two wenyamwe items",
   "liquidbounce.command.rename.parameter.name.description": "A custwom nyamwe fwow teh item",
   "liquidbounce.command.rename.result.mustBeCreative": "U nyeed two be in cweatiwe mwode (* ^ ω ^)",

@@ -100,7 +100,7 @@
   "liquidbounce.command.give.description": "給自己一個物品。",
   "liquidbounce.command.give.parameter.amount.description": "數量(可選)。",
   "liquidbounce.command.give.parameter.item.description": "物品名字。",
-  "liquidbounce.command.give.result.itemGiven": "已獲得 %s * %d。",
+  "liquidbounce.command.give.result.itemGiven": "已獲得 %s * %s。",
   "liquidbounce.command.give.result.mustBeCreative": "需要創造模式！",
   "liquidbounce.command.give.result.noEmptySlot": "背包已滿。",
   "liquidbounce.command.help.description": "列出所有可用命令。",

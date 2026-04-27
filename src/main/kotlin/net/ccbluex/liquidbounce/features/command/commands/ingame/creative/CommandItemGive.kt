@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.item.createItem
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.world.item.ItemStack
@@ -73,8 +74,8 @@ object CommandItemGive : Command.Factory {
                     regular(
                         command.result(
                             "itemGiven",
-                            variable(itemStack.displayName.string),
-                            variable(giveAmount.toString())
+                            itemStack.displayName,
+                            variable(itemStack.count.toString())
                         )
                     )
                 )
