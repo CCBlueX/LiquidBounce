@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -83,6 +84,7 @@ object CommandItemGive : Command.Factory {
     }
 
     fun LocalPlayer.giveItem(item: ItemStack, amount: Int): Int {
+        item.popTime = 5
         var remaining = amount
 
         while (remaining > 0) {
