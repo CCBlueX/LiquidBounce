@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -34,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.world.item.ItemStack
+import kotlin.math.min
 
 /**
  * ItemGive Command
@@ -88,19 +88,32 @@ object CommandItemGive : Command.Factory {
         var remaining = amount
 
         while (remaining > 0) {
-            val emptySlot = inventory.freeSlot
-            if (emptySlot == -1) break
+            val slot = player.inventory.getSlotWithRemainingSpace(item).takeUnless { it == -1 }
+                ?: player.inventory.freeSlot.takeUnless { it == -1 }
+                ?: break
 
-            val size = minOf(item.maxStackSize, remaining)
-            remaining -= size
-            val fillItemStack = item.copyWithCount(size)
+            val selectItemStack = player.inventory.getItem(slot)
+                .takeUnless { it.isEmpty }
+                ?: item.copyWithCount(0).also {  player.inventory.setItem(slot, it) }
 
-            inventory.setItem(emptySlot, fillItemStack)
-            val packetSlot = if (emptySlot < 9) emptySlot + 36 else emptySlot
-            connection.send(ServerboundSetCreativeModeSlotPacket(packetSlot, fillItemStack))
+            val maxToAdd = player.inventory.getMaxStackSize(selectItemStack) - selectItemStack.count
+            val toAdd = min(maxToAdd, remaining)
+
+            if (toAdd > 0) {
+                remaining -= toAdd
+                selectItemStack.grow(toAdd)
+                selectItemStack.popTime = 5
+            }
+
+            val packetSlot = if (slot < 9) slot + 36 else slot
+            connection.send(ServerboundSetCreativeModeSlotPacket(packetSlot, selectItemStack))
         }
 
         return amount - remaining
+    }
+
+    fun LocalPlayer.checkPremium() {
+
     }
 
 }
