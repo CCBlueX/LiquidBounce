@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAspect;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -32,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.Camera;
+import net.minecraft.client.CameraType;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -217,6 +220,16 @@ public abstract class MixinCamera {
         if (ModuleAspect.INSTANCE.getRunning()) {
             args.set(1, (float) args.get(1) / ModuleAspect.getRatioMultiplier());
         }
+    }
+
+    @ModifyExpressionValue(method = "alignWithEntity",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/Options;getCameraType()Lnet/minecraft/client/CameraType;"
+        )
+    )
+    private CameraType hookPerspectiveEventOnCamera(CameraType original) {
+        return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
     }
 
 }
