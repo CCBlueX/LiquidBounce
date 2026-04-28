@@ -62,11 +62,7 @@ object CommandItemGive : Command.Factory {
                 val item = args[0] as String
                 val amount = args.getOrElse(1, defaultValue = { 1 }) as Int // default one
 
-                val itemStack = world.createItem(item)
-                if (!network.isFeatureEnabled(itemStack.item.requiredFeatures())) {
-                    throw CommandException(command.result("mustBeCreative"))
-                }
-
+                val itemStack = world.createItem(item.replace("minecraft:", ""))
                 val giveAmount = player.giveItem(itemStack, amount)
                 if (giveAmount == 0) throw CommandException(command.result("noEmptySlot"))
 
@@ -110,10 +106,6 @@ object CommandItemGive : Command.Factory {
         }
 
         return amount - remaining
-    }
-
-    fun LocalPlayer.checkPremium() {
-
     }
 
 }
