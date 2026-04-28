@@ -39,7 +39,6 @@ import com.mojang.blaze3d.textures.TextureFormat
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.blaze3d.vertex.Tesselator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -65,9 +64,6 @@ fun PoseStack.reset() {
     while (!isEmpty) popPose()
     setIdentity()
 }
-
-inline fun Tesselator.begin(pipeline: RenderPipeline): BufferBuilder =
-    begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
 
 inline fun ByteBufferBuilder.begin(pipeline: RenderPipeline): BufferBuilder =
     BufferBuilder(this, pipeline.vertexFormatMode, pipeline.vertexFormat)

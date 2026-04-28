@@ -89,7 +89,13 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         final override val parent get() = modes
 
         protected var useColor = false
-        val dirtyFlag = atomic(true)
+        protected val dirtyFlag = atomic(true)
+
+        fun markDirty() {
+            if (this.running) {
+                dirtyFlag.value = true
+            }
+        }
 
         final override fun enable() {
             dirtyFlag.value = true
@@ -274,7 +280,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     private fun markDirtyForModes() {
-        modes.modes.forEach { it.dirtyFlag.value = true }
+        modes.modes.forEach { it.markDirty() }
     }
 
     private inline fun forEachTrackedBlocks(

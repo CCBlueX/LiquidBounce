@@ -148,10 +148,16 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        val dirtyFlag = atomic(true)
+        private val dirtyFlag = atomic(true)
 
         private val blockFacesRenderState = StaticMeshStorage("${ModuleStorageESP.name} $name BlockFaces")
         private val blockOutlinesRenderState = StaticMeshStorage("${ModuleStorageESP.name} $name BlockOutlines")
+
+        fun markDirty() {
+            if (this.running) {
+                dirtyFlag.value = true
+            }
+        }
 
         override fun enable() {
             dirtyFlag.value = true
@@ -276,9 +282,15 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     }
 
     object GlowMode : Mode("Glow") {
-        internal val dirtyFlag = atomic(true)
+        private val dirtyFlag = atomic(true)
 
         private val renderState = StaticMeshStorage("${ModuleStorageESP.name} $name")
+
+        internal fun markDirty() {
+            if (this.running) {
+                dirtyFlag.value = true
+            }
+        }
 
         override fun enable() {
             dirtyFlag.value = true
@@ -412,13 +424,15 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     private object StorageScanner : AbstractBlockLocationTracker.State2BlockPos<ChestType>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): ChestType? {
+            if (!state.hasBlockEntity()) return null
+
             val chunk = mc.level?.getChunk(pos) ?: return null
             return chunk.getBlockEntity(pos)?.categorize()
         }
 
         override fun onUpdated() {
-            GlowMode.dirtyFlag.value = true
-            BoxMode.dirtyFlag.value = true
+            GlowMode.markDirty()
+            BoxMode.markDirty()
         }
     }
 
