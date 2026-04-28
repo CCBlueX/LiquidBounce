@@ -28,7 +28,6 @@ import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.blaze3d.vertex.Tesselator
 import com.mojang.blaze3d.vertex.VertexConsumer
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
@@ -235,7 +234,7 @@ class WorldRenderEnvironment internal constructor(
             return batchCollector.start(key)
         }
 
-        val immediateBuilder = Tesselator.getInstance().begin(pipeline)
+        val immediateBuilder = ClientTesselator.Shared.begin(pipeline)
         val pending = pendingImmediateDraws ?: immediateDrawMapPool.borrow().also {
             pendingImmediateDraws = it
         }
