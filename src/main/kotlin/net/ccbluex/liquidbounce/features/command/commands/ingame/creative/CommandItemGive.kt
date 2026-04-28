@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.item
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -62,7 +61,7 @@ object CommandItemGive : Command.Factory {
                 val item = args[0] as String
                 val amount = args.getOrElse(1, defaultValue = { 1 }) as Int // default one
 
-                val itemStack = world.createItem(item.replace("minecraft:", ""))
+                val itemStack = world.createItem(item)
                 val giveAmount = player.giveItem(itemStack, amount)
                 if (giveAmount == 0) throw CommandException(command.result("noEmptySlot"))
 
@@ -80,7 +79,6 @@ object CommandItemGive : Command.Factory {
     }
 
     fun LocalPlayer.giveItem(item: ItemStack, amount: Int): Int {
-        item.popTime = 5
         var remaining = amount
 
         while (remaining > 0) {
