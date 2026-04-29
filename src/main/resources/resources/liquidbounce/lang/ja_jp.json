@@ -84,7 +84,7 @@
 	"liquidbounce.command.give.description": "自分にアイテムを与えます。",
 	"liquidbounce.command.give.parameter.amount.description": "任意の量。",
 	"liquidbounce.command.give.parameter.item.description": "アイテムの名前。",
-	"liquidbounce.command.give.result.itemGiven": "あなたに %s を %d 個与えました。",
+	"liquidbounce.command.give.result.itemGiven": "あなたに %s を %s 個与えました。",
 	"liquidbounce.command.give.result.mustBeCreative": "クリエイティブ モードが必要です!",
 	"liquidbounce.command.give.result.noEmptySlot": "インベントリに空のスロットはありません。",
 	"liquidbounce.command.help.description": "利用可能なすべてのコマンドを一覧表示します。",

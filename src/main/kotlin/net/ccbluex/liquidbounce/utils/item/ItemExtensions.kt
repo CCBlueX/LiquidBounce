@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.commands.arguments.item.ItemInput
 import net.minecraft.commands.arguments.item.ItemParser
 import net.minecraft.core.BlockPos
@@ -87,6 +88,15 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
+
+/**
+ * Create item with NBT tags
+ *
+ * @docs https://minecraft.gamepedia.com/Commands/give
+ */
+fun ClientLevel.createItem(raw: String) = ItemParser(registryAccess())
+    .parse(StringReader(raw))
+    .createItemStack(1)
 
 /**
  * Create item with NBT tags

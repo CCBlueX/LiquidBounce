@@ -149,7 +149,7 @@
   "liquidbounce.command.give.parameter.amount.description": "Необов'язкова кількість.",
   "liquidbounce.command.give.result.mustBeCreative": "Вимагається творчий режим!",
   "liquidbounce.command.give.result.noEmptySlot": "Немає пустих слотів в інвентарі.",
-  "liquidbounce.command.give.result.itemGiven": "Видано %s * %d.",
+  "liquidbounce.command.give.result.itemGiven": "Видано %s * %s.",
   "liquidbounce.command.rename.description": "Перейменовує вибраний предмет.",
   "liquidbounce.command.rename.parameter.name.description": "Нове ім'я для предмета.",
   "liquidbounce.command.rename.result.mustBeCreative": "Вимагається творчий режим!",
