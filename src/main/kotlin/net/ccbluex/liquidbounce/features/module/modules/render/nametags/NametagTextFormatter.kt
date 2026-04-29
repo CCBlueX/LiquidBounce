@@ -40,6 +40,7 @@ import net.minecraft.network.chat.TextColor
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.level.GameType
 import java.util.function.Function
 import kotlin.math.roundToInt
 
@@ -127,6 +128,33 @@ internal object NametagTextFormatter : ValueGroup("Text") {
                 }
 
                 return "$actualHealth HP".asPlainText(healthColor)
+            }
+        },
+
+        GAMEMODE("Gamemode") {
+            private val leftBracket = "[".asPlainText(ChatFormatting.GRAY)
+            private val rightBracket = "]".asPlainText(ChatFormatting.GRAY)
+
+            override fun apply(t: Entity): Component? {
+                val entity = t as? Player ?: return null
+
+                val playerGamemode = entity.gameMode() ?: return null
+
+                val gamemodeColor = when(playerGamemode) {
+                    GameType.SURVIVAL -> ChatFormatting.GREEN
+                    GameType.CREATIVE -> ChatFormatting.RED
+                    GameType.ADVENTURE -> ChatFormatting.YELLOW
+                    GameType.SPECTATOR -> ChatFormatting.GRAY
+                    else -> ChatFormatting.RED
+                }
+
+                val gamemodeText = playerGamemode.toString().first()
+
+                return textOf(
+                    leftBracket,
+                    "${gamemodeText}".asPlainText(gamemodeColor),
+                    rightBracket,
+                )
             }
         },
 
