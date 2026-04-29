@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -45,6 +46,8 @@ import java.util.UUID
  */
 object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
 
+    private val enableSendInChat by boolean("SendInChat", default = true)
+
     @JvmRecord
     private data class LoggedOffPlayer(
         val time: Instant,
@@ -56,7 +59,9 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
     @Suppress("unused")
     private val entityRemoveHandler = handler<WorldEntityRemoveEvent> { event ->
         val entity = event.entity
-        if (entity !is Player || isLogoffEntity(entity.id)) {
+        if (entity !is Player
+            || isLogoffEntity(entity.id)
+            || ModuleBlink.isDummyPlayer(entity.id)) {
             return@handler
         }
 
@@ -72,7 +77,9 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
         lastSeenPlayers[entity.uuid] = LoggedOffPlayer(Instant.now(), clone)
 
         val blockPos = entity.blockPosition()
-        chat(regular(message("disappeared", entity.scoreboardName, blockPos.x, blockPos.y, blockPos.z)))
+        if (enableSendInChat) {
+            chat(regular(message("disappeared", entity.scoreboardName, blockPos.x, blockPos.y, blockPos.z)))
+        }
     }
 
     @Suppress("unused")
@@ -82,11 +89,11 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
             val blockPos = playerEntity.blockPosition()
 
             if (!world.isLoaded(blockPos)) {
-                chat(regular(message("unloaded", playerEntity.scoreboardName)))
+                if (enableSendInChat) chat(regular(message("unloaded", playerEntity.scoreboardName)))
                 world.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
                 true
             } else if (world.getPlayerByUUID(id) != null) {
-                chat(regular(message("reappeared", playerEntity.scoreboardName)))
+                if (enableSendInChat) chat(regular(message("reappeared", playerEntity.scoreboardName)))
                 world.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_WITH_PLAYER)
                 true
             } else {
