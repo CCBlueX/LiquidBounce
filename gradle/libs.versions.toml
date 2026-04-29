@@ -37,7 +37,7 @@ sodium = "mc26.1.1-0.8.9-fabric"
 lithium = "mc26.1.2-0.24.1-fabric"
 viafabricplus = "4.5.2"
 # Mods for compatibility test (runtime only)
-immediatelyFast = "1.15.2+26.1.2-fabric"
+immediatelyFast = "1.15.2+"
 iris = "1.10.9+26.1-fabric"
 
 # Kotlin
