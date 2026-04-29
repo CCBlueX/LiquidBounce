@@ -47,6 +47,9 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val leaveMessages by boolean("LeaveMessages", true)
     private val leaveMessageFormat by text("LeaveMessageFormat", "%s left")
 
+    private val gamemodeMessages by boolean("GamemodeMessages", false)
+    private val gamemodeMessageFormat by text("GamemodeMessageFormat", "%s changed their gamemode to %s")
+
     private val useNotification by boolean("UseNotification", false)
 
     private val uuidNameCache = hashMapOf<UUID, String>()
@@ -65,19 +68,40 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
         val packet = event.packet
 
         if (packet is ClientboundPlayerInfoUpdatePacket) {
-            for (entry in packet.newEntries()) {
-                val profile = entry.profile ?: continue
+            for (action in packet.actions()) {
+                for (entry in packet.entries()) {
+                    when (action) {
+                        ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER -> {
+                            val profile = entry.profile ?: continue
 
-                if (profile.name != null && profile.name.length > 2) {
-                    uuidNameCache[profile.id] = profile.name
-                    if (joinMessages) {
-                        val message = joinMessageFormat.format(profile.name)
+                            if (profile.name != null && profile.name.length > 2) {
+                                uuidNameCache[profile.id] = profile.name
+                                if (joinMessages) {
+                                    val message = joinMessageFormat.format(profile.name)
 
-                        if (useNotification) {
-                            notification("Notifier", message, NotificationEvent.Severity.INFO)
-                        } else {
-                            chat(regular(message))
+                                    if (useNotification) {
+                                        notification("Notifier", message, NotificationEvent.Severity.INFO)
+                                    } else {
+                                        chat(regular(message))
+                                    }
+                                }
+                            }
                         }
+                        ClientboundPlayerInfoUpdatePacket.Action.UPDATE_GAME_MODE -> {
+                            var profileName = uuidNameCache[entry.profileId] ?: continue
+                            val gameMode = entry.gameMode
+
+                            if (gamemodeMessages) {
+                                val message = gamemodeMessageFormat.format(profileName, gameMode)
+
+                                if (useNotification) {
+                                    notification("Notifier", message, NotificationEvent.Severity.INFO)
+                                } else {
+                                    chat(regular(message))
+                                }
+                            }
+                        }
+                        else -> {}
                     }
                 }
             }
