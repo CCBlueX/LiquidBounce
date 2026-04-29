@@ -177,4 +177,8 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
         RESET("Reset"),
         BLINK("Blink");
     }
+
+    fun isDummyPlayer(entityId: Int): Boolean {
+        return entityId == dummyPlayer?.id
+    }
 }

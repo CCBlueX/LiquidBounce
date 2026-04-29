@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -58,7 +59,9 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
     @Suppress("unused")
     private val entityRemoveHandler = handler<WorldEntityRemoveEvent> { event ->
         val entity = event.entity
-        if (entity !is Player || isLogoffEntity(entity.id)) {
+        if (entity !is Player
+            || isLogoffEntity(entity.id)
+            || ModuleBlink.isDummyPlayer(entity.id)) {
             return@handler
         }
 
