@@ -46,6 +46,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import it.unimi.dsi.fastutil.objects.ObjectList;
+
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -183,14 +186,21 @@ public abstract class MixinPlayerTabOverlay {
 
     @ModifyReturnValue(method = "getNameForDisplay", at = @At("RETURN"))
     private Component modifyPlayerName(Component original, PlayerInfo entry) {
-        if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().name())) {
-            return TextList.of(
-                original,
-                PlainText.of(" - (Staff)", TextColor.fromRgb(CommonColors.SOFT_RED))
-            );
+        var components = new ArrayList<Component>(List.of(original));
+
+        var showGameMode = ModuleBetterTab.ShowGameMode.INSTANCE;
+        if (ModuleBetterTab.INSTANCE.getRunning() && showGameMode.getRunning()) {
+            var playerGamemode = entry.getGameMode();
+            var gamemodeText = PlainText.of(" [" + playerGamemode.toString().charAt(0) + "]");
+            components.add(gamemodeText);
         }
 
-        return original;
+        if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().name())) {
+            var staffText = PlainText.of(" - (Staff)", TextColor.fromRgb(CommonColors.SOFT_RED));
+            components.add(staffText);
+        }
+
+        return TextList.of(components);
     }
 
 }
