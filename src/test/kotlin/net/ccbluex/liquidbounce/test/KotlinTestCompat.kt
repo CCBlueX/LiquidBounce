@@ -40,7 +40,7 @@ fun <T : Any> assertNotNull(actual: T?, message: String? = null): T {
 }
 
 @OptIn(ExperimentalContracts::class)
-inline fun <reified T> assertIs(actual: Any?, message: String? = null): T {
+inline fun <reified T : Any> assertIs(actual: Any?, message: String? = null): T {
     contract {
         returns() implies (actual is T)
     }
