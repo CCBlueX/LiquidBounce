@@ -225,13 +225,6 @@ public abstract class MixinLivingEntity extends MixinEntity {
         return new Vec3(-Mth.sin(yaw) * 0.2F, 0.0, Mth.cos(yaw) * 0.2F);
     }
 
-    @Inject(method = "push", at = @At("HEAD"), cancellable = true)
-    private void hookNoPush(CallbackInfo callbackInfo) {
-        if (!ModuleNoPush.canPush(NoPushBy.ENTITIES)) {
-            callbackInfo.cancel();
-        }
-    }
-
     @Inject(method = "aiStep", at = @At("HEAD"))
     private void hookTickMovement(CallbackInfo callbackInfo) {
         // We don't want NoJumpDelay to interfere with AirJump which would lead to a Jetpack-like behavior
