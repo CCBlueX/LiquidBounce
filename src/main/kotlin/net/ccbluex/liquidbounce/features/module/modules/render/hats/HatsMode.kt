@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
+import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -29,17 +31,17 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EquipmentSlot
 import org.joml.Quaternionf
-import org.joml.Vector2f
-import org.joml.Vector3f
-import kotlin.math.cos
-import kotlin.math.sin
 
 private val ROTATION = Quaternionf()
 
@@ -74,33 +76,33 @@ abstract class HatsMode(name: String) : Mode(name) {
     protected abstract fun WorldRenderEnvironment.drawHat(isHurt: Boolean)
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         val player = mc.player ?: return@handler
 
-        for (entity in world.players()) {
-            val isMe = entity == player
-            val isFriend = FriendManager.isFriend(entity)
-            val inDistance = player.distanceTo(entity) <= friendsOptions.distance
+        renderEnvironmentForWorld(event.matrixStack) {
+            for (entity in world.players()) {
+                val isMe = entity == player
+                val isFriend = FriendManager.isFriend(entity)
+                val inDistance = player.distanceTo(entity) <= friendsOptions.distance
 
-            val shouldRender = if (isMe) {
-                !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
-            } else {
-                inDistance && (isFriend && friendsOptions.friendView)
-            }
-
-            if (shouldRender) {
-                val hurtMarked = entity.hurtTime > 0 && hurtMarked
-                val pos = entity.interpolateCurrentPosition(it.partialTicks)
-                val rotation = entity.interpolateCurrentRotation(it.partialTicks)
-
-                val height = ModuleHats.HeightOffset.current()
-                val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
-                    equipOffset.equipmentOffset
+                val shouldRender = if (isMe) {
+                    !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
                 } else {
-                    0.0F
+                    inDistance && isFriend && friendsOptions.friendView
                 }
 
-                renderEnvironmentForWorld(it.matrixStack) {
+                if (shouldRender) {
+                    val hurtMarked = entity.hurtTime > 0 && hurtMarked
+                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                    val rotation = entity.interpolateCurrentRotation(event.partialTicks)
+
+                    val height = ModuleHats.HeightOffset.current()
+                    val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
+                        equipOffset.equipmentOffset
+                    } else {
+                        0.0F
+                    }
+
                     withPositionRelativeToCamera(pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)) {
                         poseStack.withPush {
                             if (followRotation) mulPose(rotation.toQuaternion(ROTATION))
@@ -113,99 +115,66 @@ abstract class HatsMode(name: String) : Mode(name) {
         }
     }
 
-    protected fun innerI(
+    protected fun VertexConsumer.addTorusQuad(
+        pose: PoseStack.Pose,
         innerSegments: Int,
-        angles: Angles,
-        radiuses: Radiuses,
-        innerI: Int
-    ): TorusQuad {
+        outerCurAngle: Float,
+        outerNextAngle: Float,
+        outerCurRadius: Float,
+        outerNextRadius: Float,
+        innerRadius: Float,
+        innerI: Int,
+        color: Color4b,
+    ) {
         val innerCurAngle = getAngle(innerI, innerSegments)
         val innerNextAngle = getNextAngle(innerI, innerSegments)
 
-        val radii = Vector2f(radiuses.outerCurRadius, radiuses.outerNextRadius)
+        val curMainSin = outerCurAngle.fastSin()
+        val curMainCos = outerCurAngle.fastCos()
+        val nextMainSin = outerNextAngle.fastSin()
+        val nextMainCos = outerNextAngle.fastCos()
 
-        val angles = TorusAngles(
-            angles.outerCurAngle,
-            angles.outerNextAngle,
-            innerCurAngle,
-            innerNextAngle,
-            angles.rotationAngle,
-        )
-        val pos = getToroidalMeshCords(
-            angles,
-            radii,
-            radiuses.innerRadius,
-        )
-        return pos
+        val innerCurSin = innerCurAngle.fastSin()
+        val innerCurCos = innerCurAngle.fastCos()
+        val innerNextSin = innerNextAngle.fastSin()
+        val innerNextCos = innerNextAngle.fastCos()
+
+        val curTubeY = innerRadius * innerCurSin
+        val nextTubeY = innerRadius * innerNextSin
+        val curTubeOffset = innerRadius * innerCurCos
+        val nextTubeOffset = innerRadius * innerNextCos
+
+        val p1Radius = outerCurRadius + curTubeOffset
+        val p2Radius = outerCurRadius + nextTubeOffset
+        val p3Radius = outerNextRadius + curTubeOffset
+        val p4Radius = outerNextRadius + nextTubeOffset
+
+        val p1x = p1Radius * curMainSin
+        val p1z = p1Radius * curMainCos
+        val p2x = p2Radius * curMainSin
+        val p2z = p2Radius * curMainCos
+        val p3x = p3Radius * nextMainSin
+        val p3z = p3Radius * nextMainCos
+        val p4x = p4Radius * nextMainSin
+        val p4z = p4Radius * nextMainCos
+
+        addVertex(pose, p1x, curTubeY, p1z).setColor(color)
+        addVertex(pose, p2x, nextTubeY, p2z).setColor(color)
+        addVertex(pose, p3x, curTubeY, p3z).setColor(color)
+        addVertex(pose, p2x, nextTubeY, p2z).setColor(color)
+        addVertex(pose, p4x, nextTubeY, p4z).setColor(color)
+        addVertex(pose, p3x, curTubeY, p3z).setColor(color)
     }
 
-    private fun getTorusPoints(
-        mainAngle: Float,
-        tubeAngle: Float,
-        radius: Float,
-        tubeRadius: Float
-    ): Vector3f {
-        val x = ((radius + tubeRadius * cos(tubeAngle)) * sin(mainAngle))
-        val y = (tubeRadius * sin(tubeAngle))
-        val z = ((radius + tubeRadius * cos(tubeAngle)) * cos(mainAngle))
-
-        return Vector3f(x, y, z)
+    protected inline fun WorldRenderEnvironment.withHatRotation(
+        angle: Float,
+        block: WorldRenderEnvironment.() -> Unit,
+    ) {
+        poseStack.withPush {
+            if (!Mth.equal(angle, 0f)) mulPose(Quaternionf().rotationY(angle))
+            block()
+        }
     }
-
-    private fun getToroidalMeshCords(
-        angles: TorusAngles,
-        radii: Vector2f,
-        innerRadius: Float
-    ): TorusQuad {
-        val currentRadius = radii.x
-        val nextRadius = radii.y
-        return TorusQuad(
-            getTorusPoints(
-                angles.outerCurrentAngle + angles.rotationAngle,
-                angles.innerCurrentAngle, currentRadius, innerRadius
-            ),
-            getTorusPoints(
-                angles.outerCurrentAngle + angles.rotationAngle,
-                angles.innerNextAngle, currentRadius, innerRadius
-            ),
-            getTorusPoints(
-                angles.outerNextAngle + angles.rotationAngle,
-                angles.innerCurrentAngle, nextRadius, innerRadius
-            ),
-            getTorusPoints(
-                angles.outerNextAngle + angles.rotationAngle,
-                angles.innerNextAngle, nextRadius, innerRadius
-            ),
-        )
-    }
-
-    // --- Data Classes ---
-    protected data class TorusQuad(
-        val p1: Vector3f,
-        val p2: Vector3f,
-        val p3: Vector3f,
-        val p4: Vector3f,
-    )
-
-    protected data class TorusAngles(
-        val outerCurrentAngle: Float,
-        val outerNextAngle: Float,
-        val innerCurrentAngle: Float,
-        val innerNextAngle: Float,
-        val rotationAngle: Float,
-    )
-
-    protected data class Angles(
-        val outerCurAngle: Float,
-        val outerNextAngle: Float,
-        val rotationAngle: Float,
-    )
-
-    protected data class Radiuses(
-        val outerCurRadius: Float,
-        val outerNextRadius: Float,
-        val innerRadius: Float,
-    )
 
     // Math functions
 

@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.setColor
-import net.minecraft.util.Mth
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -53,12 +52,15 @@ internal object HatsCone : HatsMode("Cone") {
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
-        drawCustomMesh(ClientRenderPipelines.triangleStrip(noDepthTest = true)) { matrix ->
-            val segments = 600
-            for (i in 0..segments) {
-                val angle = (i.toFloat() / segments) * Mth.TWO_PI
+        drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+            val segments = 128
+            for (i in 0 until segments) {
+                val angle = getAngle(i, segments)
+                val nextAngle = getNextAngle(i, segments)
                 val cosine = cos(angle)
                 val sine = sin(angle)
+                val nextCosine = cos(nextAngle)
+                val nextSine = sin(nextAngle)
 
                 val color = if (!isHurt) colors.getCurrentStepColor(angle) else Color4b(255, 0, 0, colors.firstColor.a)
 
@@ -67,6 +69,12 @@ internal object HatsCone : HatsMode("Cone") {
                     cosine * HatConeSettings.RadiusSettings.outerRadius,
                     0f,
                     sine * HatConeSettings.RadiusSettings.outerRadius
+                ).setColor(color)
+                addVertex(
+                    matrix,
+                    nextCosine * HatConeSettings.RadiusSettings.outerRadius,
+                    0f,
+                    nextSine * HatConeSettings.RadiusSettings.outerRadius
                 ).setColor(color)
                 addVertex(matrix, 0f, HatConeSettings.peak, 0f).setColor(color)
             }

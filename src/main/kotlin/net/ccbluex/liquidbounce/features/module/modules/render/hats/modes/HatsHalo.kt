@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.setColor
 
 /**
  * @author minecrrrr
@@ -47,21 +46,14 @@ internal object HatsHalo : HatsMode("Halo") {
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-            val outerSegments = 600
-            val innerSegments = 60
+            val outerSegments = 144
+            val innerSegments = 12
 
             // Main loop for creating the torus (donut) using segments.
             for (outerI in 0 until outerSegments) {
 
                 val outerCurAngleTorus = getAngle(outerI, outerSegments)
                 val outerNextAngleTorus = getNextAngle(outerI, outerSegments)
-
-                // Nested loop for rendering the torus "thickness".
-                val angles = Angles(
-                    outerCurAngleTorus,
-                    outerNextAngleTorus,
-                    0.0F,
-                )
 
                 val color = if (!isHurt) {
                     colors
@@ -70,20 +62,18 @@ internal object HatsHalo : HatsMode("Halo") {
                     Color4b(255, 0, 0, colors.firstColor.a)
                 }
 
-                val radiuses = Radiuses(
-                    HatHaloSettings.outerRadius,
-                    HatHaloSettings.outerRadius,
-                    HatHaloSettings.innerRadius,
-                )
-
                 for (innerI in 0 until innerSegments) {
-                    val pos = innerI(innerSegments, angles, radiuses, innerI)
-                    addVertex(matrix, pos.p1).setColor(color)
-                    addVertex(matrix, pos.p2).setColor(color)
-                    addVertex(matrix, pos.p3).setColor(color)
-                    addVertex(matrix, pos.p2).setColor(color)
-                    addVertex(matrix, pos.p4).setColor(color)
-                    addVertex(matrix, pos.p3).setColor(color)
+                    addTorusQuad(
+                        matrix,
+                        innerSegments,
+                        outerCurAngleTorus,
+                        outerNextAngleTorus,
+                        HatHaloSettings.outerRadius,
+                        HatHaloSettings.outerRadius,
+                        HatHaloSettings.innerRadius,
+                        innerI,
+                        color,
+                    )
                 }
             }
         }

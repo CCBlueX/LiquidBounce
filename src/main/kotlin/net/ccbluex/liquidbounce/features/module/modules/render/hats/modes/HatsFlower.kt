@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.setColor
 import net.minecraft.util.Mth
 import kotlin.math.abs
 
@@ -51,58 +50,53 @@ internal object HatsFlower : HatsMode("Flower") {
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
-        drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-            val rotAngle = getRotationAngle(HatFlowerSettings.spinSpeed)
-            val petals = HatFlowerSettings.petalCount
-            val outerSegments = petals * 120
-            val innerSegments = petals * 2
+        val rotAngle = getRotationAngle(HatFlowerSettings.spinSpeed)
+        withHatRotation(rotAngle) {
+            drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+                val petals = HatFlowerSettings.petalCount
+                val outerSegments = petals * 32
+                val innerSegments = 12
 
 
-            for (outerI in 0 until outerSegments) {
-                // Outer
-                val outerCurAngleFlower = getAngle(outerI, outerSegments)
-                val outerNextAngleFlower = getNextAngle(outerI, outerSegments)
+                for (outerI in 0 until outerSegments) {
+                    // Outer
+                    val outerCurAngleFlower = getAngle(outerI, outerSegments)
+                    val outerNextAngleFlower = getNextAngle(outerI, outerSegments)
 
-                val curRadius = getFlowerRadius(
-                    outerCurAngleFlower,
-                    HatFlowerSettings.outerRadius,
-                    petals,
-                    HatFlowerSettings.sharpness
-                )
-                val nextRadius = getFlowerRadius(
-                    outerNextAngleFlower,
-                    HatFlowerSettings.outerRadius,
-                    petals,
-                    HatFlowerSettings.sharpness
-                )
+                    val curRadius = getFlowerRadius(
+                        outerCurAngleFlower,
+                        HatFlowerSettings.outerRadius,
+                        petals,
+                        HatFlowerSettings.sharpness
+                    )
+                    val nextRadius = getFlowerRadius(
+                        outerNextAngleFlower,
+                        HatFlowerSettings.outerRadius,
+                        petals,
+                        HatFlowerSettings.sharpness
+                    )
 
-                val color = if (!isHurt) {
-                    colors
-                        .getCurrentStepColor(outerCurAngleFlower)
-                } else {
-                    Color4b(255, 0, 0, colors.firstColor.a)
-                }
+                    val color = if (!isHurt) {
+                        colors
+                            .getCurrentStepColor(outerCurAngleFlower)
+                    } else {
+                        Color4b(255, 0, 0, colors.firstColor.a)
+                    }
 
-                val angles = Angles(
-                    outerCurAngleFlower,
-                    outerNextAngleFlower,
-                    rotAngle,
-                )
-                val radiuses = Radiuses(
-                    curRadius,
-                    nextRadius,
-                    HatFlowerSettings.innerRadius
-                )
-
-                // Inner
-                for (innerI in 0 until innerSegments) {
-                    val pos = innerI(innerSegments, angles, radiuses, innerI)
-                    addVertex(matrix, pos.p1).setColor(color)
-                    addVertex(matrix, pos.p2).setColor(color)
-                    addVertex(matrix, pos.p3).setColor(color)
-                    addVertex(matrix, pos.p2).setColor(color)
-                    addVertex(matrix, pos.p4).setColor(color)
-                    addVertex(matrix, pos.p3).setColor(color)
+                    // Inner
+                    for (innerI in 0 until innerSegments) {
+                        addTorusQuad(
+                            matrix,
+                            innerSegments,
+                            outerCurAngleFlower,
+                            outerNextAngleFlower,
+                            curRadius,
+                            nextRadius,
+                            HatFlowerSettings.innerRadius,
+                            innerI,
+                            color,
+                        )
+                    }
                 }
             }
         }
@@ -117,4 +111,3 @@ internal object HatsFlower : HatsMode("Flower") {
     }
 
 }
-
