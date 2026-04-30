@@ -29,7 +29,6 @@ import java.util.Objects;
 public final class TextBuilder {
 
     private @Nullable Object inner;
-    // -1 -> built
     private int size;
 
     public TextBuilder() {
@@ -81,7 +80,8 @@ public final class TextBuilder {
         };
         assert result != null;
 
-        this.size = -1;
+        this.inner = null;
+        this.size = 0;
         return result;
     }
 
