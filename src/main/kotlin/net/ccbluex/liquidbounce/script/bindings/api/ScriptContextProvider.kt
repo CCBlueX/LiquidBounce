@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
+import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.math.Axis
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptSetting
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.core.BlockPos
@@ -49,11 +51,20 @@ object ScriptContextProvider {
 
             // -> Minecraft API
             putMember("Vec3i", Vec3i::class.java)
+            putMember("Vec3", Vec3::class.java)
+            putMember("Mth", Mth::class.java)
+            putMember("BlockPos", BlockPos::class.java)
+            putMember("InteractionHand", InteractionHand::class.java)
+            putMember("Axis", Axis::class.java)
+            putMember("RenderSystem", RenderSystem::class.java)
+            // Yarn names compatibility
             putMember("Vec3d", Vec3::class.java)
             putMember("MathHelper", Mth::class.java)
-            putMember("BlockPos", BlockPos::class.java)
             putMember("Hand", InteractionHand::class.java)
             putMember("RotationAxis", Axis::class.java)
+
+            // Client utils
+            putMember("Color4b", Color4b::class.java)
 
             // Variable bindings
             putMember("mc", mc)
