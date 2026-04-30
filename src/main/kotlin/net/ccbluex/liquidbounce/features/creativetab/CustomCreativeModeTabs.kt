@@ -40,7 +40,7 @@ object CustomCreativeModeTabs {
         }
 
         // Check if FabricAPI is installed, otherwise we can't use the page buttons
-        // Use net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
+        // Use net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab
         runCatching {
             Class.forName("net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab")
         }.onFailure {
