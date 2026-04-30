@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.setColor
 import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.pow
@@ -52,57 +51,52 @@ internal object HatsStar : HatsMode("Star") {
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
-        drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-            val rotAngle = getRotationAngle(HatStarSettings.spinSpeed)
-            val points = HatStarSettings.pointsCount
-            val outerSegments = points * 120
-            val innerSegments = points * 2
+        val rotAngle = getRotationAngle(HatStarSettings.spinSpeed)
+        withHatRotation(rotAngle) {
+            drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+                val points = HatStarSettings.pointsCount
+                val outerSegments = points * 32
+                val innerSegments = 12
 
-            for (mainI in 0 until outerSegments) {
+                for (mainI in 0 until outerSegments) {
 
-                val outerCurAngleStar = getAngle(mainI, outerSegments)
-                val outerNextAngleStar = getNextAngle(mainI, outerSegments)
+                    val outerCurAngleStar = getAngle(mainI, outerSegments)
+                    val outerNextAngleStar = getNextAngle(mainI, outerSegments)
 
-                val curRadius = getStarRadius(
-                    outerCurAngleStar,
-                    HatStarSettings.outerRadius,
-                    points,
-                    HatStarSettings.sharpness,
-                    1.75F,
-                )
-                val nextRadius = getStarRadius(
-                    outerNextAngleStar,
-                    HatStarSettings.outerRadius,
-                    points,
-                    HatStarSettings.sharpness,
-                    1.75F,
-                )
+                    val curRadius = getStarRadius(
+                        outerCurAngleStar,
+                        HatStarSettings.outerRadius,
+                        points,
+                        HatStarSettings.sharpness,
+                        1.75F,
+                    )
+                    val nextRadius = getStarRadius(
+                        outerNextAngleStar,
+                        HatStarSettings.outerRadius,
+                        points,
+                        HatStarSettings.sharpness,
+                        1.75F,
+                    )
 
-                val color = if (!isHurt) {
-                    colors
-                        .getCurrentStepColor(outerCurAngleStar)
-                } else {
-                    Color4b(255, 0, 0, colors.firstColor.a)
-                }
-                val angles = Angles(
-                    outerCurAngleStar,
-                    outerNextAngleStar,
-                    rotAngle,
-                )
-                val radiuses = Radiuses(
-                    curRadius,
-                    nextRadius,
-                    HatStarSettings.innerRadius
-                )
-
-                for (innerI in 0 until innerSegments) {
-                    val pos = innerI(innerSegments, angles, radiuses, innerI)
-                    addVertex(matrix, pos.p1).setColor(color)
-                    addVertex(matrix, pos.p2).setColor(color)
-                    addVertex(matrix, pos.p3).setColor(color)
-                    addVertex(matrix, pos.p2).setColor(color)
-                    addVertex(matrix, pos.p4).setColor(color)
-                    addVertex(matrix, pos.p3).setColor(color)
+                    val color = if (!isHurt) {
+                        colors
+                            .getCurrentStepColor(outerCurAngleStar)
+                    } else {
+                        Color4b(255, 0, 0, colors.firstColor.a)
+                    }
+                    for (innerI in 0 until innerSegments) {
+                        addTorusQuad(
+                            matrix,
+                            innerSegments,
+                            outerCurAngleStar,
+                            outerNextAngleStar,
+                            curRadius,
+                            nextRadius,
+                            HatStarSettings.innerRadius,
+                            innerI,
+                            color,
+                        )
+                    }
                 }
             }
         }
@@ -118,4 +112,3 @@ internal object HatsStar : HatsMode("Star") {
     }
 
 }
-
