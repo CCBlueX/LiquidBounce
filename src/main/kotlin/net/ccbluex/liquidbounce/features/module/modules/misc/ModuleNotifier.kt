@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
+import net.minecraft.world.level.GameType
 import java.util.UUID
 
 /**
@@ -47,57 +49,93 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val leaveMessages by boolean("LeaveMessages", true)
     private val leaveMessageFormat by text("LeaveMessageFormat", "%s left")
 
+    private val gameModeMessages by boolean("GameModeMessages", false)
+    private val gameModeMessageFormat by text("GameModeMessageFormat", "%s changed their game mode to %s")
+
     private val useNotification by boolean("UseNotification", false)
 
-    private val uuidNameCache = hashMapOf<UUID, String>()
+    private val uuidNameCache = Object2ObjectOpenHashMap<UUID, String>()
+    private val uuidGameModeCache = Object2ObjectOpenHashMap<UUID, GameType>()
 
     override fun onEnabled() {
         for (entry in network.onlinePlayers) {
             uuidNameCache[entry.profile.id] = entry.profile.name
+            uuidGameModeCache[entry.profile.id] = entry.gameMode
         }
     }
 
     override fun onDisabled() {
         uuidNameCache.clear()
+        uuidGameModeCache.clear()
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        val packet = event.packet
+        when (val packet = event.packet) {
+            is ClientboundPlayerInfoUpdatePacket -> mc.execute {
+                val actions = packet.actions()
+                val entries = packet.entries()
 
-        if (packet is ClientboundPlayerInfoUpdatePacket) {
-            for (entry in packet.newEntries()) {
-                val profile = entry.profile ?: continue
+                if (ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER in actions) {
+                    for (entry in entries) {
+                        handlePlayerAdd(entry)
+                    }
+                }
 
-                if (profile.name != null && profile.name.length > 2) {
-                    uuidNameCache[profile.id] = profile.name
-                    if (joinMessages) {
-                        val message = joinMessageFormat.format(profile.name)
+                if (ClientboundPlayerInfoUpdatePacket.Action.UPDATE_GAME_MODE in actions) {
+                    val isInitializing = ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER in actions
 
-                        if (useNotification) {
-                            notification("Notifier", message, NotificationEvent.Severity.INFO)
-                        } else {
-                            chat(regular(message))
+                    for (entry in entries) {
+                        handleGameModeUpdate(entry, isInitializing)
+                    }
+                }
+            }
+
+            is ClientboundPlayerInfoRemovePacket -> mc.execute {
+                for (uuid in packet.profileIds) {
+                    val profileName = uuidNameCache.remove(uuid)
+                    uuidGameModeCache.remove(uuid)
+
+                    if (profileName != null && profileName.length > 2) {
+                        if (leaveMessages) {
+                            sendNotifierMessage(leaveMessageFormat.format(profileName))
                         }
                     }
                 }
             }
-        } else if (packet is ClientboundPlayerInfoRemovePacket) {
-            for (uuid in packet.profileIds) {
-                val entry = network.onlinePlayers.find { it.profile.id == uuid } ?: continue
+        }
+    }
 
-                if (entry.profile.name != null && entry.profile.name.length > 2) {
-                    if (leaveMessages) {
-                        val message = leaveMessageFormat.format(uuidNameCache[entry.profile.id])
-                        if (useNotification) {
-                            notification("Notifier", message, NotificationEvent.Severity.INFO)
-                        } else {
-                            chat(regular(message))
-                        }
-                    }
+    private fun handlePlayerAdd(entry: ClientboundPlayerInfoUpdatePacket.Entry) {
+        val profile = entry.profile ?: return
+        val profileName = profile.name
 
-                    uuidNameCache.remove(entry.profile.id)
-                }
-            }
+        if (profileName == null || profileName.length <= 2) {
+            return
+        }
+
+        uuidNameCache[profile.id] = profileName
+
+        if (joinMessages) {
+            sendNotifierMessage(joinMessageFormat.format(profileName))
+        }
+    }
+
+    private fun handleGameModeUpdate(entry: ClientboundPlayerInfoUpdatePacket.Entry, isInitializing: Boolean) {
+        val previousGameMode = uuidGameModeCache.put(entry.profileId, entry.gameMode)
+
+        if (isInitializing || previousGameMode == null || previousGameMode == entry.gameMode || !gameModeMessages) {
+            return
+        }
+
+        val profileName = uuidNameCache[entry.profileId] ?: return
+        sendNotifierMessage(gameModeMessageFormat.format(profileName, entry.gameMode))
+    }
+
+    private fun sendNotifierMessage(message: String) {
+        if (useNotification) {
+            notification(this.name, message, NotificationEvent.Severity.INFO)
+        } else {
+            chat(regular(message))
         }
     }
 

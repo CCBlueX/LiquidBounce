@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import static net.ccbluex.liquidbounce.utils.entity.EntityExtensionsKt.shortName;
+
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -29,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab;
 import net.ccbluex.liquidbounce.features.module.modules.misc.Visibility;
 import net.ccbluex.liquidbounce.utils.text.PlainText;
-import net.ccbluex.liquidbounce.utils.text.TextList;
+import net.ccbluex.liquidbounce.utils.text.TextBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
@@ -183,14 +185,20 @@ public abstract class MixinPlayerTabOverlay {
 
     @ModifyReturnValue(method = "getNameForDisplay", at = @At("RETURN"))
     private Component modifyPlayerName(Component original, PlayerInfo entry) {
-        if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().name())) {
-            return TextList.of(
-                original,
-                PlainText.of(" - (Staff)", TextColor.fromRgb(CommonColors.SOFT_RED))
-            );
+        var components = new TextBuilder(original);
+
+        if (ModuleBetterTab.INSTANCE.getRunning() && ModuleBetterTab.INSTANCE.getShowGameMode()) {
+            var playerGameMode = entry.getGameMode();
+            var gameModeText = PlainText.of(" [" + shortName(playerGameMode) + "]");
+            components.append(gameModeText);
         }
 
-        return original;
+        if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().name())) {
+            var staffText = PlainText.of(" - (Staff)", TextColor.fromRgb(CommonColors.SOFT_RED));
+            components.append(staffText);
+        }
+
+        return components.build();
     }
 
 }
