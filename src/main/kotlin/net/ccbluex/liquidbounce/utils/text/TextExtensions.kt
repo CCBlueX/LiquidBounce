@@ -39,6 +39,9 @@ import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.util.FormattedCharSequence
 import java.util.Optional
 import java.util.function.Function
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 inline fun String.stripMinecraftColorCodes(): String =
     ChatFormatting.stripFormatting(this)!!
@@ -81,6 +84,15 @@ inline fun List<Component>.asText(): Component = TextList.of(this)
 inline fun Array<out Component>.asText(): Component = TextList.of(this.unmodifiable())
 
 inline fun textOf(vararg parts: Component): Component = parts.asText()
+
+@OptIn(ExperimentalContracts::class)
+inline fun buildText(builderAction: TextBuilder.() -> Unit): Component {
+    contract { callsInPlace(builderAction, InvocationKind.EXACTLY_ONCE) }
+
+    val builder = TextBuilder()
+    builder.builderAction()
+    return builder.build()
+}
 
 fun <T> Collection<T>.joinToText(
     separator: Component,
