@@ -62,7 +62,7 @@ object CustomCreativeModeTabs {
             }.onFailure { exception ->
                 logger.error("Unable to setup creative tabs", exception)
             }.onSuccess { creativeTabs ->
-                logger.info("Item Groups: [ ${creativeTabs.joinToString { tab -> tab.plainName }} ]")
+                logger.info("Creative Tabs: [ ${creativeTabs.joinToString { tab -> tab.plainName }} ]")
             }
         }
     }
