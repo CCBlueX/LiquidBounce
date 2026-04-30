@@ -160,7 +160,7 @@ dependencies {
 
     // Test libraries
 //    testImplementation(kotlin("test"))
-    testImplementation(libs.fabric.loader.junit)
+//    testImplementation(libs.fabric.loader.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
