@@ -39,14 +39,14 @@ open class CustomCreativeModeTab(
 ) {
 
     fun init(): CreativeModeTab {
-        val itemGroup = FabricCreativeModeTab.builder()
+        val creativeTab = FabricCreativeModeTab.builder()
             .title(plainName.asPlainText())
             .icon(icon)
             .displayItems { _, entries ->
                 runCatching {
                     items.accept(entries)
                 }.onFailure {
-                    logger.error("Unable to create item group $plainName", it)
+                    logger.error("Unable to create creative tab $plainName", it)
                 }
             }
             .build()
@@ -55,10 +55,10 @@ open class CustomCreativeModeTab(
         Registry.register(
             BuiltInRegistries.CREATIVE_MODE_TAB,
             LiquidBounce.identifier(plainName.lowercase()),
-            itemGroup
+            creativeTab
         )
 
-        return itemGroup
+        return creativeTab
     }
 
 }
