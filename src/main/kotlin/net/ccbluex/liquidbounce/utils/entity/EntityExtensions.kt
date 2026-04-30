@@ -78,6 +78,7 @@ import net.minecraft.world.item.component.UseEffects
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.Explosion
+import net.minecraft.world.level.GameType
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerExplosion
 import net.minecraft.world.level.block.Blocks
@@ -185,6 +186,13 @@ val ClientInput.initial: Input
 
 val Player.ping: Int
     get() = mc.connection?.getPlayerInfo(uuid)?.latency ?: 0
+
+fun GameType.shortName(): String = when (this) {
+    GameType.SURVIVAL -> "S"
+    GameType.CREATIVE -> "C"
+    GameType.ADVENTURE -> "A"
+    GameType.SPECTATOR -> "S"
+}
 
 val LocalPlayer.airTicks: Int
     get() = (this as LocalPlayerAddition).`liquid_bounce$getAirTicks`()

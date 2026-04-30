@@ -76,7 +76,7 @@ object ModuleBetterTab : ClientModule("BetterTab", ModuleCategories.RENDER) {
         val filter = tree(PlayerFilter())
     }
 
-    object ShowGameMode : ToggleableValueGroup(ModuleBetterTab, "ShowGameMode", true)
+    val showGameMode by boolean("ShowGameMode", true)
 
     init {
         treeAll(
@@ -84,7 +84,6 @@ object ModuleBetterTab : ClientModule("BetterTab", ModuleCategories.RENDER) {
             Highlight,
             AccurateLatency,
             PlayerHider,
-            ShowGameMode
         )
     }
 
