@@ -32,6 +32,7 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ResolvableProfile
+import java.util.UUID
 
 /**
  * CommandItemSkull
@@ -60,8 +61,13 @@ object CommandItemSkull : Command.Factory, MinecraftShortcuts {
 
                 val itemStack = ItemStack(Items.PLAYER_HEAD)
                     .apply {
+                        val profile = runCatching { UUID.fromString(name) }
+                            .fold(
+                                onSuccess = { ResolvableProfile.createUnresolved(it) },
+                                onFailure = { ResolvableProfile.createUnresolved(name) }
+                            )
                         DataComponentPatch.builder()
-                            .set(DataComponents.PROFILE, ResolvableProfile.createUnresolved(name))
+                            .set(DataComponents.PROFILE, profile)
                             .build()
                             .also { applyComponents(it) }
                     }
