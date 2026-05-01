@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
-import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.text.PlainText
@@ -53,7 +52,6 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
         super.extractRenderState(context, mouseX, mouseY, delta)
 
         val handler = handler ?: return
-        GlStateManager._disableDepthTest()
         context.pose().pushMatrix()
         context.pose().translate(x.toFloat(), y.toFloat())
         var hoveredSlot: Slot? = null
@@ -83,7 +81,6 @@ class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainTex
         }
 
         context.pose().popMatrix()
-        GlStateManager._enableDepthTest()
 
         if (cursorStack.isEmpty && hoveredSlot != null && hoveredSlot.hasItem()) {
             val hoveredItemStack = hoveredSlot.item

@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
-import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.translate
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
@@ -361,14 +360,12 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         renderEnvironmentForWorld(event.matrixStack) {
             val eyeVector = Vec3f.eyeVector(camera)
 
-            longLines {
-                for (type in types) {
-                    for (blockPos in StorageScanner.iterate(type)) {
-                        if (!type.shouldRender(blockPos)) continue
-                        val pos = relativeToCamera(blockPos.center).toVec3f()
+            for (type in types) {
+                for (blockPos in StorageScanner.iterate(type)) {
+                    if (!type.shouldRender(blockPos)) continue
+                    val pos = relativeToCamera(blockPos.center).toVec3f()
 
-                        drawLine(eyeVector, pos, type.color.argb)
-                    }
+                    drawLine(eyeVector, pos, type.color.argb)
                 }
             }
         }

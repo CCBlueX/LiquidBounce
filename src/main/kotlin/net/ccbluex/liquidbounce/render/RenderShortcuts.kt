@@ -44,7 +44,6 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Vector3f
 import org.joml.Vector3fc
-import org.lwjgl.opengl.GL11C
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -89,7 +88,6 @@ inline fun renderEnvironmentForWorld(
     camera: Camera = mc.gameRenderer.mainCamera,
     draw: WorldRenderEnvironment.() -> Unit,
 ) {
-    GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
     val environment = WorldRenderEnvironment.create(renderTarget, poseStack, camera)
     try {
         when (mode) {
@@ -98,7 +96,6 @@ inline fun renderEnvironmentForWorld(
         }
     } finally {
         environment.flushBatchIfLocalEnvironment()
-        GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
     }
 }
 
@@ -126,18 +123,6 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw:
     poseStack.withPush {
         translate(relativeToCamera(pos))
         draw()
-    }
-}
-
-/**
- * Disables [GL11C.GL_LINE_SMOOTH] if [HAS_AMD_VEGA_APU].
- */
-inline fun WorldRenderEnvironment.longLines(draw: WorldRenderEnvironment.() -> Unit) {
-    if (HAS_AMD_VEGA_APU) GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
-    try {
-        draw()
-    } finally {
-        if (HAS_AMD_VEGA_APU) GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
     }
 }
 
