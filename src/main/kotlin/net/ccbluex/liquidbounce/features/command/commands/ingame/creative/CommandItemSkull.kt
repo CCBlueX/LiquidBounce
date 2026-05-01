@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.item.setInventoryItem
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ResolvableProfile
@@ -71,13 +71,7 @@ object CommandItemSkull : Command.Factory, MinecraftShortcuts {
                     throw CommandException(command.result("noEmptySlot"))
                 }
 
-                player.inventory.setItem(emptySlot, itemStack)
-                network.send(
-                    ServerboundSetCreativeModeSlotPacket(
-                        if (emptySlot < 9) emptySlot + 36 else emptySlot,
-                        itemStack
-                    )
-                )
+                player.setInventoryItem(emptySlot, itemStack)
                 chat(regular(command.result("skullGiven", variable(name))), command)
             }
             .build()
