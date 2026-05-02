@@ -356,13 +356,14 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         renderEnvironmentForWorld(event.matrixStack) {
             val eyeVector = Vec3f.eyeVector(camera)
 
-            for (type in types) {
-                if (StorageScanner.isEmpty()) continue
-                for (blockPos in StorageScanner.iterate(type)) {
-                    if (!type.shouldRender(blockPos)) continue
-                    val pos = relativeToCamera(blockPos.center).toVec3f()
+            if (!StorageScanner.isEmpty()) {
+                for (type in types) {
+                    for (blockPos in StorageScanner.iterate(type)) {
+                        if (!type.shouldRender(blockPos)) continue
+                        val pos = relativeToCamera(blockPos.center).toVec3f()
 
-                    drawLine(eyeVector, pos, type.color.argb)
+                        drawLine(eyeVector, pos, type.color.argb)
+                    }
                 }
             }
 
