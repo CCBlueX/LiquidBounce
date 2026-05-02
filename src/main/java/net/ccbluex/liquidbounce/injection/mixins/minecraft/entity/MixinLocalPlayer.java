@@ -432,14 +432,6 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
     }
 
-    @ModifyReturnValue(method = "shouldStopRunSprinting", at = @At("RETURN"))
-    private boolean hookForceStopSprinting(boolean shouldStop) {
-        if (shouldStop) return true;
-        var event = new SprintEvent(new DirectionalInput(input), true, SprintEvent.Source.MOVEMENT_TICK);
-        EventManager.INSTANCE.callEvent(event);
-        return !event.getSprint();
-    }
-
     @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;hasForwardImpulse()Z"))
     private boolean hookIsWalking(boolean original) {
         if (!ModuleSprint.INSTANCE.getShouldSprintOmnidirectional()) {
