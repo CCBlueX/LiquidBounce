@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.item.createItem
-import net.ccbluex.liquidbounce.utils.item.setInventoryItem
+import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.item.ItemStack
 import kotlin.math.min
@@ -99,7 +99,7 @@ object CommandItemGive : Command.Factory {
                 selectItemStack.popTime = 5
             }
 
-            setInventoryItem(slot, selectItemStack)
+            setInventoryItemCreative(slot, selectItemStack)
         }
 
         return amount - remaining

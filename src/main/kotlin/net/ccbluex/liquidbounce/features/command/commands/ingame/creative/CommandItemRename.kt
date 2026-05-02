@@ -24,14 +24,12 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.text.translateColorCodes
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
 import net.minecraft.core.component.DataComponents
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.world.InteractionHand
 
 /**
@@ -54,7 +52,7 @@ object CommandItemRename : Command.Factory {
                     .build()
             )
             .handler {
-                if (!player.isCreative) {
+                if (!player.hasInfiniteMaterials()) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
@@ -75,7 +73,7 @@ object CommandItemRename : Command.Factory {
                         chat(regular(command.result("renamedItem", itemStack.itemName, variable(name))), command)
                     }
                 }
-                network.send(ServerboundSetCreativeModeSlotPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))
+                player.setInventoryItemCreative(itemStack = itemStack, animation = false)
             }
             .build()
     }

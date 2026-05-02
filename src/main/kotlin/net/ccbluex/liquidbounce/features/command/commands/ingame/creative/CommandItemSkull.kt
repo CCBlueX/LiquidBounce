@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.item.setInventoryItem
+import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.item.ItemStack
@@ -77,7 +77,7 @@ object CommandItemSkull : Command.Factory, MinecraftShortcuts {
                     throw CommandException(command.result("noEmptySlot"))
                 }
 
-                player.setInventoryItem(emptySlot, itemStack)
+                player.setInventoryItemCreative(emptySlot, itemStack)
                 chat(regular(command.result("skullGiven", variable(name))), command)
             }
             .build()
