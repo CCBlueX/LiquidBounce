@@ -173,12 +173,11 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
             val colorMode = colorMode.activeMode
             useColor = colorMode.isParamSensitive
-            val origin = player.blockPosition()
 
             facesRenderState.buildMesh(
                 pipeline = ClientRenderPipelines.relativeQuads(useColor),
-                origin = origin,
-            ) { pose ->
+                origin = player.blockPosition(),
+            ) { pose, origin ->
                 forEachTrackedBlocks { blockPos, blockState, outlineShape ->
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
@@ -192,13 +191,13 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
             if (outline) {
                 outlinesRenderState.buildMesh(
                     pipeline = ClientRenderPipelines.relativeLines(useColor),
-                    origin = origin,
-                ) { pose ->
+                    origin = player.blockPosition(),
+                ) { pose, meshOrigin ->
                     forEachTrackedBlocks { blockPos, blockState, outlineShape ->
                         val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                         pose.withPush {
-                            translate(blockPos.subtract(origin))
+                            translate(blockPos.subtract(meshOrigin))
                             addShapeOutlines(last().pose(), outlineShape, color)
                         }
                     }
@@ -256,12 +255,12 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor),
                 origin = origin,
-            ) { pose ->
+            ) { pose, meshOrigin ->
                 forEachTrackedBlocks { blockPos, blockState, outlineShape ->
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                     pose.withPush {
-                        translate(blockPos.subtract(origin))
+                        translate(blockPos.subtract(meshOrigin))
                         addShapeFaces(last().pose(), outlineShape, color?.alpha(255))
                     }
                 }
