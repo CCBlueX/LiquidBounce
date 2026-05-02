@@ -451,6 +451,6 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         }
 
     fun showTracers() : Boolean {
-        return allTypes.any {it.tracers}
+        return this.running && allTypes.any { it.tracers }
     }
 }
