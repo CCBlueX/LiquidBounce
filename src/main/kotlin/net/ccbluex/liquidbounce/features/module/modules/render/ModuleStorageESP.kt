@@ -372,7 +372,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
             for (entity in mc.level?.entitiesForRendering() ?: return@handler) {
                 val category = entity.categorize() ?: continue
-                if (!category.shouldRender(entity)) continue
+                if (!category.shouldRender(entity) || !category.tracers) continue
 
                 val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
                 val topPos = pos.add(0f, entity.bbHeight, 0f)
