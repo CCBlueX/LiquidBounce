@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.item.createItem
+import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.world.item.ItemStack
 import kotlin.math.min
 
@@ -82,15 +82,15 @@ object CommandItemGive : Command.Factory {
         var remaining = amount
 
         while (remaining > 0) {
-            val slot = player.inventory.getSlotWithRemainingSpace(item).takeUnless { it == -1 }
-                ?: player.inventory.freeSlot.takeUnless { it == -1 }
+            val slot = inventory.getSlotWithRemainingSpace(item).takeUnless { it == -1 }
+                ?: inventory.freeSlot.takeUnless { it == -1 }
                 ?: break
 
-            val selectItemStack = player.inventory.getItem(slot)
+            val selectItemStack = inventory.getItem(slot)
                 .takeUnless { it.isEmpty }
-                ?: item.copyWithCount(0).also {  player.inventory.setItem(slot, it) }
+                ?: item.copyWithCount(0).also { inventory.setItem(slot, it) }
 
-            val maxToAdd = player.inventory.getMaxStackSize(selectItemStack) - selectItemStack.count
+            val maxToAdd = inventory.getMaxStackSize(selectItemStack) - selectItemStack.count
             val toAdd = min(maxToAdd, remaining)
 
             if (toAdd > 0) {
@@ -99,8 +99,7 @@ object CommandItemGive : Command.Factory {
                 selectItemStack.popTime = 5
             }
 
-            val packetSlot = if (slot < 9) slot + 36 else slot
-            connection.send(ServerboundSetCreativeModeSlotPacket(packetSlot, selectItemStack))
+            setInventoryItemCreative(slot, selectItemStack)
         }
 
         return amount - remaining

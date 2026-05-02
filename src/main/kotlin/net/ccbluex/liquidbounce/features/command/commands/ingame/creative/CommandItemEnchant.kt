@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.item.clearEnchantments
 import net.ccbluex.liquidbounce.utils.item.removeEnchantment
+import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
 import net.minecraft.core.Holder
 import net.minecraft.core.registries.Registries
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.resources.Identifier
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
@@ -171,15 +171,11 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
 
 
     private fun sendItemPacket(itemStack: ItemStack) {
-        network.send(
-            ServerboundSetCreativeModeSlotPacket(
-                36 + player.inventory.selectedSlot, itemStack
-            )
-        )
+        player.setInventoryItemCreative(itemStack = itemStack, animation = false)
     }
 
     private fun creativeOrThrow(command: Command) {
-        if (!player.isCreative) {
+        if (!player.hasInfiniteMaterials()) {
             throw CommandException(command.resultWithTree("mustBeCreative"))
         }
     }

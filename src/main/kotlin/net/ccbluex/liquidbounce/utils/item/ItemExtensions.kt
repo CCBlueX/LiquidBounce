@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.player.LocalPlayer
 import net.minecraft.commands.arguments.item.ItemInput
 import net.minecraft.commands.arguments.item.ItemParser
 import net.minecraft.core.BlockPos
@@ -39,12 +40,14 @@ import net.minecraft.core.Registry
 import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.Registries
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attribute
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ArmorStandItem
 import net.minecraft.world.item.ArrowItem
 import net.minecraft.world.item.BlockItem
@@ -107,6 +110,27 @@ fun createItem(stack: String, amount: Int = 1): ItemStack =
     ItemParser(mc.level!!.registryAccess()).parse(StringReader(stack)).let {
         ItemInput(it.item, it.components).createItemStack(amount)
     }
+
+/**
+ * Set player inventory item (Creative mode only)
+ *
+ * @see net.minecraft.client.multiplayer.MultiPlayerGameMode.handleCreativeModeItemAdd
+ */
+fun LocalPlayer.setInventoryItemCreative(
+    slot: Int = this.inventory.selectedSlot,
+    itemStack: ItemStack,
+    animation: Boolean = true,
+) {
+    if (animation) itemStack.popTime = 5
+
+    inventory.setItem(slot, itemStack)
+    connection.send(
+        ServerboundSetCreativeModeSlotPacket(
+            if (slot < Inventory.SELECTION_SIZE) slot + Inventory.INVENTORY_SIZE else slot,
+            itemStack,
+        )
+    )
+}
 
 fun createSplashPotion(name: String, vararg effects: MobEffectInstance): ItemStack {
     val itemStack = ItemStack(Items.SPLASH_POTION)

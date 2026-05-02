@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
+import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
 
 object CommandItemStack : Command.Factory, MinecraftShortcuts {
 
@@ -45,7 +45,7 @@ object CommandItemStack : Command.Factory, MinecraftShortcuts {
             .requiresIngame()
             .parameter(amountParameter)
             .handler {
-                if (!player.isCreative) {
+                if (!player.hasInfiniteMaterials()) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
@@ -63,13 +63,9 @@ object CommandItemStack : Command.Factory, MinecraftShortcuts {
                 }
 
                 mainHandStack.count = amount
-                player.inventory!!.setItem(player.inventory.selectedSlot, mainHandStack)
-                mc.connection!!.send(
-                    ServerboundSetCreativeModeSlotPacket(
-                        36 + player.inventory.selectedSlot,
-                        mainHandStack
-                    )
-                )
+
+                player.setInventoryItemCreative(itemStack = mainHandStack)
+
                 chat(regular(command.result("amountChanged", variable(amount.toString()))), command)
             }
             .build()
