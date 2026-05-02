@@ -249,12 +249,10 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 return@handler
             }
 
-            val origin = BlockPos.containing(player.position())
-
             blockFacesRenderState.buildMesh(
                 pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
-                origin = origin,
-            ) { pose ->
+                origin = player.blockPosition(),
+            ) { pose, origin ->
                 forEachTrackedBlockShapes { blockPos, type, outlineShape ->
                     pose.withPush {
                         translate(blockPos.subtract(origin))
@@ -266,8 +264,8 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             if (outline) {
                 blockOutlinesRenderState.buildMesh(
                     pipeline = ClientRenderPipelines.relativeLines(useColor = true),
-                    origin = origin,
-                ) { pose ->
+                    origin = player.blockPosition(),
+                ) { pose, origin ->
                     forEachTrackedBlockShapes { blockPos, type, outlineShape ->
                         pose.withPush {
                             translate(blockPos.subtract(origin))
@@ -336,8 +334,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor = true),
                 origin = player.blockPosition(),
-            ) { pose ->
-                val origin = renderState.baseBlockPos
+            ) { pose, origin ->
                 // non-model blocks are already processed by WorldRenderer where we injected code which renders
                 // their outline
                 forEachTrackedBlockShapes({ it.renderShape != RenderShape.MODEL }) { blockPos, type, outlineShape ->

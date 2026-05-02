@@ -227,19 +227,22 @@ private fun VertexConsumer.addColoredVertex(
 /**
  * Build new mesh data and upload it.
  * This method is designed for lazy building so [rotate] defaults to true.
+ *
+ * @param origin a preferred origin; the lambda receives the resolved origin that must be used
+ * for relative vertex positions.
  */
 inline fun StaticMeshStorage.buildMesh(
     pipeline: RenderPipeline,
     rotate: Boolean = true,
     origin: BlockPos = BlockPos.ZERO,
-    block: VertexConsumer.(pose: PoseStack) -> Unit,
+    block: VertexConsumer.(pose: PoseStack, origin: BlockPos) -> Unit,
 ) {
     clearStates()
-    this.setBaseBlockPos(origin)
+    val resolvedOrigin = this.resolveBaseBlockPos(origin)
 
     val bufferBuilder = this.byteBufferBuilder.begin(pipeline)
     usePoseStack {
-        bufferBuilder.block(this)
+        bufferBuilder.block(this, resolvedOrigin)
     }
 
     bufferBuilder.build()?.use { meshData ->

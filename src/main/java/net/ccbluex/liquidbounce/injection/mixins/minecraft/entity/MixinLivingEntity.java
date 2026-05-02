@@ -53,6 +53,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -124,8 +125,12 @@ public abstract class MixinLivingEntity extends MixinEntity {
             require = 1,
             allow = 1
     )
-    public MobEffectInstance hookTravelStatusEffect(MobEffectInstance original) {
-        // If we get anyting other than levitation, the injection went wrong
+    public @Nullable MobEffectInstance hookTravelStatusEffect(@Nullable MobEffectInstance original) {
+        if (original == null) {
+            return null;
+        }
+
+        // If we get anything other than levitation, the injection went wrong
         assert original.getEffect() == MobEffects.LEVITATION;
 
         if (ModuleAntiLevitation.INSTANCE.getRunning()) {
