@@ -374,7 +374,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
                 val topPos = pos.add(0f, entity.bbHeight, 0f)
 
-                drawLines(category.color.argb,eyeVector,pos,pos,topPos)
+                drawLines(category.color.argb, eyeVector, pos, pos, topPos)
             }
         }
     }
