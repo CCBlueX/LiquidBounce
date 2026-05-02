@@ -353,8 +353,6 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        if (StorageScanner.isEmpty()) return@handler
-
         val types = allTypes.filter { it.tracers && !it.color.isTransparent }
         if (types.isEmpty()) return@handler
 
@@ -362,6 +360,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             val eyeVector = Vec3f.eyeVector(camera)
 
             for (type in types) {
+                if (StorageScanner.isEmpty()) continue
                 for (blockPos in StorageScanner.iterate(type)) {
                     if (!type.shouldRender(blockPos)) continue
                     val pos = relativeToCamera(blockPos.center).toVec3f()
