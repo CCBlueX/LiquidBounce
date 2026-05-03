@@ -102,10 +102,10 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
      * Hook entity tick event
      */
     @Inject(method = "tick", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V",
-        shift = At.Shift.BEFORE,
-        ordinal = 0),
-        cancellable = true)
+            target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V",
+            shift = At.Shift.BEFORE,
+            ordinal = 0),
+            cancellable = true)
     private void hookTickEvent(CallbackInfo ci) {
         var tickEvent = new PlayerTickEvent();
         EventManager.INSTANCE.callEvent(tickEvent);
@@ -116,9 +116,9 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V",
-        shift = At.Shift.AFTER,
-        ordinal = 0))
+            target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V",
+            shift = At.Shift.AFTER,
+            ordinal = 0))
     private void hookPostTickEvent(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(PlayerPostTickEvent.INSTANCE);
 
@@ -410,7 +410,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     private boolean hookFreeCamPreventRotations(boolean bl4) {
         // Prevent rotation changes when free cam is active, unless a rotation is being set via the rotation manager
         return (!ModuleFreeCam.INSTANCE.getRunning() ||
-            RotationManager.INSTANCE.getCurrentRotation() != null) && bl4;
+                RotationManager.INSTANCE.getCurrentRotation() != null) && bl4;
     }
 
     @ModifyExpressionValue(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;canStartSprinting()Z"))
@@ -432,11 +432,11 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
     }
 
-    @ModifyReturnValue(method = "shouldStopRunSprinting", at = @At("RETURN"))
+       @ModifyReturnValue(method = "shouldStopRunSprinting", at = @At("RETURN"))
     private boolean hookForceStopSprinting(boolean shouldStop) {
         return shouldStop || shouldForceStopSprinting();
     }
-
+    
     @ModifyExpressionValue(
         method = "aiStep",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;shouldStopRunSprinting()Z")
@@ -444,17 +444,17 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     private boolean hookVfpSprintStop(boolean shouldStop) {
         return shouldStop || shouldForceStopSprinting();
     }
-
+    
     private boolean shouldForceStopSprinting() {
         var event = new SprintEvent(
             new DirectionalInput(input),
             true,
             SprintEvent.Source.MOVEMENT_TICK
         );
-
+    
         EventManager.INSTANCE.callEvent(event);
         return !event.getSprint();
-    }
+    } 
 
     @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;hasForwardImpulse()Z"))
     private boolean hookIsWalking(boolean original) {
@@ -465,15 +465,15 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         float movementForward = input.getMoveVector().y;
         float movementSideways = input.getMoveVector().x;
         var hasMovement = Math.abs(movementForward) > 1.0E-5F ||
-            Math.abs(movementSideways) > 1.0E-5F;
+                Math.abs(movementSideways) > 1.0E-5F;
         var isWalking = (double) Math.abs(movementForward) >= 0.8 ||
-            (double) Math.abs(movementSideways) >= 0.8;
+                (double) Math.abs(movementSideways) >= 0.8;
         return this.isUnderWater() ? hasMovement : isWalking;
     }
 
     @ModifyExpressionValue(method = "sendIsSprintingIfNeeded", at = @At(
-        value = "INVOKE",
-        target = "Lnet/minecraft/client/player/LocalPlayer;isSprinting()Z")
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/player/LocalPlayer;isSprinting()Z")
     )
     private boolean hookNetworkSprint(boolean original) {
         var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.NETWORK);
