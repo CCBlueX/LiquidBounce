@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
-import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip.Animation.lastDistance
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -50,44 +49,29 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
         tree(ScrollAdjust)
     }
 
-
-    @JvmStatic
-    fun getBaseDistance() = when {
-        ScrollAdjust.running -> ScrollAdjust.scrolledDistance
-        else -> cameraDistance.get()
-    }
-
-    @JvmStatic
-    fun getDistance(partialTicks: Float) = when {
-        Animation.running -> Animation.getDistance(partialTicks)
-        else -> getBaseDistance()
-    }
-
-    object Animation: ToggleableValueGroup(this, "Animation", true) {
-        val speed by float("Speed", 0.6f, 0.1f..1f)
-        val easing by easing("Easing", Easing.LINEAR)
-
-        var lastCameraType = CameraType.FIRST_PERSON
-        var lastDistance = 0f
-        var distance = 0f
-
-        @JvmStatic
-        fun tick(camera: CameraType, newDistance: Float) {
-            if (lastCameraType != camera) {
-                lastCameraType = camera
-                onEnabled()
-            }
-
-            lastDistance = distance
-            distance = Mth.lerp(easing.transform(speed.coerceIn(0f, 1f)), distance, newDistance)
+    val distance
+        get() = when {
+            ScrollAdjust.running -> ScrollAdjust.scrolledDistance
+            else -> cameraDistance.get()
         }
 
-        @JvmStatic
-        fun getDistance(partialTicks: Float) = Mth.lerp(partialTicks, lastDistance, distance)
+    @Suppress("unused")
+    private val perspectiveHandler = handler<PerspectiveEvent> { event ->
+        event.noClip = true
+    }
 
-        override fun onEnabled() {
-            lastDistance = 0f
-            distance = 0f
+    private object Animation: ToggleableValueGroup(this, "Animation", true) {
+        private val speed by float("Speed", 0.6f, 0.1f..1f)
+        private val easing by easing("Easing", Easing.LINEAR)
+
+        @Suppress("unused")
+        private val perspectiveHandler = handler<PerspectiveEvent> { event ->
+            if (event.lastPerspective != event.perspective) {
+                event.lastDistance = 0f
+            }
+            if (event.perspective != CameraType.FIRST_PERSON) {
+                event.distance = Mth.lerp(easing.transform(speed), event.lastDistance, distance)
+            }
         }
     }
 
@@ -119,8 +103,8 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
         @Suppress("unused")
         private val resetHandler = handler<PerspectiveEvent>(
             priority = EventPriorityConvention.READ_FINAL_STATE
-        ) {
-            if (it.perspective == CameraType.FIRST_PERSON) {
+        ) { event ->
+            if (event.perspective == CameraType.FIRST_PERSON) {
                 reset()
             }
         }

@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
-import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.Camera;
@@ -108,7 +107,7 @@ public abstract class MixinCamera {
             }
 
             float scale = this.entity instanceof LivingEntity livingEntity ? livingEntity.getScale() : 1.0F;
-            float desiredCameraDistance = ModuleCameraClip.INSTANCE.getRunning() ? ModuleCameraClip.getBaseDistance() : 4f;
+            float desiredCameraDistance = PerspectiveEvent.INSTANCE.getDistance();
 
             if (!rearView) {
                 move(-getMaxZoom(desiredCameraDistance * scale), 0.0f, 0.0f);
@@ -146,25 +145,6 @@ public abstract class MixinCamera {
         if (ModuleFreeCam.INSTANCE.getRunning()) {
             this.detached = true;
         }
-    }
-
-    @ModifyConstant(method = "getMaxZoom", constant = @Constant(intValue = 8))
-    private int hookCameraClip(int constant) {
-        return ModuleCameraClip.INSTANCE.getRunning() ? 0 : constant;
-    }
-
-    @Inject(method = "tickFov", at = @At("HEAD"))
-    private void tick(CallbackInfo ci) {
-        if (ModuleCameraClip.Animation.INSTANCE.getRunning()) {
-            ModuleCameraClip.Animation.tick(minecraft.options.getCameraType(), ModuleCameraClip.getBaseDistance());
-        }
-    }
-
-    @ModifyExpressionValue(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
-    private float modifyDesiredCameraDistance(float original, float partialTicks) {
-        return ModuleCameraClip.INSTANCE.getRunning()
-            ? getMaxZoom(ModuleCameraClip.getDistance(partialTicks))
-            : original;
     }
 
     @Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
@@ -237,6 +217,14 @@ public abstract class MixinCamera {
         }
     }
 
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void tick(CallbackInfo ci) {
+        final PerspectiveEvent event = PerspectiveEvent.INSTANCE;
+        event.update(minecraft, entity);
+
+        EventManager.INSTANCE.callEvent(event);
+    }
+
     @ModifyExpressionValue(method = "alignWithEntity",
         at = @At(
             value = "INVOKE",
@@ -244,7 +232,19 @@ public abstract class MixinCamera {
         )
     )
     private CameraType hookPerspectiveEventOnCamera(CameraType original) {
-        return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
+        return PerspectiveEvent.INSTANCE.getPerspective();
+    }
+
+    @ModifyConstant(method = "getMaxZoom", constant = @Constant(intValue = 8))
+    private int hookCameraClip(int constant) {
+        return (PerspectiveEvent.INSTANCE.getNoClip()) ? 0 : constant;
+    }
+
+    @ModifyExpressionValue(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
+    private float hookCameraDistance(float original, float partialTicks) {
+        final float lastDistance = PerspectiveEvent.INSTANCE.getLastDistance();
+        final float distance = PerspectiveEvent.INSTANCE.getDistance();
+        return distance != lastDistance ? Mth.lerp(partialTicks, lastDistance, distance) : distance;
     }
 
 }

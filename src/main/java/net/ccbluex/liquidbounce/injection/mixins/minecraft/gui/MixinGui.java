@@ -234,7 +234,7 @@ public abstract class MixinGui {
             )
     )
     private CameraType hookPerspectiveEventOnCrosshair(CameraType original) {
-        return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
+        return PerspectiveEvent.INSTANCE.getPerspective();
     }
 
     @ModifyExpressionValue(method = "extractCameraOverlays",
@@ -244,7 +244,7 @@ public abstract class MixinGui {
             )
     )
     private CameraType hookPerspectiveEventOnMiscOverlays(CameraType original) {
-        return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
+        return PerspectiveEvent.INSTANCE.getPerspective();
     }
 
     @Inject(method = "extractTitle", at = @At("HEAD"), cancellable = true)
