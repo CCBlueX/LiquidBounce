@@ -35,11 +35,13 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
@@ -70,6 +72,10 @@ public abstract class MixinCamera {
 
     @Shadow
     private @Nullable Entity entity;
+
+    @Shadow
+    @Final
+    private Minecraft minecraft;
 
     @Inject(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V", shift = At.Shift.AFTER))
     private void hookFreeCamModifiedPosition(float partialTicks, CallbackInfo ci) {
@@ -102,7 +108,7 @@ public abstract class MixinCamera {
             }
 
             float scale = this.entity instanceof LivingEntity livingEntity ? livingEntity.getScale() : 1.0F;
-            float desiredCameraDistance = ModuleCameraClip.INSTANCE.getRunning() ? ModuleCameraClip.INSTANCE.getDistance() : 4f;
+            float desiredCameraDistance = ModuleCameraClip.INSTANCE.getRunning() ? ModuleCameraClip.getBaseDistance() : 4f;
 
             if (!rearView) {
                 move(-getMaxZoom(desiredCameraDistance * scale), 0.0f, 0.0f);
@@ -147,9 +153,18 @@ public abstract class MixinCamera {
         return ModuleCameraClip.INSTANCE.getRunning() ? 0 : constant;
     }
 
+    @Inject(method = "tickFov", at = @At("HEAD"))
+    private void tick(CallbackInfo ci) {
+        if (ModuleCameraClip.Animation.INSTANCE.getRunning()) {
+            ModuleCameraClip.Animation.tick(minecraft.options.getCameraType(), ModuleCameraClip.getBaseDistance());
+        }
+    }
+
     @ModifyExpressionValue(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
-    private float modifyDesiredCameraDistance(float original) {
-        return ModuleCameraClip.INSTANCE.getRunning() ? getMaxZoom(ModuleCameraClip.INSTANCE.getDistance()) : original;
+    private float modifyDesiredCameraDistance(float original, float partialTicks) {
+        return ModuleCameraClip.INSTANCE.getRunning()
+            ? getMaxZoom(ModuleCameraClip.getDistance(partialTicks))
+            : original;
     }
 
     @Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
