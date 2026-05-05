@@ -38,13 +38,23 @@
             <div class="name">{target.username}</div>
             <div class="health-stats">
                 <div class="stat">
-                    <div class="value">{Math.floor(target.actualHealth + target.absorption)}</div>
+                    <div class="value">{Math.floor(target.actualHealth)}</div>
                     <img
                             class="icon"
                             src="img/hud/targethud/icon-health.svg"
                             alt="health"
                     />
                 </div>
+                {#if target.absorption > 0}
+                    <div class="stat">
+                        <div class="value">{Math.floor(target.absorption)}</div>
+                        <img
+                                class="icon"
+                                src="img/hud/targethud/icon-absorption.svg"
+                                alt="absorption"
+                        />
+                    </div>
+                {/if}
                 <div class="stat">
                     <div class="value">{Math.floor(target.armor)}</div>
                     <img
