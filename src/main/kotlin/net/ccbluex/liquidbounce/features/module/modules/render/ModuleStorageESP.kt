@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
 import net.ccbluex.liquidbounce.render.drawLine
+import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
@@ -349,21 +350,31 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        if (StorageScanner.isEmpty()) return@handler
-
         val types = allTypes.filter { it.tracers && !it.color.isTransparent }
         if (types.isEmpty()) return@handler
 
         renderEnvironmentForWorld(event.matrixStack) {
             val eyeVector = Vec3f.eyeVector(camera)
 
-            for (type in types) {
-                for (blockPos in StorageScanner.iterate(type)) {
-                    if (!type.shouldRender(blockPos)) continue
-                    val pos = relativeToCamera(blockPos.center).toVec3f()
+            if (!StorageScanner.isEmpty()) {
+                for (type in types) {
+                    for (blockPos in StorageScanner.iterate(type)) {
+                        if (!type.shouldRender(blockPos)) continue
+                        val pos = relativeToCamera(blockPos.center).toVec3f()
 
-                    drawLine(eyeVector, pos, type.color.argb)
+                        drawLine(eyeVector, pos, type.color.argb)
+                    }
                 }
+            }
+
+            for (entity in mc.level?.entitiesForRendering() ?: return@handler) {
+                val category = entity.categorize() ?: continue
+                if (!category.shouldRender(entity) || !category.tracers) continue
+
+                val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
+                val topPos = pos.add(0f, entity.bbHeight, 0f)
+
+                drawLines(category.color.argb, eyeVector, pos, pos, topPos)
             }
         }
     }
@@ -439,4 +450,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             return super.running
         }
 
+    fun showTracers() : Boolean {
+        return this.running && allTypes.any { it.tracers }
+    }
 }
