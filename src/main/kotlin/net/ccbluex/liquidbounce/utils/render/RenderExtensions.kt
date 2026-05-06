@@ -169,7 +169,7 @@ fun GpuTexture.asyncCopyTo(
 @JvmOverloads
 fun GpuTexture.copyFully(
     labelGetter: Supplier<String>? = null,
-    usage: Int = 0,
+    usage: @GpuTexture.Usage Int = 0,
 ): GpuTexture {
     val dest = gpuDevice.createTexture(
         labelGetter,
