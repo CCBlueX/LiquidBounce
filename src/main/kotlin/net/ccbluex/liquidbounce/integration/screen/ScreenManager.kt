@@ -89,8 +89,6 @@ object ScreenManager : EventListener {
      */
     val screenAcknowledgement = ScreenAcknowledgement()
 
-    private val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
-
     internal val parent: Screen
         get() = mc.screen ?: TitleScreen()
 
@@ -237,7 +235,7 @@ object ScreenManager : EventListener {
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
         // Set to default GLFW cursor
-        GLFW.glfwSetCursor(mc.window.handle(), standardCursor)
+        GLFW.glfwSetCursor(mc.window.handle(), 0)
 
         if (handleCurrentScreen(event.screen)) {
             event.cancelEvent()
