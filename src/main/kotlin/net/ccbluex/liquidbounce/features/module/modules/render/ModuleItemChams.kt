@@ -22,8 +22,9 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
-import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
@@ -32,10 +33,11 @@ import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.kotlin.optional
-import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.ccbluex.liquidbounce.utils.render.copyFrom
+import net.ccbluex.liquidbounce.utils.render.copyFully
 import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.writeStd140
+import net.minecraft.util.ARGB
 
 /**
  * Module ItemChams
@@ -49,76 +51,116 @@ import net.ccbluex.liquidbounce.utils.render.writeStd140
  */
 object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
-    private val blendColor by color("BlendColor", Color4b(0, 64, 255, 186)).markDirtyOnChanged()
-    private val alpha by int("Alpha", 95, 1..255).markDirtyOnChanged()
-    private val glowColor by color("GlowColor", Color4b(0, 64, 255, 15)).markDirtyOnChanged()
-    private val layers by int("Layers", 3, 1..10).markDirtyOnChanged()
-    private val layerSize by float("LayerSize", 1.91f, 1f..5f).markDirtyOnChanged()
-    private val falloff by float("Falloff", 6.83f, 0f..20f).markDirtyOnChanged()
+    object Lightmap : ToggleableValueGroup(this, "Lightmap", true) {
+        private val blendColor by color("BlendColor", Color4b(0, 64, 255, 186)).markDirtyOnChanged()
+        private val alpha by int("Alpha", 95, 1..255).markDirtyOnChanged()
+        private val glowColor by color("GlowColor", Color4b(0, 64, 255, 15)).markDirtyOnChanged()
+        private val layers by int("Layers", 3, 1..10).markDirtyOnChanged()
+        private val layerSize by float("LayerSize", 1.91f, 1f..5f).markDirtyOnChanged()
+        private val falloff by float("Falloff", 6.83f, 0f..20f).markDirtyOnChanged()
 
-    private var edited = false
+        private var edited = false
 
-    private val storedLightmapTexture = gpuDevice.createTexture(
-        "$name - Lightmap Texture",
-        GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC,
-        TextureFormat.RGBA8,
-        16, 16, 1, 1,
-    )
+        private var storedLightmapTexture: GpuTexture? = null
 
-    private val UBO = ClientUniformDefine.HAND_ITEM_LIGHTMAP.createSingleBuffer()
+        private val UBO = ClientUniformDefine.HAND_ITEM_LIGHTMAP.createSingleBuffer()
 
-    private var uboDirty = true
-    private fun <T : Any> Value<T>.markDirtyOnChanged() = onChanged { uboDirty = true }
+        private var uboDirty = true
+        private fun <T : Any> Value<T>.markDirtyOnChanged() = onChanged { uboDirty = true }
 
-    private val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR, false)
+        private val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR, false)
 
-    fun applyToTexture(textureView: GpuTextureView) {
-        if (!this.running || edited) return
+        fun applyToTexture(textureView: GpuTextureView) {
+            if (!this.running || edited) return
 
-        this.storedLightmapTexture.copyFrom(source = textureView.texture())
-
-        if (uboDirty) {
-            UBO.writeStd140 {
-                putInt(0)
-                putFloat(alpha / 255f)
-                putVec4(blendColor)
-                putFloat(layerSize)
-                putVec4(glowColor)
-                putFloat(falloff)
-                putInt(layers)
+            if (this.storedLightmapTexture == null) {
+                this.storedLightmapTexture = textureView.texture().copyFully(
+                    labelGetter = { "$name - Lightmap Texture" },
+                    GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC,
+                )
+            } else {
+                this.storedLightmapTexture!!.copyFrom(source = textureView.texture())
             }
-            uboDirty = false
+
+            if (uboDirty) {
+                UBO.writeStd140 {
+                    putInt(0)
+                    putFloat(alpha / 255f)
+                    putVec4(blendColor)
+                    putFloat(layerSize)
+                    putVec4(glowColor)
+                    putFloat(falloff)
+                    putInt(layers)
+                }
+                uboDirty = false
+            }
+
+            textureView.createRenderPass(
+                { "$name Pass" },
+                clearColor = optional(-1),
+            ).use { pass ->
+                pass.setPipeline(ClientRenderPipelines.ItemChams)
+
+                pass.bindTexture("texture0", textureView, sampler)
+                pass.bindTexture("image", textureView, sampler)
+                pass.setUniform(ClientUniformDefine.HAND_ITEM_LIGHTMAP.uboName, UBO)
+
+                pass.draw(0, 3)
+            }
+
+            edited = true
         }
 
-        textureView.createRenderPass(
-            { "$name Pass" },
-            clearColor = optional(-1),
-        ).use { pass ->
-            pass.setPipeline(ClientRenderPipelines.ItemChams)
+        fun resetTexture(texture: GpuTextureView) {
+            if (!edited) return
 
-            pass.bindTexture("texture0", textureView, sampler)
-            pass.bindTexture("image", textureView, sampler)
-            pass.setUniform(ClientUniformDefine.HAND_ITEM_LIGHTMAP.uboName, UBO)
+            texture.texture().copyFrom(source = this.storedLightmapTexture!!)
 
-            pass.draw(0, 3)
+            edited = false
         }
 
-        edited = true
+        override fun onDisabled() {
+            uboDirty = true
+            super.onDisabled()
+        }
+
     }
 
-    fun resetTexture(texture: GpuTextureView) {
-        if (!edited) return
+    object Shield : ToggleableValueGroup(this, "Shield", true) {
+        private val tintMode by enumChoice("TintMode", ShieldTintMode.MULTIPLY)
+        private val tint by color("Tint", Color4b.WHITE)
 
-        texture.texture().copyFrom(source = this.storedLightmapTexture)
-        storedLightmapTexture.clearColor(-1)
+        fun applyTint(tintedColor: Int): Int {
+            if (!running) {
+                return tintedColor
+            }
 
-        edited = false
+            return when (tintMode) {
+                ShieldTintMode.OVERRIDE -> tint.argb
+                ShieldTintMode.MULTIPLY -> multiplyArgb(tintedColor, tint.argb)
+            }
+        }
+
+        fun usesTranslucentTint(tintedColor: Int) = running && ARGB.alpha(applyTint(tintedColor)) < 255
+
+        private fun multiplyArgb(left: Int, right: Int): Int = ARGB.color(
+            multiplyChannel(ARGB.alpha(left), ARGB.alpha(right)),
+            multiplyChannel(ARGB.red(left), ARGB.red(right)),
+            multiplyChannel(ARGB.green(left), ARGB.green(right)),
+            multiplyChannel(ARGB.blue(left), ARGB.blue(right)),
+        )
+
+        private fun multiplyChannel(left: Int, right: Int) = (left * right + 127) / 255
     }
 
-    override fun onDisabled() {
-        uboDirty = true
-        super.onDisabled()
+    init {
+        tree(Lightmap)
+        tree(Shield)
     }
 
+    private enum class ShieldTintMode(override val tag: String) : Tagged {
+        OVERRIDE("Override"),
+        MULTIPLY("Multiply"),
+    }
 
 }

@@ -135,12 +135,12 @@ public abstract class MixinGameRenderer {
     }
 
     @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/player/LocalPlayer;I)V"))
-    public void drawItemCharms(ItemInHandRenderer instance, float tickProgress, PoseStack matrices,
-        SubmitNodeCollector orderedRenderCommandQueue, LocalPlayer player, int light,
-        Operation<Void> original) {
-        ModuleItemChams.INSTANCE.applyToTexture(this.lightmap.getTextureView());
-        original.call(instance, tickProgress, matrices, orderedRenderCommandQueue, player, light);
-        ModuleItemChams.INSTANCE.resetTexture(this.lightmap.getTextureView());
+    public void drawItemCharms(ItemInHandRenderer instance, float frameInterp, PoseStack poseStack,
+                               SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords,
+                               Operation<Void> original) {
+        ModuleItemChams.Lightmap.INSTANCE.applyToTexture(this.lightmap.getTextureView());
+        original.call(instance, frameInterp, poseStack, submitNodeCollector, player, lightCoords);
+        ModuleItemChams.Lightmap.INSTANCE.resetTexture(this.lightmap.getTextureView());
     }
 
     /**

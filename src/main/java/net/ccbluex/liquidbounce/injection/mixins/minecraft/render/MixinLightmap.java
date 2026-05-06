@@ -41,7 +41,7 @@ public abstract class MixinLightmap {
     private GpuTexture texture;
 
     /**
-     * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams
+     * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams.Lightmap
      */
     @ModifyArg(
         method = "<init>",
@@ -62,9 +62,9 @@ public abstract class MixinLightmap {
         at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/LightmapRenderState;needsUpdate:Z", ordinal = 0, opcode = Opcodes.GETFIELD),
         cancellable = true
     )
-    private void injectCustomClearColor(LightmapRenderState lightmapRenderState, CallbackInfo ci) {
+    private void injectCustomClearColor(LightmapRenderState renderState, CallbackInfo ci) {
         ModuleCustomAmbience.CustomLightmap customLightmap = ModuleCustomAmbience.CustomLightmap.INSTANCE;
-        if (customLightmap.getRunning() && customLightmap.getMode().getActiveMode().edit(this.texture, lightmapRenderState)) {
+        if (customLightmap.getRunning() && customLightmap.getMode().getActiveMode().edit(this.texture, renderState)) {
             ci.cancel();
         }
     }
