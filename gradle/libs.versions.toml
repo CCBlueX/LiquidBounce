@@ -27,7 +27,7 @@ httpServer = "2.5.6"
 discordIpc = "0.6.0-SNAPSHOT"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
-fastutil4k = "0.2.7"
+fastutil4k = "0.2.8"
 
 # Recommended mods
 modmenu = "18.0.0-alpha.7"
