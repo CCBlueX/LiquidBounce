@@ -18,135 +18,113 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import it.unimi.dsi.fastutil.objects.ReferenceSet
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.fastutil.objectLinkedSetOf
+import net.ccbluex.fastutil.mapToCharArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Rect
-import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
-import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.resources.language.I18n
-import net.minecraft.core.registries.Registries
-import net.minecraft.resources.ResourceKey
-import net.minecraft.world.entity.LivingEntity
+import net.minecraft.client.gui.render.GuiRenderer
+import net.minecraft.core.Holder
+import net.minecraft.tags.EnchantmentTags
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
-import net.minecraft.world.item.enchantment.Enchantments
-import org.joml.Vector2f
-import org.joml.component1
-import org.joml.component2
-import kotlin.math.hypot
+import net.minecraft.world.item.enchantment.EnchantmentHelper
 
 private object EnchantmentDisplayHelper {
-    private val enchantmentAbbreviationCache = LruCache<ResourceKey<Enchantment>, String>(128)
+    private val enchantmentAbbreviationCache = LruCache<Holder<Enchantment>, String>(128)
 
-    private val knownCurses = ReferenceSet.of(
-        Enchantments.BINDING_CURSE,
-        Enchantments.VANISHING_CURSE
-    )
+    private const val MAX_NAME_LENGTH = 3
 
-    fun getEnchantmentInfo(enchantment: ResourceKey<Enchantment>): EnchantmentInfo {
+    fun getEnchantmentInfo(enchantment: Holder<Enchantment>, level: Int): EnchantmentInfo {
         return EnchantmentInfo(
             displayName = getAbbreviation(enchantment),
-            isCurse = isCurse(enchantment)
+            isCurse = isCurse(enchantment),
+            level,
         )
     }
 
-    private fun getEnchantmentName(enchantment: ResourceKey<Enchantment>): String {
-        val idPath = enchantment.identifier().toString().substringAfter(':')
-        val translationKey = "enchantment.minecraft.$idPath"
-        return I18n.get(translationKey)
-    }
-
-    private fun getSingleWordAbbreviation(word: String): String = word.take(3)
+    /**
+     * @see net.minecraft.world.item.enchantment.Enchantment.getFullname
+     */
+    private fun getEnchantmentName(enchantment: Holder<Enchantment>): String =
+        enchantment.value().description.string
 
     private fun getInitialsAbbreviation(words: List<String>): String =
-        words.joinToString("") { it.first().toString() }
+        words.mapToCharArray { it.first() }.concatToString()
 
     private fun getCompoundAbbreviation(words: List<String>): String {
-        val firstWord = words[0]
+        val firstWord = words.first()
 
-        if (firstWord.length >= 3) {
-            return firstWord.take(3)
+        if (firstWord.length >= MAX_NAME_LENGTH) {
+            return firstWord.take(MAX_NAME_LENGTH)
         }
 
-        val remainingChars = 3 - firstWord.length
+        val remainingChars = MAX_NAME_LENGTH - firstWord.length
         return firstWord + words.getOrNull(1)?.take(remainingChars).orEmpty()
     }
 
     private fun processMultiWordName(words: List<String>): String {
-        val initials = getInitialsAbbreviation(words)
-
-        return if (initials.length >= 3) {
-            initials
+        return if (words.size >= MAX_NAME_LENGTH) {
+            getInitialsAbbreviation(words)
         } else {
             getCompoundAbbreviation(words)
         }
     }
 
     private fun processName(name: String): String {
-        if (name.length <= 3) {
+        if (name.length <= MAX_NAME_LENGTH) {
             return name
         }
 
-        val words = name.split(" ").filter { it.isNotEmpty() }
+        val words = name.split(' ').filter { it.isNotEmpty() }
 
         return if (words.size >= 2) {
             processMultiWordName(words)
         } else {
-            getSingleWordAbbreviation(words.getOrNull(0) ?: "")
+            words.getOrNull(0).orEmpty().take(MAX_NAME_LENGTH)
         }
     }
 
-    private fun getAbbreviation(enchantment: ResourceKey<Enchantment>): String {
+    private fun getAbbreviation(enchantment: Holder<Enchantment>): String {
         return enchantmentAbbreviationCache.getOrPut(enchantment) {
             val name = getEnchantmentName(enchantment)
             processName(name)
         }
     }
 
-    private fun isCurse(enchantment: ResourceKey<Enchantment>): Boolean = enchantment in knownCurses
+    /**
+     * @see net.minecraft.world.item.enchantment.Enchantment.getFullname
+     */
+    private fun isCurse(enchantment: Holder<Enchantment>): Boolean = enchantment.`is`(EnchantmentTags.CURSE)
 }
 
 @JvmRecord
 private data class EnchantmentInfo(
     val displayName: String,
-    val isCurse: Boolean = false
+    val isCurse: Boolean,
+    val level: Int,
 )
 
 internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags, "Enchantment", true) {
 
-    private val slots by multiEnumChoice(
-        "Slots",
-        objectLinkedSetOf(
-            EquipmentSlotChoice.MAINHAND, EquipmentSlotChoice.OFFHAND,
-            EquipmentSlotChoice.HEAD, EquipmentSlotChoice.CHEST,
-            EquipmentSlotChoice.LEGS, EquipmentSlotChoice.FEET,
-        ),
-        canBeNone = true
-    )
+    private val maxCountPerItem by int("MaxCountPerItem", 4, 1..16)
 
-    private const val MAX_ENCHANTMENTS_PER_ITEM = 10
-    private const val FIXED_SCALE = 0.6f
-    private const val LINE_HEIGHT = 14f
-    private const val COLUMN_SPACING = 20f
-    private const val PADDING = 3f
-    private const val CELL_HEIGHT = LINE_HEIGHT + PADDING * 2
-    private const val VERTICAL_SPACING = 4f
-    private const val FRAME_MARGIN = 6f
-    private val BG_COLOR_NORMAL = Color4b.BLACK.alpha(200)
-    private val BG_COLOR_CURSE = Color4b.RED.darker().alpha(200)
-
-    private val supportedEnchantments by lazy {
-        mc.level?.registryAccess()?.lookupOrThrow(Registries.ENCHANTMENT)?.registryKeySet()?.toList() ?: emptyList()
-    }
+    private const val ITEM_SIZE = GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()
+    private const val ITEM_CENTER_X = ITEM_SIZE * 0.5f
+    private const val LABEL_TEXT_SCALE = 0.13f
+    private const val LABEL_PADDING_X = 1.25f
+    private const val LABEL_PADDING_Y = 0.5f
+    private const val LABEL_VERTICAL_GAP = 1.5f
+    private const val LABEL_ROW_SPACING = 0.5f
+    private val BG_COLOR_NORMAL = Color4b.BLACK.alpha(130)
+    private val BG_COLOR_CURSE = Color4b.RED.darker().alpha(150)
 
     @JvmRecord
     private data class EnchantCell(
@@ -155,95 +133,75 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         val isCurse: Boolean
     )
 
-    @JvmRecord
-    private data class EnchantColumn(
-        val cells: List<EnchantCell>,
-        val width: Float
-    )
-
-    fun GuiGraphicsExtractor.drawEntityEnchantments(
-        entity: LivingEntity,
-        worldX: Float,
-        worldY: Float,
+    context(guiGraphics: GuiGraphicsExtractor)
+    fun drawItemEnchantments(
+        stack: ItemStack,
+        x: Float,
+        y: Float,
     ) {
-        val itemsWithEnchantments = getEntityItemsWithEnchantments(entity)
-        if (itemsWithEnchantments.isEmpty()) return
-
-        if (isPositionOccluded(worldX, worldY)) {
+        if (!running || stack.isEmpty || stack.getEnchantmentCount() == 0) {
             return
         }
 
-        val columnData = itemsWithEnchantments.mapNotNull { item ->
-            val cells = processItemEnchantments(item)
-            if (cells.isEmpty()) return@mapNotNull null
-
-            val maxWidth = cells.maxOfOrNull { it.textWidth } ?: 0f
-            val columnWidth = maxWidth * FIXED_SCALE + PADDING * 2
-            EnchantColumn(cells, columnWidth)
+        val cells = processItemEnchantments(stack)
+        if (cells.isEmpty()) {
+            return
         }
 
-        if (columnData.isNotEmpty()) {
-            // Add this position to the drawn areas list
-            ModuleNametags.drawnEnchantmentAreas.add(Vector2f(worldX, worldY))
-            drawEnchantmentColumns(worldX, worldY, columnData)
-        }
-    }
+        val rowHeight = ModuleNametags.fontRenderer.height * LABEL_TEXT_SCALE + LABEL_PADDING_Y * 2f
+        val totalHeight = cells.size * rowHeight + (cells.size - 1) * LABEL_ROW_SPACING
+        val centerX = x + ITEM_CENTER_X
+        var rowY = y - LABEL_VERTICAL_GAP - totalHeight
 
-    private const val OCCLUSION_THRESHOLD = 2f
-    // Check if a position would be occluded by another enchantment panel
-    private fun isPositionOccluded(x: Float, y: Float): Boolean {
-        return ModuleNametags.drawnEnchantmentAreas.any { (existingX, existingY) ->
-            hypot(existingX - x, existingY - y) < OCCLUSION_THRESHOLD
+        cells.forEach { cell ->
+            drawCell(cell, centerX, rowY, rowHeight)
+            rowY += rowHeight + LABEL_ROW_SPACING
         }
     }
 
     private fun processItemEnchantments(itemStack: ItemStack): List<EnchantCell> {
-        val enchantmentList = mutableListOf<Pair<EnchantmentInfo, Int>>()
+        val enchantmentList = ObjectArrayList<EnchantmentInfo>()
 
-        for (enchantmentKey in supportedEnchantments) {
-            val level = itemStack.getEnchantment(enchantmentKey)
-            if (level > 0) {
-                enchantmentList.add(EnchantmentDisplayHelper.getEnchantmentInfo(enchantmentKey) to level)
-            }
+        // Use EnchantmentHelper for both normal items and enchantment books
+        for (itemEnchantment in EnchantmentHelper.getEnchantmentsForCrafting(itemStack).entrySet()) {
+            val enchantment = itemEnchantment.key
+            val level = itemEnchantment.intValue
+            if (level <= 0) continue
+            enchantmentList += EnchantmentDisplayHelper.getEnchantmentInfo(enchantment, level)
         }
 
-        if (enchantmentList.isEmpty()) return emptyList()
+        if (enchantmentList.isEmpty) return emptyList()
+        enchantmentList.sortByDescending { it.level }
 
-        val sortedEnchantments = enchantmentList.sortedByDescending { it.second }
-        val hasMoreEnchantments = sortedEnchantments.size > MAX_ENCHANTMENTS_PER_ITEM
+        val hasMoreEnchantments = enchantmentList.size > maxCountPerItem
 
-        val cells = sortedEnchantments
-            .take(MAX_ENCHANTMENTS_PER_ITEM)
-            .mapToArray { (info, level) -> createCell(info, level) }
+        val cells = (if (hasMoreEnchantments) enchantmentList.subList(0, maxCountPerItem) else enchantmentList)
+            .mapToArray { info -> createCell(info, isEllipsis = false) }
 
         if (hasMoreEnchantments && cells.isNotEmpty()) {
-            cells[cells.lastIndex] = createCell(null, 0, true)
+            MinecraftTextProcessor.TEXT_POOL.recycle(cells.last().processedText)
+            cells[cells.lastIndex] = createCell(null, true)
         }
 
         return cells.asList()
     }
 
-    private fun getEntityItemsWithEnchantments(entity: LivingEntity): List<ItemStack> =
-        slots.mapToArray {
-            entity.getItemBySlot(it.slot)
-        }.filter { !it.isEmpty && it.getEnchantmentCount() > 0 }
-
     private fun createCell(
-        info: EnchantmentInfo? = null,
-        level: Int = 0,
-        isEllipsis: Boolean = false
+        info: EnchantmentInfo?,
+        isEllipsis: Boolean,
     ): EnchantCell {
         val text = if (isEllipsis) {
-            "${ChatFormatting.GRAY}..."
+            "...".asPlainText(ChatFormatting.GRAY)
         } else {
+            requireNotNull(info)
             val textColor = when {
-                info?.isCurse == true -> ChatFormatting.RED
-                level >= 4 -> ChatFormatting.GOLD
-                level == 3 -> ChatFormatting.YELLOW
-                level == 2 -> ChatFormatting.GREEN
+                info.isCurse -> ChatFormatting.RED
+                info.level >= 4 -> ChatFormatting.GOLD
+                info.level == 3 -> ChatFormatting.YELLOW
+                info.level == 2 -> ChatFormatting.GREEN
                 else -> ChatFormatting.WHITE
             }
-            "${textColor}${info?.displayName} $level"
+            "${info.displayName}${info.level}".asPlainText(textColor)
         }
 
         val processedText = ModuleNametags.fontRenderer.process(text)
@@ -255,78 +213,31 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         )
     }
 
-    private fun GuiGraphicsExtractor.renderEnchantmentColumn(
-        cells: List<EnchantCell>,
-        x: Float,
+    context(guiGraphics: GuiGraphicsExtractor)
+    private fun drawCell(
+        cell: EnchantCell,
+        centerX: Float,
         y: Float,
+        rowHeight: Float,
     ) {
-        val maxWidth = cells.maxOfOrNull { it.textWidth } ?: 0f
-        val cellWidth = maxWidth * FIXED_SCALE + PADDING * 2
+        val textWidth = cell.textWidth * LABEL_TEXT_SCALE
+        val width = textWidth + LABEL_PADDING_X * 2f
+        val x1 = centerX - width * 0.5f
+        val x2 = centerX + width * 0.5f
 
-        cells.forEachIndexed { index, cell ->
-            val cellX = x - cellWidth / 2
-            val cellY = y + index * (CELL_HEIGHT + VERTICAL_SPACING)
-
-            val rect = Rect(
-                cellX,
-                cellY,
-                cellX + cellWidth,
-                cellY + CELL_HEIGHT
-            )
-            val bgColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL
-
-            drawQuad(rect.x1, rect.y1, rect.x2, rect.y2, fillColor = bgColor)
-
-            val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
-            val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
-
-            ModuleNametags.fontRenderer.draw(cell.processedText) {
-                this.x = textX
-                this.y = textY
-                shadow = true
-                scale = FIXED_SCALE
-            }
-        }
-    }
-
-    private fun GuiGraphicsExtractor.drawEnchantmentColumns(
-        x: Float,
-        y: Float,
-        columnData: List<EnchantColumn>
-    ) {
-        val columnsWidth = columnData.sumOf { it.width.toDouble() }.toFloat()
-        val spacingWidth = (columnData.size - 1) * COLUMN_SPACING
-        val totalWidth = columnsWidth + spacingWidth
-        val halfTotalWidth = totalWidth / 2
-
-        val maxColumnHeight = columnData.maxOfOrNull { column ->
-            column.cells.size * (CELL_HEIGHT + VERTICAL_SPACING) - VERTICAL_SPACING
-        } ?: 0f
-
-        val groupRect = Rect(
-            x - halfTotalWidth - FRAME_MARGIN,
-            y - FRAME_MARGIN,
-            x + halfTotalWidth + FRAME_MARGIN,
-            y + maxColumnHeight + FRAME_MARGIN
+        guiGraphics.drawQuad(
+            x1 = x1,
+            y1 = y,
+            x2 = x2,
+            y2 = y + rowHeight,
+            fillColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL,
         )
 
-        drawGroupBorder(groupRect)
-
-        var columnX = x - halfTotalWidth
-        columnData.forEach { column ->
-            val columnCenterX = columnX + column.width / 2
-            renderEnchantmentColumn(column.cells, columnCenterX, y)
-            columnX += column.width + COLUMN_SPACING
+        ModuleNametags.fontRenderer.draw(cell.processedText) {
+            this.x = centerX - textWidth * 0.5f
+            this.y = y + LABEL_PADDING_Y
+            shadow = true
+            scale = LABEL_TEXT_SCALE
         }
-    }
-
-    private fun GuiGraphicsExtractor.drawGroupBorder(rect: Rect) {
-        // Drawing a semi-transparent background instead of just lines for better visibility
-        drawQuad(
-            rect.x1, rect.y1,
-            rect.x2, rect.y2,
-            fillColor = Color4b.BLACK.with(a = 100),
-            outlineColor = Color4b.RED,
-        )
     }
 }

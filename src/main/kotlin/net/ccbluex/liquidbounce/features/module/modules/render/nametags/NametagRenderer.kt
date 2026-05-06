@@ -18,13 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.features.module.modules.render.nametags.NametagEnchantmentRenderer.drawEntityEnchantments
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.world.entity.LivingEntity
 
 private const val NAMETAG_PADDING: Int = 15
 
@@ -36,13 +34,16 @@ private const val BACKGROUND_Y_OFFSET_BOTTOM = 1.1f
 private const val BACKGROUND_X_PADDING = 0.2f * FONT_SIZE
 
 internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX: Float, posY: Float) {
-    val entity = nametag.entity ?: return
-    if (nametag.equipments.itemStacks.any { !it.isEmpty }) {
-        drawItemStackList(nametag.equipments.itemStacks)
+    if (nametag.entity == null) {
+        return
+    }
+
+    if (!nametag.equipments.equipment.isEmpty) {
+        drawItemStackList(nametag.equipments.stacksView)
             .centerX(posX)
             .centerY(posY - NAMETAG_PADDING * nametag.scale)
             .scale(nametag.scale)
-            .itemStackRenderer(nametag.equipmentStackRenderer())
+            .itemStackRenderer(nametag.equipmentStackRenderer)
             .rectBackground(Color4b.TRANSPARENT)
             .draw()
     }
@@ -67,7 +68,10 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
 
     // Background
     drawQuad(
-        x1, y1, x2, y2,
+        x1 = x1,
+        y1 = y1,
+        x2 = x2,
+        y2 = y2,
         fillColor = Color4b.DEFAULT_BG_COLOR,
         outlineColor = Color4b.BLACK.takeIf { ModuleNametags.border },
     )
@@ -75,19 +79,6 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
     // Text
     fontRenderer.draw(processedText) {
         shadow = true
-    }
-
-    // Draw enchantments directly for the entity (regardless of whether items are shown)
-    if (NametagEnchantmentRenderer.running && entity is LivingEntity) {
-        val entityPos = entity.position()
-        val worldX = entityPos.x.toFloat()
-        val worldY = (entityPos.y + entity.bbHeight + 0.5f).toFloat()
-
-        drawEntityEnchantments(
-            entity,
-            worldX,
-            worldY,
-        )
     }
 
     pose().popMatrix()
