@@ -76,7 +76,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
             if (this.storedLightmapTexture == null) {
                 this.storedLightmapTexture = textureView.texture().copyFully(
                     labelGetter = { "$name - Lightmap Texture" },
-                    usage = GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC,
+                    GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC,
                 )
             } else {
                 this.storedLightmapTexture!!.copyFrom(source = textureView.texture())
