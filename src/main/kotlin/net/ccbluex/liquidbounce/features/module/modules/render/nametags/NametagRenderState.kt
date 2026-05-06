@@ -23,11 +23,12 @@ import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.SingleItemStack
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityEquipment
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 
@@ -73,21 +74,20 @@ internal class NametagRenderState {
     }
 
     class Equipments {
+        /**
+         * The order of equipment slots
+         */
+        @JvmField val slotOrder = ArrayList<EquipmentSlot>()
 
         /**
          * The items that should be rendered above the name tag
          */
-        @JvmField var itemStacks: List<ItemStack> = emptyList()
-
-        /**
-         * The equipment slots matching [itemStacks] by index.
-         */
-        @JvmField var itemSlots: List<EquipmentSlotChoice> = emptyList()
+        @JvmField val equipment = EntityEquipment()
 
         /**
          * For entity using item.
          */
-        @JvmField var highlightIndex: Int = -1
+        @JvmField var highlightStackRef: ItemStack? = null
 
         fun update(entity: Entity) {
             if (entity is LivingEntity) {
@@ -98,14 +98,21 @@ internal class NametagRenderState {
         }
 
         fun reset() {
-            this.itemStacks = emptyList()
-            this.itemSlots = emptyList()
-            this.highlightIndex = -1
+            this.slotOrder.clear()
+            this.equipment.clear()
+            this.highlightStackRef = null
+        }
+
+        @JvmField
+        val stacksView: List<ItemStack> = object : AbstractList<ItemStack>(), RandomAccess {
+            override val size get() = slotOrder.size
+            override fun get(index: Int) = equipment[slotOrder[index]]
         }
     }
 
-    fun equipmentStackRenderer(): SingleItemStackRenderer {
-        val raw = if (NametagEquipment.showInfo) {
+    @JvmField
+    val equipmentStackRenderer = SingleItemStackRenderer { font, index, stack, x, y ->
+        val delegation = if (NametagEquipment.showInfo) {
             if (entity === player) {
                 SingleItemStackRenderer.All
             } else {
@@ -115,30 +122,24 @@ internal class NametagRenderState {
             SingleItemStackRenderer.OnlyItem
         }
 
-        if (equipments.highlightIndex !in equipments.itemStacks.indices && !NametagEnchantmentRenderer.running) {
-            return raw
-        }
-
-        return SingleItemStackRenderer { font, index, stack, x, y ->
-            with(raw) {
-                drawItemStack(
-                    font = font,
-                    index = index,
-                    stack = stack,
-                    x = x,
-                    y = y,
-                )
-            }
-            if (equipments.highlightIndex == index) {
-                NametagEquipment.HighlightItemInUse.draw(x.toFloat(), y.toFloat())
-            }
-
-            drawItemEnchantments(
+        with(delegation) {
+            drawItemStack(
+                font = font,
+                index = index,
                 stack = stack,
-                slot = equipments.itemSlots.getOrNull(index),
-                x = x.toFloat(),
-                y = y.toFloat(),
+                x = x,
+                y = y,
             )
         }
+
+        if (equipments.highlightStackRef === stack) {
+            NametagEquipment.HighlightItemInUse.draw(x.toFloat(), y.toFloat())
+        }
+
+        drawItemEnchantments(
+            stack = stack,
+            x = x.toFloat(),
+            y = y.toFloat(),
+        )
     }
 }

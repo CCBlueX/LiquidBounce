@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.GuiRenderer.DEFAULT_ITEM_SIZE
@@ -48,6 +49,8 @@ internal object NametagEquipment : ValueGroup("Equipment") {
 
         context(guiGraphics: GuiGraphicsExtractor)
         fun draw(x: Float, y: Float) {
+            if (!this.running) return
+
             guiGraphics.drawQuad(
                 x1 = x,
                 y1 = y,
@@ -68,29 +71,16 @@ internal object NametagEquipment : ValueGroup("Equipment") {
      * Creates a list of items that should be rendered above the name tag.
      */
     fun update(entity: LivingEntity, equipments: NametagRenderState.Equipments) {
-        if (slots.isEmpty()) {
-            equipments.reset()
-            return
+        equipments.reset()
+
+        for (slotChoice in this.slots) {
+            val itemStack = entity.getItemBySlot(slotChoice.slot)
+            if (itemStack.isEmpty && skipEmptySlot) continue
+
+            equipments.slotOrder.add(slotChoice.slot)
+            equipments.equipment.set(slotChoice.slot, itemStack)
         }
 
-        val slotStacks = slots.map {
-            it to entity.getItemBySlot(it.slot)
-        }
-
-        val visibleSlotStacks = if (skipEmptySlot) {
-            slotStacks.filterNot { (_, stack) -> stack.isEmpty }
-        } else {
-            slotStacks
-        }
-
-        equipments.itemSlots = visibleSlotStacks.map { it.first }
-        equipments.itemStacks = visibleSlotStacks.map { it.second }
-
-        equipments.highlightIndex = if (HighlightItemInUse.enabled && entity.isUsingItem) {
-            val usingStack = entity.getItemInHand(entity.usedItemHand)
-            equipments.itemStacks.indexOfFirst { usingStack === it }
-        } else {
-            -1
-        }
+        equipments.highlightStackRef = entity.usingItemOrNull
     }
 }

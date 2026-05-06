@@ -38,12 +38,12 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
         return
     }
 
-    if (nametag.equipments.itemStacks.any { !it.isEmpty }) {
-        drawItemStackList(nametag.equipments.itemStacks)
+    if (!nametag.equipments.equipment.isEmpty) {
+        drawItemStackList(nametag.equipments.stacksView)
             .centerX(posX)
             .centerY(posY - NAMETAG_PADDING * nametag.scale)
             .scale(nametag.scale)
-            .itemStackRenderer(nametag.equipmentStackRenderer())
+            .itemStackRenderer(nametag.equipmentStackRenderer)
             .rectBackground(Color4b.TRANSPARENT)
             .draw()
     }

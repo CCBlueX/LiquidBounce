@@ -21,12 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.mapToCharArray
-import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -37,6 +35,7 @@ import net.minecraft.core.Holder
 import net.minecraft.tags.EnchantmentTags
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.EnchantmentHelper
 
 private object EnchantmentDisplayHelper {
     private val enchantmentAbbreviationCache = LruCache<Holder<Enchantment>, String>(128)
@@ -115,16 +114,6 @@ private data class EnchantmentInfo(
 
 internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags, "Enchantment", true) {
 
-    private val slots by multiEnumChoice(
-        "Slots",
-        objectLinkedSetOf(
-            EquipmentSlotChoice.MAINHAND, EquipmentSlotChoice.OFFHAND,
-            EquipmentSlotChoice.HEAD, EquipmentSlotChoice.CHEST,
-            EquipmentSlotChoice.LEGS, EquipmentSlotChoice.FEET,
-        ),
-        canBeNone = true,
-    )
-
     private val maxCountPerItem by int("MaxCountPerItem", 4, 1..16)
 
     private const val ITEM_SIZE = GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()
@@ -147,11 +136,10 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
     context(guiGraphics: GuiGraphicsExtractor)
     fun drawItemEnchantments(
         stack: ItemStack,
-        slot: EquipmentSlotChoice?,
         x: Float,
         y: Float,
     ) {
-        if (!running || slot !in slots || stack.isEmpty || stack.getEnchantmentCount() == 0) {
+        if (!running || stack.isEmpty || stack.getEnchantmentCount() == 0) {
             return
         }
 
@@ -174,7 +162,8 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
     private fun processItemEnchantments(itemStack: ItemStack): List<EnchantCell> {
         val enchantmentList = ObjectArrayList<EnchantmentInfo>()
 
-        for (itemEnchantment in itemStack.enchantments.entrySet()) {
+        // Use EnchantmentHelper for both normal items and enchantment books
+        for (itemEnchantment in EnchantmentHelper.getEnchantmentsForCrafting(itemStack).entrySet()) {
             val enchantment = itemEnchantment.key
             val level = itemEnchantment.intValue
             if (level <= 0) continue
