@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -27,6 +26,7 @@ import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.render.GuiRenderer.DEFAULT_ITEM_SIZE
 import net.minecraft.world.entity.LivingEntity
 
 internal object NametagEquipment : ValueGroup("Equipment") {
@@ -49,17 +49,18 @@ internal object NametagEquipment : ValueGroup("Equipment") {
         context(guiGraphics: GuiGraphicsExtractor)
         fun draw(x: Float, y: Float) {
             guiGraphics.drawQuad(
-                x,
-                y,
-                x + 16F,
-                y + 16F,
-                fillColor,
-                outlineColor,
+                x1 = x,
+                y1 = y,
+                x2 = x + DEFAULT_ITEM_SIZE,
+                y2 = y + DEFAULT_ITEM_SIZE,
+                fillColor = fillColor,
+                outlineColor = outlineColor,
             )
         }
     }
 
     init {
+        tree(NametagEnchantmentRenderer)
         tree(HighlightItemInUse)
     }
 
@@ -72,15 +73,18 @@ internal object NametagEquipment : ValueGroup("Equipment") {
             return
         }
 
-        val stacks = slots.mapToArray {
-            entity.getItemBySlot(it.slot)
+        val slotStacks = slots.map {
+            it to entity.getItemBySlot(it.slot)
         }
 
-        equipments.itemStacks = if (skipEmptySlot) {
-            stacks.filterNot { it.isEmpty }
+        val visibleSlotStacks = if (skipEmptySlot) {
+            slotStacks.filterNot { (_, stack) -> stack.isEmpty }
         } else {
-            stacks.asList()
+            slotStacks
         }
+
+        equipments.itemSlots = visibleSlotStacks.map { it.first }
+        equipments.itemStacks = visibleSlotStacks.map { it.second }
 
         equipments.highlightIndex = if (HighlightItemInUse.enabled && entity.isUsingItem) {
             val usingStack = entity.getItemInHand(entity.usedItemHand)

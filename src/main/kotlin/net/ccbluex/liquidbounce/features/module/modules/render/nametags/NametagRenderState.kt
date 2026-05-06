@@ -18,10 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.features.module.modules.render.nametags.NametagEnchantmentRenderer.drawItemEnchantments
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.SingleItemStackRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.network.chat.Component
@@ -62,7 +64,7 @@ internal class NametagRenderState {
     }
 
     fun calculateScreenPos(tickDelta: Float): Vec3f? {
-        val entity = this.entity!!
+        val entity = this.entity ?: return null
         val nametagPos = entity.interpolateCurrentPosition(tickDelta)
             .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
 
@@ -76,6 +78,11 @@ internal class NametagRenderState {
          * The items that should be rendered above the name tag
          */
         @JvmField var itemStacks: List<ItemStack> = emptyList()
+
+        /**
+         * The equipment slots matching [itemStacks] by index.
+         */
+        @JvmField var itemSlots: List<EquipmentSlotChoice> = emptyList()
 
         /**
          * For entity using item.
@@ -92,6 +99,7 @@ internal class NametagRenderState {
 
         fun reset() {
             this.itemStacks = emptyList()
+            this.itemSlots = emptyList()
             this.highlightIndex = -1
         }
     }
@@ -107,15 +115,30 @@ internal class NametagRenderState {
             SingleItemStackRenderer.OnlyItem
         }
 
-        if (equipments.highlightIndex !in equipments.itemStacks.indices) return raw
+        if (equipments.highlightIndex !in equipments.itemStacks.indices && !NametagEnchantmentRenderer.running) {
+            return raw
+        }
 
         return SingleItemStackRenderer { font, index, stack, x, y ->
             with(raw) {
-                drawItemStack(font, index, stack, x, y)
+                drawItemStack(
+                    font = font,
+                    index = index,
+                    stack = stack,
+                    x = x,
+                    y = y,
+                )
             }
             if (equipments.highlightIndex == index) {
                 NametagEquipment.HighlightItemInUse.draw(x.toFloat(), y.toFloat())
             }
+
+            drawItemEnchantments(
+                stack = stack,
+                slot = equipments.itemSlots.getOrNull(index),
+                x = x.toFloat(),
+                y = y.toFloat(),
+            )
         }
     }
 }
