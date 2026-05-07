@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.tags.TagKey
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import java.util.function.Predicate
 
 fun <T : HotbarItemSlot> Iterable<T>.findClosestSlot(item: Item): T? =
     findClosestSlot { it.item === item }
@@ -61,6 +62,8 @@ class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
     inline fun findSlot(predicate: (ItemStack) -> Boolean): T? {
         return if (mc.player == null) null else find { predicate(it.itemStack) }
     }
+
+    fun findSlot(predicate: Predicate<ItemStack>): T? = findSlot(predicate::test)
 
     operator fun plus(other: Slots<*>): Slots<ItemSlot> {
         return Slots(this.slots + other.slots)
