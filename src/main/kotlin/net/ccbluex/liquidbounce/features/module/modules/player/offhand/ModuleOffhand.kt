@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
-import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
-import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.network.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction

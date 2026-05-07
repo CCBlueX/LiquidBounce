@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_6
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
-import net.ccbluex.liquidbounce.utils.client.send1_21_5StopSneaking
+import net.ccbluex.liquidbounce.utils.network.send1_21_5StartSneaking
+import net.ccbluex.liquidbounce.utils.network.send1_21_5StopSneaking
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 
 internal class NoSlowSneakingSwitch(override val parent: ModeValueGroup<*>) : Mode("Switch") {

@@ -18,7 +18,7 @@
  */
 @file:Suppress("FunctionName", "TooManyFunctions")
 
-package net.ccbluex.liquidbounce.utils.client
+package net.ccbluex.liquidbounce.utils.network
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor
@@ -28,11 +28,15 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Switc
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
-import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
-import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
@@ -239,7 +243,8 @@ enum class MovePacketType(override val tag: String) : Tagged {
     },
     POSITION_AND_ON_GROUND("PositionAndOnGround") {
         override fun generatePacket() =
-            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z,
+            ServerboundMovePlayerPacket.Pos(
+                player.x, player.y, player.z,
                 player.onGround(), player.horizontalCollision)
     },
     LOOK_AND_ON_GROUND("LookAndOnGround") {
@@ -248,7 +253,8 @@ enum class MovePacketType(override val tag: String) : Tagged {
     },
     FULL("Full") {
         override fun generatePacket() =
-            ServerboundMovePlayerPacket.PosRot(player.x, player.y, player.z,
+            ServerboundMovePlayerPacket.PosRot(
+                player.x, player.y, player.z,
                 player.yRot, player.xRot, player.onGround(), player.horizontalCollision)
     };
 

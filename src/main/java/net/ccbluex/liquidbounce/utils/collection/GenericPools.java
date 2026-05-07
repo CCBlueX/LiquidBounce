@@ -17,22 +17,25 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.io
+package net.ccbluex.liquidbounce.utils.collection;
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.awt.Font
-import java.io.File
-import java.io.InputStream
+import net.ccbluex.fastutil.Pool;
 
-suspend fun File.createFont(fontFormat: Int = Font.TRUETYPE_FONT): Font =
-    withContext(Dispatchers.IO) {
-        Font.createFont(fontFormat, this@createFont)
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+
+/**
+ * This should only be used in render thread!
+ */
+@SuppressWarnings("rawtypes")
+public final class GenericPools {
+    private GenericPools() {
     }
 
-suspend fun InputStream.createFont(fontFormat: Int = Font.TRUETYPE_FONT): Font =
-    withContext(Dispatchers.IO) {
-        this@createFont.use {
-            Font.createFont(fontFormat, it)
-        }
-    }
+    public static final Pool<ArrayList> ARRAY_LIST = Pool.create(ArrayList::new, ArrayList::clear);
+
+    public static final Pool<HashMap> HASH_MAP = Pool.create(HashMap::new, HashMap::clear);
+
+    public static final Pool<HashSet> HASH_SET = Pool.create(HashSet::new, HashSet::clear);
+}

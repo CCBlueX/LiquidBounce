@@ -18,7 +18,8 @@
  */
 
 @file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
-package net.ccbluex.liquidbounce.utils.client
+
+package net.ccbluex.liquidbounce.utils.math
 
 import net.minecraft.util.Mth
 import org.joml.Vector2f

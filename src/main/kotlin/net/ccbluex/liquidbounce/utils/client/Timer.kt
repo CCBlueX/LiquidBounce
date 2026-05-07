@@ -25,9 +25,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.Timer.requestTimerSpeed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
 
-// Global minecraft timer
+/** Global minecraft timer */
 object Timer : EventListener {
     private val requestHandler = RequestHandler<Float>()
 

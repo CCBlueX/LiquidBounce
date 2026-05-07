@@ -24,7 +24,6 @@ import it.unimi.dsi.fastutil.objects.ObjectArraySet
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import java.util.Collections
-import java.util.function.Function
 import java.util.function.Predicate
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
@@ -33,12 +32,6 @@ fun <T> Array<out T>?.unmodifiable(): List<T> =
         size == 1 -> Collections.singletonList(this[0])
         else -> ObjectImmutableList(this)
     }
-
-fun <K, V> memorizingFunction(map: MutableMap<K, V>, mappingFunction: Function<K, V>): Function<K, V> =
-    Function { key -> map.computeIfAbsent(key, mappingFunction) }
-
-inline fun <K : Any, V : Any> Map<K, V>.immutableCopy(): Map<K, V> =
-    java.util.Map.copyOf(this)
 
 fun <E> Collection<E>.toOrderedSet(): Set<E> {
     return when (this.size) {

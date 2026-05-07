@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
+import static net.ccbluex.liquidbounce.utils.collection.GenericPools.ARRAY_LIST;
 
 @SuppressWarnings("rawtypes")
 @Mixin(GuiRenderState.class)

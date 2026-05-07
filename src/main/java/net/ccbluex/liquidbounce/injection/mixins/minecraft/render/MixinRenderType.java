@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.MeshData;
-import net.ccbluex.liquidbounce.utils.client.GenericPools;
+import net.ccbluex.liquidbounce.utils.collection.GenericPools;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;

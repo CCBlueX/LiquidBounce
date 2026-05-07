@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_6
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
-import net.ccbluex.liquidbounce.utils.client.send1_21_5StopSneaking
+import net.ccbluex.liquidbounce.utils.network.send1_21_5StartSneaking
+import net.ccbluex.liquidbounce.utils.network.send1_21_5StopSneaking
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks

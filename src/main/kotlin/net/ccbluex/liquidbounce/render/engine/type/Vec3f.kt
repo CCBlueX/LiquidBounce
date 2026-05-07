@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.render.engine.type
 
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.fastCos
+import net.ccbluex.liquidbounce.utils.math.fastSin
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.minecraft.client.Camera
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i

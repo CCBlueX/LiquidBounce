@@ -26,8 +26,8 @@ import it.unimi.dsi.fastutil.floats.Float2IntFunction
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.GuiCircleLutAtlas
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
-import net.ccbluex.liquidbounce.utils.client.floorToInt
+import net.ccbluex.liquidbounce.utils.math.ceilToInt
+import net.ccbluex.liquidbounce.utils.math.floorToInt
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.render.gui.element.CircleGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.LambdaSimpleGuiElementRenderState

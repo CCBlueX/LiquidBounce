@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.ArrayList;
 
-import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
+import static net.ccbluex.liquidbounce.utils.collection.GenericPools.ARRAY_LIST;
 
 @SuppressWarnings("rawtypes")
 @Mixin(GuiRenderState.Node.class)

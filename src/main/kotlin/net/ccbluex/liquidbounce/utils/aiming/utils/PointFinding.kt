@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.add
+import net.ccbluex.liquidbounce.utils.math.edgePoints
 import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -35,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.minecraft.world.entity.projectile.arrow.Arrow
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.AABB
@@ -48,18 +48,6 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
-
-val AABB.edgePoints: Array<Vec3>
-    get() = arrayOf(
-        Vec3(minX, minY, minZ),
-        Vec3(minX, minY, maxZ),
-        Vec3(minX, maxY, minZ),
-        Vec3(minX, maxY, maxZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(maxX, minY, maxZ),
-        Vec3(maxX, maxY, minZ),
-        Vec3(maxX, maxY, maxZ),
-    )
 
 /**
  * Creates rotation matrices: The first allows to turn the vec (1.0, 0.0, 0.0) into the given [vec].
@@ -215,7 +203,7 @@ fun findVisiblePointFromVirtualEye(
 object ArrowVisibilityPredicate : VisibilityPredicate {
     override fun isVisible(eyesPos: Vec3, targetSpot: Vec3): Boolean {
         val arrowEntity = Arrow(
-            world, eyesPos.x, eyesPos.y, eyesPos.z, ItemStack(Items.ARROW),
+            world, eyesPos.x, eyesPos.y, eyesPos.z, Items.ARROW.defaultInstance,
             null)
 
         return world.clip(

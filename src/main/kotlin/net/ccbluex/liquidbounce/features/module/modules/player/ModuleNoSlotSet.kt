@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
 
 object ModuleNoSlotSet : ClientModule("NoSlotSet", ModuleCategories.PLAYER) {

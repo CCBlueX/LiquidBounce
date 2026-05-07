@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.blockingHand
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
-import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 
 internal object NoSlowBlockingInteract : Mode("Interact") {

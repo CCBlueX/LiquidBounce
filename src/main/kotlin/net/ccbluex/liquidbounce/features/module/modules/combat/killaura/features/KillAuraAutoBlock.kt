@@ -40,9 +40,9 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
-import net.ccbluex.liquidbounce.utils.client.releaseUsingItemInTickLoop
-import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
-import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
+import net.ccbluex.liquidbounce.utils.network.releaseUsingItemInTickLoop
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.network.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.interactBlock
 import net.ccbluex.liquidbounce.utils.entity.interactBlockLikeVanilla
