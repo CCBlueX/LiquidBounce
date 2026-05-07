@@ -45,16 +45,7 @@ inline fun VoxelShape.ifEmpty(defaultValue: () -> VoxelShape): VoxelShape {
 
 inline fun VoxelShape?.orEmpty(): VoxelShape = this ?: Shapes.empty()
 
-fun Iterable<VoxelShape>.allEmpty(): Boolean {
-    if (this is Collection && isEmpty()) return true
-
-    val iterator = this.iterator()
-    while (iterator.hasNext()) {
-        val element = iterator.next()
-        if (!element.isEmpty) return false
-    }
-    return true
-}
+fun Iterable<VoxelShape>.allEmpty(): Boolean = all { it.isEmpty }
 
 fun Iterable<VoxelShape>.anyNotEmpty(): Boolean = any { !it.isEmpty }
 
