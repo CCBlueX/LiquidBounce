@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.item.armor
 
 import net.ccbluex.fastutil.enumMapOf
-import net.ccbluex.liquidbounce.utils.client.roundToDecimalPlaces
+import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.item.armorToughness
 import net.ccbluex.liquidbounce.utils.item.armorValue
 import net.ccbluex.liquidbounce.utils.item.durability

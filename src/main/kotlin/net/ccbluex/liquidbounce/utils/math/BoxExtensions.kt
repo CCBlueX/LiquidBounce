@@ -20,8 +20,6 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
-import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.core.BlockPos
@@ -31,6 +29,18 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+
+val AABB.edgePoints: Array<Vec3>
+    get() = arrayOf(
+        Vec3(minX, minY, minZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, maxY, minZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, maxY, maxZ),
+    )
 
 // Box operators
 

@@ -25,7 +25,7 @@ import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
-import net.ccbluex.liquidbounce.utils.io.toJson
+import net.ccbluex.liquidbounce.utils.io.toJsonArray
 import net.minecraft.world.entity.Entity
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -68,8 +68,8 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
     fun debugObject(entity: Entity): JsonElement {
         return JsonObject().apply {
             addProperty("id", entity.id)
-            add("pos", entity.position().toJson())
-            add("velocity", entity.deltaMovement.toJson())
+            add("pos", entity.position().toJsonArray())
+            add("velocity", entity.deltaMovement.toJsonArray())
         }
     }
 }

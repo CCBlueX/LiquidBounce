@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.useItem
+import net.ccbluex.liquidbounce.utils.network.useItem
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult

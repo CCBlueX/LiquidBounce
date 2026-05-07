@@ -34,8 +34,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import static net.ccbluex.liquidbounce.utils.client.GenericPools.HASH_MAP;
-import static net.ccbluex.liquidbounce.utils.client.GenericPools.HASH_SET;
+import static net.ccbluex.liquidbounce.utils.collection.GenericPools.HASH_MAP;
+import static net.ccbluex.liquidbounce.utils.collection.GenericPools.HASH_SET;
 
 /**
  * Purpose: reusing objects for less GC.

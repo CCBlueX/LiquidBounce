@@ -16,7 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.kotlin
+
+package net.ccbluex.liquidbounce.utils.collection
 
 /**
  * @param maxSize Maximum size of the cache. The best values are 2 to the power of [Int] like 64, 128, 256...

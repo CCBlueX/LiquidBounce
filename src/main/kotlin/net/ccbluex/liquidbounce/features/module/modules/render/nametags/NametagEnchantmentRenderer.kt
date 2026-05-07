@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
-import net.ccbluex.liquidbounce.utils.kotlin.LruCache
+import net.ccbluex.liquidbounce.utils.collection.LruCache
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
