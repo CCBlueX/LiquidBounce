@@ -32,7 +32,7 @@ object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
     }
 
     override suspend fun execute() {
-        val slot = Slots.OffhandWithHotbar.findSlot(mode.activeMode::test) ?: return
+        val slot = Slots.OffhandWithHotbar.findSlot(mode.activeMode) ?: return
 
         SilentHotbar.selectSlotSilently(ModuleAutoQueue, slot, 20)
         waitTicks(1)

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
+import it.unimi.dsi.fastutil.objects.AbstractObjectList
 import net.ccbluex.fastutil.asObjectList
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -31,6 +32,7 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.world.item.ItemStack
+import java.util.function.IntFunction
 import kotlin.math.abs
 
 /**

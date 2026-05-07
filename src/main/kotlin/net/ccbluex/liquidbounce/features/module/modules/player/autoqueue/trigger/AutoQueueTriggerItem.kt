@@ -40,8 +40,6 @@ object AutoQueueTriggerItem : AutoQueueTrigger("Item") {
     }
 
     override val isTriggered: Boolean
-        get() = Slots.OffhandWithHotbar.findSlot { itemStack ->
-            mode.activeMode.test(itemStack)
-        } != null
+        get() = Slots.OffhandWithHotbar.findSlot(mode.activeMode) != null
 
 }

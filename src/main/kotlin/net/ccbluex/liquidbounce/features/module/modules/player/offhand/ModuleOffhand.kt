@@ -360,13 +360,13 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
                 INVENTORY_HOTBAR_PRIORITY
             }
 
-            var itemSlot = slots.findSlot(item::test)
+            var itemSlot = slots.findSlot(item)
             if (itemSlot == null && fallBackItem != null) {
                 if (fallBackItem.test(player.offhandItem)) {
                     return HotbarItemSlot.OFFHAND
                 }
 
-                itemSlot = slots.findSlot(fallBackItem::test)
+                itemSlot = slots.findSlot(fallBackItem)
             }
 
             return itemSlot

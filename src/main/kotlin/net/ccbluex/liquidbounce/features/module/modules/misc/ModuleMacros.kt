@@ -130,7 +130,7 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
             }
 
             override suspend fun execute() {
-                val slot = Slots.OffhandWithHotbar.findSlot { pickMode.activeMode.test(it) } ?: return
+                val slot = Slots.OffhandWithHotbar.findSlot(pickMode.activeMode) ?: return
 
                 SilentHotbar.selectSlotSilently(ModuleMacros, slot, ticksUntilReset = holdTime.random())
                 when (action) {
