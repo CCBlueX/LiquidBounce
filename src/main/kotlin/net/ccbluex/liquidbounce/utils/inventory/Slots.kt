@@ -37,7 +37,16 @@ fun <T : HotbarItemSlot> Iterable<T>.findClosestSlot(items: Collection<Item>): T
     findClosestSlot { it.item in items }
 
 inline fun <T : HotbarItemSlot> Iterable<T>.findClosestSlot(predicate: (ItemStack) -> Boolean): T? {
-    return this.filter { predicate(it.itemStack) }.minWithOrNull(HotbarItemSlot.PREFER_NEARBY)
+    var candidate: T? = null
+    for (slot in this) {
+        if (!predicate(slot.itemStack)) continue
+        candidate = if (candidate == null) {
+            slot
+        } else {
+            minOf(candidate, slot, HotbarItemSlot.PREFER_NEARBY)
+        }
+    }
+    return candidate
 }
 
 class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
@@ -48,8 +57,6 @@ class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
         get() = slots.mapToArray { it.itemStack.item }
 
     fun findSlot(item: Item): T? = findSlot { it.item === item }
-
-    fun has(item: Item): Boolean = findSlot(item) != null
 
     inline fun findSlot(predicate: (ItemStack) -> Boolean): T? {
         return if (mc.player == null) null else find { predicate(it.itemStack) }
