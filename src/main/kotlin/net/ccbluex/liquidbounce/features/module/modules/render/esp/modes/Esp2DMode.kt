@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
-import net.ccbluex.liquidbounce.utils.math.edgePoints
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 
 object Esp2DMode : EspMode.BoxBased("2D") {
@@ -61,22 +60,16 @@ object Esp2DMode : EspMode.BoxBased("2D") {
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
         for ((entity, _, _, box) in collectPreparedBoxes(event.tickDelta)) {
-            val projected = box.edgePoints.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
-            if (projected.isEmpty()) {
-                continue
-            }
+            val rect = WorldToScreen.calculateScreenRect(box) ?: continue
 
             val color = getColor(entity)
             val baseColor = color.with(a = 50)
             val outlineColor = color.with(a = 255)
             val black = Color4b.BLACK
 
-            val minX = projected.minOf { it.x }
-            val maxX = projected.maxOf { it.x }
-            val minY = projected.minOf { it.y }
-            val maxY = projected.maxOf { it.y }
-            val rectWidth = maxX - minX
-            val rectHeight = maxY - minY
+            val (minX, minY, maxX, maxY) = rect
+            val rectWidth = rect.w
+            val rectHeight = rect.h
 
             val guiScaleFactor = mc.options.guiScale().get()
             val outlineThickness = Outline.thickness / guiScaleFactor

@@ -30,7 +30,7 @@ import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
-val AABB.edgePoints: Array<Vec3>
+val AABB.vertices: Array<Vec3>
     get() = arrayOf(
         Vec3(minX, minY, minZ),
         Vec3(minX, minY, maxZ),
