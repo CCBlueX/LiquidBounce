@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.add
-import net.ccbluex.liquidbounce.utils.math.edgePoints
+import net.ccbluex.liquidbounce.utils.math.vertices
 import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -103,7 +103,8 @@ inline fun projectPointsOnBox(
 
     // Find a point between the virtual eye and the target box such that every edge point of the box is behind it
     // (from the perspective of the virtual eye). This position is used to craft the targeting frame
-    val targetFrameOrigin = targetBox.edgePoints
+    val targetVertices = targetBox.vertices
+    val targetFrameOrigin = targetVertices
         .mapToArray { playerToBoxLine.getNearestPointTo(it) }
         .minBy { it.distanceToSqr(virtualEye) }
         .lerp(virtualEye, 0.1)
@@ -111,7 +112,7 @@ inline fun projectPointsOnBox(
     val plane = NormalizedPlane(targetFrameOrigin, playerToBoxLine.direction)
     val (toMatrix, backMatrix) = getRotationMatricesForVec(plane.normalVec)
 
-    val projectedAndRotatedPoints = targetBox.edgePoints.mapToArray {
+    val projectedAndRotatedPoints = targetVertices.mapToArray {
         plane.intersection(Line.fromPoints(virtualEye, it))!!.subtract(targetFrameOrigin).toVector3f().mul(backMatrix)
     }
 

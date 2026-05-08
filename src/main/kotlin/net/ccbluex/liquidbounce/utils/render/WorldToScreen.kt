@@ -20,10 +20,13 @@ package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.math.vertices
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
@@ -95,6 +98,25 @@ object WorldToScreen {
         }
 
         return Line(cameraPos, relativePos.toVec3d())
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun calculateScreenRect(box: AABB, cameraPos: Vec3 = this.cachedCameraPos): Rect? {
+        var minX = Float.POSITIVE_INFINITY
+        var minY = Float.POSITIVE_INFINITY
+        var maxX = Float.NEGATIVE_INFINITY
+        var maxY = Float.NEGATIVE_INFINITY
+        for (vertex in box.vertices) {
+            val (x, y, _) = calculateScreenPos(vertex, cameraPos) ?: continue
+            if (minX > x) minX = x
+            if (minY > y) minY = y
+            if (maxX < x) maxX = x
+            if (maxY < y) maxY = y
+        }
+
+        if (maxX <= minX || maxY <= minY) return null
+        return Rect(minX, minY, maxX, maxY)
     }
 
 }
