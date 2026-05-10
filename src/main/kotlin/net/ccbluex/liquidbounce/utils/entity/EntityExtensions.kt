@@ -186,6 +186,9 @@ val ClientInput.initial: Input
 val Player.ping: Int
     get() = mc.connection?.getPlayerInfo(uuid)?.latency ?: 0
 
+val InteractionHand.opposite: InteractionHand
+    get() = if (this === InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
+
 fun GameType.shortName(): String = when (this) {
     GameType.SURVIVAL -> "S"
     GameType.CREATIVE -> "C"

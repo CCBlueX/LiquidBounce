@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -31,12 +32,17 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse.Imm
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.opposite
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.inventory.ContainerInput
+import net.minecraft.world.item.Items
 
 /**
  * FastUse module
@@ -46,7 +52,7 @@ import net.minecraft.world.effect.MobEffects
 
 object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases = listOf("FastEat")) {
 
-    private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime)).apply { tagBy(this) }
+    private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime, Crossbow)).apply { tagBy(this) }
 
     private val conditions by multiEnumChoice("Conditions", UseConditions.NOT_IN_THE_AIR)
     private val stopInput by boolean("StopInput", false)
@@ -136,6 +142,42 @@ object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases 
             }
         }
 
+    }
+
+    private object Crossbow : Mode("Crossbow") {
+        override val parent: ModeValueGroup<Mode>
+            get() = modes
+
+        private val tickCooldown by int("TickCooldown", 1, 1..20)
+
+        @Suppress("unused")
+        val tickHandler = handler<GameTickEvent> {
+            if (player.isUsingItem && player.activeItem.`is`(Items.CROSSBOW) && player.tickCount % tickCooldown == 0) {
+                val hand = player.usedItemHand
+                val containerId = player.inventoryMenu.containerId
+                val slot = player.inventory.selectedSlot + Inventory.INVENTORY_SIZE
+
+                interaction.handleContainerInput(
+                    containerId,
+                    slot,
+                    Inventory.SLOT_OFFHAND,
+                    ContainerInput.SWAP,
+                    player
+                )
+
+                interaction.useItem(player, hand.opposite)
+
+                interaction.handleContainerInput(
+                    containerId,
+                    slot,
+                    Inventory.SLOT_OFFHAND,
+                    ContainerInput.SWAP,
+                    player
+                )
+
+                interaction.useItem(player, hand)
+            }
+        }
     }
 
     @Suppress("unused")
