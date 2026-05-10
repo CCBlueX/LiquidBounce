@@ -151,10 +151,33 @@ object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases 
         val repeatable = tickHandler {
             if (player.isUsingItem && player.activeItem.`is`(Items.CROSSBOW) && player.tickCount % tickCooldown == 0) {
                 val hand = player.usedItemHand
+                val otherHand = if (hand == InteractionHand.MAIN_HAND)
+                    InteractionHand.OFF_HAND
+                else
+                    InteractionHand.MAIN_HAND
+
+                val containerId = player.inventoryMenu.containerId
                 val slot = player.inventory.selectedSlot + 36
-                interaction.handleContainerInput(player.inventoryMenu.containerId, slot, 40, ContainerInput.SWAP, player)
-                interaction.useItem(player, if (hand == InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND)
-                interaction.handleContainerInput(player.inventoryMenu.containerId, slot, 40, ContainerInput.SWAP, player)
+                val offhandButton = 40
+
+                interaction.handleContainerInput(
+                    containerId,
+                    slot,
+                    offhandButton,
+                    ContainerInput.SWAP,
+                    player
+                )
+
+                interaction.useItem(player, otherHand)
+
+                interaction.handleContainerInput(
+                    containerId,
+                    slot,
+                    offhandButton,
+                    ContainerInput.SWAP,
+                    player
+                )
+
                 interaction.useItem(player, hand)
             }
         }
