@@ -82,6 +82,10 @@ fun VoxelShape.toSortedAabbs(): MutableList<AABB> {
     return list
 }
 
+fun VoxelShape.toAabbs(destination: MutableCollection<in AABB>) {
+    this.forAllBoxes { x1, y1, z1, x2, y2, z2 -> destination.add(AABB(x1, y1, z1, x2, y2, z2)) }
+}
+
 fun VoxelShape.clipAllBoxes(
     base: BlockPos,
     from: Vec3,
@@ -102,9 +106,8 @@ fun VoxelShape.clipAllBoxes(
                 to,
             ).toList()
 
-        else -> {
-            val list = mutableListOf<Vec3>()
-            this.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
+        else -> buildList {
+            forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
                 AABB.clip(
                     minX + base.x,
                     minY + base.y,
@@ -115,10 +118,9 @@ fun VoxelShape.clipAllBoxes(
                     from,
                     to,
                 ).orElse(null)?.let {
-                    list.add(it)
+                    this.add(it)
                 }
             }
-            list
         }
     }
 }

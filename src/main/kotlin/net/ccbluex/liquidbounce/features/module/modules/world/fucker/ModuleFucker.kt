@@ -43,16 +43,19 @@ import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.math.distanceToSqr
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.outlineShape
+import net.ccbluex.liquidbounce.utils.block.raycast
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.clipAllBoxes
-import net.ccbluex.liquidbounce.utils.raytracing.clip
+import net.ccbluex.liquidbounce.utils.math.forAllFaces
+import net.ccbluex.liquidbounce.utils.math.samplePointOnSide
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -63,12 +66,14 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import java.util.function.ToDoubleFunction
-import kotlin.jvm.optionals.getOrNull
+import java.util.function.ToIntFunction
 import kotlin.math.max
+import kotlin.text.compareTo
 
 /**
  * Fucker module
@@ -121,10 +126,19 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
     )
 
     private val availableToolSlots
-        get() = if (ModuleAutoTool.isInventoryConsidered) Slots.Hotbar + Slots.Inventory else Slots.Hotbar
+        get() = if (ModuleAutoTool.isInventoryConsidered) Slots.HotbarAndInventory else Slots.Hotbar
+
+    private fun miningDuration(pos: BlockPos, state: BlockState): Double {
+        val bestMiningSpeed = availableToolSlots.maxOf { it.itemStack.getDestroySpeed(state) }
+        return state.getDestroySpeed(world, pos).toDouble() / bestMiningSpeed.toDouble()
+    }
 
     private var currentTarget: DestroyerTarget? = null
     private var oldTarget: DestroyerTarget? = null
+
+    private val targetPointProportions = doubleArrayOf(0.1, 0.3, 0.5, 0.7, 0.9)
+    private const val MAX_SURROUNDING_PATH_BLOCKS = 8
+    private const val RAYCAST_TARGET_EPSILON = 0.005
 
     override fun onDisabled() {
         clearCurrentTarget()
@@ -180,15 +194,15 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             max(range, wallRange).toDouble(),
             currentRotation,
             destroyerTarget.pos,
-            destroyerTarget.pos.getState() ?: return@tickHandler
+            destroyerTarget.pos.state ?: return@tickHandler
         ) ?: return@tickHandler
 
         val raytracePos = rayTraceResult.blockPos
 
         // Check if the raytrace result includes a block, if not we don't want to deal with it.
-        if (rayTraceResult.type != HitResult.Type.BLOCK ||
-            raytracePos != destroyerTarget.pos || raytracePos.getState()!!.isNotBreakable(raytracePos)
-        ) {
+        val raytraceState = raytracePos.state
+        if (rayTraceResult.type != HitResult.Type.BLOCK || raytracePos != destroyerTarget.pos ||
+            raytraceState == null || raytraceState.isNotBreakable(raytracePos)) {
             return@tickHandler
         }
 
@@ -237,8 +251,8 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
                 val weakBlock = pos.weakestNeighbor ?: continue
                 considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
-            } else if (surroundings && updateSurroundings(pos)) {
-                break
+            } else if (surroundings) {
+                updateSurroundings(pos)
             }
         }
     }
@@ -263,13 +277,11 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
     }
 
     private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {
-        val possibleBlocks = possibleBlocks.let {
-            if (it is Set || it.size <= 4) it else it.toHashSet() // for performance of contains
-        }
         val currentTarget = currentTarget ?: return
 
         var removed = false
-        if (currentTarget.pos !in possibleBlocks) {
+        val actualTargetPos = currentTarget.surroundingInfo?.actualTargetPos ?: currentTarget.pos
+        if (actualTargetPos !in possibleBlocks) {
             removed = true
         }
         if (currentTarget.isTarget && currentTarget.action != action) {
@@ -289,45 +301,6 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
         }
     }
 
-    private fun traceWayToTarget(
-        target: BlockPos,
-        targetPoint: Vec3,
-        startPos: BlockPos,
-    ): List<BlockPos> {
-        val eyePos = player.eyePosition
-
-        val visited = LongOpenHashSet()
-        val result = mutableListOf<BlockPos>()
-
-        fun traceSingle(pos: BlockPos): Boolean {
-            if (pos == target || !visited.add(pos.asLong())) {
-                return false
-            }
-
-            // Any of boxes raycast the line is not null -> need to break
-            return pos.outlineShape.clipAllBoxes(pos, eyePos, targetPoint).isNotEmpty()
-        }
-
-        fun traceSurrounding(pos: Long) {
-            val mut = BlockPos.MutableBlockPos().set(pos)
-            if (traceSingle(mut)) {
-                result.add(mut.immutable())
-            }
-
-            for (direction in Direction.entries) {
-                mut.set(pos).move(direction)
-                if (traceSingle(mut)) {
-                    result.add(mut.immutable())
-                    traceSurrounding(mut.asLong())
-                }
-            }
-        }
-
-        traceSurrounding(startPos.asLong())
-
-        return result
-    }
-
     /**
      * @return true if it is the best target, false if it's invalid and null if it's not better than the current target
      */
@@ -337,33 +310,33 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
         throughWallsRange: Double,
         isCurrentTarget: Boolean = false
     ): Boolean? {
-        val state = target.pos.getState()
-
-        if (state == null || state.isAir) {
-            return false
-        }
+        val state = target.pos.state?.takeUnless { it.isAir } ?: return false
 
         val raytrace = raytraceBlockRotation(
-            player.eyePosition,
-            target.pos,
-            state,
+            eyes = player.eyePosition,
+            pos = target.pos,
+            state = state,
             range = range,
             wallsRange = throughWallsRange
         ) ?: return false
 
         val currentTarget = currentTarget
 
-        if (!isCurrentTarget && currentTarget != null && target <= currentTarget) {
+        if (!isCurrentTarget && currentTarget != null && target >= currentTarget) {
             return null
         }
 
         if (!ModulePacketMine.running) {
             RotationManager.setRotationTarget(
-                raytrace.rotation,
+                rotation = raytrace.rotation,
                 considerInventory = !ignoreOpenInventory,
                 valueGroup = rotations,
-                if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
-                this@ModuleFucker
+                priority = if (prioritizeOverKillAura) {
+                    Priority.IMPORTANT_FOR_USAGE_3
+                } else {
+                    Priority.IMPORTANT_FOR_USAGE_1
+                },
+                provider = this@ModuleFucker
             )
         }
 
@@ -375,46 +348,115 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
     private fun updateSurroundings(initialPosition: BlockPos): Boolean {
         val eyePos = player.eyePosition
-        val targetPoint = initialPosition.outlineShape.move(initialPosition)
-            .closestPointTo(eyePos).getOrNull() ?: return false
+        val path = findBestSurroundingPath(initialPosition, eyePos) ?: return false
 
-        debugGeometry("targetPos") {
-            ModuleDebug.DebuggedPoint(targetPoint, Color4b.RED.alpha(100))
+        debugGeometry("targetPoint") {
+            ModuleDebug.DebuggedPoint(path.info.targetPoint, Color4b.RED.alpha(100))
         }
-
-        val raytraceResult = world.clip(
-            eyePos,
-            targetPoint,
-            ClipContext.Block.OUTLINE,
-            ClipContext.Fluid.NONE,
-            player,
-        ).takeIf { it.type == HitResult.Type.BLOCK } ?: return false
-
-        val blockPos = raytraceResult.blockPos
 
         debugGeometry("initialPosition") {
             ModuleDebug.DebuggedBox(initialPosition.outlineBox.move(initialPosition), Color4b.GREEN.alpha(50))
         }
 
         debugGeometry("raytraceResult") {
-            ModuleDebug.DebuggedBox(blockPos.outlineBox.move(blockPos), Color4b.BLUE.alpha(50))
+            ModuleDebug.DebuggedBox(path.firstBlock.outlineBox.move(path.firstBlock), Color4b.BLUE.alpha(50))
         }
 
-        val arr = traceWayToTarget(initialPosition, targetPoint, blockPos).ifEmpty { return false }
+        debugParameter("wayToTarget") { path.blocks }
 
-        debugParameter("wayToTarget") { arr }
-
-        val resistance = arr.mapNotNull {
-            it to (it.getState()?.takeUnless { state -> state.isAir } ?: return@mapNotNull null)
-        }.sumOf(::miningDuration)
-
-        considerAsTarget(
-            DestroyerTarget(blockPos, DestroyAction.DESTROY, SurroundingInfo(initialPosition, resistance)),
+        return considerAsTarget(
+            DestroyerTarget(path.firstBlock, DestroyAction.DESTROY, path.info),
             range.toDouble(),
             wallRange.toDouble(),
-        )
+        ) == true
+    }
 
-        return true
+    @Suppress("CognitiveComplexMethod")
+    private fun findBestSurroundingPath(target: BlockPos, eyePos: Vec3): SurroundingPath? {
+        val rangeSquared = range.toDouble().sq()
+
+        fun createSurroundingPath(targetPoint: Vec3): SurroundingPath? {
+            val blocks = traceBlocksToTarget(target, eyePos, targetPoint)?.takeIf { it.isNotEmpty() } ?: return null
+            var resistance = 0.0
+
+            for (pos in blocks) {
+                val state = pos.state?.takeUnless { it.isAir } ?: return null
+                resistance += miningDuration(pos, state)
+            }
+
+            val firstBlock = blocks.first()
+            return SurroundingPath(
+                firstBlock = firstBlock,
+                blocks = blocks,
+                info = SurroundingInfo(
+                    actualTargetPos = target,
+                    targetPoint = targetPoint,
+                    resistance = resistance,
+                    blockerCount = blocks.size,
+                    firstBlockDistanceToTarget = firstBlock.distToCenterSqr(targetPoint),
+                    firstBlockDistanceToEyes = firstBlock.distToCenterSqr(eyePos),
+                )
+            )
+        }
+
+        var bestPath: SurroundingPath? = null
+
+        target.outlineShape.move(target).forAllFaces { side, minX, minY, minZ, maxX, maxY, maxZ ->
+            val face = AABB(minX, minY, minZ, maxX, maxY, maxZ)
+            for (a in targetPointProportions) {
+                for (b in targetPointProportions) {
+                    val targetPoint = face.samplePointOnSide(side, a, b)
+
+                    if (eyePos.distanceToSqr(targetPoint) <= rangeSquared) {
+                        val path = createSurroundingPath(targetPoint) ?: continue
+                        val currentBestPath = bestPath
+                        if (currentBestPath == null || currentBestPath >= path) {
+                            bestPath = path
+                        }
+                    }
+                }
+            }
+        }
+
+        return bestPath
+    }
+
+    private fun traceBlocksToTarget(target: BlockPos, eyePos: Vec3, targetPoint: Vec3): List<BlockPos>? {
+        val direction = targetPoint.subtract(eyePos).withLength(RAYCAST_TARGET_EPSILON)
+        val end = targetPoint.add(direction)
+        val clipContext = ClipContext(eyePos, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player)
+        val ignoredBlocks = ArrayList<BlockPos>(MAX_SURROUNDING_PATH_BLOCKS)
+        val visited = LongOpenHashSet(MAX_SURROUNDING_PATH_BLOCKS)
+        var reachedTarget = false
+        var invalidPath = false
+
+        while (!reachedTarget && !invalidPath) {
+            val raytraceResult = world.raycast(
+                context = clipContext,
+                exclude = ignoredBlocks,
+                include = null,
+                maxBlastResistance = null,
+            ).takeIf { result -> result.type == HitResult.Type.BLOCK }
+
+            if (raytraceResult == null) {
+                invalidPath = true
+            } else {
+                val blockPos = raytraceResult.blockPos
+                reachedTarget = blockPos == target
+
+                if (!reachedTarget) {
+                    val state = blockPos.state
+                    invalidPath = !visited.add(blockPos.asLong()) ||
+                        state == null || state.isAir || state.isNotBreakable(blockPos) ||
+                        ignoredBlocks.size >= MAX_SURROUNDING_PATH_BLOCKS
+                    if (!invalidPath) {
+                        ignoredBlocks += blockPos
+                    }
+                }
+            }
+        }
+
+        return ignoredBlocks.takeIf { reachedTarget }
     }
 
     @JvmRecord
@@ -429,23 +471,55 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             val otherSurrounding = other.surroundingInfo
 
             return when {
-                this.isTarget -> -1
-                other.isTarget -> 1
-                currentSurrounding == null -> -1
-                otherSurrounding == null -> 1
-                else -> currentSurrounding.resistance.compareTo(otherSurrounding.resistance)
+                this.isTarget && !other.isTarget -> -1
+                !this.isTarget && other.isTarget -> 1
+                this.isTarget && other.isTarget -> 0
+                currentSurrounding == null && otherSurrounding != null -> -1
+                currentSurrounding != null && otherSurrounding == null -> 1
+                currentSurrounding == null && otherSurrounding == null -> 0
+                currentSurrounding != null && otherSurrounding != null -> currentSurrounding.compareTo(otherSurrounding)
+                else -> 0
             }
         }
     }
 
     /**
-     * @param actualTargetPos the parent DestroyerTarget is surrounding this block
+     * A candidate path that opens line of sight to a target outline point.
+     *
+     * @param firstBlock the block that should be broken first
+     * @param blocks all blocks that need to be broken for the path
+     * @param info scoring and target metadata for this path
+     */
+    private data class SurroundingPath(
+        val firstBlock: BlockPos,
+        val blocks: List<BlockPos>,
+        val info: SurroundingInfo
+    ) : Comparable<SurroundingPath> {
+        override fun compareTo(other: SurroundingPath): Int = info.compareTo(other.info)
+    }
+
+    /**
+     * @param actualTargetPos the target block this surrounding path opens
+     * @param targetPoint the outline point that should become visible from the player's eyes
      * @param resistance proportional to the time it will take until the actual target is reached
+     * @param blockerCount number of blocks that need to be broken for the path
      */
     private data class SurroundingInfo(
         val actualTargetPos: BlockPos,
-        val resistance: Double
-    )
+        val targetPoint: Vec3,
+        val resistance: Double,
+        val blockerCount: Int,
+        val firstBlockDistanceToTarget: Double,
+        val firstBlockDistanceToEyes: Double,
+    ) : Comparable<SurroundingInfo> {
+        override fun compareTo(other: SurroundingInfo): Int = SURROUNDING_INFO_COMPARATOR.compare(this, other)
+    }
+
+    private val SURROUNDING_INFO_COMPARATOR = Comparator
+        .comparingDouble(ToDoubleFunction<SurroundingInfo> { it.resistance })
+        .thenComparingInt(ToIntFunction { it.blockerCount })
+        .thenComparingDouble(ToDoubleFunction { it.firstBlockDistanceToTarget })
+        .thenComparingDouble(ToDoubleFunction { it.firstBlockDistanceToEyes })
 
     private enum class DestroyAction(override val tag: String) : Tagged {
         DESTROY("Destroy"), USE("Use")
@@ -467,25 +541,21 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             val cache = BlockPos.MutableBlockPos()
             val neighbors = DIRECTIONS_EXCLUDING_DOWN.mapNotNullTo(mutableListOf()) {
                 val neighbor = cache.setWithOffset(this, it)
-                val state = neighbor.getState() ?: return@mapNotNullTo null
+                val state = neighbor.state ?: return@mapNotNullTo null
                 if (state.block !== block && !state.isAir) neighbor.immutable() to state else null
             }
 
             return neighbors.minWithOrNull(comparator)?.first
         }
 
-    private val comparator = Comparator.comparingDouble(ToDoubleFunction(::miningDuration))
+    private val comparator: Comparator<Pair<BlockPos, BlockState>> = Comparator
+        .comparingDouble(ToDoubleFunction<Pair<BlockPos, BlockState>> { (pos, state) ->
+            miningDuration(pos, state)
+        })
         .thenComparingDouble(ToDoubleFunction { (pos, state) ->
             state.getShape(world, pos, CollisionContext.of(player))
                 .move(pos)
                 .distanceToSqr(player.eyePosition)
         })
-
-    @JvmStatic
-    private fun miningDuration(pair: Pair<BlockPos, BlockState>): Double {
-        val (pos, state) = pair
-        val bestMiningSpeed = availableToolSlots.maxOfOrNull { it.itemStack.getDestroySpeed(state) } ?: 1.0F
-        return state.getDestroySpeed(world, pos).toDouble() / bestMiningSpeed.toDouble()
-    }
 
 }

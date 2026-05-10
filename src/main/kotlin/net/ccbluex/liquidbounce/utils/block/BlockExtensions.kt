@@ -303,7 +303,7 @@ fun BlockPos.getSortedSphere(radius: Float): Array<BlockPos> {
 @Suppress("SpellCheckingInspection", "CognitiveComplexMethod")
 fun BlockGetter.raycast(
     context: ClipContext,
-    exclude: Array<BlockPos>?,
+    exclude: Collection<BlockPos>?,
     include: BlockPos?,
     maxBlastResistance: Float?
 ): BlockHitResult {

@@ -87,6 +87,12 @@ class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
         val Inventory = Slots(InventoryItemSlot.ALL)
 
         /**
+         * Hotbar + Inventory
+         */
+        @JvmField
+        val HotbarAndInventory = Hotbar + Inventory
+
+        /**
          * Armor slots 0~3
          *
          * Boots/Leggings/Chestplate/Helmet

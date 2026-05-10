@@ -231,10 +231,10 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
                 // exclude the block as it gets removed before the explosion happens
                 val exclude = if (noBedExplosion) {
                     // the anchor is just the block itself
-                    arrayOf(pos)
+                    listOf(pos)
                 } else {
                     // a bed consists of two blocks
-                    arrayOf(pos, block.getPotentialSecondBedBlock(state, pos))
+                    listOf(pos, block.getPotentialSecondBedBlock(state, pos))
                 }
 
                 maxDamage = maxDamage.coerceAtLeast(
