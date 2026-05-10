@@ -135,6 +135,7 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
             // refill
             when {
                 Features.USE_SWAP in features &&
+                    slot.canBeSwapTarget &&
                     slotWithMaxCount.itemStack.count.let { it > itemStack.count && it > itemThreshold } ->
                     event.schedule(
                         constraints,

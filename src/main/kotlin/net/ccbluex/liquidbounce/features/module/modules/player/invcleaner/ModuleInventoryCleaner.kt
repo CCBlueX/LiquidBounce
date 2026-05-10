@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
@@ -72,7 +71,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategorie
     private fun buildSlotTargetMap(): Map<HotbarItemSlot, ItemSortChoice> {
         val slotTargets = enumMapOf<HotbarItemSlot, ItemSortChoice>()
 
-        if (!isOlderThanOrEqual1_8) slotTargets[HotbarItemSlot.OFFHAND] = offHandItem
+        if (HotbarItemSlot.OFFHAND.canBeSwapTarget) slotTargets[HotbarItemSlot.OFFHAND] = offHandItem
         slotTargets[HotbarItemSlot.SLOT_0] = slotItem1
         slotTargets[HotbarItemSlot.SLOT_1] = slotItem2
         slotTargets[HotbarItemSlot.SLOT_2] = slotItem3

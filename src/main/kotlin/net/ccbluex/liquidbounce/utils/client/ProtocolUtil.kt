@@ -111,6 +111,19 @@ val isNewerThanOrEquals1_16: Boolean
     }.getOrDefault(false)
 
 /**
+ * Offhand cannot be used as a SWAP target in any container on 1.15.2 and below.
+ *
+ * https://github.com/ViaVersion/ViaFabricPlus/blame/b03638ee999f658856e8284f135bcbf55fc596a8/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/interaction/container_clicking/MixinMultiPlayerGameMode.java#L101
+ */
+val isOlderThanOrEqual1_15_2: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_15_2
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.15.2", it)
+    }.getOrDefault(false)
+
+/**
  * 1.21.4 client + 1.8 server can block with sword,
  * but the [net.minecraft.world.item.ItemStack] has no
  * [net.minecraft.core.component.DataComponents.BLOCKS_ATTACKS]

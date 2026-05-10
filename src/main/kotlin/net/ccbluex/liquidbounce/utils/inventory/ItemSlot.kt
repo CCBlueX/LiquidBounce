@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.inventory
 import it.unimi.dsi.fastutil.objects.AbstractObjectList
 import net.ccbluex.fastutil.asObjectList
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_15_2
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.item.ItemStackHolder
@@ -197,6 +198,9 @@ enum class HotbarItemSlot(
      */
     val isOffHand: Boolean
         get() = hotbarIndex == null
+
+    val canBeSwapTarget: Boolean
+        get() = !isOffHand || !isOlderThanOrEqual1_15_2
 
     /**
      * Vanilla [InteractionHand] corresponding to this slot when performing item use / interaction logic.
