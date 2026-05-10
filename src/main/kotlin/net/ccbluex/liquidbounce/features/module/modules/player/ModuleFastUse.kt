@@ -36,7 +36,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.inventory.ContainerInput
+import net.minecraft.world.item.Items
 
 /**
  * FastUse module
@@ -46,7 +49,7 @@ import net.minecraft.world.effect.MobEffects
 
 object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases = listOf("FastEat")) {
 
-    private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime)).apply { tagBy(this) }
+    private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime, Crossbow)).apply { tagBy(this) }
 
     private val conditions by multiEnumChoice("Conditions", UseConditions.NOT_IN_THE_AIR)
     private val stopInput by boolean("StopInput", false)
@@ -136,6 +139,25 @@ object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases 
             }
         }
 
+    }
+
+    private object Crossbow : Mode("Crossbow") {
+        override val parent: ModeValueGroup<Mode>
+            get() = modes
+
+        val tickCooldown by int("TickCooldown", 1, 1..20)
+
+        @Suppress("unused")
+        val repeatable = tickHandler {
+            if (player.isUsingItem && player.activeItem.`is`(Items.CROSSBOW) && player.tickCount % tickCooldown == 0) {
+                val hand = player.usedItemHand
+                val slot = player.inventory.selectedSlot + 36
+                interaction.handleContainerInput(player.inventoryMenu.containerId, slot, 40, ContainerInput.SWAP, player)
+                interaction.useItem(player, if (hand == InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND)
+                interaction.handleContainerInput(player.inventoryMenu.containerId, slot, 40, ContainerInput.SWAP, player)
+                interaction.useItem(player, hand)
+            }
+        }
     }
 
     @Suppress("unused")
