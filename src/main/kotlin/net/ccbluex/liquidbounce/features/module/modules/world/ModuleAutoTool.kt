@@ -113,7 +113,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
             if (!ConsiderInventory.running) {
                 return Slots.Hotbar.findBestToolToMineBlock(blockState, ignoreDurability, SilkTouchHandler)
             } else {
-                val slot = (Slots.Hotbar + Slots.Inventory)
+                val slot = Slots.HotbarAndInventory
                     .findBestToolToMineBlock(blockState, ignoreDurability, SilkTouchHandler)
 
                 return when (slot) {

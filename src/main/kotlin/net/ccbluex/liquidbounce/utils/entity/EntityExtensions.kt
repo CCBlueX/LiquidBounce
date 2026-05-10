@@ -580,7 +580,7 @@ fun LivingEntity.getDamageFromExplosion(
     power: Float = 6f,
     explosionRange: Float = power * 2f, // allows setting precomputed values
     damageDistance: Float = explosionRange * explosionRange,
-    exclude: Array<BlockPos>? = null,
+    exclude: Collection<BlockPos>? = null,
     include: BlockPos? = null,
     maxBlastResistance: Float? = null,
     entityBoundingBox: AABB? = null,
@@ -628,7 +628,7 @@ fun LivingEntity.getDamageFromExplosion(
 @Suppress("NestedBlockDepth")
 fun LivingEntity.getExposureToExplosion(
     source: Vec3,
-    exclude: Array<BlockPos>?,
+    exclude: Collection<BlockPos>?,
     include: BlockPos?,
     maxBlastResistance: Float?,
     entityBoundingBox: AABB?
