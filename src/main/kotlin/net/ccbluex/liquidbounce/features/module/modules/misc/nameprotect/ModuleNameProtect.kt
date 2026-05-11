@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.GenericColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
-import net.ccbluex.liquidbounce.render.engine.font.processor.LegacyTextSanitizer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.text.toText
@@ -40,6 +39,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.FormattedCharSink
+import net.minecraft.util.StringDecomposer
 
 private const val DEFAULT_CACHE_SIZE = 512
 
@@ -272,11 +272,13 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
 
 /**
  * Sanitizes texts which are sent to the client.
- * 1. Degenerates legacy formatting into new formatting [LegacyTextSanitizer]
+ * 1. Degenerates legacy formatting into new formatting [StringDecomposer]
  * 2. Applies [ModuleNameProtect] - if needed
  */
 fun Component.sanitizeForeignInput(): Component {
-    val degeneratedText = LegacyTextSanitizer.SanitizedLegacyText(this)
+    val degeneratedText = FormattedCharSequence { output ->
+        StringDecomposer.iterateFormatted(this, Style.EMPTY, output)
+    }
 
     if (!ModuleNameProtect.running) {
         return degeneratedText.toText()
