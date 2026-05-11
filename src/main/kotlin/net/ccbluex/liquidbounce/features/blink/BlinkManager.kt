@@ -201,7 +201,7 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
     private fun getEspData() = positions
         .firstOrNull()
-        ?.takeUnless { PerspectiveEvent.INSTANCE.perspective == CameraType.FIRST_PERSON }
+        ?.takeUnless { PerspectiveEvent.perspective == CameraType.FIRST_PERSON }
         ?.let { BlinkEspData(player, it, RotationManager.actualServerRotation) }
 
     @Suppress("unused")

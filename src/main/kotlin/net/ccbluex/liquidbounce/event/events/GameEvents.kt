@@ -163,14 +163,13 @@ class OverlayMessageEvent(
 ) : Event(), WebSocketEvent
 
 @Tag("perspective")
-class PerspectiveEvent(
-    var perspective: CameraType,
-    var distance: Float,
-    var noClip: Boolean = false,
+object PerspectiveEvent : Event() {
+    var perspective: CameraType = CameraType.FIRST_PERSON
+    var distance: Float = 0f
+    var noClip: Boolean = false
 
-    var lastPerspective: CameraType = CameraType.FIRST_PERSON,
-    var lastDistance: Float = 0f,
-) : Event() {
+    var lastPerspective: CameraType = CameraType.FIRST_PERSON
+    var lastDistance: Float = 0f
 
     fun update(mc: Minecraft, entity: Entity?) {
         lastDistance = distance
@@ -179,11 +178,6 @@ class PerspectiveEvent(
         perspective = mc.options.cameraType
         noClip = false
         distance = entity.cameraDistance
-    }
-
-    companion object {
-        @JvmField
-        val INSTANCE = PerspectiveEvent(CameraType.FIRST_PERSON, 0f)
     }
 }
 
