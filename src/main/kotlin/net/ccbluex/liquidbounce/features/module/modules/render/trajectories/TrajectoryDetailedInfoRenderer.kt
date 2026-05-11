@@ -125,8 +125,8 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
                     pose().pushMatrix()
                     pose().translate(0F, 16F)
                 }
-                pose().scale(1F / (fontRenderer.size * 0.15F))
                 val fontRenderer = fontRenderer
+                pose().scale(fontRenderer.scaleToVanillaFont)
                 var y = 0F
 
                 for (text in texts) {

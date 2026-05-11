@@ -27,7 +27,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 private const val NAMETAG_PADDING: Int = 15
 
 private const val FONT_SIZE = FontManager.DEFAULT_FONT_SIZE
-private const val BASE_SCALE_FACTOR = 1f / (FONT_SIZE * 0.15f)
 private const val BACKGROUND_X_OFFSET = 0.1f * FONT_SIZE
 private const val BACKGROUND_Y_OFFSET_TOP = -0.1f
 private const val BACKGROUND_Y_OFFSET_BOTTOM = 1.1f
@@ -48,13 +47,13 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
             .draw()
     }
 
-    val scale = BASE_SCALE_FACTOR * nametag.scale
+    val fontRenderer = ModuleNametags.fontRenderer
+    val scale = fontRenderer.scaleToVanillaFont * nametag.scale
 
     pose().pushMatrix()
     pose().translate(posX, posY)
     pose().scale(scale, scale)
 
-    val fontRenderer = ModuleNametags.fontRenderer
     val processedText = fontRenderer.process(nametag.text)
     val textWidth = fontRenderer.getStringWidth(processedText, shadow = true)
 

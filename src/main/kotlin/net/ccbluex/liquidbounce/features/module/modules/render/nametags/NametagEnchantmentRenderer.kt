@@ -114,18 +114,20 @@ private data class EnchantmentInfo(
 
 internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags, "Enchantment", true) {
 
+    private val scale by float("Scale", 0.8f, 0.25f..4f)
     private val maxCountPerItem by int("MaxCountPerItem", 4, 1..16)
     private val backgroundRadius by float("BackgroundRadius", 1.0f, 0f..8f)
 
     private const val ITEM_SIZE = GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()
     private const val ITEM_CENTER_X = ITEM_SIZE * 0.5f
-    private const val LABEL_TEXT_SCALE = 0.13f
     private const val LABEL_PADDING_X = 1.25f
     private const val LABEL_PADDING_Y = 0.5f
     private const val LABEL_VERTICAL_GAP = 1.5f
     private const val LABEL_ROW_SPACING = 0.5f
     private val BG_COLOR_NORMAL = Color4b.DEFAULT_BG_COLOR
     private val BG_COLOR_CURSE = Color4b.RED.darker().alpha(150)
+
+    private val labelTextScale get() = scale * ModuleNametags.fontRenderer.scaleToVanillaFont
 
     @JvmRecord
     private data class EnchantCell(
@@ -149,7 +151,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
             return
         }
 
-        val rowHeight = ModuleNametags.fontRenderer.height * LABEL_TEXT_SCALE + LABEL_PADDING_Y * 2f
+        val rowHeight = ModuleNametags.fontRenderer.height * labelTextScale + LABEL_PADDING_Y * 2f
         val totalHeight = cells.size * rowHeight + (cells.size - 1) * LABEL_ROW_SPACING
         val centerX = x + ITEM_CENTER_X
         var rowY = y - LABEL_VERTICAL_GAP - totalHeight
@@ -221,7 +223,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         y: Float,
         rowHeight: Float,
     ) {
-        val textWidth = cell.textWidth * LABEL_TEXT_SCALE
+        val textWidth = cell.textWidth * labelTextScale
         val width = textWidth + LABEL_PADDING_X * 2f
         val x1 = centerX - width * 0.5f
         val x2 = centerX + width * 0.5f
@@ -239,7 +241,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
             this.x = centerX - textWidth * 0.5f
             this.y = y + LABEL_PADDING_Y
             shadow = true
-            scale = LABEL_TEXT_SCALE
+            scale = labelTextScale
         }
     }
 }
