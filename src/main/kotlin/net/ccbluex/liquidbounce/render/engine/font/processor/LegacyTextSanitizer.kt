@@ -19,17 +19,20 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.FormattedText.StyledContentConsumer
 import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.FormattedCharSink
+import net.minecraft.util.StringDecomposer
 import java.util.Optional
 
 /**
  * This is a utility class which degenerates legacy formatting which is contained in new minecraft formatting
  * (i.e. `{text: "§a§lYeet"}`) into pure new formatting (i.e. `{text: "Yeet", bold: true, color: "green"}`).
+ *
+ * @see net.minecraft.util.StringDecomposer.iterateFormatted
+ * @see net.minecraft.network.chat.Style.applyLegacyFormat
  *
  * @param innerVisitor the receiver of the degenerated text formatting.
  */
@@ -39,72 +42,32 @@ class LegacyTextSanitizer(
 
     override fun accept(style: Style, text: String): Optional<Nothing> {
         var currentStyle = style
+        val currentText = StringBuilder(text.length)
 
-        var currentIndex = 0
-
-        while (currentIndex < text.length) {
-            val nextCommand = text.indexOf('§', currentIndex)
-
-            // If there is no more paragraph or if the paragraph is the last in the text, stop the processing.
-            if (nextCommand == -1 || nextCommand + 1 >= text.length) {
-                break
+        StringDecomposer.iterateFormatted(text, 0, style, style) { _, charStyle, codePoint ->
+            if (charStyle != currentStyle) {
+                flush(currentStyle, currentText)
+                currentStyle = charStyle
             }
 
-
-            // If there is text before the paragraph, accept it first
-            if (currentIndex != nextCommand) {
-                this.innerVisitor.accept(currentStyle, text.substring(currentIndex, nextCommand))
-            }
-
-            val nextCode = text.codePointAt(nextCommand + 1)
-
-            currentStyle = applyCodeForStyle(nextCode, currentStyle)
-            // skip the §X characters
-            currentIndex = nextCommand + 2
+            currentText.appendCodePoint(codePoint)
+            true
         }
 
-        if (currentIndex != text.length) {
-            this.innerVisitor.accept(currentStyle, text.substring(currentIndex))
-        }
-
+        flush(currentStyle, currentText)
         return Optional.empty()
     }
 
-    private fun applyCodeForStyle(codePoint: Int, currentStyle: Style): Style {
-        return ChatFormatting.getByCode(codePoint.toChar())?.applyFormatting(currentStyle) ?: currentStyle
-    }
-
-    private fun ChatFormatting.applyFormatting(style: Style): Style {
-        return when {
-            isColor -> style.withColor(this)
-            else -> when (this) {
-                ChatFormatting.RESET -> Style.EMPTY
-                ChatFormatting.BOLD -> style.withBold(true)
-                ChatFormatting.OBFUSCATED -> style.withObfuscated(true)
-                ChatFormatting.STRIKETHROUGH -> style.withStrikethrough(true)
-                ChatFormatting.UNDERLINE -> style.withUnderlined(true)
-                ChatFormatting.ITALIC -> style.withItalic(true)
-                else -> style
-            }
+    private fun flush(style: Style, text: StringBuilder) {
+        if (text.isNotEmpty()) {
+            this.innerVisitor.accept(style, text.toString())
+            text.setLength(0)
         }
     }
 
     class SanitizedLegacyText(private val text: Component): FormattedCharSequence {
         override fun accept(visitor: FormattedCharSink): Boolean {
-            val degenerator = LegacyTextSanitizer { style, text ->
-                var index = 0
-                while (index < text.length) {
-                    val codePoint = text.codePointAt(index)
-                    visitor.accept(index, style, codePoint)
-                    index += Character.charCount(codePoint)
-                }
-
-                Optional.empty()
-            }
-
-            text.visit(degenerator, Style.EMPTY)
-
-            return true
+            return StringDecomposer.iterateFormatted(text, Style.EMPTY, visitor)
         }
     }
 }

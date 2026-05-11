@@ -20,9 +20,11 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import net.ccbluex.liquidbounce.utils.kotlin.optional
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Style
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 
 class LegacyTextSanitizerTest {
@@ -48,13 +50,16 @@ class LegacyTextSanitizerTest {
         assertEquals(baseStyle, result[0].second)
 
         assertEquals("R", result[1].first)
-        assertEquals(baseStyle.withColor(ChatFormatting.RED), result[1].second)
+        assertEquals(baseStyle.applyLegacyFormat(ChatFormatting.RED), result[1].second)
 
         assertEquals("B", result[2].first)
-        assertEquals(baseStyle.withColor(ChatFormatting.RED).withBold(true), result[2].second)
+        assertEquals(
+            baseStyle.applyLegacyFormat(ChatFormatting.RED).applyLegacyFormat(ChatFormatting.BOLD),
+            result[2].second
+        )
 
         assertEquals("N", result[3].first)
-        assertEquals(Style.EMPTY, result[3].second)
+        assertEquals(baseStyle, result[3].second)
     }
 
     @Test
@@ -62,15 +67,15 @@ class LegacyTextSanitizerTest {
         val baseStyle = Style.EMPTY.withUnderlined(true)
 
         assertEquals(
-            listOf("A" to baseStyle, "B" to baseStyle),
+            listOf("AB" to baseStyle),
             sanitize(baseStyle, "A§xB")
         )
     }
 
     @Test
-    fun testTrailingSectionSignIsPreservedAsText() {
+    fun testTrailingSectionSignStopsIteration() {
         assertEquals(
-            listOf("value§" to Style.EMPTY),
+            listOf("value" to Style.EMPTY),
             sanitize(Style.EMPTY, "value§")
         )
     }
@@ -78,6 +83,20 @@ class LegacyTextSanitizerTest {
     @Test
     fun testOnlyFormattingCodesProducesNoSegments() {
         assertEquals(emptyList<Pair<String, Style>>(), sanitize(Style.EMPTY, "§a§l"))
+    }
+
+    @Test
+    fun testSanitizedLegacyTextStopsWhenVisitorStops() {
+        val text = LegacyTextSanitizer.SanitizedLegacyText("abc".asText())
+        var visits = 0
+
+        val completed = text.accept { _, _, _ ->
+            visits++
+            false
+        }
+
+        assertFalse(completed)
+        assertEquals(1, visits)
     }
 
     private fun sanitize(style: Style, text: String): List<Pair<String, Style>> {

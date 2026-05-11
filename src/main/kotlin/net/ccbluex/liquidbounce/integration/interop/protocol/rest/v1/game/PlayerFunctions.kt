@@ -170,7 +170,8 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
          *
          * Taken from the Minecraft source code
          *
-         * @see Gui.renderScoreboardSidebar
+         * @see Gui.extractScoreboardSidebar
+         * @see Gui.displayScoreboardSidebar
          */
         @JvmStatic
         fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {

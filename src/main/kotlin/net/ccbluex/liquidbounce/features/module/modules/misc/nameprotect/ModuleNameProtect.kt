@@ -40,6 +40,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.FormattedCharSink
+import net.minecraft.util.StringDecomposer
 
 private const val DEFAULT_CACHE_SIZE = 512
 
@@ -272,7 +273,7 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
 
 /**
  * Sanitizes texts which are sent to the client.
- * 1. Degenerates legacy formatting into new formatting [LegacyTextSanitizer]
+ * 1. Degenerates legacy formatting into new formatting [StringDecomposer]
  * 2. Applies [ModuleNameProtect] - if needed
  */
 fun Component.sanitizeForeignInput(): Component {
