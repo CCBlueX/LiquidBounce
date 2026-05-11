@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.gui.element.CircleGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.LambdaSimpleGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.LineGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.QuadGuiElementRenderState
+import net.ccbluex.liquidbounce.render.gui.element.RoundedRectGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.TexQuadGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.TriangleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
@@ -202,6 +203,44 @@ fun GuiGraphicsExtractor.drawQuad(
             bounds,
         )
     }
+}
+
+fun GuiGraphicsExtractor.drawRoundedRect(
+    x1: Float,
+    y1: Float,
+    x2: Float,
+    y2: Float,
+    radius: Float,
+    fillColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+    outlineWidth: Float = 1.0f,
+) {
+    val x11 = minOf(x1, x2)
+    val y11 = minOf(y1, y2)
+    val x21 = maxOf(x1, x2)
+    val y21 = maxOf(y1, y2)
+
+    val fill = fillColor ?: Color4b.TRANSPARENT
+    val outline = outlineColor ?: Color4b.TRANSPARENT
+    if (fill.isTransparent && (outline.isTransparent || outlineWidth <= 0.0f)) {
+        return
+    }
+
+    this.guiRenderState.addGuiElement(
+        RoundedRectGuiElementRenderState(
+            x11,
+            y11,
+            x21,
+            y21,
+            radius.coerceAtLeast(0.0f),
+            fill.argb,
+            outline.argb,
+            outlineWidth.coerceAtLeast(0.0f),
+            copyPosePooled(),
+            this.scissorStack.peek(),
+            getBounds(x11, y11, x21, y21),
+        )
+    )
 }
 
 inline fun GuiGraphicsExtractor.drawQuadXYWH(

@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
-import net.ccbluex.liquidbounce.render.drawQuad
+import net.ccbluex.liquidbounce.render.drawRoundedRect
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.gui.GuiGraphicsExtractor
 
@@ -67,13 +67,15 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
     val y2 = fontRenderer.height * BACKGROUND_Y_OFFSET_BOTTOM
 
     // Background
-    drawQuad(
+    drawRoundedRect(
         x1 = x1,
         y1 = y1,
         x2 = x2,
         y2 = y2,
+        radius = ModuleNametags.backgroundRadius,
         fillColor = Color4b.DEFAULT_BG_COLOR,
-        outlineColor = Color4b.BLACK.takeIf { ModuleNametags.border },
+        outlineColor = Color4b.BLACK,
+        outlineWidth = ModuleNametags.borderWidth,
     )
 
     // Text

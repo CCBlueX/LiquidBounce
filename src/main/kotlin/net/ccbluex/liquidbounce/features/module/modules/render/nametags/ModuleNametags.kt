@@ -48,7 +48,8 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
         tree(NametagEquipment)
     }
 
-    internal val border by boolean("Border", true)
+    internal val borderWidth by float("BorderWidth", 1f, 0f..8f)
+    internal val backgroundRadius by float("BackgroundRadius", 2f, 0f..16f)
     internal val scale = curve(
         "Scale",
         mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),

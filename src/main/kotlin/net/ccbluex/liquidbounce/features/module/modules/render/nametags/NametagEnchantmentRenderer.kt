@@ -22,7 +22,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.mapToCharArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.render.drawQuad
+import net.ccbluex.liquidbounce.render.drawRoundedRect
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
@@ -115,6 +115,7 @@ private data class EnchantmentInfo(
 internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags, "Enchantment", true) {
 
     private val maxCountPerItem by int("MaxCountPerItem", 4, 1..16)
+    private val backgroundRadius by float("BackgroundRadius", 1.0f, 0f..8f)
 
     private const val ITEM_SIZE = GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()
     private const val ITEM_CENTER_X = ITEM_SIZE * 0.5f
@@ -123,7 +124,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
     private const val LABEL_PADDING_Y = 0.5f
     private const val LABEL_VERTICAL_GAP = 1.5f
     private const val LABEL_ROW_SPACING = 0.5f
-    private val BG_COLOR_NORMAL = Color4b.BLACK.alpha(130)
+    private val BG_COLOR_NORMAL = Color4b.DEFAULT_BG_COLOR
     private val BG_COLOR_CURSE = Color4b.RED.darker().alpha(150)
 
     @JvmRecord
@@ -225,11 +226,12 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         val x1 = centerX - width * 0.5f
         val x2 = centerX + width * 0.5f
 
-        guiGraphics.drawQuad(
+        guiGraphics.drawRoundedRect(
             x1 = x1,
             y1 = y,
             x2 = x2,
             y2 = y + rowHeight,
+            radius = backgroundRadius,
             fillColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL,
         )
 

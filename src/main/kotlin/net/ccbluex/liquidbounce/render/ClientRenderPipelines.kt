@@ -151,6 +151,13 @@ object ClientRenderPipelines {
             withVertexFormat(ClientVertexFormats.GUI_CIRCLE_LUT, VertexFormat.Mode.QUADS)
         }
 
+        private val RoundedRect = newPipeline("gui/rounded_rect") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withVertexShader(ClientShaders.Vertex.GuiRoundedRect)
+            withFragmentShader(ClientShaders.Fragment.GuiRoundedRect)
+            withVertexFormat(ClientVertexFormats.GUI_ROUNDED_RECT, VertexFormat.Mode.QUADS)
+        }
+
         private val Lines = newPipeline("gui/lines") {
             guiPosColorSnippet(VertexFormat.Mode.DEBUG_LINES)
         }
@@ -183,6 +190,9 @@ object ClientRenderPipelines {
 
         @JvmStatic
         fun circleLut() = CircleLut
+
+        @JvmStatic
+        fun roundedRect() = RoundedRect
     }
 
     /**
