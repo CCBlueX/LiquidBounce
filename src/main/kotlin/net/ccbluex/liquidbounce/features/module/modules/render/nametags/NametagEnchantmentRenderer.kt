@@ -128,6 +128,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
     private val BG_COLOR_CURSE = Color4b.RED.darker().alpha(150)
 
     private val labelTextScale get() = scale * ModuleNametags.fontRenderer.scaleToVanillaFont
+    private val labelBackgroundRadius get() = backgroundRadius * scale
 
     @JvmRecord
     private data class EnchantCell(
@@ -233,7 +234,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
             y1 = y,
             x2 = x2,
             y2 = y + rowHeight,
-            radius = backgroundRadius,
+            radius = labelBackgroundRadius,
             fillColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL,
         )
 

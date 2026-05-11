@@ -48,7 +48,8 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
     }
 
     val fontRenderer = ModuleNametags.fontRenderer
-    val scale = fontRenderer.scaleToVanillaFont * nametag.scale
+    val fontScale = fontRenderer.scaleToVanillaFont
+    val scale = fontScale * nametag.scale
 
     pose().pushMatrix()
     pose().translate(posX, posY)
@@ -71,10 +72,10 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
         y1 = y1,
         x2 = x2,
         y2 = y2,
-        radius = ModuleNametags.backgroundRadius,
+        radius = ModuleNametags.backgroundRadius / fontScale,
         fillColor = Color4b.DEFAULT_BG_COLOR,
         outlineColor = Color4b.BLACK,
-        outlineWidth = ModuleNametags.borderWidth,
+        outlineWidth = ModuleNametags.borderWidth / fontScale,
     )
 
     // Text
