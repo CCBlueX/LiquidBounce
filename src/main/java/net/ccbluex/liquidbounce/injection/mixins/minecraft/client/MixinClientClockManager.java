@@ -39,7 +39,7 @@ public abstract class MixinClientClockManager {
             return original;
         }
 
-        return ModuleCustomAmbience.getTime(original);
+        return ModuleCustomAmbience.getWorldClockTime(original);
     }
 
 }
