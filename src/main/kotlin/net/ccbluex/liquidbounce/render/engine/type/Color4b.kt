@@ -177,7 +177,7 @@ data class Color4b(val argb: Int) {
 
     fun darker() = Color4b(darkerChannel(r), darkerChannel(g), darkerChannel(b), a)
 
-    private fun darkerChannel(value: Int) = (value * 0.7).toInt().coerceAtLeast(0)
+    private fun darkerChannel(value: Int) = (value * 0.7f).toInt().coerceAtLeast(0)
 
     /**
      * Interpolates this color with another color using the given percentage.

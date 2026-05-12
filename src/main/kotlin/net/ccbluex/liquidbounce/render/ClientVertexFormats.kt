@@ -25,6 +25,25 @@ import com.mojang.blaze3d.vertex.VertexFormatElement
 object ClientVertexFormats {
 
     /**
+     * Vertex format for GUI rounded rectangle shader.
+     *
+     * - UV0: Quad-local UV (0..1). Shader maps this into rect-local coordinates for SDF evaluation.
+     * - Color: Fill or outline color.
+     * - Size: Rect width/height encoded in UV1.x/UV1.y.
+     * - Parameters: Corner radius encoded in UV2.x. UV2.y is reserved for future flags.
+     * - StrokeWidth: Outline width in rect-local GUI units. 0 means fill.
+     */
+    @JvmField
+    val GUI_ROUNDED_RECT: VertexFormat = VertexFormat.builder()
+        .add("Position", VertexFormatElement.POSITION)
+        .add("UV0", VertexFormatElement.UV0)
+        .add("Color", VertexFormatElement.COLOR)
+        .add("Size", VertexFormatElement.UV1)
+        .add("Parameters", VertexFormatElement.UV2)
+        .add("StrokeWidth", VertexFormatElement.LINE_WIDTH)
+        .build()
+
+    /**
      * Vertex format for GUI circle LUT shader.
      *
      * - UV0: Quad-local UV (0..1). Shader remaps this to [-1,1] to evaluate circle SDF.

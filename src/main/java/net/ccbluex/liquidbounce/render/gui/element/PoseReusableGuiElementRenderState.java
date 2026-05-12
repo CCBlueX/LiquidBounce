@@ -24,7 +24,7 @@ import org.joml.Matrix3x2f;
 
 public sealed interface PoseReusableGuiElementRenderState
     extends GuiElementRenderState
-    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState {
+    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState, RoundedRectGuiElementRenderState {
     /**
      * Recyclable pose matrix.
      */

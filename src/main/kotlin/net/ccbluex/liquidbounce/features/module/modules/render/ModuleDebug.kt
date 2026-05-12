@@ -230,21 +230,23 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         }
 
         with(event.context) {
+            val vanillaScale = fontRenderer.scaleToVanillaFont
+
             // Draw
             fontRenderer.draw("Debugging".asPlainText()) {
                 x = 120f
                 y = 22f
                 shadow = true
-                scale = 0.3f
+                scale = vanillaScale * 2
             }
 
             // Draw text line one by one
             textList.forEachIndexed { index, text ->
                 fontRenderer.draw(text) {
                     x = 120f
-                    y = 40 + ((fontRenderer.height * 0.17f) * index)
+                    y = 40 + ((fontRenderer.height * vanillaScale) * index)
                     shadow = true
-                    scale = 0.17f
+                    scale = vanillaScale
                 }
             }
         }

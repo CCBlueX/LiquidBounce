@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
@@ -37,6 +38,12 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
 
     abstract val size: Float
     abstract val height: Float
+
+    /**
+     * Scales this renderer's text metrics to vanilla's 9px GUI font line height.
+     */
+    val scaleToVanillaFont: Float
+        get() = mc.font.lineHeight.toFloat() / this.height
 
     /**
      * Draws a string with minecraft font markup on GUI with [GuiGraphicsExtractor].
