@@ -102,17 +102,22 @@ suspend fun RoutingContext.getMarketplaceItemRevision() {
 suspend fun RoutingContext.subscribeMarketplaceItem() {
     val id = parameters["id"]?.toIntOrNull() ?: forbidden("Invalid ID")
 
+    if (MarketplaceManager.isSubscribed(id)) {
+        forbidden("Already subscribed")
+    }
+
+    val item = try {
+        MarketplaceApi.getMarketplaceItem(id)
+    } catch (e: Exception) {
+        logger.error("Failed to load marketplace item before subscribing", e)
+        forbidden("Failed to subscribe: ${e.message}")
+    }
+
+    if (item.status != MarketplaceItemStatus.ACTIVE) {
+        forbidden("Item is not active")
+    }
+
     try {
-        if (MarketplaceManager.isSubscribed(id)) {
-            forbidden("Already subscribed")
-        }
-
-        // Verify item exists and is active
-        val item = MarketplaceApi.getMarketplaceItem(id)
-        if (item.status != MarketplaceItemStatus.ACTIVE) {
-            forbidden("Item is not active")
-        }
-
         MarketplaceManager.subscribe(item)
         respondNoContent()
     } catch (e: Exception) {
@@ -127,11 +132,11 @@ suspend fun RoutingContext.subscribeMarketplaceItem() {
 suspend fun RoutingContext.unsubscribeMarketplaceItem() {
     val id = parameters["id"]?.toIntOrNull() ?: forbidden("Invalid ID")
 
-    try {
-        if (!MarketplaceManager.isSubscribed(id)) {
-            forbidden("Not subscribed")
-        }
+    if (!MarketplaceManager.isSubscribed(id)) {
+        forbidden("Not subscribed")
+    }
 
+    try {
         MarketplaceManager.unsubscribe(id)
         respondNoContent()
     } catch (e: Exception) {

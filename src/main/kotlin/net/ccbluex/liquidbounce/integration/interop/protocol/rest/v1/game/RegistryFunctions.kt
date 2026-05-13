@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.toName
 import net.ccbluex.liquidbounce.utils.item.getOrNull
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
 import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.util.httpServiceUnavailable
 import net.minecraft.core.BlockPos
 import net.minecraft.core.DefaultedRegistry
 import net.minecraft.core.Registry
@@ -191,9 +192,9 @@ private data class RegistryItemOutput(val name: String, val icon: String?)
 // GET /api/v1/client/registry/:name
 fun RoutingContext.getRegistry() {
     fun itemIconUrl(id: Identifier) =
-        "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id"
+        "${ClientInteropServer.url}/api/v1/client/itemTexture?id=$id"
     fun effectTextureUrl(id: Identifier) =
-        "${ClientInteropServer.url}/api/v1/client/resource/effectTexture?id=$id"
+        "${ClientInteropServer.url}/api/v1/client/effectTexture?id=$id"
 
     val registryName = parameters["name"]
         ?: forbidden("Missing registry name parameter")
@@ -231,7 +232,7 @@ fun RoutingContext.getRegistry() {
 
         "enchantment" -> {
             val registry = Registries.ENCHANTMENT.getOrNull()
-                ?: internalServerError("Registry not loaded")
+                ?: respond(httpServiceUnavailable("Registry not loaded")).let { return }
             registry.buildOutput(name = { _, id -> id.description.string })
         }
 

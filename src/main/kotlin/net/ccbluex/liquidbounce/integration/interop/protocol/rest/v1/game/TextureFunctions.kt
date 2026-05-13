@@ -62,9 +62,9 @@ fun RoutingContext.getItemTexture() {
     val image = BuiltInRegistries.ITEM.getValue(of)?.let(ItemImageAtlas::getItemImage)
         ?: badRequest("Item image not found")
 
-    val buffer = okio.Buffer()
-    ImageIO.write(image, "PNG", buffer.outputStream())
-    respondFileStream(buffer.inputStream(), contentLength = buffer.size.toInt(), contentType = "image/png")
+    call.respondOutputStream(contentType = "image/png") {
+        ImageIO.write(image, "PNG", this)
+    }
 }
 
 // GET /api/v1/client/effectTexture

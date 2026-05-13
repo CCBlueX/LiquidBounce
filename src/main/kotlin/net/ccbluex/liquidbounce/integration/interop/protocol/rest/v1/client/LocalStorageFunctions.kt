@@ -18,9 +18,10 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.LocalStorageData.Item
 import net.ccbluex.netty.http.routing.RoutingContext
 
 /**
@@ -33,6 +34,10 @@ import net.ccbluex.netty.http.routing.RoutingContext
  *
  * Especially because we have not enabled the CEF local storage
  */
+
+private data class LocalStorageData(val items: List<Item>) {
+    data class Item(val key: String, val value: String)
+}
 
 // GET /api/v1/client/localStorage
 fun RoutingContext.getLocalStorage() {
@@ -63,26 +68,12 @@ fun RoutingContext.deleteLocalStorage() {
 
 // GET /api/v1/client/localStorage/all
 fun RoutingContext.getAllLocalStorage() {
-    respond(JsonObject().apply {
-        val jsonArray = JsonArray()
-
-        PersistentLocalStorage.map.forEach { (key, value) ->
-            jsonArray.add(JsonObject().apply {
-                addProperty("key", key)
-                addProperty("value", value)
-            })
-        }
-
-        add("items", jsonArray)
-    })
+    respond(LocalStorageData(PersistentLocalStorage.map.map { (k, v) -> Item(k, v) }), interopGson)
 }
 
 // PUT /api/v1/client/localStorage/all
 fun RoutingContext.putAllLocalStorage() {
-    data class Item(val key: String, val value: String)
-    data class StoragePutRequest(val items: List<Item>)
-
-    val payload = receive<StoragePutRequest>()
+    val payload = receive<LocalStorageData>()
 
     PersistentLocalStorage.map.clear()
     payload.items.forEach { item ->
