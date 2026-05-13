@@ -18,14 +18,11 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpNoContent
+import net.ccbluex.netty.http.routing.RoutingContext
 
 // POST /api/v1/client/reconnect
-@Suppress("UNUSED_PARAMETER")
-fun postReconnect(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postReconnect() {
     ServerObserver.reconnect()
-    return httpNoContent()
+    respondNoContent()
 }

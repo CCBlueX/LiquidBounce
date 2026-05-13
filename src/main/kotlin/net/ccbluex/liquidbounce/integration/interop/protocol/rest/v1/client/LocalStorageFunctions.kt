@@ -21,10 +21,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.RoutingContext
 
 /**
  * LocalStorage RestAPI
@@ -38,35 +35,35 @@ import net.ccbluex.netty.http.util.httpOk
  */
 
 // GET /api/v1/client/localStorage
-fun getLocalStorage(requestObject: RequestObject) = with(requestObject) {
-    val key = queryParams["key"] ?: return@with httpForbidden("No key")
-    val value = PersistentLocalStorage.map[key] ?: return@with httpForbidden("No value for key $key")
+fun RoutingContext.getLocalStorage() {
+    val key = queryParameters["key"] ?: forbidden("No key")
+    val value = PersistentLocalStorage.map[key] ?: forbidden("No value for key $key")
 
-    httpOk(JsonObject().apply {
+    respond(JsonObject().apply {
         addProperty("value", value)
     })
 }
 
 // PUT /api/v1/client/localStorage
-fun putLocalStorage(requestObject: RequestObject) = with(requestObject) {
-    val body = asJson<JsonObject>()
-    val key = body["key"]?.asString ?: return@with httpForbidden("No key")
-    val value = body["value"]?.asString ?: return@with httpForbidden("No value")
+fun RoutingContext.putLocalStorage() {
+    val payload = receive<JsonObject>()
+    val key = payload["key"]?.asString ?: forbidden("No key")
+    val value = payload["value"]?.asString ?: forbidden("No value")
 
     PersistentLocalStorage.map[key] = value
-    httpNoContent()
+    respondNoContent()
 }
 
 // DELETE /api/v1/client/localStorage
-fun deleteLocalStorage(requestObject: RequestObject) = with(requestObject) {
-    val key = queryParams["key"] ?: return@with httpForbidden("No key")
+fun RoutingContext.deleteLocalStorage() {
+    val key = queryParameters["key"] ?: forbidden("No key")
     PersistentLocalStorage.map.remove(key)
-    httpNoContent()
+    respondNoContent()
 }
 
 // GET /api/v1/client/localStorage/all
-fun getAllLocalStorage(requestObject: RequestObject) = with(requestObject) {
-    httpOk(JsonObject().apply {
+fun RoutingContext.getAllLocalStorage() {
+    respond(JsonObject().apply {
         val jsonArray = JsonArray()
 
         PersistentLocalStorage.map.forEach { (key, value) ->
@@ -81,16 +78,16 @@ fun getAllLocalStorage(requestObject: RequestObject) = with(requestObject) {
 }
 
 // PUT /api/v1/client/localStorage/all
-fun putAllLocalStorage(requestObject: RequestObject) = with(requestObject) {
+fun RoutingContext.putAllLocalStorage() {
     data class Item(val key: String, val value: String)
     data class StoragePutRequest(val items: List<Item>)
 
-    val body = asJson<StoragePutRequest>()
+    val payload = receive<StoragePutRequest>()
 
     PersistentLocalStorage.map.clear()
-    body.items.forEach { item ->
+    payload.items.forEach { item ->
         PersistentLocalStorage.map[item.key] = item.value
     }
 
-    httpNoContent()
+    respondNoContent()
 }

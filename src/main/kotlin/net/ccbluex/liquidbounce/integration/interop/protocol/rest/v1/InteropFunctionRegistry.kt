@@ -130,176 +130,240 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.postOr
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.postSwapServers
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.putAddServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.putEditServer
-import net.ccbluex.netty.http.rest.Node
+import net.ccbluex.netty.http.routing.Routing
 
-internal fun Node.registerInteropFunctions() = withPath("/api/v1/client") {
+internal fun Routing.registerInteropFunctions() = route("/api/v1/client") {
     // Client Functions
-    get("/info", ::getClientInfo)
-    get("/update", ::getUpdateInfo)
-    post("/exit", ::postExit)
-    get("/window", ::getWindowInfo)
-    post("/browse", ::postBrowse)
+    get("/info") { getClientInfo() }
+    get("/update") { getUpdateInfo() }
+    post("/exit") { postExit() }
+    get("/window") { getWindowInfo() }
+    post("/browse") { postBrowse() }
 
     // User Functions
-    get("/user", ::getUser).apply {
-        post("/login", ::loginUser)
-        post("/logout", ::logoutUser)
+    route("/user") {
+        get { getUser() }
+        post("/login") { loginUser() }
+        post("/logout") { logoutUser() }
     }
 
     // OS File Functions
-    post("/browsePath", ::postBrowsePath)
-    post("/fileDialog", ::postFileDialog)
+    post("/browsePath") { postBrowsePath() }
+    post("/fileDialog") { postFileDialog() }
 
     // LocalStorage Functions
-    get("/localStorage/all", ::getAllLocalStorage)
-    put("/localStorage/all", ::putAllLocalStorage)
-    get("/localStorage", ::getLocalStorage)
-    put("/localStorage", ::putLocalStorage)
-    delete("/localStorage", ::deleteLocalStorage)
+    route("/localStorage") {
+        get { getLocalStorage() }
+        put { putLocalStorage() }
+        delete { deleteLocalStorage() }
+        route("/all") {
+            get { getAllLocalStorage() }
+            put { putAllLocalStorage() }
+        }
+    }
 
     // Theme Functions
-    get("/theme", ::getTheme) // returns current theme
-    get("/theme/:id", ::getTheme)
-    get("/shader", ::getToggleShaderInfo)
-    post("/shader", ::postToggleShader)
+    route("/theme") {
+        get { getTheme() } // returns current theme
+        get("/:id") { getTheme() }
+    }
+    route("/shader") {
+        get { getToggleShaderInfo() }
+        post { postToggleShader() }
+    }
 
     // VirtualScreen Functions
-    get("/virtualScreen", ::getVirtualScreenInfo)
-    get("/screen", ::getScreenInfo)
-    get("/screen/size", ::getScreenSize)
-    put("/screen", ::putScreen)
-    delete("/screen", ::deleteScreen)
+    get("/virtualScreen") { getVirtualScreenInfo() }
+    route("/screen") {
+        get { getScreenInfo() }
+        put { putScreen() }
+        delete { deleteScreen() }
+        get("/size") { getScreenSize() }
+    }
 
     // Module Functions
-    get("/modules", ::getModules).apply {
-        put("/toggle", ::toggleModule)
-        delete("/toggle", ::toggleModule)
-        post("/toggle", ::toggleModule)
-        get("/settings", ::getSettings)
-        put("/settings", ::putSettings)
-        post("/panic", ::postPanic)
+    route("/modules") {
+        get { getModules() }
+        route("/toggle") {
+            put { toggleModule() }
+            delete { toggleModule() }
+            post { toggleModule() }
+        }
+        route("/settings") {
+            get { getSettings() }
+            put { putSettings() }
+        }
+        post("/panic") { postPanic() }
     }
-    get("/module/:name", ::getModule)
+    get("/module/:name") { getModule() }
 
     // Component Functions
-    get("/components", ::getComponents)
-    get("/components/:id", ::getComponents)
+    route("/components") {
+        get { getComponents() }
+        get("/:id") { getComponents() }
+    }
 
     // Session Functions
-    get("/session", ::getSessionInfo)
-    get("/location", ::getLocationInfo)
+    get("/session") { getSessionInfo() }
+    get("/location") { getLocationInfo() }
 
     // Account Functions
-    get("/accounts", ::getAccounts)
-    post("/accounts/new/microsoft", ::postNewMicrosoftAccount)
-    post("/accounts/new/microsoft/clipboard", ::postClipboardMicrosoftAccount)
-    post("/accounts/new/cracked", ::postNewCrackedAccount)
-    post("/accounts/new/session", ::postNewSessionAccount)
-    post("/accounts/new/altening", ::postNewAlteningAccount)
-    post("/accounts/new/altening/generate", ::postGenerateAlteningAccount)
-    post("/accounts/swap", ::postSwapAccounts)
-    post("/accounts/order", ::postOrderAccounts)
-    delete("/account", ::deleteAccount)
-    post("/account/login", ::postLoginAccount)
-    post("/account/login/cracked", ::postLoginCrackedAccount)
-    post("/account/login/session", ::postLoginSessionAccount)
-    post("/account/restore", ::postRestoreInitial)
-    put("/account/favorite", ::putFavoriteAccount)
-    delete("/account/favorite", ::deleteFavoriteAccount)
-    post("/account/random-name", ::generateName)
+    route("/accounts") {
+        get { getAccounts() }
+        route("/new") {
+            route("/microsoft") {
+                post { postNewMicrosoftAccount() }
+                post("/clipboard") { postClipboardMicrosoftAccount() }
+            }
+            post("/cracked") { postNewCrackedAccount() }
+            post("/session") { postNewSessionAccount() }
+            route("/altening") {
+                post { postNewAlteningAccount() }
+                post("/generate") { postGenerateAlteningAccount() }
+            }
+        }
+        post("/swap") { postSwapAccounts() }
+        post("/order") { postOrderAccounts() }
+    }
+    route("/account") {
+        delete { deleteAccount() }
+        route("/login") {
+            post { postLoginAccount() }
+            post("/cracked") { postLoginCrackedAccount() }
+            post("/session") { postLoginSessionAccount() }
+        }
+        post("/restore") { postRestoreInitial() }
+        route("/favorite") {
+            put { putFavoriteAccount() }
+            delete { deleteFavoriteAccount() }
+        }
+        post("/random-name") { generateName() }
+    }
 
     // Proxy Functions
-    get("/proxy", ::getProxyInfo)
-    post("/proxy", ::postProxy)
-    delete("/proxy", ::deleteProxy)
-    get("/proxies", ::getProxies).apply {
-        post("/add", ::postAddProxy)
-        post("/add/clipboard", ::postClipboardProxy)
-        post("/edit", ::postEditProxy)
-        post("/check", ::postCheckProxy)
-        delete("/remove", ::deleteRemoveProxy)
-        put("/favorite", ::putFavoriteProxy)
-        delete("/favorite", ::deleteFavoriteProxy)
+    route("/proxy") {
+        get { getProxyInfo() }
+        post { postProxy() }
+        delete { deleteProxy() }
+    }
+    route("/proxies") {
+        get { getProxies() }
+        route("/add") {
+            post { postAddProxy() }
+            post("/clipboard") { postClipboardProxy() }
+        }
+        post("/edit") { postEditProxy() }
+        post("/check") { postCheckProxy() }
+        delete("/remove") { deleteRemoveProxy() }
+        route("/favorite") {
+            put { putFavoriteProxy() }
+            delete { deleteFavoriteProxy() }
+        }
     }
 
     // Browser Functions
-    get("/browser", ::getBrowserInfo).apply {
-        post("/navigate", ::postBrowserNavigate)
-        post("/close", ::postBrowserClose)
-        post("/reload", ::postBrowserReload)
-        post("/forceReload", ::postBrowserForceReload)
-        post("/forward", ::postBrowserForward)
-        post("/back", ::postBrowserBack)
-        post("/closeTab", ::postBrowserCloseTab)
+    route("/browser") {
+        get { getBrowserInfo() }
+        post("/navigate") { postBrowserNavigate() }
+        post("/close") { postBrowserClose() }
+        post("/reload") { postBrowserReload() }
+        post("/forceReload") { postBrowserForceReload() }
+        post("/forward") { postBrowserForward() }
+        post("/back") { postBrowserBack() }
+        post("/closeTab") { postBrowserCloseTab() }
     }
 
     // Container Functions
     // TODO: Not being used but should be re-implemented in the future
 
     // Protocol Functions
-    get("/protocols", ::getProtocols).apply {
-        get("/protocol", ::getProtocol)
-        put("/protocol", ::putProtocol)
-        delete("/protocol", ::deleteProtocol)
+    route("/protocols") {
+        get { getProtocols() }
+        route("/protocol") {
+            get { getProtocol() }
+            put { putProtocol() }
+            delete { deleteProtocol() }
+        }
     }
 
     // Reconnect Functions
-    post("/reconnect", ::postReconnect)
+    post("/reconnect") { postReconnect() }
 
     // Spoofer Functions
-    get("/spoofer", ::getSpooferConfig)
-    put("/spoofer", ::putSpooferConfig)
+    route("/spoofer") {
+        get { getSpooferConfig() }
+        put { putSpooferConfig() }
+    }
+
     // Global Functions
-    get("/global", ::getGlobalConfig)
-    put("/global", ::putGlobalConfig)
+    route("/global") {
+        get { getGlobalConfig() }
+        put { putGlobalConfig() }
+    }
 
     // Input Functions
-    get("/input", ::getInputInfo)
-    get("/keybinds", ::getKeybinds)
-    post("/typing", ::isTyping)
-    get("/typing", ::getIsTyping)
+    get("/input") { getInputInfo() }
+    get("/keybinds") { getKeybinds() }
+    route("/typing") {
+        post { isTyping() }
+        get { getIsTyping() }
+    }
 
     // Player Functions
-    get("/player", ::getPlayerData)
-    get("/player/inventory", ::getPlayerInventory)
-    get("/crosshair", ::getCrosshairData)
+    route("/player") {
+        get { getPlayerData() }
+        get("/inventory") { getPlayerInventory() }
+    }
+    get("/crosshair") { getCrosshairData() }
 
     // Registry Functions
-    get("/registry/:name", ::getRegistry)
-    get("/registry/:name/groups", ::getRegistryGroups)
+    route("/registry/:name") {
+        get { getRegistry() }
+        get("/groups") { getRegistryGroups() }
+    }
 
     // ServerList Functions
-    get("/servers", ::getServers).apply {
-        put("/add", ::putAddServer)
-        delete("/remove", ::deleteServer)
-        put("/edit", ::putEditServer)
-        post("/swap", ::postSwapServers)
-        post("/order", ::postOrderServers)
-        post("/connect", ::postConnect)
+    route("/servers") {
+        get { getServers() }
+        put("/add") { putAddServer() }
+        delete("/remove") { deleteServer() }
+        put("/edit") { putEditServer() }
+        post("/swap") { postSwapServers() }
+        post("/order") { postOrderServers() }
+        post("/connect") { postConnect() }
     }
 
     // Texture Functions
-    get("/resource", ::getResource).apply {
-        get("/itemTexture", ::getItemTexture)
-        get("/effectTexture", ::getEffectTexture)
-        get("/skin", ::getSkin)
+    route("/resource") {
+        get { getResource() }
+        get("/itemTexture") { getItemTexture() }
+        get("/effectTexture") { getEffectTexture() }
+        get("/skin") { getSkin() }
     }
 
     // World Functions
-    get("/worlds", ::getWorlds).apply {
-        post("/join", ::postJoinWorld)
-        post("/edit", ::postEditWorld)
-        post("/delete", ::postDeleteWorld)
+    route("/worlds") {
+        get { getWorlds() }
+        post("/join") { postJoinWorld() }
+        post("/edit") { postEditWorld() }
+        post("/delete") { postDeleteWorld() }
     }
 
     // Marketplace Functions
-    get("/marketplace", ::getMarketplaceItems).apply {
-        get("/:id", ::getMarketplaceItem)
-        get("/:id/revisions", ::getMarketplaceItemRevisions)
-        get("/:id/revisions/:revisionId", ::getMarketplaceItemRevision)
-        post("/:id/subscribe", ::subscribeMarketplaceItem)
-        post("/:id/unsubscribe", ::unsubscribeMarketplaceItem)
-        get("/:id/reviews", ::getMarketplaceItemReviews)
-        post("/:id/reviews", ::postMarketplaceItemReview)
+    route("/marketplace") {
+        get { getMarketplaceItems() }
+        route("/:id") {
+            get { getMarketplaceItem() }
+            route("/revisions") {
+                get { getMarketplaceItemRevisions() }
+                get("/:revisionId") { getMarketplaceItemRevision() }
+            }
+            post("/subscribe") { subscribeMarketplaceItem() }
+            post("/unsubscribe") { unsubscribeMarketplaceItem() }
+            route("/reviews") {
+                get { getMarketplaceItemReviews() }
+                post { postMarketplaceItemReview() }
+            }
+        }
     }
 }

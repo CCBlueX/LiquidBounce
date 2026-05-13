@@ -20,14 +20,10 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpInternalServerError
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.netty.http.util.readAsBase64
+import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.client.gui.components.toasts.SystemToast
 import net.minecraft.client.gui.screens.NoticeWithLinkScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -41,14 +37,14 @@ import java.io.IOException
 private var summaries = emptyList<LevelSummary>()
 
 // GET /api/v1/client/worlds
-@Suppress("UNUSED_PARAMETER")
-fun getWorlds(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.getWorlds() {
     val worlds = JsonArray()
 
-    return runCatching {
+    runCatching {
         val levelList = mc.levelSource.findLevelCandidates()
         if (levelList.isEmpty) {
-            return@runCatching httpOk(worlds)
+            respond(worlds)
+            return
         }
 
         // Refreshes the list of summaries
@@ -75,14 +71,13 @@ fun getWorlds(requestObject: RequestObject): FullHttpResponse {
                 addProperty("wouldBeDowngraded", summary.isDowngrade)
             })
         }
-        httpOk(worlds)
-    }.getOrElse { httpInternalServerError("Failed to get worlds due to ${it.message}") }
+        respond(worlds)
+    }.getOrElse { internalServerError("Failed to get worlds due to ${it.message}") }
 }
 
 // POST /api/v1/client/worlds/join
-@Suppress("UNUSED_PARAMETER")
-fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
-    val request = requestObject.asJson<LevelRequest>()
+fun RoutingContext.postJoinWorld() {
+    val request = receive<LevelRequest>()
 
     mc.execute {
         runCatching {
@@ -94,13 +89,12 @@ fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/worlds/edit
-@Suppress("UNUSED_PARAMETER")
-fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
-    val request = requestObject.asJson<LevelRequest>()
+fun RoutingContext.postEditWorld() {
+    val request = receive<LevelRequest>()
 
     mc.execute {
         val session = runCatching {
@@ -139,13 +133,12 @@ fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/worlds/delete
-@Suppress("UNUSED_PARAMETER")
-fun postDeleteWorld(requestObject: RequestObject): FullHttpResponse {
-    val request = requestObject.asJson<LevelRequest>()
+fun RoutingContext.postDeleteWorld() {
+    val request = receive<LevelRequest>()
 
     runCatching {
         mc.levelSource.createAccess(request.name).use { session ->
@@ -155,7 +148,7 @@ fun postDeleteWorld(requestObject: RequestObject): FullHttpResponse {
         logger.error("Failed to delete world ${request.name}", it)
     }
 
-    return httpNoContent()
+    respondNoContent()
 }
 
 private data class LevelRequest(val name: String)

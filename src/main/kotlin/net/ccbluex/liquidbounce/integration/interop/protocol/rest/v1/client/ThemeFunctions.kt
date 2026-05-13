@@ -18,59 +18,54 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpBadRequest
-import net.ccbluex.netty.http.util.httpFile
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpNotFound
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.RoutingContext
 
 // GET /api/v1/client/theme/:id
-@Suppress("UNUSED_PARAMETER")
-fun getTheme(requestObject: RequestObject): FullHttpResponse {
-    val id = requestObject.params["id"]
+fun RoutingContext.getTheme() {
+    val id = parameters["id"]
     val theme = if (id != null) {
-        ThemeManager.themes.find { it.metadata.id == id } ?: return httpNotFound(id, "Theme not found")
+        ThemeManager.themes.find { it.metadata.id == id } ?: notFound(id, "Theme not found")
     } else {
         ThemeManager.theme
     }
 
-    return httpOk(accessibleInteropGson.toJsonTree(theme))
+    respond(accessibleInteropGson.toJsonTree(theme))
 }
 
 // GET /api/v1/client/shader
-@Suppress("UNUSED_PARAMETER")
-fun getToggleShaderInfo(requestObject: RequestObject): FullHttpResponse = httpOk(JsonObject().apply {
-    addProperty("shaderEnabled", ThemeManager.shaderEnabled)
-})
+fun RoutingContext.getToggleShaderInfo() {
+    respond(JsonObject().apply {
+        addProperty("shaderEnabled", ThemeManager.shaderEnabled)
+    })
+}
 
 // POST /api/v1/client/shader
-@Suppress("UNUSED_PARAMETER")
-fun postToggleShader(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postToggleShader() {
     ThemeManager.shaderEnabled = !ThemeManager.shaderEnabled
     ConfigSystem.store(ThemeManager)
-    return httpNoContent()
+    respondNoContent()
 }
 
 
 // GET /api/v1/client/fonts
-@Suppress("UNUSED_PARAMETER")
-fun getFonts(requestObject: RequestObject): FullHttpResponse = httpOk(FontManager.fontFaces.keys, interopGson)
+fun RoutingContext.getFonts() {
+    respond(FontManager.fontFaces.keys, interopGson)
+}
 
 // GET /api/v1/client/fonts/:name
-@Suppress("UNUSED_PARAMETER")
-fun getFont(requestObject: RequestObject): FullHttpResponse {
-    val name = requestObject.params["name"] ?: return httpBadRequest("Missing font name")
-    val font = FontManager.fontFace(name) ?: return httpNotFound(name, "Font not found")
-    val file = font.file ?: return httpNoContent()
+fun RoutingContext.getFont() {
+    val name = parameters["name"] ?: badRequest("Missing font name")
+    val font = FontManager.fontFace(name) ?: notFound(name, "Font not found")
+    val file = font.file ?: run {
+        respondNoContent()
+        return
+    }
 
-    return httpFile(file)
+    respondFile(file)
 }

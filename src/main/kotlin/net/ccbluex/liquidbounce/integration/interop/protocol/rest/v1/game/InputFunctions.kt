@@ -22,39 +22,36 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.InputConstants
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpBadRequest
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.RoutingContext
 
 // GET /api/v1/client/input
-@Suppress("UNUSED_PARAMETER")
-fun getInputInfo(requestObject: RequestObject) = requestObject.queryParams["key"]?.let { key ->
+fun RoutingContext.getInputInfo() {
+    val key = queryParameters["key"] ?: badRequest("Missing key parameter")
     val input = InputConstants.getKey(key)
 
-    httpOk(JsonObject().apply {
+    respond(JsonObject().apply {
         addProperty("translationKey", input.name)
         addProperty("localized", input.displayName.string)
     })
-} ?: httpBadRequest("Missing key parameter")
+}
 
 // GET /api/v1/client/keybinds
-@Suppress("UNUSED_PARAMETER")
-fun getKeybinds(requestObject: RequestObject) = httpOk(
-    JsonArray().apply {
-        for (key in mc.options.keyMappings) {
-            add(JsonObject().apply {
-                addProperty("bindName", key.name)
-                add("key", JsonObject().apply {
-                    addProperty("translationKey", key.saveString())
-                    addProperty("localized", key.translatedKeyMessage?.string)
+fun RoutingContext.getKeybinds() {
+    respond(
+        JsonArray().apply {
+            for (key in mc.options.keyMappings) {
+                add(JsonObject().apply {
+                    addProperty("bindName", key.name)
+                    add("key", JsonObject().apply {
+                        addProperty("translationKey", key.saveString())
+                        addProperty("localized", key.translatedKeyMessage?.string)
+                    })
                 })
-            })
+            }
         }
-    }
-)
+    )
+}
 
 /**
  * Keeps track if we are currently typing in a text field
@@ -62,17 +59,18 @@ fun getKeybinds(requestObject: RequestObject) = httpOk(
 var isTyping = false
 
 // POST /api/v1/client/typing
-fun isTyping(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.isTyping() {
     data class TypingRequest(val typing: Boolean)
 
-    val typingRequest = requestObject.asJson<TypingRequest>()
+    val typingRequest = receive<TypingRequest>()
     isTyping = typingRequest.typing
 
-    return httpNoContent()
+    respondNoContent()
 }
 
 // GET /api/v1/client/typing
-@Suppress("UNUSED_PARAMETER")
-fun getIsTyping(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("typing", isTyping)
-})
+fun RoutingContext.getIsTyping() {
+    respond(JsonObject().apply {
+        addProperty("typing", isTyping)
+    })
+}

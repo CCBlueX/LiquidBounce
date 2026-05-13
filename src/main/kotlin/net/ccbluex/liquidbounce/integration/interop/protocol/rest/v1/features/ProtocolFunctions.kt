@@ -19,37 +19,35 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.utils.client.defaultProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersions
 import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.RoutingContext
 
 // GET /api/v1/protocols
-@Suppress("UNUSED_PARAMETER")
-fun getProtocols(requestObject: RequestObject) = httpOk(protocolVersions, interopGson)
+fun RoutingContext.getProtocols() {
+    respond(protocolVersions, interopGson)
+}
 
 // GET /api/v1/protocols/protocol
-@Suppress("UNUSED_PARAMETER")
-fun getProtocol(requestObject: RequestObject) = httpOk(protocolVersion, interopGson)
+fun RoutingContext.getProtocol() {
+    respond(protocolVersion, interopGson)
+}
 
 // PUT /api/v1/protocols/protocol
-fun putProtocol(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.putProtocol() {
     data class ProtocolRequest(val version: Int)
 
-    val protocolRequest = requestObject.asJson<ProtocolRequest>()
+    val protocolRequest = receive<ProtocolRequest>()
 
     selectProtocolVersion(protocolRequest.version)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // DELETE /api/v1/protocols/protocol
-@Suppress("UNUSED_PARAMETER")
-fun deleteProtocol(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.deleteProtocol() {
     selectProtocolVersion(defaultProtocolVersion.version)
-    return httpNoContent()
+    respondNoContent()
 }

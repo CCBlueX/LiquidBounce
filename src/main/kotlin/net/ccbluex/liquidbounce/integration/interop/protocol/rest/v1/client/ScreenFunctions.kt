@@ -20,82 +20,75 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.client.gui.screens.LoadingOverlay
 import net.minecraft.client.gui.screens.TitleScreen
 
 // GET /api/v1/client/virtualScreen
-@Suppress("UNUSED_PARAMETER")
-fun getVirtualScreenInfo(requestObject: RequestObject): FullHttpResponse {
-    return httpOk(JsonObject().apply {
+fun RoutingContext.getVirtualScreenInfo() {
+    respond(JsonObject().apply {
         addProperty("name", ScreenManager.screen?.type?.routeName)
         addProperty("showingSplash", mc.overlay is LoadingOverlay)
     })
 }
 
 // POST /api/v1/client/virtualScreen
-fun postVirtualScreen(requestObject: RequestObject): FullHttpResponse {
-    val body = requestObject.asJson<JsonObject>()
-    val name = body["name"]?.asString ?: return httpForbidden("No name")
+fun RoutingContext.postVirtualScreen() {
+    val payload = receive<JsonObject>()
+    val name = payload["name"]?.asString ?: forbidden("No name")
 
     val virtualScreen = ScreenManager.screen
     if ((virtualScreen?.type?.routeName ?: "none") != name) {
-        return httpForbidden("Wrong virtual screen")
+        forbidden("Wrong virtual screen")
     }
 
     ScreenManager.screenAcknowledgement.confirm()
-    return httpNoContent()
+    respondNoContent()
 }
 
 // GET /api/v1/client/screen
-@Suppress("UNUSED_PARAMETER")
-fun getScreenInfo(requestObject: RequestObject): FullHttpResponse {
-    val mcScreen = mc.screen ?: return httpForbidden("No screen")
+fun RoutingContext.getScreenInfo() {
+    val mcScreen = mc.screen ?: forbidden("No screen")
     val name = CustomScreenType.recognize(mcScreen)?.routeName ?: mcScreen::class.qualifiedName
 
-    return httpOk(JsonObject().apply {
+    respond(JsonObject().apply {
         addProperty("name", name)
     })
 }
 
 // GET /api/v1/client/screen/size
-@Suppress("UNUSED_PARAMETER")
-fun getScreenSize(requestObject: RequestObject): FullHttpResponse {
-    return httpOk(JsonObject().apply {
+fun RoutingContext.getScreenSize() {
+    respond(JsonObject().apply {
         addProperty("width", mc.window.guiScaledWidth)
         addProperty("height", mc.window.guiScaledHeight)
     })
 }
 
 // PUT /api/v1/client/screen
-fun putScreen(requestObject: RequestObject): FullHttpResponse {
-    val body = requestObject.asJson<JsonObject>()
-    val screenName = body["name"]?.asString ?: return httpForbidden("No screen name")
+fun RoutingContext.putScreen() {
+    val payload = receive<JsonObject>()
+    val screenName = payload["name"]?.asString ?: forbidden("No screen name")
 
     CustomScreenType.byName(screenName)?.open()
-        ?: return httpForbidden("No screen with name $screenName")
-    return httpNoContent()
+        ?: forbidden("No screen with name $screenName")
+    respondNoContent()
 }
 
 // DELETE /api/v1/client/screen
-@Suppress("UNUSED_PARAMETER")
-fun deleteScreen(requestObject: RequestObject): FullHttpResponse {
-    val screen = mc.screen ?: return httpForbidden("No screen")
+fun RoutingContext.deleteScreen() {
+    val screen = mc.screen ?: forbidden("No screen")
 
     if (screen is CustomSharedMinecraftScreen && screen.parentScreen != null) {
         mc.execute {
             mc.setScreen(screen.parentScreen)
         }
-        return httpNoContent()
+        respondNoContent()
+        return
     }
 
     mc.execute {
@@ -107,5 +100,5 @@ fun deleteScreen(requestObject: RequestObject): FullHttpResponse {
             }
         )
     }
-    return httpNoContent()
+    respondNoContent()
 }
