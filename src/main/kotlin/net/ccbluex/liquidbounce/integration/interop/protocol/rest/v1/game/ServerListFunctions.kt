@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ResourcePolicy
 import net.ccbluex.liquidbounce.event.EventListener
@@ -32,11 +31,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Active
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpInternalServerError
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -56,8 +51,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 
 // GET /api/v1/client/servers
-@Suppress("UNUSED_PARAMETER")
-fun getServers(requestObject: RequestObject) = runCatching {
+fun RoutingContext.getServers() = runCatching {
     serverList.load()
     pingThemAll()
 
@@ -75,15 +69,14 @@ fun getServers(requestObject: RequestObject) = runCatching {
         servers.add(jsonObject)
     }
 
-    httpOk(servers)
-}.getOrElse { httpInternalServerError("Failed to get servers due to ${it.message}") }
+    respond(servers)
+}.getOrElse { internalServerError("Failed to get servers due to ${it.message}") }
 
 // POST /api/v1/client/servers/connect
-@Suppress("UNUSED_PARAMETER")
-fun postConnect(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postConnect() {
     data class ServerConnectRequest(val address: String)
 
-    val serverConnectRequest = requestObject.asJson<ServerConnectRequest>()
+    val serverConnectRequest = receive<ServerConnectRequest>()
     val serverInfo = serverList.getByAddress(serverConnectRequest.address)
         ?: ServerData("Unknown Server", serverConnectRequest.address, ServerData.Type.OTHER)
 
@@ -92,18 +85,17 @@ fun postConnect(requestObject: RequestObject): FullHttpResponse {
     mc.execute {
         ConnectScreen.startConnecting(JoinMultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
     }
-    return httpNoContent()
+    respondNoContent()
 }
 
 // PUT /api/v1/client/servers/add
-@Suppress("UNUSED_PARAMETER")
-fun putAddServer(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.putAddServer() {
     data class ServerAddRequest(val name: String, val address: String, val resourcePackPolicy: String? = null)
 
-    val serverAddRequest = requestObject.asJson<ServerAddRequest>()
+    val serverAddRequest = receive<ServerAddRequest>()
 
     if (!ServerAddress.isValidAddress(serverAddRequest.address)) {
-        return httpForbidden("Invalid address")
+        forbidden("Invalid address")
     }
 
     val serverInfo = ServerData(serverAddRequest.name, serverAddRequest.address, ServerData.Type.OTHER)
@@ -114,26 +106,24 @@ fun putAddServer(requestObject: RequestObject): FullHttpResponse {
     serverList.add(serverInfo, false)
     serverList.save()
 
-    return httpNoContent()
+    respondNoContent()
 }
 
 // DELETE /api/v1/client/servers/remove
-@Suppress("UNUSED_PARAMETER")
-fun deleteServer(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.deleteServer() {
     data class ServerRemoveRequest(val id: Int)
 
-    val serverRemoveRequest = requestObject.asJson<ServerRemoveRequest>()
+    val serverRemoveRequest = receive<ServerRemoveRequest>()
     val serverInfo = serverList.get(serverRemoveRequest.id)
 
     serverList.remove(serverInfo)
     serverList.save()
 
-    return httpNoContent()
+    respondNoContent()
 }
 
 // PUT /api/v1/client/servers/edit
-@Suppress("UNUSED_PARAMETER")
-fun putEditServer(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.putEditServer() {
     data class ServerEditRequest(
         val id: Int,
         val name: String,
@@ -141,7 +131,7 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
         val resourcePackPolicy: String? = null
     )
 
-    val serverEditRequest = requestObject.asJson<ServerEditRequest>()
+    val serverEditRequest = receive<ServerEditRequest>()
     val serverInfo = serverList.get(serverEditRequest.id)
 
     serverInfo.name = serverEditRequest.name
@@ -151,27 +141,25 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
     }
     serverList.save()
 
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/servers/swap
-@Suppress("UNUSED_PARAMETER")
-fun postSwapServers(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postSwapServers() {
     data class ServerSwapRequest(val from: Int, val to: Int)
 
-    val serverSwapRequest = requestObject.asJson<ServerSwapRequest>()
+    val serverSwapRequest = receive<ServerSwapRequest>()
 
     serverList.swap(serverSwapRequest.from, serverSwapRequest.to)
     serverList.save()
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/servers/order
-@Suppress("UNUSED_PARAMETER")
-fun postOrderServers(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postOrderServers() {
     data class ServerOrderRequest(val order: List<Int>)
 
-    val serverOrderRequest = requestObject.asJson<ServerOrderRequest>()
+    val serverOrderRequest = receive<ServerOrderRequest>()
 
     serverOrderRequest.order.map { serverList.get(it) }
         .forEachIndexed { index, serverInfo ->
@@ -179,7 +167,7 @@ fun postOrderServers(requestObject: RequestObject): FullHttpResponse {
         }
     serverList.save()
 
-    return httpNoContent()
+    respondNoContent()
 }
 
 object ActiveServerList : EventListener {

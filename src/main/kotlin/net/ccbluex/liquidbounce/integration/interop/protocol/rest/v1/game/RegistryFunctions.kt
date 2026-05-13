@@ -23,7 +23,6 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.common.base.CaseFormat
 import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.fastutil.objectObjectHashMapOf
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -33,9 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
 import net.ccbluex.liquidbounce.utils.item.getOrNull
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.RoutingContext
 import net.ccbluex.netty.http.util.httpServiceUnavailable
 import net.minecraft.core.BlockPos
 import net.minecraft.core.DefaultedRegistry
@@ -193,17 +190,16 @@ private inline fun <T : Any> Registry<T>.buildOutput(
 private data class RegistryItemOutput(val name: String, val icon: String?)
 
 // GET /api/v1/client/registry/:name
-@Suppress("UNUSED_PARAMETER")
-fun getRegistry(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.getRegistry() {
     fun itemIconUrl(id: Identifier) =
-        "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id"
+        "${ClientInteropServer.url}/api/v1/client/itemTexture?id=$id"
     fun effectTextureUrl(id: Identifier) =
-        "${ClientInteropServer.url}/api/v1/client/resource/effectTexture?id=$id"
+        "${ClientInteropServer.url}/api/v1/client/effectTexture?id=$id"
 
-    val registryName = requestObject.params["name"]
-        ?: return httpForbidden("Missing registry name parameter")
+    val registryName = parameters["name"]
+        ?: forbidden("Missing registry name parameter")
 
-    return when (registryName.lowercase(Locale.ENGLISH)) {
+    val result = when (registryName.lowercase(Locale.ENGLISH)) {
         "blocks", "block" -> {
             BuiltInRegistries.BLOCK.buildOutput(
                 name = { _, id -> id.name.string },
@@ -236,7 +232,7 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
 
         "enchantment" -> {
             val registry = Registries.ENCHANTMENT.getOrNull()
-                ?: return httpServiceUnavailable("Registry not loaded")
+                ?: respond(httpServiceUnavailable("Registry not loaded")).let { return }
             registry.buildOutput(name = { _, id -> id.description.string })
         }
 
@@ -267,17 +263,20 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
             }
         }
 
-        else -> return httpForbidden("Invalid registry name: $registryName")
-    }.let { httpOk(it, interopGson) }
+        else -> forbidden("Invalid registry name: $registryName")
+    }
+
+    respond(result, interopGson)
 }
 
 
 // GET /api/v1/client/registry/:name/groups
-@Suppress("UNUSED_PARAMETER", "CognitiveComplexMethod")
-fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    val registryName = requestObject.params["name"]
-        ?: return httpForbidden("Missing registry name parameter")
-    when (registryName.lowercase(Locale.ENGLISH)) {
+@Suppress("CognitiveComplexMethod")
+fun RoutingContext.getRegistryGroups() {
+    respond(JsonObject().apply {
+        val registryName = parameters["name"]
+            ?: forbidden("Missing registry name parameter")
+        when (registryName.lowercase(Locale.ENGLISH)) {
         "items" -> {
             for ((k, v) in constructMap(BuiltInRegistries.ITEM, ACCEPTED_ITEM_TAGS)) {
                 add(
@@ -292,7 +291,7 @@ fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply 
 
         "blocks" -> {
             val parentMap = hashMapOf<Identifier, Identifier>()
-            val world = mc.level ?: return httpForbidden("No world")
+            val world = mc.level ?: forbidden("No world")
 
             BuiltInRegistries.BLOCK.forEach { block ->
                 val pickStack = block.getCloneItemStack(world, BlockPos.ZERO, block.defaultBlockState(), false)
@@ -336,6 +335,7 @@ fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply 
             }
         }
 
-        else -> return httpForbidden("Invalid registry name: $registryName")
-    }
-})
+            else -> forbidden("Invalid registry name: $registryName")
+        }
+    })
+}

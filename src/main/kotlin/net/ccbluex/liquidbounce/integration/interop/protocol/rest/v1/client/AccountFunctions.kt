@@ -23,7 +23,6 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.event.EventManager
@@ -32,14 +31,11 @@ import net.ccbluex.liquidbounce.features.account.AccountManager
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.randomUsername
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.RoutingContext
 import org.lwjgl.glfw.GLFW
 
 // GET /api/v1/client/accounts
-@Suppress("UNUSED_PARAMETER")
-fun getAccounts(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.getAccounts() {
     val accounts = JsonArray()
     for ((i, account) in AccountManager.accounts.withIndex()) {
         val profile = account.profile ?: continue
@@ -54,167 +50,152 @@ fun getAccounts(requestObject: RequestObject): FullHttpResponse {
             addProperty("favorite", account.favorite)
         })
     }
-    return httpOk(accounts)
+    respond(accounts)
 }
 
 // POST /api/v1/client/accounts/new/microsoft
-@Suppress("UNUSED_PARAMETER")
-fun postNewMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postNewMicrosoftAccount() {
     AccountManager.newMicrosoftAccount {
         browseUrl(it)
         EventManager.callEvent(AccountManagerMessageEvent("Opened login url in browser"))
     }
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/clipboard
-@Suppress("UNUSED_PARAMETER")
-fun postClipboardMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postClipboardMicrosoftAccount() {
     AccountManager.newMicrosoftAccount {
         mc.execute {
             GLFW.glfwSetClipboardString(mc.window.handle(), it)
             EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
         }
     }
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/new/cracked
-@Suppress("UNUSED_PARAMETER")
-fun postNewCrackedAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postNewCrackedAccount() {
     data class AccountForm(val username: String, val online: Boolean?)
 
-    val accountForm = requestObject.asJson<AccountForm>()
+    val accountForm = receive<AccountForm>()
 
     AccountManager.newCrackedAccount(accountForm.username, accountForm.online ?: false)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/new/session
-@Suppress("UNUSED_PARAMETER")
-fun postNewSessionAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postNewSessionAccount() {
     data class AccountForm(val token: String)
 
-    val accountForm = requestObject.asJson<AccountForm>()
+    val accountForm = receive<AccountForm>()
 
     AccountManager.newSessionAccount(accountForm.token)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/new/altening
-@Suppress("UNUSED_PARAMETER")
-fun postNewAlteningAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postNewAlteningAccount() {
     data class AlteningForm(val token: String)
 
-    val accountForm = requestObject.asJson<AlteningForm>()
+    val accountForm = receive<AlteningForm>()
     AccountManager.newAlteningAccount(accountForm.token)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/generate
-@Suppress("UNUSED_PARAMETER")
-fun postGenerateAlteningAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postGenerateAlteningAccount() {
     data class AlteningGenForm(val apiToken: String)
 
-    val accountForm = requestObject.asJson<AlteningGenForm>()
+    val accountForm = receive<AlteningGenForm>()
 
     AccountManager.generateAlteningAccount(accountForm.apiToken)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/swap
-@Suppress("UNUSED_PARAMETER")
-fun postSwapAccounts(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postSwapAccounts() {
     data class AccountForm(val from: Int, val to: Int)
 
-    val accountForm = requestObject.asJson<AccountForm>()
+    val accountForm = receive<AccountForm>()
 
     AccountManager.swapAccounts(accountForm.from, accountForm.to)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/order
-@Suppress("UNUSED_PARAMETER")
-fun postOrderAccounts(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postOrderAccounts() {
     data class AccountOrderRequest(val order: List<Int>)
 
-    val accountOrderRequest = requestObject.asJson<AccountOrderRequest>()
+    val accountOrderRequest = receive<AccountOrderRequest>()
 
     AccountManager.orderAccounts(accountOrderRequest.order)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/login
-@Suppress("UNUSED_PARAMETER")
-fun postLoginAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postLoginAccount() {
     data class AccountForm(val id: Int)
 
-    val accountForm = requestObject.asJson<AccountForm>()
+    val accountForm = receive<AccountForm>()
 
     AccountManager.loginAccount(accountForm.id)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/cracked
-@Suppress("UNUSED_PARAMETER")
-fun postLoginCrackedAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postLoginCrackedAccount() {
     data class AccountForm(val username: String, val online: Boolean?)
 
-    val accountForm = requestObject.asJson<AccountForm>()
+    val accountForm = receive<AccountForm>()
 
     AccountManager.loginCrackedAccount(accountForm.username, accountForm.online ?: false)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/session
-@Suppress("UNUSED_PARAMETER")
-fun postLoginSessionAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postLoginSessionAccount() {
     data class AccountForm(val token: String)
 
-    val accountForm = requestObject.asJson<AccountForm>()
+    val accountForm = receive<AccountForm>()
 
     AccountManager.loginSessionAccount(accountForm.token)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // POST /api/v1/client/accounts/restore
-@Suppress("UNUSED_PARAMETER")
-fun postRestoreInitial(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.postRestoreInitial() {
     AccountManager.restoreInitial()
-    return httpOk(mc.user, interopGson)
+    respond(mc.user, interopGson)
 }
 
 // PUT /api/v1/client/accounts/favorite
-@Suppress("UNUSED_PARAMETER")
-fun putFavoriteAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.putFavoriteAccount() {
     data class AccountForm(val id: Int)
 
-    val accountForm = requestObject.asJson<AccountForm>()
+    val accountForm = receive<AccountForm>()
 
     AccountManager.favoriteAccount(accountForm.id)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // DELETE /api/v1/client/accounts/favorite
-@Suppress("UNUSED_PARAMETER")
-fun deleteFavoriteAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.deleteFavoriteAccount() {
     data class AccountForm(val id: Int)
 
-    val accountForm = requestObject.asJson<AccountForm>()
+    val accountForm = receive<AccountForm>()
 
     AccountManager.unfavoriteAccount(accountForm.id)
-    return httpNoContent()
+    respondNoContent()
 }
 
 // DELETE /api/v1/client/accounts
-@Suppress("UNUSED_PARAMETER")
-fun deleteAccount(requestObject: RequestObject): FullHttpResponse {
+fun RoutingContext.deleteAccount() {
     data class AccountForm(val id: Int)
 
-    val accountForm = requestObject.asJson<AccountForm>()
+    val accountForm = receive<AccountForm>()
     val account = AccountManager.removeAccount(accountForm.id)
 
-    return httpOk(JsonObject().apply {
+    respond(JsonObject().apply {
         addProperty("id", accountForm.id)
 
         val profile = account.profile ?: return@apply
@@ -227,9 +208,8 @@ fun deleteAccount(requestObject: RequestObject): FullHttpResponse {
 }
 
 // POST /api/v1/client/account/random-name
-@Suppress("UNUSED_PARAMETER")
-fun generateName(requestObject: RequestObject): FullHttpResponse {
-    return httpOk(JsonObject().apply {
+fun RoutingContext.generateName() {
+    respond(JsonObject().apply {
         addProperty("name", randomUsername())
     })
 }

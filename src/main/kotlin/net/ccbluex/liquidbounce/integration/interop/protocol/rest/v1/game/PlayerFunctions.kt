@@ -33,9 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.client.gui.Gui
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
@@ -53,19 +51,22 @@ import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Scoreboard
 import kotlin.math.min
 
-private fun nullableResponse(item: Any?) = item?.let { httpOk(it, interopGson) } ?: httpNoContent()
+private fun RoutingContext.respondNullable(item: Any?) {
+    if (item != null) {
+        respond(item, interopGson)
+    } else {
+        respondNoContent()
+    }
+}
 
 // GET /api/v1/client/player
-@Suppress("UNUSED_PARAMETER")
-fun getPlayerData(requestObject: RequestObject) = nullableResponse(mc.player?.let(PlayerData::fromPlayer))
+fun RoutingContext.getPlayerData() = respondNullable(mc.player?.let(PlayerData::fromPlayer))
 
 // GET /api/v1/client/player/inventory
-@Suppress("UNUSED_PARAMETER")
-fun getPlayerInventory(requestObject: RequestObject) = nullableResponse(mc.player?.let(PlayerInventoryData::fromPlayer))
+fun RoutingContext.getPlayerInventory() = respondNullable(mc.player?.let(PlayerInventoryData::fromPlayer))
 
 // GET /api/v1/client/crosshair
-@Suppress("UNUSED_PARAMETER")
-fun getCrosshairData(requestObject: RequestObject) = nullableResponse(mc.hitResult)
+fun RoutingContext.getCrosshairData() = respondNullable(mc.hitResult)
 
 @JvmRecord
 data class PlayerData(
