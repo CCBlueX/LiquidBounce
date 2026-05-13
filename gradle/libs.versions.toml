@@ -46,7 +46,7 @@ kotlin = "2.3.10"
 # JUnit
 junit = "6.0.3"
 # https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test/overview
-kotlinx-coroutines = "1.10.2"
+kotlinx-coroutines = "1.11.0"
 # https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
 fabric-kotlin = "1.13.9+kotlin.2.3.10"
 
