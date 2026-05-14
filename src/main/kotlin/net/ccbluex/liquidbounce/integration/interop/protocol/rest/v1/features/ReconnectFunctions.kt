@@ -19,10 +19,15 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 // POST /api/v1/client/reconnect
 fun RoutingContext.postReconnect() {
     ServerObserver.reconnect()
     respondNoContent()
+}
+
+internal fun Routing.reconnectRoutes() {
+    post("/reconnect") { postReconnect() }
 }

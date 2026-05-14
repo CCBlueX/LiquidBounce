@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.global.GlobalManager
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 fun RoutingContext.getGlobalConfig() {
@@ -32,4 +33,9 @@ fun RoutingContext.putGlobalConfig() {
     ConfigSystem.deserializeValueGroup(GlobalManager, body.reader())
     ConfigSystem.store(GlobalManager)
     respondNoContent()
+}
+
+internal fun Routing.globalRoutes() = route("/global") {
+    get { getGlobalConfig() }
+    put { putGlobalConfig() }
 }

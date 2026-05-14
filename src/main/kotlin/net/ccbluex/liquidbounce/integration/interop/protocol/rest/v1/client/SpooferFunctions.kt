@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 fun RoutingContext.getSpooferConfig() {
@@ -33,4 +34,9 @@ fun RoutingContext.putSpooferConfig() {
     ConfigSystem.deserializeValueGroup(SpooferManager, body.reader())
     ConfigSystem.store(SpooferManager)
     respondNoContent()
+}
+
+internal fun Routing.spooferRoutes() = route("/spoofer") {
+    get { getSpooferConfig() }
+    put { putSpooferConfig() }
 }

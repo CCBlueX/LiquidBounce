@@ -22,6 +22,7 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.LocalStorageData.Item
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 /**
@@ -81,4 +82,14 @@ fun RoutingContext.putAllLocalStorage() {
     }
 
     respondNoContent()
+}
+
+internal fun Routing.localStorageRoutes() = route("/localStorage") {
+    get { getLocalStorage() }
+    put { putLocalStorage() }
+    delete { deleteLocalStorage() }
+    route("/all") {
+        get { getAllLocalStorage() }
+        put { putAllLocalStorage() }
+    }
 }

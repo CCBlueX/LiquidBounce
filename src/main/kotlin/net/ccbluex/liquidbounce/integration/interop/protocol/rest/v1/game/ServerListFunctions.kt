@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Active
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.screens.ConnectScreen
@@ -245,3 +246,13 @@ val ServerList.servers: List<ServerData>
     get() = (this as MixinServerListAccessor).`liquid_bounce$getServerList`()
 
 fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.ip == address }
+
+internal fun Routing.serverListRoutes() = route("/servers") {
+    get { getServers() }
+    put("/add") { putAddServer() }
+    delete("/remove") { deleteServer() }
+    put("/edit") { putEditServer() }
+    post("/swap") { postSwapServers() }
+    post("/order") { postOrderServers() }
+    post("/connect") { postConnect() }
+}

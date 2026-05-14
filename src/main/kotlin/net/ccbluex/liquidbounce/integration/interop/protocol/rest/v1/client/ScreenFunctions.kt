@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.client.gui.screens.LoadingOverlay
 import net.minecraft.client.gui.screens.TitleScreen
@@ -101,4 +102,14 @@ fun RoutingContext.deleteScreen() {
         )
     }
     respondNoContent()
+}
+
+internal fun Routing.screenRoutes() {
+    get("/virtualScreen") { getVirtualScreenInfo() }
+    route("/screen") {
+        get { getScreenInfo() }
+        put { putScreen() }
+        delete { deleteScreen() }
+        get("/size") { getScreenSize() }
+    }
 }

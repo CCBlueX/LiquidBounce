@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
 import net.ccbluex.liquidbounce.utils.item.getOrNull
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 import net.ccbluex.netty.http.util.httpServiceUnavailable
 import net.minecraft.core.BlockPos
@@ -338,4 +339,9 @@ fun RoutingContext.getRegistryGroups() {
             else -> forbidden("Invalid registry name: $registryName")
         }
     })
+}
+
+internal fun Routing.registryRoutes() = route("/registry/:name") {
+    get { getRegistry() }
+    get("/groups") { getRegistryGroups() }
 }

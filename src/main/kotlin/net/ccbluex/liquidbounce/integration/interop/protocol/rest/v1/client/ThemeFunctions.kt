@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 // GET /api/v1/client/theme/:id
@@ -68,4 +69,15 @@ fun RoutingContext.getFont() {
     }
 
     respondFile(file)
+}
+
+internal fun Routing.themeRoutes() {
+    route("/theme") {
+        get { getTheme() }
+        get("/:id") { getTheme() }
+    }
+    route("/shader") {
+        get { getToggleShaderInfo() }
+        post { postToggleShader() }
+    }
 }

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.browserBrowsers
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 // GET /api/v1/client/browser
@@ -116,4 +117,15 @@ suspend fun RoutingContext.postBrowserCloseTab() {
         browserBrowsers.remove(browser)
     }
     respondNoContent()
+}
+
+internal fun Routing.browserRoutes() = route("/browser") {
+    get { getBrowserInfo() }
+    post("/navigate") { postBrowserNavigate() }
+    post("/close") { postBrowserClose() }
+    post("/reload") { postBrowserReload() }
+    post("/forceReload") { postBrowserForceReload() }
+    post("/forward") { postBrowserForward() }
+    post("/back") { postBrowserBack() }
+    post("/closeTab") { postBrowserCloseTab() }
 }

@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 /**
@@ -177,4 +178,21 @@ suspend fun RoutingContext.postMarketplaceItemReview() {
 
     val response = MarketplaceApi.createReview(clientAccount.takeSession(), id, review.rating, review.comment)
     respond(response, interopGson)
+}
+
+internal fun Routing.marketplaceRoutes() = route("/marketplace") {
+    get { getMarketplaceItems() }
+    route("/:id") {
+        get { getMarketplaceItem() }
+        route("/revisions") {
+            get { getMarketplaceItemRevisions() }
+            get("/:revisionId") { getMarketplaceItemRevision() }
+        }
+        post("/subscribe") { subscribeMarketplaceItem() }
+        post("/unsubscribe") { unsubscribeMarketplaceItem() }
+        route("/reviews") {
+            get { getMarketplaceItemReviews() }
+            post { postMarketplaceItemReview() }
+        }
+    }
 }

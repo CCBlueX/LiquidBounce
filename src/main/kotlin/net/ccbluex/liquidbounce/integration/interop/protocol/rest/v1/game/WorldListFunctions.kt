@@ -23,6 +23,7 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.util.readAsBase64
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.client.gui.components.toasts.SystemToast
 import net.minecraft.client.gui.screens.NoticeWithLinkScreen
@@ -152,3 +153,10 @@ fun RoutingContext.postDeleteWorld() {
 }
 
 private data class LevelRequest(val name: String)
+
+internal fun Routing.worldListRoutes() = route("/worlds") {
+    get { getWorlds() }
+    post("/join") { postJoinWorld() }
+    post("/edit") { postEditWorld() }
+    post("/delete") { postDeleteWorld() }
+}

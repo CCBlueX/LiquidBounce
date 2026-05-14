@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.UserLoggedInEvent
 import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.utils.client.browseUrl
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 // GET /api/v1/client/user
@@ -74,4 +75,10 @@ fun RoutingContext.logoutUser() {
     ConfigSystem.store(ClientAccountManager)
     EventManager.callEvent(UserLoggedOutEvent)
     respondNoContent()
+}
+
+internal fun Routing.userRoutes() = route("/user") {
+    get { getUser() }
+    post("/login") { loginUser() }
+    post("/logout") { logoutUser() }
 }

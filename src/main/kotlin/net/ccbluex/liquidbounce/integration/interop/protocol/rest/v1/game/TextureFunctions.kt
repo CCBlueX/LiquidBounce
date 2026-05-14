@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.resources.DefaultPlayerSkin
@@ -101,4 +102,11 @@ fun RoutingContext.getSkin() {
 
         respondFileStream(resource.open(), contentType = "image/png")
     }
+}
+
+internal fun Routing.textureRoutes() = route("/resource") {
+    get { getResource() }
+    get("/itemTexture") { getItemTexture() }
+    get("/effectTexture") { getEffectTexture() }
+    get("/skin") { getSkin() }
 }

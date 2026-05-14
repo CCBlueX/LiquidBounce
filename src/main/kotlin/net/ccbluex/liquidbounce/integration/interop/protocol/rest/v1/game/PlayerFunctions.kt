@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.client.gui.Gui
 import net.minecraft.core.BlockPos
@@ -212,3 +213,11 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
  * GSON is not happy with NaN values, so we fix them to be 0.
  */
 private fun Float.fixNaN() = if (isNaN()) 0f else this
+
+internal fun Routing.playerRoutes() {
+    route("/player") {
+        get { getPlayerData() }
+        get("/inventory") { getPlayerInventory() }
+    }
+    get("/crosshair") { getCrosshairData() }
+}

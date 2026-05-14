@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 import org.lwjgl.glfw.GLFW
 
@@ -216,4 +217,26 @@ fun RoutingContext.deleteFavoriteProxy() {
     ProxyManager.proxies[body.id].favorite = false
     ConfigSystem.store(ProxyManager)
     respondNoContent()
+}
+
+internal fun Routing.proxyRoutes() {
+    route("/proxy") {
+        get { getProxyInfo() }
+        post { postProxy() }
+        delete { deleteProxy() }
+    }
+    route("/proxies") {
+        get { getProxies() }
+        route("/add") {
+            post { postAddProxy() }
+            post("/clipboard") { postClipboardProxy() }
+        }
+        post("/edit") { postEditProxy() }
+        post("/check") { postCheckProxy() }
+        delete("/remove") { deleteRemoveProxy() }
+        route("/favorite") {
+            put { putFavoriteProxy() }
+            delete { deleteFavoriteProxy() }
+        }
+    }
 }

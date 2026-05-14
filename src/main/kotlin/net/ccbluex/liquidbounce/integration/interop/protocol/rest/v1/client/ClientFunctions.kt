@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.types.FileDialogMode
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.util.Util
 import java.io.File
@@ -147,4 +148,14 @@ private val POSSIBLE_URL_TARGETS: Map<String, URI> = run {
     properties.load(LiquidBounce::class.java.getResourceAsStream("/resources/liquidbounce/client_urls.properties"))
 
     properties.stringPropertyNames().associateWith { URI(properties.getProperty(it)) }
+}
+
+internal fun Routing.clientRoutes() {
+    get("/info") { getClientInfo() }
+    get("/update") { getUpdateInfo() }
+    post("/exit") { postExit() }
+    get("/window") { getWindowInfo() }
+    post("/browse") { postBrowse() }
+    post("/browsePath") { postBrowsePath() }
+    post("/fileDialog") { postFileDialog() }
 }

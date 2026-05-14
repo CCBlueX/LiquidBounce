@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 import org.apache.commons.io.input.CharSequenceReader
 
@@ -137,4 +138,21 @@ private data class ModuleRequest(val name: String) {
         respondNoContent()
     }
 
+}
+
+internal fun Routing.moduleRoutes() {
+    route("/modules") {
+        get { getModules() }
+        route("/toggle") {
+            put { toggleModule() }
+            delete { toggleModule() }
+            post { toggleModule() }
+        }
+        route("/settings") {
+            get { getSettings() }
+            put { putSettings() }
+        }
+        post("/panic") { postPanic() }
+    }
+    get("/module/:name") { getModule() }
 }

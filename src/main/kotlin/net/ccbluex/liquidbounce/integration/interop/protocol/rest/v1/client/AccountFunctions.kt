@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.account.AccountManager
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.randomUsername
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 import org.lwjgl.glfw.GLFW
 
@@ -212,4 +213,38 @@ fun RoutingContext.generateName() {
     respond(JsonObject().apply {
         addProperty("name", randomUsername())
     })
+}
+
+internal fun Routing.accountRoutes() {
+    route("/accounts") {
+        get { getAccounts() }
+        route("/new") {
+            route("/microsoft") {
+                post { postNewMicrosoftAccount() }
+                post("/clipboard") { postClipboardMicrosoftAccount() }
+            }
+            post("/cracked") { postNewCrackedAccount() }
+            post("/session") { postNewSessionAccount() }
+            route("/altening") {
+                post { postNewAlteningAccount() }
+                post("/generate") { postGenerateAlteningAccount() }
+            }
+        }
+        post("/swap") { postSwapAccounts() }
+        post("/order") { postOrderAccounts() }
+    }
+    route("/account") {
+        delete { deleteAccount() }
+        route("/login") {
+            post { postLoginAccount() }
+            post("/cracked") { postLoginCrackedAccount() }
+            post("/session") { postLoginSessionAccount() }
+        }
+        post("/restore") { postRestoreInitial() }
+        route("/favorite") {
+            put { putFavoriteAccount() }
+            delete { deleteFavoriteAccount() }
+        }
+        post("/random-name") { generateName() }
+    }
 }

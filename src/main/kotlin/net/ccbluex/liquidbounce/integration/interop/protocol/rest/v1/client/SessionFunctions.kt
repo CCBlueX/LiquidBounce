@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 // GET /api/v1/client/session
@@ -33,4 +34,9 @@ fun RoutingContext.getSessionInfo() {
 fun RoutingContext.getLocationInfo() {
     val locationInfo = IpInfoApi.current ?: forbidden("Location is not known")
     respond(locationInfo, interopGson)
+}
+
+internal fun Routing.sessionRoutes() {
+    get("/session") { getSessionInfo() }
+    get("/location") { getLocationInfo() }
 }

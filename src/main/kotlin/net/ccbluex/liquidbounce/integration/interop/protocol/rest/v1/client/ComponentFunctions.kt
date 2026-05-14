@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 // GET /api/v1/client/components/:id
@@ -29,4 +30,9 @@ fun RoutingContext.getComponents() {
         HudComponentManager.getComponents(parameters["id"]),
         accessibleInteropGson,
     )
+}
+
+internal fun Routing.componentRoutes() = route("/components") {
+    get { getComponents() }
+    get("/:id") { getComponents() }
 }

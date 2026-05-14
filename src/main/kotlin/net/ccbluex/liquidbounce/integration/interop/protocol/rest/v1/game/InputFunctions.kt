@@ -23,6 +23,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 // GET /api/v1/client/input
@@ -73,4 +74,13 @@ fun RoutingContext.getIsTyping() {
     respond(JsonObject().apply {
         addProperty("typing", isTyping)
     })
+}
+
+internal fun Routing.inputRoutes() {
+    get("/input") { getInputInfo() }
+    get("/keybinds") { getKeybinds() }
+    route("/typing") {
+        post { isTyping() }
+        get { getIsTyping() }
+    }
 }

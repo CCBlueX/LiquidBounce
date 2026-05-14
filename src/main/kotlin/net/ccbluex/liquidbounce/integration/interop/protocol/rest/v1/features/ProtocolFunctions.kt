@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.client.defaultProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersions
 import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.routing.RoutingContext
 
 // GET /api/v1/protocols
@@ -50,4 +51,13 @@ fun RoutingContext.putProtocol() {
 fun RoutingContext.deleteProtocol() {
     selectProtocolVersion(defaultProtocolVersion.version)
     respondNoContent()
+}
+
+internal fun Routing.protocolRoutes() = route("/protocols") {
+    get { getProtocols() }
+    route("/protocol") {
+        get { getProtocol() }
+        put { putProtocol() }
+        delete { deleteProtocol() }
+    }
 }
