@@ -42,6 +42,7 @@ import net.ccbluex.netty.http.coroutines.awaitSuspend
 import net.ccbluex.netty.http.util.setup
 import java.net.InetSocketAddress
 import java.util.UUID
+import java.util.function.Consumer
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -63,7 +64,7 @@ object OAuthClient : EventListener {
      * @param onUrl Callback for when the authorization URL is ready
      * @return Client account with the authenticated session
      */
-    suspend fun startAuth(onUrl: (String) -> Unit): ClientAccount {
+    suspend fun startAuth(onUrl: Consumer<String>): ClientAccount {
         val (codeVerifier, codeChallenge) = PKCEUtils.generatePKCE()
         val state = UUID.randomUUID().toString()
 
@@ -75,7 +76,7 @@ object OAuthClient : EventListener {
         logger.info("OAuth server started on port $serverPort.")
         val authUrl = buildAuthUrl(codeChallenge, state, redirectUri)
 
-        onUrl(authUrl)
+        onUrl.accept(authUrl)
         val code = waitForAuthCode()
         val tokenResponse = AuthenticationApi.exchangeToken(AUTH_CLIENT_ID, code, codeVerifier, redirectUri)
 

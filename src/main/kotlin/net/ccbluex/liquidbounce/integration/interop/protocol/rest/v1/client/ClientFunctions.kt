@@ -142,12 +142,14 @@ fun RoutingContext.postFileDialog() {
     })
 }
 
-private val POSSIBLE_URL_TARGETS: Map<String, URI> = run {
+private val POSSIBLE_URL_TARGETS: Map<String, URI> = buildMap {
     val properties = Properties()
 
     properties.load(LiquidBounce::class.java.getResourceAsStream("/resources/liquidbounce/client_urls.properties"))
 
-    properties.stringPropertyNames().associateWith { URI(properties.getProperty(it)) }
+    properties.forEach { (k, v) ->
+        this[k as String] = URI(v as String)
+    }
 }
 
 internal fun Routing.clientRoutes() {

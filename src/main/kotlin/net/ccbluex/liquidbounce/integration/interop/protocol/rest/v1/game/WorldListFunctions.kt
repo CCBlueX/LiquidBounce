@@ -20,6 +20,9 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.util.readAsBase64
@@ -30,18 +33,16 @@ import net.minecraft.client.gui.screens.NoticeWithLinkScreen
 import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.client.gui.screens.worldselection.EditWorldScreen
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen
-import net.minecraft.world.level.storage.LevelSummary
 import net.minecraft.world.level.validation.ContentValidationException
 import java.io.IOException
 
-@Volatile
-private var summaries = emptyList<LevelSummary>()
+private val mutex = Mutex()
 
 // GET /api/v1/client/worlds
-fun RoutingContext.getWorlds() {
+suspend fun RoutingContext.getWorlds() {
     val worlds = JsonArray()
 
-    runCatching {
+    try {
         val levelList = mc.levelSource.findLevelCandidates()
         if (levelList.isEmpty) {
             respond(worlds)
@@ -49,7 +50,9 @@ fun RoutingContext.getWorlds() {
         }
 
         // Refreshes the list of summaries
-        summaries = mc.levelSource.loadLevelSummaries(levelList).get()
+        val summaries = mutex.withLock {
+            mc.levelSource.loadLevelSummaries(levelList).await()
+        }
 
         for ((index, summary) in summaries.withIndex()) {
             worlds.add(JsonObject().apply {
@@ -73,7 +76,9 @@ fun RoutingContext.getWorlds() {
             })
         }
         respond(worlds)
-    }.getOrElse { internalServerError("Failed to get worlds due to ${it.message}") }
+    } catch (e: Exception) {
+        internalServerError("Failed to get worlds due to ${e.message}")
+    }
 }
 
 // POST /api/v1/client/worlds/join
