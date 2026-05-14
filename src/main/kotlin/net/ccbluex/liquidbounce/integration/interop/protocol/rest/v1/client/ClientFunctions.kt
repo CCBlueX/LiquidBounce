@@ -27,15 +27,14 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.netty.http.routing.Routing
-import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.util.Util
 import java.io.File
 import java.net.URI
 import java.util.Properties
 
 // GET /api/v1/client/info
-fun RoutingContext.getClientInfo() {
-    respond(JsonObject().apply {
+private fun Routing.getClientInfo() = get("/info") {
+    call.respond(JsonObject().apply {
         addProperty("os", Util.getPlatform().telemetryName())
         addProperty("gameVersion", mc.launchedVersion)
         addProperty("clientVersion", LiquidBounce.clientVersion)
@@ -52,8 +51,8 @@ fun RoutingContext.getClientInfo() {
 
 // GET /api/v1/client/update
 @Suppress("ReturnCount")
-suspend fun RoutingContext.getUpdateInfo() {
-    respond(JsonObject().apply {
+private fun Routing.getUpdateInfo() = get("/update") {
+    call.respond(JsonObject().apply {
         addProperty("development", LiquidBounce.IN_DEVELOPMENT)
         addProperty("commit", LiquidBounce.clientCommit)
 
@@ -75,14 +74,14 @@ suspend fun RoutingContext.getUpdateInfo() {
 }
 
 // POST /api/v1/client/exit
-fun RoutingContext.postExit() {
+private fun Routing.postExit() = post("/exit") {
     mc.stop()
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // GET /api/v1/client/window
-fun RoutingContext.getWindowInfo() {
-    respond(JsonObject().apply {
+private fun Routing.getWindowInfo() = get("/window") {
+    call.respond(JsonObject().apply {
         addProperty("width", mc.window.screenWidth)
         addProperty("height", mc.window.screenHeight)
         addProperty("scaledWidth", mc.window.guiScaledWidth)
@@ -93,51 +92,51 @@ fun RoutingContext.getWindowInfo() {
 }
 
 // POST /api/v1/client/browse
-fun RoutingContext.postBrowse() {
-    val jsonObj = receive<JsonObject>()
-    val target = jsonObj["target"]?.asString ?: forbidden("No target specified")
+private fun Routing.postBrowse() = post("/browse") {
+    val jsonObj = call.receive<JsonObject>()
+    val target = jsonObj["target"]?.asString ?: call.forbidden("No target specified")
 
-    val url = POSSIBLE_URL_TARGETS[target] ?: forbidden("Unknown target")
+    val url = POSSIBLE_URL_TARGETS[target] ?: call.forbidden("Unknown target")
 
     Util.getPlatform().openUri(url)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/browsePath
 @Suppress("ReturnCount")
-fun RoutingContext.postBrowsePath() {
-    val jsonObj = receive<JsonObject>()
-    val path = jsonObj["path"]?.asString ?: badRequest("No file specified")
+private fun Routing.postBrowsePath() = post("/browsePath") {
+    val jsonObj = call.receive<JsonObject>()
+    val path = jsonObj["path"]?.asString ?: call.badRequest("No file specified")
 
     val file = File(path).let { file ->
         if (file.isAbsolute) file else ConfigSystem.rootFolder.resolve(file)
     }
 
     if (!file.exists()) {
-        notFound(path, "File not exists")
+        call.notFound(path, "File not exists")
     }
 
     // Ensures we open a directory, not a file
     val directoryToOpen = when {
         file.isDirectory -> file
-        file.isFile -> file.parentFile ?: forbidden("Cannot access root directory")
-        else -> forbidden("Invalid file type")
+        file.isFile -> file.parentFile ?: call.forbidden("Cannot access root directory")
+        else -> call.forbidden("Invalid file type")
     }
 
     Util.getPlatform().openFile(directoryToOpen)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/fileDialog
-fun RoutingContext.postFileDialog() {
+private fun Routing.postFileDialog() = post("/fileDialog") {
     data class RequestBody(val mode: FileDialogMode, val supportedExtensions: List<String>? = null)
     val (mode, supportedExtensions) = runCatching {
-        receive<RequestBody>()
-    }.getOrNull() ?: badRequest("No dialog mode provided")
+        call.receive<RequestBody>()
+    }.getOrNull() ?: call.badRequest("No dialog mode provided")
 
     val files = mode.selectFiles(supportedExtensions)
 
-    respond(JsonObject().apply {
+    call.respond(JsonObject().apply {
         files.firstOrNull()?.let { addProperty("file", it) }
     })
 }
@@ -153,11 +152,11 @@ private val POSSIBLE_URL_TARGETS: Map<String, URI> = buildMap {
 }
 
 internal fun Routing.clientRoutes() {
-    get("/info") { getClientInfo() }
-    get("/update") { getUpdateInfo() }
-    post("/exit") { postExit() }
-    get("/window") { getWindowInfo() }
-    post("/browse") { postBrowse() }
-    post("/browsePath") { postBrowsePath() }
-    post("/fileDialog") { postFileDialog() }
+    getClientInfo()
+    getUpdateInfo()
+    postExit()
+    getWindowInfo()
+    postBrowse()
+    postBrowsePath()
+    postFileDialog()
 }

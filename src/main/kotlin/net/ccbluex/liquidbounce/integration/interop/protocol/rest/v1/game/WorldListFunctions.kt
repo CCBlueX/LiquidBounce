@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.util.readAsBase64
 import net.ccbluex.netty.http.routing.Routing
-import net.ccbluex.netty.http.routing.RoutingContext
 import net.minecraft.client.gui.components.toasts.SystemToast
 import net.minecraft.client.gui.screens.NoticeWithLinkScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -39,14 +38,14 @@ import java.io.IOException
 private val mutex = Mutex()
 
 // GET /api/v1/client/worlds
-suspend fun RoutingContext.getWorlds() {
+private fun Routing.getWorlds() = get {
     val worlds = JsonArray()
 
     try {
         val levelList = mc.levelSource.findLevelCandidates()
         if (levelList.isEmpty) {
-            respond(worlds)
-            return
+            call.respond(worlds)
+            return@get
         }
 
         // Refreshes the list of summaries
@@ -75,15 +74,15 @@ suspend fun RoutingContext.getWorlds() {
                 addProperty("wouldBeDowngraded", summary.isDowngrade)
             })
         }
-        respond(worlds)
+        call.respond(worlds)
     } catch (e: Exception) {
-        internalServerError("Failed to get worlds due to ${e.message}")
+        call.internalServerError("Failed to get worlds due to ${e.message}")
     }
 }
 
 // POST /api/v1/client/worlds/join
-fun RoutingContext.postJoinWorld() {
-    val request = receive<LevelRequest>()
+private fun Routing.postJoinWorld() = post("/join") {
+    val request = call.receive<LevelRequest>()
 
     mc.execute {
         runCatching {
@@ -95,12 +94,12 @@ fun RoutingContext.postJoinWorld() {
         }
     }
 
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/worlds/edit
-fun RoutingContext.postEditWorld() {
-    val request = receive<LevelRequest>()
+private fun Routing.postEditWorld() = post("/edit") {
+    val request = call.receive<LevelRequest>()
 
     mc.execute {
         val session = runCatching {
@@ -139,12 +138,12 @@ fun RoutingContext.postEditWorld() {
         }
     }
 
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/worlds/delete
-fun RoutingContext.postDeleteWorld() {
-    val request = receive<LevelRequest>()
+private fun Routing.postDeleteWorld() = post("/delete") {
+    val request = call.receive<LevelRequest>()
 
     runCatching {
         mc.levelSource.createAccess(request.name).use { session ->
@@ -154,14 +153,14 @@ fun RoutingContext.postDeleteWorld() {
         logger.error("Failed to delete world ${request.name}", it)
     }
 
-    respondNoContent()
+    call.respondNoContent()
 }
 
 private data class LevelRequest(val name: String)
 
 internal fun Routing.worldListRoutes() = route("/worlds") {
-    get { getWorlds() }
-    post("/join") { postJoinWorld() }
-    post("/edit") { postEditWorld() }
-    post("/delete") { postDeleteWorld() }
+    getWorlds()
+    postJoinWorld()
+    postEditWorld()
+    postDeleteWorld()
 }

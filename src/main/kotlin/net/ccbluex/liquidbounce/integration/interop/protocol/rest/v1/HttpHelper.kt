@@ -17,24 +17,19 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
+package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.gson.interopGson
-import net.ccbluex.liquidbounce.features.global.GlobalManager
-import net.ccbluex.netty.http.routing.Routing
+import net.ccbluex.netty.http.application.ApplicationCall
+import java.io.InputStream
 
-private fun Routing.getGlobalConfig() = get {
-    call.respond(ConfigSystem.serializeValueGroup(GlobalManager, gson = interopGson))
-}
-
-private fun Routing.putGlobalConfig() = put {
-    ConfigSystem.deserializeValueGroup(GlobalManager, call.body.reader())
-    ConfigSystem.store(GlobalManager)
-    call.respondNoContent()
-}
-
-internal fun Routing.globalRoutes() = route("/global") {
-    getGlobalConfig()
-    putGlobalConfig()
+/**
+ * Write all data from [inputStream] and close it
+ */
+suspend fun ApplicationCall.respondInputStream(
+    inputStream: InputStream,
+    contentType: String?,
+) = respondOutputStream(contentType) {
+    inputStream.use {
+        it.transferTo(this)
+    }
 }
