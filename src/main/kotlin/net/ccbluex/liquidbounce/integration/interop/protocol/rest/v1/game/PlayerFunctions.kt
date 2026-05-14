@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 import net.minecraft.client.gui.Gui
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
@@ -51,22 +51,35 @@ import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Scoreboard
 import kotlin.math.min
 
-private fun RoutingContext.respondNullable(item: Any?) {
-    if (item != null) {
-        respond(item, interopGson)
+// GET /api/v1/client/player
+private fun Routing.getPlayerData() = get {
+    val playerData = mc.player?.let(PlayerData::fromPlayer)
+    if (playerData != null) {
+        call.respond(playerData, interopGson)
     } else {
-        respondNoContent()
+        call.respondNoContent()
     }
 }
 
-// GET /api/v1/client/player
-fun RoutingContext.getPlayerData() = respondNullable(mc.player?.let(PlayerData::fromPlayer))
-
 // GET /api/v1/client/player/inventory
-fun RoutingContext.getPlayerInventory() = respondNullable(mc.player?.let(PlayerInventoryData::fromPlayer))
+private fun Routing.getPlayerInventory() = get("/inventory") {
+    val playerInventoryData = mc.player?.let(PlayerInventoryData::fromPlayer)
+    if (playerInventoryData != null) {
+        call.respond(playerInventoryData, interopGson)
+    } else {
+        call.respondNoContent()
+    }
+}
 
 // GET /api/v1/client/crosshair
-fun RoutingContext.getCrosshairData() = respondNullable(mc.hitResult)
+private fun Routing.getCrosshairData() = get("/crosshair") {
+    val crosshairData = mc.hitResult
+    if (crosshairData != null) {
+        call.respond(crosshairData, interopGson)
+    } else {
+        call.respondNoContent()
+    }
+}
 
 @JvmRecord
 data class PlayerData(
@@ -212,3 +225,11 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
  * GSON is not happy with NaN values, so we fix them to be 0.
  */
 private fun Float.fixNaN() = if (isNaN()) 0f else this
+
+internal fun Routing.playerRoutes() {
+    route("/player") {
+        getPlayerData()
+        getPlayerInventory()
+    }
+    getCrosshairData()
+}

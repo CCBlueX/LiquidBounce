@@ -19,48 +19,50 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondInputStream
 import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.resources.DefaultPlayerSkin
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
 import net.minecraft.resources.ResourceKey
+import java.nio.channels.Channels
 import java.util.UUID
 import javax.imageio.ImageIO
 import kotlin.jvm.optionals.getOrNull
 
 // GET /api/v1/client/resource
-fun RoutingContext.getResource() {
-    val identifier = queryParameters["id"]
-        ?: badRequest("Missing identifier parameter")
+private fun Routing.getResource() = get {
+    val identifier = call.queryParameters["id"]
+        ?: call.badRequest("Missing identifier parameter")
     val minecraftIdentifier = Identifier.tryParse(identifier)
-        ?: badRequest("Invalid identifier $identifier")
+        ?: call.badRequest("Invalid identifier $identifier")
     val resource = mc.resourceManager.getResourceOrThrow(minecraftIdentifier)
 
-    respondFileStream(resource.open(), contentType = "image/png")
+    call.respondInputStream(resource.open(), contentType = "image/png")
 }
 
 // GET /api/v1/client/itemTexture
-fun RoutingContext.getItemTexture() {
+private fun Routing.getItemTexture() = get("/itemTexture") {
     if (!ItemImageAtlas.isAtlasAvailable) {
-        internalServerError("Item atlas not available yet")
+        call.internalServerError("Item atlas not available yet")
     }
 
-    val identifier = queryParameters["id"]
-        ?: badRequest("Missing identifier parameter")
+    val identifier = call.queryParameters["id"]
+        ?: call.badRequest("Missing identifier parameter")
     val minecraftIdentifier = Identifier.tryParse(identifier)
-        ?: badRequest("Invalid identifier $identifier")
+        ?: call.badRequest("Invalid identifier $identifier")
 
     val alternativeIdentifier = ItemImageAtlas.resolveAliasIfPresent(minecraftIdentifier)
 
     val of = ResourceKey.create(Registries.ITEM, alternativeIdentifier)
 
     val image = BuiltInRegistries.ITEM.getValue(of)?.let(ItemImageAtlas::getItemImage)
-        ?: badRequest("Item image not found")
+        ?: call.badRequest("Item image not found")
 
     call.respondOutputStream(contentType = "image/png") {
         ImageIO.write(image, "PNG", this)
@@ -68,37 +70,45 @@ fun RoutingContext.getItemTexture() {
 }
 
 // GET /api/v1/client/effectTexture
-fun RoutingContext.getEffectTexture() {
-    val identifier = queryParameters["id"]
-        ?: badRequest("Missing identifier parameter")
+private fun Routing.getEffectTexture() = get("/effectTexture") {
+    val identifier = call.queryParameters["id"]
+        ?: call.badRequest("Missing identifier parameter")
     val minecraftIdentifier = Identifier.tryParse(identifier)
-        ?: badRequest("Invalid identifier $identifier")
+        ?: call.badRequest("Invalid identifier $identifier")
 
     val textureId = Identifier.withDefaultNamespace("textures/mob_effect/${minecraftIdentifier.path}.png")
 
     val resource = mc.resourceManager.getResource(textureId).getOrNull()
-        ?: badRequest("Mob effect texture of $minecraftIdentifier not found")
+        ?: call.badRequest("Mob effect texture of $minecraftIdentifier not found")
 
-    respondFileStream(resource.open(), contentType = "image/png")
+    call.respondInputStream(resource.open(), contentType = "image/png")
 }
 
 // GET /api/v1/client/skin
-fun RoutingContext.getSkin() {
-    val uuid = queryParameters["uuid"]?.let { UUID.fromString(it) }
-        ?: badRequest("Missing UUID parameter")
+private fun Routing.getSkin() = get("/skin") {
+    val uuid = call.queryParameters["uuid"]?.let { UUID.fromString(it) }
+        ?: call.badRequest("Missing UUID parameter")
     val skinTextures = world.players().find { it.uuid == uuid }?.skin
         ?: DefaultPlayerSkin.get(uuid)
     val bodyTexturePath = skinTextures.body.texturePath()
     val texture = mc.textureManager.getTexture(bodyTexturePath)
 
     if (texture is DynamicTexture) {
-        val buffer = okio.Buffer()
-        texture.pixels?.writeToChannel(buffer) ?: internalServerError("Texture is not cached yet")
-        respondFileStream(buffer.inputStream(), contentLength = buffer.size.toInt(), contentType = "image/png")
+        val nativeImage = texture.pixels ?: call.internalServerError("Texture is not cached yet")
+        call.respondOutputStream(contentType = "image/png") {
+            Channels.newChannel(this).use(nativeImage::writeToChannel)
+        }
     } else {
         val resource = mc.resourceManager.getResource(bodyTexturePath)
-            .getOrNull() ?: internalServerError("Texture not found")
+            .getOrNull() ?: call.internalServerError("Texture not found")
 
-        respondFileStream(resource.open(), contentType = "image/png")
+        call.respondInputStream(resource.open(), contentType = "image/png")
     }
+}
+
+internal fun Routing.textureRoutes() = route("/resource") {
+    getResource()
+    getItemTexture()
+    getEffectTexture()
+    getSkin()
 }

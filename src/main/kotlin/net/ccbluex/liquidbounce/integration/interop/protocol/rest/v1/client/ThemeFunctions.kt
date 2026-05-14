@@ -24,48 +24,58 @@ import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
+
+// GET /api/v1/client/theme
+private fun Routing.getCurrentTheme() = get {
+    call.respond(accessibleInteropGson.toJsonTree(ThemeManager.theme))
+}
 
 // GET /api/v1/client/theme/:id
-fun RoutingContext.getTheme() {
-    val id = parameters["id"]
-    val theme = if (id != null) {
-        ThemeManager.themes.find { it.metadata.id == id } ?: notFound(id, "Theme not found")
-    } else {
-        ThemeManager.theme
-    }
+private fun Routing.getTheme() = get("/:id") {
+    val id = call.parameters["id"] ?: call.forbidden("No id")
+    val theme = ThemeManager.themes.find { it.metadata.id == id } ?: call.notFound(id, "Theme not found")
 
-    respond(accessibleInteropGson.toJsonTree(theme))
+    call.respond(accessibleInteropGson.toJsonTree(theme))
 }
 
 // GET /api/v1/client/shader
-fun RoutingContext.getToggleShaderInfo() {
-    respond(JsonObject().apply {
+private fun Routing.getToggleShaderInfo() = get {
+    call.respond(JsonObject().apply {
         addProperty("shaderEnabled", ThemeManager.shaderEnabled)
     })
 }
 
 // POST /api/v1/client/shader
-fun RoutingContext.postToggleShader() {
+private fun Routing.postToggleShader() = post {
     ThemeManager.shaderEnabled = !ThemeManager.shaderEnabled
     ConfigSystem.store(ThemeManager)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 
 // GET /api/v1/client/fonts
-fun RoutingContext.getFonts() {
-    respond(FontManager.fontFaces.keys, interopGson)
-}
+private fun Routing.getFonts() = get { call.respond(FontManager.fontFaces.keys, interopGson) }
 
 // GET /api/v1/client/fonts/:name
-fun RoutingContext.getFont() {
-    val name = parameters["name"] ?: badRequest("Missing font name")
-    val font = FontManager.fontFace(name) ?: notFound(name, "Font not found")
+private fun Routing.getFont() = get("/:name") {
+    val name = call.parameters["name"] ?: call.badRequest("Missing font name")
+    val font = FontManager.fontFace(name) ?: call.notFound(name, "Font not found")
     val file = font.file ?: run {
-        respondNoContent()
-        return
+        call.respondNoContent()
+        return@get
     }
 
-    respondFile(file)
+    call.respondFile(file)
+}
+
+internal fun Routing.themeRoutes() {
+    route("/theme") {
+        getCurrentTheme()
+        getTheme()
+    }
+    route("/shader") {
+        getToggleShaderInfo()
+        postToggleShader()
+    }
 }

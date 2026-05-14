@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -38,37 +38,37 @@ import org.lwjgl.glfw.GLFW
  */
 
 // GET /api/v1/client/proxy
-fun RoutingContext.getProxyInfo() {
+private fun Routing.getProxyInfo() = get {
     ProxyManager.currentProxy?.let { proxy ->
-        respond(interopGson.toJsonTree(proxy).asJsonObject.apply {
+        call.respond(interopGson.toJsonTree(proxy).asJsonObject.apply {
             addProperty("id", ProxyManager.proxies.indexOf(proxy))
         })
-    } ?: respondNoContent()
+    } ?: call.respondNoContent()
 }
 
 // POST /api/v1/client/proxy
-fun RoutingContext.postProxy() {
+private fun Routing.postProxy() = post {
     data class ProxyRequest(val id: Int)
 
-    val body = receive<ProxyRequest>()
+    val body = call.receive<ProxyRequest>()
 
-    if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
-        forbidden("Invalid id")
+    if (body.id !in ProxyManager.proxies.indices) {
+        call.forbidden("Invalid id")
     }
 
     ProxyManager.proxy = ProxyManager.proxies[body.id]
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // DELETE /api/v1/client/proxy
-fun RoutingContext.deleteProxy() {
+private fun Routing.deleteProxy() = delete {
     ProxyManager.proxy = Proxy.NONE
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // GET /api/v1/client/proxies
-fun RoutingContext.getProxies() {
-    respond(JsonArray().apply {
+private fun Routing.getProxies() = get {
+    call.respond(JsonArray().apply {
         ProxyManager.proxies.forEachIndexed { index, proxy ->
             add(interopGson.toJsonTree(proxy).asJsonObject.apply {
                 addProperty("id", index)
@@ -80,7 +80,7 @@ fun RoutingContext.getProxies() {
 
 // POST /api/v1/client/proxies/add
 @Suppress("DestructuringDeclarationWithTooManyEntries")
-fun RoutingContext.postAddProxy() {
+private fun Routing.postAddProxy() = post {
     data class ProxyRequest(
         val host: String,
         val port: Int,
@@ -89,22 +89,22 @@ fun RoutingContext.postAddProxy() {
         val type: Proxy.Type,
         val forwardAuthentication: Boolean
     )
-    val (host, port, username, password, type, forwardAuthentication) = receive<ProxyRequest>()
+    val (host, port, username, password, type, forwardAuthentication) = call.receive<ProxyRequest>()
 
     if (host.isBlank()) {
-        forbidden("No host")
+        call.forbidden("No host")
     }
 
     if (port !in 0..65535) {
-        forbidden("Illegal port")
+        call.forbidden("Illegal port")
     }
 
     ProxyManager.validateProxy(Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication))
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/proxies/add/clipboard
-fun RoutingContext.postClipboardProxy() {
+private fun Routing.postClipboardProxy() = post("/clipboard") {
     mc.execute {
         try {
             val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle())
@@ -128,12 +128,12 @@ fun RoutingContext.postClipboardProxy() {
         }
     }
 
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/proxies/edit
 @Suppress("DestructuringDeclarationWithTooManyEntries")
-fun RoutingContext.postEditProxy() {
+private fun Routing.postEditProxy() = post("/edit") {
     data class ProxyRequest(
         val id: Int,
         val host: String,
@@ -143,77 +143,99 @@ fun RoutingContext.postEditProxy() {
         val password: String,
         val forwardAuthentication: Boolean
     )
-    val (id, host, port, type, username, password, forwardAuthentication) = receive<ProxyRequest>()
+    val (id, host, port, type, username, password, forwardAuthentication) = call.receive<ProxyRequest>()
 
     if (host.isBlank()) {
-        forbidden("No host")
+        call.forbidden("No host")
     }
 
     if (port !in 0..65535) {
-        forbidden("Illegal port")
+        call.forbidden("Illegal port")
     }
 
     val proxy = Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication)
     ProxyManager.validateProxy(proxy, index = id)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/proxies/check
-fun RoutingContext.postCheckProxy() {
+private fun Routing.postCheckProxy() = post("/check") {
     data class ProxyRequest(val id: Int)
 
-    val body = receive<ProxyRequest>()
+    val body = call.receive<ProxyRequest>()
 
     if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
-        forbidden("Invalid id")
+        call.forbidden("Invalid id")
     }
 
     ProxyManager.validateProxy(ProxyManager.proxies[body.id], checkOnly = true)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // DELETE /api/v1/client/proxies/remove
-fun RoutingContext.deleteRemoveProxy() {
+private fun Routing.deleteRemoveProxy() = delete("/remove") {
     data class ProxyRequest(val id: Int)
 
-    val body = receive<ProxyRequest>()
+    val body = call.receive<ProxyRequest>()
 
     if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
-        forbidden("Invalid id")
+        call.forbidden("Invalid id")
     }
 
     if (ProxyManager.proxies.removeAt(body.id) == ProxyManager.proxy) {
         ProxyManager.proxy = Proxy.NONE
     }
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // PUT /api/v1/client/proxies/favorite
-fun RoutingContext.putFavoriteProxy() {
+private fun Routing.putFavoriteProxy() = put {
     data class ProxyRequest(val id: Int)
 
-    val body = receive<ProxyRequest>()
+    val body = call.receive<ProxyRequest>()
 
     if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
-        forbidden("Invalid id")
+        call.forbidden("Invalid id")
     }
 
     ProxyManager.proxies[body.id].favorite = true
     ConfigSystem.store(ProxyManager)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // DELETE /api/v1/client/proxies/favorite
-fun RoutingContext.deleteFavoriteProxy() {
+private fun Routing.deleteFavoriteProxy() = delete {
     data class ProxyRequest(val id: Int)
 
-    val body = receive<ProxyRequest>()
+    val body = call.receive<ProxyRequest>()
 
     if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
-        forbidden("Invalid id")
+        call.forbidden("Invalid id")
     }
 
     ProxyManager.proxies[body.id].favorite = false
     ConfigSystem.store(ProxyManager)
-    respondNoContent()
+    call.respondNoContent()
+}
+
+internal fun Routing.proxyRoutes() {
+    route("/proxy") {
+        getProxyInfo()
+        postProxy()
+        deleteProxy()
+    }
+    route("/proxies") {
+        getProxies()
+        route("/add") {
+            postAddProxy()
+            postClipboardProxy()
+        }
+        postEditProxy()
+        postCheckProxy()
+        deleteRemoveProxy()
+        route("/favorite") {
+            putFavoriteProxy()
+            deleteFavoriteProxy()
+        }
+    }
 }

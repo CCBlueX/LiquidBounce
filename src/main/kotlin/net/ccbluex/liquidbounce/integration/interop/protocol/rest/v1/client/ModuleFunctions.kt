@@ -32,7 +32,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.application.ApplicationCall
+import net.ccbluex.netty.http.routing.Routing
 import org.apache.commons.io.input.CharSequenceReader
 
 private fun ClientModule.toJsonObject() = JsonObject().apply {
@@ -47,52 +48,58 @@ private fun ClientModule.toJsonObject() = JsonObject().apply {
 }
 
 // GET /api/v1/client/modules
-fun RoutingContext.getModules() {
+private fun Routing.getModules() = get {
     val mods = JsonArray(ModuleManager.size)
     for (module in ModuleManager) {
         mods.add(module.toJsonObject())
     }
-    respond(mods)
+    call.respond(mods)
 }
 
 // GET /api/v1/client/module/:name
-fun RoutingContext.getModule() {
-    val name = parameters["name"] ?: forbidden("Module not found")
-    val module = ModuleManager[name] ?: forbidden("Module not found")
+private fun Routing.getModule() = get("/module/:name") {
+    val name = call.parameters["name"] ?: call.forbidden("Module not found")
+    val module = ModuleManager[name] ?: call.forbidden("Module not found")
 
-    respond(module.toJsonObject())
+    call.respond(module.toJsonObject())
+}
+
+// POST /api/v1/client/modules/toggle
+private fun Routing.toggleModulePost() = post {
+    call.receive<ModuleRequest>().handle(call)
 }
 
 // PUT /api/v1/client/modules/toggle
+private fun Routing.toggleModulePut() = put {
+    call.receive<ModuleRequest>().handle(call)
+}
+
 // DELETE /api/v1/client/modules/toggle
-// POST /api/v1/client/modules/toggle
-suspend fun RoutingContext.toggleModule() {
-    with(receive<ModuleRequest>()) {
-        acceptToggle(method)
-    }
+private fun Routing.toggleModuleDelete() = delete {
+    call.receive<ModuleRequest>().handle(call)
 }
 
 // GET /api/v1/client/modules/settings
-fun RoutingContext.getSettings() {
-    val name = queryParameters["name"] ?: badRequest("Missing parameter 'name'")
-    val module = ModuleManager[name] ?: forbidden("Module '$name' not found")
-    respond(ConfigSystem.serializeValueGroup(module, gson = interopGson))
+private fun Routing.getSettings() = get {
+    val name = call.queryParameters["name"] ?: call.badRequest("Missing parameter 'name'")
+    val module = ModuleManager[name] ?: call.forbidden("Module '$name' not found")
+    call.respond(ConfigSystem.serializeValueGroup(module, gson = interopGson))
 }
 
 // PUT /api/v1/client/modules/settings
-suspend fun RoutingContext.putSettings() {
-    val name = queryParameters["name"] ?: badRequest("Missing parameter 'name'")
-    val module = ModuleManager[name] ?: forbidden("Module '$name' not found")
+private fun Routing.putSettings() = put {
+    val name = call.queryParameters["name"] ?: call.badRequest("Missing parameter 'name'")
+    val module = ModuleManager[name] ?: call.forbidden("Module '$name' not found")
     withContext(Dispatchers.Minecraft) {
-        ConfigSystem.deserializeValueGroup(module, CharSequenceReader(body))
+        ConfigSystem.deserializeValueGroup(module, CharSequenceReader(call.body))
         ConfigSystem.store(modulesConfig)
 
-        respondNoContent()
+        call.respondNoContent()
     }
 }
 
 // POST /api/v1/client/modules/panic
-suspend fun RoutingContext.postPanic() = withContext(Dispatchers.Minecraft) {
+private fun Routing.postPanic() = post("/panic") { withContext(Dispatchers.Minecraft) {
     AutoConfig.withLoading {
         runCatching {
             for (module in ModuleManager) {
@@ -109,32 +116,42 @@ suspend fun RoutingContext.postPanic() = withContext(Dispatchers.Minecraft) {
         }
     }
 
-    respondNoContent()
-}
+    call.respondNoContent()
+} }
 
 @JvmRecord
 private data class ModuleRequest(val name: String) {
-
-    suspend fun RoutingContext.acceptToggle(method: HttpMethod) {
-        val module = ModuleManager[name] ?: forbidden("Module '$name' not found")
-
-        val supposedNew = method == HttpMethod.PUT || (method == HttpMethod.POST && !module.enabled)
-
+    suspend fun handle(call: ApplicationCall) {
+        val module = ModuleManager[this.name] ?: call.forbidden("Module '${this.name}' not found")
+        val supposedNew = call.method == HttpMethod.PUT || (call.method == HttpMethod.POST && !module.enabled)
         if (module.enabled == supposedNew) {
-            forbidden("$name already ${if (supposedNew) "enabled" else "disabled"}")
+            call.forbidden("${this.name} already ${if (supposedNew) "enabled" else "disabled"}")
         }
-
         withContext(Dispatchers.Minecraft) {
             try {
                 module.enabled = supposedNew
-
                 ConfigSystem.store(modulesConfig)
             } catch (e: Exception) {
-                logger.error("Failed to toggle module $name", e)
+                logger.error("Failed to toggle module ${this@ModuleRequest.name}", e)
             }
         }
-
-        respondNoContent()
+        call.respondNoContent()
     }
+}
 
+internal fun Routing.moduleRoutes() {
+    route("/modules") {
+        getModules()
+        route("/toggle") {
+            toggleModulePut()
+            toggleModuleDelete()
+            toggleModulePost()
+        }
+        route("/settings") {
+            getSettings()
+            putSettings()
+        }
+        postPanic()
+    }
+    getModule()
 }

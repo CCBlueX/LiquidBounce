@@ -24,30 +24,35 @@ import net.ccbluex.liquidbounce.utils.client.defaultProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersions
 import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 
 // GET /api/v1/protocols
-fun RoutingContext.getProtocols() {
-    respond(protocolVersions, interopGson)
-}
+private fun Routing.getProtocols() = get { call.respond(protocolVersions, interopGson) }
 
 // GET /api/v1/protocols/protocol
-fun RoutingContext.getProtocol() {
-    respond(protocolVersion, interopGson)
-}
+private fun Routing.getProtocol() = get { call.respond(protocolVersion, interopGson) }
 
 // PUT /api/v1/protocols/protocol
-fun RoutingContext.putProtocol() {
+private fun Routing.putProtocol() = put {
     data class ProtocolRequest(val version: Int)
 
-    val protocolRequest = receive<ProtocolRequest>()
+    val protocolRequest = call.receive<ProtocolRequest>()
 
     selectProtocolVersion(protocolRequest.version)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // DELETE /api/v1/protocols/protocol
-fun RoutingContext.deleteProtocol() {
+private fun Routing.deleteProtocol() = delete {
     selectProtocolVersion(defaultProtocolVersion.version)
-    respondNoContent()
+    call.respondNoContent()
+}
+
+internal fun Routing.protocolRoutes() = route("/protocols") {
+    getProtocols()
+    route("/protocol") {
+        getProtocol()
+        putProtocol()
+        deleteProtocol()
+    }
 }

@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Active
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -51,32 +51,34 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 
 // GET /api/v1/client/servers
-fun RoutingContext.getServers() = runCatching {
-    serverList.load()
-    pingThemAll()
+private fun Routing.getServers() = get {
+    runCatching {
+        serverList.load()
+        pingThemAll()
 
-    val servers = JsonArray()
-    serverList.servers.forEachIndexed { id, serverInfo ->
-        val json = interopGson.toJsonTree(serverInfo)
+        val servers = JsonArray()
+        serverList.servers.forEachIndexed { id, serverInfo ->
+            val json = interopGson.toJsonTree(serverInfo)
 
-        if (!json.isJsonObject) {
-            logger.warn("Failed to convert serverInfo to json")
-            return@forEachIndexed
+            if (!json.isJsonObject) {
+                logger.warn("Failed to convert serverInfo to json")
+                return@forEachIndexed
+            }
+
+            val jsonObject = json.asJsonObject
+            jsonObject.addProperty("id", id)
+            servers.add(jsonObject)
         }
 
-        val jsonObject = json.asJsonObject
-        jsonObject.addProperty("id", id)
-        servers.add(jsonObject)
-    }
-
-    respond(servers)
-}.getOrElse { internalServerError("Failed to get servers due to ${it.message}") }
+        call.respond(servers)
+    }.getOrElse { call.internalServerError("Failed to get servers due to ${it.message}") }
+}
 
 // POST /api/v1/client/servers/connect
-fun RoutingContext.postConnect() {
+private fun Routing.postConnect() = post("/connect") {
     data class ServerConnectRequest(val address: String)
 
-    val serverConnectRequest = receive<ServerConnectRequest>()
+    val serverConnectRequest = call.receive<ServerConnectRequest>()
     val serverInfo = serverList.getByAddress(serverConnectRequest.address)
         ?: ServerData("Unknown Server", serverConnectRequest.address, ServerData.Type.OTHER)
 
@@ -85,17 +87,17 @@ fun RoutingContext.postConnect() {
     mc.execute {
         ConnectScreen.startConnecting(JoinMultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
     }
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // PUT /api/v1/client/servers/add
-fun RoutingContext.putAddServer() {
+private fun Routing.putAddServer() = put("/add") {
     data class ServerAddRequest(val name: String, val address: String, val resourcePackPolicy: String? = null)
 
-    val serverAddRequest = receive<ServerAddRequest>()
+    val serverAddRequest = call.receive<ServerAddRequest>()
 
     if (!ServerAddress.isValidAddress(serverAddRequest.address)) {
-        forbidden("Invalid address")
+        call.forbidden("Invalid address")
     }
 
     val serverInfo = ServerData(serverAddRequest.name, serverAddRequest.address, ServerData.Type.OTHER)
@@ -106,24 +108,24 @@ fun RoutingContext.putAddServer() {
     serverList.add(serverInfo, false)
     serverList.save()
 
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // DELETE /api/v1/client/servers/remove
-fun RoutingContext.deleteServer() {
+private fun Routing.deleteServer() = delete("/remove") {
     data class ServerRemoveRequest(val id: Int)
 
-    val serverRemoveRequest = receive<ServerRemoveRequest>()
+    val serverRemoveRequest = call.receive<ServerRemoveRequest>()
     val serverInfo = serverList.get(serverRemoveRequest.id)
 
     serverList.remove(serverInfo)
     serverList.save()
 
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // PUT /api/v1/client/servers/edit
-fun RoutingContext.putEditServer() {
+private fun Routing.putEditServer() = put("/edit") {
     data class ServerEditRequest(
         val id: Int,
         val name: String,
@@ -131,7 +133,7 @@ fun RoutingContext.putEditServer() {
         val resourcePackPolicy: String? = null
     )
 
-    val serverEditRequest = receive<ServerEditRequest>()
+    val serverEditRequest = call.receive<ServerEditRequest>()
     val serverInfo = serverList.get(serverEditRequest.id)
 
     serverInfo.name = serverEditRequest.name
@@ -141,25 +143,25 @@ fun RoutingContext.putEditServer() {
     }
     serverList.save()
 
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/servers/swap
-fun RoutingContext.postSwapServers() {
+private fun Routing.postSwapServers() = post("/swap") {
     data class ServerSwapRequest(val from: Int, val to: Int)
 
-    val serverSwapRequest = receive<ServerSwapRequest>()
+    val serverSwapRequest = call.receive<ServerSwapRequest>()
 
     serverList.swap(serverSwapRequest.from, serverSwapRequest.to)
     serverList.save()
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/servers/order
-fun RoutingContext.postOrderServers() {
+private fun Routing.postOrderServers() = post("/order") {
     data class ServerOrderRequest(val order: List<Int>)
 
-    val serverOrderRequest = receive<ServerOrderRequest>()
+    val serverOrderRequest = call.receive<ServerOrderRequest>()
 
     serverOrderRequest.order.map { serverList.get(it) }
         .forEachIndexed { index, serverInfo ->
@@ -167,7 +169,7 @@ fun RoutingContext.postOrderServers() {
         }
     serverList.save()
 
-    respondNoContent()
+    call.respondNoContent()
 }
 
 object ActiveServerList : EventListener {
@@ -245,3 +247,13 @@ val ServerList.servers: List<ServerData>
     get() = (this as MixinServerListAccessor).`liquid_bounce$getServerList`()
 
 fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.ip == address }
+
+internal fun Routing.serverListRoutes() = route("/servers") {
+    getServers()
+    putAddServer()
+    deleteServer()
+    putEditServer()
+    postSwapServers()
+    postOrderServers()
+    postConnect()
+}

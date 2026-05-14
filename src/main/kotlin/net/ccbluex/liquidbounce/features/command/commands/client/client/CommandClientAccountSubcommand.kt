@@ -93,7 +93,7 @@ object CommandClientAccountSubcommand {
             }
 
             chat(regular("Starting OAuth authorization process..."))
-            val account = startAuth { browseUrl(it) }
+            val account = startAuth(::browseUrl)
             ClientAccountManager.clientAccount = account
             ConfigSystem.store(ClientAccountManager)
             EventManager.callEvent(UserLoggedInEvent)

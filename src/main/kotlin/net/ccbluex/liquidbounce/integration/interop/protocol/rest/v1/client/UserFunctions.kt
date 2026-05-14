@@ -29,13 +29,13 @@ import net.ccbluex.liquidbounce.event.events.UserLoggedInEvent
 import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.utils.client.browseUrl
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 
 // GET /api/v1/client/user
-suspend fun RoutingContext.getUser() {
+private fun Routing.getUser() = get {
     val clientAccount = ClientAccountManager.clientAccount
     if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
-        unauthorized("Not logged in")
+        call.unauthorized("Not logged in")
     }
 
     val userInformation = clientAccount.userInformation ?: run {
@@ -43,35 +43,41 @@ suspend fun RoutingContext.getUser() {
         clientAccount.userInformation
     }
 
-    respond(interopGson.toJsonTree(userInformation))
+    call.respond(interopGson.toJsonTree(userInformation))
 }
 
 // POST /api/v2/client/user/login
-suspend fun RoutingContext.loginUser() {
+private fun Routing.loginUser() = post("/login") {
     val clientAccount = ClientAccountManager.clientAccount
     if (clientAccount != ClientAccount.EMPTY_ACCOUNT) {
-        badRequest("Already logged in")
+        call.badRequest("Already logged in")
     }
 
-    val account = startAuth { url -> browseUrl(url) }.apply {
+    val account = startAuth(::browseUrl).apply {
         updateInfo()
     }
     ClientAccountManager.clientAccount = account
     ConfigSystem.store(ClientAccountManager)
     EventManager.callEvent(UserLoggedInEvent)
 
-    respond(interopGson.toJsonTree(account.userInformation))
+    call.respond(interopGson.toJsonTree(account.userInformation))
 }
 
 // POST /api/v2/client/user/logout
-fun RoutingContext.logoutUser() {
+private fun Routing.logoutUser() = post("/logout") {
     val clientAccount = ClientAccountManager.clientAccount
     if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
-        badRequest("Not logged in")
+        call.badRequest("Not logged in")
     }
 
     ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
     ConfigSystem.store(ClientAccountManager)
     EventManager.callEvent(UserLoggedOutEvent)
-    respondNoContent()
+    call.respondNoContent()
+}
+
+internal fun Routing.userRoutes() = route("/user") {
+    getUser()
+    loginUser()
+    logoutUser()
 }

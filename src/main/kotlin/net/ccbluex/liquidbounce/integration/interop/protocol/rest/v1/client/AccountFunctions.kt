@@ -31,11 +31,11 @@ import net.ccbluex.liquidbounce.features.account.AccountManager
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.randomUsername
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 import org.lwjgl.glfw.GLFW
 
 // GET /api/v1/client/accounts
-fun RoutingContext.getAccounts() {
+private fun Routing.getAccounts() = get {
     val accounts = JsonArray()
     for ((i, account) in AccountManager.accounts.withIndex()) {
         val profile = account.profile ?: continue
@@ -50,152 +50,152 @@ fun RoutingContext.getAccounts() {
             addProperty("favorite", account.favorite)
         })
     }
-    respond(accounts)
+    call.respond(accounts)
 }
 
 // POST /api/v1/client/accounts/new/microsoft
-fun RoutingContext.postNewMicrosoftAccount() {
+private fun Routing.postNewMicrosoftAccount() = post {
     AccountManager.newMicrosoftAccount {
         browseUrl(it)
         EventManager.callEvent(AccountManagerMessageEvent("Opened login url in browser"))
     }
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/clipboard
-fun RoutingContext.postClipboardMicrosoftAccount() {
+private fun Routing.postClipboardMicrosoftAccount() = post("/clipboard") {
     AccountManager.newMicrosoftAccount {
         mc.execute {
             GLFW.glfwSetClipboardString(mc.window.handle(), it)
             EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
         }
     }
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/new/cracked
-fun RoutingContext.postNewCrackedAccount() {
+private fun Routing.postNewCrackedAccount() = post("/cracked") {
     data class AccountForm(val username: String, val online: Boolean?)
 
-    val accountForm = receive<AccountForm>()
+    val accountForm = call.receive<AccountForm>()
 
     AccountManager.newCrackedAccount(accountForm.username, accountForm.online ?: false)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/new/session
-fun RoutingContext.postNewSessionAccount() {
+private fun Routing.postNewSessionAccount() = post("/session") {
     data class AccountForm(val token: String)
 
-    val accountForm = receive<AccountForm>()
+    val accountForm = call.receive<AccountForm>()
 
     AccountManager.newSessionAccount(accountForm.token)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/new/altening
-fun RoutingContext.postNewAlteningAccount() {
+private fun Routing.postNewAlteningAccount() = post {
     data class AlteningForm(val token: String)
 
-    val accountForm = receive<AlteningForm>()
+    val accountForm = call.receive<AlteningForm>()
     AccountManager.newAlteningAccount(accountForm.token)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/generate
-fun RoutingContext.postGenerateAlteningAccount() {
+private fun Routing.postGenerateAlteningAccount() = post("/generate") {
     data class AlteningGenForm(val apiToken: String)
 
-    val accountForm = receive<AlteningGenForm>()
+    val accountForm = call.receive<AlteningGenForm>()
 
     AccountManager.generateAlteningAccount(accountForm.apiToken)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/swap
-fun RoutingContext.postSwapAccounts() {
+private fun Routing.postSwapAccounts() = post("/swap") {
     data class AccountForm(val from: Int, val to: Int)
 
-    val accountForm = receive<AccountForm>()
+    val accountForm = call.receive<AccountForm>()
 
     AccountManager.swapAccounts(accountForm.from, accountForm.to)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/order
-fun RoutingContext.postOrderAccounts() {
+private fun Routing.postOrderAccounts() = post("/order") {
     data class AccountOrderRequest(val order: List<Int>)
 
-    val accountOrderRequest = receive<AccountOrderRequest>()
+    val accountOrderRequest = call.receive<AccountOrderRequest>()
 
     AccountManager.orderAccounts(accountOrderRequest.order)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/login
-fun RoutingContext.postLoginAccount() {
+private fun Routing.postLoginAccount() = post {
     data class AccountForm(val id: Int)
 
-    val accountForm = receive<AccountForm>()
+    val accountForm = call.receive<AccountForm>()
 
     AccountManager.loginAccount(accountForm.id)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/cracked
-fun RoutingContext.postLoginCrackedAccount() {
+private fun Routing.postLoginCrackedAccount() = post("/cracked") {
     data class AccountForm(val username: String, val online: Boolean?)
 
-    val accountForm = receive<AccountForm>()
+    val accountForm = call.receive<AccountForm>()
 
     AccountManager.loginCrackedAccount(accountForm.username, accountForm.online ?: false)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/session
-fun RoutingContext.postLoginSessionAccount() {
+private fun Routing.postLoginSessionAccount() = post("/session") {
     data class AccountForm(val token: String)
 
-    val accountForm = receive<AccountForm>()
+    val accountForm = call.receive<AccountForm>()
 
     AccountManager.loginSessionAccount(accountForm.token)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/accounts/restore
-fun RoutingContext.postRestoreInitial() {
+private fun Routing.postRestoreInitial() = post("/restore") {
     AccountManager.restoreInitial()
-    respond(mc.user, interopGson)
+    call.respond(mc.user, interopGson)
 }
 
 // PUT /api/v1/client/accounts/favorite
-fun RoutingContext.putFavoriteAccount() {
+private fun Routing.putFavoriteAccount() = put {
     data class AccountForm(val id: Int)
 
-    val accountForm = receive<AccountForm>()
+    val accountForm = call.receive<AccountForm>()
 
     AccountManager.favoriteAccount(accountForm.id)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // DELETE /api/v1/client/accounts/favorite
-fun RoutingContext.deleteFavoriteAccount() {
+private fun Routing.deleteFavoriteAccount() = delete {
     data class AccountForm(val id: Int)
 
-    val accountForm = receive<AccountForm>()
+    val accountForm = call.receive<AccountForm>()
 
     AccountManager.unfavoriteAccount(accountForm.id)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // DELETE /api/v1/client/accounts
-fun RoutingContext.deleteAccount() {
+private fun Routing.deleteAccount() = delete {
     data class AccountForm(val id: Int)
 
-    val accountForm = receive<AccountForm>()
+    val accountForm = call.receive<AccountForm>()
     val account = AccountManager.removeAccount(accountForm.id)
 
-    respond(JsonObject().apply {
+    call.respond(JsonObject().apply {
         addProperty("id", accountForm.id)
 
         val profile = account.profile ?: return@apply
@@ -208,8 +208,42 @@ fun RoutingContext.deleteAccount() {
 }
 
 // POST /api/v1/client/account/random-name
-fun RoutingContext.generateName() {
-    respond(JsonObject().apply {
+private fun Routing.generateName() = post("/random-name") {
+    call.respond(JsonObject().apply {
         addProperty("name", randomUsername())
     })
+}
+
+internal fun Routing.accountRoutes() {
+    route("/accounts") {
+        getAccounts()
+        route("/new") {
+            route("/microsoft") {
+                postNewMicrosoftAccount()
+                postClipboardMicrosoftAccount()
+            }
+            postNewCrackedAccount()
+            postNewSessionAccount()
+            route("/altening") {
+                postNewAlteningAccount()
+                postGenerateAlteningAccount()
+            }
+        }
+        postSwapAccounts()
+        postOrderAccounts()
+    }
+    route("/account") {
+        deleteAccount()
+        route("/login") {
+            postLoginAccount()
+            postLoginCrackedAccount()
+            postLoginSessionAccount()
+        }
+        postRestoreInitial()
+        route("/favorite") {
+            putFavoriteAccount()
+            deleteFavoriteAccount()
+        }
+        generateName()
+    }
 }

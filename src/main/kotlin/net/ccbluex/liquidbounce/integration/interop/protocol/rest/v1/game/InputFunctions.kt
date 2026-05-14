@@ -23,22 +23,22 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 
 // GET /api/v1/client/input
-fun RoutingContext.getInputInfo() {
-    val key = queryParameters["key"] ?: badRequest("Missing key parameter")
+private fun Routing.getInputInfo() = get("/input") {
+    val key = call.queryParameters["key"] ?: call.badRequest("Missing key parameter")
     val input = InputConstants.getKey(key)
 
-    respond(JsonObject().apply {
+    call.respond(JsonObject().apply {
         addProperty("translationKey", input.name)
         addProperty("localized", input.displayName.string)
     })
 }
 
 // GET /api/v1/client/keybinds
-fun RoutingContext.getKeybinds() {
-    respond(
+private fun Routing.getKeybinds() = get("/keybinds") {
+    call.respond(
         JsonArray().apply {
             for (key in mc.options.keyMappings) {
                 add(JsonObject().apply {
@@ -56,21 +56,27 @@ fun RoutingContext.getKeybinds() {
 /**
  * Keeps track if we are currently typing in a text field
  */
+@Volatile
 var isTyping = false
 
-// POST /api/v1/client/typing
-fun RoutingContext.isTyping() {
-    data class TypingRequest(val typing: Boolean)
+private data class TypingState(val typing: Boolean)
 
-    val typingRequest = receive<TypingRequest>()
+// POST /api/v1/client/typing
+private fun Routing.isTyping() = post("/typing") {
+    val typingRequest = call.receive<TypingState>()
     isTyping = typingRequest.typing
 
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // GET /api/v1/client/typing
-fun RoutingContext.getIsTyping() {
-    respond(JsonObject().apply {
-        addProperty("typing", isTyping)
-    })
+private fun Routing.getIsTyping() = get("/typing") {
+    call.respond(TypingState(isTyping))
+}
+
+internal fun Routing.inputRoutes() {
+    getInputInfo()
+    getKeybinds()
+    isTyping()
+    getIsTyping()
 }

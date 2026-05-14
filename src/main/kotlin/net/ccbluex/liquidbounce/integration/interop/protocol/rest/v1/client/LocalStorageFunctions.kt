@@ -22,7 +22,7 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.LocalStorageData.Item
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 
 /**
  * LocalStorage RestAPI
@@ -40,45 +40,55 @@ private data class LocalStorageData(val items: List<Item>) {
 }
 
 // GET /api/v1/client/localStorage
-fun RoutingContext.getLocalStorage() {
-    val key = queryParameters["key"] ?: forbidden("No key")
-    val value = PersistentLocalStorage.map[key] ?: forbidden("No value for key $key")
+private fun Routing.getLocalStorage() = get {
+    val key = call.queryParameters["key"] ?: call.forbidden("No key")
+    val value = PersistentLocalStorage.map[key] ?: call.forbidden("No value for key $key")
 
-    respond(JsonObject().apply {
+    call.respond(JsonObject().apply {
         addProperty("value", value)
     })
 }
 
 // PUT /api/v1/client/localStorage
-fun RoutingContext.putLocalStorage() {
-    val payload = receive<JsonObject>()
-    val key = payload["key"]?.asString ?: forbidden("No key")
-    val value = payload["value"]?.asString ?: forbidden("No value")
+private fun Routing.putLocalStorage() = put {
+    val payload = call.receive<JsonObject>()
+    val key = payload["key"]?.asString ?: call.forbidden("No key")
+    val value = payload["value"]?.asString ?: call.forbidden("No value")
 
     PersistentLocalStorage.map[key] = value
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // DELETE /api/v1/client/localStorage
-fun RoutingContext.deleteLocalStorage() {
-    val key = queryParameters["key"] ?: forbidden("No key")
+private fun Routing.deleteLocalStorage() = delete {
+    val key = call.queryParameters["key"] ?: call.forbidden("No key")
     PersistentLocalStorage.map.remove(key)
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // GET /api/v1/client/localStorage/all
-fun RoutingContext.getAllLocalStorage() {
-    respond(LocalStorageData(PersistentLocalStorage.map.map { (k, v) -> Item(k, v) }), interopGson)
+private fun Routing.getAllLocalStorage() = get {
+    call.respond(LocalStorageData(PersistentLocalStorage.map.map { (k, v) -> Item(k, v) }), interopGson)
 }
 
 // PUT /api/v1/client/localStorage/all
-fun RoutingContext.putAllLocalStorage() {
-    val payload = receive<LocalStorageData>()
+private fun Routing.putAllLocalStorage() = put {
+    val payload = call.receive<LocalStorageData>()
 
     PersistentLocalStorage.map.clear()
     payload.items.forEach { item ->
         PersistentLocalStorage.map[item.key] = item.value
     }
 
-    respondNoContent()
+    call.respondNoContent()
+}
+
+internal fun Routing.localStorageRoutes() = route("/localStorage") {
+    getLocalStorage()
+    putLocalStorage()
+    deleteLocalStorage()
+    route("/all") {
+        getAllLocalStorage()
+        putAllLocalStorage()
+    }
 }

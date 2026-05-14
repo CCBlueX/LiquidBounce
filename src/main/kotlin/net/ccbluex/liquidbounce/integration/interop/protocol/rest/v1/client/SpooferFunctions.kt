@@ -22,15 +22,20 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 
-fun RoutingContext.getSpooferConfig() {
+private fun Routing.getSpooferConfig() = get {
     // Serialize MultiplayerConfigurable to JSON
-    respond(ConfigSystem.serializeValueGroup(SpooferManager, gson = interopGson))
+    call.respond(ConfigSystem.serializeValueGroup(SpooferManager, gson = interopGson))
 }
 
-fun RoutingContext.putSpooferConfig() {
-    ConfigSystem.deserializeValueGroup(SpooferManager, body.reader())
+private fun Routing.putSpooferConfig() = put {
+    ConfigSystem.deserializeValueGroup(SpooferManager, call.body.reader())
     ConfigSystem.store(SpooferManager)
-    respondNoContent()
+    call.respondNoContent()
+}
+
+internal fun Routing.spooferRoutes() = route("/spoofer") {
+    getSpooferConfig()
+    putSpooferConfig()
 }

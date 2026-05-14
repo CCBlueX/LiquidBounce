@@ -25,11 +25,11 @@ import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.browserBrowsers
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.netty.http.routing.RoutingContext
+import net.ccbluex.netty.http.routing.Routing
 
 // GET /api/v1/client/browser
-fun RoutingContext.getBrowserInfo() {
-    respond(JsonObject().apply {
+private fun Routing.getBrowserInfo() = get {
+    call.respond(JsonObject().apply {
         val internetExplorerScreen = mc.screen as? InternetExplorerScreen ?: return@apply
         val browser = internetExplorerScreen.browserBrowser ?: return@apply
 
@@ -38,82 +38,93 @@ fun RoutingContext.getBrowserInfo() {
 }
 
 // POST /api/v1/client/browser/navigate
-fun RoutingContext.postBrowserNavigate() = with(receive<Navigate>()) {
+private fun Routing.postBrowserNavigate() = post("/navigate") { with(call.receive<Navigate>()) {
     val url = this.url
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: badRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: badRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.url = url
-    respondNoContent()
-}
+    call.respondNoContent()
+} }
 
 private data class Navigate(val url: String)
 
 // POST /api/v1/client/browser/close
-suspend fun RoutingContext.postBrowserClose() = withContext(Dispatchers.Minecraft) {
+private fun Routing.postBrowserClose() = post("/close") { withContext(Dispatchers.Minecraft) {
     if (mc.screen !is InternetExplorerScreen) {
-        badRequest("No browser screen")
+        call.badRequest("No browser screen")
     } else {
         mc.setScreen(null)
-        respondNoContent()
+        call.respondNoContent()
     }
-}
+} }
 
 // POST /api/v1/client/browser/reload
-fun RoutingContext.postBrowserReload() {
+private fun Routing.postBrowserReload() = post("/reload") {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: badRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: badRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.reload()
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/browser/forceReload
-fun RoutingContext.postBrowserForceReload() {
+private fun Routing.postBrowserForceReload() = post("/forceReload") {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: badRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: badRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.forceReload()
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/browser/forward
-fun RoutingContext.postBrowserForward() {
+private fun Routing.postBrowserForward() = post("/forward") {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: badRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: badRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.goForward()
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/browser/back
-fun RoutingContext.postBrowserBack() {
+private fun Routing.postBrowserBack() = post("/back") {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: badRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: badRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.goBack()
-    respondNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/browser/closeTab
-suspend fun RoutingContext.postBrowserCloseTab() {
+private fun Routing.postBrowserCloseTab() = post("/closeTab") {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: badRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: badRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
     withContext(Dispatchers.Minecraft) {
         browser.close()
         browserBrowsers.remove(browser)
     }
-    respondNoContent()
+    call.respondNoContent()
+}
+
+internal fun Routing.browserRoutes() = route("/browser") {
+    getBrowserInfo()
+    postBrowserNavigate()
+    postBrowserClose()
+    postBrowserReload()
+    postBrowserForceReload()
+    postBrowserForward()
+    postBrowserBack()
+    postBrowserCloseTab()
 }
