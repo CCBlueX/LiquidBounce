@@ -117,22 +117,6 @@ public abstract class MixinCamera {
             this.setPosition(screen.getCameraPos());
             this.setRotation(screen.getCameraRotation().yRot(), screen.getCameraRotation().xRot());
         }
-
-        var rotationTarget = RotationManager.INSTANCE.getActiveRotationTarget();
-        var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
-        var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-
-        var changeLook = rotationTarget != null &&
-            rotationTarget.getMovementCorrection() == MovementCorrection.CHANGE_LOOK;
-        if (currentRotation == null || previousRotation == null || !changeLook ||
-            !RotationManager.INSTANCE.isRotatingAllowed(rotationTarget)) {
-            return;
-        }
-
-        setRotation(
-            Mth.lerp(partialTicks, previousRotation.yRot(), currentRotation.yRot()),
-            Mth.lerp(partialTicks, previousRotation.xRot(), currentRotation.xRot())
-        );
     }
 
     @Inject(method = "alignWithEntity", at = @At("TAIL"))
