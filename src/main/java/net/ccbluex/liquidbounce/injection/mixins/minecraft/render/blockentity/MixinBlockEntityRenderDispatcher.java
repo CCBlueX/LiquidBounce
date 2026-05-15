@@ -16,9 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.render.blockentity;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
 import net.minecraft.client.Minecraft;

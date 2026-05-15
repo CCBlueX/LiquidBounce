@@ -63,7 +63,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
         private val cloudEnd by float("CloudEnd", 20480f, 0f..4096f)
 
         /**
-         * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinFogRenderer
+         * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.fog.MixinFogRenderer
          */
         fun modifyFogData(fogData: FogData) {
             if (!this.running) {

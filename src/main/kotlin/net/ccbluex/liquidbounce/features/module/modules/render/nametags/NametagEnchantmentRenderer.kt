@@ -93,8 +93,8 @@ private object EnchantmentDisplayHelper {
     }
 
     private fun getAbbreviation(enchantment: Holder<Enchantment>): String {
-        return enchantmentAbbreviationCache.getOrPut(enchantment) {
-            val name = getEnchantmentName(enchantment)
+        return enchantmentAbbreviationCache.computeIfAbsent(enchantment) {
+            val name = getEnchantmentName(it)
             processName(name)
         }
     }
@@ -129,6 +129,10 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
 
     private val labelTextScale get() = scale * ModuleNametags.fontRenderer.scaleToVanillaFont
     private val labelBackgroundRadius get() = backgroundRadius * scale
+
+    private val enchantmentInfoComparator = Comparator
+        .comparingInt<EnchantmentInfo> { -it.level }
+        .thenComparing { it.displayName }
 
     @JvmRecord
     private data class EnchantCell(
@@ -175,7 +179,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         }
 
         if (enchantmentList.isEmpty) return emptyList()
-        enchantmentList.sortByDescending { it.level }
+        enchantmentList.sortWith(enchantmentInfoComparator)
 
         val hasMoreEnchantments = enchantmentList.size > maxCountPerItem
 

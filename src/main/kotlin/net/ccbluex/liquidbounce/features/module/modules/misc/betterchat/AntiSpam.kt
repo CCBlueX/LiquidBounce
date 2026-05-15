@@ -66,7 +66,7 @@ object AntiSpam : ToggleableValueGroup(ModuleBetterChat, "AntiSpam", true) {
             val id = "$string-external"
 
             val chatText = ArrayList<Component>()
-            val text = event.applyChatDecoration.invoke(event.textData)
+            val text = event.applyChatDecoration.apply(event.textData)
             chatText += text
 
             val other = mc.gui.chat.allMessages.find {
