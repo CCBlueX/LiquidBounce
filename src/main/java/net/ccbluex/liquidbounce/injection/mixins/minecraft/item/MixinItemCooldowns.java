@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
 import net.ccbluex.liquidbounce.interfaces.ItemCooldownsAddition;
 import net.minecraft.resources.Identifier;

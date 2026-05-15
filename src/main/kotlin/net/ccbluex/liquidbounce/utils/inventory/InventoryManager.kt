@@ -225,7 +225,7 @@ object InventoryManager : EventListener {
     /**
      * Called when a click occurs. Can be tracked by listening for [ServerboundContainerClickPacket]
      *
-     * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinPacketWrapper
+     * @see net.ccbluex.liquidbounce.injection.mixins.viaversion.MixinPacketWrapper
      */
     @JvmStatic
     fun onClickOccurs() {

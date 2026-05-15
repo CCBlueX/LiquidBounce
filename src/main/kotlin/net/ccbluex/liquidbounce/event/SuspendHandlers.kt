@@ -33,6 +33,8 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration
 
+typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
+
 /**
  * Registers an event hook for events of type [T] and launches a sequence
  */

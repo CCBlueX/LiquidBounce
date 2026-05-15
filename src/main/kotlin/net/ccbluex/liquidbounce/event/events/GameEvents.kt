@@ -36,6 +36,7 @@ import net.minecraft.client.multiplayer.TransferState
 import net.minecraft.client.multiplayer.resolver.ServerAddress
 import net.minecraft.network.chat.Component
 import net.minecraft.world.item.ItemStack
+import java.util.function.UnaryOperator
 
 @Tag("gameTick")
 object GameTickEvent : Event()
@@ -133,7 +134,7 @@ class ChatReceiveEvent(
     val message: String,
     val textData: Component,
     val type: ChatType,
-    val applyChatDecoration: (Component) -> Component,
+    val applyChatDecoration: UnaryOperator<Component>,
 ) : CancellableEvent(), WebSocketEvent {
     enum class ChatType(override val tag: String) : Tagged {
         CHAT_MESSAGE("ChatMessage"),
