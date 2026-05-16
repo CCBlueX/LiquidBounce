@@ -98,7 +98,6 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
             add(Blocks.BREWING_STAND)
             add(Blocks.DISPENSER)
             add(Blocks.HOPPER)
-            add(Blocks.DECORATED_POT)
         }
     )
 
