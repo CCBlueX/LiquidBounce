@@ -53,6 +53,7 @@ import net.ccbluex.liquidbounce.utils.network.position
 import net.minecraft.client.CameraType
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
+import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
 import net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket
 import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -165,6 +166,11 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
             is ClientboundRespawnPacket,
             is ClientboundLoginPacket -> {
                 flush(origin)
+                return@handler
+            }
+
+            // Ignore damage events
+            is ClientboundDamageEventPacket -> {
                 return@handler
             }
 
