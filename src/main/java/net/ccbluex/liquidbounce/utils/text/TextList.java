@@ -43,7 +43,7 @@ public final class TextList implements Component {
     @Nullable
     private Language language;
 
-    private TextList(@Nullable List<Component> siblings) {
+    TextList(@Nullable List<Component> siblings) {
         this.siblings = siblings == null ? Collections.emptyList() : siblings;
     }
 

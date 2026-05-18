@@ -30,6 +30,9 @@ import net.ccbluex.liquidbounce.interfaces.TextColorAddition
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.text.RunnableClickEvent
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asText
+import net.ccbluex.liquidbounce.utils.text.plus
 import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
@@ -134,7 +137,7 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableC
 /**
  * Creates text with a copy-to-clipboard click event
  *
- * @param this@copyable The text to make copyable
+ * @receiver The text to make copyable
  * @param copyContent The content to copy when clicked (defaults to text's string representation)
  * @param hover The hover event to apply (defaults to "Click to copy" tooltip)
  * @return Styled text with copy functionality
@@ -162,8 +165,9 @@ fun MutableComponent.bypassNameProtection(): MutableComponent = withStyle {
  * Open a [ChatScreen] with given text,
  * or set the text of current [ChatScreen]
  */
-fun Minecraft.openChat(text: String, draft: Boolean = false) = schedule {
-    (screen as? MixinChatScreenAccessor)?.input?.setValue(text) ?: setScreen(ChatScreen(text, draft))
+fun Minecraft.openChat(text: String, draft: Boolean = false, closeOnSubmit: Boolean = true) = schedule {
+    (screen as? MixinChatScreenAccessor)?.input?.setValue(text)
+        ?: setScreen(ChatScreen(text, draft, closeOnSubmit))
 }
 
 private val defaultMessageMetadata = MessageMetadata()

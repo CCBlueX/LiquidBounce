@@ -37,8 +37,8 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.send1_11_1OpenInventory
-import net.ccbluex.liquidbounce.utils.client.sendCloseInventory
+import net.ccbluex.liquidbounce.utils.network.send1_11_1OpenInventory
+import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
@@ -47,7 +47,7 @@ import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import kotlin.math.max
 import kotlin.random.Random
 
@@ -60,6 +60,9 @@ import kotlin.random.Random
  */
 object InventoryManager : EventListener {
 
+    override val running: Boolean
+        get() = super.running && inGame
+
     val isInventoryOpen
         get() = isInInventoryScreen || isInventoryOpenServerSide
 
@@ -69,7 +72,7 @@ object InventoryManager : EventListener {
     var isInventoryOpenServerSide = false
         internal set(value) {
             if (!field && value) {
-                inventoryOpened()
+                onInventoryOpened()
             }
             field = value
         }
@@ -186,7 +189,8 @@ object InventoryManager : EventListener {
                     // the action is a throw action (you cannot miss-click really when throwing)
                     if (index == 0 && action is InventoryAction.Click
                         && constraints.missChance.random() > Random.nextInt(100)
-                        && action.actionType != ClickType.THROW) {
+                        && action.actionType != ContainerInput.THROW
+                    ) {
                         // Simulate a miss click (this is only possible for container-type slots)
                         // TODO: Add support for inventory slots
                         if (action.performMissClick()) {
@@ -219,10 +223,12 @@ object InventoryManager : EventListener {
     }
 
     /**
-     * Called when a click occurred. Can be tracked by listening for [ServerboundContainerClickPacket]
+     * Called when a click occurs. Can be tracked by listening for [ServerboundContainerClickPacket]
+     *
+     * @see net.ccbluex.liquidbounce.injection.mixins.viaversion.MixinPacketWrapper
      */
     @JvmStatic
-    fun clickOccurred() {
+    fun onClickOccurs() {
         // Every click will require an update
         requiresUpdate = true
     }
@@ -231,7 +237,7 @@ object InventoryManager : EventListener {
      * Called when the inventory was opened. Can be tracked by listening for [ClientboundOpenScreenPacket]
      */
     @JvmStatic
-    fun inventoryOpened() {
+    fun onInventoryOpened() {
         recentInventoryOpen = true
     }
 
@@ -249,7 +255,7 @@ object InventoryManager : EventListener {
 
         // If we actually send a click packet, we can reset the click chronometer
         if (packet is ServerboundContainerClickPacket) {
-            clickOccurred()
+            onClickOccurs()
 
             if (packet.containerId == 0) {
                 isInventoryOpenServerSide = true
@@ -297,7 +303,7 @@ object InventoryManager : EventListener {
                 isInventoryOpenServerSide = true
             }
 
-            inventoryOpened()
+            onInventoryOpened()
         }
     }
 

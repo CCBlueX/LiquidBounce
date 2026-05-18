@@ -3,6 +3,10 @@ export interface Metadata {
     name: string;
     version: string;
     authors: string[];
+    colors: {
+        Accent: string;
+        Tint: string;
+    }
     screens: string[];
     overlays: string[];
     components: string[];
@@ -70,8 +74,8 @@ export interface Setting<V> {
     valueType: string;
     name: string;
     value: V;
-    description: string;
-    key: string;
+    description: string | undefined;
+    key: string | undefined;
 }
 
 export interface FileSetting extends Setting<File> {
@@ -186,7 +190,7 @@ export interface InputBind {
     modifiers: BindModifier[];
 }
 
-export type BindAction = "Toggle" | "Hold";
+export type BindAction = "Toggle" | "Hold" | "Smart";
 
 export type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 
@@ -262,10 +266,6 @@ export interface ItemStack {
     damage: number;
     maxDamage: number;
     displayName: TextComponent | string;
-    /**
-     * @deprecated use {@link enchantments} instead.
-     */
-    hasEnchantment: boolean;
     enchantments?: Record<string, number>;
 }
 
@@ -381,6 +381,10 @@ export interface GameWindow {
 export interface Theme {
     name: string;
     id: string;
+    colors: {
+        accent: number;
+        tint: number;
+    };
     settings: { [name: string]: any };
 }
 

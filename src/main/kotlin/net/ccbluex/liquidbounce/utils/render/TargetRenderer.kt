@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.drawCircleOutline
 import net.ccbluex.liquidbounce.render.drawCircle
+import net.ccbluex.liquidbounce.render.drawCircleOutline
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.drawTexQuad
@@ -44,17 +44,17 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.AnimatedValueGroup
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
-import net.ccbluex.liquidbounce.utils.client.plus
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.text.plus
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
@@ -132,14 +132,13 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val length by int("Length", 25, 15..40)
 
             override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
-                matrixStack.pushPose()
+                poseStack.pushPose()
 
                 val interpolated = entity.lastRenderPos().lerp(entity.position(), partialTicks.toDouble())
                     .add(0.2, 1.25, 0.0)
 
-                matrixStack.translate(interpolated - mc.gameRenderer.mainCamera.position())
+                poseStack.translate(interpolated - camera.position())
 
-                startBatch()
                 drawParticle(
                     { sin, cos -> Vec3(sin, cos, -cos) },
                     { sin, cos -> Vec3(-sin, -cos, cos) }
@@ -154,9 +153,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     { sin, cos -> Vec3(-sin, -sin, cos) },
                     { sin, cos -> Vec3(sin, sin, -cos) }
                 )
-                commitBatch()
 
-                matrixStack.popPose()
+                poseStack.popPose()
             }
 
             private inline fun WorldRenderEnvironment.drawParticle(
@@ -172,7 +170,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     val sin = sin(angle) * radius
                     val cos = cos(angle) * radius
 
-                    with(matrixStack) {
+                    with(poseStack) {
                         translate(translationsBefore(sin, cos))
 
                         translate(-size / 2.0, -size / 2.0, 0.0)
@@ -186,7 +184,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                     drawSquareTexture(ghostModeTexture, size, renderColor.argb)
 
-                    with(matrixStack) {
+                    with(poseStack) {
                         translate(-size / 2.0, -size / 2.0, 0.0)
                         mulPose(Axis.XP.rotationDegrees(-camera.xRot()))
                         mulPose(Axis.YP.rotationDegrees(camera.yRot()))
@@ -256,7 +254,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 MARKER2("Marker2", "target_renderer/target2.png");
 
                 override val texture = LiquidBounce.resource(this.path)
-                    .toNativeImage().asTexture { "TargetRenderer Image $tag" }
+                    .readNativeImage().asTexture { "TargetRenderer Image $tag" }
             }
 
             private val quaternion = Quaternionf()
@@ -268,12 +266,12 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
                 withPositionRelativeToCamera(pos) {
-                    matrixStack.mulPose(camera.rotation())
-                    matrixStack.mulPose(
+                    poseStack.mulPose(camera.rotation())
+                    poseStack.mulPose(
                         quaternion.scaling(1f)
                             .rotateLocalZ(rotate.current().toRadians())
                     )
-                    matrixStack.last().scale(scale.x(), scale.y(), 1f)
+                    poseStack.last().scale(scale.x(), scale.y(), 1f)
                     drawTexQuad(texture, color.argb)
                 }
             }
@@ -304,14 +302,10 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val height = heightMode.activeMode.getHeight(entity, partialTicks)
                 val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
-                startBatch()
                 withPositionRelativeToCamera(pos) {
                     drawGradientCircle(radius, innerRadius, outerColor, innerColor)
-                    if (!outlineColor.isTransparent) {
-                        drawCircleOutline(radius, outlineColor)
-                    }
+                    drawCircleOutline(radius, outlineColor)
                 }
-                commitBatch()
             }
 
         }
@@ -350,7 +344,6 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 }
 
                 withPositionRelativeToCamera(pos) {
-                    // Don't use batch mode because `drawGradientCircle` uses TRIANGLE_STRIP
                     drawGradientCircle(
                         radius,
                         radius,
@@ -360,10 +353,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     )
 
                     drawCircle(radius, color)
-
-                    if (!outlineColor.isTransparent) {
-                        drawCircleOutline(radius, outlineColor)
-                    }
+                    drawCircleOutline(radius, outlineColor)
                 }
             }
 
@@ -371,7 +361,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
     }
 
-    sealed class Gui(name: String) : TargetRenderAppearance<GuiGraphics>(name) {
+    sealed class Gui(name: String) : TargetRenderAppearance<GuiGraphicsExtractor>(name) {
 
         class Text(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) : Gui("Text2D") {
 
@@ -393,7 +383,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
             private val fontRenderer get() = FontManager.FONT_RENDERER
 
-            override fun GuiGraphics.render(entity: Entity, partialTicks: Float) {
+            override fun GuiGraphicsExtractor.render(entity: Entity, partialTicks: Float) {
                 val height = heightMode.activeMode.getHeight(entity, partialTicks)
                 val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
                 val screenPos = calculateScreenPos(pos) ?: return
@@ -417,7 +407,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
             private val size by float("Size", 1.5f, 0.5f..20f)
 
-            override fun GuiGraphics.render(entity: Entity, partialTicks: Float) {
+            override fun GuiGraphicsExtractor.render(entity: Entity, partialTicks: Float) {
                 val pos = entity.interpolateCurrentPosition(partialTicks)
                     .add(0.0, entity.bbHeight.toDouble(), 0.0)
 
@@ -442,7 +432,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 private val defaultColor = Color4b.LIQUID_BOUNCE.alpha(100)
 
 private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
-    .toNativeImage().asTexture { "TargetRenderer Ghost" }
+    .readNativeImage().asTexture { "TargetRenderer Ghost" }
 
 private sealed class HeightMode(name: String) : Mode(name) {
     abstract fun getHeight(entity: Entity, partialTicks: Float): Double

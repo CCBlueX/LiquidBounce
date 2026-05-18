@@ -18,14 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine
 
-import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
 import net.ccbluex.liquidbounce.event.events.BlockAttackEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.CivMineMode
@@ -42,8 +41,10 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
@@ -52,7 +53,6 @@ import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
@@ -79,15 +79,16 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
     private val range by float("Range", 4.5f, 1f..6f)
     private val wallsRange by float("WallsRange", 4.5f, 0f..6f).onChange {
-        it.coerceAtLeast(range)
+        minOf(range, it)
     }
 
     val keepRange by float("KeepRange", 25f, 0f..200f).onChange {
-        it.coerceAtLeast(wallsRange)
+        maxOf(range, it)
     }
 
     val swingMode by enumChoice("Swing", SwingMode.HIDE_CLIENT)
-    val switchMode = choices("Switch",
+    val switchMode = choices(
+        "Switch",
         OnStopToolMode,
         arrayOf(AlwaysToolMode, PostStartToolMode, OnStopToolMode, NeverToolMode)
     )
@@ -96,6 +97,17 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
     private val rotations = tree(RotationsValueGroup(this))
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     val breakDamage by float("BreakDamage", 1f, 0f..2f)
+    /**
+     * Extra delay before starting the next target after sending `STOP_DESTROY_BLOCK`.
+     *
+     * Vanilla applies a chained-break cooldown in
+     * [net.minecraft.client.multiplayer.MultiPlayerGameMode.continueDestroyBlock]
+     * by setting `destroyDelay = 5` after a successful break.
+     * The default `6` is to prevent possible flags by different network environment and anticheat.
+     *
+     * @see net.minecraft.client.multiplayer.MultiPlayerGameMode.destroyDelay
+     */
+    private val postBreakDelay by int("PostBreakDelay", 6, 0..10, "ticks")
     val abortAlwaysDown by boolean("AbortAlwaysDown", false)
     private val selectDelay by int("SelectDelay", 200, 0..400, "ms")
 
@@ -109,6 +121,8 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
     private val chronometer = Chronometer()
     private var rotation: Rotation? = null
+    private var tickCounter = 0L
+    private var nextAllowedStartTick = 0L
 
     /**
      * The current target of the module.
@@ -127,6 +141,10 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
             field = value
         }
 
+    private fun shouldBlockTargetChange(mineTarget: MineTarget): Boolean {
+        return mode.activeMode.shouldPreventTargetChange(mineTarget)
+    }
+
     init {
         mode.onChanged {
             if (mc.level != null && mc.player != null) {
@@ -137,11 +155,13 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
     }
 
     override fun onEnabled() {
+        nextAllowedStartTick = 0L
         interaction.stopDestroyBlock()
     }
 
     override fun onDisabled() {
         targetRenderer.clearSilently()
+        nextAllowedStartTick = 0L
         _target = null
     }
 
@@ -153,11 +173,12 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
-        val mineTarget = _target ?: return@tickHandler
+    private val repeatable = handler<GameTickEvent> {
+        tickCounter++
+        val mineTarget = _target ?: return@handler
         if (mineTarget.isInvalidOrOutOfRange()) {
             _target = null
-            return@tickHandler
+            return@handler
         }
 
         mineTarget.updateBlockState()
@@ -192,6 +213,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
         rotation = raytrace.rotation
     }
 
+    @Suppress("ReturnCount")
     private fun handleBreaking(mineTarget: MineTarget) {
         // are we looking at the target?
         val hit = raytraceBlock(
@@ -218,7 +240,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
         }
 
         if (player.isCreative) {
-            interaction.startPrediction(net.ccbluex.liquidbounce.utils.client.world) { sequence: Int ->
+            interaction.startPrediction(world) { sequence: Int ->
                 interaction.destroyBlock(mineTarget.targetPos)
                 ServerboundPlayerActionPacket(
                     ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
@@ -235,19 +257,28 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
         val switchMode = switchMode.activeMode
         val slot = switchMode.getSlot(mineTarget.blockState)
         if (!mineTarget.started) {
+            if (tickCounter < nextAllowedStartTick) {
+                return
+            }
             startBreaking(slot, mineTarget)
         } else if (mode.activeMode.shouldUpdate(mineTarget, slot)) {
             updateBreakingProgress(mineTarget, slot)
             if (mineTarget.progress >= breakDamage && !mineTarget.finished) {
-                mode.activeMode.finish(mineTarget)
-                switchMode.getSwitchingMethod().switchBack()
+                val finishReadyTick = mineTarget.finishReadyTick
+                if (finishReadyTick == null) {
+                    mineTarget.finishReadyTick = tickCounter
+                } else if (tickCounter > finishReadyTick) {
+                    nextAllowedStartTick = tickCounter + postBreakDelay
+                    mode.activeMode.finish(mineTarget)
+                    switchMode.getSwitchingMethod().switchBack()
+                }
             }
         }
 
         switchMode.getSwitchingMethod().reset()
     }
 
-    private fun startBreaking(slot: IntObjectImmutablePair<ItemStack>?, mineTarget: MineTarget) {
+    private fun startBreaking(slot: HotbarItemSlot?, mineTarget: MineTarget) {
         switch(slot, mineTarget)
         if (switchMode.activeMode.syncOnStart) {
             interaction.ensureHasSentCarriedItem()
@@ -255,14 +286,15 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
         mode.activeMode.start(mineTarget)
         mineTarget.started = true
+        mineTarget.finishReadyTick = null
     }
 
-    private fun updateBreakingProgress(mineTarget: MineTarget, slot: IntObjectImmutablePair<ItemStack>?) {
+    private fun updateBreakingProgress(mineTarget: MineTarget, slot: HotbarItemSlot?) {
         val switchMode = switchMode.activeMode
         mineTarget.progress += switchMode.getBlockBreakingDelta(
             mineTarget.targetPos,
             mineTarget.blockState,
-            slot?.second()
+            slot?.itemStack
         )
 
         switch(slot, mineTarget)
@@ -271,10 +303,9 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
         }
 
         val f = if (breakDamage > 0f) {
-            val breakDamageD = breakDamage.toDouble()
-            mineTarget.progress.toDouble().coerceIn(0.0..breakDamageD) / breakDamageD / 2.0
+            mineTarget.progress.coerceIn(0f, breakDamage) / breakDamage * 0.5f
         } else {
-            0.5
+            0.5f
         }
 
         val box = mineTarget.targetPos.outlineBox
@@ -284,14 +315,14 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
         targetRenderer.updateBox(
             mineTarget.targetPos,
             box.inflate(
-                -(lengthX / 2) + lengthX * f,
-                -(lengthY / 2) + lengthY * f,
-                -(lengthZ / 2) + lengthZ * f
+                lengthX * (f - 0.5f),
+                lengthY * (f - 0.5f),
+                lengthZ * (f - 0.5f),
             )
         )
     }
 
-    fun switch(slot: IntObjectImmutablePair<ItemStack>?, mineTarget: MineTarget) {
+    fun switch(slot: HotbarItemSlot?, mineTarget: MineTarget) {
         if (slot == null) {
             return
         }
@@ -320,13 +351,19 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
         val blockPos = hitResult.blockPos
         val state = blockPos.getState()!!
+        val activeTarget = _target
 
         val shouldTargetBlock = mode.activeMode.shouldTarget(blockPos, state)
         // stop when the block is clicked again
-        val isCancelledByUser = blockPos == _target?.targetPos
+        val isCancelledByUser = blockPos == activeTarget?.targetPos
+
+        if (activeTarget != null && shouldBlockTargetChange(activeTarget)) {
+            chronometer.reset()
+            return@handler
+        }
 
         _target = if (shouldTargetBlock && world.worldBorder.isWithinBounds(blockPos) && !isCancelledByUser) {
-            MineTarget(blockPos)
+            MineTarget(blockPos.immutable)
         } else {
             null
         }
@@ -346,32 +383,44 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
     @Suppress("unused")
     private val blockUpdateHandler = handler<PacketEvent> {
-        if (!mode.activeMode.stopOnStateChange) {
-            return@handler
-        }
-
         when (val packet = it.packet) {
             is ClientboundBlockUpdatePacket -> {
-                mc.submit { updatePosOnChange(packet.pos, packet.blockState) }
+                mc.execute { updatePosOnChange(packet.pos, packet.blockState) }
             }
 
             is ClientboundSectionBlocksUpdatePacket -> {
-                mc.submit {
-                    packet.runUpdates { pos, state -> updatePosOnChange(pos, state) }
+                mc.execute {
+                    packet.runUpdates(::updatePosOnChange)
                 }
             }
         }
     }
 
     private fun updatePosOnChange(pos: BlockPos, state: BlockState) {
-        if (pos == _target?.targetPos && state.isAir) {
+        val target = _target ?: return
+        if (pos != target.targetPos) {
+            return
+        }
+
+        if (state.isAir && mode.activeMode.stopOnStateChange) {
             _target = null
         }
     }
 
     fun setTarget(blockPos: BlockPos) {
-        if (_target?.finished != false && mode.activeMode.canManuallyChange || _target == null) {
-            _target = MineTarget(blockPos)
+        val state = blockPos.getState()
+        val shouldTargetBlock = state != null && mode.activeMode.shouldTarget(blockPos, state)
+        if (!shouldTargetBlock || !world.worldBorder.isWithinBounds(blockPos)) {
+            return
+        }
+
+        val activeTarget = _target
+        if (activeTarget != null && shouldBlockTargetChange(activeTarget)) {
+            return
+        }
+
+        if (activeTarget?.finished != false && mode.activeMode.canManuallyChange || activeTarget == null) {
+            _target = MineTarget(blockPos.immutable)
         }
     }
 

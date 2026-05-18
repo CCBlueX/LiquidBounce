@@ -29,12 +29,17 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
+import net.ccbluex.liquidbounce.utils.render.trajectory.EntityTrajectoryResolver
+import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryDisplayResolver
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.world.entity.TraceableEntity
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.FishingRodItem
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -45,6 +50,12 @@ import net.minecraft.world.phys.Vec3
 @Suppress("MagicNumber")
 object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER) {
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
+    private val maxRenderDistance by int("MaxRenderDistance", 96, 16..512, "m")
+    private val cullBehindPlayer by boolean("CullBehindPlayer", false)
+    private val showMultiShot by boolean("ShowMultiShot", true)
+
+    private val trajectoryTypes by multiEnumChoice("TrajectoryTypes", TrajectoryType.entries, canBeNone = false)
+
     private val show by multiEnumChoice(
         "Show",
         Show.OTHER_PLAYERS,
@@ -70,17 +81,28 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
+            val viewPos = player.eyePosition
+            val viewDirection = player.rotation.directionVector
+            val maxRenderDistanceSq = maxRenderDistance * maxRenderDistance.toDouble()
+
             for (entity in world.entitiesForRendering()) {
-                val (trajectoryInfo, trajectoryType) = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
+                val delta = entity.position().subtract(viewPos)
+                if (delta.lengthSqr() > maxRenderDistanceSq ||
+                    cullBehindPlayer && delta.dot(viewDirection) < 0.0 && delta.lengthSqr() > 9.0) {
+                    continue
+                }
+
+                val (trajectoryInfo, trajectoryType) = EntityTrajectoryResolver.resolveEntityTrajectory(
                     entity,
                     activeTrajectoryArrow,
                     activeTrajectoryOther
                 ) ?: continue
 
+                if (trajectoryType !in trajectoryTypes) continue
+
                 val trajectoryRenderer = TrajectoryInfoRenderer(
                     owner = (entity as? TraceableEntity)?.owner ?: entity,
-                    icon = TrajectoryData.getRenderIconForOtherEntity(
+                    icon = TrajectoryDisplayResolver.resolveEntityIcon(
                         entity, activeTrajectoryArrow, activeTrajectoryOther
                     ),
                     velocity = entity.deltaMovement,
@@ -91,7 +113,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     renderOffset = Vec3.ZERO,
                 )
 
-                val color = TrajectoryData.getColorForEntity(entity)
+                val color = TrajectoryDisplayResolver.resolveEntityColor(entity)
 
                 simulationResults += trajectoryRenderer to trajectoryRenderer.drawTrajectoryForProjectile(
                     maxSimulatedTicks,
@@ -104,13 +126,22 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
 
             if (otherPlayers) {
                 for (otherPlayer in world.players()) {
+                    if (otherPlayer !== player) {
+                        val delta = otherPlayer.eyePosition.subtract(viewPos)
+                        if (delta.lengthSqr() > maxRenderDistanceSq) {
+                            continue
+                        }
+                        if (cullBehindPlayer && delta.dot(viewDirection) < 0.0 && delta.lengthSqr() > 9.0) {
+                            continue
+                        }
+                    }
+
                     // Including the user
-                    drawHypotheticalTrajectory(otherPlayer, event)
+                    drawHypotheticalTrajectory(otherPlayer, event.partialTicks)
                 }
             } else {
-                drawHypotheticalTrajectory(player, event)
+                drawHypotheticalTrajectory(player, event.partialTicks)
             }
-            commitBatch()
         }
 
         debugParameter("TrajectoryCount") { simulationResults.size }
@@ -121,10 +152,23 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
      */
     private fun WorldRenderEnvironment.drawHypotheticalTrajectory(
         otherPlayer: Player,
-        event: WorldRenderEvent
+        partialTicks: Float,
     ) {
-        val (trajectoryInfoTyped, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
-            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack, alwaysShowBow)?.let {
+        val shouldFilterHeldFishingRod = otherPlayer.fishing != null &&
+            activeTrajectoryOther &&
+            TrajectoryType.FishingBobber in trajectoryTypes
+
+        val (trajectoryShotDescriptors, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
+            if (shouldFilterHeldFishingRod && stack.item is FishingRodItem) {
+                return@firstNotNullOfOrNull null
+            }
+
+            HeldItemTrajectoryResolver.resolveHeldItemShots(
+                otherPlayer,
+                stack,
+                alwaysShowBow,
+                includeMultiShot = showMultiShot
+            )?.let {
                 it to stack
             }
         } ?: return
@@ -140,22 +184,34 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             otherPlayer.rotation
         }
 
-        val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            owner = otherPlayer,
-            icon = stack,
-            trajectoryInfo = trajectoryInfoTyped.info,
-            trajectoryType = trajectoryInfoTyped.type,
-            rotation = rotation,
-            partialTicks = event.partialTicks
-        )
+        trajectoryShotDescriptors.forEach { shotDescriptor ->
+            if (shotDescriptor.trajectoryType !in trajectoryTypes) {
+                return@forEach
+            }
 
-        simulationResults += renderer to renderer.drawTrajectoryForProjectile(
-            maxSimulatedTicks,
-            event.partialTicks,
-            trajectoryColor = Color4b.WHITE,
-            blockHitColor = Color4b(0, 160, 255, 150),
-            entityHitColor = Color4b(255, 0, 0, 100),
-        )
+            val shotRotation = Rotation(
+                yaw = rotation.yaw + shotDescriptor.yawOffsetDegrees,
+                pitch = rotation.pitch,
+                isNormalized = rotation.isNormalized
+            )
+
+            val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
+                owner = otherPlayer,
+                icon = if (shotDescriptor.icon.isEmpty) stack else shotDescriptor.icon,
+                trajectoryInfo = shotDescriptor.trajectoryInfo,
+                trajectoryType = shotDescriptor.trajectoryType,
+                rotation = shotRotation,
+                partialTicks = partialTicks
+            )
+
+            simulationResults += renderer to renderer.drawTrajectoryForProjectile(
+                maxSimulatedTicks,
+                partialTicks,
+                trajectoryColor = Color4b.WHITE,
+                blockHitColor = Color4b(0, 160, 255, 150),
+                entityHitColor = Color4b.RED.alpha(100),
+            )
+        }
     }
 
     private enum class Show(

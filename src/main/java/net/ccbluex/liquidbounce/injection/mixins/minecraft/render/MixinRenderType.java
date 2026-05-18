@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.MeshData;
-import net.ccbluex.liquidbounce.utils.client.GenericPools;
+import net.ccbluex.liquidbounce.utils.collection.GenericPools;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,7 +38,7 @@ public abstract class MixinRenderType {
 
     @SuppressWarnings("rawtypes")
     @Inject(method = "draw", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;close()V"))
-    private void recycleHashMap(MeshData meshData, CallbackInfo ci, @Local(ordinal = 0) Map textures) {
+    private void recycleHashMap(MeshData mesh, CallbackInfo ci, @Local(name = "textures") Map textures) {
         if (textures instanceof HashMap hashMap) {
             GenericPools.HASH_MAP.recycle(hashMap);
         }

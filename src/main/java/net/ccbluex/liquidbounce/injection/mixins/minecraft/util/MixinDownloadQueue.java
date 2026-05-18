@@ -39,8 +39,8 @@ public abstract class MixinDownloadQueue {
     @Final
     private Path cacheDir;
 
-    @ModifyExpressionValue(method = "method_55485", at = @At(value = "INVOKE", target = "Ljava/nio/file/Path;resolve(Ljava/lang/String;)Ljava/nio/file/Path;"))
-    private Path hookResolve(Path original, @Local(argsOnly = true) UUID id) {
+    @ModifyExpressionValue(method = "lambda$runDownload$0", at = @At(value = "INVOKE", target = "Ljava/nio/file/Path;resolve(Ljava/lang/String;)Ljava/nio/file/Path;"))
+    private Path hookResolve(Path original, @Local(argsOnly = true, name = "id") UUID id) {
         // Check if our fingerprint spoofer is enabled or,
         // the folder has been altered with by another mod.
         if (!SpooferFingerprint.INSTANCE.getRunning() || !original.getParent().equals(cacheDir)) {

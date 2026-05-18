@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine
 
+import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -32,12 +33,13 @@ class MineTarget(val targetPos: BlockPos) {
     var finished = false
     var progress = 0f
     var started = false
+    var finishReadyTick: Long? = null
     var direction: Direction? = null
     var blockState = targetPos.getState()!!
 
     fun init() {
         with(ModulePacketMine) {
-            targetRenderer.addBlock(targetPos, box = EMPTY_BOX.inflate(0.01e-5, 0.0, 0.0))
+            targetRenderer.addBlock(targetPos, box = EMPTY_BOX.inflate(1e-5))
             targetRenderer.updateAll()
         }
     }
@@ -73,13 +75,15 @@ class MineTarget(val targetPos: BlockPos) {
             direction ?: Direction.DOWN
         }
 
-        network.send(
-            ServerboundPlayerActionPacket(
-                ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK,
-                targetPos,
-                dir,
+        TickLoopTaskExecutor.executeInTickLoop {
+            network.send(
+                ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK,
+                    targetPos,
+                    dir,
+                )
             )
-        )
+        }
     }
 
     override fun equals(other: Any?): Boolean {

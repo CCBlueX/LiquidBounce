@@ -19,48 +19,40 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
+import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.utils.client.defaultProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersions
 import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.Routing
 
 // GET /api/v1/protocols
-@Suppress("UNUSED_PARAMETER")
-fun getProtocols(requestObject: RequestObject) = httpOk(JsonArray().apply {
-    for (protocol in protocolVersions) {
-        add(JsonObject().apply {
-            addProperty("name", protocol.name)
-            addProperty("version", protocol.version)
-        })
-    }
-})
+private fun Routing.getProtocols() = get { call.respond(protocolVersions, interopGson) }
 
 // GET /api/v1/protocols/protocol
-@Suppress("UNUSED_PARAMETER")
-fun getProtocol(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("name", protocolVersion.name)
-    addProperty("version", protocolVersion.version)
-})
+private fun Routing.getProtocol() = get { call.respond(protocolVersion, interopGson) }
 
 // PUT /api/v1/protocols/protocol
-fun putProtocol(requestObject: RequestObject): FullHttpResponse {
+private fun Routing.putProtocol() = put {
     data class ProtocolRequest(val version: Int)
 
-    val protocolRequest = requestObject.asJson<ProtocolRequest>()
+    val protocolRequest = call.receive<ProtocolRequest>()
 
     selectProtocolVersion(protocolRequest.version)
-    return httpNoContent()
+    call.respondNoContent()
 }
 
 // DELETE /api/v1/protocols/protocol
-@Suppress("UNUSED_PARAMETER")
-fun deleteProtocol(requestObject: RequestObject): FullHttpResponse {
+private fun Routing.deleteProtocol() = delete {
     selectProtocolVersion(defaultProtocolVersion.version)
-    return httpNoContent()
+    call.respondNoContent()
+}
+
+internal fun Routing.protocolRoutes() = route("/protocols") {
+    getProtocols()
+    route("/protocol") {
+        getProtocol()
+        putProtocol()
+        deleteProtocol()
+    }
 }

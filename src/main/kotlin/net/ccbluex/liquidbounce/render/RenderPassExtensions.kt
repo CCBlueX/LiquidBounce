@@ -31,7 +31,11 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.minecraft.client.renderer.texture.AbstractTexture
+import org.joml.Matrix4f
 import org.joml.Matrix4fc
+import org.joml.Vector3f
+import org.joml.Vector3fc
+import org.joml.Vector4f
 import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.function.Supplier
@@ -104,17 +108,22 @@ fun RenderPass.bindAndDraw(
     )
 }
 
+private val COLOR_MODULATOR = Vector4f(1f)
+private val VECTOR3F_0 = Vector3f()
+private val TEXTURE_MATRIX = Matrix4f()
+
 @JvmOverloads
 fun getDynamicTransformsUniform(
     modelView: Matrix4fc? = null,
     colorModulator: Color4b = Color4b.WHITE,
+    modelOffset: Vector3fc? = null,
 ): GpuBufferSlice {
     val slice = RenderSystem.getDynamicUniforms()
         .writeTransform(
             modelView ?: RenderSystem.getModelViewMatrix(),
-            colorModulator.toVector4f(RenderPassRenderState.colorModulator),
-            RenderPassRenderState.modelOffset,
-            RenderPassRenderState.textureMatrix,
+            colorModulator.toVector4f(COLOR_MODULATOR),
+            modelOffset ?: VECTOR3F_0,
+            TEXTURE_MATRIX,
         )
 
     return slice

@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
@@ -49,7 +49,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
     private val ttl by float("TimeToLive", 3F, 0.5F..5.0F, "s")
     private val scale by float("Scale", 2F, 0.25F..4F)
     private val scaleTransition by easing("ScaleTransition", Easing.QUAD_OUT)
-    private val displacement by vec3d("Displacement", Vec3(0.0, 1.0, 0.0))
+    private val displacement by vec3d("Displacement", Vec3.Y_AXIS.scale(1.5))
     private val displacementTransition by easing("DisplacementTransition", Easing.QUAD_OUT)
     private val trackMode by enumChoice("TrackMode", TrackMode.ON_TICK)
 
@@ -159,7 +159,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
         particles.forEachIndexed { i, particle ->
             val progress = (now - particle.startTime).toFloat() / (ttl * 1000.0F)
 
-            val currentPos = particle.pos.add(displacement * displacementTransition.transform(progress).toDouble())
+            val currentPos = particle.pos.fma(displacementTransition.transform(progress).toDouble(), displacement)
             val screenPos = WorldToScreen.calculateScreenPos(currentPos) ?: return@forEachIndexed
 
             val currentScale = scale * scaleTransition.transform(progress)
@@ -169,7 +169,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
                 pose().translate(screenPos.x, screenPos.y)
                 pose().scale(currentScale, currentScale)
 
-                drawCenteredString(
+                centeredText(
                     mc.font,
                     particle.text,
                     0,

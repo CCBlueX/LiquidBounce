@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
+import net.ccbluex.fastutil.weightedFilterSortedByAtMost
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
@@ -33,18 +34,20 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
+import net.ccbluex.liquidbounce.utils.math.boundsOrNull
+import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionResult.Success
+import net.minecraft.world.InteractionResult.SwingSource
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.item.ItemStack
@@ -108,7 +111,7 @@ import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.BooleanOp
+import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.Consumer
@@ -117,13 +120,22 @@ import kotlin.math.floor
 
 fun Vec3i.toBlockPos() = BlockPos(this)
 
-fun BlockPos.getState() = mc.level?.getBlockState(this)
+val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
 
-fun BlockPos.getBlock() = getState()?.block
+@Deprecated(
+    "Use BlockPos.state or BlockPos.stateOrEmpty instead",
+    replaceWith = ReplaceWith("this.state", imports = ["net.ccbluex.liquidbounce.utils.block.state"])
+)
+@JvmName("getState-deprecated")
+inline fun BlockPos.getState() = state
 
-fun BlockPos.getCenterDistanceSquared() = player.distanceToSqr(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+val BlockPos.stateOrEmpty: BlockState get() = state ?: Blocks.VOID_AIR.defaultBlockState()
 
-fun BlockPos.getCenterDistanceSquaredEyes() = player.eyePosition.distanceToSqr(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+fun BlockPos.getBlock(): Block? = state?.block
+
+fun BlockPos.getCenterDistanceSquared() = this.distToCenterSqr(player.position())
+
+fun BlockPos.getCenterDistanceSquaredEyes() = this.distToCenterSqr(player.eyePosition)
 
 val BlockState.isBed: Boolean
     get() = block is BedBlock
@@ -141,88 +153,25 @@ val BlockPos.immutable: BlockPos get() = if (this is BlockPos.MutableBlockPos) t
  */
 val BlockPos.outlineBox: AABB
     get() {
-        val blockState = getState() ?: return FULL_BOX
+        val blockState = state ?: return FULL_BOX
         if (blockState.isAir) {
             return FULL_BOX
         }
 
         val outlineShape = blockState.getShape(world, this)
-        return if (outlineShape.isEmpty) {
-            FULL_BOX
-        } else {
-            outlineShape.bounds()
-        }
+        return outlineShape.boundsOrNull() ?: FULL_BOX
     }
 
 val BlockPos.collisionShape: VoxelShape
-    get() = this.getState()!!.getCollisionShape(world, this)
+    get() = state?.getCollisionShape(world, this) ?: Shapes.empty()
+
+val BlockPos.outlineShape: VoxelShape
+    get() = state?.getShape(world, this) ?: Shapes.empty()
 
 fun BlockState.outlineBox(blockPos: BlockPos): AABB {
     val outlineShape = this.getShape(world, blockPos)
 
-    return if (outlineShape.isEmpty) {
-        FULL_BOX
-    } else {
-        outlineShape.bounds()
-    }
-}
-
-fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
-    var minDistanceSq = Double.MAX_VALUE
-    forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-        val nearestX = position.x().coerceIn(minX, maxX)
-        val nearestY = position.y().coerceIn(minY, maxY)
-        val nearestZ = position.z().coerceIn(minZ, maxZ)
-        val distanceSq = (position.x() - nearestX).sq() +
-            (position.y() - nearestY).sq() + (position.z() - nearestZ).sq()
-        if (distanceSq < minDistanceSq) {
-            minDistanceSq = distanceSq
-        }
-    }
-    return minDistanceSq
-}
-
-/**
- * Shrinks a VoxelShape by the specified amounts on selected axes.
- */
-@Suppress("CognitiveComplexMethod")
-fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelShape {
-    return when {
-        this.isEmpty -> Shapes.empty()
-        this == Shapes.block() -> Shapes.box(
-            x, y, z,
-            1.0 - x, 1.0 - y, 1.0 - z
-        )
-
-        else -> {
-            var shape = Shapes.empty()
-
-            this.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-                val width = maxX - minX
-                val height = maxY - minY
-                val depth = maxZ - minZ
-
-                val canShrinkX = x == 0.0 || width > x * 2
-                val canShrinkY = y == 0.0 || height > y * 2
-                val canShrinkZ = z == 0.0 || depth > z * 2
-
-                if (canShrinkX && canShrinkY && canShrinkZ) {
-                    val shrunkBox = Shapes.box(
-                        minX + (if (x > 0) x else 0.0),
-                        minY + (if (y > 0) y else 0.0),
-                        minZ + (if (z > 0) z else 0.0),
-                        maxX - (if (x > 0) x else 0.0),
-                        maxY - (if (y > 0) y else 0.0),
-                        maxZ - (if (z > 0) z else 0.0)
-                    )
-
-                    shape = Shapes.joinUnoptimized(shape, shrunkBox, BooleanOp.OR)
-                }
-            }
-
-            shape
-        }
-    }
+    return outlineShape.boundsOrNull() ?: FULL_BOX
 }
 
 
@@ -234,11 +183,8 @@ val Block.mustBePlacedOnUpperSide: Boolean
         return this is SlabBlock || this is StairBlock
     }
 
-/**
- * Scan blocks around the position in a cuboid.
- */
-fun Vec3.searchBlocksInCuboid(radius: Float): BoundingBox =
-    BoundingBox(
+fun Vec3.searchBlocksInCuboid(radius: Float): Iterable<BlockPos> =
+    BlockPos.betweenClosed(
         floor(x - radius).toInt(),
         floor(y - radius).toInt(),
         floor(z - radius).toInt(),
@@ -255,7 +201,7 @@ inline fun Vec3.searchBlocksInCuboid(
     crossinline filter: (BlockPos, BlockState) -> Boolean
 ): Sequence<Pair<BlockPos, BlockState>> =
     searchBlocksInCuboid(radius).iterator().asSequence().mapNotNull {
-        val state = it.getState() ?: return@mapNotNull null
+        val state = it.state ?: return@mapNotNull null
 
         if (filter(it, state)) {
             it.immutable() to state
@@ -265,27 +211,24 @@ inline fun Vec3.searchBlocksInCuboid(
     }
 
 /**
- * Search blocks around the position in a specific [radius]
+ * Scan blocks around the position in a cuboid, filtered and sorted by shape distance from this [Vec3].
+ * Distance calculation is based on outline shape:
+ * `shapeGetter.get(state, level, pos, collisionContext).move(pos).distanceToSqr(eyesPos)`.
+ *
+ * @return pairs of [BlockPos] and its [BlockState], sorted by distance to the center
  */
-inline fun Vec3.searchBlocksInRadius(
-    radius: Float,
+inline fun Vec3.searchBlocksInRangeSorted(
+    range: Float,
+    shapeGetter: ClipContext.ShapeGetter = ClipContext.Block.OUTLINE,
+    collisionContext: CollisionContext = CollisionContext.of(player),
     crossinline filter: (BlockPos, BlockState) -> Boolean,
-): Sequence<Pair<BlockPos, BlockState>> =
-    searchBlocksInCuboid(radius).iterator().asSequence().mapNotNull {
-        val state = it.getState() ?: return@mapNotNull null
-
-        if (it.distToCenterSqr(this@searchBlocksInRadius) <= radius.sq() && filter(it, state)) {
-            it.immutable() to state
-        } else {
-            null
+): List<Pair<BlockPos, BlockState>> =
+    searchBlocksInCuboid(range + 1, filter)
+        .weightedFilterSortedByAtMost(range.sq().toDouble()) { (pos, state) ->
+            shapeGetter.get(state, world, pos, collisionContext)
+                .move(pos)
+                .distanceToSqr(this)
         }
-    }
-
-/**
- * Scan blocks around the position in a cuboid.
- */
-fun BlockPos.searchBlocksInCuboid(radius: Int): BoundingBox =
-    this.expendToBlockBox(radius, radius, radius)
 
 /**
  * Scan blocks outwards from a bed
@@ -360,7 +303,7 @@ fun BlockPos.getSortedSphere(radius: Float): Array<BlockPos> {
 @Suppress("SpellCheckingInspection", "CognitiveComplexMethod")
 fun BlockGetter.raycast(
     context: ClipContext,
-    exclude: Array<BlockPos>?,
+    exclude: Collection<BlockPos>?,
     include: BlockPos?,
     maxBlastResistance: Float?
 ): BlockHitResult {
@@ -424,7 +367,7 @@ fun BlockGetter.raycast(
 }
 
 fun BlockPos.canStandOn(): Boolean {
-    return this.getState()!!.isFaceSturdy(world, this, Direction.UP, SupportType.CENTER)
+    return this.state?.isFaceSturdy(world, this, Direction.UP, SupportType.CENTER) ?: false
 }
 
 fun BlockState?.anotherChestPartDirection(): Direction? {
@@ -480,7 +423,7 @@ inline fun AABB.collideBlockIntersects(
     isCorrectBlock: (Block) -> Boolean
 ): Boolean {
     for (blockPos in collidingRegion) {
-        val blockState = blockPos.getState()
+        val blockState = blockPos.state
 
         if (blockState == null || !isCorrectBlock(blockState.block)) {
             continue
@@ -552,8 +495,13 @@ enum class SwingMode(
 
 val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.direction)
 
+/**
+ * Simulated [net.minecraft.world.phys.HitResult.Type.BLOCK] branch in vanilla
+ *
+ * @see net.minecraft.client.Minecraft.startUseItem
+ */
 fun doPlacement(
-    rayTraceResult: BlockHitResult,
+    hitResult: BlockHitResult,
     hand: InteractionHand = InteractionHand.MAIN_HAND,
     onPlacementSuccess: () -> Boolean = { true },
     onItemUseSuccess: () -> Boolean = { true },
@@ -562,24 +510,28 @@ fun doPlacement(
     val stack = player.getItemInHand(hand)
     val count = stack.count
 
-    val interactionResult = interaction.useItemOn(player, hand, rayTraceResult)
+    val useItemOnResult = interaction.useItemOn(player, hand, hitResult)
 
     when {
-        interactionResult == InteractionResult.FAIL -> {
+        useItemOnResult == InteractionResult.FAIL -> {
             return
         }
 
-        interactionResult == InteractionResult.PASS -> {
+        useItemOnResult == InteractionResult.PASS -> {
             // Ok, we cannot place on the block, so let's just use the item in the direction
             // without targeting a block (for buckets, etc.)
-            handlePass(hand, stack, onItemUseSuccess, swingMode)
-            return
+            if (!stack.isEmpty) {
+                val useItemResult = interaction.useItem(player, hand)
+                if (useItemResult.consumesAction()) {
+                    handleActionsOnAccept(hand, useItemResult, true, onItemUseSuccess, swingMode)
+                }
+            }
         }
 
-        interactionResult.consumesAction() -> {
+        useItemOnResult.consumesAction() -> {
             val wasStackUsed = !stack.isEmpty && (stack.count != count || player.isCreative)
 
-            handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess, swingMode)
+            handleActionsOnAccept(hand, useItemOnResult, wasStackUsed, onPlacementSuccess, swingMode)
         }
     }
 }
@@ -588,52 +540,26 @@ fun doPlacement(
  * Swings item, resets equip progress and hand swing progress
  *
  * @param wasStackUsed was an item consumed in order to place the block
- * @param onPlacementSuccess if result of the lambda is true, swing hand with [swingMode]
+ * @param shouldSwing if result of the lambda is true, swing hand with [swingMode]
  */
 private inline fun handleActionsOnAccept(
     hand: InteractionHand,
     interactionResult: InteractionResult,
     wasStackUsed: Boolean,
-    onPlacementSuccess: () -> Boolean,
-    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
+    shouldSwing: () -> Boolean,
+    swingMode: SwingMode,
 ) {
-    if (!interactionResult.shouldSwingHand()) {
+    if (interactionResult is Success && interactionResult.swingSource != SwingSource.CLIENT) {
         return
     }
 
-    if (onPlacementSuccess()) {
+    if (shouldSwing()) {
         swingMode.swing(hand)
     }
 
     if (wasStackUsed) {
         mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
     }
-
-    return
-}
-
-private fun InteractionResult.shouldSwingHand(): Boolean {
-    return this !is InteractionResult.Success ||
-        this.swingSource != InteractionResult.SwingSource.SERVER
-}
-
-
-/**
- * Just interacts with the item in the hand instead of using it on the block
- */
-private inline fun handlePass(
-    hand: InteractionHand,
-    stack: ItemStack,
-    onItemUseSuccess: () -> Boolean,
-    swingMode: SwingMode
-) {
-    if (stack.isEmpty) {
-        return
-    }
-
-    val actionResult = interaction.useItem(player, hand)
-
-    handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess, swingMode)
 }
 
 /**

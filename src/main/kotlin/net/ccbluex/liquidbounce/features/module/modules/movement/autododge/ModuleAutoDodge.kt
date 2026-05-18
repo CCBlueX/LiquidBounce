@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -35,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.CachedPlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -48,8 +48,10 @@ import net.minecraft.world.entity.projectile.arrow.ThrownTrident
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
-@Suppress("MagicNumber")
 object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
+    private const val MIN_PACKET_DISTANCE = 0.9
+    private const val MIN_PACKET_DISTANCE_SQ = MIN_PACKET_DISTANCE * MIN_PACKET_DISTANCE
+
     private object AllowRotationChange : ToggleableValueGroup(this, "AllowRotationChange", false) {
         val allowJump by boolean("AllowJump", true)
     }
@@ -117,7 +119,9 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
         maxTicks: Int = 80,
         hitboxExpansion: Double = 0.7,
     ): HitInfo? {
-        val simulatedArrows = arrows.map { SimulatedArrow(world, it.position(), it.deltaMovement, false) }
+        val simulatedArrows = arrows.mapToArray {
+            SimulatedArrow(it.level(), it.position(), it.deltaMovement, false)
+        }
 
         for (i in 0 until maxTicks) {
             simulatedPlayer.tick()
@@ -172,7 +176,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
 
             // Process packets only if they are at least some distance away from each other
             if (lastPosition != null) {
-                if (lastPosition.distanceToSqr(position) < 0.9 * 0.9) {
+                if (lastPosition.distanceToSqr(position) < MIN_PACKET_DISTANCE_SQ) {
                     continue
                 }
             }
@@ -192,7 +196,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
 
         // If the evading packet is less than one player hitbox away from the current position, we should rather
         // call the evasion a failure
-        if (bestPacketIdx != null && bestPacketPosition!!.distanceToSqr(lastPosition!!) > 0.9) {
+        if (bestPacketIdx != null && bestPacketPosition!!.distanceToSqr(player.position()) > MIN_PACKET_DISTANCE_SQ) {
             return EvadingPacket(bestPacketIdx, bestTimeToImpact)
         }
 
@@ -201,7 +205,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
 
     fun getInflictedHit(pos: Vec3): HitInfo? {
         val arrows = world.findFlyingArrows()
-        val playerSimulation = RigidPlayerSimulation(pos)
+        val playerSimulation = PlayerSimulation.Rigid(pos)
 
         return getInflictedHits(playerSimulation, arrows, maxTicks = 40)
     }

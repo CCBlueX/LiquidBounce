@@ -42,8 +42,8 @@ import net.ccbluex.liquidbounce.api.thirdparty.PlayerSkinApi
 import net.ccbluex.liquidbounce.authlib.utils.generateOfflinePlayerUuid
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
@@ -53,8 +53,8 @@ import net.ccbluex.liquidbounce.injection.mixins.authlib.MixinYggdrasilMinecraft
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.ccbluex.liquidbounce.utils.render.registerTexture
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.core.ClientAsset
@@ -213,7 +213,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
                 image.asStateFlow().filter { it.isFile }.debounceUntilInGame { file ->
                     // New texture will replace the old one
                     val nativeImage = withContext(Dispatchers.IO) {
-                        file.inputStream().toNativeImage()
+                        file.readNativeImage()
                     }
 
                     withContext(Dispatchers.Minecraft) {

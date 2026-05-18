@@ -26,15 +26,15 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.anyNotEmpty
 import net.minecraft.world.effect.MobEffects
-import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Watchdog (NCP)
  * @anticheatVersion 25.01.25
  * @testedOn hypixel.net
  */
-class SpeedHypixelLowHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelLowHop", parent) {
+class SpeedHypixelLowHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelLowHop", parent) {
 
     companion object {
         var shouldStrafe = false
@@ -95,8 +95,7 @@ class SpeedHypixelLowHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase
     }
 
     private fun isGroundExempt() =
-        world.getBlockCollisions(player, player.boundingBox.move(0.0, -0.66, 0.0)).any { shape ->
-            shape != Shapes.empty()
-        } && player.deltaMovement.y < 0
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, -0.66, 0.0)).anyNotEmpty()
+            && player.deltaMovement.y < 0
 
 }

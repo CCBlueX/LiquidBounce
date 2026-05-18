@@ -20,39 +20,38 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpInternalServerError
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.netty.http.util.readAsBase64
+import net.ccbluex.netty.http.routing.Routing
 import net.minecraft.client.gui.components.toasts.SystemToast
 import net.minecraft.client.gui.screens.NoticeWithLinkScreen
 import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.client.gui.screens.worldselection.EditWorldScreen
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen
-import net.minecraft.world.level.storage.LevelSummary
 import net.minecraft.world.level.validation.ContentValidationException
 import java.io.IOException
 
-@Volatile
-private var summaries = emptyList<LevelSummary>()
+private val mutex = Mutex()
 
 // GET /api/v1/client/worlds
-@Suppress("UNUSED_PARAMETER")
-fun getWorlds(requestObject: RequestObject): FullHttpResponse {
+private fun Routing.getWorlds() = get {
     val worlds = JsonArray()
 
-    return runCatching {
+    try {
         val levelList = mc.levelSource.findLevelCandidates()
         if (levelList.isEmpty) {
-            return@runCatching httpOk(worlds)
+            call.respond(worlds)
+            return@get
         }
 
         // Refreshes the list of summaries
-        summaries = mc.levelSource.loadLevelSummaries(levelList).get()
+        val summaries = mutex.withLock {
+            mc.levelSource.loadLevelSummaries(levelList).await()
+        }
 
         for ((index, summary) in summaries.withIndex()) {
             worlds.add(JsonObject().apply {
@@ -61,12 +60,12 @@ fun getWorlds(requestObject: RequestObject): FullHttpResponse {
                 addProperty("displayName", summary.levelName)
                 addProperty("lastPlayed", summary.lastPlayed)
                 addProperty("gameMode", summary.settings.gameType().serializedName)
-                addProperty("difficulty", summary.settings.difficulty().serializedName)
+                addProperty("difficulty", summary.settings.difficultySettings.difficulty.serializedName)
                 addProperty("icon", runCatching { summary.icon.readAsBase64() }.onFailure {
                     //logger.error("Failed to read icon for world ${summary.name}", it)
                 }.getOrNull())
                 addProperty("version", summary.levelVersion().minecraftVersionName())
-                addProperty("hardcore", summary.settings.hardcore())
+                addProperty("hardcore", summary.settings.difficultySettings.hardcore())
                 addProperty("commandsAllowed", summary.settings.allowCommands())
                 addProperty("locked", summary.isLocked)
                 addProperty("requiresConversion", summary.requiresManualConversion())
@@ -75,14 +74,15 @@ fun getWorlds(requestObject: RequestObject): FullHttpResponse {
                 addProperty("wouldBeDowngraded", summary.isDowngrade)
             })
         }
-        httpOk(worlds)
-    }.getOrElse { httpInternalServerError("Failed to get worlds due to ${it.message}") }
+        call.respond(worlds)
+    } catch (e: Exception) {
+        call.internalServerError("Failed to get worlds due to ${e.message}")
+    }
 }
 
 // POST /api/v1/client/worlds/join
-@Suppress("UNUSED_PARAMETER")
-fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
-    val request = requestObject.asJson<LevelRequest>()
+private fun Routing.postJoinWorld() = post("/join") {
+    val request = call.receive<LevelRequest>()
 
     mc.execute {
         runCatching {
@@ -94,13 +94,12 @@ fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/worlds/edit
-@Suppress("UNUSED_PARAMETER")
-fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
-    val request = requestObject.asJson<LevelRequest>()
+private fun Routing.postEditWorld() = post("/edit") {
+    val request = call.receive<LevelRequest>()
 
     mc.execute {
         val session = runCatching {
@@ -139,13 +138,12 @@ fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/worlds/delete
-@Suppress("UNUSED_PARAMETER")
-fun postDeleteWorld(requestObject: RequestObject): FullHttpResponse {
-    val request = requestObject.asJson<LevelRequest>()
+private fun Routing.postDeleteWorld() = post("/delete") {
+    val request = call.receive<LevelRequest>()
 
     runCatching {
         mc.levelSource.createAccess(request.name).use { session ->
@@ -155,7 +153,14 @@ fun postDeleteWorld(requestObject: RequestObject): FullHttpResponse {
         logger.error("Failed to delete world ${request.name}", it)
     }
 
-    return httpNoContent()
+    call.respondNoContent()
 }
 
 private data class LevelRequest(val name: String)
+
+internal fun Routing.worldListRoutes() = route("/worlds") {
+    getWorlds()
+    postJoinWorld()
+    postEditWorld()
+    postDeleteWorld()
+}

@@ -32,7 +32,7 @@ public abstract class MixinBuiltInRegistries {
     @Inject(method = "bootStrap", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/registries/BuiltInRegistries;freeze()V"))
     private static void injectInitializeTabs(CallbackInfo ci) {
         CustomCreativeModeTabs.INSTANCE.init();
-        HitFXRegistry.INSTANCE.init();
+        HitFXRegistry.registerAll();
     }
 
 }

@@ -54,7 +54,9 @@ class CurveValue(
         }
     }
 
-    fun transform(x: Float): Float = CurveUtil.transform(get(), x, tension)
+    // TODO: add option for out-of-bounds behavior
+    fun transform(x: Float): Float =
+        CurveUtil.transformNormalized(get(), x, tension, CurveUtil.OnOutOfBounds.CLAMP)
 
     companion object {
         const val DEFAULT_TENSION = 0.4f

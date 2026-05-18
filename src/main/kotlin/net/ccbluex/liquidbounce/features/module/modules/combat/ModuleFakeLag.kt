@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -36,18 +36,22 @@ import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
+import net.minecraft.network.protocol.game.ServerboundSpectateEntityPacket
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.phys.Vec3
+import java.util.function.Predicate
 import kotlin.jvm.optionals.getOrNull
 
 /**
@@ -66,10 +70,10 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
 
     private enum class FlushOn(
         override val tag: String,
-        val testPacket: (packet: Packet<*>?) -> Boolean
-    ) : Tagged {
+        private val testPacket: Predicate<Packet<*>?>
+    ) : Tagged, Predicate<Packet<*>?> by testPacket {
         ENTITY_INTERACT("EntityInteract", {
-            it is ServerboundInteractPacket
+            it is ServerboundInteractPacket || it is ServerboundAttackPacket || it is ServerboundSpectateEntityPacket
             || it is ServerboundSwingPacket
         }),
         BLOCK_INTERACT("BlockInteract", {
@@ -92,14 +96,14 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     private var isEnemyNearby = false
 
     @Suppress("unused")
-    private val gameTickHandler = tickHandler {
+    private val gameTickHandler = handler<GameTickEvent> {
         isEnemyNearby = world.findEnemy(range) != null
 
-        if (ModuleAutoDodge.running) {
-            val position = positions.firstOrNull() ?: return@tickHandler
+        if (ModuleAutoDodge.enabled) {
+            val position = positions.firstOrNull() ?: return@handler
 
             if (ModuleAutoDodge.getInflictedHit(position) == null) {
-                return@tickHandler
+                return@handler
             }
 
             val evadingPacket = ModuleAutoDodge.findAvoidingArrowPosition()
@@ -139,7 +143,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
             return@handler
         }
 
-        if (flushOn.any { it.testPacket(event.packet) }) {
+        if (flushOn.matchesAny(event.packet)) {
             chronometer.reset()
             return@handler
         }
@@ -153,6 +157,8 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
             }
 
             is ServerboundInteractPacket,
+            is ServerboundAttackPacket,
+            is ServerboundSpectateEntityPacket,
             is ServerboundSwingPacket -> {
                 if (FlushOn.ENTITY_INTERACT in flushOn) {
                     chronometer.reset()

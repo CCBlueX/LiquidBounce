@@ -24,4 +24,10 @@ interface PlayerSimulation {
     val pos: Vec3
 
     fun tick()
+
+    data class Rigid(override val pos: Vec3) : PlayerSimulation {
+        override fun tick() {
+            // Do nothing.
+        }
+    }
 }

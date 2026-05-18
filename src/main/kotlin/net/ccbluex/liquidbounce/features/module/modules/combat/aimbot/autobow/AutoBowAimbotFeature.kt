@@ -30,9 +30,10 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.handItems
+import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
+import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.CrossbowItem
 import net.minecraft.world.item.TridentItem
@@ -44,6 +45,7 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
 
     val targetTracker = TargetTracker(TargetPriority.DISTANCE)
     private val rotations = RotationsValueGroup(this)
+    private val throughWalls by boolean("ThroughWalls", true)
 
     init {
         tree(targetTracker)
@@ -56,12 +58,8 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
         targetTracker.reset()
 
         // Should check if player is using bow
-        val activeStack = if (player.isUsingItem) {
-            player.useItem
-        } else {
-            player.handItems.firstOrNull {
-                it.item is CrossbowItem && CrossbowItem.isCharged(it)
-            }
+        val activeStack = player.usingItemOrNull ?: player.handItems.firstOrNull {
+            it.item is CrossbowItem && CrossbowItem.isCharged(it)
         }
         val activeItem = activeStack?.item
 
@@ -69,15 +67,20 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
             return@handler
         }
 
-        val (projectileInfo, _) = TrajectoryData.getRenderedTrajectoryInfo(
+        val trajectoryDescriptor = HeldItemTrajectoryResolver.resolveHeldItemPrimaryShot(
             player,
             activeStack,
             true
         ) ?: return@handler
 
         var rotation: Rotation? = null
+        val calculator = if (throughWalls) {
+            SituationalProjectileAngleCalculator
+        } else {
+            SituationalProjectileAngleCalculator.VerifyHitResult
+        }
         targetTracker.selectFirst { enemy ->
-            rotation = SituationalProjectileAngleCalculator.calculateAngleForEntity(projectileInfo, enemy)
+            rotation = calculator.calculateAngleForEntity(trajectoryDescriptor.trajectoryInfo, enemy)
             rotation != null
         } ?: return@handler
 

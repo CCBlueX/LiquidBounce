@@ -26,7 +26,8 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import java.lang.reflect.Type
 
@@ -98,7 +99,7 @@ class ValueGroupSerializer(
                 )
             )
         } catch (e: Exception) {
-            println("failed to serialize config for ${src.name}")
+            logger.error("failed to serialize config for ${src.name}")
             throw e
         }
         if (withValueType) {

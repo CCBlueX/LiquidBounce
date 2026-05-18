@@ -126,7 +126,7 @@
   "liquidbounce.command.give.description": "Выдать себе предмет.",
   "liquidbounce.command.give.parameter.amount.description": "Необязательное количество",
   "liquidbounce.command.give.parameter.item.description": "Имя предмета.",
-  "liquidbounce.command.give.result.itemGiven": "Выдано %s * %d.",
+  "liquidbounce.command.give.result.itemGiven": "Выдано %s * %s.",
   "liquidbounce.command.give.result.mustBeCreative": "Требуется творческий режим!",
   "liquidbounce.command.give.result.noEmptySlot": "Нет пустых слотов в инвентаре.",
   "liquidbounce.command.help.description": "Список всех доступных команд.",

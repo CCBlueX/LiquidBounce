@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
 import net.ccbluex.liquidbounce.utils.inventory.syncId
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.Items
 
 internal object ReportHelperAutoConfirm : ToggleableValueGroup(ModuleReportHelper, "AutoConfirm", false) {
@@ -85,11 +85,11 @@ internal object ReportHelperAutoConfirm : ToggleableValueGroup(ModuleReportHelpe
                 return
             }
 
-            interaction.handleInventoryMouseClick(
+            interaction.handleContainerInput(
                 screen.syncId,
                 11,
                 0,
-                ClickType.PICKUP,
+                ContainerInput.PICKUP,
                 player,
             )
 
@@ -111,11 +111,11 @@ internal object ReportHelperAutoConfirm : ToggleableValueGroup(ModuleReportHelpe
 
             val diamondSwordId = slots.firstOrNull { it.itemStack.`is`(Items.DIAMOND_SWORD) } ?: return
 
-            interaction.handleInventoryMouseClick(
+            interaction.handleContainerInput(
                 screen.syncId,
                 diamondSwordId.slotInContainer,
                 0,
-                ClickType.PICKUP,
+                ContainerInput.PICKUP,
                 player,
             )
 

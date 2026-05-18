@@ -29,6 +29,7 @@ import type {
 } from "./types";
 import type {PlayerInventory} from "./events";
 import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
+import {replace} from "svelte-spa-router";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -525,8 +526,13 @@ export async function checkProxy(id: number) {
     });
 }
 
-export async function getCurrentProxy(): Promise<Proxy> {
+export async function getCurrentProxy(): Promise<Proxy | null> {
     const response = await fetch(`${API_BASE}/client/proxy`);
+
+    if (response.status !== 200) {
+        return null;
+    }
+
     const data: Proxy = await response.json();
 
     return data;
@@ -721,14 +727,14 @@ export async function setTyping(typing: boolean) {
 
 export async function getClientUser(): Promise<ClientUser | null> {
     const response = await fetch(`${API_BASE}/client/user`);
-    
+
     if (!response.ok) {
         if (response.status === 401) {
             return null;
         }
         throw new Error(`Failed to get client user: ${response.status} ${response.statusText}`);
     }
-    
+
     const data: ClientUser = await response.json();
     return data;
 }

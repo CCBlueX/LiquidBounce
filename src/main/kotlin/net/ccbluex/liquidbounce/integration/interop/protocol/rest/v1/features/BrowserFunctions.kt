@@ -19,103 +19,112 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import com.google.gson.JsonObject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.browserBrowsers
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpBadRequest
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.netty.http.routing.Routing
 
 // GET /api/v1/client/browser
-@Suppress("UNUSED_PARAMETER")
-fun getBrowserInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen ?: return@apply
-    val browser = internetExplorerScreen.browserBrowser ?: return@apply
+private fun Routing.getBrowserInfo() = get {
+    call.respond(JsonObject().apply {
+        val internetExplorerScreen = mc.screen as? InternetExplorerScreen ?: return@apply
+        val browser = internetExplorerScreen.browserBrowser ?: return@apply
 
-    addProperty("url", browser.url)
-})
+        addProperty("url", browser.url)
+    })
+}
 
 // POST /api/v1/client/browser/navigate
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserNavigate(requestObject: RequestObject) = with(requestObject.asJson<Navigate>()) {
+private fun Routing.postBrowserNavigate() = post("/navigate") { with(call.receive<Navigate>()) {
     val url = this.url
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.url = url
-    httpNoContent()
-}
+    call.respondNoContent()
+} }
 
 private data class Navigate(val url: String)
 
 // POST /api/v1/client/browser/close
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserClose(requestObject: RequestObject) = with(requestObject) {
-    if (mc.screen !is InternetExplorerScreen) return@with httpBadRequest("No browser screen")
-    mc.setScreen(null)
-    httpNoContent()
-}
+private fun Routing.postBrowserClose() = post("/close") { withContext(Dispatchers.Minecraft) {
+    if (mc.screen !is InternetExplorerScreen) {
+        call.badRequest("No browser screen")
+    } else {
+        mc.setScreen(null)
+        call.respondNoContent()
+    }
+} }
 
 // POST /api/v1/client/browser/reload
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserReload(requestObject: RequestObject) = with(requestObject) {
+private fun Routing.postBrowserReload() = post("/reload") {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.reload()
-    httpNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/browser/forceReload
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserForceReload(requestObject: RequestObject) = with(requestObject) {
+private fun Routing.postBrowserForceReload() = post("/forceReload") {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.forceReload()
-    httpNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/browser/forward
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserForward(requestObject: RequestObject) = with(requestObject) {
+private fun Routing.postBrowserForward() = post("/forward") {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.goForward()
-    httpNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/browser/back
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserBack(requestObject: RequestObject) = with(requestObject) {
+private fun Routing.postBrowserBack() = post("/back") {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.goBack()
-    httpNoContent()
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/browser/closeTab
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserCloseTab(requestObject: RequestObject) = with(requestObject) {
+private fun Routing.postBrowserCloseTab() = post("/closeTab") {
     val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
+    withContext(Dispatchers.Minecraft) {
+        browser.close()
+        browserBrowsers.remove(browser)
+    }
+    call.respondNoContent()
+}
 
-    browser.close()
-    browserBrowsers.remove(browser)
-    httpNoContent()
+internal fun Routing.browserRoutes() = route("/browser") {
+    getBrowserInfo()
+    postBrowserNavigate()
+    postBrowserClose()
+    postBrowserReload()
+    postBrowserForceReload()
+    postBrowserForward()
+    postBrowserBack()
+    postBrowserCloseTab()
 }

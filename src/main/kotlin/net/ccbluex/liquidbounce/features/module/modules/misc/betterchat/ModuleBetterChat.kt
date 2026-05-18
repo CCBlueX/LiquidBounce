@@ -29,14 +29,15 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsAutoTranslate
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.openChat
-import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.minecraft.client.GuiMessage
 import net.minecraft.client.gui.screens.DeathScreen
+import net.minecraft.client.multiplayer.chat.GuiMessage
 import net.minecraft.util.FormattedCharSink
 import org.lwjgl.glfw.GLFW
 
@@ -80,7 +81,6 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
 
     private val autoTranslate by multiEnumChoice<ChatReceiveEvent.ChatType>("AutoTranslate")
 
-    // FIXME(1.21.11)
     object Copy : ToggleableValueGroup(this, "Copy", true) {
         private val notify by boolean("Notify", true)
         val highlight by boolean("Highlight", true)
@@ -127,7 +127,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
         tree(AppendPrefix)
         tree(AppendSuffix)
         tree(AntiSpam)
-//        tree(Copy)
+        tree(Copy)
     }
 
     var antiChatClearPaused = false
@@ -213,5 +213,50 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
         ANTI_CLEAR("AntiClear"),
         KEEP_AFTER_DEATH("KeepAfterDeath"),
         FORCE_UNICODE_CHAT("ForceUnicodeChat")
+    }
+
+    /**
+     * Resolves the contiguous wrapped-line range for the message at [index].
+     */
+    @Suppress("CAST_NEVER_SUCCEEDS")
+    @JvmStatic
+    fun resolveMessageBounds(visibleMessages: List<GuiMessage.Line>, index: Int): IntRange {
+        val id = (visibleMessages[index] as GuiMessageLineAddition).`liquid_bounce$getId`()
+
+        if (id != null) {
+            var start = index
+            while (start > 0) {
+                val previousId = (visibleMessages[start - 1] as GuiMessageLineAddition).`liquid_bounce$getId`()
+                if (id != previousId) {
+                    break
+                }
+                start--
+            }
+
+            var end = index
+            val lastIndex = visibleMessages.size - 1
+            while (end < lastIndex) {
+                val nextId = (visibleMessages[end + 1] as GuiMessageLineAddition).`liquid_bounce$getId`()
+                if (id != nextId) {
+                    break
+                }
+                end++
+            }
+
+            return start..end
+        }
+
+        var start = index
+        while (start > 0 && !visibleMessages[start].endOfEntry()) {
+            start--
+        }
+
+        var end = index
+        val lastIndex = visibleMessages.size - 1
+        while (end < lastIndex && !visibleMessages[end + 1].endOfEntry()) {
+            end++
+        }
+
+        return start..end
     }
 }

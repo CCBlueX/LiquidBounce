@@ -22,20 +22,20 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
+import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.world.InteractionHand
 
 /**
  * Vehicle control module
@@ -158,7 +158,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
 
                     // Enter the vehicle again
                     if (!forceAttempt) {
-                        interaction.interact(player, vehicle, InteractionHand.MAIN_HAND)
+                        interactEntity(vehicle)
                         forceAttempt = true
                     } else {
                         // We are already in the vehicle on the server-side, but our client does not know that, so
@@ -174,8 +174,10 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
 
                 waitTicks(unhookAfter)
                 vehicleId = player.controlledVehicle?.id ?: return@tickHandler
-                network.send1_21_5StartSneaking()
-                player.stopRiding()
+                once<MovementInputEvent> {
+                    it.sneak = true
+                    player.stopRiding()
+                }
                 waitTicks(hookAfter - 1)
             }
         }

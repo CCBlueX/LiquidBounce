@@ -19,24 +19,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.fastutil.forEachFloat
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
@@ -46,18 +41,12 @@ import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.bold
-import net.ccbluex.liquidbounce.utils.client.italic
-import net.ccbluex.liquidbounce.utils.client.textOf
-import net.ccbluex.liquidbounce.utils.client.underline
-import net.ccbluex.liquidbounce.utils.client.vector2f
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.textOf
+import net.ccbluex.liquidbounce.utils.math.vector2f
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
@@ -188,44 +177,10 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         }
 
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
             debuggedGeometry.values.forEach { geometry ->
                 geometry.render()
             }
-            commitBatch()
         }
-    }
-
-    @Suppress("unused")
-    private val scaffoldDebugging = handler<GameTickEvent> {
-        if (!ModuleScaffold.running) {
-            return@handler
-        }
-
-        val pos0 = Vec3(77.0, 75.0, -52.0)
-        val face = AlignedFace(pos0, pos0.add(1.0, 1.0, 0.0))
-
-        debugGeometry(
-            ModuleScaffold,
-            "targetFace",
-            DebuggedBox(AABB(face.from, face.to), Color4b(255, 0, 0, 64))
-        )
-
-        val line = LineSegment(player.eyePosition, player.lookAngle, 0.0..10.0)
-
-        debugGeometry(
-            ModuleScaffold,
-            "daLine",
-            DebuggedLineSegment(line.endPoints.first, line.endPoints.second, Color4b(0, 0, 255, 255))
-        )
-
-        val pointTo = face.nearestPointTo(line)
-
-        debugGeometry(
-            ModuleScaffold,
-            "targetPoint",
-            DebuggedPoint(pointTo, Color4b(0, 0, 255, 255), size = 0.05)
-        )
     }
 
     @Suppress("unused")
@@ -259,29 +214,12 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
         val currentTime = System.currentTimeMillis()
 
-        fun ownerName(owner: DebuggedOwner): Component {
-            return when (owner) {
-                is ClientModule -> owner.name.asText().withStyle(ChatFormatting.GOLD).bold(true)
-                is Command -> "Command ${owner.name}".asText().withStyle(ChatFormatting.GOLD).underline(true)
-                is EventListener -> listOfNotNull(
-                    owner.parent()?.let { ownerName(it) },
-                    "::".asPlainText(ChatFormatting.GRAY),
-                    owner.javaClass.simpleName.asText().withStyle(ChatFormatting.DARK_AQUA).italic(true),
-                ).asText()
+        debuggedOwners.forEach { (owner, parameters) ->
+            textList += owner.debugDisplayName
 
-                is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asPlainText(ChatFormatting.GRAY)
-                    ?: owner.toString().asPlainText()
-
-                else -> owner.javaClass.simpleName.asPlainText(ChatFormatting.BLUE)
-            }
-        }
-
-        debuggedOwners.forEach { (owner, parameter) ->
-            textList += ownerName(owner)
-
-            parameter.forEach { debuggedParameter ->
+            for (debuggedParameter in parameters) {
                 val parameterName = debuggedParameter.name
-                val parameterCapture = debugParameters[debuggedParameter] ?: return@forEach
+                val parameterCapture = debugParameters[debuggedParameter] ?: continue
                 val duration = (currentTime - parameterCapture.time) / 1000
                 textList += textOf(
                     "$parameterName: ".asPlainText(ChatFormatting.WHITE),
@@ -292,36 +230,42 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         }
 
         with(event.context) {
+            val vanillaScale = fontRenderer.scaleToVanillaFont
+
             // Draw
             fontRenderer.draw("Debugging".asPlainText()) {
                 x = 120f
                 y = 22f
                 shadow = true
-                scale = 0.3f
+                scale = vanillaScale * 2
             }
 
             // Draw text line one by one
             textList.forEachIndexed { index, text ->
                 fontRenderer.draw(text) {
                     x = 120f
-                    y = 40 + ((fontRenderer.height * 0.17f) * index)
+                    y = 40 + ((fontRenderer.height * vanillaScale) * index)
                     shadow = true
-                    scale = 0.17f
+                    scale = vanillaScale
                 }
             }
         }
     }
 
-    fun debugGeometry(owner: DebuggedOwner, name: String, geometry: DebuggedGeometry) {
+    fun debugGeometry(owner: DebuggedOwner, name: String, geometry: DebuggedGeometry?) {
         // Do not take any new debugging while the module is off
         if (!running) {
             return
         }
 
-        debuggedGeometry[DebuggedKey(owner, name)] = geometry
+        if (geometry != null) {
+            debuggedGeometry[DebuggedKey(owner, name)] = geometry
+        } else {
+            debuggedGeometry.remove(DebuggedKey(owner, name))
+        }
     }
 
-    inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
+    inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry?) {
         if (!running) {
             return
         }
@@ -387,7 +331,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
             env.drawTriangle(
                 p1 = env.relativeToCamera(p1).toVec3f(),
                 p2 = env.relativeToCamera(p2).toVec3f(),
-                p3 = env.relativeToCamera(p2).toVec3f(),
+                p3 = env.relativeToCamera(p3).toVec3f(),
                 argb = color.argb,
             )
         }

@@ -23,8 +23,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.common.base.CaseFormat
 import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.fastutil.objectObjectHashMapOf
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
@@ -33,13 +32,12 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
 import net.ccbluex.liquidbounce.utils.item.getOrNull
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.Routing
 import net.ccbluex.netty.http.util.httpServiceUnavailable
 import net.minecraft.core.BlockPos
 import net.minecraft.core.DefaultedRegistry
 import net.minecraft.core.Registry
+import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.protocol.PacketFlow
@@ -180,7 +178,7 @@ private inline fun <T : Any> Registry<T>.buildOutput(
     name: (Identifier, T) -> String,
     iconUrl: (Identifier) -> String? = { null },
 ): Map<String, RegistryItemOutput> {
-    val obj = objectObjectHashMapOf<String, RegistryItemOutput>()
+    val obj = Object2ObjectOpenHashMap<String, RegistryItemOutput>(this.size())
     for (item in this) {
         val id = this.getKey(item) ?: continue
         obj[id.toString()] = RegistryItemOutput(name(id, item), iconUrl(id))
@@ -192,17 +190,16 @@ private inline fun <T : Any> Registry<T>.buildOutput(
 private data class RegistryItemOutput(val name: String, val icon: String?)
 
 // GET /api/v1/client/registry/:name
-@Suppress("UNUSED_PARAMETER")
-fun getRegistry(requestObject: RequestObject): FullHttpResponse {
+private fun Routing.getRegistry() = get {
     fun itemIconUrl(id: Identifier) =
-        "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id"
+        "${ClientInteropServer.url}/api/v1/client/itemTexture?id=$id"
     fun effectTextureUrl(id: Identifier) =
-        "${ClientInteropServer.url}/api/v1/client/resource/effectTexture?id=$id"
+        "${ClientInteropServer.url}/api/v1/client/effectTexture?id=$id"
 
-    val registryName = requestObject.params["name"]
-        ?: return httpForbidden("Missing registry name parameter")
+    val registryName = call.parameters["name"]
+        ?: call.forbidden("Missing registry name parameter")
 
-    return when (registryName.lowercase(Locale.ENGLISH)) {
+    val result = when (registryName.lowercase(Locale.ENGLISH)) {
         "blocks", "block" -> {
             BuiltInRegistries.BLOCK.buildOutput(
                 name = { _, id -> id.name.string },
@@ -212,7 +209,7 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
 
         "items", "item" -> {
             BuiltInRegistries.ITEM.buildOutput(
-                name = { _, id -> id.name.string },
+                name = { id, item -> item.components()[DataComponents.ITEM_NAME]?.string ?: id.toString() },
                 iconUrl = ::itemIconUrl,
             )
         }
@@ -235,7 +232,7 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
 
         "enchantment" -> {
             val registry = Registries.ENCHANTMENT.getOrNull()
-                ?: return httpServiceUnavailable("Registry not loaded")
+                ?: call.respond(httpServiceUnavailable("Registry not loaded")).let { return@get }
             registry.buildOutput(name = { _, id -> id.description.string })
         }
 
@@ -266,17 +263,20 @@ fun getRegistry(requestObject: RequestObject): FullHttpResponse {
             }
         }
 
-        else -> return httpForbidden("Invalid registry name: $registryName")
-    }.let { httpOk(it, interopGson) }
+        else -> call.forbidden("Invalid registry name: $registryName")
+    }
+
+    call.respond(result, interopGson)
 }
 
 
 // GET /api/v1/client/registry/:name/groups
-@Suppress("UNUSED_PARAMETER", "CognitiveComplexMethod")
-fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    val registryName = requestObject.params["name"]
-        ?: return httpForbidden("Missing registry name parameter")
-    when (registryName.lowercase(Locale.ENGLISH)) {
+@Suppress("CognitiveComplexMethod")
+private fun Routing.getRegistryGroups() = get("/groups") {
+    call.respond(JsonObject().apply {
+        val registryName = call.parameters["name"]
+            ?: call.forbidden("Missing registry name parameter")
+        when (registryName.lowercase(Locale.ENGLISH)) {
         "items" -> {
             for ((k, v) in constructMap(BuiltInRegistries.ITEM, ACCEPTED_ITEM_TAGS)) {
                 add(
@@ -291,7 +291,7 @@ fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply 
 
         "blocks" -> {
             val parentMap = hashMapOf<Identifier, Identifier>()
-            val world = mc.level ?: return httpForbidden("No world")
+            val world = mc.level ?: forbidden("No world")
 
             BuiltInRegistries.BLOCK.forEach { block ->
                 val pickStack = block.getCloneItemStack(world, BlockPos.ZERO, block.defaultBlockState(), false)
@@ -335,6 +335,12 @@ fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply 
             }
         }
 
-        else -> return httpForbidden("Invalid registry name: $registryName")
-    }
-})
+            else -> call.forbidden("Invalid registry name: $registryName")
+        }
+    })
+}
+
+internal fun Routing.registryRoutes() = route("/registry/:name") {
+    getRegistry()
+    getRegistryGroups()
+}

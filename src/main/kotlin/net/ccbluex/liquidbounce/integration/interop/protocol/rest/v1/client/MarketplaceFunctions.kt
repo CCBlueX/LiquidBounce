@@ -28,22 +28,20 @@ import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.Routing
 
 /**
  * GET /api/v1/marketplace
  *
  * Lists marketplace items with optional filtering
  */
-suspend fun getMarketplaceItems(requestObject: RequestObject) = run {
-    val page = requestObject.queryParams.getOrDefault("page", "1").toInt()
-    val limit = requestObject.queryParams.getOrDefault("limit", "12").toInt()
-    val query = requestObject.queryParams["query"]
-    val typeStr = requestObject.queryParams["type"]
+private fun Routing.getMarketplaceItems() = get {
+    val page = call.queryParameters.getOrDefault("page", "1").toInt()
+    val limit = call.queryParameters.getOrDefault("limit", "12").toInt()
+    val query = call.queryParameters["query"]
+    val typeStr = call.queryParameters["type"]
     val type = typeStr?.let { MarketplaceItemType.valueOf(it.uppercase()) }
-    val featured = requestObject.queryParams["featured"]?.toBoolean() ?: true
+    val featured = call.queryParameters["featured"]?.toBoolean() ?: true
 
     val response = MarketplaceApi.getMarketplaceItems(page, limit, query, type, featured)
 
@@ -54,124 +52,146 @@ suspend fun getMarketplaceItems(requestObject: RequestObject) = run {
         }
     }
 
-    JsonObject().apply {
+    call.respond(JsonObject().apply {
         add("items", interopGson.toJsonTree(items))
         add("pagination", interopGson.toJsonTree(response.pagination))
-    }.let { httpOk(it) }
+    })
 }
 
 /**
  * GET /api/v1/marketplace/:id
  */
-suspend fun getMarketplaceItem(requestObject: RequestObject) = run {
-    val id = requestObject.params["id"]?.toIntOrNull() ?: return@run httpForbidden("Invalid ID")
+private fun Routing.getMarketplaceItem() = get {
+    val id = call.parameters["id"]?.toIntOrNull() ?: call.forbidden("Invalid ID")
 
     val item = MarketplaceApi.getMarketplaceItem(id)
-    JsonObject().apply {
+    call.respond(JsonObject().apply {
         add("item", interopGson.toJsonTree(item))
         addProperty("isSubscribed", MarketplaceManager.isSubscribed(id))
         addProperty("hasUpdate", false) // TODO: Implement version check
-    }.let { httpOk(it) }
+    })
 }
 
 /**
  * GET /api/v1/marketplace/:id/revisions
  */
-suspend fun getMarketplaceItemRevisions(requestObject: RequestObject) = run {
-    val id = requestObject.params["id"]?.toIntOrNull() ?: return@run httpForbidden("Invalid ID")
-    val page = requestObject.queryParams.getOrDefault("page", "1").toInt()
-    val limit = requestObject.queryParams.getOrDefault("limit", "10").toInt()
+private fun Routing.getMarketplaceItemRevisions() = get {
+    val id = call.parameters["id"]?.toIntOrNull() ?: call.forbidden("Invalid ID")
+    val page = call.queryParameters.getOrDefault("page", "1").toInt()
+    val limit = call.queryParameters.getOrDefault("limit", "10").toInt()
 
     val response = MarketplaceApi.getMarketplaceItemRevisions(id, page, limit)
-    httpOk(interopGson.toJsonTree(response))
+    call.respond(response, interopGson)
 }
 
 /**
  * GET /api/v1/marketplace/:id/revisions/:revisionId
  */
-suspend fun getMarketplaceItemRevision(requestObject: RequestObject) = run {
-    val id = requestObject.params["id"]?.toIntOrNull() ?: return@run httpForbidden("Invalid ID")
-    val revisionId = requestObject.params["revisionId"]?.toIntOrNull()
-        ?: return@run httpForbidden("Invalid revision ID")
+private fun Routing.getMarketplaceItemRevision() = get("/:revisionId") {
+    val id = call.parameters["id"]?.toIntOrNull() ?: call.forbidden("Invalid ID")
+    val revisionId = call.parameters["revisionId"]?.toIntOrNull()
+        ?: call.forbidden("Invalid revision ID")
 
     val response = MarketplaceApi.getMarketplaceItemRevision(id, revisionId)
-    httpOk(interopGson.toJsonTree(response))
+    call.respond(response, interopGson)
 }
 
 /**
  * POST /api/v1/marketplace/:id/subscribe
  */
-suspend fun subscribeMarketplaceItem(requestObject: RequestObject) = run {
-    val id = requestObject.params["id"]?.toIntOrNull() ?: return@run httpForbidden("Invalid ID")
+private fun Routing.subscribeMarketplaceItem() = post("/subscribe") {
+    val id = call.parameters["id"]?.toIntOrNull() ?: call.forbidden("Invalid ID")
+
+    if (MarketplaceManager.isSubscribed(id)) {
+        call.forbidden("Already subscribed")
+    }
+
+    val item = try {
+        MarketplaceApi.getMarketplaceItem(id)
+    } catch (e: Exception) {
+        logger.error("Failed to load marketplace item before subscribing", e)
+        call.forbidden("Failed to subscribe: ${e.message}")
+    }
+
+    if (item.status != MarketplaceItemStatus.ACTIVE) {
+        call.forbidden("Item is not active")
+    }
 
     try {
-        if (MarketplaceManager.isSubscribed(id)) {
-            return@run httpForbidden("Already subscribed")
-        }
-
-        // Verify item exists and is active
-        val item = MarketplaceApi.getMarketplaceItem(id)
-        if (item.status != MarketplaceItemStatus.ACTIVE) {
-            return@run httpForbidden("Item is not active")
-        }
-
         MarketplaceManager.subscribe(item)
-        httpOk(interopGson.toJsonTree(item))
+        call.respondNoContent()
     } catch (e: Exception) {
         logger.error("Failed to subscribe to marketplace item", e)
-        httpForbidden("Failed to subscribe: ${e.message}")
+        call.forbidden("Failed to subscribe: ${e.message}")
     }
 }
 
 /**
  * POST /api/v1/marketplace/:id/unsubscribe
  */
-suspend fun unsubscribeMarketplaceItem(requestObject: RequestObject) = run {
-    val id = requestObject.params["id"]?.toIntOrNull() ?: return@run httpForbidden("Invalid ID")
+private fun Routing.unsubscribeMarketplaceItem() = post("/unsubscribe") {
+    val id = call.parameters["id"]?.toIntOrNull() ?: call.forbidden("Invalid ID")
+
+    if (!MarketplaceManager.isSubscribed(id)) {
+        call.forbidden("Not subscribed")
+    }
 
     try {
-        if (!MarketplaceManager.isSubscribed(id)) {
-            return@run httpForbidden("Not subscribed")
-        }
-
         MarketplaceManager.unsubscribe(id)
-        httpOk(interopGson.toJsonTree(requestObject))
+        call.respondNoContent()
     } catch (e: Exception) {
         logger.error("Failed to unsubscribe from marketplace item", e)
-        httpForbidden("Failed to unsubscribe: ${e.message}")
+        call.forbidden("Failed to unsubscribe: ${e.message}")
     }
 }
 
 /**
  * GET /api/v1/marketplace/:id/reviews
  */
-suspend fun getMarketplaceItemReviews(requestObject: RequestObject) = run {
-    val id = requestObject.params["id"]?.toIntOrNull() ?: return@run httpForbidden("Invalid ID")
-    val page = requestObject.queryParams.getOrDefault("page", "1").toInt()
-    val limit = requestObject.queryParams.getOrDefault("limit", "10").toInt()
+private fun Routing.getMarketplaceItemReviews() = get {
+    val id = call.parameters["id"]?.toIntOrNull() ?: call.forbidden("Invalid ID")
+    val page = call.queryParameters.getOrDefault("page", "1").toInt()
+    val limit = call.queryParameters.getOrDefault("limit", "10").toInt()
 
     val response = MarketplaceApi.getReviews(id, page, limit)
-    httpOk(interopGson.toJsonTree(response))
+    call.respond(response, interopGson)
 }
 
 /**
  * POST /api/v1/marketplace/:id/reviews
  */
-suspend fun postMarketplaceItemReview(requestObject: RequestObject) = run {
+private fun Routing.postMarketplaceItemReview() = post {
     data class MarketplaceReview(
         val rating: Int,
         val comment: String
     )
 
-    val id = requestObject.params["id"]?.toIntOrNull() ?: return@run httpForbidden("Invalid ID")
-    val review = requestObject.body.let { interopGson.fromJson(it, MarketplaceReview::class.java) }
-        ?: return@run httpForbidden("Invalid review data")
+    val id = call.parameters["id"]?.toIntOrNull() ?: call.forbidden("Invalid ID")
+    val review = call.body.let { interopGson.fromJson(it, MarketplaceReview::class.java) }
+        ?: call.forbidden("Invalid review data")
 
     val clientAccount = ClientAccountManager.clientAccount
     if (clientAccount == EMPTY_ACCOUNT) {
-        return@run httpForbidden("Not logged in")
+        call.forbidden("Not logged in")
     }
 
     val response = MarketplaceApi.createReview(clientAccount.takeSession(), id, review.rating, review.comment)
-    httpOk(interopGson.toJsonTree(response))
+    call.respond(response, interopGson)
+}
+
+internal fun Routing.marketplaceRoutes() = route("/marketplace") {
+    getMarketplaceItems()
+    route("/:id") {
+        getMarketplaceItem()
+        route("/revisions") {
+            getMarketplaceItemRevisions()
+            getMarketplaceItemRevision()
+        }
+        subscribeMarketplaceItem()
+        unsubscribeMarketplaceItem()
+        route("/reviews") {
+            getMarketplaceItemReviews()
+            postMarketplaceItemReview()
+        }
+    }
 }

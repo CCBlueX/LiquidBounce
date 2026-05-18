@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpe
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.OnlyOnPotionEffect.potionEffects
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedCustom
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedPiercingAttack
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.blocksmc.SpeedBlocksMC
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim.SpeedGrimCollide
@@ -71,6 +72,7 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
         SpeedLegitHop(modeValueGroup),
         SpeedCustom(modeValueGroup),
         SpeedSpeedYPort(modeValueGroup),
+        SpeedPiercingAttack(modeValueGroup),
 
         SpeedVerusB3882(modeValueGroup),
 
@@ -102,7 +104,7 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
     val modes = choices("Mode", 0, this::initializeSpeeds).apply(::tagBy)
 
-    private val notCondition by multiEnumChoice("Not", NotCondition.DURING_SCAFFOLD)
+    private val notCondition by multiEnumChoice("Not", NotCondition.SCAFFOLD)
 
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
 
@@ -129,7 +131,7 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
     private fun passesRequirements() = when {
         // DO NOT REMOVE - PLAYER COULD BE NULL!
         !inGame || isDestructed -> false
-        else -> notCondition.all { it.testCondition.asBoolean }
+        else -> !notCondition.any { it.condition.asBoolean }
     }
 
     private object OnlyInCombat : ToggleableValueGroup(this, "OnlyInCombat", false) {
@@ -194,16 +196,12 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
     @Suppress("unused")
     private enum class NotCondition(
         override val tag: String,
-        val testCondition: BooleanSupplier
+        val condition: BooleanSupplier
     ) : Tagged {
-        WHILE_USING_ITEM("WhileUsingItem", {
-            !player.isUsingItem
-        }),
-        DURING_SCAFFOLD("DuringScaffold", {
-            !(ModuleScaffold.running || ModuleFly.running)
-        }),
-        WHILE_SNEAKING("WhileSneaking", {
-            !player.isShiftKeyDown
-        })
+        USING_ITEM("WhileUsingItem", { player.isUsingItem }),
+        SCAFFOLD("DuringScaffold", { ModuleScaffold.running || ModuleFly.running }),
+        SNEAKING("WhileSneaking", { player.isShiftKeyDown }),
+        FALL_FLYING("IsFallFlying", { player.isFallFlying }),
+        IN_LIQUID("IsInLiquid", { player.isInLiquid }),
     }
 }

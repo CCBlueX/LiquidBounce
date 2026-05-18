@@ -68,7 +68,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
     private val requirementsMet
-        get() = requires.all { it.asBoolean }
+        get() = mc.screen == null && requires.all { it.asBoolean }
 
     private var angleSmooth = modes(this, "AngleSmooth") {
         arrayOf(
@@ -77,6 +77,8 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
             LinearAngleSmooth(it)
         )
     }
+
+    private val axis by multiEnumChoice<Axis>("Axis", Axis.HORIZONTAL, Axis.VERTICAL)
 
     private val ignores by multiEnumChoice<IgnoreOpened>("Ignore")
 
@@ -132,17 +134,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
             return@handler
         }
 
-        val currentRotation = playerRotation ?: return@handler
-
-        val timerSpeed = Timer.timerSpeed
-        targetRotation?.let { rotation ->
-            val interpolatedRotation = Rotation(
-                currentRotation.yaw + (rotation.yaw - currentRotation.yaw) * (timerSpeed * partialTicks),
-                currentRotation.pitch + (rotation.pitch - currentRotation.pitch) * (timerSpeed * partialTicks)
-            )
-
-            player.setRotation(interpolatedRotation)
-        }
+        lookAt(partialTicks)
     }
 
     @Suppress("unused", "MagicNumber")
@@ -160,6 +152,23 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         targetRotation?.let { rotation ->
             targetRotation = updateRotation(rotation)
         }
+    }
+
+    /**
+     * Looks at the target rotation, with interpolation based on the timer speed and partial ticks to make it smooth.
+     */
+    private fun lookAt(partialTicks: Float) {
+        val playerRotation = playerRotation ?: return
+        val targetRotation = targetRotation ?: return
+        val timerSpeed = Timer.timerSpeed
+        val interpolatedRotation = playerRotation.interpolateTo(targetRotation, timerSpeed * partialTicks)
+
+        player.setRotation(
+            Rotation(
+                yaw = if (Axis.HORIZONTAL in axis) interpolatedRotation.yaw else playerRotation.yaw,
+                pitch = if (Axis.VERTICAL in axis) interpolatedRotation.pitch else playerRotation.pitch,
+            )
+        )
     }
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
@@ -192,5 +201,10 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     ) : Tagged {
         SCREEN("Screen"),
         CONTAINER("Container")
+    }
+
+    private enum class Axis(override val tag: String) : Tagged {
+        HORIZONTAL("Horizontal"),
+        VERTICAL("Vertical")
     }
 }

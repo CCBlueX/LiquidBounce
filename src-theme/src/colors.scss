@@ -1,50 +1,281 @@
-$accent-color: #4677ff;
+:root {
+    /* Foundation */
+    --surface-color: #000000;
+    --text-color: #ffffff;
+    --text-dimmed-color: #d3d3d3;
 
-$clickgui-base-color: black;
-$clickgui-text-color: white;
-$clickgui-text-dimmed-color: rgba(211, 211, 211, 255);
-$clickgui-grid-color: rgba(128, 128, 128, 0.25);
+    --accent-color: #4677ff;
+    --accent-hover-color: color-mix(in srgb, var(--accent-color) 82%, black);
+    --accent-subtle-background-color: color-mix(in srgb, var(--accent-color) 12%, transparent);
 
-$tabgui-base-color: black;
-$tabgui-text-color: white;
-$tabgui-text-dimmed-color: rgba(211, 211, 211, 255);
+    --success-color: #4dac68;
+    --error-color: #fc4130;
+    --premium-color: #67d24a;
+    --warning-color: #efbf04;
+    --grid-color: color-mix(in srgb, #808080 25%, transparent);
 
-$arraylist-base-color: black;
-$arraylist-text-color: white;
-$arraylist-tag-color: #AAAAAA;
+    /* ClickGUI */
+    --clickgui-base-color: var(--surface-color);
+    --clickgui-text-color: var(--text-color);
+    --clickgui-text-dimmed-color: var(--text-dimmed-color);
+    --clickgui-grid-color: var(--grid-color);
 
-$targethud-base-color: black;
-$targethud-text-color: white;
-$targethud-text-dimmed-color: rgba(211, 211, 211, 255);
+    --clickgui-base-30-color: color-mix(in srgb, var(--clickgui-base-color) 30%, transparent);
+    --clickgui-base-36-color: color-mix(in srgb, var(--clickgui-base-color) 36%, transparent);
+    --clickgui-base-50-color: color-mix(in srgb, var(--clickgui-base-color) 50%, transparent);
+    --clickgui-base-60-color: color-mix(in srgb, var(--clickgui-base-color) 60%, transparent);
+    --clickgui-base-70-color: color-mix(in srgb, var(--clickgui-base-color) 70%, transparent);
+    --clickgui-base-80-color: color-mix(in srgb, var(--clickgui-base-color) 80%, transparent);
+    --clickgui-base-85-color: color-mix(in srgb, var(--clickgui-base-color) 85%, transparent);
+    --clickgui-base-90-color: color-mix(in srgb, var(--clickgui-base-color) 90%, transparent);
 
-$blockcounter-base-color: black;
+    --clickgui-description-background-color: var(--clickgui-base-90-color);
+    --clickgui-description-shadow-color: var(--clickgui-base-50-color);
+    --clickgui-description-arrow-color: var(--clickgui-description-background-color);
 
-$hotbar-base-color: black;
-$hotbar-text-color: white;
-/* TODO: currently unused */
-$hotbar-experience-color: #88C657;
-$hotbar-health-color: #FC4130;
-$hotbar-hunger-color: #B88458;
+    --clickgui-overlay-background-color: color-mix(in srgb, black 60%, transparent);
+    --clickgui-panel-shadow-color: var(--clickgui-base-50-color);
+    --clickgui-panel-header-background-color: var(--clickgui-base-90-color);
+    --clickgui-panel-header-border-color: var(--accent-color);
+    --clickgui-panel-body-background-color: var(--clickgui-base-80-color);
+    --clickgui-panel-toggle-icon-color: var(--clickgui-text-color);
 
-$menu-account-premium-color: #67D24A;
-$menu-base-color: black;
-$menu-text-color: white;
-$menu-text-dimmed-color: rgba(211, 211, 211, 255);
-$menu-error-color: #fc4130;
-$menu-button-loader-color: white;
+    --clickgui-module-hover-background-color: var(--clickgui-base-85-color);
+    --clickgui-module-highlight-color: var(--accent-color);
+    --clickgui-module-enabled-color: var(--accent-color);
+    --clickgui-module-settings-background-color: var(--clickgui-base-50-color);
+    --clickgui-module-settings-border-color: var(--accent-color);
 
-$scoreboard-base-color: black;
+    --clickgui-search-background-color: var(--clickgui-base-90-color);
+    --clickgui-search-shadow-color: var(--clickgui-base-50-color);
+    --clickgui-search-border-color: var(--accent-color);
+    --clickgui-search-enabled-color: var(--accent-color);
+    --clickgui-search-alias-color: color-mix(in srgb, var(--clickgui-text-dimmed-color) 60%, transparent);
+    --clickgui-search-hint-color: color-mix(in srgb, var(--clickgui-text-color) 40%, transparent);
 
-$keystrokes-base-color: black;
-$keystrokes-text-color: white;
+    --clickgui-tabs-background-color: var(--clickgui-base-85-color);
+    --clickgui-tabs-shadow-color: var(--clickgui-base-50-color);
+    --clickgui-tab-hover-background-color: var(--clickgui-base-70-color);
+    --clickgui-tab-active-background-color: var(--accent-subtle-background-color);
+    --clickgui-tab-active-border-color: var(--accent-color);
 
-$item-damage-base-color: black;
+    --clickgui-window-background-color: var(--clickgui-base-80-color);
+    --clickgui-window-shadow-color: var(--clickgui-base-50-color);
+    --clickgui-window-header-background-color: var(--clickgui-base-90-color);
+    --clickgui-window-header-border-color: var(--accent-color);
 
-$keybinds-base-color: black;
-$keybinds-text-color: white;
-$keybinds-enabled-color: #4dac68;
+    --clickgui-global-settings-divider-color: color-mix(in srgb, var(--clickgui-text-color) 12%, transparent);
+    --clickgui-input-background-color: var(--clickgui-base-36-color);
+    --clickgui-input-border-color: var(--accent-color);
+    --clickgui-button-background-color: var(--accent-color);
+    --clickgui-button-hover-background-color: var(--accent-hover-color);
+    --clickgui-setting-group-border-color: var(--accent-color);
+    --clickgui-dropdown-trigger-background-color: var(--clickgui-button-background-color);
+    --clickgui-dropdown-background-color: var(--clickgui-base-color);
+    --clickgui-dropdown-border-color: var(--accent-color);
+    --clickgui-dropdown-option-color: var(--clickgui-text-dimmed-color);
+    --clickgui-dropdown-option-hover-color: var(--clickgui-text-color);
+    --clickgui-dropdown-option-selected-color: var(--accent-color);
+    --clickgui-selection-chip-background-color: var(--clickgui-base-30-color);
+    --clickgui-selection-chip-color: var(--clickgui-text-dimmed-color);
+    --clickgui-selection-chip-selected-background-color: var(--accent-subtle-background-color);
+    --clickgui-selection-chip-selected-color: var(--accent-color);
+    --clickgui-selection-chip-remove-background-color: color-mix(in srgb, var(--error-color) 10%, transparent);
+    --clickgui-selection-chip-remove-color: var(--error-color);
+    --clickgui-switch-track-color: color-mix(in srgb, var(--clickgui-text-color) 45%, black);
+    --clickgui-switch-thumb-color: var(--clickgui-text-color);
+    --clickgui-switch-track-active-color: color-mix(in srgb, var(--accent-color) 40%, black);
+    --clickgui-switch-thumb-active-color: var(--accent-color);
+    --clickgui-slider-track-color: color-mix(in srgb, var(--clickgui-text-color) 20%, black);
+    --clickgui-slider-handle-color: var(--clickgui-button-background-color);
+    --clickgui-slider-fill-color: var(--clickgui-button-background-color);
+    --clickgui-color-picker-border-color: var(--accent-color);
+    --clickgui-curve-accent-color: var(--accent-color);
+    --clickgui-curve-grid-color: var(--clickgui-grid-color);
+    --clickgui-curve-axis-color: var(--clickgui-text-dimmed-color);
 
-$effects-amplifier-color: #FC4130;
-$effects-name-color: white;
-$effects-background-color: rgba(0, 0, 0, 0.5);
-$effects-duration-color: white;
+    /* Menu */
+    --menu-base-color: var(--surface-color);
+    --menu-text-color: var(--text-color);
+    --menu-text-dimmed-color: var(--text-dimmed-color);
+    --menu-error-color: var(--error-color);
+    --menu-account-premium-color: var(--premium-color);
+    --menu-button-loader-color: var(--menu-text-color);
+
+    --menu-base-36-color: color-mix(in srgb, var(--menu-base-color) 36%, transparent);
+    --menu-base-50-color: color-mix(in srgb, var(--menu-base-color) 50%, transparent);
+    --menu-base-68-color: color-mix(in srgb, var(--menu-base-color) 68%, transparent);
+    --menu-base-70-color: color-mix(in srgb, var(--menu-base-color) 70%, transparent);
+    --menu-base-80-color: color-mix(in srgb, var(--menu-base-color) 80%, transparent);
+    --menu-base-90-color: color-mix(in srgb, var(--menu-base-color) 90%, transparent);
+
+    --menu-search-background-color: var(--menu-base-36-color);
+    --menu-search-border-color: var(--accent-color);
+    --menu-button-container-background-color: var(--menu-base-68-color);
+    --menu-option-bar-background-color: var(--menu-base-68-color);
+    --menu-option-bar-divider-color: var(--menu-base-36-color);
+    --menu-list-background-color: var(--menu-base-68-color);
+    --menu-list-item-background-color: var(--menu-base-36-color);
+    --menu-list-item-hover-background-color: var(--accent-color);
+    --menu-list-item-hover-subtitle-color: var(--menu-text-color);
+    --menu-list-tag-background-color: var(--menu-base-36-color);
+    --menu-icon-text-button-background-color: var(--menu-base-36-color);
+    --menu-icon-text-button-accent-color: var(--accent-color);
+    --menu-icon-text-button-icon-background-color: var(--accent-color);
+    --menu-title-button-icon-color: var(--menu-text-color);
+    --menu-title-button-icon-hover-color: var(--accent-color);
+    --menu-main-button-background-color: var(--menu-base-68-color);
+    --menu-main-button-accent-color: var(--accent-color);
+    --menu-main-button-icon-background-color: var(--accent-color);
+    --menu-main-button-icon-hover-background-color: var(--menu-text-color);
+    --menu-main-button-icon-foreground-color: var(--menu-title-button-icon-color);
+    --menu-main-button-icon-hover-foreground-color: var(--menu-title-button-icon-hover-color);
+    --menu-main-button-text-color: var(--menu-text-color);
+    --menu-child-button-background-color: var(--accent-color);
+    --menu-child-button-hover-background-color: var(--menu-text-color);
+    --menu-child-button-icon-color: var(--menu-title-button-icon-color);
+    --menu-child-button-icon-hover-color: var(--menu-title-button-icon-hover-color);
+    --menu-child-button-hover-text-color: var(--accent-color);
+    --menu-input-background-color: var(--menu-base-36-color);
+    --menu-input-divider-color: var(--menu-base-color);
+    --menu-input-error-border-color: var(--menu-error-color);
+    --menu-input-icon-background-color: var(--accent-color);
+    --menu-switch-track-color: color-mix(in srgb, var(--menu-text-color) 45%, black);
+    --menu-switch-thumb-color: var(--menu-text-color);
+    --menu-switch-track-active-color: color-mix(in srgb, var(--accent-color) 40%, black);
+    --menu-switch-thumb-active-color: var(--accent-color);
+    --menu-button-background-color: var(--accent-color);
+    --menu-button-hover-background-color: var(--accent-hover-color);
+    --menu-button-secondary-background-color: var(--menu-base-36-color);
+    --menu-button-secondary-hover-background-color: var(--menu-base-color);
+    --menu-modal-backdrop-color: color-mix(in srgb, black 60%, transparent);
+    --menu-modal-background-color: var(--menu-base-80-color);
+    --menu-modal-shadow-color: var(--menu-base-50-color);
+    --menu-modal-title-accent-color: var(--accent-color);
+    --menu-modal-close-border-color: var(--menu-text-color);
+    --menu-modal-close-hover-background-color: color-mix(in srgb, var(--menu-text-color) 10%, transparent);
+    --menu-modal-tab-background-color: var(--menu-base-36-color);
+    --menu-modal-tab-active-border-color: var(--accent-color);
+    --menu-select-header-background-color: var(--accent-color);
+    --menu-select-options-background-color: var(--menu-base-90-color);
+    --menu-wrapped-setting-header-background-color: var(--menu-base-36-color);
+    --menu-wrapped-setting-content-background-color: var(--menu-base-90-color);
+    --menu-header-notification-background-color: var(--menu-base-68-color);
+    --menu-header-notification-icon-background-color: var(--accent-color);
+    --menu-header-notification-icon-error-background-color: var(--menu-error-color);
+    --menu-account-header-background-color: var(--menu-base-68-color);
+    --menu-account-switcher-background-color: var(--menu-base-90-color);
+    --menu-account-search-background-color: var(--menu-base-36-color);
+    --menu-account-search-border-color: var(--accent-color);
+
+    /* HUD */
+    --tabgui-base-color: var(--surface-color);
+    --tabgui-text-color: var(--text-color);
+    --tabgui-text-dimmed-color: var(--text-dimmed-color);
+    --tabgui-base-36-color: color-mix(in srgb, var(--tabgui-base-color) 36%, transparent);
+    --tabgui-base-50-color: color-mix(in srgb, var(--tabgui-base-color) 50%, transparent);
+    --tabgui-base-68-color: color-mix(in srgb, var(--tabgui-base-color) 68%, transparent);
+    --tabgui-icon-background-color: var(--tabgui-base-68-color);
+    --tabgui-category-background-color: var(--tabgui-base-50-color);
+    --tabgui-category-active-background-color: var(--accent-color);
+    --tabgui-module-selected-background-color: var(--tabgui-base-36-color);
+    --tabgui-modules-background-color: var(--tabgui-base-50-color);
+
+    --arraylist-base-color: var(--surface-color);
+    --arraylist-text-color: var(--text-color);
+    --arraylist-tag-color: #aaaaaa;
+    --arraylist-background-color: color-mix(in srgb, var(--arraylist-base-color) 68%, transparent);
+    --arraylist-border-color: var(--accent-color);
+
+    --targethud-base-color: var(--surface-color);
+    --targethud-text-color: var(--text-color);
+    --targethud-text-dimmed-color: var(--text-dimmed-color);
+    --targethud-base-30-color: color-mix(in srgb, var(--targethud-base-color) 30%, transparent);
+    --targethud-base-68-color: color-mix(in srgb, var(--targethud-base-color) 68%, transparent);
+    --targethud-background-color: var(--targethud-base-68-color);
+    --targethud-armor-point-background-color: var(--targethud-base-30-color);
+    --targethud-armor-point-active-color: var(--accent-color);
+    --targethud-health-progress-color: var(--hotbar-health-color);
+
+    --blockcounter-base-color: var(--surface-color);
+    --blockcounter-background-color: color-mix(in srgb, var(--blockcounter-base-color) 68%, transparent);
+
+    --hotbar-base-color: var(--surface-color);
+    --hotbar-text-color: var(--text-color);
+    --hotbar-base-68-color: color-mix(in srgb, var(--hotbar-base-color) 68%, transparent);
+    --hotbar-armor-color: #49ead6;
+    --hotbar-air-color: #aac1e3;
+    --hotbar-absorption-color: #d4af37;
+    --hotbar-experience-color: #88c657;
+    --hotbar-health-color: #fc4130;
+    --hotbar-hunger-color: #b88458;
+    --hotbar-status-background-color: var(--hotbar-base-68-color);
+    --hotbar-slot-background-color: var(--hotbar-base-68-color);
+    --hotbar-slot-border-color: var(--accent-color);
+    --hotbar-item-name-background-color: var(--hotbar-base-68-color);
+
+    --scoreboard-base-color: var(--surface-color);
+    --scoreboard-base-50-color: color-mix(in srgb, var(--scoreboard-base-color) 50%, transparent);
+    --scoreboard-base-68-color: color-mix(in srgb, var(--scoreboard-base-color) 68%, transparent);
+    --scoreboard-header-background-color: var(--scoreboard-base-68-color);
+    --scoreboard-body-background-color: var(--scoreboard-base-50-color);
+
+    --keystrokes-base-color: var(--surface-color);
+    --keystrokes-text-color: var(--text-color);
+    --keystrokes-background-color: color-mix(in srgb, var(--keystrokes-base-color) 68%, transparent);
+    --keystrokes-active-color: var(--accent-color);
+
+    --item-damage-base-color: var(--surface-color);
+    --item-damage-background-color: color-mix(in srgb, var(--item-damage-base-color) 68%, transparent);
+    --item-enchant-glow-start-color: rgba(112, 48, 160, 0.8);
+    --item-enchant-glow-end-color: rgba(255, 105, 180, 0);
+    --item-count-shadow-color: #000000;
+    --inventory-background-color: color-mix(in srgb, var(--surface-color) 50%, transparent);
+
+    --keybinds-base-color: var(--surface-color);
+    --keybinds-text-color: var(--text-color);
+    --keybinds-enabled-color: var(--success-color);
+    --keybinds-base-68-color: color-mix(in srgb, var(--keybinds-base-color) 68%, transparent);
+    --keybinds-text-muted-color: color-mix(in srgb, var(--keybinds-text-color) 65%, transparent);
+    --keybinds-background-color: var(--keybinds-base-68-color);
+    --keybinds-header-background-color: var(--scoreboard-base-50-color);
+    --keybinds-accent-color: var(--accent-color);
+
+    --effects-amplifier-color: var(--error-color);
+    --effects-name-color: var(--text-color);
+    --effects-background-color: color-mix(in srgb, var(--surface-color) 50%, transparent);
+    --effects-duration-color: var(--text-color);
+
+    --notification-background-color: color-mix(in srgb, var(--surface-color) 68%, transparent);
+    --notification-success-color: var(--success-color);
+    --notification-error-color: var(--error-color);
+    --notification-info-color: var(--accent-color);
+    --notification-toggle-knob-color: var(--text-color);
+    --notification-title-color: var(--text-color);
+    --notification-message-color: var(--text-dimmed-color);
+
+    /* Special visuals */
+    --tooltip-background-color: var(--accent-color);
+    --tooltip-text-color: var(--text-color);
+
+    --animated-logo-banner-start-color: var(--accent-color);
+    --animated-logo-banner-middle-color: var(--error-color);
+    --animated-logo-banner-end-color: var(--accent-color);
+    --animated-logo-text-start-color: #dbe6ff;
+    --animated-logo-text-middle-color: #ffd4cf;
+    --animated-logo-text-end-color: #dbe6ff;
+    --animated-logo-foreground-color: var(--text-color);
+    --animated-logo-divider-color: var(--text-color);
+    --animated-logo-anniversary-highlight-color: var(--warning-color);
+    --animated-logo-glow-primary-color: color-mix(in srgb, var(--accent-color) 22%, transparent);
+    --animated-logo-glow-secondary-color: color-mix(in srgb, var(--error-color) 12%, transparent);
+
+    --confetti-color-1: #4677ff;
+    --confetti-color-2: #fc4130;
+    --confetti-color-3: #67d24a;
+    --confetti-color-4: #ffd166;
+    --confetti-color-5: #ffffff;
+    --confetti-color-6: #8ad9ff;
+    --confetti-color-7: #ff8fab;
+    --confetti-shadow-color: rgba(255, 255, 255, 0.12);
+}

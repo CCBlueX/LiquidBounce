@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.createItemStackForRendering
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.createItemStackForRendering
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
@@ -191,7 +191,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
 
         var i = 0
         for ((bedState, distance, surrounding, itemStacksForRender) in beds) {
-            if (i > maxCount) {
+            if (i >= maxCount) {
                 break
             }
 
@@ -222,7 +222,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                 .itemStackRenderer { textRenderer, index, stack, x, y ->
                     if (index == 0 && showBed) {
                         // bed
-                        renderItem(stack, x, y)
+                        item(stack, x, y)
                         drawStackCount(textRenderer, stack, x, y, "${distance.toInt()}m")
                     } else {
                         val surroundingBlock = surrounding[if (showBed) index - 1 else index]
@@ -236,12 +236,12 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                                 Color4b.WHITE
                             }.argb
 
-                        renderItem(stack, x, y)
+                        item(stack, x, y)
                         val countString = stack.count.toString()
                         pose().withPush {
                             // draw layer text
                             if (!compact) {
-                                drawString(
+                                text(
                                     textRenderer,
                                     ROMAN_NUMERALS[surroundingBlock.layer],
                                     x,
@@ -251,7 +251,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                                 )
                             }
                             // drawStackCount, with custom color (copied from DrawContext)
-                            drawString(
+                            text(
                                 textRenderer,
                                 countString,
                                 x + 19 - 2 - textRenderer.width(countString),

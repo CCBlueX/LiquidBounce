@@ -19,21 +19,22 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.global.GlobalManager
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.Routing
 
-@Suppress("UNUSED_PARAMETER")
-fun getGlobalConfig(request: RequestObject): FullHttpResponse {
-    return httpOk(ConfigSystem.serializeValueGroup(GlobalManager, gson = interopGson))
+private fun Routing.getGlobalConfig() = get {
+    call.respond(ConfigSystem.serializeValueGroup(GlobalManager, gson = interopGson))
 }
 
-fun putGlobalConfig(request: RequestObject): FullHttpResponse {
-    ConfigSystem.deserializeValueGroup(GlobalManager, request.body.reader())
+private fun Routing.putGlobalConfig() = put {
+    ConfigSystem.deserializeValueGroup(GlobalManager, call.body.reader())
     ConfigSystem.store(GlobalManager)
-    return httpNoContent()
+    call.respondNoContent()
+}
+
+internal fun Routing.globalRoutes() = route("/global") {
+    getGlobalConfig()
+    putGlobalConfig()
 }

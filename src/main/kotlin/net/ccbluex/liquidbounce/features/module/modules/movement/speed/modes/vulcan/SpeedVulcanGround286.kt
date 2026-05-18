@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
+
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
@@ -26,9 +27,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.anyNotEmpty
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.effect.MobEffects
-import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Vulcan
@@ -36,7 +37,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * @testedOn anticheat-test.com, eu.loyisa.cn
  * @note flags on specific blocks such as fences
  */
-class SpeedVulcanGround286(override val parent: ModeValueGroup<*>) : SpeedBHopBase("VulcanGround286", parent) {
+class SpeedVulcanGround286(parent: ModeValueGroup<*>) : SpeedBHopBase("VulcanGround286", parent) {
 
     @Suppress("unused")
     private val afterJumpHandler = tickHandler {
@@ -64,9 +65,7 @@ class SpeedVulcanGround286(override val parent: ModeValueGroup<*>) : SpeedBHopBa
     }
 
     private fun collidesBottomVertical() =
-        world.getBlockCollisions(player, player.boundingBox.move(0.0, -0.005, 0.0)).any { shape ->
-            shape != Shapes.empty()
-        }
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, -0.005, 0.0)).anyNotEmpty()
 
     @Suppress("unused")
     private val jumpEvent = handler<PlayerJumpEvent> { event ->

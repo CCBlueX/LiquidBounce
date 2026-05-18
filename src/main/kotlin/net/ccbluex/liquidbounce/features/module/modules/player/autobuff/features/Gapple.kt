@@ -29,10 +29,12 @@ import net.minecraft.world.item.Items
 
 internal object Gapple : HealthBasedBuff("Gapple") {
 
+    private val enchanted by boolean("Enchanted", true)
+
     private var forceUseKey = false
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        return stack.`is`(Items.GOLDEN_APPLE)
+        return stack.`is`(Items.GOLDEN_APPLE) || (enchanted && stack.`is`(Items.ENCHANTED_GOLDEN_APPLE))
     }
 
     override suspend fun execute(slot: HotbarItemSlot) {

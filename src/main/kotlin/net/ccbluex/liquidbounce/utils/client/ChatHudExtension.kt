@@ -20,9 +20,10 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
-import net.minecraft.client.GuiMessage
-import net.minecraft.client.GuiMessageTag
 import net.minecraft.client.gui.components.ChatComponent
+import net.minecraft.client.multiplayer.chat.GuiMessage
+import net.minecraft.client.multiplayer.chat.GuiMessageSource
+import net.minecraft.client.multiplayer.chat.GuiMessageTag
 import net.minecraft.network.chat.Component
 
 private val SYSTEM_TEXT: Component = Component.translatable("chat.tag.system")
@@ -48,7 +49,7 @@ private fun getTag() = if (mc.isSingleplayer) {
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
 fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.execute {
-    val guiMessage = GuiMessage(mc.gui.guiTicks, message, null, getTag())
+    val guiMessage = GuiMessage(mc.gui.guiTicks, message, null, GuiMessageSource.SYSTEM_CLIENT, getTag())
     (guiMessage as GuiMessageLineAddition).`liquid_bounce$setId`(id)
     (guiMessage as GuiMessageAddition).`liquid_bounce$setCount`(count)
     this.logChatMessage(guiMessage)

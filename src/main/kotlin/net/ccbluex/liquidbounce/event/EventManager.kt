@@ -127,6 +127,7 @@ import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
+import net.ccbluex.liquidbounce.event.events.ThemeColorChangeEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
@@ -249,6 +250,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     SelectHotbarSlotSilentlyEvent::class.java,
     SpaceSeperatedNamesChangeEvent::class.java,
     ClickGuiScaleChangeEvent::class.java,
+    ThemeColorChangeEvent::class.java,
     BrowserUrlChangeEvent::class.java,
     TagEntityEvent::class.java,
     MouseScrollInHotbarEvent::class.java,
@@ -269,6 +271,9 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     UserLoggedInEvent::class.java,
     UserLoggedOutEvent::class.java,
 )
+
+inline fun <reified E : Event> eventFlow(): SharedFlow<E> =
+    EventManager.eventFlow(E::class.java)
 
 /**
  * A modern and fast event handler using lambda handlers
@@ -334,7 +339,9 @@ object EventManager {
         val target = registry[eventType] ?: return event
 
         event.isCompleted = false
-        for (eventHook in target) {
+        for (eventHook in target.snapshot) {
+            @Suppress("UNCHECKED_CAST")
+            eventHook as EventHook<T>
             if (!eventHook.handlerClass.running) {
                 continue
             }
@@ -369,7 +376,7 @@ object EventManager {
      * The flow receives the event instances after all [EventHook]s are executed.
      * So the [Event.isCompleted] will be true when the event is emitted.
      */
-    fun <T : Event> flowOf(eventClass: Class<T>): SharedFlow<T> {
+    fun <T : Event> eventFlow(eventClass: Class<T>): SharedFlow<T> {
         @Suppress("UNCHECKED_CAST")
         return flows[eventClass] as SharedFlow<T>
     }

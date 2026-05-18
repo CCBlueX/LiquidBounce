@@ -110,7 +110,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         wasScreenOpen = isScreenOpen
 
         return if (isScreenOpen) {
-            val x = (lastTimeScreenOpened.elapsed.toFloat() / 333.0F + 0.1F).coerceIn(0.0F..1.0F)
+            val x = (lastTimeScreenOpened.elapsed.toFloat() / 333.0F + 0.1F).coerceIn(0.0F, 1.0F)
             Easing.QUAD_OUT.transform(x)
         } else {
             1.0F

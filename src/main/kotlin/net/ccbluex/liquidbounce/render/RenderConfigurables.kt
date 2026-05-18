@@ -82,8 +82,8 @@ class GenericEntityHealthColorMode(
 
         val healthPercentage = health / maxHealth
 
-        val red = (255 * (1 - healthPercentage)).toInt().coerceIn(0..255)
-        val green = (255 * healthPercentage).toInt().coerceIn(0..255)
+        val red = (255 * (1 - healthPercentage)).toInt().coerceIn(0, 255)
+        val green = (255 * healthPercentage).toInt().coerceIn(0, 255)
 
         return Color4b(red, green, 0, alpha)
     }

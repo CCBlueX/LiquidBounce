@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.config.gson.adapter.CodecBasedAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.ColorAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.IdentifierWithRegistryAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.InputBindAdapter
+import net.ccbluex.liquidbounce.config.gson.adapter.InstantAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.IntRangeAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.LocalDateAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.LocalDateTimeAdapter
@@ -82,7 +83,7 @@ import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector2fc
 import java.io.File
-import java.nio.file.Path
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -94,7 +95,8 @@ import java.util.function.Supplier
 val fileGson: Gson = GsonBuilder()
     .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(ValueGroup::class.javaObjectType, ValueGroupSerializer.FILE_SERIALIZER)
+    .registerTypeAdapter(ModeValueGroup::class.java, ModeValueGroupSerializer.FILE_SERIALIZER)
+    .registerTypeHierarchyAdapter(ValueGroup::class.java, ValueGroupSerializer.FILE_SERIALIZER)
     .create()
 
 /**
@@ -104,7 +106,8 @@ val publicGson: Gson = GsonBuilder()
     .setPrettyPrinting()
     .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(ValueGroup::class.javaObjectType, ValueGroupSerializer.PUBLIC_SERIALIZER)
+    .registerTypeAdapter(ModeValueGroup::class.java, ModeValueGroupSerializer.FILE_SERIALIZER)
+    .registerTypeHierarchyAdapter(ValueGroup::class.java, ValueGroupSerializer.PUBLIC_SERIALIZER)
     .create()
 
 /**
@@ -113,7 +116,8 @@ val publicGson: Gson = GsonBuilder()
 internal val interopGson: Gson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(ValueGroup::class.javaObjectType, ValueGroupSerializer.INTEROP_SERIALIZER)
+    .registerTypeAdapter(ModeValueGroup::class.java, ModeValueGroupSerializer.INTEROP_SERIALIZER)
+    .registerTypeHierarchyAdapter(ValueGroup::class.java, ValueGroupSerializer.INTEROP_SERIALIZER)
     .create()
 
 /**
@@ -123,7 +127,8 @@ internal val interopGson: Gson = GsonBuilder()
 internal val accessibleInteropGson: Gson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(ValueGroup::class.javaObjectType, ValueGroupSerializer.INTEROP_SERIALIZER)
+    .registerTypeAdapter(ModeValueGroup::class.java, ModeValueGroupSerializer.INTEROP_SERIALIZER)
+    .registerTypeHierarchyAdapter(ValueGroup::class.java, ValueGroupSerializer.INTEROP_SERIALIZER)
     .registerTypeHierarchyAdapter(Theme::class.javaObjectType, ReadOnlyThemeSerializer)
     .registerTypeHierarchyAdapter(HudComponent::class.javaObjectType, ReadOnlyComponentSerializer)
     .registerTypeHierarchyAdapter(Alignment::class.javaObjectType, AlignmentAdapter)
@@ -138,10 +143,11 @@ internal val accessibleInteropGson: Gson = GsonBuilder()
  * @see GsonBuilder.registerTypeHierarchyAdapter
  * @see GsonBuilder.registerTypeAdapter
  */
-internal fun GsonBuilder.registerCommonTypeAdapters() =
+private fun GsonBuilder.registerCommonTypeAdapters() =
     registerTypeAdapter(LocalDate::class.java, LocalDateAdapter)
         .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter)
         .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter)
+        .registerTypeAdapter(Instant::class.java, InstantAdapter)
         .registerTypeAdapter(Regex::class.java, SimpleStringTypeAdapter.KT_REGEX)
         .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
@@ -160,7 +166,6 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(Block::class.javaObjectType, IdentifierWithRegistryAdapter.BLOCK)
         .registerTypeHierarchyAdapter(InputConstants.Key::class.javaObjectType, SimpleStringTypeAdapter.INPUT_KEY)
         .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)
-        .registerTypeAdapter(ModeValueGroup::class.javaObjectType, ModeValueGroupSerializer)
         .registerTypeHierarchyAdapter(Tagged::class.javaObjectType, TaggedSerializer)
         .registerTypeHierarchyAdapter(MinecraftAccount::class.javaObjectType, MinecraftAccountAdapter)
         .registerTypeHierarchyAdapter(Component::class.javaObjectType, CodecBasedAdapter.TRANSLATED_COMPONENT)

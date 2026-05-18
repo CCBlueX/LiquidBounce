@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.attack
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.prepareForAttack
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.canAttackNow
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.additionalRange
@@ -63,13 +63,13 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
         currentAdditionalRange = this.additionalRange.random()
     }
 
-    suspend fun dealWithFakeSwing(target: Entity?) {
+    fun dealWithFakeSwing(target: Entity?) {
         if (!enabled || !canAttackNow()) {
             return
         }
 
         val range = ModuleKillAura.range.interactionRange + currentAdditionalRange
-        val entity = target ?: world.findEnemy(0f..range) ?: return
+        val entity = target ?: world.findEnemy(0f, range) ?: return
         val raycastType = mc.hitResult?.type
 
         if (entity.isRemoved || entity.squaredBoxedDistanceTo(player) > range.pow(2)
@@ -80,7 +80,7 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
 
-        attack {
+        prepareForAttack {
             // [this.crosshairTarget == null] results in a limited attack speed
             if (interaction.hasMissTime()) {
                 mc.missTime = 10

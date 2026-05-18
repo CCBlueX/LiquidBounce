@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.joinAll
+import net.ccbluex.liquidbounce.utils.world.forEachSectionBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
@@ -89,7 +90,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     private val chunkLoadHandler = handler<ChunkLoadEvent>(READ_FINAL_STATE) { event ->
         val chunk = world.getChunk(event.x, event.z).takeUnless { it.isEmpty } ?: return@handler
 
-        loadedChunks.add(ChunkPos.asLong(event.x, event.z))
+        loadedChunks.add(ChunkPos.pack(event.x, event.z))
 
         if (subscribers.isEmpty()) return@handler
 
@@ -109,7 +110,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
                 UpdateRequest.ChunkSectionUpdate(packet).runAsync()
 
             is ClientboundForgetLevelChunkPacket -> mc.execute {
-                loadedChunks.remove(packet.pos.toLong())
+                loadedChunks.remove(packet.pos.pack())
                 UpdateRequest.ChunkUnload(packet.pos).runAsync()
             }
         }
@@ -160,25 +161,10 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         chunk: LevelChunk,
         action: BiConsumer<BlockPos, BlockState>
     ) {
-        // 0 rangeTo chunk.highestNonEmptySection
         Array(chunk.highestFilledSectionIndex + 1) { sectionIndex ->
             scope.launch {
-                val startX = chunk.pos.minBlockX
-                val startZ = chunk.pos.minBlockZ
-                val blockPos = threadLocalBlockPos.get()
-                val section = chunk.getSection(sectionIndex)
-
-                for (sectionY in 0..15) {
-                    // index == (y >> 4) - (bottomY >> 4)
-                    val y = (sectionIndex + (chunk.minY shr 4)) shl 4 or sectionY
-                    for (x in 0..15) {
-                        for (z in 0..15) {
-                            val blockState = section.getBlockState(x, sectionY, z)
-                            val pos = blockPos.set(startX or x, y, startZ or z)
-                            action.accept(pos, blockState)
-                        }
-                    }
-                }
+                val mutable = threadLocalBlockPos.get()
+                chunk.forEachSectionBlock(sectionIndex, mutable, action::accept)
             }
         }.joinAll()
     }

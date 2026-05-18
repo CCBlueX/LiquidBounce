@@ -21,7 +21,10 @@ package net.ccbluex.liquidbounce.render.engine.font
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.awt.Dimension
@@ -121,5 +124,154 @@ class DynamicAtlasAllocatorTest {
         }
 
         assertEquals(availableSliceCount, allocator.availableSlices.size)
+    }
+
+    @Test
+    fun testInitSkipsRemainderSliceBelowMinHeight() {
+        val allocator = DynamicAtlasAllocator(Dimension(32, 10), 6, Dimension(1, 5))
+
+        assertEquals(1, allocator.availableSlices.size)
+        val slice = allocator.availableSlices.single()
+        assertEquals(0, slice.x)
+        assertEquals(0, slice.y)
+        assertEquals(32, slice.width)
+        assertEquals(6, slice.height)
+    }
+
+    @Test
+    fun testAllocateReturnsNullWhenNoSliceFits() {
+        val allocator = DynamicAtlasAllocator(Dimension(16, 16), 16, Dimension(4, 4))
+
+        assertNull(allocator.allocate(Dimension(17, 1)))
+        assertNull(allocator.allocate(Dimension(1, 17)))
+    }
+
+    @Test
+    fun testAllocateSplitsIntoFourSlices() {
+        val allocator = DynamicAtlasAllocator(Dimension(20, 20), 20, Dimension(4, 4))
+
+        val handle = allocator.allocate(Dimension(8, 8))
+        assertNotNull(handle)
+
+        assertEquals(8, handle!!.dimension.x)
+        assertEquals(8, handle.dimension.y)
+        assertEquals(3, allocator.availableSlices.size)
+        assertTrue(allocator.availableSlices.any { it.x == 8 && it.y == 8 && it.width == 12 && it.height == 12 })
+        assertTrue(allocator.availableSlices.any { it.x == 0 && it.y == 8 && it.width == 8 && it.height == 12 })
+        assertTrue(allocator.availableSlices.any { it.x == 8 && it.y == 0 && it.width == 12 && it.height == 8 })
+    }
+
+    @Test
+    fun testAllocateSplitsVerticallyWhenOnlyWidthRemainderFitsMinDimension() {
+        val allocator = DynamicAtlasAllocator(Dimension(20, 10), 10, Dimension(4, 4))
+
+        val handle = allocator.allocate(Dimension(8, 8))
+        assertNotNull(handle)
+
+        assertEquals(8, handle!!.dimension.x)
+        assertEquals(10, handle.dimension.y)
+        assertEquals(1, allocator.availableSlices.size)
+        assertTrue(allocator.availableSlices.any { it.x == 8 && it.y == 0 && it.width == 12 && it.height == 10 })
+    }
+
+    @Test
+    fun testAllocateSplitsHorizontallyWhenOnlyHeightRemainderFitsMinDimension() {
+        val allocator = DynamicAtlasAllocator(Dimension(10, 20), 20, Dimension(4, 4))
+
+        val handle = allocator.allocate(Dimension(8, 8))
+        assertNotNull(handle)
+
+        assertEquals(10, handle!!.dimension.x)
+        assertEquals(8, handle.dimension.y)
+        assertEquals(1, allocator.availableSlices.size)
+        assertTrue(allocator.availableSlices.any { it.x == 0 && it.y == 8 && it.width == 10 && it.height == 12 })
+    }
+
+    @Test
+    fun testAllocateDoesNotSplitWhenRemaindersAreTooSmall() {
+        val allocator = DynamicAtlasAllocator(Dimension(10, 10), 10, Dimension(4, 4))
+
+        val handle = allocator.allocate(Dimension(8, 8))
+        assertNotNull(handle)
+        assertEquals(10, handle!!.dimension.x)
+        assertEquals(10, handle.dimension.y)
+        assertTrue(allocator.availableSlices.isEmpty())
+    }
+
+    @Test
+    fun testFreeCoalescesBackToHighestParent() {
+        val allocator = DynamicAtlasAllocator(Dimension(16, 16), 16, Dimension(4, 4))
+
+        val first = allocator.allocate(Dimension(8, 8))
+        val second = allocator.allocate(Dimension(8, 8))
+
+        assertNotNull(first)
+        assertNotNull(second)
+
+        allocator.free(first!!)
+        allocator.free(second!!)
+
+        assertEquals(1, allocator.availableSlices.size)
+        val topSlice = allocator.availableSlices.single()
+        assertEquals(0, topSlice.x)
+        assertEquals(0, topSlice.y)
+        assertEquals(16, topSlice.width)
+        assertEquals(16, topSlice.height)
+        assertTrue(topSlice.children.isEmpty())
+        assertFalse(topSlice.isAllocated)
+    }
+
+    @Test
+    fun testHandleCannotBeUsedAfterFree() {
+        val allocator = DynamicAtlasAllocator(Dimension(16, 16), 16, Dimension(4, 4))
+
+        val handle = allocator.allocate(Dimension(8, 8))
+        assertNotNull(handle)
+
+        allocator.free(handle!!)
+
+        assertThrows(IllegalStateException::class.java) {
+            handle.pos
+        }
+        assertThrows(IllegalStateException::class.java) {
+            handle.dimension
+        }
+    }
+
+    @Test
+    fun testInitRejectsNonPositiveVerticalCutSize() {
+        assertThrows(IllegalArgumentException::class.java) {
+            DynamicAtlasAllocator(Dimension(16, 16), 0, Dimension(4, 4))
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            DynamicAtlasAllocator(Dimension(16, 16), -1, Dimension(4, 4))
+        }
+    }
+
+    @Test
+    fun testFourSliceCutUsesMinWidthForHorizontalRemainder() {
+        val allocator = DynamicAtlasAllocator(Dimension(20, 20), 20, Dimension(10, 2))
+
+        val handle = allocator.allocate(Dimension(13, 13))
+        assertNotNull(handle)
+
+        // Horizontal remainder is 7 (< min width 10), so allocator must not use 4-way split.
+        assertEquals(20, handle!!.dimension.x)
+        assertEquals(13, handle.dimension.y)
+        assertEquals(1, allocator.availableSlices.size)
+        assertTrue(allocator.availableSlices.any { it.x == 0 && it.y == 13 && it.width == 20 && it.height == 7 })
+    }
+
+    @Test
+    fun testDoubleFreeThrows() {
+        val allocator = DynamicAtlasAllocator(Dimension(16, 16), 16, Dimension(4, 4))
+        val handle = allocator.allocate(Dimension(8, 8))
+        assertNotNull(handle)
+
+        allocator.free(handle!!)
+
+        assertThrows(IllegalStateException::class.java) {
+            allocator.free(handle)
+        }
     }
 }

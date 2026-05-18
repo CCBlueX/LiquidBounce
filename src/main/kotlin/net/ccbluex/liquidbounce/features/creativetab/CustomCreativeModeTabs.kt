@@ -40,29 +40,29 @@ object CustomCreativeModeTabs {
         }
 
         // Check if FabricAPI is installed, otherwise we can't use the page buttons
-        // Use net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
+        // Use net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab
         runCatching {
-            Class.forName("net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup")
+            Class.forName("net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab")
         }.onFailure {
             logger.error("FabricAPI is not installed, please install it to use the page buttons " +
                 "in the creative inventory")
         }.onSuccess {
             runCatching {
-                val itemGroups = arrayOf(
+                val creativeTabs = arrayOf(
                     HeadsCreativeModeTab(),
                     ExploitsCreativeModeTab()
                 )
 
-                for (itemGroup in itemGroups) {
-                    itemGroup.init()
+                for (creativeTab in creativeTabs) {
+                    creativeTab.init()
                 }
                 isInitialized = true
 
-                itemGroups
+                creativeTabs
             }.onFailure { exception ->
-                logger.error("Unable to setup item groups", exception)
-            }.onSuccess { itemGroups ->
-                logger.info("Item Groups: [ ${itemGroups.joinToString { group -> group.plainName }} ]")
+                logger.error("Unable to setup creative tabs", exception)
+            }.onSuccess { creativeTabs ->
+                logger.info("Creative Tabs: [ ${creativeTabs.joinToString { tab -> tab.plainName }} ]")
             }
         }
     }

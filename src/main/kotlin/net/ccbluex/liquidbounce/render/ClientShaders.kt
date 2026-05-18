@@ -51,6 +51,15 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         @JvmField
         val Circle = "circle"("shaders/circle/circle.vsh")
 
+        @JvmField
+        val GuiCircleLut = "gui_circle_lut"("shaders/circle/gui_circle_lut.vsh")
+
+        @JvmField
+        val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.vsh")
+
+        @JvmField
+        val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.vsh")
+
     }
 
     object Fragment : ClientShaders(ShaderType.FRAGMENT) {
@@ -78,6 +87,15 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
 
         @JvmField
         val RoundedRect = "rounded_rect"("shaders/circle/rounded_rect.fsh")
+
+        @JvmField
+        val GuiCircleLut = "gui_circle_lut"("shaders/circle/gui_circle_lut.fsh")
+
+        @JvmField
+        val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.fsh")
+
+        @JvmField
+        val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.fsh")
 
     }
 

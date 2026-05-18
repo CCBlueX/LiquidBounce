@@ -22,10 +22,13 @@ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.core.Holder
+import net.minecraft.core.TypedInstance
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.ItemLike
 import kotlin.math.ceil
 
 @JvmRecord
@@ -36,12 +39,16 @@ data class InventorySwap(val from: ItemSlot, val to: ItemSlot, val priority: Pri
  * [ItemStack]s with same [Item] and [DataComponentPatch] can be merged.
  */
 @JvmRecord
-data class ItemAndComponents(val item: Item, val componentChanges: DataComponentPatch) {
+data class ItemAndComponents @JvmOverloads constructor(
+    val item: Item,
+    val componentsPatch: DataComponentPatch = DataComponentPatch.EMPTY,
+) : TypedInstance<Item> {
     constructor(itemStack: ItemStack) : this(itemStack.item, itemStack.componentsPatch)
 
+    override fun typeHolder(): Holder<Item> = BuiltInRegistries.ITEM.wrapAsHolder(this.item)
+
     fun toItemStack(count: Int): ItemStack {
-        val itemKey = BuiltInRegistries.ITEM.wrapAsHolder(item)
-        return ItemStack(itemKey, count, componentChanges)
+        return ItemStack(this.typeHolder(), count, componentsPatch)
     }
 }
 
@@ -112,33 +119,38 @@ class InventoryCleanupPlan(
                 return
             }
 
-            // Remove
+            // Drop target candidates that are already too large to absorb the smallest remaining stack.
+            // The selected double-click target must be able to consume at least one smaller stack.
             while (stacks.isNotEmpty() && stacks.last().count + stacks[0].count > maxStackSize) {
                 stacks.removeLast()
             }
 
-            // Find the biggest stack that can be merged
+            // Pick the largest remaining stack as the double-click target so the merge frees
+            // up as much inventory space as possible with a single action.
             val itemToDbclick = stacks.removeLastOrNull() ?: return
 
             add(itemToDbclick.slot)
 
             var itemsToRemove = maxStackSize - itemToDbclick.count
 
-            // Remove all small stacks that have been removed by last merge
+            // Simulate how smaller stacks are consumed by the target stack after the double-click.
+            // We mutate the temporary counts so recursive calls operate on the post-merge state.
             while (itemsToRemove > 0 && stacks.isNotEmpty()) {
                 val stack = stacks.first()
 
                 val count = stack.count
+                val transferredItems = count.coerceAtMost(itemsToRemove)
 
-                if (count < itemsToRemove) {
+                if (count <= itemsToRemove) {
                     stacks.removeFirst()
                 } else {
-                    stack.count -= itemsToRemove
+                    stack.count -= transferredItems
                 }
 
-                itemsToRemove -= stack.count
+                itemsToRemove -= transferredItems
             }
 
+            // Continue planning additional merges on the updated stack distribution.
             mergeStacks(stacks, maxStackSize)
         }
 

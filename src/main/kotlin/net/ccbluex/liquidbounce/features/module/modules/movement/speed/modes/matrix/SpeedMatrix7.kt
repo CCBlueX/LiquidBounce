@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
  *
  * @author XeContrast
  */
-class SpeedMatrix7(override val parent : ModeValueGroup<*>) : SpeedBHopBase("Matrix7",parent) {
+class SpeedMatrix7(parent : ModeValueGroup<*>) : SpeedBHopBase("Matrix7",parent) {
 
     @Suppress("unused")
     private val tickHandle = tickHandler {

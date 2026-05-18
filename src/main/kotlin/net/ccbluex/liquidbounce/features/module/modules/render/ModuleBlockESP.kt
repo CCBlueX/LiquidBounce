@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.MapColorMode
-import net.ccbluex.liquidbounce.render.RenderPassRenderState
-import net.ccbluex.liquidbounce.render.addBoxFaces
-import net.ccbluex.liquidbounce.render.addBoxOutlines
+import net.ccbluex.liquidbounce.render.StaticMeshStorage
+import net.ccbluex.liquidbounce.render.addShapeFaces
+import net.ccbluex.liquidbounce.render.addShapeOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -41,12 +41,11 @@ import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Matrix4fc
 import java.util.concurrent.ConcurrentSkipListSet
 
@@ -90,7 +89,13 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         final override val parent get() = modes
 
         protected var useColor = false
-        val dirtyFlag = atomic(true)
+        protected val dirtyFlag = atomic(true)
+
+        fun markDirty() {
+            if (this.running) {
+                dirtyFlag.value = true
+            }
+        }
 
         final override fun enable() {
             dirtyFlag.value = true
@@ -107,7 +112,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
             } else {
                 val color = colorMode.activeMode.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
                 if (colorModulatorAlpha == -1) color else color.alpha(colorModulatorAlpha)
-            }
+            },
         )
     }
 
@@ -117,8 +122,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 outlinesRenderState.clearStates()
             }
         }
-        private val facesRenderState = RenderPassRenderState("${ModuleBlockESP.name} $name Faces")
-        private val outlinesRenderState = RenderPassRenderState("${ModuleBlockESP.name} $name Outlines")
+        private val facesRenderState = StaticMeshStorage("${ModuleBlockESP.name} $name Faces")
+        private val outlinesRenderState = StaticMeshStorage("${ModuleBlockESP.name} $name Outlines")
 
         override fun disable() {
             facesRenderState.clearStates()
@@ -148,7 +153,9 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 ClientRenderPipelines.relativeQuads(useColor),
                 distanceFade,
             ) {
-                getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
+                getDynamicTransformsUniform(
+                    modelView = event.matrixStack.last().pose(),
+                )
             }
         }
 
@@ -169,13 +176,14 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
             facesRenderState.buildMesh(
                 pipeline = ClientRenderPipelines.relativeQuads(useColor),
-            ) { pose ->
-                forEachTrackedBlocks { blockPos, blockState, outlineBox ->
+                origin = player.blockPosition(),
+            ) { pose, origin ->
+                forEachTrackedBlocks { blockPos, blockState, outlineShape ->
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                     pose.withPush {
-                        translate(blockPos)
-                        addBoxFaces(last().pose(), outlineBox, color)
+                        translate(blockPos.subtract(origin))
+                        addShapeFaces(last().pose(), outlineShape, color)
                     }
                 }
             }
@@ -183,13 +191,14 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
             if (outline) {
                 outlinesRenderState.buildMesh(
                     pipeline = ClientRenderPipelines.relativeLines(useColor),
-                ) { pose ->
-                    forEachTrackedBlocks { blockPos, blockState, outlineBox ->
+                    origin = player.blockPosition(),
+                ) { pose, meshOrigin ->
+                    forEachTrackedBlocks { blockPos, blockState, outlineShape ->
                         val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                         pose.withPush {
-                            translate(blockPos)
-                            addBoxOutlines(last().pose(), outlineBox, color)
+                            translate(blockPos.subtract(meshOrigin))
+                            addShapeOutlines(last().pose(), outlineShape, color)
                         }
                     }
                 }
@@ -199,7 +208,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     private class OutlineMode(name: String, type: DrawOutlinesEvent.OutlineType) : Mode(name) {
-        private val renderState = RenderPassRenderState("${ModuleBlockESP.name} $name")
+        private val renderState = StaticMeshStorage("${ModuleBlockESP.name} $name")
 
         override fun disable() {
             renderState.clearStates()
@@ -218,7 +227,9 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 ClientRenderPipelines.outlineQuads(useColor),
                 distanceFade,
             ) {
-                getDynamicTransformsUniform(colorModulatorAlpha = 255)
+                getDynamicTransformsUniform(
+                    colorModulatorAlpha = 255,
+                )
             }
 
             if (dirty) {
@@ -239,16 +250,18 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
             val colorMode = colorMode.activeMode
             useColor = colorMode.isParamSensitive
+            val origin = player.blockPosition()
 
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor),
-            ) { pose ->
-                forEachTrackedBlocks { blockPos, blockState, outlineBox ->
+                origin = origin,
+            ) { pose, meshOrigin ->
+                forEachTrackedBlocks { blockPos, blockState, outlineShape ->
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                     pose.withPush {
-                        translate(blockPos)
-                        addBoxFaces(last().pose(), outlineBox, color?.alpha(255))
+                        translate(blockPos.subtract(meshOrigin))
+                        addShapeFaces(last().pose(), outlineShape, color?.alpha(255))
                     }
                 }
             }
@@ -266,25 +279,25 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     private fun markDirtyForModes() {
-        modes.modes.forEach { it.dirtyFlag.value = true }
+        modes.modes.forEach { it.markDirty() }
     }
 
     private inline fun forEachTrackedBlocks(
-        block: (blockPos: BlockPos, blockState: BlockState, outlineBox: AABB) -> Unit,
+        block: (blockPos: BlockPos, blockState: BlockState, outlineShape: VoxelShape) -> Unit,
     ) {
         for ((blockPos, t) in BlockTracker.iterate()) {
             val blockState = t.state
-            val outlineBox = t.box
-            block(blockPos, blockState, outlineBox)
+            val outlineShape = t.shape
+            block(blockPos, blockState, outlineShape)
         }
     }
 
-    private class TrackedState(@JvmField val state: BlockState, @JvmField val box: AABB)
+    private class TrackedState(@JvmField val state: BlockState, @JvmField val shape: VoxelShape)
 
     private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
             return if (!state.isAir && state.block in targets) {
-                TrackedState(state, state.outlineBox(pos))
+                TrackedState(state, state.getShape(world, pos))
             } else {
                 null
             }

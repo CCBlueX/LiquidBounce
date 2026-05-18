@@ -20,8 +20,11 @@
 @file:Suppress("NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.utils.kotlin
 
+import it.unimi.dsi.fastutil.objects.ObjectArraySet
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import java.util.Collections
+import java.util.function.Predicate
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
     when {
@@ -29,3 +32,18 @@ fun <T> Array<out T>?.unmodifiable(): List<T> =
         size == 1 -> Collections.singletonList(this[0])
         else -> ObjectImmutableList(this)
     }
+
+fun <E> Collection<E>.toOrderedSet(): Set<E> {
+    return when (this.size) {
+        0 -> emptySet()
+        1 -> Collections.singleton(this.first())
+        in 2..4 -> ObjectArraySet(this)
+        else -> ObjectLinkedOpenHashSet(this)
+    }
+}
+
+fun <T> Iterable<Predicate<T>>.matchesAny(t: T): Boolean =
+    any { it.test(t) }
+
+fun <T> Iterable<Predicate<T>>.matchesAll(t: T): Boolean =
+    all { it.test(t) }

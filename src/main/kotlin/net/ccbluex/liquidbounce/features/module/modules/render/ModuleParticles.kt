@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -41,11 +41,11 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
@@ -117,7 +117,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
         chronometer.reset()
 
         val directionVector = (RotationManager.currentRotation ?: player.rotation).directionVector
-        val pos = player.eyePosition.add(directionVector * player.distanceTo(event.entity).toDouble())
+        val pos = player.eyePosition.fma(player.distanceTo(event.entity).toDouble(), directionVector)
 
         repeat(count.random()) {
             particles.add(Particle(pos, builtinParticles.random()))
@@ -127,13 +127,11 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
-            startBatch()
             for (particle in particles) {
                 if (!particle.visible) continue
 
                 particle.render(event.partialTicks)
             }
-            commitBatch()
         }
     }
 
@@ -168,7 +166,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
         SNOWFLAKE("Snowflake", "snowflake"),
         SPARK("Spark", "spark");
 
-        val image = LiquidBounce.resource("particles/$fileName.png").toNativeImage()
+        val image = LiquidBounce.resource("particles/$fileName.png").readNativeImage()
         val texture = this.image.asTexture { "Builtin Particle $tag" }
     }
 
@@ -236,7 +234,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
                     90f
                 }
 
-                with(matrixStack) {
+                with(poseStack) {
                     translate(-size / 2.0, -size / 2.0, 0.0)
                     mulPose(mc.gameRenderer.mainCamera.rotation())
                     scale(-1.0f, 1.0f, -1.0f)

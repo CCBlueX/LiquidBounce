@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
@@ -57,8 +57,7 @@ import net.minecraft.world.phys.Vec3
  * EasyPearl module
  *
  * Throw pearl to where you are looking at.
- **/
-@Suppress("MagicNumber")
+ */
 object ModuleEasyPearl :
     ClientModule("EasyPearl", ModuleCategories.MISC, aliases = listOf("PearlHelper", "PearlAssist", "PearlTP")) {
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
@@ -69,6 +68,7 @@ object ModuleEasyPearl :
 
     var currentTargetRotation : Rotation? = null
         private set
+
     private val enderPearlSlot: HotbarItemSlot?
         get() = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
 
@@ -151,7 +151,7 @@ object ModuleEasyPearl :
         val matrixStack = event.matrixStack
         val pos = getPositionPlayerLookAt(event.partialTicks)?.location ?: return@handler
         val blockPos = pos.toBlockPos()
-        val state = blockPos.getState() ?: return@handler
+        val state = blockPos.state ?: return@handler
 
         renderEnvironmentForWorld(matrixStack) {
             val color =
@@ -204,8 +204,8 @@ object ModuleEasyPearl :
      * get the position player look at
      * @return the position player look at
      */
-    private fun getPositionPlayerLookAt(tickDelta: Float = 0f) =
-        player.pick(1000.0, tickDelta, false)
+    private fun getPositionPlayerLookAt(partialTicks: Float = 0f) =
+        player.pick(1000.0, partialTicks, false)
 
     /**
      * get the target rotation for the target position

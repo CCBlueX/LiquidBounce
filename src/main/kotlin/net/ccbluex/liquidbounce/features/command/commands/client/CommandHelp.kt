@@ -23,12 +23,11 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
-import net.ccbluex.liquidbounce.utils.client.plusAssign
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.minecraft.ChatFormatting
@@ -73,18 +72,14 @@ object CommandHelp : Command.Factory {
             )
     }
 
-    private fun buildAliasesText(cmd: Command): Component {
-        val aliasesText = Component.literal("")
-
+    private fun buildAliasesText(cmd: Command): Component = buildList {
         if (cmd.aliases.isNotEmpty()) {
             cmd.aliases.forEach { alias ->
-                aliasesText += ", ".asPlainText(ChatFormatting.DARK_GRAY)
-                aliasesText += regular(alias).withStyle(ChatFormatting.GRAY)
+                this += ", ".asPlainText(ChatFormatting.DARK_GRAY)
+                this += regular(alias).withStyle(ChatFormatting.GRAY)
                     .onClick(ClickEvent.SuggestCommand(CommandManager.GlobalSettings.prefix + alias))
             }
         }
-
-        return aliasesText
-    }
+    }.asText()
 
 }

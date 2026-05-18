@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.ClientProtocolVersion;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.apache.commons.lang3.ArrayUtils;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Compatibility layer for ViaFabricPlus
@@ -37,7 +38,7 @@ public enum VfpCompatibility {
 
     INSTANCE;
 
-    public ClientProtocolVersion unsafeGetProtocolVersion() {
+    public @Nullable ClientProtocolVersion unsafeGetProtocolVersion() {
         try {
             ProtocolVersion version = ViaFabricPlus.getImpl().getTargetVersion();
             return new ClientProtocolVersion(version.getName(), version.getVersion());
@@ -136,6 +137,28 @@ public enum VfpCompatibility {
         }
     }
 
+    public boolean isOlderThanOrEqual1_15_2() {
+        try {
+            var version = ViaFabricPlus.getImpl().getTargetVersion();
+
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_15_2);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.15.2", throwable);
+            return false;
+        }
+    }
+
+    public boolean isEqual1_21_4() {
+        try {
+            var version = ViaFabricPlus.getImpl().getTargetVersion();
+
+            return version.equalTo(ProtocolVersion.v1_21_4);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.21.4", throwable);
+            return false;
+        }
+    }
+
     public boolean isNewerThanOrEqual1_21_5() {
         try {
             var version = ViaFabricPlus.getImpl().getTargetVersion();
@@ -165,6 +188,17 @@ public enum VfpCompatibility {
             return version.newerThanOrEqualTo(ProtocolVersion.v1_21_9);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.21.9", throwable);
+            return false;
+        }
+    }
+
+    public boolean isOlderThanOrEqual1_21_11() {
+        try {
+            var version = ViaFabricPlus.getImpl().getTargetVersion();
+
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_21_11);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.21.11", throwable);
             return false;
         }
     }

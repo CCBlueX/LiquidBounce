@@ -25,8 +25,8 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -35,18 +35,18 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.item.COMPARING_DESCRIPTION_ID
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.item.ItemEntity
@@ -94,7 +94,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
     }
 
     private val itemStackComparator: Comparator<ItemStack> =
-        PreferStackSize.PREFER_MORE.thenComparing { it.item.descriptionId }
+        PreferStackSize.PREFER_MORE.thenComparing(COMPARING_DESCRIPTION_ID)
 
     @Suppress("unused")
     private enum class MergeMode(
@@ -130,7 +130,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
         }),
 
         /**
-         * [ItemStack]s with same [Item] and same [DataComponentPatch] will be merged.
+         * [ItemStack]s with same [Item] and same [net.minecraft.core.component.DataComponentPatch] will be merged.
          */
         BY_COMPONENTS("ByComponents", { stacks ->
             val map = Object2IntOpenHashMap<ItemAndComponents>()
@@ -210,7 +210,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
             if (Shulker.enabled) {
                 result.stacks.forEach { stack ->
                     val containerComponent = stack[DataComponents.CONTAINER] ?: return@forEach
-                    val stacks = containerComponent.nonEmptyStream().toTypedArray()
+                    val stacks = containerComponent.nonEmptyItemCopyStream().toTypedArray()
                     if (stacks.isEmpty()) {
                         return@forEach
                     }

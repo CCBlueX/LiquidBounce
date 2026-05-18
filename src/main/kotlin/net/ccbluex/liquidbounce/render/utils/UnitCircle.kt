@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.render.utils
 
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.math.fastCos
+import net.ccbluex.liquidbounce.utils.math.fastSin
 import net.minecraft.util.Mth
 
 object UnitCircle {

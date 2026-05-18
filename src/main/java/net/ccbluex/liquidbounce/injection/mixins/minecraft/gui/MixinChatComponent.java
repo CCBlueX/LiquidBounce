@@ -23,9 +23,11 @@ import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.interfaces.ChatComponentAddition;
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition;
-import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.util.ArrayListDeque;
 import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.*;
@@ -37,6 +39,10 @@ import java.util.List;
 
 @Mixin(ChatComponent.class)
 public abstract class MixinChatComponent implements ChatComponentAddition {
+
+    @Shadow
+    @Final
+    private Minecraft minecraft;
 
     @Mutable
     @Shadow
@@ -60,9 +66,6 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
     @Shadow
     public abstract void scrollChat(int scroll);
 
-//    @Shadow
-//    protected abstract int getWidth();
-
     @Unique
     private int chatY = -1;
 
@@ -81,7 +84,7 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
      * }
      * </pre>
      */
-    @ModifyExpressionValue(method = "addMessageToQueue(Lnet/minecraft/client/GuiMessage;)V", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", ordinal = 0, remap = false))
+    @ModifyExpressionValue(method = "addMessageToQueue", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", ordinal = 0, remap = false))
     public int hookGetSize2(int original) {
         var betterChat = ModuleBetterChat.INSTANCE;
         if (betterChat.getRunning() && betterChat.getInfiniteLength()) {
@@ -107,22 +110,22 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
      * forwarded and if {@link ModuleBetterChat} is enabled, older lines won't be removed.
      */
     @Inject(method = "addMessageToDisplayQueue", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;isChatFocused()Z", shift = At.Shift.BEFORE), cancellable = true)
-    public void hookAddVisibleMessage(GuiMessage message, CallbackInfo ci, @Local List<FormattedCharSequence> list) {
+    public void hookAddVisibleMessage(GuiMessage message, CallbackInfo ci, @Local(name = "lines") List<FormattedCharSequence> lines) {
         var focused = isChatFocused();
-        var removable = GuiMessageLineAddition.class.cast(message);
+        var removable = ((GuiMessageLineAddition) (Object) message);
         //noinspection DataFlowIssue
         var id = removable.liquid_bounce$getId();
 
-        for(int j = 0; j < list.size(); ++j) {
-            FormattedCharSequence orderedText = list.get(j);
+        for(int j = 0; j < lines.size(); ++j) {
+            FormattedCharSequence orderedText = lines.get(j);
             if (focused && chatScrollbarPos > 0) {
                 newMessageSinceScroll = true;
                 scrollChat(1);
             }
 
-            boolean last = j == list.size() - 1;
+            boolean last = j == lines.size() - 1;
             //noinspection DataFlowIssue
-            var visible = new GuiMessage.Line(message.addedTime(), orderedText, message.tag(), last);
+            var visible = new GuiMessage.Line(message, orderedText, last);
             ((GuiMessageLineAddition) (Object) visible).liquid_bounce$setId(id);
             trimmedMessages.addFirst(visible);
         }
@@ -137,32 +140,85 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
         ci.cancel();
     }
 
-//    @Inject(method = "render(Lnet/minecraft/client/gui/hud/ChatHud$Backend;IIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;getLineHeight()I", ordinal = 0))
-//    public void hookStoreChatY(ChatHud.Backend drawer, int windowHeight, int currentTick, boolean expanded, CallbackInfo ci, @Local(ordinal = 7) int m) {
-//        this.chatY = m;
-//    }
-//
-//    @ModifyArgs(method = "render(Lnet/minecraft/client/gui/hud/ChatHud$Backend;IIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V", ordinal = 0))
-//    private void modifyArgs(
-//            Args args,
-//            @Local(ordinal = 1, argsOnly = true) int mouseX,
-//            @Local(ordinal = 2, argsOnly = true) int mouseY
-//    ) {
-//        if(!(ModuleBetterChat.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getHighlight())) {
-//            return;
-//        }
-//
-//        var hovering = mouseX >= 0 && mouseX <= ((int) args.get(2)) -4 &&
-//                mouseY >= ((int)args.get(1)+1) && mouseY <= ((int)args.get(3));
-//
-//        if (hovering) {
-//            args.set(4, 140 << 24);
-//        }
-//    }
+    @Inject(method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;IIILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;Z)V", at = @At("TAIL"))
+    private void hookRenderCopyHighlight(
+        GuiGraphicsExtractor graphics,
+        Font font,
+        int tickCount,
+        int globalMouseX,
+        int globalMouseY,
+        ChatComponent.DisplayMode displayMode,
+        boolean changeCursorOnInsertions,
+        CallbackInfo ci
+    ) {
+        if (!displayMode.foreground) {
+            return;
+        }
+
+        var betterChat = ModuleBetterChat.INSTANCE;
+        if (!(betterChat.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getHighlight())) {
+            return;
+        }
+
+        if (trimmedMessages.isEmpty()) {
+            return;
+        }
+
+        var accessor = (MixinChatComponentAccessor) this;
+        double chatScale = accessor.invokeGetScale();
+        if (chatScale <= 0.0) {
+            return;
+        }
+
+        int chatWidth = (int) Math.ceil(accessor.invokeGetWidth() / chatScale);
+        double localMouseX = globalMouseX / chatScale - 4.0;
+        if (localMouseX < 0.0 || localMouseX > chatWidth) {
+            return;
+        }
+
+        int lineHeight = accessor.invokeGetLineHeight();
+        if (lineHeight <= 0) {
+            return;
+        }
+
+        int guiHeight = minecraft.getWindow().getGuiScaledHeight();
+        int chatBottom = (int) Math.floor((guiHeight - 40) / chatScale);
+        double localMouseY = chatBottom - globalMouseY / chatScale;
+        if (localMouseY < 0.0) {
+            return;
+        }
+
+        int lineIndex = (int) Math.floor(localMouseY / lineHeight);
+        int visibleLineCount = Math.min(accessor.invokeGetLinesPerPage(), trimmedMessages.size() - chatScrollbarPos);
+        if (lineIndex < 0 || lineIndex >= visibleLineCount) {
+            return;
+        }
+
+        int messageIndex = lineIndex + chatScrollbarPos;
+        if (messageIndex < 0 || messageIndex >= trimmedMessages.size()) {
+            return;
+        }
+
+        var messageBounds = ModuleBetterChat.resolveMessageBounds(trimmedMessages, messageIndex);
+        int visibleStart = chatScrollbarPos;
+        int visibleEnd = visibleStart + visibleLineCount - 1;
+        int highlightedStart = Math.max(messageBounds.getStart(), visibleStart);
+        int highlightedEnd = Math.min(messageBounds.getEndInclusive(), visibleEnd);
+        if (highlightedStart > highlightedEnd) {
+            return;
+        }
+
+        int startLineIndex = highlightedStart - visibleStart;
+        int endLineIndex = highlightedEnd - visibleStart;
+        int left = (int) Math.floor(4.0 * chatScale);
+        int right = (int) Math.ceil((chatWidth + 4.0) * chatScale);
+        int top = (int) Math.floor((chatBottom - (endLineIndex + 1) * lineHeight) * chatScale);
+        int bottom = (int) Math.ceil((chatBottom - startLineIndex * lineHeight) * chatScale);
+        graphics.fill(left, top, right, bottom, 0x4422AAFF);
+    }
 
     @Override
     public int liquidbounce_getChatY() {
         return chatY;
     }
 }
-

@@ -26,8 +26,13 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.item.createItem
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
+import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.component.ResolvableProfile
+import java.util.UUID
 
 /**
  * CommandItemSkull
@@ -48,26 +53,31 @@ object CommandItemSkull : Command.Factory, MinecraftShortcuts {
                     .build()
             )
             .handler {
-                val name = args[0] as String
-
-                if (!player.isCreative) {
+                if (!player.hasInfiniteMaterials()) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
-                val itemStack = createItem("minecraft:player_head[profile=$name]")
-                val emptySlot = player.inventory!!.freeSlot
+                val name = args[0] as String
 
+                val itemStack = ItemStack(Items.PLAYER_HEAD)
+                    .apply {
+                        val profile = runCatching { UUID.fromString(name) }
+                            .fold(
+                                onSuccess = { ResolvableProfile.createUnresolved(it) },
+                                onFailure = { ResolvableProfile.createUnresolved(name) }
+                            )
+                        DataComponentPatch.builder()
+                            .set(DataComponents.PROFILE, profile)
+                            .build()
+                            .also { applyComponents(it) }
+                    }
+
+                val emptySlot = player.inventory.freeSlot
                 if (emptySlot == -1) {
                     throw CommandException(command.result("noEmptySlot"))
                 }
 
-                player.inventory!!.setItem(emptySlot, itemStack)
-                mc.connection!!.send(
-                    ServerboundSetCreativeModeSlotPacket(
-                        if (emptySlot < 9) emptySlot + 36 else emptySlot,
-                        itemStack
-                    )
-                )
+                player.setInventoryItemCreative(emptySlot, itemStack)
                 chat(regular(command.result("skullGiven", variable(name))), command)
             }
             .build()

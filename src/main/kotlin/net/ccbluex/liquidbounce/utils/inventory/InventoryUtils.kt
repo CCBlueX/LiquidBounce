@@ -24,20 +24,22 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.useItem
-import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
-import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.item.durability
+import net.ccbluex.liquidbounce.utils.item.getDestroySpeedWithEnchantment
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
 import java.util.SortedSet
+import java.util.function.BiPredicate
+import java.util.function.ToDoubleFunction
 
 fun hasInventorySpace() = player.inventory.nonEquipmentItems.any { it.isEmpty }
 
@@ -73,27 +75,7 @@ fun useHotbarSlotOrOffhand(
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): InteractionResult {
     SilentHotbar.selectSlotSilently(requester, slot, ticksUntilReset)
-    return useItem(slot.useHand, yRot, xRot, swingMode)
-}
-
-@JvmOverloads
-fun useItem(
-    hand: InteractionHand,
-    yRot: Float = RotationManager.currentRotation?.yRot ?: player.yRot,
-    xRot: Float = RotationManager.currentRotation?.xRot ?: player.xRot,
-    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
-): InteractionResult {
-    val result = interaction.useItem(player, hand, yRot, xRot)
-
-    if (result.consumesAction()) {
-        if (result.shouldSwingHand()) {
-            swingMode.accept(hand)
-        }
-
-        mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
-    }
-
-    return result
+    return net.ccbluex.liquidbounce.utils.entity.useItem(slot.useHand, yRot, xRot, swingMode)
 }
 
 internal fun findBlocksEndingWith(vararg targets: String): SortedSet<Block> =
@@ -103,3 +85,33 @@ internal fun findBlocksEndingWith(vararg targets: String): SortedSet<Block> =
 
 val AbstractContainerMenu.typeOrNull: MenuType<*>?
     get() = try { type } catch (_: UnsupportedOperationException) { null }
+
+/**
+ * Finds the best slot in this iterable for mining [blockState] using `mc.player` as baseline.
+ *
+ * The result depends on current player context (e.g. creative state and durability filtering),
+ * then ranks candidates by destroy speed and nearby-slot preference.
+ */
+fun <T : ItemSlot> Iterable<T>.findBestToolToMineBlock(
+    blockState: BlockState,
+    ignoreDurability: Boolean = true,
+    predicate: BiPredicate<ItemStack, BlockState> = BiPredicate { _, _ -> true },
+): T? {
+    val player = mc.player ?: return null
+
+    val candidates = filter {
+        val stack = it.itemStack
+        val durabilityCheck = (ignoreDurability || (stack.durability > 2 || stack.maxDamage <= 0))
+        !player.isCreative && durabilityCheck && predicate.test(stack, blockState)
+    }
+
+    if (candidates.size > 1) {
+        return candidates.maxWith(
+            Comparator.comparingDouble<T>(ToDoubleFunction {
+                it.itemStack.getDestroySpeedWithEnchantment(blockState).toDouble()
+            }).thenDescending(ItemSlot.PREFER_NEARBY)
+        )
+    }
+
+    return candidates.firstOrNull()
+}

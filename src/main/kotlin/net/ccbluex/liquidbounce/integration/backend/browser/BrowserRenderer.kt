@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.lang.AutoCloseable
 
 /**
@@ -93,7 +93,7 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
     /**
      * Renders a browser tab with proper scaling
      */
-    private fun render(context: GuiGraphics) {
+    private fun render(context: GuiGraphicsExtractor) {
         val texture = browser.texture ?: return
         val scaleFactor = mc.window.guiScale.toFloat()
 
@@ -109,7 +109,7 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
 
     @Suppress("LongParameterList")
     private fun renderTexture(
-        context: GuiGraphics,
+        context: GuiGraphicsExtractor,
         texture: BrowserTexture,
         x: Float,
         y: Float,

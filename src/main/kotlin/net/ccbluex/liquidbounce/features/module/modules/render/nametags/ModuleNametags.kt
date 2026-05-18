@@ -24,17 +24,17 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.minecraft.client.gui.GuiGraphics
+import net.ccbluex.liquidbounce.utils.render.entity
+import net.ccbluex.liquidbounce.utils.render.isCustom
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.renderer.entity.state.EntityRenderState
 import org.joml.Vector2f
-import org.joml.Vector2fc
 
 /**
  * Nametags module
@@ -46,17 +46,16 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
     init {
         tree(NametagTextFormatter)
         tree(NametagEquipment)
-        tree(NametagEnchantmentRenderer)
     }
 
-    internal val border by boolean("Border", true)
+    internal val borderWidth by float("BorderWidth", 1f, 0f..8f)
+    internal val backgroundRadius by float("BackgroundRadius", 2f, 0f..16f)
     internal val scale = curve(
         "Scale",
         mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
         xAxis = "Distance" axis 0f..200f,
         yAxis = "Scale" axis 0.25f..4f,
     )
-    internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
 
     val fontRenderer
         get() = FontManager.FONT_RENDERER
@@ -85,9 +84,7 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
         event.context.drawNametags(event.tickDelta)
     }
 
-    private fun GuiGraphics.drawNametags(tickDelta: Float) {
-        drawnEnchantmentAreas.clear()
-
+    private fun GuiGraphicsExtractor.drawNametags(tickDelta: Float) {
         for (nametagInfo in nametagsToRender) {
             val (x, y) = nametagInfo.calculateScreenPos(tickDelta) ?: continue
 
@@ -115,12 +112,11 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
     }
 
     private val NAMETAG_COMPARATOR: Comparator<NametagRenderState> = Comparator.comparingDouble { nametag ->
-        nametag.entity!!.position().cameraDistanceSq()
+        nametag.entity?.position()?.cameraDistanceSq() ?: Double.POSITIVE_INFINITY
     }
 
     fun shouldRenderVanillaNametag(state: EntityRenderState): Boolean {
-        return !running || !((state as EntityRenderStateAddition).`liquid_bounce$getEntity`()
-            ?: return true).shouldBeShown()
+        return !running || !(state.entity ?: return true).shouldBeShown() || state.isCustom
     }
 
 }

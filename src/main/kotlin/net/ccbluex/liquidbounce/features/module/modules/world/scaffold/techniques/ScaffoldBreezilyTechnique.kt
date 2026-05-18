@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
@@ -62,8 +63,8 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
     ): BlockPlacementTarget? {
         val searchOptions = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
-                NORMAL_INVESTIGATION_OFFSETS,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                BlockPosOffsets.NORMAL.offsets,
+                BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos),
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = bestStack,
@@ -137,7 +138,7 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
             return getRotationForNoInput(target)
         }
 
-        val direction = getMovementDirectionOfInput(player.yRot, rawInput) + 180
+        val direction = player.getMovementDirectionOfInput(rawInput) + 180
 
         // Round to 45°-steps (NORTH, NORTH_EAST, etc.)
         val movingYaw = round(direction / 45) * 45

@@ -1,10 +1,9 @@
-<img class="watermark" src="img/lb-logo.svg" alt="watermark" />
+<script lang="ts">
+    import LiquidBounceLogo from "../../../components/LiquidBounceLogo.svelte";
+</script>
 
-<style lang="scss">
-    .watermark {
-        //position: fixed;
-        //top: 15px;
-        //left: 15px;
-        width: 165px;
-    }
-</style>
+<LiquidBounceLogo
+    width="165px"
+    height="61.8917px"
+    badgeFill="var(--accent-color)"
+/>

@@ -26,17 +26,16 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.add
+import net.ccbluex.liquidbounce.utils.math.vertices
 import net.ccbluex.liquidbounce.utils.math.firstHit
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.geometry.PlaneSection
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.minecraft.world.entity.projectile.arrow.Arrow
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.AABB
@@ -49,18 +48,6 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
-
-val AABB.edgePoints: Array<Vec3>
-    get() = arrayOf(
-        Vec3(minX, minY, minZ),
-        Vec3(minX, minY, maxZ),
-        Vec3(minX, maxY, minZ),
-        Vec3(minX, maxY, maxZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(maxX, minY, maxZ),
-        Vec3(maxX, maxY, minZ),
-        Vec3(maxX, maxY, maxZ),
-    )
 
 /**
  * Creates rotation matrices: The first allows to turn the vec (1.0, 0.0, 0.0) into the given [vec].
@@ -116,7 +103,8 @@ inline fun projectPointsOnBox(
 
     // Find a point between the virtual eye and the target box such that every edge point of the box is behind it
     // (from the perspective of the virtual eye). This position is used to craft the targeting frame
-    val targetFrameOrigin = targetBox.edgePoints
+    val targetVertices = targetBox.vertices
+    val targetFrameOrigin = targetVertices
         .mapToArray { playerToBoxLine.getNearestPointTo(it) }
         .minBy { it.distanceToSqr(virtualEye) }
         .lerp(virtualEye, 0.1)
@@ -124,7 +112,7 @@ inline fun projectPointsOnBox(
     val plane = NormalizedPlane(targetFrameOrigin, playerToBoxLine.direction)
     val (toMatrix, backMatrix) = getRotationMatricesForVec(plane.normalVec)
 
-    val projectedAndRotatedPoints = targetBox.edgePoints.mapToArray {
+    val projectedAndRotatedPoints = targetVertices.mapToArray {
         plane.intersection(Line.fromPoints(virtualEye, it))!!.subtract(targetFrameOrigin).toVector3f().mul(backMatrix)
     }
 
@@ -174,7 +162,6 @@ inline fun projectPointsOnBox(
  * @param visibilityPredicate An optional predicate to determine if a given point is visible
  * @return the best visible spot found or `null`
  */
-@Suppress("detekt:complexity.LongParameterList")
 fun findVisiblePointFromVirtualEye(
     virtualEyes: Vec3,
     box: AABB,
@@ -194,7 +181,7 @@ fun findVisiblePointFromVirtualEye(
 
     for (spot in points) {
         val vecFromEyes = spot - virtualEyes
-        val raycastTarget = vecFromEyes * 2.0 + virtualEyes
+        val raycastTarget = virtualEyes.fma(2.0, vecFromEyes)
         val spotOnBox = box.firstHit(virtualEyes, raycastTarget) ?: continue
 
         val rayStart = spotOnBox - vecFromEyes.withLength(rangeToTest)
@@ -217,7 +204,7 @@ fun findVisiblePointFromVirtualEye(
 object ArrowVisibilityPredicate : VisibilityPredicate {
     override fun isVisible(eyesPos: Vec3, targetSpot: Vec3): Boolean {
         val arrowEntity = Arrow(
-            world, eyesPos.x, targetSpot.y, targetSpot.z, ItemStack(Items.ARROW),
+            world, eyesPos.x, eyesPos.y, eyesPos.z, Items.ARROW.defaultInstance,
             null)
 
         return world.clip(

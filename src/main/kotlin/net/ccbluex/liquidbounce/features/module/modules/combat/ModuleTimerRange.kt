@@ -89,17 +89,17 @@ object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
     }
 
     private fun updateTimerSpeed(): Float? {
-        if (world.findEnemy(0f..distanceToPause) != null) {
+        if (world.findEnemy(0f, distanceToPause) != null) {
             return 1.0f
         }
 
-        if (world.findEnemy(0f..distanceToStartWorking) == null
+        if (world.findEnemy(0f, distanceToStartWorking) == null
             || chance != 100 && Random.nextInt(100) > chance)
         {
             return null
         }
 
-        if (world.findEnemy(0f..distanceToSpeedUp) == null) {
+        if (world.findEnemy(0f, distanceToSpeedUp) == null) {
             return normalSpeed
         }
 

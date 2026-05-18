@@ -27,12 +27,14 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitSeconds
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue.presets
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
@@ -59,6 +61,10 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
     }
 
     val repeatable = tickHandler {
+        if (ModuleAutoQueue.shouldPause) {
+            return@tickHandler
+        }
+
         val inGameHud = mc.gui ?: return@tickHandler
         val playerListHeader = inGameHud.tabList.header
 
@@ -117,6 +123,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
     }
 
     override fun disable() {
+        SilentHotbar.resetSlot(this)
         super.disable()
 
         inMatch = false
@@ -138,7 +145,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
             notification("AutoPlay", "Could not find Duels NPC", NotificationEvent.Severity.ERROR)
         } else {
             // I mean, we do not need any rotation for the lobby, right?
-            interaction.interact(player, duelsEntity, InteractionHand.MAIN_HAND)
+            interactEntity(duelsEntity)
             notification("AutoPlay", "Interacted with Duels NPC", NotificationEvent.Severity.INFO)
         }
 
@@ -152,7 +159,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
                 ModuleKillAura.enabled = false
             }
 
-            val headSlot = Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.hotbarSlot ?: return
+            val headSlot = Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot ?: return
 
             if (headSlot != player.inventory.selectedSlot) {
                 SilentHotbar.selectSlotSilently(this, headSlot, 20)

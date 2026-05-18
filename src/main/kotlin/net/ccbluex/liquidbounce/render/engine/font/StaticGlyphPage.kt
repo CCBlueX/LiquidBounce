@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
-import net.ccbluex.liquidbounce.render.engine.FontId
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
 import net.ccbluex.liquidbounce.render.engine.font.StaticGlyphPage.Companion.createGlyphPageWithFittingCharacters
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -63,7 +62,7 @@ class StaticGlyphPage(
          */
         @JvmStatic
         fun createGlyphPageWithFittingCharacters(chars: List<FontGlyph>): Pair<StaticGlyphPage, List<FontGlyph>> {
-            val result: Pair<GlyphPlacementResult, List<FontGlyph>>? = tryCharacterPlacementWithShrinking(chars)
+            val result = tryCharacterPlacementWithShrinking(chars)
 
             val (res, remainingGlyphs) = result ?: error("Unable to create static atlas.")
 

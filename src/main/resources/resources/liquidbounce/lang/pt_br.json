@@ -100,7 +100,7 @@
   "liquidbounce.command.give.parameter.amount.description": "Valor opcional.",
   "liquidbounce.command.give.result.mustBeCreative": "Criativo requirido!",
   "liquidbounce.command.give.result.noEmptySlot": "Não espaçõs vazios no seu inventario.",
-  "liquidbounce.command.give.result.itemGiven": "Deu a você %s * %d.",
+  "liquidbounce.command.give.result.itemGiven": "Deu a você %s * %s.",
   "liquidbounce.command.rename.description": "Renomeia o item segurado.",
   "liquidbounce.command.rename.parameter.name.description": "Novo nome requirido.",
   "liquidbounce.command.rename.result.mustBeCreative": "Criativo requirido!",

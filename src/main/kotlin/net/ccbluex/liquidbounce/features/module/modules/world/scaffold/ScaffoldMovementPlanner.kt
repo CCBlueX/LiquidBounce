@@ -22,12 +22,8 @@ import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -52,13 +48,7 @@ object ScaffoldMovementPlanner {
      * This function calculates this ideal line that the player should move on.
      */
     fun getOptimalMovementLine(directionalInput: DirectionalInput): Line? {
-        val direction =
-            chooseDirection(
-                getMovementDirectionOfInput(
-                    RotationManager.currentRotation?.yRot ?: player.yRot,
-                    directionalInput,
-                ),
-            )
+        val direction = chooseDirection(player.getMovementDirectionOfInput(directionalInput))
 
         // Is this a good way to find the block center?
         val blockUnderPlayer = findBlockPlayerStandsOn() ?: return null
@@ -113,10 +103,10 @@ object ScaffoldMovementPlanner {
 
     private fun debugLastPlacedBlocks(lastPlacedBlocksToConsider: List<BlockPos>) {
         lastPlacedBlocksToConsider.forEachIndexed { idx, pos ->
-            val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 255.0).toInt()
+            val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 200.0).toInt()
 
             ModuleScaffold.debugGeometry("lastPlacedBlock$idx") {
-                ModuleDebug.DebuggedBox(AABB(pos), Color4b(alpha, alpha, 255, 127))
+                ModuleDebug.DebuggedBox(AABB(pos), Color4b(133, 155, 255, alpha))
             }
         }
     }
@@ -136,7 +126,7 @@ object ScaffoldMovementPlanner {
             for (zOffset in offsetsToTry) {
                 val playerPos = player.position().toBlockPos(xOffset, -1.0, zOffset)
 
-                val isEmpty = playerPos.getState()?.getCollisionShape(world, playerPos)?.isEmpty ?: true
+                val isEmpty = playerPos.state?.getCollisionShape(world, playerPos)?.isEmpty ?: true
 
                 if (!isEmpty) {
                     candidates.add(playerPos)
@@ -175,9 +165,9 @@ object ScaffoldMovementPlanner {
         // Round the angle to the nearest integer, which represents the direction.
         val newDirectionNumber = round(currentDirection)
         // Do this transformation backwards, and we have an angle that follows one of the 8 directions.
-        val newDirectionAngle = Mth.wrapDegrees((newDirectionNumber - 4) / 4.0F * 180.0F + 90.0F).toRadians()
+        val newDirectionAngle = Mth.wrapDegrees((newDirectionNumber - 4) / 4.0F * 180.0F)
 
-        return Vec3(newDirectionAngle.fastCos().toDouble(), 0.0, newDirectionAngle.fastSin().toDouble())
+        return Vec3.directionFromRotation(0.0F, newDirectionAngle)
     }
 
     /**

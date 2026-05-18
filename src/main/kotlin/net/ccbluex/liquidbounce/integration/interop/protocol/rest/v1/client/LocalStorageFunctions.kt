@@ -18,13 +18,11 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.LocalStorageData.Item
+import net.ccbluex.netty.http.routing.Routing
 
 /**
  * LocalStorage RestAPI
@@ -37,60 +35,60 @@ import net.ccbluex.netty.http.util.httpOk
  * Especially because we have not enabled the CEF local storage
  */
 
-// GET /api/v1/client/localStorage
-fun getLocalStorage(requestObject: RequestObject) = with(requestObject) {
-    val key = queryParams["key"] ?: return@with httpForbidden("No key")
-    val value = PersistentLocalStorage.map[key] ?: return@with httpForbidden("No value for key $key")
+private data class LocalStorageData(val items: List<Item>) {
+    data class Item(val key: String, val value: String)
+}
 
-    httpOk(JsonObject().apply {
+// GET /api/v1/client/localStorage
+private fun Routing.getLocalStorage() = get {
+    val key = call.queryParameters["key"] ?: call.forbidden("No key")
+    val value = PersistentLocalStorage.map[key] ?: call.forbidden("No value for key $key")
+
+    call.respond(JsonObject().apply {
         addProperty("value", value)
     })
 }
 
 // PUT /api/v1/client/localStorage
-fun putLocalStorage(requestObject: RequestObject) = with(requestObject) {
-    val body = asJson<JsonObject>()
-    val key = body["key"]?.asString ?: return@with httpForbidden("No key")
-    val value = body["value"]?.asString ?: return@with httpForbidden("No value")
+private fun Routing.putLocalStorage() = put {
+    val payload = call.receive<JsonObject>()
+    val key = payload["key"]?.asString ?: call.forbidden("No key")
+    val value = payload["value"]?.asString ?: call.forbidden("No value")
 
     PersistentLocalStorage.map[key] = value
-    httpNoContent()
+    call.respondNoContent()
 }
 
 // DELETE /api/v1/client/localStorage
-fun deleteLocalStorage(requestObject: RequestObject) = with(requestObject) {
-    val key = queryParams["key"] ?: return@with httpForbidden("No key")
+private fun Routing.deleteLocalStorage() = delete {
+    val key = call.queryParameters["key"] ?: call.forbidden("No key")
     PersistentLocalStorage.map.remove(key)
-    httpNoContent()
+    call.respondNoContent()
 }
 
 // GET /api/v1/client/localStorage/all
-fun getAllLocalStorage(requestObject: RequestObject) = with(requestObject) {
-    httpOk(JsonObject().apply {
-        val jsonArray = JsonArray()
-
-        PersistentLocalStorage.map.forEach { (key, value) ->
-            jsonArray.add(JsonObject().apply {
-                addProperty("key", key)
-                addProperty("value", value)
-            })
-        }
-
-        add("items", jsonArray)
-    })
+private fun Routing.getAllLocalStorage() = get {
+    call.respond(LocalStorageData(PersistentLocalStorage.map.map { (k, v) -> Item(k, v) }), interopGson)
 }
 
 // PUT /api/v1/client/localStorage/all
-fun putAllLocalStorage(requestObject: RequestObject) = with(requestObject) {
-    data class Item(val key: String, val value: String)
-    data class StoragePutRequest(val items: List<Item>)
-
-    val body = asJson<StoragePutRequest>()
+private fun Routing.putAllLocalStorage() = put {
+    val payload = call.receive<LocalStorageData>()
 
     PersistentLocalStorage.map.clear()
-    body.items.forEach { item ->
+    payload.items.forEach { item ->
         PersistentLocalStorage.map[item.key] = item.value
     }
 
-    httpNoContent()
+    call.respondNoContent()
+}
+
+internal fun Routing.localStorageRoutes() = route("/localStorage") {
+    getLocalStorage()
+    putLocalStorage()
+    deleteLocalStorage()
+    route("/all") {
+        getAllLocalStorage()
+        putAllLocalStorage()
+    }
 }

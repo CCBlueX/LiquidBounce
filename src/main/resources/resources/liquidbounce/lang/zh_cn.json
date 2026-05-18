@@ -115,7 +115,7 @@
   "liquidbounce.command.give.description": "给自己一个物品。",
   "liquidbounce.command.give.parameter.amount.description": "数量(可选)。",
   "liquidbounce.command.give.parameter.item.description": "物品名字。",
-  "liquidbounce.command.give.result.itemGiven": "已获得 %s * %d。",
+  "liquidbounce.command.give.result.itemGiven": "已获得 %s * %s。",
   "liquidbounce.command.give.result.mustBeCreative": "需要创造模式！",
   "liquidbounce.command.give.result.noEmptySlot": "背包已满。",
   "liquidbounce.command.help.description": "列出所有可用命令。",
@@ -459,6 +459,7 @@
   "liquidbounce.module.antiStaff.messages.staffsLoaded": "%s 管理名单已加载，适用于 %s。",
   "liquidbounce.module.antiStaff.messages.vanishClear": "没有发现消失的玩家。",
   "liquidbounce.module.particles.description": "攻击实体时显示粒子效果。",
+  "liquidbounce.module.hitFX.description": "攻击目标时触发特殊效果。",
   "liquidbounce.module.autoAccount.description": "自动在离线服务器上验证身份。",
   "liquidbounce.module.autoArmor.description": "自动装备背包中最好的盔甲。",
   "liquidbounce.module.autoArmor.value.delay.description": "穿戴延迟。",
@@ -506,6 +507,7 @@
   "liquidbounce.module.clip.messages.whoosh": "嗖嗖！",
   "liquidbounce.module.combineMobs.description": "合并挤在一起的实体。",
   "liquidbounce.module.criticals.description": "每次攻击实体的时候自动暴击。",
+  "liquidbounce.module.crosshair.description": "更改准星样式。",
   "liquidbounce.module.crystalAura.description": "自动在目标附近放置并摧毁末影水晶。",
   "liquidbounce.module.damage.description": "对自己造成特定伤害。",
   "liquidbounce.module.damageParticles.description": "在实体生命值变化时显示变化情况。",
@@ -759,6 +761,7 @@
   "liquidbounce.module.anchor.description": "让你移动到水晶PvP的安全点里。",
   "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect 将尝试在你下次加入任何服务器/游戏时，通过监测 ping 参数来检测服务器的反作弊系统。请注意，结果可能不准确，特别是当服务器上有多个反作弊系统时。",
   "liquidbounce.module.autoWindCharge.description": "在按下跳跃键时自动用风弹加速跳跃。",
+  "liquidbounce.module.autoMobHeal.description": "自动使用生物对应的原版修复或喂食物品，为附近可通过原版方式回血的生物恢复生命。",
   "liquidbounce.module.airPlace.description": "允许你将方块放置在半空中。",
   "liquidbounce.module.notebot.description": "使用 NBS 文件定义的乐谱自动演奏音符盒音乐。",
   "liquidbounce.module.notebot.messages.startTesting": "开始测试…",
@@ -785,6 +788,9 @@
   "liquidbounce.module.reportHelper.description": "自动开始举报并为您确认。",
   "liquidbounce.module.protectionZones.description": "允许您查看受保护方块保护的区域，并建议最佳放置位置。",
   "liquidbounce.module.macros.description": "允许你通过自定义按键快速执行聊天消息或物品操作。",
-  "liquidbounce.module.newChunks.description": "高亮显示可能是新生成的区块。"
+  "liquidbounce.module.newChunks.description": "高亮显示可能是新生成的区块。",
+  "liquidbounce.module.strongholdFinder.description": "跟踪末影之眼投掷并预测最可能的要塞区块候选。",
+  "liquidbounce.module.strongholdFinder.messages.sampleCaptured": "已采集样本（#%s）。",
+  "liquidbounce.module.strongholdFinder.messages.bestChunk": "最佳区块：%s, %s（p=%s%%）。"
 
 }

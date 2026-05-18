@@ -19,25 +19,21 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonElement
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.Routing
 
 // GET /api/v1/client/session
-@Suppress("UNUSED_PARAMETER")
-fun getSessionInfo(requestObject: RequestObject): FullHttpResponse {
-    val sessionInfo: JsonElement = interopGson.toJsonTree(mc.user)
-    return httpOk(sessionInfo)
-}
+private fun Routing.getSessionInfo() = get("/session") { call.respond(mc.user, interopGson) }
 
 // GET /api/v1/client/location
-@Suppress("UNUSED_PARAMETER")
-fun getLocationInfo(requestObject: RequestObject): FullHttpResponse {
-    val locationInfo = IpInfoApi.current ?: return httpForbidden("Location is not known")
-    return httpOk(interopGson.toJsonTree(locationInfo))
+private fun Routing.getLocationInfo() = get("/location") {
+    val locationInfo = IpInfoApi.current ?: call.forbidden("Location is not known")
+    call.respond(locationInfo, interopGson)
+}
+
+internal fun Routing.sessionRoutes() {
+    getSessionInfo()
+    getLocationInfo()
 }

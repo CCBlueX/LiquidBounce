@@ -25,14 +25,14 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMouseHandlerAccessor;
 import net.minecraft.client.MouseHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Util;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +61,7 @@ public abstract class MixinAbstractContainerScreen<T extends AbstractContainerMe
     private ItemStack lastQuickMoved;
 
     @Shadow
-    protected abstract void slotClicked(Slot slot, int id, int button, ClickType actionType);
+    protected abstract void slotClicked(Slot slot, int id, int button, ContainerInput actionType);
 
     @Shadow
     private boolean skipNextRelease;
@@ -75,8 +75,8 @@ public abstract class MixinAbstractContainerScreen<T extends AbstractContainerMe
     @Shadow
     protected int topPos;
 
-    @Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ClickType;)V", at = @At("HEAD"), cancellable = true)
-    private void cancelMouseClick(Slot slot, int slotId, int button, ClickType actionType, CallbackInfo ci) {
+    @Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ContainerInput;)V", at = @At("HEAD"), cancellable = true)
+    private void cancelMouseClick(Slot slot, int slotId, int button, ContainerInput actionType, CallbackInfo ci) {
         var inventoryMove = ModuleInventoryMove.INSTANCE;
         if ((AbstractContainerScreen<?>) (Object) this instanceof InventoryScreen && inventoryMove.getRunning() && inventoryMove.getDoNotAllowClicking()) {
             ci.cancel();
@@ -88,13 +88,13 @@ public abstract class MixinAbstractContainerScreen<T extends AbstractContainerMe
     }
 
     // Before `if (itemStack.isEmpty() && slot.isEnabled()) {`
-    @Inject(method = "renderSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 5))
-    private void drawSlotOutline(GuiGraphics context, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
+    @Inject(method = "extractSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 5))
+    private void drawSlotOutline(GuiGraphicsExtractor context, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
         ModuleBetterInventory.INSTANCE.drawHighlightSlot(context, slot);
     }
 
-    @Inject(method = "renderContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractContainerScreen;renderSlots(Lnet/minecraft/client/gui/GuiGraphics;II)V", shift = At.Shift.AFTER))
-    private void hookDrawSlot(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    @Inject(method = "extractContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractContainerScreen;extractSlots(Lnet/minecraft/client/gui/GuiGraphicsExtractor;II)V", shift = At.Shift.AFTER))
+    private void hookDrawSlot(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         var cursorStack = this.menu.getCarried();
         var slot = getHoveredSlot(mouseX, mouseY);
 

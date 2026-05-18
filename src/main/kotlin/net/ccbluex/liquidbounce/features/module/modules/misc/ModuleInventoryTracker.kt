@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent
 import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -27,8 +28,8 @@ import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.inventory.ViewedInventoryScreen
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.world.entity.EquipmentSlot
@@ -56,8 +57,8 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", ModuleCategorie
      * the render distance. */
     private val savePlayers by boolean("SavePlayers", false).onChanged { playerMap.clear() }
 
-    private val inventoryMap = hashMapOf<UUID, TrackedInventory>()
-    val playerMap = hashMapOf<UUID, Player>()
+    private val inventoryMap = Object2ObjectOpenHashMap<UUID, TrackedInventory>()
+    val playerMap = Object2ObjectOpenHashMap<UUID, Player>()
 
     @Suppress("unused")
     val playerEquipmentChangeHandler = handler<EntityEquipmentChangeEvent> { event ->
@@ -122,7 +123,7 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", ModuleCategorie
         val timeStamp = inventoryMap[player]?.timeMap?.getLong(event.itemStack)?.takeIf { it != 0L } ?: return@handler
         val lastSeen = System.currentTimeMillis() - timeStamp
         event.lore.add(
-            "Last Seen: ${toMinutesSeconds(lastSeen)}".asText().withStyle(ChatFormatting.GRAY)
+            "Last Seen: ${toMinutesSeconds(lastSeen)}".asPlainText(ChatFormatting.GRAY)
         )
     }
 

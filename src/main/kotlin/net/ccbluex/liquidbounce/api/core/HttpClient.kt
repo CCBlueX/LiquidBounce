@@ -29,13 +29,13 @@ import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
 import net.ccbluex.liquidbounce.authlib.Authlib
 import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
 import net.ccbluex.liquidbounce.config.gson.util.readJson
+import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.ReportedException
-import net.minecraft.util.Util
 import okhttp3.Cache
 import okhttp3.Call
 import okhttp3.Callback
@@ -58,8 +58,8 @@ import java.io.Reader
 import java.util.Locale
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
 val renderScope = CoroutineScope(
     Dispatchers.Minecraft + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
@@ -108,7 +108,13 @@ object HttpClient {
     }
 
     private val defaultClient = OkHttpClient.Builder()
-        .dispatcher(Dispatcher(Util.nonCriticalIoPool().service))
+        .dispatcher(
+            Dispatcher(
+                Executors.newThreadPerTaskExecutor(
+                    Thread.ofVirtual().name("OkHttpClient Dispatcher", 0L).factory()
+                )
+            )
+        )
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)
@@ -128,7 +134,7 @@ object HttpClient {
         .addInterceptor(CacheBlacklistInterceptor(setOf("localhost", "127.0.0.1")))
         .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
         .build().also {
-            McefFileUtils.setOkHttpClient(it)
+            MCEF.INSTANCE.settings.okHttpClient = it
             Authlib.client = it
         }
 
@@ -237,7 +243,7 @@ inline fun <reified T> Response.parse(): T {
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
-        NativeImage::class.java -> body.byteStream().toNativeImage() as T
+        NativeImage::class.java -> body.source().readNativeImage() as T
         else -> body.charStream().readJson<T>()
     }
 }

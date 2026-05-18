@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import java.util.SequencedSet
-import java.util.TreeMap
 
 class MultiChoiceListValue<T : Tagged>(
     name: String,

@@ -23,9 +23,9 @@ import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.kotlin.getValue
-import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
+import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.size
@@ -78,7 +78,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         }
 
         // Check new ones
-        val region = pos.expendToBlockBox(2, 3, 2)
+        val region = pos.expandToBoundingBox(2, 3, 2)
         invalidate(region)
         region.cachedUpdate()
     }
@@ -180,7 +180,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         if (containsKey(longValue)) {
             return get(longValue)
         } else {
-            val state = blockPos.getState() ?: return AIR
+            val state = blockPos.state ?: return AIR
             val result = when {
                 state.isAir -> AIR
                 state.block in BLAST_RESISTANT_BLOCKS -> BLAST_RESISTANT

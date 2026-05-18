@@ -29,6 +29,7 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
+import net.ccbluex.liquidbounce.render.gui.GuiCircleLutAtlas;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.render.GuiRenderer;
 import org.jspecify.annotations.NullMarked;
@@ -67,7 +68,7 @@ public abstract class MixinGuiRenderer {
         GpuBuffer gpuBuffer,
         VertexFormat.IndexType indexType,
         Operation<Void> original,
-        @Local(argsOnly = true) GuiRenderer.Draw draw
+        @Local(argsOnly = true, name = "draw") GuiRenderer.Draw draw
     ) {
         var pipeline = draw.pipeline();
         if (pipeline.getVertexFormatMode() != VertexFormat.Mode.QUADS) {
@@ -96,6 +97,7 @@ public abstract class MixinGuiRenderer {
         method = "draw", at = @At("RETURN")
     )
     private void afterRenderBlurOverlay(GpuBufferSlice fogBuffer, CallbackInfo ci) {
+        GuiCircleLutAtlas.INSTANCE.resetForNextDraw();
         BlurEffectRenderer.INSTANCE.blitBlurOverlay();
     }
 

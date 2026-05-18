@@ -27,14 +27,13 @@ import net.ccbluex.liquidbounce.render.drawLineStripAsLines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -226,7 +225,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
             owner,
             posBefore,
             posAfter,
-            hitbox.move(pos).expandTowards(velocity).inflate(1.0),
+            hitbox.move(posBefore).expandTowards(posAfter - posBefore).inflate(1.0),
             {
                 val canCollide = !it.isSpectator && it.isAlive
                 val shouldCollide = it.isPickable || owner !== player && it === player
@@ -280,11 +279,14 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
     }
 
     private fun WorldRenderEnvironment.drawTrajectoryForProjectile(positions: List<Vec3>, argb: Int) {
+        val renderedPositions = if (positions.size and 1 != 0) positions.subList(1) else positions
+        val origin = renderedPositions.firstOrNull() ?: return
+
         // Don't use LineStrip because in batch mode
-        matrixStack.pushPose()
-        matrixStack.translate(renderOffset - camera.position())
-        drawLineStripAsLines(argb, if (positions.size and 1 != 0) positions.subList(1) else positions)
-        matrixStack.popPose()
+        poseStack.pushPose()
+        poseStack.translate(origin.add(renderOffset).subtract(camera.position()))
+        drawLineStripAsLines(argb, renderedPositions.map { it - origin })
+        poseStack.popPose()
     }
 
     @JvmRecord
@@ -335,11 +337,11 @@ private fun WorldRenderEnvironment.drawHitEntities(
 
 private fun WorldRenderEnvironment.renderHitBlockFace(blockHitResult: BlockHitResult, color: Color4b) {
     val currPos = blockHitResult.blockPos
-    val currState = currPos.getState()!!
+    val currState = currPos.stateOrEmpty
 
     val bestBox = currState.getShape(world, currPos, CollisionContext.of(player)).toAabbs()
         .filter { blockHitResult.location in it.inflate(0.01).move(currPos) }
-        .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.location) }
+        .minByOrNull { it.distanceToSqr(blockHitResult.location) }
 
     if (bestBox != null) {
         withPositionRelativeToCamera(currPos) {

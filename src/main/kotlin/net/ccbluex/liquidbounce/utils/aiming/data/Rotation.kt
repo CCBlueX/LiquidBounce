@@ -22,12 +22,13 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toDegrees
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.toDegrees
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
+import java.lang.Math.fma
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -137,11 +138,21 @@ data class Rotation @JvmOverloads constructor(
         )
     }
 
+    /**
+     * Interpolates this rotation towards [other] using the given [factor].
+     */
+    fun interpolateTo(other: Rotation, factor: Float): Rotation = Rotation(
+        fma(factor, other.yaw - yaw, yaw),
+        fma(factor, other.pitch - pitch, pitch),
+    )
+
     @JvmOverloads
     fun approximatelyEquals(other: Rotation, tolerance: Float = 2f): Boolean {
         return angleTo(other) <= tolerance
     }
 
+    fun add(x: Float, y: Float): Rotation {
+        return Rotation(yaw = this.yRot + y, pitch = this.xRot + x)
+    }
+
 }
-
-

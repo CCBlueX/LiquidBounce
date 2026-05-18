@@ -40,13 +40,13 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
-import net.ccbluex.liquidbounce.utils.client.roundToDecimalPlaces
+import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
+import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -303,29 +303,24 @@ object CommandFakePlayer : Command.Factory, EventListener {
 
         /**
          * Explosions are not handled by [LivingEntity#damage]
-         * so an ExplosionS2CPacket handler is required.
+         * so an [ClientboundExplodePacket] handler is required.
          */
         if (packet is ClientboundExplodePacket) {
             fakePlayers.forEach { fakePlayer ->
                 val damage = fakePlayer.getDamageFromExplosion(
-                    pos = packet.center // will only work for crystals
+                    pos = packet.center,
+                    power = packet.radius
                 )
 
-                val absorption = fakePlayer.absorptionAmount
-                fakePlayer.health -= damage - absorption
-                fakePlayer.absorptionAmount -= damage.coerceAtMost(absorption)
+                fakePlayer.applyEstimatedDamage(damage)
             }
         }
 
         /**
          * The server should not know that we tried to attack a fake player.
          */
-        if (
-            packet is ServerboundInteractPacket &&
-            fakePlayers.any { fakePlayer ->
-                packet.entityId == fakePlayer.id
-            }
-        ) {
+        val interactEntityId = packet.entityIdC2SInteractOrAttack ?: return@handler
+        if (fakePlayers.any { fakePlayer -> interactEntityId == fakePlayer.id }) {
             it.cancelEvent()
         }
     }
@@ -344,24 +339,9 @@ object CommandFakePlayer : Command.Factory, EventListener {
             return@handler
         }
 
-        val fakePlayer = event.entity as LivingEntity
+        val fakePlayer = event.entity as FakePlayer
 
-        val genericAttackDamage = if (player.isAutoSpinAttack) {
-                player.autoSpinAttackDmg
-            } else {
-                player.getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
-            }
-        val damageSource = player.damageSources().playerAttack(player)
-        var enchantAttackDamage = player.getEnchantedDamage(fakePlayer, genericAttackDamage,
-            damageSource) - genericAttackDamage
-
-        val attackCooldown = player.getAttackStrengthScale(0.5f)
-        enchantAttackDamage *= attackCooldown
-        val damage = fakePlayer.getEffectiveDamage(damageSource, enchantAttackDamage, false)
-
-        val absorption = fakePlayer.absorptionAmount
-        fakePlayer.health -= damage - absorption
-        fakePlayer.absorptionAmount -= damage.coerceAtMost(absorption)
+        fakePlayer.applyEstimatedDamage(calculateAttackDamage(fakePlayer))
     }
 
     /**
@@ -402,6 +382,39 @@ object CommandFakePlayer : Command.Factory, EventListener {
             translation("liquidbounce.command.fakeplayer.stoppedRecording"),
             NotificationEvent.Severity.INFO
         )
+    }
+
+    private fun calculateAttackDamage(fakePlayer: LivingEntity): Float {
+        var genericAttackDamage = if (player.isAutoSpinAttack) {
+            player.autoSpinAttackDmg
+        } else {
+            player.getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
+        }
+        val damageSource = player.damageSources().playerAttack(player)
+        var enchantAttackDamage =
+            player.getEnchantedDamage(fakePlayer, genericAttackDamage, damageSource) - genericAttackDamage
+
+        val attackCooldown = player.getAttackStrengthScale(0.5f)
+        genericAttackDamage *= 0.2f + attackCooldown * attackCooldown * 0.8f
+        enchantAttackDamage *= attackCooldown
+
+        return fakePlayer.getEffectiveDamage(damageSource, genericAttackDamage + enchantAttackDamage, false)
+    }
+
+    private fun FakePlayer.applyEstimatedDamage(damage: Float) {
+        if (damage <= 0f) {
+            return
+        }
+
+        val absorbedDamage = damage.coerceAtMost(this.absorptionAmount)
+        if (absorbedDamage > 0f) {
+            this.absorptionAmount = (this.absorptionAmount - absorbedDamage).coerceAtLeast(0f)
+        }
+
+        val remainingDamage = damage - absorbedDamage
+        if (remainingDamage > 0f) {
+            this.health -= remainingDamage
+        }
     }
 
 }

@@ -32,7 +32,6 @@
 </GenericSelect>
 
 <style lang="scss">
-  @use "../../../../../colors.scss" as *;
 
   .title {
     font-weight: 600;
@@ -40,17 +39,17 @@
 
   .option {
     font-weight: 500;
-    color: $menu-text-dimmed-color;
+    color: var(--menu-text-dimmed-color);
     font-size: 20px;
     padding: 15px 20px;
     transition: ease color .2s;
 
     &:hover {
-      color: $menu-text-color;
+      color: var(--menu-text-color);
     }
 
     &.active {
-      color: $accent-color;
+      color: var(--accent-color);
     }
   }
 </style>

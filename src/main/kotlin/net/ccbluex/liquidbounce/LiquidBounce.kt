@@ -28,11 +28,12 @@ import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
-import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
+import net.ccbluex.liquidbounce.api.services.client.ClientUpdate
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
@@ -65,11 +66,10 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
-import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
-import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
+import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -77,6 +77,7 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -86,12 +87,10 @@ import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
 import java.io.InputStream
-import java.util.Locale
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import kotlin.time.measureTime
@@ -160,9 +159,11 @@ object LiquidBounce : EventListener {
 
     /**
      * Creates an [net.minecraft.resources.Identifier] starts with [CLIENT_NAME].
+     *
+     * Warning: Use [clientIdentifier] to prevent silent `<clinit>` invocation
      */
     @JvmStatic
-    fun identifier(path: String): Identifier = Identifier.fromNamespaceAndPath(CLIENT_NAME.lowercase(Locale.ROOT), path)
+    fun identifier(path: String): Identifier = clientIdentifier(path)
 
     /**
      * Gets client resource.
@@ -248,7 +249,6 @@ object LiquidBounce : EventListener {
     ) = withContext(renderThreadDispatcher) {
         // Script system
         val scriptEngineJob = launch(workerDispatcher) {
-            EnvironmentRemapper
             runCatching(ScriptManager::initializeEngine).onFailure { error ->
                 logger.error("[ScriptAPI] Failed to initialize script engine.", error)
             }
@@ -320,7 +320,7 @@ object LiquidBounce : EventListener {
                 LanguageManager.loadDefault()
             }
             launch {
-                val update = update ?: return@launch
+                val update = withTimeoutOrNull(8000) { ClientUpdate.update.await() } ?: return@launch
                 logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
             }
             launch {
@@ -362,7 +362,6 @@ object LiquidBounce : EventListener {
         }
 
         logger.info("API initialization done.")
-
     }
 
     /**

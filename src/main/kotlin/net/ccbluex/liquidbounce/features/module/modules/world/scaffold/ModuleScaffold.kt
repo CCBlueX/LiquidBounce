@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -89,6 +90,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.allEmpty
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
@@ -106,7 +108,6 @@ import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
-import net.minecraft.world.phys.shapes.Shapes
 import kotlin.math.abs
 
 /**
@@ -197,6 +198,12 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
     private var wasTowering: Boolean = false
 
+    private val activeTechnique get() = if (isTowering) {
+        ScaffoldNormalTechnique
+    } else {
+        technique.activeMode
+    }
+
     // SafeWalk feature - uses the SafeWalk module as a base
     @Suppress("unused")
     private val safeWalkMode = choices("SafeWalk", 1, ModuleSafeWalk::safeWalkChoices)
@@ -281,10 +288,10 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             // In this case we expand the bounding box by 0.5 in all directions and check if there is a collision
             // This might cause for "Spider-like" behavior, but it's the most reliable way to check
             // and usually the scaffold should start placing blocks
-            return world.getBlockCollisions(
+            return !world.getBlockCollisions(
                 player,
                 player.boundingBox.inflate(0.5, 0.0, 0.5).move(0.0, -1.05, 0.0)
-            ).any { shape -> shape != Shapes.empty() }
+            ).allEmpty()
         }
 
     /**
@@ -322,19 +329,29 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         jumps = 2
 
         ScaffoldMovementPlanner.reset()
-        ScaffoldMovementPrediction.reset()
 
         super.onEnabled()
     }
 
     override fun onDisabled() {
+        reset()
+    }
+
+    private fun reset() {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
+        ScaffoldMovementPrediction.reset()
         SilentHotbar.resetSlot(this)
         nextBlock = null
         updateRenderCount(null)
         forceSneak = 0
+        currentTarget = null
         renderer.clearSilently()
+    }
+
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        reset()
     }
 
     private fun updateRenderCount(count: Int?) {
@@ -368,31 +385,25 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             }
 
         debugGeometry("predictedPos") {
-            ModuleDebug.DebuggedPoint(predictedPos, Color4b(0, 255, 0, 255), size = 0.1)
+            ModuleDebug.DebuggedPoint(predictedPos, Color4b.GREEN, size = 0.1)
         }
 
-        val technique = if (isTowering) {
-            ScaffoldNormalTechnique
-        } else {
-            technique.activeMode
-        }
+        val technique = activeTechnique
 
         val target = technique.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
             .also { this.currentTarget = it }
 
-        if (optimalLine != null && target != null) {
-            debugGeometry("lineToBlock") {
-                // Debug stuff
-                val b = target.placedBlock.toVec3d(0.5, 1.0, 0.5)
-                val a = optimalLine.getNearestPointTo(b)
+        debugGeometry("lineToBlock") {
+            // Debug stuff
+            val b = target?.placedBlock?.toVec3d(0.5, 1.0, 0.5) ?: return@debugGeometry null
+            val a = optimalLine?.getNearestPointTo(b)  ?: return@debugGeometry null
 
-                // Debug the line a-b
-                ModuleDebug.DebuggedLineSegment(
-                    from = a,
-                    to = b,
-                    Color4b(255, 0, 0, 255),
-                )
-            }
+            // Debug the line a-b
+            ModuleDebug.DebuggedLineSegment(
+                from = a,
+                to = b,
+                Color4b.RED,
+            )
         }
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
@@ -440,11 +451,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
         // Ledge feature - AutoJump and AutoSneak
         if (ledge) {
-            val technique = if (isTowering) {
-                ScaffoldNormalTechnique
-            } else {
-                technique.activeMode
-            }
+            val technique = activeTechnique
 
             val ledgeAction = ledge(
                 this.currentTarget,
@@ -501,19 +508,14 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         debugParameter("WasTowering") { wasTowering }
 
         val target = currentTarget
-
-        val computedRotation = if (target != null) {
-            technique.activeMode.getRotations(target)
-        } else {
-            null
-        }
+        val technique = activeTechnique
 
         val currentRotation = if ((rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) && target != null) {
-            computedRotation ?: (RotationManager.currentRotation ?: player.rotation)
+            technique.getRotations(target) ?: (RotationManager.currentRotation ?: player.rotation)
         } else {
             RotationManager.currentRotation ?: player.rotation
         }.normalize()
-        val currentCrosshairTarget = technique.activeMode.getCrosshairTarget(target, currentRotation)
+        val currentCrosshairTarget = technique.getCrosshairTarget(target, currentRotation)
         val currentDelay = delay.random()
 
         var hasBlockInMainHand = isValidBlock(player.inventory.getItem(player.inventory.selectedSlot))

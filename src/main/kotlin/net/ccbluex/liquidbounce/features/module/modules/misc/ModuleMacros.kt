@@ -26,16 +26,17 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
-import net.ccbluex.liquidbounce.utils.client.sendChatOrCommand
+import net.ccbluex.liquidbounce.utils.network.sendChatOrCommand
 import net.ccbluex.liquidbounce.utils.inventory.SingleItemStackPickMode
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.useItem
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.minecraft.world.phys.BlockHitResult
 
 /**
@@ -51,6 +52,8 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
     private val macros: List<Macro>
 
     init {
+        doNotIncludeAlways()
+
         val macros = ArrayList<Macro>()
         repeat(COUNT) {
             macros += tree(Macro.Chat("Chat-${it + 1}"))
@@ -91,9 +94,16 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
 
             private val messages by textList("Messages", ArrayList())
 
+            private val useClientCommand by boolean("UseClientCommand", false)
+
             override suspend fun execute() {
                 for (message in messages) {
-                    network.sendChatOrCommand(message)
+                    if (useClientCommand && message.startsWith(CommandManager.GlobalSettings.prefix)) {
+                        CommandManager.execute(message.substring(CommandManager.GlobalSettings.prefix.length))
+                    } else {
+                        network.sendChatOrCommand(message)
+                    }
+
                     delay(delay.random().toLong())
                 }
             }
@@ -120,7 +130,7 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
             }
 
             override suspend fun execute() {
-                val slot = Slots.OffhandWithHotbar.findSlot { pickMode.activeMode.test(it) } ?: return
+                val slot = Slots.OffhandWithHotbar.findSlot(pickMode.activeMode) ?: return
 
                 SilentHotbar.selectSlotSilently(ModuleMacros, slot, ticksUntilReset = holdTime.random())
                 when (action) {

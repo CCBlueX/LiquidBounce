@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
-import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.LivingEntity
@@ -35,7 +34,7 @@ import net.minecraft.world.level.block.Blocks
 object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
 
     init {
-        HitFXRegistry
+        HitFXRegistry.registerAll()
     }
 
     enum class Particle(override val tag: String) : Tagged {
@@ -45,36 +44,13 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         WATER("Water"),
         SMOKE("Smoke"),
         MAGIC("Magic"),
-        CRITS("Crits")
-    }
-
-    @Suppress("unused")
-    enum class Sound(
-        override val tag: String,
-        val sounds: Array<SoundEvent>
-    ) : Tagged {
-        HIT("Hit", arrayOf(SoundEvents.ARROW_HIT)),
-        ORB("Orb", arrayOf(SoundEvents.EXPERIENCE_ORB_PICKUP)),
-        BONK("Bonk", HitFXRegistry.BONK),
-        BOYKISSER("Boykisser", HitFXRegistry.BOYKISSER),
-        BRING("Bring", HitFXRegistry.BRING),
-        GLASS("Glass", HitFXRegistry.GLASS),
-        CLICK("Click", HitFXRegistry.CLICK),
-        MEOW("Meow", HitFXRegistry.MEOW),
-        MOAN("Moan", HitFXRegistry.MOAN),
-        MAGICSQUASH("MagicSquash", HitFXRegistry.MAGICSQUASH),
-        NYA("NYA", HitFXRegistry.NYA),
-        POP("Pop", HitFXRegistry.POP),
-        SOFT("Soft", HitFXRegistry.SOFT),
-        SQUASH("Squash", HitFXRegistry.SQUASH),
-        TUNG("Tung", HitFXRegistry.TUNG),
-        UWU("UWU", HitFXRegistry.UWU),
+        CRITS("Crits"),
     }
 
     private val particles by multiEnumChoice("Particle", Particle.FIRE)
     private val particleAmount by intRange("ParticleAmount", 1..1, 1..20)
 
-    private val otherSoundSet by multiEnumChoice("OtherSound", Sound.POP)
+    private val otherSoundSet by multiEnumChoice("OtherSound", HitFXRegistry.POP)
 
     private val otherSound
         get() = otherSoundSet.randomOrNull()?.sounds?.randomOrNull()
@@ -82,9 +58,7 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
     val selfSound
         get() = selfSoundSet.randomOrNull()?.sounds?.randomOrNull()
 
-    private val selfSoundSet by multiEnumChoice("SelfSound",
-        Sound.BOYKISSER
-    )
+    private val selfSoundSet by multiEnumChoice("SelfSound", HitFXRegistry.BOYKISSER)
 
     private var lastTargetId: Int? = null
 
@@ -97,7 +71,7 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         SoundEvents.PLAYER_ATTACK_SWEEP,
         SoundEvents.PLAYER_ATTACK_WEAK,
         SoundEvents.SPEAR_HIT,
-        SoundEvents.PLAYER_HURT
+        SoundEvents.PLAYER_HURT,
     )
 
     @Suppress("unused")

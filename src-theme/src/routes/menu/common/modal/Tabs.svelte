@@ -37,7 +37,6 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
 
   .available-tabs {
     display: flex;
@@ -47,8 +46,8 @@
 
   .tab-button {
     font-family: "Inter", sans-serif;
-    background-color: rgba($menu-base-color, .36);
-    color: $menu-text-color;
+    background-color: var(--menu-modal-tab-background-color);
+    color: var(--menu-text-color);
     padding: 10px;
     border: solid 2px transparent;
     border-radius: 5px;
@@ -65,7 +64,7 @@
     }
 
     &.active {
-      border-color: $accent-color;
+      border-color: var(--menu-modal-tab-active-border-color);
     }
   }
 </style>

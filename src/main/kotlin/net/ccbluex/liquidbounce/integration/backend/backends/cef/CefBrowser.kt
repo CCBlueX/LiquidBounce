@@ -35,6 +35,8 @@ import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.joml.component1
+import org.joml.component2
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -166,8 +168,8 @@ class CefBrowser(
 
             return BrowserTexture(
                 browserApi.renderer.textureSetup!!,
-                viewport.height,
                 viewport.width,
+                viewport.height,
                 browserApi.renderer.isBGRA,
             )
         }
@@ -247,9 +249,9 @@ class CefBrowser(
         browserApi.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
     }
 
-    override fun charTyped(char: Char, modifiers: Int) {
+    override fun charTyped(codepoint: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyTyped(char, modifiers)
+        browserApi.sendKeyTyped(codepoint.toChar(), 0) // TODO: GLFW update removed modifiers here
     }
 
     private fun comparePaintWithViewpoint(width: Int, height: Int) {

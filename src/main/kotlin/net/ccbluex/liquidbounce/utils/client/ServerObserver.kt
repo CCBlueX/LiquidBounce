@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -216,7 +217,7 @@ object ServerObserver : EventListener {
                 val averageInterval = intervals.average()
                 mc.execute {
                     tps = if (averageInterval > 0 && !averageInterval.isNaN()) {
-                        (20.0 / (averageInterval / 1000.0)).coerceIn(0.0..20.0)
+                        (20.0 / (averageInterval / 1000.0)).coerceIn(0.0, 20.0)
                     } else {
                         Double.NaN
                     }

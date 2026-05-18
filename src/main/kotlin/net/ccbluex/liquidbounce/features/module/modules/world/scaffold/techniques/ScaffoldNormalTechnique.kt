@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.AngleYawTargetPosition
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.DiagonalYawTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.EdgePointTargetPositionFactory
@@ -52,7 +53,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
-import net.minecraft.core.Vec3i
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
@@ -86,19 +86,14 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget? {
-        // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
-        val priorityComparator: Comparator<Vec3i> = if (optimalLine != null) {
-            compareByDescending { vec -> optimalLine.squaredDistanceTo(Vec3.atCenterOf(vec)) }
-        } else {
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
-        }
+        val priorityComparator = priorityComparator(predictedPos, optimalLine)
 
         val offsets = if (ModuleFreeze.running) {
-            FULL_INVESTIGATION_OFFSETS
+            BlockPosOffsets.FULL.offsets
         } else if (ScaffoldDownFeature.shouldGoDown) {
-            INVESTIGATE_DOWN_OFFSETS
+            BlockPosOffsets.DOWN.offsets
         } else {
-            NORMAL_INVESTIGATION_OFFSETS
+            BlockPosOffsets.NORMAL.offsets
         }
 
         // Face position factory for current config

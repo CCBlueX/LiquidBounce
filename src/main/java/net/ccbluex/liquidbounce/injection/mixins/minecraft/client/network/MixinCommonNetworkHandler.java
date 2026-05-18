@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinCommonNetworkHandler {
 
     @Inject(method = "onPacketError", at = @At(value = "HEAD"), cancellable = true)
-    private void packetExceptionCancel(Packet packet, Exception exception, CallbackInfo ci) {
+    private void packetExceptionCancel(Packet<?> packet, Exception cause, CallbackInfo ci) {
         var antiExploit = ModuleAntiExploit.INSTANCE;
         if (antiExploit.getRunning() && antiExploit.getIgnoreProtocol()) {
             ci.cancel();
