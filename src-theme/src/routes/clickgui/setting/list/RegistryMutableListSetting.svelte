@@ -138,8 +138,6 @@
 </div>
 
 <style lang="scss">
-   @use "sass:color";
-   @use "../../../../colors.scss" as *;
 
     .setting {
         padding: 7px 0;
@@ -155,7 +153,7 @@
         }
 
         .name {
-            color: $clickgui-text-color;
+            color: var(--clickgui-text-color);
             font-size: 12px;
             font-weight: 600;
         }
@@ -169,7 +167,7 @@
             align-items: center;
             gap: 5px;
             padding: 5px;
-            background-color: rgba($clickgui-base-color, 0.1);
+            background-color: color-mix(in srgb, var(--clickgui-base-color) 10%, transparent);
             border-radius: 3px;
             margin-bottom: 5px;
 
@@ -180,7 +178,7 @@
 
             .name {
                 flex: 1;
-                color: $clickgui-text-color;
+                color: var(--clickgui-text-color);
                 font-size: 12px;
             }
 
@@ -199,7 +197,7 @@
             .arrow-btn {
                 background: none;
                 border: none;
-                color: $accent-color;
+                color: var(--accent-color);
                 cursor: pointer;
                 font-size: 14px;
                 padding: 0 5px;
@@ -207,7 +205,7 @@
                 transition: color 0.2s;
 
                 &:hover {
-                    color: color.adjust($accent-color, $lightness: 10%);
+                    color: color-mix(in srgb, var(--accent-color) 80%, white);
                 }
             }
 
@@ -236,10 +234,10 @@
         .add-btn {
             width: 100%;
             padding: 8px;
-            background-color: rgba($accent-color, 0.2);
+            background-color: var(--accent-subtle-background-color);
             border: none;
             border-radius: 4px;
-            color: $clickgui-text-color;
+            color: var(--clickgui-text-color);
             cursor: pointer;
             font-size: 12px;
         }
@@ -249,13 +247,13 @@
         .search-input {
             width: 100%;
             border: none;
-            border-bottom: solid 1px $accent-color;
+            border-bottom: solid 1px var(--accent-color);
             font-family: "Inter", sans-serif;
             font-size: 12px;
             padding: 5px;
-            color: $clickgui-text-color;
+            color: var(--clickgui-text-color);
             margin-bottom: 5px;
-            background-color: rgba($clickgui-base-color, .36);
+            background-color: var(--clickgui-input-background-color);
         }
 
         .results {

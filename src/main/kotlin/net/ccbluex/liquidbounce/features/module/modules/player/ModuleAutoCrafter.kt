@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.world.inventory.AbstractCraftingMenu
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -66,9 +66,9 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
                         collection.isCraftable(recipe.id) &&
                         // Prevent crafting loops (ingot->block->ingot)
                         // by rejecting recipes that use items crafted later
-                        recipe.craftingRequirements.map { requirements ->
-                            requirements.none { req -> itemsToCraftLater.any { req.test(ItemStack(it)) } }
-                        }.orElse(true)
+                        (recipe.craftingRequirements.isEmpty ||
+                            recipe.craftingRequirements.get()
+                                .none { req -> itemsToCraftLater.any { req.test(ItemStack(it)) } })
                 }
             } ?: continue
 
@@ -77,9 +77,9 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
                 interaction.handlePlaceRecipe(menu.containerId, recipe.id(), craftInStacks)
             } else {
                 val hasSpace = player.inventory.freeSlot != -1
-                val clickType = if (hasSpace) ClickType.QUICK_MOVE else ClickType.THROW
+                val clickType = if (hasSpace) ContainerInput.QUICK_MOVE else ContainerInput.THROW
                 val mouseButton = if (hasSpace) 0 else 1
-                interaction.handleInventoryMouseClick(
+                interaction.handleContainerInput(
                     menu.containerId, 0, mouseButton, clickType, player
                 )
             }
