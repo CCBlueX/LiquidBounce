@@ -22,7 +22,6 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.gson.fileGson
 import net.ccbluex.liquidbounce.config.gson.util.parseTree
 import net.ccbluex.liquidbounce.config.types.Config
@@ -30,11 +29,10 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
 import net.ccbluex.liquidbounce.utils.io.extractZip
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import java.io.File
 import java.io.Reader
 import java.io.Writer
@@ -47,7 +45,7 @@ object ConfigSystem {
 
     const val KEY_PREFIX = "liquidbounce"
 
-    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ConfigSystem")
+    private val logger = clientLogger("ConfigSystem")
 
     var isFirstLaunch: Boolean = false
         private set

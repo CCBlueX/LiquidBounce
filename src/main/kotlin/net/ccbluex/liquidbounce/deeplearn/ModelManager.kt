@@ -20,19 +20,17 @@
 package net.ccbluex.liquidbounce.deeplearn
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import kotlin.time.measureTime
 
 object ModelManager : EventListener, ValueGroup("AI") {
 
-    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/AI/ModelManager")
+    private val logger = clientLogger("AI/ModelManager")
 
     /**
      * Base models that are always available
