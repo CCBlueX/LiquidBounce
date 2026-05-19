@@ -226,11 +226,15 @@ fun <K> Collection<PositionedVoxelShape<K>>.mergeAdjacentVoxelShapes(): List<Pos
         return emptyList()
     }
 
+    val visited = LongOpenHashSet()
+    val queue = LongArrayList()
+    val componentEntries = LongArrayList()
+
     val result = ArrayList<PositionedVoxelShape<K>>()
     for ((key, shapesByPos) in groupedShapes) {
-        val visited = LongOpenHashSet(shapesByPos.size)
-        val queue = LongArrayList()
-        val componentEntries = LongArrayList()
+        visited.clear()
+        queue.clear()
+        componentEntries.clear()
 
         shapesByPos.keys.forEachLong { startPos ->
             if (!visited.add(startPos)) {
