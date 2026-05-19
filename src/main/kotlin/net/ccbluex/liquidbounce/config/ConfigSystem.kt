@@ -206,15 +206,25 @@ object ConfigSystem {
      *
      * The config should be known to the config system.
      */
-    fun store(config: Config) { // Make a new .json file to save our root config
-        config.jsonFile.runCatching {
+    fun store(config: Config) {
+        config.jsonTmpFile.runCatching {
+            // Write to temp file
+            logger.debug("Writing config ${config.loweredName}...")
             if (!exists()) {
                 createNewFile().let { logger.debug("Created new file (status: $it)") }
             }
-
-            logger.debug("Writing config ${config.loweredName}...")
             serializeValueGroup(config, bufferedWriter())
-            logger.info("Successfully saved config '${config.loweredName}'.")
+            logger.debug("Writing config ${config.loweredName}... done")
+
+            // Move temp file to final file
+            if (config.jsonFile.exists() && !config.jsonFile.delete()) {
+                error("Unable to delete old file for config ${config.loweredName}")
+            }
+
+            if (!renameTo(config.jsonFile)) {
+                error("Unable to rename temp file to final file for config ${config.loweredName}")
+            }
+            logger.info("Successfully stored config '${config.loweredName}'.")
         }.onFailure {
             logger.error("Unable to store config ${config.loweredName}", it)
         }
