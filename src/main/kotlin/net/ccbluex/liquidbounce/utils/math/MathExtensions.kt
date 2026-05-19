@@ -57,3 +57,9 @@ fun Float.roundToDecimalPlaces(decimalPlaces: Int = 1): Float =
     toBigDecimal().setScale(decimalPlaces, RoundingMode.HALF_UP).toFloat()
 
 inline infix fun Float.vector2f(other: Float) = Vector2f(this, other)
+
+fun Long.high32(): Int = (this shr 32).toInt()
+
+fun Long.low32(): Int = this.toInt()
+
+fun longFrom32(high: Int, low: Int): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFF)

@@ -28,7 +28,9 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
+import net.ccbluex.liquidbounce.utils.math.high32
 import net.ccbluex.liquidbounce.utils.math.iterator
+import net.ccbluex.liquidbounce.utils.math.low32
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
@@ -75,8 +77,8 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                             box,
                             color.fade(colorFactor),
                             outlineColor.fade(colorFactor),
-                            (cullData ushr 32).toInt(),
-                            (cullData and 0xFFFFFFFF).toInt()
+                            cullData.high32(),
+                            cullData.low32(),
                         )
                     }
                 }
