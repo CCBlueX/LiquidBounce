@@ -87,7 +87,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     private val distanceFade = tree(DistanceFadeUniformValueGroup())
-    private val mergeAdjacent by boolean("MergeAdjacent", true).onChanged {
+    private val mergeAdjacent by boolean("MergeAdjacent", false).onChanged {
         markDirtyForModes()
     }
 

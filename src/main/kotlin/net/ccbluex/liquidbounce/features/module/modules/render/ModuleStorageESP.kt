@@ -135,7 +135,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     }
 
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
-    private val mergeAdjacent by boolean("MergeAdjacent", true).onChanged {
+    private val mergeAdjacent by boolean("MergeAdjacent", false).onChanged {
         markDirtyForModes()
     }
 
