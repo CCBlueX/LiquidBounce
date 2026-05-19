@@ -67,13 +67,13 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
             val outlineColor = getOutlineColor(id)
 
             renderEnvironmentForWorld(matrixStack) {
-                fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: AABB, colorFactor: Float) {
-                    withPositionRelativeToCamera(blockPos) {
+                fun drawEntryBox(blockPos: Long, cullData: Long, box: AABB, colorFactor: Float) {
+                    withPositionRelativeToCamera(blockPosCache.set(blockPos)) {
                         drawBox(
                             box,
                             color.fade(colorFactor),
                             outlineColor.fade(colorFactor),
-                            (cullData shr 32).toInt(),
+                            (cullData ushr 32).toInt(),
                             (cullData and 0xFFFFFFFF).toInt()
                         )
                     }
@@ -89,7 +89,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     val box = getBox(if (expand < 1f) 1f - expand else expand, value.box)
                     val colorFactor = fadeInCurve.getFactor(value.startTime, time, inTime.toFloat())
 
-                    drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
+                    drawEntryBox(pos, value.cullData, box, colorFactor)
 
                     if (time - value.startTime >= inTime) {
                         if (keep) {
@@ -107,7 +107,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     // Do not use destructuring declaration which returns boxed [Long] values
                     val pos = entry.longKey
                     val value = entry.value
-                    drawEntryBox(blockPosCache.set(pos), value.cullData, value.box, 1f)
+                    drawEntryBox(pos, value.cullData, value.box, 1f)
                 }
 
                 outList.long2ObjectEntrySet().removeIf { entry ->
@@ -120,7 +120,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     val box = getBox(expand, value.box)
                     val colorFactor = 1f - fadeOutCurve.getFactor(value.startTime, time, outTime.toFloat())
 
-                    drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
+                    drawEntryBox(pos, value.cullData, box, colorFactor)
 
                     if (time - value.startTime >= outTime) {
                         updateNeighbors(blockPosCache.set(pos))
