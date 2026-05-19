@@ -32,4 +32,14 @@ open class Config(name: String, value: MutableCollection<Value<*>> = mutableList
             return File(rootFolder, "${this.loweredName}.json")
         }
 
+    /**
+     * We write to this temp file, we can safely rename [jsonTmpFile] to [jsonFile],
+     * to eliminate any chances of data loss.
+     */
+    val jsonTmpFile: File
+        get() {
+            require(this in configs) { "${this.name} is not registered" }
+            return File(rootFolder, "${this.loweredName}.json.tmp")
+        }
+
 }
