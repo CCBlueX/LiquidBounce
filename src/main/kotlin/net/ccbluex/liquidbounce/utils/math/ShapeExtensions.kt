@@ -371,7 +371,7 @@ private class ShapeSurfaceMesh(
 
             val seed = findSeedCell(mask, direction, planeIndex, hitPos)
             if (seed == -1L) continue
-            return FaceComponent(planeIndex, floodFill(mask, seed.high(), seed.low()))
+            return FaceComponent(planeIndex, floodFill(mask, seed.high32(), seed.low32()))
         }
 
         return null
@@ -385,7 +385,7 @@ private class ShapeSurfaceMesh(
                 }
 
                 if (faceContainsPoint(direction, planeIndex, u, v, hitPos)) {
-                    return toLong(u, v)
+                    return longFrom32(u, v)
                 }
             }
         }
@@ -719,9 +719,3 @@ private fun DoubleArray.indexOfCoordinate(value: Double): Int {
 }
 
 private fun approximatelyEquals(a: Double, b: Double): Boolean = kotlin.math.abs(a - b) <= SHAPE_EPSILON
-
-private fun toLong(high: Int, low: Int): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFF)
-
-private fun Long.high(): Int = (this ushr 32).toInt()
-
-private fun Long.low(): Int = (this and 0xFFFFFFFF).toInt()

@@ -40,7 +40,6 @@ class MineTarget(val targetPos: BlockPos) {
     fun init() {
         with(ModulePacketMine) {
             targetRenderer.addBlock(targetPos, box = EMPTY_BOX.inflate(1e-5))
-            targetRenderer.updateAll()
         }
     }
 

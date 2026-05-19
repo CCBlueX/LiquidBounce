@@ -18,7 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.render.placement
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.longs.LongArrayList
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
@@ -27,7 +28,9 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
+import net.ccbluex.liquidbounce.utils.math.high32
 import net.ccbluex.liquidbounce.utils.math.iterator
+import net.ccbluex.liquidbounce.utils.math.low32
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
@@ -41,9 +44,9 @@ import net.minecraft.world.phys.AABB
 @Suppress("TooManyFunctions")
 class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) : BlockCuller.Owner {
 
-    private val inList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
-    private val currentList = Long2ObjectLinkedOpenHashMap<CurrentBlockData>()
-    private val outList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
+    private val inList = Long2ObjectOpenHashMap<InOutBlockData>()
+    private val currentList = Long2ObjectOpenHashMap<CurrentBlockData>()
+    private val outList = Long2ObjectOpenHashMap<InOutBlockData>()
 
     private val culler = BlockCuller(this)
 
@@ -58,6 +61,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     }
 
     private val blockPosCache = BlockPos.MutableBlockPos()
+    private val blockPosCacheList = LongArrayList()
 
     fun render(event: WorldRenderEvent, time: Long) {
         val matrixStack = event.matrixStack
@@ -73,8 +77,8 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                             box,
                             color.fade(colorFactor),
                             outlineColor.fade(colorFactor),
-                            (cullData ushr 32).toInt(),
-                            (cullData and 0xFFFFFFFF).toInt()
+                            cullData.high32(),
+                            cullData.low32(),
                         )
                     }
                 }
@@ -110,6 +114,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     drawEntryBox(pos, value.cullData, value.box, 1f)
                 }
 
+                blockPosCacheList.clear()
                 outList.long2ObjectEntrySet().removeIf { entry ->
                     // Do not use destructuring declaration which returns boxed [Long] values
                     val pos = entry.longKey
@@ -123,11 +128,15 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     drawEntryBox(pos, value.cullData, box, colorFactor)
 
                     if (time - value.startTime >= outTime) {
-                        updateNeighbors(blockPosCache.set(pos))
+                        blockPosCacheList.add(pos)
                         true
                     } else {
                         false
                     }
+                }
+
+                for (i in blockPosCacheList.indices) {
+                    updateNeighbors(blockPosCache.set(blockPosCacheList.getLong(i)))
                 }
 
             }
@@ -155,8 +164,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
             return
         }
 
-        // TODO in theory a one block radius should be enough
-        for (mutable in pos.expandToBoundingBox(2, 2, 2)) {
+        for (mutable in pos.expandToBoundingBox(1, 1, 1)) {
             val longValue = mutable.asLong()
 
             val inValue = inList[longValue]
@@ -248,20 +256,13 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      */
     fun updateBox(pos: BlockPos, box: AABB) {
         val longValue = pos.asLong()
-        var needUpdate = false
 
         inList[longValue]?.let {
-            needUpdate = true
             inList.put(longValue, it.copy(box = box))
         }
 
         currentList[longValue]?.let {
-            needUpdate = true
             currentList.put(longValue, it.copy(box = box))
-        }
-
-        if (needUpdate) {
-            updateNeighbors(pos)
         }
     }
 
