@@ -24,6 +24,11 @@ import net.minecraft.util.Util
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
+/**
+ * Get a [Logger] with client name prefix
+ */
+internal fun clientLogger(name: String): Logger = LogManager.getLogger("$CLIENT_NAME/$name")
+
 val logger: Logger = LogManager.getLogger(CLIENT_NAME)
 
 val inGame: Boolean

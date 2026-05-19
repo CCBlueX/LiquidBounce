@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
@@ -33,7 +32,7 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputListener
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
-import org.apache.logging.log4j.LogManager
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import org.apache.logging.log4j.Logger
 import org.joml.component1
 import org.joml.component2
@@ -73,7 +72,7 @@ class CefBrowser(
             }
         }
 
-        logger = LogManager.getLogger("$CLIENT_NAME/CefBrowser/${browserApi.hashCode()}")
+        logger = clientLogger("CefBrowser/${browserApi.hashCode()}")
         logger.info("Initializing Browser API (url='$url')")
     }
 

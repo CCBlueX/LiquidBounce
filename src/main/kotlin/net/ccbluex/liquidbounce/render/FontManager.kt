@@ -19,24 +19,22 @@
 package net.ccbluex.liquidbounce.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.createFont
 import net.minecraft.util.Util
 import net.minecraft.util.Util.OS.LINUX
 import net.minecraft.util.Util.OS.OSX
 import net.minecraft.util.Util.OS.WINDOWS
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import java.awt.Font
 import java.io.File
 import java.io.InputStream
 
 object FontManager {
 
-    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/FontManager")
+    private val logger = clientLogger("FontManager")
 
     private val STYLES = intArrayOf(
         Font.PLAIN,
