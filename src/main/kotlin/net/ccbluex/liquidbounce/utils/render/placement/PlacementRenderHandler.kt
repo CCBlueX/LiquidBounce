@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.render.placement
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
@@ -41,9 +41,9 @@ import net.minecraft.world.phys.AABB
 @Suppress("TooManyFunctions")
 class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) : BlockCuller.Owner {
 
-    private val inList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
-    private val currentList = Long2ObjectLinkedOpenHashMap<CurrentBlockData>()
-    private val outList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
+    private val inList = Long2ObjectOpenHashMap<InOutBlockData>()
+    private val currentList = Long2ObjectOpenHashMap<CurrentBlockData>()
+    private val outList = Long2ObjectOpenHashMap<InOutBlockData>()
 
     private val culler = BlockCuller(this)
 
@@ -155,8 +155,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
             return
         }
 
-        // TODO in theory a one block radius should be enough
-        for (mutable in pos.expandToBoundingBox(2, 2, 2)) {
+        for (mutable in pos.expandToBoundingBox(1, 1, 1)) {
             val longValue = mutable.asLong()
 
             val inValue = inList[longValue]
