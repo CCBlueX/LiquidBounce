@@ -34,7 +34,10 @@ class ShapeExtensionsTest {
 
     @Test
     fun `mergeAdjacentVoxelShapes returns empty list for empty input`() {
-        assertEquals(emptyList<PositionedShapeSpec>(), emptyList<PositionedVoxelShape<Int>>().mergeAdjacentVoxelShapes().toSpecs())
+        assertEquals(
+            emptyList<PositionedShapeSpec>(),
+            emptyList<PositionedVoxelShape<Int>>().mergeAdjacentVoxelShapes().toSpecs(),
+        )
     }
 
     @Test
