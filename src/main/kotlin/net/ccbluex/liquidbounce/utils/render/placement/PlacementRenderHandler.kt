@@ -248,20 +248,13 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      */
     fun updateBox(pos: BlockPos, box: AABB) {
         val longValue = pos.asLong()
-        var needUpdate = false
 
         inList[longValue]?.let {
-            needUpdate = true
             inList.put(longValue, it.copy(box = box))
         }
 
         currentList[longValue]?.let {
-            needUpdate = true
             currentList.put(longValue, it.copy(box = box))
-        }
-
-        if (needUpdate) {
-            updateNeighbors(pos)
         }
     }
 
