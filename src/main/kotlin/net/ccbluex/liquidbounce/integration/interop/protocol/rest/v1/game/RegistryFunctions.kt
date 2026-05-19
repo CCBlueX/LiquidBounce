@@ -154,7 +154,7 @@ private fun <T : Any> constructMap(
     registry: DefaultedRegistry<T>,
     tagKeys: Array<TagKey<T>>,
 ): Map<Identifier, Identifier> {
-    val map = hashMapOf<Identifier, Identifier>()
+    val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
 
     for (acceptedTag in tagKeys) {
         val get = registry.get(acceptedTag).getOrNull() ?: continue
@@ -192,9 +192,9 @@ private data class RegistryItemOutput(val name: String, val icon: String?)
 // GET /api/v1/client/registry/:name
 private fun Routing.getRegistry() = get {
     fun itemIconUrl(id: Identifier) =
-        "${ClientInteropServer.url}/api/v1/client/itemTexture?id=$id"
+        "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id"
     fun effectTextureUrl(id: Identifier) =
-        "${ClientInteropServer.url}/api/v1/client/effectTexture?id=$id"
+        "${ClientInteropServer.url}/api/v1/client/resource/effectTexture?id=$id"
 
     val registryName = call.parameters["name"]
         ?: call.forbidden("Missing registry name parameter")
