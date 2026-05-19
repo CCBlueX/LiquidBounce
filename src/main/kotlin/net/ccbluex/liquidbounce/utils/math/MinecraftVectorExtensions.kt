@@ -47,7 +47,6 @@ inline fun Vec2.copy(x: Float = this.x, y: Float = this.y) = Vec2(x, y)
  */
 object BlockPosAsLongComparator : LongComparator {
     override fun compare(k1: Long, k2: Long): Int {
-
         val y1 = BlockPos.getY(k1)
         val y2 = BlockPos.getY(k2)
         if (y1 == y2) {
