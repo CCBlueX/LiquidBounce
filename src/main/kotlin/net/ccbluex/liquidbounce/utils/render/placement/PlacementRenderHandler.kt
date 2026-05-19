@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.render.placement
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.longs.LongArrayList
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
@@ -58,6 +59,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     }
 
     private val blockPosCache = BlockPos.MutableBlockPos()
+    private val blockPosCacheList = LongArrayList()
 
     fun render(event: WorldRenderEvent, time: Long) {
         val matrixStack = event.matrixStack
@@ -110,6 +112,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     drawEntryBox(pos, value.cullData, value.box, 1f)
                 }
 
+                blockPosCacheList.clear()
                 outList.long2ObjectEntrySet().removeIf { entry ->
                     // Do not use destructuring declaration which returns boxed [Long] values
                     val pos = entry.longKey
@@ -123,11 +126,15 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     drawEntryBox(pos, value.cullData, box, colorFactor)
 
                     if (time - value.startTime >= outTime) {
-                        updateNeighbors(blockPosCache.set(pos))
+                        blockPosCacheList.add(pos)
                         true
                     } else {
                         false
                     }
+                }
+
+                for (i in blockPosCacheList.indices) {
+                    updateNeighbors(blockPosCache.set(blockPosCacheList.getLong(i)))
                 }
 
             }
