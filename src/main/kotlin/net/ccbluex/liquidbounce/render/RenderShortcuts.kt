@@ -111,17 +111,19 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRender
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) {
     poseStack.withPush {
-        translate(relativeToCamera(pos))
+        val cameraPos = camera.position()
+        translate(pos.x - cameraPos.x, pos.y - cameraPos.y, pos.z - cameraPos.z)
         draw()
     }
 }
 
 /**
- * Shortcut of `withPositionRelativeToCamera(Vec3d.of(pos))`
+ * Shortcut of `withPositionRelativeToCamera(Vec3.atLowerCornerOf(pos))`
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) {
     poseStack.withPush {
-        translate(relativeToCamera(pos))
+        val cameraPos = camera.position()
+        translate(pos.x - cameraPos.x, pos.y - cameraPos.y, pos.z - cameraPos.z)
         draw()
     }
 }

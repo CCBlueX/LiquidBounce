@@ -382,7 +382,7 @@ class BlockPlacer(
     /**
      * Removes all positions that are not in [positions] and adds all that are not in the queue.
      */
-    fun update(positions: Set<BlockPos>) {
+    fun update(positions: Collection<BlockPos>) {
         val iterator = blocks.fastIterator()
         while (iterator.hasNext()) {
             val entry = iterator.next()

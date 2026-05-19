@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
+import it.unimi.dsi.fastutil.longs.LongComparator
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Position
@@ -40,6 +41,27 @@ import kotlin.math.sqrt
 inline operator fun Vec2.component1() = this.x
 inline operator fun Vec2.component2() = this.y
 inline fun Vec2.copy(x: Float = this.x, y: Float = this.y) = Vec2(x, y)
+
+/**
+ * @see Vec3i.compareTo
+ */
+object BlockPosAsLongComparator : LongComparator {
+    override fun compare(k1: Long, k2: Long): Int {
+        val y1 = BlockPos.getY(k1)
+        val y2 = BlockPos.getY(k2)
+        if (y1 == y2) {
+            val z1 = BlockPos.getZ(k1)
+            val z2 = BlockPos.getZ(k2)
+            return if (z1 == z2) {
+                BlockPos.getX(k1) - BlockPos.getX(k2)
+            } else {
+                z1 - z2
+            }
+        } else {
+            return y1 - y2
+        }
+    }
+}
 
 inline operator fun BlockPos.rangeTo(other: BlockPos): BoundingBox = BoundingBox.fromCorners(this, other)
 

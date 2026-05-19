@@ -22,8 +22,12 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
-import net.minecraft.core.Direction
+import it.unimi.dsi.fastutil.longs.LongArrayList
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.fastutil.forEachLong
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.BooleanOp
@@ -77,7 +81,8 @@ fun interface DoubleFaceConsumer {
  * Order: bigger first
  */
 fun VoxelShape.toSortedAabbs(): MutableList<AABB> {
-    val list: MutableList<AABB> = this.toAabbs() // -> ArrayList
+    val list = ArrayList<AABB>()
+    this.toAabbs(list)
     list.sortWith(AABB_BIGGER_FIRST)
     return list
 }
@@ -198,6 +203,98 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
             shape
         }
     }
+}
+
+data class PositionedVoxelShape<K>(
+    val blockPos: Long,
+    val key: K,
+    val shape: VoxelShape,
+)
+
+@Suppress("CognitiveComplexMethod", "LongMethod")
+fun <K> Collection<PositionedVoxelShape<K>>.mergeAdjacentVoxelShapes(): List<PositionedVoxelShape<K>> {
+    if (this.isEmpty()) return emptyList()
+
+    val groupedShapes = HashMap<K, Long2ObjectOpenHashMap<VoxelShape>>()
+
+    for ((blockPos, key, shape) in this) {
+        val shapesByPos = groupedShapes.getOrPut(key, ::Long2ObjectOpenHashMap)
+        shapesByPos.put(blockPos, shape)
+    }
+
+    if (groupedShapes.isEmpty()) {
+        return emptyList()
+    }
+
+    val visited = LongOpenHashSet()
+    val queue = LongArrayList()
+    val componentEntries = LongArrayList()
+
+    val result = ArrayList<PositionedVoxelShape<K>>()
+    for ((key, shapesByPos) in groupedShapes) {
+        visited.clear()
+        queue.clear()
+        componentEntries.clear()
+
+        shapesByPos.keys.forEachLong { startPos ->
+            if (!visited.add(startPos)) {
+                return@forEachLong
+            }
+
+            componentEntries.clear()
+            queue.clear()
+            queue.add(startPos)
+            var queueIndex = 0
+
+            var originLong = startPos
+
+            while (queueIndex < queue.size) {
+                val currentPos = queue.getLong(queueIndex++)
+                if (!shapesByPos.containsKey(currentPos)) continue
+
+                componentEntries.add(currentPos)
+
+                if (BlockPosAsLongComparator.compare(currentPos, originLong) < 0) {
+                    originLong = currentPos
+                }
+
+                for (direction in Direction.entries) {
+                    val neighborPos = BlockPos.offset(currentPos, direction)
+                    if (shapesByPos.containsKey(neighborPos) && visited.add(neighborPos)) {
+                        queue.add(neighborPos)
+                    }
+                }
+            }
+
+            val originX = BlockPos.getX(originLong)
+            val originY = BlockPos.getY(originLong)
+            val originZ = BlockPos.getZ(originLong)
+
+            var mergedShape = Shapes.empty()
+            for (i in componentEntries.indices) {
+                val componentPos = componentEntries.getLong(i)
+                val componentShape = shapesByPos.get(componentPos) ?: continue
+
+                mergedShape = Shapes.joinUnoptimized(
+                    mergedShape,
+                    componentShape.move(
+                        (BlockPos.getX(componentPos) - originX).toDouble(),
+                        (BlockPos.getY(componentPos) - originY).toDouble(),
+                        (BlockPos.getZ(componentPos) - originZ).toDouble(),
+                    ),
+                    BooleanOp.OR,
+                )
+            }
+
+            result += PositionedVoxelShape(
+                blockPos = originLong,
+                key = key,
+                shape = mergedShape.optimize(),
+            )
+        }
+    }
+
+    return result
 }
 
 private class ShapeSurfaceMesh(

@@ -51,6 +51,8 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.PositionedVoxelShape
+import net.ccbluex.liquidbounce.utils.math.mergeAdjacentVoxelShapes
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.core.BlockPos
@@ -133,6 +135,9 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     }
 
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
+    private val mergeAdjacent by boolean("MergeAdjacent", false).onChanged {
+        markDirtyForModes()
+    }
 
     private val distanceFade = tree(DistanceFadeUniformValueGroup())
 
@@ -250,14 +255,16 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 return@handler
             }
 
+            val mergedShapes = collectTrackedBlockShapes()
+
             blockFacesRenderState.buildMesh(
                 pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
                 origin = player.blockPosition(),
             ) { pose, origin ->
-                forEachTrackedBlockShapes { blockPos, type, outlineShape ->
+                for (mergedShape in mergedShapes) {
                     pose.withPush {
-                        translate(blockPos.subtract(origin))
-                        addShapeFaces(last().pose(), outlineShape, type.color.alpha(50))
+                        translate(mergedShape.blockPos, origin)
+                        addShapeFaces(last().pose(), mergedShape.shape, mergedShape.key.color.alpha(50))
                     }
                 }
             }
@@ -267,10 +274,10 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                     pipeline = ClientRenderPipelines.relativeLines(useColor = true),
                     origin = player.blockPosition(),
                 ) { pose, origin ->
-                    forEachTrackedBlockShapes { blockPos, type, outlineShape ->
+                    for (mergedShape in mergedShapes) {
                         pose.withPush {
-                            translate(blockPos.subtract(origin))
-                            addShapeOutlines(last().pose(), outlineShape, type.color.alpha(100))
+                            translate(mergedShape.blockPos, origin)
+                            addShapeOutlines(last().pose(), mergedShape.shape, mergedShape.key.color.alpha(100))
                         }
                     }
                 }
@@ -338,10 +345,10 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             ) { pose, origin ->
                 // non-model blocks are already processed by WorldRenderer where we injected code which renders
                 // their outline
-                forEachTrackedBlockShapes({ it.renderShape != RenderShape.MODEL }) { blockPos, type, outlineShape ->
+                for (mergedShape in collectTrackedBlockShapes { it.renderShape != RenderShape.MODEL }) {
                     pose.withPush {
-                        translate(blockPos.subtract(origin))
-                        addShapeFaces(last().pose(), outlineShape, type.color)
+                        translate(mergedShape.blockPos, origin)
+                        addShapeFaces(last().pose(), mergedShape.shape, mergedShape.key.color)
                     }
                 }
             }
@@ -427,6 +434,29 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         }
     }
 
+    private inline fun collectTrackedBlockShapes(
+        skipWhen: (BlockState) -> Boolean = { false },
+    ): List<PositionedVoxelShape<ChestType>> {
+        val shapes = buildList {
+            forEachTrackedBlockShapes(skipWhen) { blockPos, type, outlineShape ->
+                add(
+                    PositionedVoxelShape(
+                        blockPos = blockPos.asLong(),
+                        key = type,
+                        shape = outlineShape,
+                    )
+                )
+            }
+        }
+
+        return if (mergeAdjacent) shapes.mergeAdjacentVoxelShapes() else shapes
+    }
+
+    private fun markDirtyForModes() {
+        GlowMode.markDirty()
+        BoxMode.markDirty()
+    }
+
     private object StorageScanner : AbstractBlockLocationTracker.State2BlockPos<ChestType>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): ChestType? {
             if (!state.hasBlockEntity()) return null
@@ -436,8 +466,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         }
 
         override fun onUpdated() {
-            GlowMode.markDirty()
-            BoxMode.markDirty()
+            markDirtyForModes()
         }
     }
 
