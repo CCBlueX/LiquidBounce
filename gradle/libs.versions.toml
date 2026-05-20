@@ -10,7 +10,7 @@ minecraft = "26.1.2"
 fabric-loom = "1.16-SNAPSHOT"
 fabric-loader = "0.19.2"
 fabric-loaderMin = "0.18.4"
-fabric-api = "0.149.1+26.1.2"
+fabric-api = "0.149.1+"
 
 # mcef
 mcef = "3.3.1-26.1-SNAPSHOT"
