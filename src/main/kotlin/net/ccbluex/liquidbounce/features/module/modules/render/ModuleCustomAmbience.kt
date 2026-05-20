@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.minecraft.client.renderer.fog.FogData
 import net.minecraft.client.renderer.state.LightmapRenderState
 
@@ -105,7 +106,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
                 private val color by color("Color", Color4b.BLUE)
 
                 override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
-                    gpuDevice.createCommandEncoder().clearColorTexture(texture, color.argb)
+                    texture.clearColor(color.argb)
                     return true
                 }
             }
