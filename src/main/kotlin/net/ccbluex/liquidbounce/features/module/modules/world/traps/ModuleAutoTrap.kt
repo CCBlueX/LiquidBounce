@@ -61,12 +61,18 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     private var timeout = false
 
     override fun onEnabled() {
-        timeout = false
+        resetState()
     }
 
     override fun onDisabled() {
-        timeout = false
+        resetState()
         SilentHotbar.resetSlot(this)
+    }
+
+    private fun resetState() {
+        timeout = false
+        currentPlan = null
+        targetTracker.reset()
     }
 
     @Suppress("unused")
