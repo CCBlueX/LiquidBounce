@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
 /**
  * Ignite & AutoWeb module
@@ -74,6 +75,10 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             return@handler
         }
 
+        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+            return@handler
+        }
+
         val enemies = targetTracker.targets()
         TrapPlayerSimulation.runSimulations(enemies)
 
@@ -91,6 +96,10 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
     @Suppress("unused")
     private val placementHandler = tickHandler {
+        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+            return@tickHandler
+        }
+
         val plan = currentPlan ?: return@tickHandler
 
         if (shouldWaitForTiming(plan)) {
