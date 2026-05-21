@@ -47,7 +47,7 @@
             }));
         updateItems();
     });
-    
+
     function updateItems() {
         selectedItems = cSetting.value.map(id => allItems.find(item => item.value === id))
             .filter(Boolean) as NamedItem[];
