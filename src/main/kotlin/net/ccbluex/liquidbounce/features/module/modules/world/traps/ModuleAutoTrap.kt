@@ -104,11 +104,31 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
         CombatManager.pauseCombatForAtLeast(1)
         SilentHotbar.selectSlotSilently(this, plan.slot, 1)
-        doPlacement(raycast, hand = plan.slot.useHand)
+
+        var successful = false
+        val onSuccess = {
+            plan.onIntentFulfilled()
+            successful = true
+            true
+        }
+
+        doPlacement(
+            raycast,
+            hand = plan.slot.useHand,
+            onPlacementSuccess = onSuccess,
+            onItemUseSuccess = onSuccess
+        )
+
+        if (!successful) {
+            return@tickHandler
+        }
+
         timeout = true
-        plan.onIntentFulfilled()
-        waitTicks(delay)
-        timeout = false
+        try {
+            waitTicks(delay)
+        } finally {
+            timeout = false
+        }
     }
 
     private fun shouldWaitForTiming(plan: BlockChangeIntent<*>): Boolean {
