@@ -436,6 +436,7 @@
   "liquidbounce.liquidchat.states.loggedIn": "Authenticated!",
   "liquidbounce.liquidchat.writeMessage": "To send a message: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "To send a private message: %s",
+  "liquidbounce.module.packetCanceller.description": "Allows you to cancel selected packets.",
   "liquidbounce.module.packetLogger.description": "Prints all packets and their fields.",
   "liquidbounce.module.packetLogger.messages.send": "Sending",
   "liquidbounce.module.packetLogger.messages.receive": "Receiving",
