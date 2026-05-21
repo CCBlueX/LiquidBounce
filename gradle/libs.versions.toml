@@ -32,7 +32,7 @@ fastutil4k = "0.2.8"
 # Recommended mods
 modmenu = "18.0.0-alpha.7"
 exploit_preventer_api = "1.0.0"
-exploit_preventer_mod = "1.0.5+26.1"
+exploit_preventer_mod = "1.0.6+"
 sodium = "mc26.1.2-0.8.12-fabric"
 lithium = "mc26.1.2-0.24.2-fabric"
 viafabricplus = "4.5.3"
