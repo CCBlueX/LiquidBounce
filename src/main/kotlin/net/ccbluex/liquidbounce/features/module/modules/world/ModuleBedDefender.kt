@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.distanceToCenterSqr
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BlockItem
@@ -102,10 +103,9 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
             (blockPos, _) -> blockPos.distToCenterSqr(eyesPos)
         } ?: return@handler
 
-        val mutable = BlockPos.MutableBlockPos()
         val placementPositions = blockPos.searchBedLayer(state, maxLayers)
             .filterTo(mutableListOf()) { (_, pos) ->
-                mutable.set(pos).center.distanceToSqr(eyesPos) <= rangeSq
+                eyesPos.distanceToCenterSqr(pos) <= rangeSq
             }
 
         if (placementPositions.isEmpty()) {
@@ -117,25 +117,21 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
             sortWith(
                 Comparator.comparingInt<IntLongPair> { it.leftInt() }
                     .thenComparingDouble {
-                        -mutable.set(it.rightLong()).distToCenterSqr(eyesPos)
+                        eyesPos.distanceToCenterSqr(it.rightLong())
                     }
             )
         }
 
-        debugGeometry("PlacementPosition") {
+        debugGeometry("PlacementPositions") {
             ModuleDebug.DebugCollection(
                 updatePositions.map { (_, pos) ->
-                    ModuleDebug.DebuggedPoint(mutable.set(pos).center, Color4b.RED.with(a = 100))
+                    ModuleDebug.DebuggedPoint(BlockPos.of(pos).center, Color4b.RED.with(a = 100))
                 }
             )
         }
 
         // Need ordered set (like TreeSet/LinkedHashSet)
-        placer.update(
-            updatePositions.mapTo(linkedSetOf()) {
-                BlockPos.of(it.rightLong())
-            }
-        )
+        placer.update(updatePositions.mapTo(linkedSetOf()) { BlockPos.of(it.rightLong()) })
     }
 
     override fun onDisabled() {
