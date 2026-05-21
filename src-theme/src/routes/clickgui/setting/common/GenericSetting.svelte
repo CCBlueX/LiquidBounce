@@ -61,10 +61,8 @@
         <ItemListSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "REGISTRY_LIST" }
         <RegistryListSetting {path} bind:setting={setting} on:change/>
-    {:else if setting.valueType === "REGISTRY_CHOOSE" }
-        <RegistryChooseSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "REGISTRY_MUTABLE_LIST" }
-        <RegistryMutableListSetting bind:setting={setting} on:change/>
+        <RegistryMutableListSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "BIND"}
         <BindSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "VECTOR3_I" }
