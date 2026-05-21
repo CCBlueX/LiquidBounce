@@ -12,6 +12,7 @@
     export let enabled: boolean;
     // NOTE: It would be better if enabled state handling was performed by a wrapper element.
     export let showEnabledState = true;
+    export let pointerCursor = true;
 
     let showingFallbackImage = false;
 
@@ -26,7 +27,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="item" class:has-icon={icon !== undefined} class:has-enabled-state={showEnabledState}
-     on:click={() => dispatch("toggle", {enabled: !enabled, value: value})}>
+     class:pointer-cursor={pointerCursor} on:click={() => dispatch("toggle", {enabled: !enabled, value: value})}>
     {#if icon}
         <img class="icon" class:fallback={showingFallbackImage} src="{icon}" alt={value} on:error={showFallbackIcon}/>
     {/if}
@@ -51,7 +52,7 @@
     column-gap: 5px;
     margin: 2px 5px 2px 0;
 
-    &.has-enabled-state {
+    &.pointer-cursor {
       cursor: pointer;
     }
 

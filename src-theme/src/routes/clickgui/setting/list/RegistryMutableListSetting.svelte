@@ -125,7 +125,7 @@
                             <DraggableItem>
                                 <RemovableItem on:remove={() => handleRemove(index)}>
                                     <ListItem value={item.value} name={item.name} icon={item.icon} enabled={false}
-                                              showEnabledState={false}/>
+                                              showEnabledState={false} pointerCursor={false}/>
                                 </RemovableItem>
                             </DraggableItem>
                         {/each}
