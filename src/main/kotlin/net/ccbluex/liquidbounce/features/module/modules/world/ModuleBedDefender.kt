@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
+import net.ccbluex.fastutil.referenceArraySetOf
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -41,11 +42,15 @@ import net.ccbluex.liquidbounce.utils.math.distanceToCenterSqr
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.BedBlock
 
 object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategories.WORLD) {
 
+    private val CHEST_ITEMS = referenceArraySetOf(Items.CHEST, Items.TRAPPED_CHEST, Items.COPPER_CHEST, Items.ENDER_CHEST)
+
     private val maxLayers by int("MaxLayers", 1, 1..5)
+    private val allowChests by boolean("AllowChests", false)
 
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
@@ -60,7 +65,10 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
 
     private fun findBestBlockSlot(): HotbarItemSlot? {
         return Slots.OffhandWithHotbar
-            .filter { it.itemStack.isFullBlock() }
+            .filter {
+                val itemStack = it.itemStack
+                itemStack.isFullBlock() || allowChests && CHEST_ITEMS.contains(itemStack.item)
+            }
             .minWithOrNull(blockSlotComparator)
     }
 
