@@ -90,8 +90,14 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
         currentPlan = webTrapPlanner.plan(enemies) ?: ignitionTrapPlanner.plan(enemies)
         currentPlan?.let { intent ->
+            val blockChangeInfo = intent.blockChangeInfo
+            if (blockChangeInfo !is BlockChangeInfo.PlaceBlock) {
+                currentPlan = null
+                return@handler
+            }
+
             RotationManager.setRotationTarget(
-                (intent.blockChangeInfo as BlockChangeInfo.PlaceBlock).blockPlacementTarget.rotation,
+                blockChangeInfo.blockPlacementTarget.rotation,
                 considerInventory = !ignoreOpenInventory,
                 valueGroup = rotations,
                 Priority.IMPORTANT_FOR_PLAYER_LIFE,
@@ -107,6 +113,10 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         }
 
         val plan = currentPlan ?: return@tickHandler
+        if (plan.blockChangeInfo !is BlockChangeInfo.PlaceBlock) {
+            currentPlan = null
+            return@tickHandler
+        }
 
         if (shouldWaitForTiming(plan)) {
             return@tickHandler
