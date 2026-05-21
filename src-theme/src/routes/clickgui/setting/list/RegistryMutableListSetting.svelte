@@ -28,6 +28,14 @@
     let selectableItems: NamedItem[] = [];
 
     let showChooser = false;
+    let sortableRenderKey = 0;
+
+    type SortEvent = {
+        oldIndex?: number | null;
+        newIndex?: number | null;
+        oldDraggableIndex?: number | null;
+        newDraggableIndex?: number | null;
+    };
 
     onMount(async () => {
         const registryItems = await getRegistryItems(cSetting.registry);
@@ -39,8 +47,7 @@
             }));
         updateItems();
     });
-
-    // TODO: refactor
+    
     function updateItems() {
         selectedItems = cSetting.value.map(id => allItems.find(item => item.value === id))
             .filter(Boolean) as NamedItem[];
@@ -67,16 +74,39 @@
         updateItems();
     }
 
-    function handleSort(e: {oldIndex: number, newIndex: number}) {
-        const items = [...selectedItems];
-        const [movedItem] = items.splice(e.oldIndex, 1);
+    function handleSort(e: SortEvent) {
+        const oldIndex = e.oldDraggableIndex ?? e.oldIndex;
+        const newIndex = e.newDraggableIndex ?? e.newIndex;
 
-        items.splice(e.newIndex, 0, movedItem);
+        if (
+            oldIndex === undefined ||
+            oldIndex === null ||
+            newIndex === undefined ||
+            newIndex === null ||
+            oldIndex === newIndex
+        ) {
+            return;
+        }
+
+        const items = [...selectedItems];
+
+        if (oldIndex < 0 || oldIndex >= items.length || newIndex < 0 || newIndex >= items.length) {
+            return;
+        }
+
+        const [movedItem] = items.splice(oldIndex, 1);
+
+        if (!movedItem) {
+            return;
+        }
+
+        items.splice(newIndex, 0, movedItem);
 
         cSetting.value = items.map(i => i.value);
         
         handleChange();
         updateItems();
+        sortableRenderKey++;
     }
 </script>
 
@@ -89,16 +119,18 @@
     {#if expanded}
         <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
             <div class="selected-items">
-                <SortableList class="" forceFallback={true} animation={150} onSort={handleSort}>
-                    {#each selectedItems as item, index (item.value)}
-                        <DraggableItem>
-                            <RemovableItem on:remove={() => handleRemove(index)}>
-                                <ListItem value={item.value} name={item.name} icon={item.icon} enabled={false}
-                                          showEnabledState={false}/>
-                            </RemovableItem>
-                        </DraggableItem>
-                    {/each}
-                </SortableList>
+                {#key sortableRenderKey}
+                    <SortableList class="" forceFallback={true} fallbackOnBody={true} animation={150} onEnd={handleSort}>
+                        {#each selectedItems as item, index (item.value)}
+                            <DraggableItem>
+                                <RemovableItem on:remove={() => handleRemove(index)}>
+                                    <ListItem value={item.value} name={item.name} icon={item.icon} enabled={false}
+                                              showEnabledState={false}/>
+                                </RemovableItem>
+                            </DraggableItem>
+                        {/each}
+                    </SortableList>
+                {/key}
             </div>
 
             <SettingButton value={showChooser ? "Cancel" : "Add item"} on:click={() => showChooser = !showChooser}/>
@@ -146,5 +178,4 @@
     margin-top: 10px;
   }
 </style>
-
 
