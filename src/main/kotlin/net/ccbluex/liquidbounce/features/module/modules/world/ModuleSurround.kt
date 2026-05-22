@@ -218,7 +218,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
 
     private var addExtraLayerBlocks = false
     private var startY = 0.0
-    private var centerPos: Vector2d? = null
+    private val centerPos = Vector2d()
 
     init {
         // for this module, support should by default be able to use obsidian
@@ -232,12 +232,13 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
 
         startY = player.position().y
         val centerBlockPos = player.blockPosition().center
-        centerPos = Vector2d(centerBlockPos.x, centerBlockPos.z)
+        centerPos.set(centerBlockPos.x, centerBlockPos.z)
     }
 
     override fun onDisabled() {
         placer.disable()
         addExtraLayerBlocks = false
+        centerPos.set(0.0)
     }
 
     @Suppress("unused")
@@ -252,8 +253,8 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
         }
 
         val yChange = DisableOn.Y_CHANGE in disableOn && it.y != startY
-        val dx = abs(player.x - (centerPos?.x ?: 0.0))
-        val dz = abs(player.z - (centerPos?.y ?: 0.0))
+        val dx = abs(player.x - centerPos.x)
+        val dz = abs(player.z - centerPos.y)
         val xzChange = DisableOn.XZ_MOVE in disableOn && (dx > 0.5 || dz > 0.5)
         val speed = player.position().subtract(player.xo, player.yo, player.zo).lengthSqr() * 20.0
         val highSpeed = DisableOn.XZ_SPEED in disableOn && speed >= 5.0

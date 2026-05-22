@@ -34,8 +34,6 @@ import org.joml.Vector3f
 import org.joml.Vector3fc
 import java.lang.Math.fma
 import kotlin.math.abs
-import kotlin.math.absoluteValue
-import kotlin.math.hypot
 import kotlin.math.sqrt
 
 inline operator fun Vec2.component1() = this.x
@@ -94,8 +92,6 @@ fun Vec3i.lengthSqr(): Long {
 inline operator fun Vec3.unaryMinus(): Vec3 = this.reverse()
 
 inline operator fun Vec3.plus(other: Position): Vec3 = add(other.x(), other.y(), other.z())
-
-inline val Vec3.absoluteValue: Vec3 get() = Vec3(this.x.absoluteValue, this.y.absoluteValue, this.z.absoluteValue)
 
 /**
  * @return [this] + [scale] * [other]
@@ -166,7 +162,14 @@ inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: 
 inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
     multiply(factorX, factorY, factorZ)
 
-fun Vec3.horizontalDistanceTo(other: Vec3): Double = hypot(this.x - other.x, this.z - other.z)
+fun Vec3.horizontalDistanceTo(other: Vec3): Double = Mth.length(this.x - other.x, this.z - other.z)
+
+fun Position.distanceToCenterSqr(blockPos: Long): Double {
+    val dx = this.x() - BlockPos.getX(blockPos)
+    val dy = this.y() - BlockPos.getY(blockPos)
+    val dz = this.z() - BlockPos.getZ(blockPos)
+    return Mth.lengthSquared(dx, dy, dz)
+}
 
 inline operator fun Vec3.component1(): Double = this.x
 inline operator fun Vec3.component2(): Double = this.y

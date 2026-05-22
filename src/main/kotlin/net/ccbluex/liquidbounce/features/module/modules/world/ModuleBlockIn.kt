@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet
-import net.ccbluex.liquidbounce.config.types.group.Mode
-import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -51,20 +50,14 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
 
     private val blockPlacer = tree(BlockPlacer("Placer", this, Priority.NORMAL, ::slotFinder))
     private val autoDisable by boolean("AutoDisable", true)
-    private val placeOrder = choices("PlaceOrder", 0) {
-        arrayOf(Order.Normal, Order.Random, Order.BottomTop, Order.TopBottom)
-    }
+    private val placeOrder by enumChoice("PlaceOrder", Order.Normal)
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val blocks by blocks("Blocks", blockSortedSetOf())
 
-    private sealed class Order(name: String) : Mode(name) {
-        override val parent: ModeValueGroup<*>
-            get() = placeOrder
+    private enum class Order(override val tag: String) : Tagged {
 
-        abstract fun positions(): MutableSet<BlockPos>
-
-        object Normal : Order("Normal") {
-            override fun positions(): ObjectArraySet<BlockPos> {
+        Normal("Normal") {
+            override fun positions(): Array<BlockPos> {
                 val playerHeight = Mth.ceil(player.bbHeight)
                 val result = ObjectArraySet<BlockPos>(10)
                 result += startPos.below()
@@ -76,43 +69,44 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
                 }
                 result += startPos.above(playerHeight)
 
-                return result
+                return result.toTypedArray()
             }
-        }
+        },
 
-        object Random : Order("Random") {
-            override fun positions(): ObjectArraySet<BlockPos> {
-                val array = Normal.positions().toArray()
+        Random("Random") {
+            override fun positions(): Array<BlockPos> {
+                val array = Normal.positions()
                 array.shuffle()
-                return ObjectArraySet(array)
+                return array
             }
-        }
+        },
 
-        object BottomTop : Order("BottomTop") {
-            override fun positions(): MutableSet<BlockPos> {
-                val array = Normal.positions().toArray()
-                array.sortBy { (it as BlockPos).y }
-                return ObjectArraySet(array)
+        BottomTop("BottomTop") {
+            override fun positions(): Array<BlockPos> {
+                val array = Normal.positions()
+                array.sortBy { it.y }
+                return array
             }
-        }
+        },
 
-        object TopBottom : Order("TopBottom") {
-            override fun positions(): MutableSet<BlockPos> {
-                val array = Normal.positions().toArray()
-                array.sortByDescending { (it as BlockPos).y }
-                return ObjectArraySet(array)
+        TopBottom("TopBottom") {
+            override fun positions(): Array<BlockPos> {
+                val array = Normal.positions()
+                array.sortByDescending { it.y }
+                return array
             }
-        }
+        };
 
+        abstract fun positions(): Array<BlockPos>
     }
 
     private val startPos = BlockPos.MutableBlockPos()
     private var rotateClockwise = false
-    private var blockList = emptySet<BlockPos>()
+    private var blockList = emptyList<BlockPos>()
 
     override fun onDisabled() {
         startPos.set(BlockPos.ZERO)
-        blockList = emptySet()
+        blockList = emptyList()
         blockPlacer.disable()
     }
 
@@ -136,7 +130,7 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     }
 
     private fun getPositions() {
-        blockList = placeOrder.activeMode.positions()
+        blockList = placeOrder.positions().asList()
         debugParameter("Place Count") { blockList.size }
     }
 

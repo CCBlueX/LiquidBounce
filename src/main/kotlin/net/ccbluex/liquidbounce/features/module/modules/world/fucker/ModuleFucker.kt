@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.ccbluex.liquidbounce.utils.block.isAnyChest
 import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.block.outlineBox
@@ -60,7 +61,6 @@ import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.ClipContext
@@ -70,10 +70,10 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.phys.shapes.Shapes
 import java.util.function.ToDoubleFunction
 import java.util.function.ToIntFunction
 import kotlin.math.max
-import kotlin.text.compareTo
 
 /**
  * Fucker module
@@ -114,6 +114,8 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val ignoreUsingItem by boolean("IgnoreUsingItem", true)
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
+
+    private val chestAsFullBlock by boolean("ChestAsFullBlock", false)
 
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
@@ -401,7 +403,14 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
         var bestPath: SurroundingPath? = null
 
-        target.outlineShape.move(target).forAllFaces { side, minX, minY, minZ, maxX, maxY, maxZ ->
+        val targetState = target.state ?: return bestPath
+        val targetShape = if (chestAsFullBlock && targetState.isAnyChest) {
+            Shapes.block()
+        } else {
+            targetState.getShape(world, target)
+        }
+
+        targetShape.move(target).forAllFaces { side, minX, minY, minZ, maxX, maxY, maxZ ->
             val face = AABB(minX, minY, minZ, maxX, maxY, maxZ)
             for (a in targetPointProportions) {
                 for (b in targetPointProportions) {

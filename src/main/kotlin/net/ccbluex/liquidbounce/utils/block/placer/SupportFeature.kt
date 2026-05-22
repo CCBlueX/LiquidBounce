@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
 import net.ccbluex.liquidbounce.utils.block.dijkstraShortestPath
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.kotlin.toOrderedSet
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
@@ -77,7 +77,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
                             // this useless because we already search the shortest path under all structure blocks?
                             queuedBlocks.contains(neighbor.asLong()) ||
                             neighbor.distManhattan(targetPos) > depth ||
-                            player.eyePosition.distanceToSqr(neighbor.center) > rangeSq ||
+                            neighbor.distToCenterSqr(player.eyePosition) > rangeSq ||
                             neighbor.isBlockedByEntities()
                         ) {
                             continue
@@ -95,7 +95,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
     private fun canPlace(pos: BlockPos): Boolean {
         val cache = BlockPos.MutableBlockPos()
         return Direction.entries.any {
-            !cache.setWithOffset(pos, it).getState()!!.canBeReplaced()
+            !cache.setWithOffset(pos, it).stateOrEmpty.canBeReplaced()
         }
     }
 
