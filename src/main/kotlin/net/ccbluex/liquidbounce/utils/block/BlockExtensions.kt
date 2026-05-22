@@ -41,9 +41,11 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.core.TypedInstance
 import net.minecraft.core.Vec3i
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.tags.BlockTags
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionResult.Success
@@ -139,6 +141,12 @@ fun BlockPos.getCenterDistanceSquaredEyes() = this.distToCenterSqr(player.eyePos
 
 val BlockState.isBed: Boolean
     get() = block is BedBlock
+
+val TypedInstance<Block>.isAnyChest: Boolean
+    get() = this.`is`(Blocks.CHEST)
+        || this.`is`(Blocks.TRAPPED_CHEST)
+        || this.`is`(Blocks.ENDER_CHEST)
+        || this.`is`(BlockTags.COPPER_CHESTS)
 
 /**
  * Converts this [BlockPos] to an immutable one if needed.
@@ -609,7 +617,7 @@ fun BlockState.isBreakable(pos: BlockPos): Boolean {
     return !isAir && (player.isCreative || getDestroySpeed(world, pos) >= 0f)
 }
 
-val FALL_DAMAGE_BLOCKING_BLOCKS = arrayOf(
+private val FALL_DAMAGE_BLOCKING_BLOCKS = arrayOf(
     Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
 )
 
@@ -678,6 +686,7 @@ val BlockState?.isInteractable: Boolean get() = this?.block?.isInteractable(this
 
 fun BlockPos.isBlockedByEntities(): Boolean {
     val posBox = FULL_BOX + this
+    // TODO: optimize this
     return world.entitiesForRendering().any {
         it.boundingBox.intersects(posBox)
     }
