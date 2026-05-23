@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
  * Allows you to cancel selected packets.
  */
 
-object ModulePacketCanceller : ClientModule("PacketCanceller", ModuleCategories.PLAYER) {
+object ModulePacketCanceller : ClientModule("PacketCanceller", ModuleCategories.MISC) {
 
     private val filter by enumChoice("Filter", Filter.WHITELIST)
     private val clientPackets by c2sPackets("C2SPackets", sortedSetOf())
