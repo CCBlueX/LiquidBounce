@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.animations.ModuleAnimations;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
@@ -28,17 +29,20 @@ public abstract class MixinSwingAnimationRenderer {
     )
     private void onRenderArmWithItem(AbstractClientPlayer player, float partialTick, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equippedProgress, PoseStack poseStack, SubmitNodeCollector nodeCollector, int packedLight, CallbackInfo ci) {
         if (ModuleAnimations.INSTANCE.getEnabled() && ModuleAnimations.INSTANCE.getSwingAnimation().getEnabled() && hand == InteractionHand.MAIN_HAND) {
+            if (ModuleSwordBlock.INSTANCE.getEnabled() && !ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
 
-            ModuleAnimations.INSTANCE.getSwingAnimation().onRenderItem(player, hand, swingProgress, equippedProgress, poseStack);
+                ModuleAnimations.INSTANCE.getSwingAnimation().onRenderItem(player, hand, swingProgress, equippedProgress, poseStack);
 
-            boolean isMainHand = hand == InteractionHand.MAIN_HAND;
-            HumanoidArm arm = isMainHand ? player.getMainArm() : player.getMainArm().getOpposite();
-            ItemDisplayContext context = (arm == HumanoidArm.RIGHT) ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+                boolean isMainHand = hand == InteractionHand.MAIN_HAND;
+                HumanoidArm arm = isMainHand ? player.getMainArm() : player.getMainArm().getOpposite();
+                ItemDisplayContext context = (arm == HumanoidArm.RIGHT) ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
 
-            this.renderItem(player, item, context, poseStack, nodeCollector, packedLight);
+                this.renderItem(player, item, context, poseStack, nodeCollector, packedLight);
 
-            poseStack.popPose();
-            ci.cancel();
+                poseStack.popPose();
+                ci.cancel();
+
+            }
         }
     }
 }
