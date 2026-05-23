@@ -87,12 +87,12 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
                 poseStack.mulPose(Axis.ZP.rotationDegrees(i * g * -20.0f))
             }
             Mode.Five -> {
-                applyEquipOffset(poseStack, arm, equip)
+                applyEquipOffset(poseStack, arm, 0f)
                 val scale = -fSin(swing * 3f) / 2f + 1f
                 poseStack.scale(scale, scale, scale)
             }
             Mode.Six -> {
-                applyEquipOffset(poseStack, arm, equip)
+                applyEquipOffset(poseStack, arm, 0f)
                 poseStack.mulPose(Axis.XP.rotationDegrees(swing * -360f))
             }
             Mode.Seven -> {
