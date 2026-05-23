@@ -30,7 +30,7 @@ import net.minecraft.world.entity.HumanoidArm
 
 object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations", false) {
 
-    val mode by enumChoice("Mode", Mode.One)
+    val mode by enumChoice("Mode", Mode.Fourteen)
 
     enum class Mode(override val tag: String) : Tagged {
         One("Jump"), Two("Swipe"), Three("Bounce"), Four("Tilt"),
@@ -134,7 +134,7 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
                     val m = 0.2f * fSin(fSqrt * PI * 2f)
                     val f2 = -0.2f * fSin(swing * PI)
                     poseStack.translate(i * n.toDouble(), m.toDouble(), f2.toDouble())
-                    applyEquipOffset(poseStack, arm, equip)
+                    applyEquipOffset(poseStack, arm, 0f)
                     applySwingOffset(poseStack, arm, swing)
                 }
             }

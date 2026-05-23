@@ -10,17 +10,23 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.item.Items;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static net.minecraft.world.item.Items.SHIELD;
+
 @Mixin(ItemInHandRenderer.class)
 public abstract class MixinSwingAnimationRenderer {
 
     @Shadow
     public abstract void renderItem(net.minecraft.world.entity.LivingEntity entity, ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack, SubmitNodeCollector nodeCollector, int packedLight);
+
+    @Shadow
+    private ItemStack mainHandItem;
 
     @Inject(
         method = "renderArmWithItem",
@@ -30,18 +36,20 @@ public abstract class MixinSwingAnimationRenderer {
     private void onRenderArmWithItem(AbstractClientPlayer player, float partialTick, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equippedProgress, PoseStack poseStack, SubmitNodeCollector nodeCollector, int packedLight, CallbackInfo ci) {
         if (ModuleAnimations.INSTANCE.getEnabled() && ModuleAnimations.INSTANCE.getSwingAnimation().getEnabled() && hand == InteractionHand.MAIN_HAND) {
             if (ModuleSwordBlock.INSTANCE.getEnabled() && !ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
+                if (!player.isUsingItem() && player.getItemInHand(InteractionHand.MAIN_HAND).getItem() != SHIELD) {
 
-                ModuleAnimations.INSTANCE.getSwingAnimation().onRenderItem(player, hand, swingProgress, equippedProgress, poseStack);
+                    ModuleAnimations.INSTANCE.getSwingAnimation().onRenderItem(player, hand, swingProgress, equippedProgress, poseStack);
 
-                boolean isMainHand = hand == InteractionHand.MAIN_HAND;
-                HumanoidArm arm = isMainHand ? player.getMainArm() : player.getMainArm().getOpposite();
-                ItemDisplayContext context = (arm == HumanoidArm.RIGHT) ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+                    boolean isMainHand = hand == InteractionHand.MAIN_HAND;
+                    HumanoidArm arm = isMainHand ? player.getMainArm() : player.getMainArm().getOpposite();
+                    ItemDisplayContext context = (arm == HumanoidArm.RIGHT) ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
 
-                this.renderItem(player, item, context, poseStack, nodeCollector, packedLight);
+                    this.renderItem(player, item, context, poseStack, nodeCollector, packedLight);
 
-                poseStack.popPose();
-                ci.cancel();
+                    poseStack.popPose();
+                    ci.cancel();
 
+                }
             }
         }
     }
