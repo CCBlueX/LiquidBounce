@@ -74,8 +74,9 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
     /**
      * A choice that allows the user to choose the animation that will be used during the blocking
      * of a sword.
-     * This choice is only used when the [net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock] module is enabled.
+     * This choice is only used when the [ModuleSwordBlock] module is enabled.
      */
+
     val swingAnimation = SwingAnimations
     val blockAnimationChoice = choices(
         "BlockingAnimation", OneSevenAnimation, arrayOf(
