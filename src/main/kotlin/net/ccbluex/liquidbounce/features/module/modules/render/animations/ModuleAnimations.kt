@@ -16,7 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+
+package net.ccbluex.liquidbounce.features.module.modules.render.animations
 
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
@@ -28,7 +29,6 @@ import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.HumanoidArm
 
@@ -48,6 +48,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
         tree(MainHand)
         tree(OffHand)
         tree(EquipOffset)
+        tree(SwingAnimations)
     }
 
     object MainHand : ToggleableValueGroup(this, "MainHand", false) {
@@ -73,8 +74,9 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
     /**
      * A choice that allows the user to choose the animation that will be used during the blocking
      * of a sword.
-     * This choice is only used when the [ModuleSwordBlock] module is enabled.
+     * This choice is only used when the [net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock] module is enabled.
      */
+    val swingAnimation = SwingAnimations
     val blockAnimationChoice = choices(
         "BlockingAnimation", OneSevenAnimation, arrayOf(
             OneSevenAnimation,
@@ -116,6 +118,8 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
     /**
      * A choice that aims to transform the held item transformation during the swing progress.
      */
+
+
     abstract class AnimationMode(name: String) : Mode(name) {
 
         override val parent: ModeValueGroup<*>

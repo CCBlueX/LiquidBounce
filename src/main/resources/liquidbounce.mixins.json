@@ -149,6 +149,7 @@
     "minecraft.render.fog.MixinBlindnessFogEnvironment",
     "minecraft.render.fog.MixinFogRenderer",
     "minecraft.render.special.MixinShieldSpecialRenderer",
+    "minecraft.render.MixinSwingAnimationRenderer",
     "minecraft.text.MixinGuiMessage",
     "minecraft.text.MixinGuiMessageLineVisible",
     "minecraft.text.MixinMutableComponent",
