@@ -265,7 +265,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
             val sine1 = Mth.sin(swingProgress * swingProgress * Math.PI)
             val sideM = if (arm == HumanoidArm.RIGHT) 1.0f else -1.0f
 
-            matrices.translate(0F, translateY, 0F)
+            matrices.translate(0.2F * sideM, translateY, 0F)
 
             val rot1 = Quaternionf().rotationAxis(
                 (0.0F * sideM).toRadians(),
