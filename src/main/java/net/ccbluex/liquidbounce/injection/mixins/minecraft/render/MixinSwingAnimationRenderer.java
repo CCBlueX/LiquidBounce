@@ -35,7 +35,7 @@ public abstract class MixinSwingAnimationRenderer {
     )
     private void onRenderArmWithItem(AbstractClientPlayer player, float partialTick, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equippedProgress, PoseStack poseStack, SubmitNodeCollector nodeCollector, int packedLight, CallbackInfo ci) {
         if (ModuleAnimations.INSTANCE.getEnabled() && ModuleAnimations.INSTANCE.getSwingAnimation().getEnabled() && hand == InteractionHand.MAIN_HAND) {
-            if (ModuleSwordBlock.INSTANCE.getEnabled() && !ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
+            if (!ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
                 if (!player.isUsingItem() && player.getItemInHand(InteractionHand.MAIN_HAND).getItem() != SHIELD) {
 
                     ModuleAnimations.INSTANCE.getSwingAnimation().onRenderItem(player, hand, swingProgress, equippedProgress, poseStack);
