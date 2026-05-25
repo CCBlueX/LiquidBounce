@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.LedgeAction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldLedgeExtension
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -169,8 +169,8 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
                 .relative(Direction.fromYRot(movingYaw.toDouble()), 0.6)
                 .toBlockPos()
 
-            val isLeaningOffBlock = player.blockPosition().below().getState()?.isAir == true
-            val nextBlockIsAir = posInDirection.below().getState()?.isAir == true
+            val isLeaningOffBlock = player.blockPosition().below().state?.isAir == true
+            val nextBlockIsAir = posInDirection.below().state?.isAir == true
 
             if (isLeaningOffBlock && nextBlockIsAir) {
                 isOnRightSide = !isOnRightSide

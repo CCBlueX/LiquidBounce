@@ -174,7 +174,13 @@ inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: 
 inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
     multiply(factorX, factorY, factorZ)
 
-fun Vec3.horizontalDistanceTo(other: Vec3): Double = Mth.length(this.x - other.x, this.z - other.z)
+fun Vec3.horizontalDistanceTo(other: Vec3): Double = horizontalDistanceTo(other.x, other.z)
+
+fun Vec3.horizontalDistanceTo(x: Double, z: Double): Double = sqrt(horizontalDistanceToSqr(x, z))
+
+fun Vec3.horizontalDistanceToSqr(other: Vec3): Double = horizontalDistanceToSqr(other.x, other.z)
+
+fun Vec3.horizontalDistanceToSqr(x: Double, z: Double): Double = Mth.lengthSquared(this.x - x, this.z - z)
 
 fun Position.distanceToCenterSqr(blockPos: Long): Double {
     val dx = this.x() - BlockPos.getX(blockPos)
