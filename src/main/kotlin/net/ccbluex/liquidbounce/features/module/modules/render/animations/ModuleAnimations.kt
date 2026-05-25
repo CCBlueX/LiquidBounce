@@ -196,21 +196,18 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
             val sine = Mth.sin(Mth.sqrt(swingProgress) * Math.PI)
             val sideM = if (arm == HumanoidArm.RIGHT) 1.0f else -1.0f
 
-            val rot1 = Quaternionf().rotationAxis(
+            val rot = Quaternionf().rotationAxis(
                 (-sine * 27.5f * sideM).toRadians(),
                 -8.0f * sideM,
                 0.0f,
                 9.0f
-            )
-            matrices.mulPose(rot1)
-
-            val rot2 = Quaternionf().rotationAxis(
+            ).rotateAxis(
                 (-sine * 45.0f * sideM).toRadians(),
                 1.0f * sideM,
                 sine / 2.0f,
                 0.0f
             )
-            matrices.mulPose(rot2)
+            matrices.mulPose(rot)
 
             matrices.translate(0.0f, translateY, 0.0f)
             applySwingOffset(matrices, arm, 0f)
@@ -232,22 +229,18 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
 
             matrices.translate(0.1F, 0.4F, -0.1F)
 
-            val rot1 = Quaternionf().rotationAxis(
+            val rot = Quaternionf().rotationAxis(
                 (-sine * 30.0F * sideM).toRadians(),
                 sine.div(2F),
                 0.0F,
                 9.0F
-            )
-            matrices.mulPose(rot1)
-
-            val rot2 = Quaternionf().rotationAxis(
+            ).rotateAxis(
                 (-sine * 50.0F * sideM).toRadians(),
                 0.8F * sideM,
                 sine.div(2F),
                 0F
             )
-
-            matrices.mulPose(rot2)
+            matrices.mulPose(rot)
 
             matrices.translate(0.0f, translateY - 0.2f, 0.0f)
 
@@ -267,37 +260,22 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
 
             matrices.translate(0.2F * sideM, translateY, 0F)
 
-            val rot1 = Quaternionf().rotationAxis(
+            val rot = Quaternionf().rotationAxis(
                 (0.0F * sideM).toRadians(),
                 0.0F,
                 1.0F,
                 0.0F
-            )
-            matrices.mulPose(rot1)
-
-            val rot2 = Quaternionf().rotationAxis(
-                (sine1 * -20.0F * sideM).toRadians(),
-                0.0F,
-                1.0F,
-                0.0F
-            )
-            matrices.mulPose(rot2)
-
-            val rot3 = Quaternionf().rotationAxis(
-                (sine * -20.0F * sideM).toRadians(),
-                0.0F,
-                0.0F,
-                1.0F
-            )
-            matrices.mulPose(rot3)
-
-            val rot4 = Quaternionf().rotationAxis(
+            ).rotateY(
+                (sine1 * -20.0F * sideM).toRadians()
+            ).rotateZ(
+                (sine * -20.0F * sideM).toRadians()
+            ).rotateAxis(
                 (sine * -40.0F * sideM).toRadians(),
                 1.0F * sideM,
                 0.0F,
                 0.0F
             )
-            matrices.mulPose(rot4)
+            matrices.mulPose(rot)
 
             applySwingOffset(matrices, arm, 0f)
         }
@@ -312,37 +290,33 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
             val sine = Mth.sin(Mth.sqrt(swingProgress) * Math.PI)
             val sqrtSwing = Mth.sqrt(swingProgress)
             val altSine = Mth.sin(sqrtSwing * Math.PI - 3)
-            val sideM = if (arm == HumanoidArm.RIGHT) 1.0f else -1.0f
 
-            val rot1 = Quaternionf().rotationAxis(
+            val rot = Quaternionf().rotationAxis(
                 (-sine * 10).toRadians(),
                 0.0f,
                 15.0f,
                 200.0f
-            )
-            matrices.mulPose(rot1)
-
-            val rot2 = Quaternionf().rotationAxis(
+            ).rotateAxis(
                 (-sine * 10f).toRadians(),
                 300.0f,
                 sine.div(2f),
                 1.0f
             )
-            matrices.mulPose(rot2)
+            matrices.mulPose(rot)
+
             matrices.translate(3.4, 0.3, -0.4)
             matrices.translate(-2.10f, -0.2f, 0.1f)
 
-            val rot3 = Quaternionf().rotationAxis(
+            val rot1 = Quaternionf().rotationAxis(
                 (altSine * 13.0f).toRadians(),
                 -10.0f,
                 -1.4f,
                 -10.0f
             )
-            matrices.mulPose(rot3)
+            matrices.mulPose(rot1)
 
             matrices.translate(if(arm == HumanoidArm.RIGHT) -1f else -2f, translateY, 0f)
 
-            applySwingOffset(matrices, arm, 0f)
         }
     }
 }
