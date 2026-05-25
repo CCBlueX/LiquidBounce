@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.math.average
@@ -67,10 +67,9 @@ object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Predic
 
         val unrotatedOffset = (player.position() - fallOffPoint).yRot(lineDirAngle)
 
-        val x = getAvgPlacementPos()
-
-        if (x != null) {
-            logger.debug(x.distanceTo(unrotatedOffset))
+        debugParameter("AvgPlacementPos") {
+            val x = getAvgPlacementPos()
+            x?.let { it to it.distanceTo(unrotatedOffset) }
         }
 
         lastPlacementOffsets.addLast(unrotatedOffset)
