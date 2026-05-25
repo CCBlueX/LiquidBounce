@@ -8,10 +8,12 @@
     import {getClientInfo, getGameWindow, getModuleSettings, setTyping} from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
+    import HUDEditor from "./hudeditor/HUDEditor.svelte";
 
     const tabs = [
         {title: "ClickGUI", content: ClickGui},
-        {title: "Settings", content: GlobalSettings}
+        {title: "Settings", content: GlobalSettings},
+        {title: "HUD Editor", content: HUDEditor},
     ];
 
     let activeTab = $state(0);
