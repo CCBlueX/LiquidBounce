@@ -420,6 +420,10 @@
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.notifyDeveloper": "检查你的游戏日志并通知我们。",
   "liquidbounce.generic.locked": "此模块已锁定，无法开启。因为很可能不绕过。",
+  "liquidbounce.tooltip.clickToCopy": "点击复制",
+  "liquidbounce.fileDialog.mode.openFile": "打开文件",
+  "liquidbounce.fileDialog.mode.saveFile": "另存为",
+  "liquidbounce.fileDialog.mode.openDirectory": "选择文件夹",
   "liquidbounce.liquidchat.authenticationFailed": "身份验证失败！ LiquidChat需要Minecraft正版账号。",
   "liquidbounce.liquidchat.jwtTokenReceived": "接收到JWT令牌！ 重新登录中...",
   "liquidbounce.liquidchat.notConnected": "未链接聊天服务器！ 请开启LiquidChat模块！",
@@ -716,7 +720,6 @@
   "liquidbounce.module.antiHunger.description": "防止你饥饿。",
   "liquidbounce.module.antiHunger.messages.warnSprint": "其他模块造成了疾跑数据包，这可能导致饥饿。",
   "liquidbounce.module.antiHunger.messages.warnBreak": "你正在破坏方块，这可能导致饥饿。",
-  "liquidbounce.tooltip.clickToCopy": "点击复制",
   "liquidbounce.module.liquidChat.description": "允许你与其他LiquidBounce用户聊天。",
   "liquidbounce.module.consoleSpammer.description": "向服务器控制台发送大量错误信息。",
   "liquidbounce.module.autoQueue.description": "在服务器上自动加入小游戏队列。",
@@ -792,5 +795,4 @@
   "liquidbounce.module.strongholdFinder.description": "跟踪末影之眼投掷并预测最可能的要塞区块候选。",
   "liquidbounce.module.strongholdFinder.messages.sampleCaptured": "已采集样本（#%s）。",
   "liquidbounce.module.strongholdFinder.messages.bestChunk": "最佳区块：%s, %s（p=%s%%）。"
-
 }
