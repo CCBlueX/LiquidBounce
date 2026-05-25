@@ -80,7 +80,7 @@ fun Collection<File>.createZipArchive(file: File) {
             if (!item.isFile) continue
 
             aos.putArchiveEntry(ZipArchiveEntry(item, item.name))
-            item.inputStream().buffered().use { it.copyTo(aos) }
+            item.inputStream().buffered().use { it.transferTo(aos) }
             aos.closeArchiveEntry()
         }
 

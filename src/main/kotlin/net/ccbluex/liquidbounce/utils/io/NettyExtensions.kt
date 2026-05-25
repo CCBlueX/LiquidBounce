@@ -24,7 +24,7 @@ import net.minecraft.server.network.EventLoopGroupHolder
 
 /**
  * Shortcut for Netty client [io.netty.bootstrap.Bootstrap],
- * using shared [io.netty.channel.EventLoopGroup] from [NetworkingBackend]
+ * using shared [io.netty.channel.EventLoopGroup] from [EventLoopGroupHolder]
  */
 internal fun <B : AbstractBootstrap<B, Channel>> AbstractBootstrap<B, Channel>.clientChannelAndGroup(
     useEpoll: Boolean = true

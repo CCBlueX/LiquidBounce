@@ -54,5 +54,3 @@ sealed interface TranslateLanguage {
         }
     }
 }
-
-fun String.asLanguage() = TranslateLanguage.of(this)

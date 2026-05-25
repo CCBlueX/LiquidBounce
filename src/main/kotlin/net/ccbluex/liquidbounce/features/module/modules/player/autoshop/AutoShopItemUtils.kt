@@ -43,14 +43,6 @@ val LIMITED_ITEMS: Set<String> = hashSetOf(
     "brick", "copper_ingot", "iron_ingot", "gold_ingot", "diamond", "emerald", EXPERIENCE_ID
 )
 
-fun Item.isWool(): Boolean {
-    return this is BlockItem && this in WOOL_BLOCKS
-}
-
-fun Item.isTerracotta() : Boolean {
-    return this is BlockItem && this in TERRACOTTA_BLOCKS
-}
-
 fun Item.isStainedGlass() : Boolean {
     return this is BlockItem && this in STAINED_GLASS_BLOCKS
 }
@@ -77,22 +69,6 @@ fun ContainerScreen.stacks(): List<String> {
         }
         .mapNotNull { BuiltInRegistries.ITEM.getKey(it.item.item).path }
 }
-
-private val WOOL_BLOCKS: Set<Item> = referenceHashSetOf(
-    Items.BLACK_WOOL, Items.BLUE_WOOL, Items.BROWN_WOOL, Items.CYAN_WOOL,
-    Items.GRAY_WOOL, Items.GREEN_WOOL, Items.LIGHT_BLUE_WOOL, Items.LIGHT_GRAY_WOOL,
-    Items.LIME_WOOL, Items.MAGENTA_WOOL, Items.ORANGE_WOOL, Items.PINK_WOOL,
-    Items.PURPLE_WOOL, Items.RED_WOOL, Items.WHITE_WOOL, Items.YELLOW_WOOL
-)
-
-private val TERRACOTTA_BLOCKS: Set<Item> = referenceHashSetOf(
-    Items.BLACK_TERRACOTTA, Items.BLUE_TERRACOTTA, Items.BROWN_TERRACOTTA,
-    Items.CYAN_TERRACOTTA, Items.GRAY_TERRACOTTA, Items.GREEN_TERRACOTTA,
-    Items.LIGHT_BLUE_TERRACOTTA, Items.LIGHT_GRAY_TERRACOTTA,
-    Items.LIME_TERRACOTTA, Items.MAGENTA_TERRACOTTA, Items.ORANGE_TERRACOTTA,
-    Items.PINK_TERRACOTTA, Items.PURPLE_TERRACOTTA, Items.RED_TERRACOTTA,
-    Items.WHITE_TERRACOTTA, Items.YELLOW_TERRACOTTA
-)
 
 private val STAINED_GLASS_BLOCKS: Set<Item> = referenceHashSetOf(
     Items.BLACK_STAINED_GLASS, Items.BLUE_STAINED_GLASS, Items.BROWN_STAINED_GLASS,

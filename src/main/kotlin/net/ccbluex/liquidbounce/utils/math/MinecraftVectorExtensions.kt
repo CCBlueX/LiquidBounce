@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Position
+import net.minecraft.core.SectionPos
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.level.ChunkPos
@@ -64,6 +65,17 @@ object BlockPosAsLongComparator : LongComparator {
 inline operator fun BlockPos.rangeTo(other: BlockPos): BoundingBox = BoundingBox.fromCorners(this, other)
 
 inline fun BlockPos.MutableBlockPos.set(pos: Position): BlockPos.MutableBlockPos = set(pos.x(), pos.y(), pos.z())
+
+inline val Vec3i.center: Vec3
+    get() = Vec3.atCenterOf(this)
+
+inline val Vec3i.bottomCenter: Vec3
+    get() = Vec3.atBottomCenterOf(this)
+
+inline val Vec3i.topCenter: Vec3
+    get() = Vec3.upFromBottomCenterOf(this, 1.0)
+
+inline fun Vec3i.bottomCenter(yOffset: Double): Vec3 = Vec3.upFromBottomCenterOf(this, yOffset)
 
 inline operator fun Vec3i.unaryMinus(): Vec3i = Vec3i(-x, -y, -z)
 
@@ -176,7 +188,8 @@ inline operator fun Vec3.component2(): Double = this.y
 inline operator fun Vec3.component3(): Double = this.z
 
 operator fun ChunkPos.contains(blockPos: Long): Boolean =
-    BlockPos.getX(blockPos) in minBlockX..maxBlockX && BlockPos.getZ(blockPos) in minBlockZ..maxBlockZ
+    SectionPos.blockToSectionCoord(BlockPos.getX(blockPos)) == this.x
+        && SectionPos.blockToSectionCoord(BlockPos.getZ(blockPos)) == this.z
 
 fun Iterable<Vec3>.average(): Vec3 {
     var x = 0.0
