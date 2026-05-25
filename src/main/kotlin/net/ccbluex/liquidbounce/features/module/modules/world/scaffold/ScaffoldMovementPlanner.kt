@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
-import net.ccbluex.fastutil.objectHashSetOf
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -40,6 +40,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.round
 
+@Suppress("TooManyFunctions")
 object ScaffoldMovementPlanner {
     private const val MAX_LAST_PLACE_BLOCKS: Int = 4
     private const val DIRECTION_HYSTERESIS_DEGREES = 30.0F
@@ -62,17 +63,16 @@ object ScaffoldMovementPlanner {
         val overlapArea: Double,
         val surfaceDelta: Double,
         val horizontalDistanceToPlayerSqr: Double,
-    ) {
-        fun isBetterThan(other: SupportCandidate?): Boolean {
+    ) : Comparable<SupportCandidate> {
+        override fun compareTo(other: SupportCandidate): Int {
             return when {
-                other == null -> true
-                surfaceDelta + SUPPORT_SURFACE_EPSILON < other.surfaceDelta -> true
-                other.surfaceDelta + SUPPORT_SURFACE_EPSILON < surfaceDelta -> false
-                overlapArea > other.overlapArea + SUPPORT_OVERLAP_HYSTERESIS -> true
-                overlapArea + SUPPORT_OVERLAP_HYSTERESIS < other.overlapArea -> false
-                horizontalDistanceToPlayerSqr < other.horizontalDistanceToPlayerSqr -> true
-                horizontalDistanceToPlayerSqr > other.horizontalDistanceToPlayerSqr -> false
-                else -> false
+                surfaceDelta + SUPPORT_SURFACE_EPSILON < other.surfaceDelta -> -1
+                other.surfaceDelta + SUPPORT_SURFACE_EPSILON < surfaceDelta -> 1
+                overlapArea > other.overlapArea + SUPPORT_OVERLAP_HYSTERESIS -> -1
+                overlapArea + SUPPORT_OVERLAP_HYSTERESIS < other.overlapArea -> 1
+                horizontalDistanceToPlayerSqr < other.horizontalDistanceToPlayerSqr -> -1
+                horizontalDistanceToPlayerSqr > other.horizontalDistanceToPlayerSqr -> 1
+                else -> 0
             }
         }
     }
@@ -86,7 +86,7 @@ object ScaffoldMovementPlanner {
         val direction = chooseDirection(player.getMovementDirectionOfInput(directionalInput))
 
         // Keep the current in-block offset so starting away from the block center does not snap the line sideways.
-        val supportReference = findBlockPlayerStandsOn() ?: return null
+        val supportReference = findSupportReferenceUnderPlayer() ?: return null
         lastSupportReference = supportReference
 
         val lastBlocksLine = fitLinesThroughLastPlacedBlocks()
@@ -154,77 +154,20 @@ object ScaffoldMovementPlanner {
     private val offsetsToTry = doubleArrayOf(0.301, 0.0, -0.301)
 
     /**
-     * Find the block the player stands on.
-     * It considers nearby blocks below the player and ranks them by support surface height, hitbox overlap area, and
-     * distance to the player. Recent support blocks are preferred when they are still close enough to the best candidate
-     * to prevent line jitter at block boundaries.
+     * Find the support block reference the player is currently standing on.
+     * It samples nearby blocks below the player, ranks them by support surface height, hitbox overlap area, and
+     * distance to the player, then keeps a stable previous choice when it is still close enough.
      */
-    private fun findBlockPlayerStandsOn(): SupportReference? {
-        // Contains nearby blocks that can currently support the player.
-        val candidates = objectHashSetOf<BlockPos>()
-
-        for (xOffset in offsetsToTry) {
-            for (zOffset in offsetsToTry) {
-                val playerPos = player.position().toBlockPos(xOffset, -1.0, zOffset)
-
-                val isEmpty = playerPos.state?.getCollisionShape(world, playerPos)?.isEmpty ?: true
-
-                if (!isEmpty) {
-                    candidates.add(playerPos)
-                }
-            }
-        }
-
+    private fun findSupportReferenceUnderPlayer(): SupportReference? {
+        val candidates = collectSupportCandidates()
         if (candidates.isEmpty()) {
             lastSupportReference = null
+            lastPosition = null
             return null
         }
 
-        var bestCandidate: SupportCandidate? = null
-        var preferredLastPlaced: SupportCandidate? = null
-        var preferredLastPosition: SupportCandidate? = null
-        val lastPlacedBlock = lastPlacedBlocks.lastOrNull()
-
-        for (blockPos in candidates) {
-            val candidate = createSupportCandidate(blockPos)
-
-            if (candidate.isBetterThan(bestCandidate)) {
-                bestCandidate = candidate
-            }
-
-            if (blockPos == lastPlacedBlock) {
-                preferredLastPlaced = candidate
-            }
-
-            if (blockPos == lastPosition) {
-                preferredLastPosition = candidate
-            }
-        }
-
-        val best = bestCandidate ?: return null
-
-        fun preferStableCandidate(preferredPos: BlockPos?): SupportCandidate? {
-            val preferred = when (preferredPos) {
-                lastPlacedBlock -> preferredLastPlaced
-                lastPosition -> preferredLastPosition
-                else -> null
-            } ?: return null
-
-            if (preferred.surfaceDelta > best.surfaceDelta + SUPPORT_SURFACE_EPSILON) {
-                return null
-            }
-
-            if (preferred.overlapArea + SUPPORT_OVERLAP_HYSTERESIS < best.overlapArea) {
-                return null
-            }
-
-            return preferred
-        }
-
-        val chosenCandidate =
-            preferStableCandidate(lastPlacedBlock)
-                ?: preferStableCandidate(lastPosition)
-                ?: best
+        val bestCandidate = candidates.values.minOrNull() ?: return null
+        val chosenCandidate = chooseStableSupportCandidate(candidates, bestCandidate)
 
         lastPosition = chosenCandidate.blockPos
 
@@ -233,6 +176,52 @@ object ScaffoldMovementPlanner {
             player.position().x - (chosenCandidate.blockPos.x + 0.5),
             player.position().z - (chosenCandidate.blockPos.z + 0.5),
         )
+    }
+
+    private fun collectSupportCandidates(): Map<BlockPos, SupportCandidate> {
+        // [offsetsToTry] makes the result map has up to 4 entries
+        val candidates = Object2ObjectArrayMap<BlockPos, SupportCandidate>()
+
+        for (xOffset in offsetsToTry) {
+            for (zOffset in offsetsToTry) {
+                val blockPos = player.position().toBlockPos(xOffset, -1.0, zOffset)
+
+                if (candidates.containsKey(blockPos)) continue
+
+                val collisionShape = blockPos.state?.getCollisionShape(world, blockPos) ?: continue
+
+                if (!collisionShape.isEmpty) {
+                    candidates[blockPos] = createSupportCandidate(blockPos)
+                }
+            }
+        }
+
+        return candidates
+    }
+
+    private fun chooseStableSupportCandidate(
+        candidates: Map<BlockPos, SupportCandidate>,
+        bestCandidate: SupportCandidate,
+    ): SupportCandidate {
+        val lastPlacedBlock = lastPlacedBlocks.lastOrNull()
+        val preferredLastPlaced = candidates[lastPlacedBlock]
+        val preferredLastPosition = candidates[lastPosition]
+
+        return preferredLastPlaced?.takeIf { it.isStableComparedTo(bestCandidate) }
+            ?: preferredLastPosition?.takeIf { it.isStableComparedTo(bestCandidate) }
+            ?: bestCandidate
+    }
+
+    private fun SupportCandidate.isStableComparedTo(bestCandidate: SupportCandidate): Boolean {
+        if (this.surfaceDelta > bestCandidate.surfaceDelta + SUPPORT_SURFACE_EPSILON) {
+            return false
+        }
+
+        if (this.overlapArea + SUPPORT_OVERLAP_HYSTERESIS < bestCandidate.overlapArea) {
+            return false
+        }
+
+        return true
     }
 
     private fun createSupportCandidate(blockPos: BlockPos): SupportCandidate {
