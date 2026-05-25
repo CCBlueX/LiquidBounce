@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.fastutil.complement
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -63,7 +65,6 @@ import net.minecraft.world.entity.projectile.FishingHook
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 import java.util.function.BooleanSupplier
-import java.util.function.Function
 
 /**
  * Auto use fishing rod for combat.
@@ -81,7 +82,10 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     private val maxEnemiesNearby by int("MaxEnemiesNearby", 1, 0..10) // 0 = no limit
     private val minHealth by float("MinHealth", 10f, 1f..20f)
     private val minTargetHealth by float("MinTargetHealth", 4f, 1f..20f)
-    private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
+    private val requires by multiEnumChoice<KillAuraRequirements>(
+        "Requires",
+        choices = enumSetOf(KillAuraRequirements.EMPTY_HAND).complement()
+    )
     private val ignores by multiEnumChoice<Ignore>("Ignore")
     private val holdingItemsForIgnore by items(
         "HoldingItemsForIgnore",
@@ -216,11 +220,11 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         SilentHotbar.resetSlot(this)
     }
 
-    private enum class GravityType(override val tag: String) : Tagged, Function<LivingEntity, Rotation?> {
+    private enum class GravityType(override val tag: String) : Tagged {
         LINEAR("Linear"),
         PROJECTILE("Projectile");
 
-        override fun apply(target: LivingEntity): Rotation? = when (this) {
+        fun apply(target: LivingEntity): Rotation? = when (this) {
             LINEAR -> {
                 val eyes = player.eyePosition
                 val point = pointTracker.findPoint(eyes, target, 1)

@@ -38,6 +38,7 @@ enum class KillAuraRequirements(
 ) : Tagged, BooleanSupplier {
     CLICK("Click"),
     WEAPON("Weapon"),
+    EMPTY_HAND("EmptyHand"),
     VANILLA_NAME("VanillaName"),
     NOT_BREAKING("NotBreaking");
 
@@ -45,6 +46,7 @@ enum class KillAuraRequirements(
         when (this) {
             CLICK -> mc.options.keyAttack.isPressedOnAny || mc.options.keyAttack.wasPressedRecently(250)
             WEAPON -> player.mainHandItem.isWeapon()
+            EMPTY_HAND -> player.mainHandItem.isEmpty
             VANILLA_NAME -> player.mainHandItem.customName == null
             NOT_BREAKING -> mc.gameMode?.isDestroying == false
         }
