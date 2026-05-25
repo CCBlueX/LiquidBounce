@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { scale, slide } from "svelte/transition";
+    import { fade, slide } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import { setModuleSettings, getModuleSettings } from "../../../integration/rest";
     import { onMount } from "svelte";
@@ -50,10 +50,31 @@
     }
 </script>
 
-<div class="panel" transition:scale|global={{duration: 200, easing: quintOut}}>
+{#if hudConfig}
+<div 
+        class="panel" 
+        style="
+            top: 0;
+            bottom: 0;
+            left: 0; 
+            right: 0; 
+            width: 225px; 
+            max-height: 600px;
+            position: absolute;
+            margin: auto;
+        "
+        transition:fade|global={{duration: 200, easing: quintOut}}
+>
+
     <div class="title">
+        <img 
+        class="icon"
+        src="img/clickgui/icon-render.svg"
+        alt="icon"
+        />
         <span class="category">HUD Editor</span>
     </div>
+    
     <div class="modules">
         {#each hudElements as element, i}
             <div class="module-wrapper" class:expanded={element.expanded}>
@@ -84,6 +105,7 @@
         {/each}
     </div>
 </div>
+{/if}
 
 <style lang="scss">
   @use "../../../colors.scss" as *;
@@ -95,14 +117,9 @@
     }
 
     .panel { 
-        border-radius: 15px; 
-        width: 225px; 
-        max-height: 600px;
+        border-radius: 5px; 
         display: flex;
         flex-direction: column;
-        position: absolute; 
-        left: 50%; top: 50%; 
-        transform: translate(-50%, -50%); 
         overflow: hidden;
         box-shadow: 0 0 10px var(--clickgui-base-50-color); 
         backdrop-filter: blur(10px); 
@@ -110,10 +127,19 @@
     }
 
     .title { 
-        padding: 15px; 
-        text-align: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        flex-shrink: 0;
+        display: grid;
+        grid-template-columns: max-content 1fr max-content;
+        align-items: center;
+        column-gap: 12px;
+        background-color: var(--clickgui-panel-header-background-color);
+        border-bottom: solid 2px var(--clickgui-panel-header-border-color);
+        padding: 10px 15px;
+
+        .category {
+            font-size: 14px;
+            color: var(--clickgui-text-color);
+            font-weight: 500;
+        }
     }
 
     .modules { 
@@ -125,7 +151,7 @@
     }
 
     .category { 
-        font-size: 14px; 
+        font-size: 13px; 
         color: var(--clickgui-text-color); 
         font-weight: 500; 
     }
