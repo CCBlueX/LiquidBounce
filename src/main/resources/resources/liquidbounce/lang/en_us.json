@@ -427,6 +427,9 @@
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.notifyDeveloper": "Check your game log and notify us.",
   "liquidbounce.tooltip.clickToCopy": "Click to copy",
+  "liquidbounce.fileDialog.mode.openFile": "Open File",
+  "liquidbounce.fileDialog.mode.saveFile": "Save File As",
+  "liquidbounce.fileDialog.mode.openDirectory": "Select Folder",
   "liquidbounce.liquidchat.authenticationFailed": "Authentication failed! LiquidChat requires Minecraft premium account.",
   "liquidbounce.liquidchat.jwtTokenReceived": "Received JWT token! Relogging...",
   "liquidbounce.liquidchat.notConnected": "Not connected to the chat server! Turn on the LiquidChat module!",
@@ -789,5 +792,4 @@
   "liquidbounce.module.protectionZones.description": "Allows you to see areas protected by protection blocks and suggests optimal placement spots.",
   "liquidbounce.module.macros.description": "Lets you execute chat messages or item actions using custom keybinds.",
   "liquidbounce.module.newChunks.description": "Highlights chunks that are likely newly generated."
-
 }
