@@ -275,11 +275,11 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
 
         val feetBlockPos = player.getFeetBlockPos()
         val hole = if (Features.NO_WASTE in features && player.isInHole(feetBlockPos)) {
-            setOf(feetBlockPos)
+            listOf(feetBlockPos)
         } else {
             val maxX = getMax(bb, Direction.Axis.X)
             val maxZ = getMax(bb, Direction.Axis.Z)
-            setOf(
+            listOf(
                 BlockPos.containing(bb.minX, y, bb.minZ),
                 BlockPos.containing(bb.minX, y, maxZ),
                 BlockPos.containing(maxX, y, bb.minZ),
@@ -312,7 +312,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
                 }
 
                 if (!isDown && Features.EXTEND in features) {
-                    pos.getBlockingEntities { it !is EndCrystal && it != player }.forEach {
+                    pos.getBlockingEntities(except = player) { it !is EndCrystal }.forEach {
                         getEntitySurround(it, holeBlocks, blocked, y)
                     }
                 }
