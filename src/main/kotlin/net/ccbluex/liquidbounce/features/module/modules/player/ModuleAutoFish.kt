@@ -23,11 +23,13 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
@@ -48,6 +50,10 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
 
     private object RecastRod : ToggleableValueGroup(this, "RecastRod", true) {
         val delay by intRange("Delay", 15..20, 10..30, "ticks")
+    }
+
+    private object AutoCastRod : ToggleableValueGroup(this, "AutoCastRod", false) {
+        val delay by intRange("Delay", 15..20, 0..30, "ticks")
     }
 
     /**
@@ -77,6 +83,7 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
     init {
         tree(PullTriggerSoundDistance)
         tree(RecastRod)
+        tree(AutoCastRod)
     }
 
     private var caughtFish = false
@@ -85,44 +92,44 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
         caughtFish = false
     }
 
+    private fun findFishingRodHand() = InteractionHand.entries.find {
+        player.getItemInHand(it).item is FishingRodItem
+    }
+
+    private fun activeFishingHook() = player.fishing?.takeIf { !it.isRemoved }
+
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (!caughtFish) {
-            return@tickHandler
+        val hand = findFishingRodHand() ?: return@tickHandler
+
+        tickUntil {
+            caughtFish || activeFishingHook() == null
         }
 
-        for (hand in InteractionHand.entries) {
-            if (player.getItemBySlot(hand.asEquipmentSlot()).item !is FishingRodItem) {
-                continue
-            }
+        if (caughtFish) {
+            caughtFish = false
 
             waitTicks(reelDelay.random())
-            interaction.startPrediction(world) { sequence ->
-                ServerboundUseItemPacket(hand, sequence, player.yRot, player.xRot)
-            }
-
-            player.swing(hand)
+            useItem(hand)
 
             if (RecastRod.enabled) {
                 waitTicks(RecastRod.delay.random())
-                interaction.startPrediction(world) { sequence ->
-                    ServerboundUseItemPacket(hand, sequence, player.yRot, player.xRot)
-                }
-                player.swing(hand)
+                useItem(hand)
             }
-            break
+
+            return@tickHandler
         }
 
-        caughtFish = false
+        if (AutoCastRod.enabled && activeFishingHook() == null) {
+            waitTicks(AutoCastRod.delay.random())
+            useItem(hand)
+        }
     }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        val fishHook = player.fishing ?: return@handler
-        if (fishHook.isRemoved) {
-            return@handler
-        }
+        val fishHook = activeFishingHook() ?: return@handler
 
         if (packet is ClientboundSoundPacket && packet.sound.value() in sounds) {
             if (PullTriggerSoundDistance.running) {
