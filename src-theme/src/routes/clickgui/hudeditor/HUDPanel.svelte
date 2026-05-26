@@ -69,25 +69,38 @@
         {#each hudElements as element, i}
             <div class="module-wrapper" class:expanded={element.expanded}>
                 <button 
-                    class="module-item" 
-                    class:enabled={isElementEnabled(element)} 
+                    class="module-item"
+                    class:enabled={isElementEnabled(element)}
+                    class:expanded={element.expanded}
                     onclick={() => toggleElement(element)}
                     oncontextmenu={(e) => {
                         e.preventDefault();
-                        element.expanded = !element.expanded;
+                        if (Array.isArray(element.value)) {
+                            element.expanded = !element.expanded;
+                        }
                     }}
                 >
                     {element.name.replace(/([a-z0-9])([A-Z])/g, '$1 $2')}
+
+                    {#if Array.isArray(element.value)}
+                        <img
+                            class="expand-icon"
+                            src="img/clickgui/icon-settings-expand.svg"
+                            alt="expand-icon"
+                        />
+                    {/if}
                 </button>
 
                 {#if element.expanded && Array.isArray(element.value)}
                     <div class="settings" transition:slide={{duration: 300, easing: quintOut}}>
                         {#each element.value as setting, j}
-                            <GenericSetting 
-                                path="hud.{element.name}" 
-                                bind:setting={element.value[j]} 
-                                on:change={saveSettings}
-                            />
+                            {#if setting.name !== "Enabled"}
+                                <GenericSetting 
+                                    path="hud.{element.name}" 
+                                    bind:setting={element.value[j]} 
+                                    on:change={saveSettings}
+                                />
+                            {/if}
                         {/each}
                     </div>
                 {/if}
@@ -149,12 +162,44 @@
 
     .module-item {
         width: 100%;
-        padding: 10px; 
+        padding: 10px 15px; 
         background: transparent; 
         border: none; 
         color: var(--clickgui-text-dimmed-color); 
         cursor: pointer; 
-        text-align: center; 
+    
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+
+        .expand-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+            
+            width: 10px;
+            height: 10px;
+            opacity: 0.5;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        &:hover {
+            background-color: var(--clickgui-module-hover-background-color);
+            color: var(--clickgui-text-color);
+        
+            .expand-icon {
+                opacity: 1; 
+            }
+        }
+
+        &.expanded {
+            .expand-icon {
+                opacity: 1;
+                transform: translateY(-50%) rotate(0);
+            }
+        }
     }
 
     .enabled { 
