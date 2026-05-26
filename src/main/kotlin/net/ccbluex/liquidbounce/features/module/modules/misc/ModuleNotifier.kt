@@ -31,12 +31,15 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemUseAnimation
+import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
 import java.util.UUID
 
@@ -63,12 +66,17 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val itemConsumptionMessages by boolean("ItemConsumptionMessages", true)
     private val itemConsumptionMessageFormat by text("ItemConsumptionMessageFormat", $$"%1$s used %2$s")
 
+    private val heldItemMessages by boolean("HeldItemMessages", false)
+    private val heldItemMessageFormat by text("HeldItemMessageFormat", $$"%1$s holds %2$s x%3$s in %4$s")
+    private val heldItems by items("HeldItems", itemSortedSetOf(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE))
+
     private val useNotification by boolean("UseNotification", false)
 
     private val uuidNameCache = Object2ObjectOpenHashMap<UUID, String>()
     private val uuidGameModeCache = Object2ObjectOpenHashMap<UUID, GameType>()
     private val itemConsumptionCache = Object2ObjectOpenHashMap<UUID, ItemConsumptionState>()
-    private val observedItemConsumers = ObjectOpenHashSet<UUID>()
+    private val heldItemCache = Object2ObjectOpenHashMap<UUID, HeldItemState>()
+    private val observedPlayers = ObjectOpenHashSet<UUID>()
 
     override fun onEnabled() {
         for (entry in network.onlinePlayers) {
@@ -81,7 +89,8 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
         uuidNameCache.clear()
         uuidGameModeCache.clear()
         itemConsumptionCache.clear()
-        observedItemConsumers.clear()
+        heldItemCache.clear()
+        observedPlayers.clear()
     }
 
     val packetHandler = handler<PacketEvent> { event ->
@@ -110,7 +119,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
                     val profileName = uuidNameCache.remove(uuid)
                     uuidGameModeCache.remove(uuid)
 
-                    if (profileName != null && profileName.length > 2) {
+                    if (profileName != null && profileName.length >= 2) {
                         if (leaveMessages) {
                             sendNotifierMessage(leaveMessageFormat.format(profileName))
                         }
@@ -122,29 +131,41 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
 
     @Suppress("unused")
     private val tickHandler = handler<PlayerTickEvent> {
-        if (!itemConsumptionMessages) {
-            itemConsumptionCache.clear()
-            observedItemConsumers.clear()
-            return@handler
-        }
-
-        observedItemConsumers.clear()
+        observedPlayers.clear()
         for (player in world.players()) {
             if (player !is RemotePlayer || ModuleAntiBot.isBot(player)) {
                 continue
             }
 
-            observedItemConsumers.add(player.uuid)
-            handleItemConsumption(player)
+            observedPlayers.add(player.uuid)
+
+            if (itemConsumptionMessages) {
+                handleItemConsumption(player)
+            }
+
+            if (heldItemMessages) {
+                handleHeldItems(player)
+            }
         }
 
-        itemConsumptionCache.keys.retainAll(observedItemConsumers)
+        if (itemConsumptionMessages) {
+            itemConsumptionCache.keys.retainAll(observedPlayers)
+        } else {
+            itemConsumptionCache.clear()
+        }
+
+        if (heldItemMessages) {
+            heldItemCache.keys.retainAll(observedPlayers)
+        } else {
+            heldItemCache.clear()
+        }
     }
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
         itemConsumptionCache.clear()
-        observedItemConsumers.clear()
+        heldItemCache.clear()
+        observedPlayers.clear()
     }
 
     private fun handlePlayerAdd(entry: ClientboundPlayerInfoUpdatePacket.Entry) {
@@ -208,6 +229,37 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
         state.lastTicksUsingItem = maxOf(state.lastTicksUsingItem, player.ticksUsingItem)
     }
 
+    private fun handleHeldItems(player: RemotePlayer) {
+        val currentMainHand = player.mainHandItem.takeIf { it.isTrackedHeldItem() }
+        val currentOffHand = player.offhandItem.takeIf { it.isTrackedHeldItem() }
+
+        val currentState = HeldItemState(currentMainHand, currentOffHand)
+        val previousState = heldItemCache[player.uuid]
+
+        if (currentState.isEmpty) {
+            heldItemCache.remove(player.uuid)
+            return
+        }
+
+        if (previousState != null) {
+            if (currentMainHand != null && !currentMainHand.isSameHeldItem(previousState.mainHand)) {
+                sendHeldItemMessage(player, currentMainHand, InteractionHand.MAIN_HAND)
+            }
+            if (currentOffHand != null && !currentOffHand.isSameHeldItem(previousState.offHand)) {
+                sendHeldItemMessage(player, currentOffHand, InteractionHand.OFF_HAND)
+            }
+        } else {
+            if (currentMainHand != null) {
+                sendHeldItemMessage(player, currentMainHand, InteractionHand.MAIN_HAND)
+            }
+            if (currentOffHand != null) {
+                sendHeldItemMessage(player, currentOffHand, InteractionHand.OFF_HAND)
+            }
+        }
+
+        heldItemCache[player.uuid] = currentState
+    }
+
     private fun ItemStack.isTrackedConsumable(): Boolean {
         if (!isConsumable) {
             return false
@@ -215,6 +267,25 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
 
         val animation = useAnimation
         return animation == ItemUseAnimation.EAT || animation == ItemUseAnimation.DRINK
+    }
+
+    private fun ItemStack.isTrackedHeldItem(): Boolean {
+        return !isEmpty && item in heldItems
+    }
+
+    private fun ItemStack.isSameHeldItem(other: ItemStack?): Boolean {
+        return other != null && ItemStack.isSameItemSameComponents(this, other) && count == other.count
+    }
+
+    private fun sendHeldItemMessage(player: RemotePlayer, itemStack: ItemStack, hand: InteractionHand) {
+        sendNotifierMessage(
+            heldItemMessageFormat.format(
+                player.gameProfile.name,
+                itemStack.hoverName.string,
+                itemStack.count,
+                hand
+            )
+        )
     }
 
     private fun sendNotifierMessage(message: String) {
@@ -232,6 +303,14 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     ) {
         val isComplete: Boolean
             get() = useDuration > 0 && lastTicksUsingItem >= useDuration - 1
+    }
+
+    private data class HeldItemState(
+        val mainHand: ItemStack?,
+        val offHand: ItemStack?,
+    ) {
+        val isEmpty: Boolean
+            get() = mainHand == null && offHand == null
     }
 
 }
