@@ -50,7 +50,6 @@
     }
 </script>
 
-{#if hudConfig}
 <div 
         class="panel" 
         style="
@@ -105,7 +104,6 @@
         {/each}
     </div>
 </div>
-{/if}
 
 <style lang="scss">
   @use "../../../colors.scss" as *;
