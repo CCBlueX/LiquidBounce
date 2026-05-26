@@ -112,12 +112,6 @@
 <style lang="scss">
   @use "../../../colors.scss" as *;
 
-    .title { 
-        font-size: 12px; 
-        color: var(--clickgui-text-color); 
-        font-weight: 600; 
-    }
-
     .panel { 
         display: flex;
         width: 250px; 
@@ -131,6 +125,10 @@
     }
 
     .title { 
+        font-size: 12px; 
+        color: var(--clickgui-text-color); 
+        font-weight: 600; 
+
         display: grid;
         grid-template-columns: max-content 1fr max-content;
         align-items: center;
@@ -185,6 +183,7 @@
             transition: transform 0.2s ease, opacity 0.2s ease;
         }
 
+        
         &:hover {
             background-color: var(--clickgui-module-hover-background-color);
             color: var(--clickgui-text-color);
@@ -194,16 +193,16 @@
             }
         }
 
+        &.enabled {
+            color: var(--accent-color)
+        }
+
         &.expanded {
             .expand-icon {
                 opacity: 1;
                 transform: translateY(-50%) rotate(0);
             }
         }
-    }
-
-    .enabled { 
-        color: var(--accent-color); 
     }
 
     .settings { 
