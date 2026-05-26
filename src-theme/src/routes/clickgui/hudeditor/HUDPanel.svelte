@@ -48,20 +48,11 @@
         }
         return false;
     }
+
 </script>
 
 <div 
-        class="panel" 
-        style="
-            top: 0;
-            bottom: 0;
-            left: 0; 
-            right: 0; 
-            width: 225px; 
-            max-height: 600px;
-            position: absolute;
-            margin: auto;
-        "
+        class="panel"
         transition:fade|global={{duration: 200, easing: quintOut}}
 >
 
@@ -115,8 +106,10 @@
     }
 
     .panel { 
-        border-radius: 5px; 
         display: flex;
+        width: 250px; 
+        max-height: 600px;
+        border-radius: 5px; 
         flex-direction: column;
         overflow: hidden;
         box-shadow: 0 0 10px var(--clickgui-base-50-color); 
