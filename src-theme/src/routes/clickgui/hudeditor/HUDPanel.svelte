@@ -77,7 +77,7 @@
                         element.expanded = !element.expanded;
                     }}
                 >
-                    {element.name}
+                    {element.name.replace(/([a-z0-9])([A-Z])/g, '$1 $2')}
                 </button>
 
                 {#if element.expanded && Array.isArray(element.value)}
