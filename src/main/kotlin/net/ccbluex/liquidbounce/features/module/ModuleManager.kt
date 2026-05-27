@@ -247,6 +247,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleExtinguish
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleHoleFiller
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidFiller
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoInterpolation
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak
@@ -685,6 +686,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleAutoTrap,
             ModuleBlockTrap,
             ModuleNoSlowBreak,
+            ModuleLiquidFiller,
             ModuleLiquidPlace,
             ModuleProjectilePuncher,
             ModuleScaffold,

@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
+import com.google.common.base.Predicates
 import net.ccbluex.fastutil.weightedFilterSortedByAtMost
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntLongPair
@@ -51,6 +52,7 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionResult.Success
 import net.minecraft.world.InteractionResult.SwingSource
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntitySelector
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.BlockPlaceContext
@@ -117,6 +119,7 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.Consumer
+import java.util.function.Predicate
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -684,40 +687,52 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
 
 val BlockState?.isInteractable: Boolean get() = this?.block?.isInteractable(this) ?: false
 
-fun BlockPos.isBlockedByEntities(): Boolean {
-    val posBox = FULL_BOX + this
-    // TODO: optimize this
-    return world.entitiesForRendering().any {
-        it.boundingBox.intersects(posBox)
+fun BlockPos.hasAnySolidPlacementNeighbor(): Boolean {
+    val cache = BlockPos.MutableBlockPos()
+    return Direction.entries.any {
+        !cache.setWithOffset(this, it).stateOrEmpty.canBeReplaced()
     }
 }
 
-inline fun BlockPos.getBlockingEntities(include: (Entity) -> Boolean = { true }): List<Entity> {
-    val posBox = FULL_BOX + this
-    return world.entitiesForRendering().filter {
-        it.boundingBox.intersects(posBox) &&
-            include.invoke(it)
-    }
+fun BlockPos.isBlockedByEntities(
+    except: Entity? = null,
+    box: AABB = FULL_BOX,
+    predicate: Predicate<Entity> = Predicates.alwaysTrue(),
+): Boolean {
+    val posBox = box + this
+    return world.getEntities(except, posBox, EntitySelector.NO_SPECTATORS.and(predicate))
+        .isNotEmpty() // TODO: optimize this
+}
+
+fun BlockPos.getBlockingEntities(
+    except: Entity? = null,
+    box: AABB = FULL_BOX,
+    predicate: Predicate<Entity> = Predicates.alwaysTrue(),
+): List<Entity> {
+    val posBox = box + this
+    return world.getEntities(except, posBox, EntitySelector.NO_SPECTATORS.and(predicate))
 }
 
 /**
  * Like [isBlockedByEntities] but it returns a blocking end crystal if present.
  */
 fun BlockPos.isBlockedByEntitiesReturnCrystal(
+    except: Entity? = null,
     box: AABB = FULL_BOX,
     excludeIds: IntArray? = null
 ): BooleanObjectPair<EndCrystal?> {
     var blocked = false
 
     val posBox = box + this
-    world.entitiesForRendering().forEach {
-        if (it.boundingBox.intersects(posBox) && (excludeIds == null || it.id !in excludeIds)) {
-            if (it is EndCrystal) {
-                return BooleanObjectPair.of(true, it)
-            }
-
-            blocked = true
+    val selector = Predicate<Entity> {
+        EntitySelector.NO_SPECTATORS.test(it) && (excludeIds == null || it.id !in excludeIds)
+    }
+    world.getEntities(except, posBox, selector).forEach {
+        if (it is EndCrystal) {
+            return BooleanObjectPair.of(true, it)
         }
+
+        blocked = true
     }
 
     return BooleanObjectPair.of(blocked, null)
