@@ -81,9 +81,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val itemConsumptionCache = Object2ObjectOpenHashMap<UUID, ItemConsumptionState>()
     private val heldItemCache = Object2ObjectOpenHashMap<UUID, HeldItemState>()
     private val observedPlayers = ObjectOpenHashSet<UUID>()
-    private val recentPops = mutableSetOf<UUID>()
     private val popCounter = mutableMapOf<UUID, Int>()
-    private var lastUpdateTime = 0L
 
     override fun onEnabled() {
         for (entry in network.onlinePlayers) {
@@ -98,7 +96,6 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
         itemConsumptionCache.clear()
         heldItemCache.clear()
         observedPlayers.clear()
-        recentPops.clear()
     }
 
     val packetHandler = handler<PacketEvent> { event ->
@@ -140,10 +137,8 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
                     val entity = packet.getEntity(world) as? Player ?: return@handler
                     if (entity == mc.player || FriendManager.isFriend(entity.name.string)) return@handler
 
-                    recentPops.add(entity.uuid)
                     val pops = popCounter.getOrDefault(entity.uuid, 0) + 1
                     popCounter[entity.uuid] = pops
-                    lastUpdateTime = System.currentTimeMillis()
 
                     sendNotifierMessage("${entity.name.string} pop totem $pops times")
                 }
@@ -180,12 +175,6 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
             heldItemCache.keys.retainAll(observedPlayers)
         } else {
             heldItemCache.clear()
-        }
-
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastUpdateTime >= 500L) {
-            recentPops.clear()
-            lastUpdateTime = currentTime
         }
     }
 
