@@ -59,7 +59,7 @@ lwjgl = "3.4.1"
 
 # Other plugins
 detekt = "2.0.0-alpha.3"
-gradleGitProperties = "2.5.7"
+gradleGitProperties = "3.0.3"
 dokka = "2.2.0"
 nodeGradle = "7.1.0"
 
