@@ -131,7 +131,7 @@ object ModuleTracker : ClientModule("Tracker", ModuleCategories.MISC) {
 
             when(messagePlace) {
 
-                Modes.CHAT -> ScriptClient.displayChatMessage("${entity.name.string} получил $name $lvl на $dur")
+                Modes.CHAT -> ScriptClient.displayChatMessage("${entity.name.string} get $name $lvl for $dur")
 
                 Modes.NOTIFICATIONS -> notification(
                     "Tracker",
@@ -178,7 +178,7 @@ object ModuleTracker : ClientModule("Tracker", ModuleCategories.MISC) {
             val lvl = effectInstance.amplifier + 1
             val dur = getDurationString(effectInstance.duration)
 
-            sb.append("$name $lvl на $dur")
+            sb.append("$name $lvl for $dur")
         }
 
         return sb.toString()
@@ -190,7 +190,7 @@ object ModuleTracker : ClientModule("Tracker", ModuleCategories.MISC) {
         val seconds = ticks / 20
         val m = seconds / 60
         val s = seconds % 60
-        return if (m > 0) "${m}м ${s}с" else "${s}с"
+        return if (m > 0) "${m}m ${s}s" else "${s}s"
     }
 
     private enum class Modes(override val tag: String) : Tagged {
