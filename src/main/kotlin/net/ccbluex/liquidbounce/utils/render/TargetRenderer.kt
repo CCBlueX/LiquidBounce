@@ -25,15 +25,18 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawCircle
 import net.ccbluex.liquidbounce.render.drawCircleOutline
+import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.drawTexQuad
@@ -52,6 +55,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
+import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -64,9 +68,12 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import org.joml.Vector2f
 import org.joml.Vector3f
+import kotlin.math.ceil
 import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
+import kotlin.random.Random
 
 /**
  * A target tracker to choose the best enemy to attack
@@ -89,6 +96,7 @@ class TargetRenderer(
             TargetRenderAppearance.World.Image(owner, it),
             TargetRenderAppearance.World.GlowingCircle(owner, it),
             TargetRenderAppearance.World.Ghost(it),
+            TargetRenderAppearance.World.Hearts(it),
             TargetRenderAppearance.Gui.Text(owner, it),
             TargetRenderAppearance.Gui.Arrow(it),
         )
@@ -357,6 +365,208 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 }
             }
 
+        }
+
+        class Hearts(override val parent: ModeValueGroup<*>) : World("Hearts") {
+
+            private val color by color("Color", Color4b(255, 255, 255, 180))
+            private val dynamicCount by boolean("DynamicCount", true)
+            private val heartCount by int("HeartCount", 10, 1..32)
+            private val yOffset by float("YOffset", 0.1f, -1f..3f)
+            private val size by float("Size", 0.18f, 0.05f..0.6f)
+            object OrbitSettings : ValueGroup("Orbit") {
+                val orbitRadius by float("OrbitRadius", 0.5f, 0.1f..4f)
+                val orbitSpeed by float("OrbitSpeed", 35f, -360f..360f, "deg/s")
+            }
+
+            init { tree(OrbitSettings) }
+
+            private var currentTargetId: Int = -1
+            private var damageFlashStrength = 0f
+            private var lastUpdTime = 0L
+            private val heartInstances = mutableListOf<HeartInstance>()
+
+            override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
+                val target = entity as? LivingEntity ?: return
+
+                updateState(target)
+
+                val nowSeconds = System.currentTimeMillis() / 1000.0
+                val targetPos = target.interpolateCurrentPosition(partialTicks)
+                val goldenHearts = ceil((target.absorptionAmount / 2f).toDouble()).toInt().coerceAtLeast(0)
+                val baseHeartSlots = baseHeartSlots(target)
+                val renderedCount = max(heartInstances.size, goldenHearts)
+                val halfHeartIndex =
+                    if (dynamicCount && target.health>0f && target.health.ceilToInt() % 2 != 0) baseHeartSlots-1 else -1
+
+
+                for (index in 0 until renderedCount) {
+                    val instance =
+                        heartInstances.getOrNull(index) ?: HeartInstance.create(index).also(heartInstances::add)
+
+                    val orbitAngleDegrees = instance.baseOrbitAngle + nowSeconds * OrbitSettings.orbitSpeed
+
+                    val orbitAngle = Math.toRadians(orbitAngleDegrees)
+                    val orbitDistance = OrbitSettings.orbitRadius.toDouble()
+                    val localOffset = Vec3(
+                        cos(orbitAngle) * orbitDistance,
+                        yOffset.toDouble() + target.bbHeight.toDouble() * instance.heightFactor,
+                        sin(orbitAngle) * orbitDistance
+                    )
+
+                    val worldPos = targetPos.add(localOffset)
+                    val baseColor =
+                        if (index < goldenHearts) Color4b(255, 214, 72, color.a) else color
+
+                    val renderColor = baseColor.interpolateTo(
+                        Color4b(255, 0, 0, color.a),
+                        damageFlashStrength.toDouble()
+                    )
+
+                    drawHeartAt(worldPos, targetPos, renderColor, 1f)
+                }
+            }
+
+            private fun updateState(target: LivingEntity) {
+                val now = System.currentTimeMillis()
+                val deltaSeconds =
+                    if (lastUpdTime != 0L) ((now - lastUpdTime) /1000f ).coerceAtMost(0.25f) else 0f
+
+                lastUpdTime = now
+
+                if (target.id != currentTargetId) {
+                    currentTargetId = target.id
+                    damageFlashStrength = 0f
+                    respawnHearts(target)
+                }
+
+                damageFlashStrength =
+                    if (target.hurtTime in 8..10) 1f else max(0f, damageFlashStrength - deltaSeconds * 3.5f)
+
+
+                ensureHeartCount(target)
+            }
+
+            @Suppress("a", "UnusedParameter")
+            private fun WorldRenderEnvironment.drawHeartAt(
+                pos: Vec3,
+                targetPos: Vec3,
+                color: Color4b,
+                widthScale: Float,
+            ) {
+                poseStack.pushPose()
+                poseStack.translate(pos - camera.position())
+
+                val directionToTarget = targetPos.subtract(pos)
+                val targetYaw =
+                    Math.toDegrees(kotlin.math.atan2(directionToTarget.x, directionToTarget.z)).toFloat()
+                poseStack.mulPose(Axis.YP.rotationDegrees(targetYaw))
+
+                poseStack.scale(size, size, size)
+                drawLowPolyHeart(color, widthScale)
+                poseStack.popPose()
+            }
+
+            val points = arrayOf(
+                Pair(0.0f, -0.72f), Pair(-0.62f, -0.14f), Pair(-0.56f, 0.18f), Pair(-0.28f, 0.46f),
+                Pair(0.0f, 0.34f), Pair(0.28f, 0.46f), Pair(0.56f, 0.18f), Pair(0.62f, -0.14f),
+            )
+
+            private fun WorldRenderEnvironment.drawLowPolyHeart(color: Color4b, widthScale: Float) {
+                drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+                    val argb = color.argb
+                    val depth = 0.16f
+                    val backZ = -depth
+                    val horizontalScale = widthScale.coerceAtLeast(0.1f)
+
+                    fun tri3d(
+                        ax: Float, ay: Float, az: Float,
+                        bx: Float, by: Float, bz: Float,
+                        cx: Float, cy: Float, cz: Float,
+                    ) {
+                        addVertex(matrix, ax, ay, az).setColor(argb)
+                        addVertex(matrix, bx, by, bz).setColor(argb)
+                        addVertex(matrix, cx, cy, cz).setColor(argb)
+                    }
+
+                    fun addFace(z: Float, reverse: Boolean) {
+                        for (i in 1 until points.size - 1) {
+                            val a = points[0]
+                            val b = points[i]
+                            val c = points[i + 1]
+                            if (reverse) {
+                                tri3d(
+                                    a.first * horizontalScale, a.second, z,
+                                    c.first * horizontalScale, c.second, z,
+                                    b.first * horizontalScale, b.second, z,
+                                )
+                            } else {
+                                tri3d(
+                                    a.first * horizontalScale, a.second, z,
+                                    b.first * horizontalScale, b.second, z,
+                                    c.first * horizontalScale, c.second, z,
+                                )
+                            }
+                        }
+                    }
+
+                    fun addSide(ax: Float, ay: Float, bx: Float, by: Float) {
+                        val scaledAx = ax * horizontalScale
+                        val scaledBx = bx * horizontalScale
+                        tri3d(scaledAx, ay, depth, scaledBx, by, depth, scaledBx, by, backZ)
+                        tri3d(scaledAx, ay, depth, scaledBx, by, backZ, scaledAx, ay, backZ)
+                    }
+
+                    addFace(depth, reverse = false)
+                    addFace(backZ, reverse = true)
+
+                    for (i in points.indices) {
+                        val current = points[i]
+                        val next = points[(i + 1) % points.size]
+                        addSide(current.first, current.second, next.first, next.second)
+                    }
+                }
+            }
+
+            private fun ensureHeartCount(target: LivingEntity) {
+                val minimum = max(baseHeartSlots(target), ceil(target.absorptionAmount / 2.0).toInt())
+
+                if (heartInstances.size > minimum) {
+                    heartInstances.subList(minimum, heartInstances.size).clear()
+                }
+
+                repeat(minimum - heartInstances.size) {
+                    heartInstances.add(HeartInstance.create(heartInstances.size))
+                }
+            }
+
+            private fun respawnHearts(target: LivingEntity) {
+                heartInstances.clear()
+                val minimum = max(baseHeartSlots(target), ceil((target.absorptionAmount / 2f).toDouble()).toInt())
+                repeat(minimum) { heartInstances += HeartInstance.create(it) }
+            }
+
+            private fun baseHeartSlots(target: LivingEntity): Int =
+                if (dynamicCount) ceil(target.health.coerceAtLeast(0f) / 2f).toInt() else heartCount
+
+            private data class HeartInstance(
+                val baseOrbitAngle: Double,
+                val baseSelfAngle: Double,
+                val heightFactor: Float,
+                val tiltAngle: Float,
+            ) {
+                companion object {
+                    fun create(index: Int): HeartInstance {
+                        val random = Random(index * 31 + 17)
+                        return HeartInstance(
+                            baseOrbitAngle = random.nextDouble(0.0, 360.0),
+                            baseSelfAngle = random.nextDouble(0.0, 360.0),
+                            heightFactor = random.nextDouble(0.0, 1.0).toFloat(),
+                            tiltAngle = random.nextDouble(-18.0, 18.0).toFloat(),
+                        )
+                    }
+                }
+            }
         }
 
     }
