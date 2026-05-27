@@ -45,6 +45,11 @@ object ModuleAutoTPA : ClientModule("AutoTPA", ModuleCategories.MISC) {
         "deny]"
     )
 
+    private val blacklistMessages = arrayOf(
+        "✉", "[ЛС]", "You]", "Я]", "Вы]", "I]", "» You", "-> You","» I", "-> I", "» Я", "-> Я",
+        "» Вы", "-> Вы", "You)", "Я)", "Вы)", "I)",
+    )
+
     private var canAccept = false
 
     @Suppress("unused")
@@ -80,6 +85,7 @@ object ModuleAutoTPA : ClientModule("AutoTPA", ModuleCategories.MISC) {
 
     private fun isTeleportMessage(message: String): Boolean {
         return teleportMessages.any { message.contains(it, ignoreCase = true) }
+            && !blacklistMessages.any { message.contains(it, ignoreCase = true) }
     }
 
     private enum class Modes(override val tag: String) : Tagged {
