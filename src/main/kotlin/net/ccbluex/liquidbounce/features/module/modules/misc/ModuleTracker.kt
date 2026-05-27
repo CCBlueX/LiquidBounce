@@ -45,7 +45,7 @@ object ModuleTracker : ClientModule("Tracker", ModuleCategories.MISC) {
             for (player in world.players()) {
                 if (player == localPlayer || FriendManager.isFriend(player.name.string)) continue
                 val distance = localPlayer.distanceToSqr(player)
-                if (distance > range) continue
+                if (distance > range * range) continue
 
                 val id = player.uuid
                 if (player.isUsingItem) {
@@ -122,7 +122,7 @@ object ModuleTracker : ClientModule("Tracker", ModuleCategories.MISC) {
             val entity = world.getEntity(packet.entityId) as? Player ?: return@handler
             if (entity == mc.player || FriendManager.isFriend(entity.name.string)) return@handler
             val distance = player.distanceToSqr(entity)
-            if (distance > range) return@handler
+            if (distance > range * range) return@handler
 
             val effectHolder = packet.effect
             val name = Component.translatable(effectHolder.value().descriptionId).string
@@ -147,7 +147,7 @@ object ModuleTracker : ClientModule("Tracker", ModuleCategories.MISC) {
                 if (entity == mc.player || FriendManager.isFriend(entity.name.string)) return@handler
                 if (recentPops.contains(entity.uuid)) return@handler
                 val distance = player.distanceToSqr(entity)
-                if (distance > range) return@handler
+                if (distance > range * range) return@handler
 
                 recentPops.add(entity.uuid)
                 val pops = popCounter.getOrDefault(entity.uuid, 0) + 1
