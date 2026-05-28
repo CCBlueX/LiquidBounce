@@ -230,13 +230,14 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 rotate(-yawRad)
 
                 val onlyPlayers = OnlyPlayers.enabled
-                val ignoreTeams = OnlyPlayers.ignoreTeams && onlyPlayers
+                val ignoreTeams =
+                    OnlyPlayers.ignoreTeams && onlyPlayers && ModuleTeams.enabled
 
                 for (entity in RenderedEntities) {
                     if (entity === player
                         || (onlyPlayers && entity !is Player)
-                        || (ModuleTeams.enabled && ignoreTeams && isInClientPlayersTeam(entity))
-                        ) continue
+                        || (ignoreTeams && isInClientPlayersTeam(entity))
+                        ) { continue }
 
                     val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
 
