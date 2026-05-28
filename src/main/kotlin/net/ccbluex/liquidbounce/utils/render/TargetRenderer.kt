@@ -369,12 +369,12 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
         class Hearts(override val parent: ModeValueGroup<*>) : World("Hearts") {
 
-            private val color by color("Color", Color4b(255, 255, 255, 180))
+            private val color by color("Color", Color4b.WHITE.alpha(180))
             private val dynamicCount by boolean("DynamicCount", true)
             private val heartCount by int("HeartCount", 10, 1..32)
             private val yOffset by float("YOffset", 0.1f, -1f..3f)
             private val size by float("Size", 0.18f, 0.05f..0.6f)
-            object OrbitSettings : ValueGroup("Orbit") {
+            private object OrbitSettings : ValueGroup("Orbit") {
                 val orbitRadius by float("OrbitRadius", 0.5f, 0.1f..4f)
                 val orbitSpeed by float("OrbitSpeed", 35f, -360f..360f, "deg/s")
             }
@@ -419,7 +419,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                         if (index < goldenHearts) Color4b(255, 214, 72, color.a) else color
 
                     val renderColor = baseColor.interpolateTo(
-                        Color4b(255, 0, 0, color.a),
+                        Color4b.RED.alpha(color.a),
                         damageFlashStrength.toDouble()
                     )
 
