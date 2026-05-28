@@ -40,13 +40,7 @@ object ModulePacketCanceller : ClientModule("PacketCanceller", ModuleCategories.
     private val serverPackets by s2cPackets("S2CPackets", sortedSetOf())
 
     val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.FINAL_DECISION) { event ->
-        if (!running) {
-            return@handler
-        }
-
-        if (event.isCancelled) {
-            return@handler
-        }
+        if (!running || event.isCancelled) return@handler
 
         val packetId = event.packet.type().id
         if (!filter(packetId, if (event.origin == TransferOrigin.INCOMING) serverPackets else clientPackets)) {
