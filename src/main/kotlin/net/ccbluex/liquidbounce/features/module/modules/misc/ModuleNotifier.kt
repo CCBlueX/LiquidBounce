@@ -36,7 +36,9 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.minecraft.client.player.RemotePlayer
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.world.InteractionHand
@@ -143,6 +145,8 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
                     sendNotifierMessage("${entity.name.string} pop totem ${popCounter.getInt(entity.uuid)} times")
                 }
             }
+
+            is ClientboundDisconnectPacket, is ClientboundLoginPacket -> popCounter.clear()
         }
     }
 
