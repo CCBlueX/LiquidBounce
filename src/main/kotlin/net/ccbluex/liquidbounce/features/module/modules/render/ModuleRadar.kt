@@ -24,10 +24,13 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams.isInClientPlayersTeam
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
@@ -105,7 +108,13 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
 
     private val radius by float("Radius", 40f, 2f..200f)
 
-    private val onlyPlayers by boolean("OnlyPlayers", false)
+    private object OnlyPlayers : ToggleableValueGroup(this, "OnlyPlayers", false) {
+        val ignoreTeams by boolean("IgnoreTeams", true)
+    }
+
+    init {
+        tree(OnlyPlayers)
+    }
 
     private val pointerModes = choices("PointerMode", 0) {
         arrayOf(
@@ -220,8 +229,15 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
 
                 rotate(-yawRad)
 
+                val onlyPlayers = OnlyPlayers.enabled
+                val ignoreTeams = OnlyPlayers.ignoreTeams && onlyPlayers
+
                 for (entity in RenderedEntities) {
-                    if (entity === player || (onlyPlayers && entity !is Player)) continue
+                    if (entity === player
+                        || (onlyPlayers && entity !is Player)
+                        || (ModuleTeams.enabled && ignoreTeams && isInClientPlayersTeam(entity))
+                        ) continue
+
                     val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
 
                     val cameraDistance = entityPos.cameraDistance().toFloat()
