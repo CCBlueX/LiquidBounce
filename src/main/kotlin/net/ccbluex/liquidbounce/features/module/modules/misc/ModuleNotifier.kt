@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -81,7 +82,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val itemConsumptionCache = Object2ObjectOpenHashMap<UUID, ItemConsumptionState>()
     private val heldItemCache = Object2ObjectOpenHashMap<UUID, HeldItemState>()
     private val observedPlayers = ObjectOpenHashSet<UUID>()
-    private val popCounter = mutableMapOf<UUID, Int>()
+    private val popCounter = Object2IntOpenHashMap<UUID>()
 
     override fun onEnabled() {
         for (entry in network.onlinePlayers) {
@@ -137,10 +138,9 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
                     val entity = packet.getEntity(world) as? Player ?: return@handler
                     if (entity == mc.player || FriendManager.isFriend(entity.name.string)) return@handler
 
-                    val pops = popCounter.getOrDefault(entity.uuid, 0) + 1
-                    popCounter[entity.uuid] = pops
+                    popCounter.addTo(entity.uuid, 1)
 
-                    sendNotifierMessage("${entity.name.string} pop totem $pops times")
+                    sendNotifierMessage("${entity.name.string} pop totem ${popCounter.getInt(entity.uuid)} times")
                 }
             }
         }
