@@ -55,15 +55,12 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
-import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.toDegrees
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
-import net.minecraft.util.Mth.cos
-import net.minecraft.util.Mth.sin
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
@@ -75,6 +72,8 @@ import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.random.Random
 
 /**
@@ -395,14 +394,11 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val nowSeconds = System.currentTimeMillis() / 1000.0
                 val targetPos = target.interpolateCurrentPosition(partialTicks)
                 val goldenHearts = ceil((target.absorptionAmount / 2f).toDouble()).toInt().coerceAtLeast(0)
-                val baseHeartSlots = baseHeartSlots(target)
                 val renderedCount = max(heartInstances.size, goldenHearts)
-                val halfHeartIndex =
-                    if (dynamicCount && target.health > 0f && target.health.ceilToInt() % 2 != 0) baseHeartSlots -1 else -1
 
                 for (index in 0 until renderedCount) {
                     val instance =
-                        heartInstances.getOrNull(index) ?: HeartInstance.create(index).also(heartInstances::add)
+                        heartInstances.getOrNull(index) ?: HeartInstance(index).also(heartInstances::add)
 
                     val orbitAngleDegrees = instance.baseOrbitAngle + nowSeconds * orbitSettings.orbitSpeed
 
@@ -533,14 +529,14 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 }
 
                 repeat(minimum - heartInstances.size) {
-                    heartInstances.add(HeartInstance.create(heartInstances.size))
+                    heartInstances.add(HeartInstance(heartInstances.size))
                 }
             }
 
             private fun respawnHearts(target: LivingEntity) {
                 heartInstances.clear()
                 val minimum = max(baseHeartSlots(target), ceil((target.absorptionAmount / 2f).toDouble()).toInt())
-                repeat(minimum) { heartInstances += HeartInstance.create(it) }
+                repeat(minimum) { heartInstances += HeartInstance(it) }
             }
 
             private fun baseHeartSlots(target: LivingEntity): Int =
@@ -548,21 +544,15 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
             private data class HeartInstance(
                 val baseOrbitAngle: Double,
-                val baseSelfAngle: Double,
                 val heightFactor: Float,
-                val tiltAngle: Float,
             ) {
-                companion object {
-                    fun create(index: Int): HeartInstance {
-                        val random = Random(index * 31 + 17)
-                        return HeartInstance(
-                            baseOrbitAngle = random.nextDouble(0.0, 360.0),
-                            baseSelfAngle = random.nextDouble(0.0, 360.0),
-                            heightFactor = random.nextDouble(0.0, 1.0).toFloat(),
-                            tiltAngle = random.nextDouble(-18.0, 18.0).toFloat(),
-                        )
-                    }
-                }
+                constructor(
+                    index: Int,
+                    random: Random = Random(("$index".hashCode() xor ("$index".hashCode() ushr 16)).toLong())
+                ) : this(
+                    baseOrbitAngle = random.nextDouble(0.0, 360.0),
+                    heightFactor = random.nextDouble(0.0, 1.0).toFloat()
+                )
             }
         }
 
@@ -696,6 +686,6 @@ private sealed class HeightMode(name: String) : Mode(name) {
         }
 
         private fun calculateHeight(time: Float) =
-            (sin(time.toDouble()) * heightMultiplier + heightOffset).toDouble()
+            (sin(time.toDouble()) * heightMultiplier + heightOffset)
     }
 }
