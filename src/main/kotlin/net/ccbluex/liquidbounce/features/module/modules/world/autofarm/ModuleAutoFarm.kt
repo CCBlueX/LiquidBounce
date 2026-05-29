@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockTargetPlan
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -286,8 +287,10 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                 if (outlineShape.isEmpty) return@mapNotNullTo null
                 // getShape is block-local, move it to world space before measuring distance to the eyes
                 val box = outlineShape.bounds().move(pos)
+                // Keep only sides that are within reach and whose face points towards the eyes
                 sides.removeIf { side ->
-                    box.getNearestPointOnSide(eyesPos, side).distanceToSqr(eyesPos) > radiusSquared
+                    box.getNearestPointOnSide(eyesPos, side).distanceToSqr(eyesPos) > radiusSquared ||
+                        BlockTargetPlan(pos, side).calculateAngleToPlayerEyeCosine(eyesPos) < 0.0
                 }
 
                 pos to sides.ifEmpty { return@mapNotNullTo null }
