@@ -267,7 +267,8 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                 val outlineShape = state.getShape(world, pos)
 
                 if (outlineShape.isEmpty) return@mapNotNullTo null
-                val box = outlineShape.bounds()
+                // getShape is block-local, move it to world space before measuring distance to the eyes
+                val box = outlineShape.bounds().move(pos)
                 sides.removeIf { side ->
                     box.getNearestPointOnSide(eyesPos, side).distanceToSqr(eyesPos) > radiusSquared
                 }
