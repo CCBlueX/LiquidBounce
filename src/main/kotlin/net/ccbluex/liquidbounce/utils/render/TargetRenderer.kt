@@ -380,6 +380,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val orbitSpeed by float("OrbitSpeed", 35f, -360f..360f, "deg/s")
             }
             private val orbitSettings = tree(OrbitSettings())
+            private val canBeCovered by boolean("CanBeCovered", false)
 
             private var currentTargetId: Int = -1
             private var damageFlashStrength = 0f
@@ -419,7 +420,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                         damageFlashStrength.toDouble()
                     )
 
-                    drawHeartAt(worldPos, targetPos, renderColor, 1f)
+                    drawHeart(worldPos, targetPos, renderColor)
                 }
             }
 
@@ -442,82 +443,24 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 ensureHeartCount(target)
             }
 
-            private fun WorldRenderEnvironment.drawHeartAt(
-                pos: Vec3,
-                targetPos: Vec3,
-                color: Color4b,
-                widthScale: Float,
-            ) {
-                poseStack.pushPose()
-                poseStack.translate(pos - camera.position())
+            private fun WorldRenderEnvironment.drawHeart(pos: Vec3, targetPos: Vec3, color: Color4b) {
+                withPositionRelativeToCamera(pos) {
+                    val directionToTarget = targetPos.subtract(pos)
+                    val targetYaw = atan2(directionToTarget.x, directionToTarget.z).toDegrees().toFloat()
+                    poseStack.mulPose(Axis.YP.rotationDegrees(targetYaw))
 
-                val directionToTarget = targetPos.subtract(pos)
-                val targetYaw = atan2(directionToTarget.x, directionToTarget.z).toDegrees().toFloat()
-                poseStack.mulPose(Axis.YP.rotationDegrees(targetYaw))
-
-                poseStack.scale(size, size, size)
-                drawLowPolyHeart(color, widthScale)
-                poseStack.popPose()
+                    drawHeartSDF(color, size)
+                }
             }
 
-            val points = arrayOf(
-                Pair(0.0f, -0.72f), Pair(-0.62f, -0.14f), Pair(-0.56f, 0.18f), Pair(-0.28f, 0.46f),
-                Pair(0.0f, 0.34f), Pair(0.28f, 0.46f), Pair(0.56f, 0.18f), Pair(0.62f, -0.14f),
-            )
-
-            private fun WorldRenderEnvironment.drawLowPolyHeart(color: Color4b, widthScale: Float) {
-                drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+            private fun WorldRenderEnvironment.drawHeartSDF(color: Color4b, size: Float) {
+                drawCustomMesh(ClientRenderPipelines.heart(noDepthTest = !canBeCovered)) { matrix ->
                     val argb = color.argb
-                    val depth = 0.16f
-                    val backZ = -depth
-                    val horizontalScale = widthScale.coerceAtLeast(0.1f)
-
-                    fun tri3d(
-                        ax: Float, ay: Float, az: Float,
-                        bx: Float, by: Float, bz: Float,
-                        cx: Float, cy: Float, cz: Float,
-                    ) {
-                        addVertex(matrix, ax, ay, az).setColor(argb)
-                        addVertex(matrix, bx, by, bz).setColor(argb)
-                        addVertex(matrix, cx, cy, cz).setColor(argb)
-                    }
-
-                    fun addFace(z: Float, reverse: Boolean) {
-                        for (i in 1 until points.size - 1) {
-                            val a = points[0]
-                            val b = points[i]
-                            val c = points[i + 1]
-                            if (reverse) {
-                                tri3d(
-                                    a.first * horizontalScale, a.second, z,
-                                    c.first * horizontalScale, c.second, z,
-                                    b.first * horizontalScale, b.second, z,
-                                )
-                            } else {
-                                tri3d(
-                                    a.first * horizontalScale, a.second, z,
-                                    b.first * horizontalScale, b.second, z,
-                                    c.first * horizontalScale, c.second, z,
-                                )
-                            }
-                        }
-                    }
-
-                    fun addSide(ax: Float, ay: Float, bx: Float, by: Float) {
-                        val scaledAx = ax * horizontalScale
-                        val scaledBx = bx * horizontalScale
-                        tri3d(scaledAx, ay, depth, scaledBx, by, depth, scaledBx, by, backZ)
-                        tri3d(scaledAx, ay, depth, scaledBx, by, backZ, scaledAx, ay, backZ)
-                    }
-
-                    addFace(depth, reverse = false)
-                    addFace(backZ, reverse = true)
-
-                    for (i in points.indices) {
-                        val current = points[i]
-                        val next = points[(i + 1) % points.size]
-                        addSide(current.first, current.second, next.first, next.second)
-                    }
+                    val hs = size * 1.12f // -> See heart.fsh
+                    addVertex(matrix, -hs, -hs, 0f).setUv(0f, 0f).setColor(argb)
+                    addVertex(matrix, -hs,  hs, 0f).setUv(0f, 1f).setColor(argb)
+                    addVertex(matrix,  hs,  hs, 0f).setUv(1f, 1f).setColor(argb)
+                    addVertex(matrix,  hs, -hs, 0f).setUv(1f, 0f).setColor(argb)
                 }
             }
 

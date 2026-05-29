@@ -355,6 +355,25 @@ object ClientRenderPipelines {
     fun gradientCircle(noDepthTest: Boolean) =
         if (noDepthTest) GradientCircleNoDepthTest else GradientCircle
 
+    private fun RenderPipeline.Builder.heartSdfSnippet() {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withVertexShader(ClientShaders.Vertex.Circle)
+        withFragmentShader(ClientShaders.Fragment.HeartSDF)
+        withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+    }
+
+    private val Heart = newPipeline("heart") {
+        heartSdfSnippet()
+        forWorldRender(noDepthTest = false)
+    }
+
+    private val HeartNoDepthTest = newPipeline("heart_no_depth_test") {
+        heartSdfSnippet()
+        forWorldRender(noDepthTest = true)
+    }
+
+    fun heart(noDepthTest: Boolean) = if (noDepthTest) HeartNoDepthTest else Heart
+
     // Special
 
     /**
