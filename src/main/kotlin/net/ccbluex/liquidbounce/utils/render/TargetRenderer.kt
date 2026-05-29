@@ -57,10 +57,13 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.toDegrees
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
+import net.minecraft.util.Mth.cos
+import net.minecraft.util.Mth.sin
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
@@ -68,11 +71,10 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import org.joml.Vector2f
 import org.joml.Vector3f
+import kotlin.math.atan2
 import kotlin.math.ceil
-import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sin
 import kotlin.random.Random
 
 /**
@@ -374,12 +376,11 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val heartCount by int("HeartCount", 10, 1..32)
             private val yOffset by float("YOffset", 0.1f, -1f..3f)
             private val size by float("Size", 0.18f, 0.05f..0.6f)
-            private object OrbitSettings : ValueGroup("Orbit") {
+            private class OrbitSettings : ValueGroup("Orbit") {
                 val orbitRadius by float("OrbitRadius", 0.5f, 0.1f..4f)
                 val orbitSpeed by float("OrbitSpeed", 35f, -360f..360f, "deg/s")
             }
-
-            init { tree(OrbitSettings) }
+            private val orbitSettings = tree(OrbitSettings())
 
             private var currentTargetId: Int = -1
             private var damageFlashStrength = 0f
@@ -397,17 +398,16 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val baseHeartSlots = baseHeartSlots(target)
                 val renderedCount = max(heartInstances.size, goldenHearts)
                 val halfHeartIndex =
-                    if (dynamicCount && target.health>0f && target.health.ceilToInt() % 2 != 0) baseHeartSlots-1 else -1
-
+                    if (dynamicCount && target.health > 0f && target.health.ceilToInt() % 2 != 0) baseHeartSlots -1 else -1
 
                 for (index in 0 until renderedCount) {
                     val instance =
                         heartInstances.getOrNull(index) ?: HeartInstance.create(index).also(heartInstances::add)
 
-                    val orbitAngleDegrees = instance.baseOrbitAngle + nowSeconds * OrbitSettings.orbitSpeed
+                    val orbitAngleDegrees = instance.baseOrbitAngle + nowSeconds * orbitSettings.orbitSpeed
 
-                    val orbitAngle = Math.toRadians(orbitAngleDegrees)
-                    val orbitDistance = OrbitSettings.orbitRadius.toDouble()
+                    val orbitAngle = orbitAngleDegrees.toRadians()
+                    val orbitDistance = orbitSettings.orbitRadius.toDouble()
                     val localOffset = Vec3(
                         cos(orbitAngle) * orbitDistance,
                         yOffset.toDouble() + target.bbHeight.toDouble() * instance.heightFactor,
@@ -430,7 +430,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private fun updateState(target: LivingEntity) {
                 val now = System.currentTimeMillis()
                 val deltaSeconds =
-                    if (lastUpdTime != 0L) ((now - lastUpdTime) /1000f ).coerceAtMost(0.25f) else 0f
+                    if (lastUpdTime != 0L) ((now - lastUpdTime) / 1000f).coerceAtMost(0.25f) else 0f
 
                 lastUpdTime = now
 
@@ -443,11 +443,9 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 damageFlashStrength =
                     if (target.hurtTime in 8..10) 1f else max(0f, damageFlashStrength - deltaSeconds * 3.5f)
 
-
                 ensureHeartCount(target)
             }
 
-            @Suppress("a", "UnusedParameter")
             private fun WorldRenderEnvironment.drawHeartAt(
                 pos: Vec3,
                 targetPos: Vec3,
@@ -458,8 +456,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 poseStack.translate(pos - camera.position())
 
                 val directionToTarget = targetPos.subtract(pos)
-                val targetYaw =
-                    Math.toDegrees(kotlin.math.atan2(directionToTarget.x, directionToTarget.z)).toFloat()
+                val targetYaw = atan2(directionToTarget.x, directionToTarget.z).toDegrees().toFloat()
                 poseStack.mulPose(Axis.YP.rotationDegrees(targetYaw))
 
                 poseStack.scale(size, size, size)
@@ -699,6 +696,6 @@ private sealed class HeightMode(name: String) : Mode(name) {
         }
 
         private fun calculateHeight(time: Float) =
-            (sin(time) * heightMultiplier + heightOffset).toDouble()
+            (sin(time.toDouble()) * heightMultiplier + heightOffset).toDouble()
     }
 }
