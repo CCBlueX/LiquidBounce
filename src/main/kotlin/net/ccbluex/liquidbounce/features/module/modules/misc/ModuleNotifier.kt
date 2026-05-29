@@ -98,6 +98,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
         itemConsumptionCache.clear()
         heldItemCache.clear()
         observedPlayers.clear()
+        popCounter.clear()
     }
 
     val packetHandler = handler<PacketEvent> { event ->
@@ -137,7 +138,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
             is ClientboundEntityEventPacket -> mc.execute {
                 if (packet.eventId.toInt() == 35) {
                     val entity = packet.getEntity(world) as? Player ?: return@execute
-                    if (entity == mc.player || FriendManager.isFriend(entity.name.string)) return@execute
+                    if (entity === mc.player || FriendManager.isFriend(entity.name.string)) return@execute
 
                     popCounter.addTo(entity.uuid, 1)
 
