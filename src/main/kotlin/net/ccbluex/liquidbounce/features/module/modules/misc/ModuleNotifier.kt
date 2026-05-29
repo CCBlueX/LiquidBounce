@@ -48,7 +48,6 @@ import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
 import java.util.UUID
-import kotlin.collections.set
 
 /**
  * Notifier module
@@ -135,10 +134,10 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
                 }
             }
 
-            is ClientboundEntityEventPacket -> {
+            is ClientboundEntityEventPacket -> mc.execute {
                 if (packet.eventId.toInt() == 35) {
-                    val entity = packet.getEntity(world) as? Player ?: return@handler
-                    if (entity == mc.player || FriendManager.isFriend(entity.name.string)) return@handler
+                    val entity = packet.getEntity(world) as? Player ?: return@execute
+                    if (entity == mc.player || FriendManager.isFriend(entity.name.string)) return@execute
 
                     popCounter.addTo(entity.uuid, 1)
 
@@ -146,7 +145,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
                 }
             }
 
-            is ClientboundDisconnectPacket, is ClientboundLoginPacket -> popCounter.clear()
+            is ClientboundDisconnectPacket, is ClientboundLoginPacket -> mc.execute(popCounter::clear)
         }
     }
 
