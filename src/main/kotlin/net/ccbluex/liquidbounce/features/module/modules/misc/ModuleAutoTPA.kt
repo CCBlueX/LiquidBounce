@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.script.bindings.api.ScriptClient
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNotifier.sendNotifierMessage
 import net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 
@@ -79,7 +79,8 @@ object ModuleAutoTPA : ClientModule("AutoTPA", ModuleCategories.MISC) {
             val player = mc.player ?: return@handler
 
             player.connection.sendCommand(mode.tag)
-            ScriptClient.displayChatMessage("§a[AutoTPA] §7Teleport request accepted!")
+            val canSendMessage = ModuleNotifier.enabled && ModuleNotifier.autotpaMessages
+            if (canSendMessage) sendNotifierMessage("Teleport request accepted")
         }
     }
 

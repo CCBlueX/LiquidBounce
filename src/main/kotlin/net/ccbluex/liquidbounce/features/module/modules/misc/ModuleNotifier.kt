@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import joptsimple.internal.Messages
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
@@ -65,6 +66,8 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
 
     private val itemConsumptionMessages by boolean("ItemConsumptionMessages", true)
     private val itemConsumptionMessageFormat by text("ItemConsumptionMessageFormat", $$"%1$s used %2$s")
+
+    val autotpaMessages by boolean("AutoTPAMessages", true)
 
     private val heldItemMessages by boolean("HeldItemMessages", false)
     private val heldItemMessageFormat by text("HeldItemMessageFormat", $$"%1$s holds %2$s x%3$s in %4$s")
@@ -288,7 +291,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
         )
     }
 
-    private fun sendNotifierMessage(message: String) {
+    fun sendNotifierMessage(message: String) {
         if (useNotification) {
             notification(this.name, message, NotificationEvent.Severity.INFO)
         } else {
