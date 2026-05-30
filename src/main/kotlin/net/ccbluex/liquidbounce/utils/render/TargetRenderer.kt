@@ -453,8 +453,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                 damageSqueezeStrength +=
                     when(target.hurtTime) {
-                        in In -> max(0f, deltaSeconds * (orbitSqueezeStrength * 5))
-                        in Out -> min(0f, -deltaSeconds * (orbitSqueezeStrength * 5))
+                        in inAnim -> max(0f, deltaSeconds * (orbitSqueezeStrength * 5))
+                        in outAnim -> min(0f, -deltaSeconds * (orbitSqueezeStrength * 5))
                         else -> -damageSqueezeStrength
                     }
 
