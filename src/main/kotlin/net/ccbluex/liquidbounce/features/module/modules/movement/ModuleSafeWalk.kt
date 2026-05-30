@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.wouldBeCloseToFallOff
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
@@ -71,7 +72,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
 
     class OnEdge(override val parent: ModeValueGroup<Mode>) : Mode("OnEdge") {
 
-        private val edgeDistance by float("Distance", 0.1f, 0.1f..0.5f)
+        private val edgeDistance by floatRange("Distance", 0.1f..0.15f, 0.05f..0.5f)
         private var center: Vec3? = null
 
         private enum class OnEdgeMode(override val tag: String) : Tagged {
@@ -102,7 +103,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
             if (shouldBeActive) {
                 val isOnEdge = player.isCloseToEdge(
                     event.directionalInput,
-                    min(player.horizontalSpeed, edgeDistance.toDouble())
+                    min(player.horizontalSpeed, edgeDistance.random().toDouble())
                 )
                 if (isOnEdge) {
                     debugParameter("InputOnEdge") { event.directionalInput }
