@@ -18,13 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.minecraft.world.inventory.AbstractCraftingMenu
+import net.minecraft.client.gui.screens.recipebook.SearchRecipeBookCategory
+import net.minecraft.world.inventory.AbstractFurnaceMenu
+import net.minecraft.world.inventory.BlastFurnaceMenu
 import net.minecraft.world.inventory.ContainerInput
+import net.minecraft.world.inventory.CraftingMenu
+import net.minecraft.world.inventory.FurnaceMenu
 import net.minecraft.world.inventory.InventoryMenu
+import net.minecraft.world.inventory.RecipeBookMenu
+import net.minecraft.world.inventory.RecipeBookType
+import net.minecraft.world.inventory.SmokerMenu
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.display.SlotDisplayContext
@@ -32,59 +40,89 @@ import net.minecraft.world.item.crafting.display.SlotDisplayContext
 /**
  * AutoCrafter module
  *
- * Automatically crafts items in the specified order using the Recipe Book.
+ * Automatically crafts items using the Recipe Book.
  */
 object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) {
 
-    private val targetItems by itemList(
-        "TargetItems", mutableListOf(
+    private val itemsToCraft by itemList(
+        "ItemsToCraft", mutableListOf(
             Items.POLISHED_DEEPSLATE, Items.DEEPSLATE_BRICKS, Items.DEEPSLATE_TILES
         )
     )
 
-    private val craftInStacks by boolean("CraftInStacks", true)
     private val delay by intRange("Delay", 2..3, 1..20, "ticks")
-    private val allowInventoryCrafting by boolean("AllowInventoryCrafting", false)
-    private val craftSequentially by boolean("CraftSequentially", true)
-    private var timer = 0
+    private val stackCrafting by boolean("StackCrafting", true)
+    private val sequentialCrafting by boolean("SequentialCrafting", true)
+    private val allowedContainers by multiEnumChoice("AllowedContainers", RecipeBookMenuType.CRAFTING_TABLE)
 
     @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        val menu = player.containerMenu as? AbstractCraftingMenu ?: return@handler
-        if (menu is InventoryMenu && !allowInventoryCrafting) return@handler
-        if (++timer < delay.random()) return@handler
+    private val tickHandler = tickHandler {
+        val menu = player.containerMenu
+        if (menu !is RecipeBookMenu) return@tickHandler
+        val menuType = RecipeBookMenuType.fromMenu(menu) ?: return@tickHandler
+        if (menuType !in allowedContainers) return@tickHandler
 
-        val context = SlotDisplayContext.fromLevel(mc.level ?: return@handler)
-        val collections = player.recipeBook.collections
+        if (!player.recipeBook.bookSettings.isOpen(menuType.recipeBookType)) {
+            return@tickHandler
+        }
 
-        for ((index, item) in targetItems.withIndex()) {
-            val itemsToCraftLater = targetItems.drop(index + 1)
+        val context = SlotDisplayContext.fromLevel(mc.level ?: return@tickHandler)
+        val collections = player.recipeBook.getCollection(menuType.searchCategory)
+
+        for ((index, targetItem) in itemsToCraft.withIndex()) {
+            val remainingItems = itemsToCraft.subList(index + 1, itemsToCraft.size)
 
             val recipe = collections.firstNotNullOfOrNull { collection ->
                 collection.recipes.firstOrNull { recipe ->
-                    recipe.resultItems(context).any { it.item == item } &&
-                        collection.isCraftable(recipe.id) &&
+                    recipe.resultItems(context).any { it.item == targetItem } &&
+                        collection.isCraftable(recipe.id)
+
                         // Prevent crafting loops (ingot->block->ingot)
-                        // by rejecting recipes that use items crafted later
-                        (recipe.craftingRequirements.isEmpty ||
-                            recipe.craftingRequirements.get()
-                                .none { req -> itemsToCraftLater.any { req.test(ItemStack(it)) } })
+                        // by rejecting recipes that use items that appear later in the list
+                        && (recipe.craftingRequirements.isEmpty ||
+                        recipe.craftingRequirements.get()
+                            .none { req -> remainingItems.any { req.test(ItemStack(it)) } })
                 }
             } ?: continue
 
-            val resultSlot = menu.getSlot(0)
+            val resultSlotId = if (menu is AbstractFurnaceMenu) 2 else 0
+            val resultSlot = menu.slots[resultSlotId]
             if (resultSlot.item.isEmpty) {
-                interaction.handlePlaceRecipe(menu.containerId, recipe.id(), craftInStacks)
+                interaction.handlePlaceRecipe(menu.containerId, recipe.id(), stackCrafting)
             } else {
                 val hasSpace = player.inventory.freeSlot != -1
                 val clickType = if (hasSpace) ContainerInput.QUICK_MOVE else ContainerInput.THROW
                 val mouseButton = if (hasSpace) 0 else 1
                 interaction.handleContainerInput(
-                    menu.containerId, 0, mouseButton, clickType, player
+                    menu.containerId, resultSlotId, mouseButton, clickType, player
                 )
             }
-            timer = 0
-            if (craftSequentially) return@handler
+            waitTicks(delay.random())
+            if (sequentialCrafting || menu is AbstractFurnaceMenu) return@tickHandler
+        }
+
+    }
+
+    private enum class RecipeBookMenuType(
+        override val tag: String,
+        val recipeBookType: RecipeBookType,
+        val searchCategory: SearchRecipeBookCategory,
+    ) : Tagged {
+        INVENTORY("Inventory", RecipeBookType.CRAFTING, SearchRecipeBookCategory.CRAFTING),
+        CRAFTING_TABLE("CraftingTable", RecipeBookType.CRAFTING, SearchRecipeBookCategory.CRAFTING),
+        FURNACE("Furnace", RecipeBookType.FURNACE, SearchRecipeBookCategory.FURNACE),
+        BLAST_FURNACE("BlastFurnace", RecipeBookType.BLAST_FURNACE, SearchRecipeBookCategory.BLAST_FURNACE),
+        SMOKER("Smoker", RecipeBookType.SMOKER, SearchRecipeBookCategory.SMOKER);
+
+        companion object {
+            fun fromMenu(menu: RecipeBookMenu) = when (menu) {
+                is InventoryMenu -> INVENTORY
+                is CraftingMenu -> CRAFTING_TABLE
+                is FurnaceMenu -> FURNACE
+                is BlastFurnaceMenu -> BLAST_FURNACE
+                is SmokerMenu -> SMOKER
+                else -> null
+            }
         }
     }
 }
