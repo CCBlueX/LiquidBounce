@@ -22,6 +22,8 @@ import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -41,10 +43,10 @@ import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockTargetPlan
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
@@ -124,14 +126,24 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     var currentTarget: BlockPos? = null
         private set
 
+    // Find the target on RotationUpdateEvent, which runs right before RotationManager.update, so the
+    // requested rotation is applied within the same tick.
+    @Suppress("unused")
+    private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        // Return if the user is inside a screen like the inventory
+        if (mc.screen is AbstractContainerScreen<*>) {
+            return@handler
+        }
+
+        updateTarget()
+    }
+
     @Suppress("unused")
     private val tickHandler = tickHandler {
         // Return if the user is inside a screen like the inventory
         if (mc.screen is AbstractContainerScreen<*>) {
             return@tickHandler
         }
-
-        updateTarget()
 
         // Return if the blink module is enabled
         if (ModuleBlink.running) {
@@ -147,12 +159,13 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         }
 
         // Return if we don't have a target
-        currentTarget ?: return@tickHandler
+        val target = currentTarget ?: return@tickHandler
 
         val rayTraceResult = traceFromPoint(
             range = range.toDouble(),
             start = player.eyePosition,
-            direction = (RotationManager.currentRotation ?: player.rotation).directionVector,
+            // Use the rotation already sent to the server, so we only interact when the server sees the aim
+            direction = RotationManager.serverRotation.directionVector,
             entity = player,
         )
         if (rayTraceResult.type != HitResult.Type.BLOCK) {
@@ -160,6 +173,11 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         }
 
         val blockPos = rayTraceResult.blockPos
+
+        // Only act when we are actually aiming at the target block
+        if (blockPos != target) {
+            return@tickHandler
+        }
 
         val state = blockPos.getState() ?: return@tickHandler
         if (blockPos.readyForHarvest(state)) {
@@ -267,9 +285,12 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                 val outlineShape = state.getShape(world, pos)
 
                 if (outlineShape.isEmpty) return@mapNotNullTo null
-                val box = outlineShape.bounds()
+                // getShape is block-local, move it to world space before measuring distance to the eyes
+                val box = outlineShape.bounds().move(pos)
+                // Keep only sides that are within reach and whose face points towards the eyes
                 sides.removeIf { side ->
-                    box.getNearestPointOnSide(eyesPos, side).distanceToSqr(eyesPos) > radiusSquared
+                    box.getNearestPointOnSide(eyesPos, side).distanceToSqr(eyesPos) > radiusSquared ||
+                        BlockTargetPlan(pos, side).calculateAngleToPlayerEyeCosine(eyesPos) < 0.0
                 }
 
                 pos to sides.ifEmpty { return@mapNotNullTo null }
