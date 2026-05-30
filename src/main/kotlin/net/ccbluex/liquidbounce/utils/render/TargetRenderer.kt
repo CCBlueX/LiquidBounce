@@ -448,8 +448,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                 val orbitSqueezeStrength = orbitSettings.orbitSqueezeStrength
 
-                val In = (5 + orbitSettings.orbitSqueezeSpeed)..10
-                val Out = (1 + orbitSettings.orbitSqueezeSpeed)..(4 + orbitSettings.orbitSqueezeSpeed)
+                val inAnim = (5 + orbitSettings.orbitSqueezeSpeed)..10
+                val outAnim = (1 + orbitSettings.orbitSqueezeSpeed)..(4 + orbitSettings.orbitSqueezeSpeed)
 
                 damageSqueezeStrength +=
                     when(target.hurtTime) {
