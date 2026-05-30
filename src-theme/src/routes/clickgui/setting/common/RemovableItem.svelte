@@ -18,6 +18,9 @@
     grid-template-columns: 1fr max-content;
     column-gap: 5px;
     align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 8px;
   }
 
   .button-remove {

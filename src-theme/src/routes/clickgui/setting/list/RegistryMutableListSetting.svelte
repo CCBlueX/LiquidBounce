@@ -170,8 +170,10 @@
 
   .selected-items {
     max-height: 200px;
+    position: relative;
     margin-bottom: 10px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .list-item-list-wrapper {
