@@ -376,14 +376,17 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val yOffset by float("YOffset", 0.1f, -1f..3f)
             private val size by float("Size", 0.18f, 0.05f..0.6f)
             private class OrbitSettings : ValueGroup("Orbit") {
-                val orbitRadius by float("OrbitRadius", 0.5f, 0.1f..4f)
+                val orbitRadius by float("OrbitRadius", 0.5f, 0.1f..1f)
                 val orbitSpeed by float("OrbitSpeed", 35f, -360f..360f, "deg/s")
+                val orbitSqueezeStrength by float("OrbitSqueezeStrength", 0.25f, 0f..1f)
+                val orbitSqueezeSpeed by int("OrbitSqueezeSpeed", 2, 1..4)
             }
             private val orbitSettings = tree(OrbitSettings())
             private val canBeCovered by boolean("CanBeCovered", false)
 
             private var currentTargetId: Int = -1
             private var damageFlashStrength = 0f
+            private var damageSqueezeStrength = 0f
             private var lastUpdTime = 0L
             private val heartInstances = mutableListOf<HeartInstance>()
 
@@ -404,7 +407,10 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     val orbitAngleDegrees = instance.baseOrbitAngle + nowSeconds * orbitSettings.orbitSpeed
 
                     val orbitAngle = orbitAngleDegrees.toRadians()
-                    val orbitDistance = orbitSettings.orbitRadius.toDouble()
+                    val orbitDistance =
+                        (orbitSettings.orbitRadius.toDouble() - damageSqueezeStrength)
+                            .coerceIn(0.05, orbitSettings.orbitRadius.toDouble())
+
                     val localOffset = Vec3(
                         cos(orbitAngle) * orbitDistance,
                         yOffset.toDouble() + target.bbHeight.toDouble() * instance.heightFactor,
@@ -439,6 +445,18 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                 damageFlashStrength =
                     if (target.hurtTime in 8..10) 1f else max(0f, damageFlashStrength - deltaSeconds * 3.5f)
+
+                val orbitSqueezeStrength = orbitSettings.orbitSqueezeStrength
+
+                val In = (5 + orbitSettings.orbitSqueezeSpeed)..10
+                val Out = (1 + orbitSettings.orbitSqueezeSpeed)..(4 + orbitSettings.orbitSqueezeSpeed)
+
+                damageSqueezeStrength +=
+                    when(target.hurtTime) {
+                        in In -> max(0f, deltaSeconds * (orbitSqueezeStrength * 5))
+                        in Out -> min(0f, -deltaSeconds * (orbitSqueezeStrength * 5))
+                        else -> -damageSqueezeStrength
+                    }
 
                 ensureHeartCount(target)
             }
