@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.integration.screen
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
@@ -48,6 +47,7 @@ import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.QuickFix
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -55,15 +55,13 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import org.lwjgl.glfw.GLFW
 import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
 
 object ScreenManager : EventListener {
 
-    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ScreenManager")
+    private val logger = clientLogger("ScreenManager")
 
     /**
      * The main browser will constantly be updated to display the current screen.

@@ -23,6 +23,7 @@ import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import net.ccbluex.liquidbounce.lang.LanguageManager
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.tinyfd.TinyFileDialogs
@@ -81,16 +82,17 @@ class FileValue(
 /**
  * Defines the mode of the file dialog used in a [FileValue].
  *
- * TODO: i18n
- *
  * This controls how the file chooser behaves in the UI (e.g., ClickGUI or similar):
  *
  * - [OPEN_FILE]: Opens a dialog to select an existing file.
  * - [SAVE_FILE]: Opens a dialog to choose a file path for saving.
  * - [OPEN_DIRECTORY]: Opens a dialog to select an existing directory. File extension filters are ignored in this mode.
  */
-enum class FileDialogMode(val title: String) {
-    OPEN_FILE("Open File") {
+enum class FileDialogMode(
+    private val translationKey: String,
+    private val fallbackTitle: String
+) {
+    OPEN_FILE("liquidbounce.fileDialog.mode.openFile", "Open File") {
         override fun selectFilesRaw(extensions: Iterable<String>?) = TinyFileDialogs.tinyfd_openFileDialog(
             title,
             null,
@@ -99,7 +101,7 @@ enum class FileDialogMode(val title: String) {
             false
         )
     },
-    SAVE_FILE("Save File As") {
+    SAVE_FILE("liquidbounce.fileDialog.mode.saveFile", "Save File As") {
         override fun selectFilesRaw(extensions: Iterable<String>?) = TinyFileDialogs.tinyfd_saveFileDialog(
             title,
             null,
@@ -107,12 +109,15 @@ enum class FileDialogMode(val title: String) {
             null
         )
     },
-    OPEN_DIRECTORY("Select Folder") {
+    OPEN_DIRECTORY("liquidbounce.fileDialog.mode.openDirectory", "Select Folder") {
         override fun selectFilesRaw(extensions: Iterable<String>?) = TinyFileDialogs.tinyfd_selectFolderDialog(
             title,
             ConfigSystem.rootFolder.path,
         )
     };
+
+    val title: String
+        get() = LanguageManager.getLanguage()?.getOrDefault(translationKey, fallbackTitle) ?: fallbackTitle
 
     protected abstract fun selectFilesRaw(extensions: Iterable<String>?): String?
 

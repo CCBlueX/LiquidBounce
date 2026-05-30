@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArraySet
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import java.util.Collections
+import java.util.SequencedCollection
 import java.util.function.Predicate
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
@@ -36,7 +37,7 @@ fun <T> Array<out T>?.unmodifiable(): List<T> =
 fun <E> Collection<E>.toOrderedSet(): Set<E> {
     return when (this.size) {
         0 -> emptySet()
-        1 -> Collections.singleton(this.first())
+        1 -> Collections.singleton(if (this is SequencedCollection) this.first else this.iterator().next())
         in 2..4 -> ObjectArraySet(this)
         else -> ObjectLinkedOpenHashSet(this)
     }

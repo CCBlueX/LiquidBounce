@@ -154,7 +154,7 @@ private fun <T : Any> constructMap(
     registry: DefaultedRegistry<T>,
     tagKeys: Array<TagKey<T>>,
 ): Map<Identifier, Identifier> {
-    val map = hashMapOf<Identifier, Identifier>()
+    val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
 
     for (acceptedTag in tagKeys) {
         val get = registry.get(acceptedTag).getOrNull() ?: continue

@@ -45,6 +45,12 @@ val DataComponentGetter.toolComponent: Tool?
 val TypedInstance<Item>.isBundle
     get() = this.`is`(ItemTags.BUNDLES)
 
+val TypedInstance<Item>.isAnyChest: Boolean
+    get() = this.`is`(Items.CHEST)
+        || this.`is`(Items.TRAPPED_CHEST)
+        || this.`is`(Items.ENDER_CHEST)
+        || this.`is`(ItemTags.COPPER_CHESTS)
+
 // Tools
 
 val TypedInstance<Item>.isSword

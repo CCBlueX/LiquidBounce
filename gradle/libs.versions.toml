@@ -10,7 +10,7 @@ minecraft = "26.1.2"
 fabric-loom = "1.16-SNAPSHOT"
 fabric-loader = "0.19.2"
 fabric-loaderMin = "0.18.4"
-fabric-api = "0.146.1+26.1.2"
+fabric-api = "0.149.1+26.1.2"
 
 # mcef
 mcef = "3.3.1-26.1-SNAPSHOT"
@@ -32,10 +32,10 @@ fastutil4k = "0.2.8"
 # Recommended mods
 modmenu = "18.0.0-alpha.7"
 exploit_preventer_api = "1.0.0"
-exploit_preventer_mod = "1.0.2+26.1"
-sodium = "mc26.1.1-0.8.9-fabric"
-lithium = "mc26.1.2-0.24.1-fabric"
-viafabricplus = "4.5.2"
+exploit_preventer_mod = "1.0.6+26.1"
+sodium = "mc26.1.2-0.8.12-fabric"
+lithium = "mc26.1.2-0.24.2-fabric"
+viafabricplus = "4.5.3"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.15.2+26.1.2-fabric"
 iris = "1.10.9+26.1-fabric"
@@ -44,7 +44,7 @@ iris = "1.10.9+26.1-fabric"
 # https://kotlinlang.org/releases.html
 kotlin = "2.3.10"
 # JUnit
-junit = "6.0.3"
+junit = "6.1.0"
 # https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test/overview
 kotlinx-coroutines = "1.11.0"
 # https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
@@ -59,7 +59,7 @@ lwjgl = "3.4.1"
 
 # Other plugins
 detekt = "2.0.0-alpha.3"
-gradleGitProperties = "2.5.7"
+gradleGitProperties = "3.0.3"
 dokka = "2.2.0"
 nodeGradle = "7.1.0"
 

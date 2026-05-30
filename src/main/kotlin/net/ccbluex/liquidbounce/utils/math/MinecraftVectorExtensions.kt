@@ -20,9 +20,11 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
+import it.unimi.dsi.fastutil.longs.LongComparator
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Position
+import net.minecraft.core.SectionPos
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.level.ChunkPos
@@ -33,17 +35,47 @@ import org.joml.Vector3f
 import org.joml.Vector3fc
 import java.lang.Math.fma
 import kotlin.math.abs
-import kotlin.math.absoluteValue
-import kotlin.math.hypot
 import kotlin.math.sqrt
 
 inline operator fun Vec2.component1() = this.x
 inline operator fun Vec2.component2() = this.y
 inline fun Vec2.copy(x: Float = this.x, y: Float = this.y) = Vec2(x, y)
 
+/**
+ * @see Vec3i.compareTo
+ */
+object BlockPosAsLongComparator : LongComparator {
+    override fun compare(k1: Long, k2: Long): Int {
+        val y1 = BlockPos.getY(k1)
+        val y2 = BlockPos.getY(k2)
+        if (y1 == y2) {
+            val z1 = BlockPos.getZ(k1)
+            val z2 = BlockPos.getZ(k2)
+            return if (z1 == z2) {
+                BlockPos.getX(k1) - BlockPos.getX(k2)
+            } else {
+                z1 - z2
+            }
+        } else {
+            return y1 - y2
+        }
+    }
+}
+
 inline operator fun BlockPos.rangeTo(other: BlockPos): BoundingBox = BoundingBox.fromCorners(this, other)
 
 inline fun BlockPos.MutableBlockPos.set(pos: Position): BlockPos.MutableBlockPos = set(pos.x(), pos.y(), pos.z())
+
+inline val Vec3i.center: Vec3
+    get() = Vec3.atCenterOf(this)
+
+inline val Vec3i.bottomCenter: Vec3
+    get() = Vec3.atBottomCenterOf(this)
+
+inline val Vec3i.topCenter: Vec3
+    get() = Vec3.upFromBottomCenterOf(this, 1.0)
+
+inline fun Vec3i.bottomCenter(yOffset: Double): Vec3 = Vec3.upFromBottomCenterOf(this, yOffset)
 
 inline operator fun Vec3i.unaryMinus(): Vec3i = Vec3i(-x, -y, -z)
 
@@ -72,8 +104,6 @@ fun Vec3i.lengthSqr(): Long {
 inline operator fun Vec3.unaryMinus(): Vec3 = this.reverse()
 
 inline operator fun Vec3.plus(other: Position): Vec3 = add(other.x(), other.y(), other.z())
-
-inline val Vec3.absoluteValue: Vec3 get() = Vec3(this.x.absoluteValue, this.y.absoluteValue, this.z.absoluteValue)
 
 /**
  * @return [this] + [scale] * [other]
@@ -144,14 +174,28 @@ inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: 
 inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
     multiply(factorX, factorY, factorZ)
 
-fun Vec3.horizontalDistanceTo(other: Vec3): Double = hypot(this.x - other.x, this.z - other.z)
+fun Vec3.horizontalDistanceTo(other: Vec3): Double = horizontalDistanceTo(other.x, other.z)
+
+fun Vec3.horizontalDistanceTo(x: Double, z: Double): Double = sqrt(horizontalDistanceToSqr(x, z))
+
+fun Vec3.horizontalDistanceToSqr(other: Vec3): Double = horizontalDistanceToSqr(other.x, other.z)
+
+fun Vec3.horizontalDistanceToSqr(x: Double, z: Double): Double = Mth.lengthSquared(this.x - x, this.z - z)
+
+fun Position.distanceToCenterSqr(blockPos: Long): Double {
+    val dx = this.x() - BlockPos.getX(blockPos)
+    val dy = this.y() - BlockPos.getY(blockPos)
+    val dz = this.z() - BlockPos.getZ(blockPos)
+    return Mth.lengthSquared(dx, dy, dz)
+}
 
 inline operator fun Vec3.component1(): Double = this.x
 inline operator fun Vec3.component2(): Double = this.y
 inline operator fun Vec3.component3(): Double = this.z
 
 operator fun ChunkPos.contains(blockPos: Long): Boolean =
-    BlockPos.getX(blockPos) in minBlockX..maxBlockX && BlockPos.getZ(blockPos) in minBlockZ..maxBlockZ
+    SectionPos.blockToSectionCoord(BlockPos.getX(blockPos)) == this.x
+        && SectionPos.blockToSectionCoord(BlockPos.getZ(blockPos)) == this.z
 
 fun Iterable<Vec3>.average(): Vec3 {
     var x = 0.0

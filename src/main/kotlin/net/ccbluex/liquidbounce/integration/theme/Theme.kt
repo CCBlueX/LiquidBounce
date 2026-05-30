@@ -25,7 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -38,13 +37,12 @@ import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory.JsonHudComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.text.capitalize
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.server.packs.resources.ResourceManager
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import okhttp3.Headers.Companion.headersOf
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
@@ -261,7 +259,7 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     companion object {
 
-        private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/Theme")
+        private val logger = clientLogger("Theme")
 
         @JvmStatic
         suspend fun load(url: String) = Theme(Origin.REMOTE, url).loadAll()

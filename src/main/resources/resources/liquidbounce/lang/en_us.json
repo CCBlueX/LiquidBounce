@@ -427,6 +427,9 @@
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.notifyDeveloper": "Check your game log and notify us.",
   "liquidbounce.tooltip.clickToCopy": "Click to copy",
+  "liquidbounce.fileDialog.mode.openFile": "Open File",
+  "liquidbounce.fileDialog.mode.saveFile": "Save File As",
+  "liquidbounce.fileDialog.mode.openDirectory": "Select Folder",
   "liquidbounce.liquidchat.authenticationFailed": "Authentication failed! LiquidChat requires Minecraft premium account.",
   "liquidbounce.liquidchat.jwtTokenReceived": "Received JWT token! Relogging...",
   "liquidbounce.liquidchat.notConnected": "Not connected to the chat server! Turn on the LiquidChat module!",
@@ -763,7 +766,13 @@
   "liquidbounce.module.autoWindCharge.description": "Automatically boosts you using wind charges when holding jump.",
   "liquidbounce.module.autoMobHeal.description": "Automatically heals nearby vanilla-healable mobs using their vanilla repair or feeding items.",
   "liquidbounce.module.airPlace.description": "Allows you to place blocks in mid-air.",
+<<<<<<< feat/auto-crafter
   "liquidbounce.module.autoCrafter.description": "Automatically crafts items in the specified order using the Recipe Book.",
+=======
+  "liquidbounce.module.liquidFiller.description": "Places blocks inside of liquid source blocks within range of you.",
+  "liquidbounce.module.liquidFiller.value.placeOrder.description": "Controls the order in which liquid source blocks are queued for placing.",
+  "liquidbounce.module.liquidFiller.value.useSponge.description": "Uses sponge for water source blocks to absorb nearby water with vanilla sponge behavior.",
+>>>>>>> nextgen
   "liquidbounce.module.notebot.description": "Automatically plays note block songs from NBS (Note Block Song) file.",
   "liquidbounce.module.notebot.messages.startTesting": "Starting testing...",
   "liquidbounce.module.notebot.messages.noNbs": "No NBS found at %s!",
@@ -790,5 +799,4 @@
   "liquidbounce.module.protectionZones.description": "Allows you to see areas protected by protection blocks and suggests optimal placement spots.",
   "liquidbounce.module.macros.description": "Lets you execute chat messages or item actions using custom keybinds.",
   "liquidbounce.module.newChunks.description": "Highlights chunks that are likely newly generated."
-
 }

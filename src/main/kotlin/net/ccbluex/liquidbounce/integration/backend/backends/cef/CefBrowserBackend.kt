@@ -129,20 +129,18 @@ class CefBrowserBackend : BrowserBackend, EventListener {
     fun cleanup() {
         if (cacheFolder.exists()) {
             runCatching {
-                cacheFolder.listFiles()
-                    ?.filter { file ->
-                        file.isDirectory && System.currentTimeMillis() - file.lastModified() > CACHE_CLEANUP_THRESHOLD
+                cacheFolder.listFiles { file ->
+                    file.isDirectory && System.currentTimeMillis() - file.lastModified() > CACHE_CLEANUP_THRESHOLD
+                }?.sumOf { file ->
+                    try {
+                        val fileSize = file.walkTopDown().sumOf { uFile -> uFile.length() }
+                        file.deleteRecursively()
+                        fileSize
+                    } catch (e: Exception) {
+                        logger.error("Failed to clean up old cache directory", e)
+                        0
                     }
-                    ?.sumOf { file ->
-                        try {
-                            val fileSize = file.walkTopDown().sumOf { uFile -> uFile.length() }
-                            file.deleteRecursively()
-                            fileSize
-                        } catch (e: Exception) {
-                            logger.error("Failed to clean up old cache directory", e)
-                            0
-                        }
-                    } ?: 0
+                } ?: 0
             }.onFailure {
                 // Not a big deal, not fatal.
                 logger.error("Failed to clean up old JCEF cache directories", it)

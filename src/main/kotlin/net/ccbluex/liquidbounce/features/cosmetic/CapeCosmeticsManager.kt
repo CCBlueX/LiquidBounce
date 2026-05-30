@@ -19,21 +19,20 @@
 package net.ccbluex.liquidbounce.features.cosmetic
 
 import com.mojang.authlib.GameProfile
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.ccbluex.liquidbounce.api.core.withScope
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory
 import net.ccbluex.liquidbounce.api.services.cosmetics.CapeApi
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.minecraft.resources.Identifier
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import java.util.function.Consumer
 
 /**
@@ -41,7 +40,7 @@ import java.util.function.Consumer
  */
 object CapeCosmeticsManager : EventListener {
 
-    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/CapeCosmeticsManager")
+    private val logger = clientLogger("CapeCosmeticsManager")
 
     /**
      * Cached capes
@@ -60,43 +59,41 @@ object CapeCosmeticsManager : EventListener {
      * @param callback The callback to call with the cape texture identifier
      */
     fun loadPlayerCape(player: GameProfile, callback: Consumer<Identifier>) {
-        withScope {
-            runCatching {
-                val uuid = player.id
+        ioScope.launch {
+            val uuid = player.id
 
-                CosmeticService.fetchCosmetic(uuid, CosmeticCategory.CAPE) { cosmetic ->
-                    // Get url of cape from cape service
-                    val name = getCapeName(cosmetic) ?: return@fetchCosmetic
+            CosmeticService.fetchCosmetic(uuid, CosmeticCategory.CAPE) { cosmetic ->
+                // Get url of cape from cape service
+                val name = getCapeName(cosmetic) ?: return@fetchCosmetic
 
-                    // Check if the cape is cached
-                    val cachedCapeId = cachedCapes[name]
-                    if (cachedCapeId != null) {
-                        logger.info("Successfully loaded cached cape for ${player.name}")
-                        callback.accept(cachedCapeId)
-                        return@fetchCosmetic
+                // Check if the cape is cached
+                val cachedCapeId = cachedCapes[name]
+                if (cachedCapeId != null) {
+                    logger.info("Successfully loaded cached cape for ${player.name}")
+                    callback.accept(cachedCapeId)
+                    return@fetchCosmetic
+                }
+
+                // Request cape texture
+                val nativeImage = runCatching {
+                    runBlocking {
+                        CapeApi.getCape(name)
                     }
+                }.getOrNull() ?: return@fetchCosmetic
 
-                    // Request cape texture
-                    val nativeImageBackedTexture = runCatching {
-                        runBlocking {
-                            CapeApi.getCape(name)
-                        }
-                    }.getOrNull() ?: return@fetchCosmetic
+                logger.info("Successfully loaded cape for ${player.name}")
 
-                    logger.info("Successfully loaded cape for ${player.name}")
+                val id = LiquidBounce.identifier("cape-$name")
 
-                    val id = LiquidBounce.identifier("cape-$name")
+                mc.execute {
+                    // Register cape texture
+                    nativeImage.registerTexture(id)
 
-                    mc.execute {
-                        // Register cape texture
-                        nativeImageBackedTexture.registerTexture(id)
+                    // Cache cape texture
+                    cachedCapes[name] = id
 
-                        // Cache cape texture
-                        cachedCapes[name] = id
-
-                        // Return cape texture
-                        callback.accept(id)
-                    }
+                    // Return cape texture
+                    callback.accept(id)
                 }
             }
         }

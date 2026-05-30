@@ -315,15 +315,29 @@ fun BufferedImage.toNativeImage(): NativeImage {
     return nativeImage
 }
 
-fun NativeImage.registerTexture(identifier: Identifier) {
-    mc.textureManager.register(identifier, asTexture(identifier::toString))
+/**
+ * Should be called from main thread.
+ */
+fun NativeImage.registerTexture(identifier: Identifier): DynamicTexture {
+    val texture = asTexture(identifier::toString)
+    mc.textureManager.register(identifier, texture)
+    return texture
 }
 
+/**
+ * Read and close stream. Accepts PNG.
+ */
 inline fun InputStream.readNativeImage(): NativeImage = NativeImage.read(this)
 
+/**
+ * Read and close source. Accepts JPEG and PNG.
+ */
 fun BufferedSource.readNativeImage(): NativeImage =
     this.ensurePngOrConvertJpeg().inputStream().readNativeImage()
 
+/**
+ * Read from file. Accepts JPEG and PNG.
+ */
 fun File.readNativeImage(): NativeImage =
     this.source().buffer().readNativeImage()
 
