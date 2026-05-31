@@ -428,7 +428,7 @@ object CommandManager : Collection<Command> by commandSet {
                 ' ' if !quote -> {
                     // Is the buffer not empty? Also ignore stuff like .friend   add SenkJu
                     if (stringBuilder.isNotBlank()) {
-                        output.add(stripOuterQuotes(stringBuilder.toString()))
+                        output.add(stripOuterQuotes(stringBuilder))
 
                         // Reset string buffer
                         stringBuilder.setLength(0)
@@ -440,16 +440,16 @@ object CommandManager : Collection<Command> by commandSet {
         }
 
         // Is there something left in the buffer?
-        if (stringBuilder.isNotBlank()) output.add(stripOuterQuotes(stringBuilder.toString()))
+        if (stringBuilder.isNotBlank()) output.add(stripOuterQuotes(stringBuilder))
 
         return Pair(output, outputIndices)
     }
 
-    private fun stripOuterQuotes(token: String): String {
-        if (token.length >= 2 && token.startsWith("\"") && token.endsWith("\"")) {
+    private fun stripOuterQuotes(token: CharSequence): String {
+        if (token.length >= 2 && token.startsWith('"') && token.endsWith('"')) {
             return token.substring(1, token.length - 1)
         }
-        return token
+        return token.toString()
     }
 
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
@@ -470,7 +470,7 @@ object CommandManager : Collection<Command> by commandSet {
                 args = listOf("")
             }
 
-            val nextParameter = !args.last().endsWith(" ") && cmd.endsWith(" ")
+            val nextParameter = !args.last().endsWith(' ') && cmd.endsWith(' ')
             var currentArgStart = tokenized.second.lastOrNull()
 
             if (currentArgStart == null) {
