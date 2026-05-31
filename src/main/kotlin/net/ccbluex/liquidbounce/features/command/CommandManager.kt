@@ -421,11 +421,14 @@ object CommandManager : Collection<Command> by commandSet {
             when (c) {
                 // Is the current char an escape char?
                 '\\' -> escaped = true // Enable escape for the next character
-                '"' -> quote = !quote
+                '"' -> {
+                    quote = !quote
+                    stringBuilder.append(c) // Don't throw quotes out
+                }
                 ' ' if !quote -> {
                     // Is the buffer not empty? Also ignore stuff like .friend   add SenkJu
                     if (stringBuilder.isNotBlank()) {
-                        output.add(stringBuilder.toString())
+                        output.add(stripOuterQuotes(stringBuilder))
 
                         // Reset string buffer
                         stringBuilder.setLength(0)
@@ -437,17 +440,16 @@ object CommandManager : Collection<Command> by commandSet {
         }
 
         // Is there something left in the buffer?
-        if (stringBuilder.isNotBlank()) {
-            // If a string was not closed, don't remove the quote
-            // e.g. .friend add "SenkJu -> [.friend, add, "SenkJu]
-            if (quote) {
-                output.add('"' + stringBuilder.toString())
-            } else {
-                output.add(stringBuilder.toString())
-            }
-        }
+        if (stringBuilder.isNotBlank()) output.add(stripOuterQuotes(stringBuilder))
 
         return Pair(output, outputIndices)
+    }
+
+    private fun stripOuterQuotes(token: CharSequence): String {
+        if (token.length >= 2 && token.startsWith('"') && token.endsWith('"')) {
+            return token.substring(1, token.length - 1)
+        }
+        return token.toString()
     }
 
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
@@ -468,7 +470,7 @@ object CommandManager : Collection<Command> by commandSet {
                 args = listOf("")
             }
 
-            val nextParameter = !args.last().endsWith(" ") && cmd.endsWith(" ")
+            val nextParameter = !args.last().endsWith(' ') && cmd.endsWith(' ')
             var currentArgStart = tokenized.second.lastOrNull()
 
             if (currentArgStart == null) {
