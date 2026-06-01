@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
+import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.fastutil.swap
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,7 +33,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanGenerator
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryCleanupPlan
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeValueGroup
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleValueGroup
 import net.ccbluex.liquidbounce.utils.inventory.ContainerItemSlot
@@ -48,6 +53,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.world.item.ItemStack
 import kotlin.math.ceil
+import net.ccbluex.liquidbounce.utils.kotlin.random
 
 /**
  * ChestStealer module
@@ -60,7 +66,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     private val inventoryConstrains = tree(InventoryConstraints())
     private val autoClose by boolean("AutoClose", true)
 
-    private val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE)
+    private val selectionMode = choices("SelectionMode", Distance, arrayOf(Distance, Index, Random, InvCleanerPriority))
+
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
@@ -94,7 +101,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         val itemsToCollect = cleanupPlan.usefulItems.filterIsInstanceTo(ArrayList<ContainerItemSlot>())
 
         val stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
-        selectionMode.process(itemsToCollect)
+        selectionMode.activeMode.process(itemsToCollect)
 
         val targetBlacklist = objectHashSetOf<ItemSlot>()
 
@@ -312,44 +319,117 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         return cleanupPlan
     }
 
-    @Suppress("unused")
-    private enum class SelectionMode(
-        override val tag: String,
-    ) : Tagged {
-        DISTANCE("Distance") {
-            override fun process(slots: MutableList<ContainerItemSlot>) {
-                val n = slots.size
-                if (n <= 2) return
+    private fun sortByDistance(slots: MutableList<ContainerItemSlot>, factorRange: ClosedFloatingPointRange<Float>) {
+        val n = slots.size
+        if (n <= 2) return
 
-                for (i in 0..<n - 1) {
-                    var bestIdx = i + 1
-                    var bestDist = Int.MAX_VALUE
+        val hasRandom = factorRange.start != factorRange.endInclusive
+        val randomFactors = if (hasRandom) Int2DoubleOpenHashMap(n) else null
 
-                    val current = slots[i]
+        if (randomFactors != null) {
+            for (slot in slots) {
+                randomFactors.put(slot.slotInContainer, factorRange.random().toDouble())
+            }
+        }
 
-                    for (j in i + 1..<n) {
-                        val d = current.distance(slots[j])
+        for (i in 0..<n - 1) {
+            var bestIdx = i + 1
+            var bestDist = Double.MAX_VALUE
 
-                        if (d < bestDist) {
-                            bestDist = d
-                            bestIdx = j
-                        }
-                    }
+            val current = slots[i]
 
-                    slots.swap(i + 1, bestIdx)
+            for (j in i + 1..<n) {
+                val candidate = slots[j]
+                val baseDist = current.distance(candidate).toDouble()
+                val randomizedDist = if (randomFactors == null) {
+                    baseDist
+                } else {
+                    baseDist * randomFactors.get(candidate.slotInContainer)
+                }
+
+                if (randomizedDist < bestDist) {
+                    bestDist = randomizedDist
+                    bestIdx = j
                 }
             }
-        },
-        INDEX("Index")  {
-            private val comparator: Comparator<ContainerItemSlot> = Comparator.comparingInt { it.slotInContainer }
 
-            override fun process(slots: MutableList<ContainerItemSlot>) = slots.sortWith(this.comparator)
-        },
-        RANDOM("Random") {
-            override fun process(slots: MutableList<ContainerItemSlot>) = slots.shuffle()
-        };
+            slots.swap(i + 1, bestIdx)
+        }
+    }
+
+    private fun invCleanerPriorityFor(slot: ItemSlot): Int {
+        val categoryType = primaryItemType(slot)
+        return when (categoryType) {
+            ItemType.ARMOR -> 5
+            ItemType.SWORD -> 4
+            ItemType.WEAPON, ItemType.SPEAR, ItemType.MACE -> 3
+            ItemType.PEARL -> 2
+            ItemType.TOOL -> 1
+            else -> 0
+        }
+    }
+
+    private fun primaryItemType(slot: ItemSlot): ItemType {
+        val facets = ItemCategorization.Default.getItemFacets(slot)
+        val nonWeaponFacets = facets.filterNot { it is WeaponItemFacet }
+        val facetsToCheck = if (nonWeaponFacets.isEmpty()) facets else nonWeaponFacets
+
+        return facetsToCheck
+            .maxBy { it.category.type.allocationPriority }
+            .category
+            .type
+    }
+
+    /**
+     * Mode pattern (as requested in review): each selection mode owns its own settings, so the
+     * DistanceRandomFactor only shows for the modes that actually sort by distance and is hidden for the
+     * others — no doNotIncludeWhen hacks.
+     */
+    abstract class SelectionMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<SelectionMode> get() = selectionMode
 
         abstract fun process(slots: MutableList<ContainerItemSlot>)
+    }
+
+    /** Steal nearest-first (greedy nearest-neighbour), optionally randomized by [distanceRandomFactor]. */
+    object Distance : SelectionMode("Distance") {
+        val distanceRandomFactor by floatRange("DistanceRandomFactor", 1.0f..1.0f, 0.0f..5.0f, "factor")
+
+        override fun process(slots: MutableList<ContainerItemSlot>) = sortByDistance(slots, distanceRandomFactor)
+    }
+
+    /** Steal in raw container-slot order. */
+    object Index : SelectionMode("Index") {
+        private val comparator: Comparator<ContainerItemSlot> = Comparator.comparingInt { it.slotInContainer }
+
+        override fun process(slots: MutableList<ContainerItemSlot>) = slots.sortWith(comparator)
+    }
+
+    /** Steal in a fully random order. */
+    object Random : SelectionMode("Random") {
+        override fun process(slots: MutableList<ContainerItemSlot>) = slots.shuffle()
+    }
+
+    /**
+     * Steal highest-priority items first (armor > sword > weapon > pearl > tool), and WITHIN each
+     * priority group take them nearest-first, optionally randomized by [distanceRandomFactor].
+     */
+    object InvCleanerPriority : SelectionMode("InvCleanerPriority") {
+        val distanceRandomFactor by floatRange("DistanceRandomFactor", 1.0f..1.0f, 0.0f..5.0f, "factor")
+
+        override fun process(slots: MutableList<ContainerItemSlot>) {
+            if (slots.size <= 2) return
+
+            val grouped = slots.groupBy { invCleanerPriorityFor(it) }
+            val sortedPriorities = grouped.keys.sortedDescending()
+
+            slots.clear()
+            for (priority in sortedPriorities) {
+                val groupSlots = grouped.getValue(priority).toMutableList()
+                sortByDistance(groupSlots, distanceRandomFactor)
+                slots.addAll(groupSlots)
+            }
+        }
     }
 
     /**
