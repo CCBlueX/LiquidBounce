@@ -376,12 +376,12 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val yOffset by float("YOffset", 0.1f, -1f..3f)
             private val size by float("Size", 0.18f, 0.05f..0.6f)
             private class OrbitSettings : ValueGroup("Orbit") {
-                val orbitRadius by float("OrbitRadius", 0.5f, 0.1f..1f)
-                val orbitSpeed by float("OrbitSpeed", 35f, -360f..360f, "deg/s")
-                val orbitSqueezeStrength by float("OrbitSqueezeStrength", 0.25f, 0f..1f)
-                val orbitSqueezeSpeed by int("OrbitSqueezeSpeed", 2, 1..4)
+                val radius by float("Radius", 0.5f, 0.1f..1f)
+                val speed by float("Speed", 35f, -360f..360f, "deg/s")
+                val squeezeStrength by float("SqueezeStrength", 0.25f, 0f..1f)
+                val squeezeSpeed by int("SqueezeSpeed", 2, 1..4)
             }
-            private val orbitSettings = tree(OrbitSettings())
+            private val orbit = tree(OrbitSettings())
             private val canBeCovered by boolean("CanBeCovered", false)
 
             private var currentTargetId: Int = -1
@@ -404,12 +404,12 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     val instance =
                         heartInstances.getOrNull(index) ?: HeartInstance(index).also(heartInstances::add)
 
-                    val orbitAngleDegrees = instance.baseOrbitAngle + nowSeconds * orbitSettings.orbitSpeed
+                    val orbitAngleDegrees = instance.baseOrbitAngle + nowSeconds * orbit.speed
 
                     val orbitAngle = orbitAngleDegrees.toRadians()
                     val orbitDistance =
-                        (orbitSettings.orbitRadius.toDouble() - damageSqueezeStrength)
-                            .coerceIn(0.05, orbitSettings.orbitRadius.toDouble())
+                        (orbit.radius.toDouble() - damageSqueezeStrength)
+                            .coerceIn(0.05, orbit.radius.toDouble())
 
                     val localOffset = Vec3(
                         cos(orbitAngle) * orbitDistance,
@@ -446,10 +446,10 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 damageFlashStrength =
                     if (target.hurtTime in 8..10) 1f else max(0f, damageFlashStrength - deltaSeconds * 3.5f)
 
-                val orbitSqueezeStrength = orbitSettings.orbitSqueezeStrength
+                val orbitSqueezeStrength = orbit.squeezeStrength
 
-                val inAnim = (5 + orbitSettings.orbitSqueezeSpeed)..10
-                val outAnim = (1 + orbitSettings.orbitSqueezeSpeed)..(4 + orbitSettings.orbitSqueezeSpeed)
+                val inAnim = (5 + orbit.squeezeSpeed)..10
+                val outAnim = (1 + orbit.squeezeSpeed)..(4 + orbit.squeezeSpeed)
 
                 damageSqueezeStrength +=
                     when(target.hurtTime) {
