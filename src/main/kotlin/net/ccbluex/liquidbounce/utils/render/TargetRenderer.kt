@@ -90,7 +90,7 @@ class TargetRenderer(
         doNotIncludeAlways()
     }
 
-    private val appearance = modes(owner, "Mode", 2) {
+    private val appearance = modes(owner, "Mode", 3) {
         arrayOf(
             TargetRenderAppearance.World.Legacy(it),
             TargetRenderAppearance.World.Circle(owner, it),
@@ -472,8 +472,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             }
 
             private fun WorldRenderEnvironment.drawHeartSDF(color: Color4b, size: Float) {
+                val argb = color.argb
                 drawCustomMesh(ClientRenderPipelines.heart(noDepthTest = !canBeCovered)) { matrix ->
-                    val argb = color.argb
                     val hs = size * 1.12f // -> See heart.fsh
                     addVertex(matrix, -hs, -hs, 0f).setUv(0f, 0f).setColor(argb)
                     addVertex(matrix, -hs,  hs, 0f).setUv(0f, 1f).setColor(argb)
