@@ -76,6 +76,9 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val heldItemMessageFormat by text("HeldItemMessageFormat", $$"%1$s holds %2$s x%3$s in %4$s")
     private val heldItems by items("HeldItems", itemSortedSetOf(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE))
 
+    private val totemPopMessages by boolean("TotemPopMessages", true)
+    private val totemPopMessageFormat by text("TotemPopMessageFormat", $$"%1$s popped a totem %2$s times")
+
     private val useNotification by boolean("UseNotification", false)
 
     private val uuidNameCache = Object2ObjectOpenHashMap<UUID, String>()
@@ -83,7 +86,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val itemConsumptionCache = Object2ObjectOpenHashMap<UUID, ItemConsumptionState>()
     private val heldItemCache = Object2ObjectOpenHashMap<UUID, HeldItemState>()
     private val observedPlayers = ObjectOpenHashSet<UUID>()
-    private val popCounter = Object2IntOpenHashMap<UUID>()
+    private val totemPopCounter = Object2IntOpenHashMap<UUID>()
 
     override fun onEnabled() {
         for (entry in network.onlinePlayers) {
@@ -98,7 +101,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
         itemConsumptionCache.clear()
         heldItemCache.clear()
         observedPlayers.clear()
-        popCounter.clear()
+        totemPopCounter.clear()
     }
 
     val packetHandler = handler<PacketEvent> { event ->
@@ -140,13 +143,20 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
                     val entity = packet.getEntity(world) as? Player ?: return@execute
                     if (entity === mc.player || FriendManager.isFriend(entity.name.string)) return@execute
 
-                    popCounter.addTo(entity.uuid, 1)
+                    totemPopCounter.addTo(entity.uuid, 1)
 
-                    sendNotifierMessage("${entity.name.string} pop totem ${popCounter.getInt(entity.uuid)} times")
+                    if (totemPopMessages) {
+                        sendNotifierMessage(
+                            totemPopMessageFormat.format(
+                                entity.name.string,
+                                totemPopCounter.getInt(entity.uuid)
+                            )
+                        )
+                    }
                 }
             }
 
-            is ClientboundDisconnectPacket, is ClientboundLoginPacket -> mc.execute(popCounter::clear)
+            is ClientboundDisconnectPacket, is ClientboundLoginPacket -> mc.execute(totemPopCounter::clear)
         }
     }
 
