@@ -397,8 +397,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                 val nowSeconds = System.currentTimeMillis() / 1000.0
                 val targetPos = target.interpolateCurrentPosition(partialTicks)
-                val goldenHearts = ceil((target.absorptionAmount / 2f).toDouble()).toInt().coerceAtLeast(0)
-                val renderedCount = max(heartInstances.size, goldenHearts)
+                val heartCounts = heartCounts(target)
+                val renderedCount = max(heartInstances.size, heartCounts.total)
 
                 for (index in 0 until renderedCount) {
                     val instance =
@@ -419,7 +419,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                     val worldPos = targetPos.add(localOffset)
                     val baseColor =
-                        if (index < goldenHearts) Color4b(255, 214, 72, color.a) else color
+                        if (index >= heartCounts.base) Color4b(255, 214, 72, color.a) else color
 
                     val renderColor = baseColor.interpolateTo(
                         Color4b.RED.alpha(color.a),
@@ -483,7 +483,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             }
 
             private fun ensureHeartCount(target: LivingEntity) {
-                val minimum = max(baseHeartSlots(target), ceil(target.absorptionAmount / 2.0).toInt())
+                val minimum = heartCounts(target).total
 
                 if (heartInstances.size > minimum) {
                     heartInstances.subList(minimum, heartInstances.size).clear()
@@ -496,12 +496,29 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
             private fun respawnHearts(target: LivingEntity) {
                 heartInstances.clear()
-                val minimum = max(baseHeartSlots(target), ceil((target.absorptionAmount / 2f).toDouble()).toInt())
-                repeat(minimum) { heartInstances += HeartInstance(it) }
+                repeat(heartCounts(target).total) { heartInstances += HeartInstance(it) }
             }
 
-            private fun baseHeartSlots(target: LivingEntity): Int =
-                if (dynamicCount) ceil(target.health.coerceAtLeast(0f) / 2f).toInt() else heartCount
+            private fun heartCounts(target: LivingEntity): HeartCounts {
+                fun Float.toHeartSlots(): Int = ceil(coerceAtLeast(0f) / 2f).toInt()
+
+                val base = if (dynamicCount) {
+                    target.health.toHeartSlots()
+                } else {
+                    heartCount
+                }
+                val absorption = target.absorptionAmount.toHeartSlots()
+
+                return HeartCounts(base, absorption)
+            }
+
+            private data class HeartCounts(
+                val base: Int,
+                val absorption: Int,
+            ) {
+                val total: Int
+                    get() = base + absorption
+            }
 
             private data class HeartInstance(
                 val baseOrbitAngle: Double,
