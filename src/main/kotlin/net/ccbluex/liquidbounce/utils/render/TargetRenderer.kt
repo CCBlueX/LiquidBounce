@@ -374,7 +374,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val dynamicCount by boolean("DynamicCount", true)
             private val heartCount by int("HeartCount", 10, 1..32)
             private val yOffset by float("YOffset", 0.1f, -1f..3f)
-            private val size by float("Size", 0.18f, 0.05f..0.6f)
+            private val size by float("Size", 0.15f, 0.05f..1f)
             private class OrbitSettings : ValueGroup("Orbit") {
                 val radius by float("Radius", 0.5f, 0.1f..1f)
                 val speed by float("Speed", 35f, -360f..360f, "deg/s")
@@ -473,12 +473,13 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
             private fun WorldRenderEnvironment.drawHeartSDF(color: Color4b, size: Float) {
                 val argb = color.argb
-                drawCustomMesh(ClientRenderPipelines.heart(noDepthTest = !canBeCovered)) { matrix ->
-                    val hs = size * 1.12f // -> See heart.fsh
-                    addVertex(matrix, -hs, -hs, 0f).setUv(0f, 0f).setColor(argb)
-                    addVertex(matrix, -hs,  hs, 0f).setUv(0f, 1f).setColor(argb)
-                    addVertex(matrix,  hs,  hs, 0f).setUv(1f, 1f).setColor(argb)
-                    addVertex(matrix,  hs, -hs, 0f).setUv(1f, 0f).setColor(argb)
+                drawCustomMesh(ClientRenderPipelines.heart(noDepthTest = !canBeCovered)) { pose ->
+                    // Preserve the native aspect ratio of sdHeart() in heart.fsh.
+                    val halfWidth = size * 1.0938363f
+                    addVertex(pose, -halfWidth, -size, 0f).setUv(0f, 0f).setColor(argb)
+                    addVertex(pose, -halfWidth,  size, 0f).setUv(0f, 1f).setColor(argb)
+                    addVertex(pose,  halfWidth,  size, 0f).setUv(1f, 1f).setColor(argb)
+                    addVertex(pose,  halfWidth, -size, 0f).setUv(1f, 0f).setColor(argb)
                 }
             }
 

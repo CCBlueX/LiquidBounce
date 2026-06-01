@@ -36,8 +36,11 @@ void main() {
     vec4 color = vColor * ColorModulator;
     if (color.a < 0.001) discard;
 
-    vec2 p = (vUv * 2.0 - 1.0) * vec2(1.08, 1.12);
-    p.y -= 0.03;
+    // Native bounds of sdHeart(): x = +/-0.6035534, y = 0.0..1.1035534.
+    // Keep a small margin so that the antialiased edge is not clipped by the quad.
+    const vec2 heartCenter = vec2(0.0, 0.5517767);
+    const vec2 heartHalfSize = vec2(0.6035534, 0.5517767) * 1.02;
+    vec2 p = (vUv * 2.0 - 1.0) * heartHalfSize + heartCenter;
 
     float d = sdHeart(p);
 
