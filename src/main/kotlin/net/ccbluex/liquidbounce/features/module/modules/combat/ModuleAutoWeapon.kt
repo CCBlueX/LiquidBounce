@@ -40,12 +40,17 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.WeaponType
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.isAxe
-import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
+import net.ccbluex.liquidbounce.utils.item.isSword
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
+import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.MaceItem
+import net.minecraft.world.item.enchantment.Enchantments
 
 /**
  * AutoWeapon module
@@ -65,6 +70,8 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     private val autoShieldBreak by boolean("AutoShieldBreak", true)
     private val autoMace by boolean("AutoMace", true)
+    private val block1_8Priority by boolean("1.8BlockPriority", true)
+    private val voidKnockbackPriority by boolean("VoidKnockbackPriority", true)
 
     private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
 
@@ -173,6 +180,11 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
 
+        val requiresLegacySword = block1_8Priority && KillAuraAutoBlock.running &&
+                (!KillAuraAutoBlock.onlyWhenInDanger || KillAuraAutoBlock.isInDanger) && target != null
+
+        val prioritizeKnockback = voidKnockbackPriority && target != null && isNearVoid(target)
+
         val bestSlot = Slots.Hotbar
             .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
             .filter { itemFacet ->
@@ -182,13 +194,75 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
                     requiresMace -> WeaponType.MACE.test(itemStack)
                     // An axe will stun the target if it is blocking with a shield
                     requiresShield -> WeaponType.AXE.test(itemStack)
+                    // If legacy block priority is active, always allow swords
+                    requiresLegacySword && itemStack.isSword -> true
+                    // If void knockback is active, always allow knockback items
+                    prioritizeKnockback && itemStack.getEnchantment(Enchantments.KNOCKBACK) > 0 -> true
                     // Fall back to a preferred weapon when no special case applies
                     else -> preferredWeapon.matchesAny(itemStack)
                 }
             }
-            .maxOrNull()
+            .maxWithOrNull(Comparator { o1, o2 ->
+                if (prioritizeKnockback) {
+                    val kb1 = o1.itemStack.getEnchantment(Enchantments.KNOCKBACK)
+                    val kb2 = o2.itemStack.getEnchantment(Enchantments.KNOCKBACK)
+                    if (kb1 != kb2) {
+                        return@Comparator kb1.compareTo(kb2)
+                    }
+                }
+                if (requiresLegacySword) {
+                    val o1Sword = o1.itemStack.isSword
+                    val o2Sword = o2.itemStack.isSword
+                    if (o1Sword != o2Sword) {
+                        return@Comparator if (o1Sword) 1 else -1
+                    }
+                }
+                o1.compareTo(o2)
+            })
 
         return bestSlot?.itemSlot as HotbarItemSlot?
+    }
+
+    private fun isNearVoid(target: LivingEntity): Boolean {
+        val level = mc.level ?: return false
+
+        val dx = target.x - player.x
+        val dz = target.z - player.z
+        val len = Math.sqrt(dx * dx + dz * dz)
+        if (len < 0.1) return false
+
+        val nx = dx / len
+        val nz = dz / len
+
+        val targetY = target.blockPosition().y
+        var voidBlocksCount = 0
+        val checkDistances = listOf(1.5, 3.0, 4.5, 6.0)
+
+        for (dist in checkDistances) {
+            val checkX = target.x + nx * dist
+            val checkZ = target.z + nz * dist
+
+            val blockPos = BlockPos(checkX.toInt(), targetY, checkZ.toInt())
+            var hasBlockBelow = false
+
+            for (dy in 0..16) {
+                val p = blockPos.below(dy)
+                if (p.y < level.minBuildHeight) {
+                    break
+                }
+                val state = level.getBlockState(p)
+                if (!state.isAir && !state.getCollisionShape(level, p).isEmpty) {
+                    hasBlockBelow = true
+                    break
+                }
+            }
+
+            if (!hasBlockBelow) {
+                voidBlocksCount++
+            }
+        }
+
+        return voidBlocksCount >= 2
     }
 
     /**
