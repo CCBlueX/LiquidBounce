@@ -29,9 +29,7 @@ import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
-import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -134,8 +132,10 @@ object ScaffoldMovementPlanner {
             debugLastPlacedBlocks(listOf(secondToLast, last))
         }
 
-        val avgPos = secondToLast.offset(last).toVec3d() * 0.5
-        val dir = last.subtract(secondToLast).toVec3d().normalize()
+        val secondToLastCenter = secondToLast.bottomCenter
+        val lastCenter = last.bottomCenter
+        val avgPos = secondToLastCenter.add(lastCenter).scale(0.5)
+        val dir = lastCenter.subtract(secondToLastCenter).normalize()
 
         // Calculate the average direction of the last placed blocks
         return Line(avgPos, dir)
