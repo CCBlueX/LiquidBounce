@@ -61,6 +61,15 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
         super.onDisabled()
     }
 
+    private fun effectiveBlockReach(): Float {
+        val extra = if (useReachModule && ModuleReach.running) {
+            ModuleReach.blockRangeIncrease
+        } else {
+            0.0f
+        }
+        return auraReach + extra
+    }
+
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent>(
         priority = EventPriorityConvention.FIRST_PRIORITY
@@ -81,7 +90,7 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
             return@handler
         }
 
-        val blockReach = auraReach + (if (useReachModule && ModuleReach.running) ModuleReach.blockRangeIncrease else 0.0f)
+        val blockReach = effectiveBlockReach()
         val blockReachInt = ceil(blockReach).toInt()
 
         var bestPlan: PlacementPlan? = null
@@ -114,7 +123,7 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
     private val tickHandler = handler<GameTickEvent> {
         val target = currentTarget ?: return@handler
 
-        val blockReach = auraReach + (if (useReachModule && ModuleReach.running) ModuleReach.blockRangeIncrease else 0.0f)
+        val blockReach = effectiveBlockReach()
         val rayTraceResult = traceFromPlayer(range = blockReach.toDouble())
 
         if (!target.doesCorrespondTo(rayTraceResult)) {
@@ -122,9 +131,13 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
         }
 
         if (silentSelection) {
-            SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
+            target.hotbarItemSlot.hotbarIndex?.let {
+                SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
+            }
         } else {
-            target.hotbarItemSlot.hotbarIndex?.let { player.inventory.selectedSlot = it }
+            target.hotbarItemSlot.hotbarIndex?.let {
+                player.inventory.selectedSlot = it
+            }
         }
 
         val onSuccess: () -> Boolean = {
