@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.onTarget
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
@@ -39,13 +41,20 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.WeaponType
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
+import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.MaceItem
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.Vec3
+import kotlin.math.floor
 
 /**
  * AutoWeapon module
@@ -126,6 +135,15 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     private val canMaceSmash
         get() = (!isOlderThanOrEqual1_8 && MaceItem.canSmashAttack(player)) || ModuleMaceKill.enabled
 
+    private val voidCheckCache = Int2BooleanOpenHashMap()
+    private var voidCheckCacheTick = -1
+
+    private val voidCheckDistances = doubleArrayOf(0.5, 1.0, 1.5, 2.0, 2.5)
+
+    private const val VOID_HITS_THRESHOLD = 3
+    private const val VOID_MIN_Y = -64
+    private const val DIRECTION_EPSILON = 1.0E-4
+
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         val entity = event.entity as? LivingEntity ?: return@handler
@@ -168,27 +186,148 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         SilentHotbar.resetSlot(this)
     }
 
+    private fun shouldPrioritizeKnockback(target: LivingEntity): Boolean {
+        val direction = Vec3(target.x - player.x, 0.0, target.z - player.z)
+        if (direction.lengthSqr() < DIRECTION_EPSILON) {
+            return false
+        }
+
+        return isNearVoid(target, direction.normalize())
+    }
+
+    private fun isNearVoid(target: LivingEntity, direction: Vec3): Boolean {
+        val tick = player.tickCount
+        if (voidCheckCacheTick != tick) {
+            voidCheckCache.clear()
+            voidCheckCacheTick = tick
+        }
+
+        val targetId = target.id
+        if (voidCheckCache.containsKey(targetId)) {
+            return voidCheckCache.get(targetId)
+        }
+
+        val result = isNearVoidInDirection(target, direction)
+        voidCheckCache.put(targetId, result)
+        return result
+    }
+
+    private fun isNearVoidInDirection(target: LivingEntity, direction: Vec3): Boolean {
+        val level = target.level()
+        val targetY = floor(target.boundingBox.minY).toInt()
+        var voidBlocksCount = 0
+
+        for (distance in voidCheckDistances) {
+            val checkX = target.x + direction.x * distance
+            val checkZ = target.z + direction.z * distance
+
+            if (isNearVoidAt(level, targetY, checkX, checkZ)) {
+                voidBlocksCount++
+                if (voidBlocksCount >= VOID_HITS_THRESHOLD) {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    private fun isNearVoidAt(
+        level: Level,
+        targetY: Int,
+        checkX: Double,
+        checkZ: Double,
+    ): Boolean {
+        val blockX = floor(checkX).toInt()
+        val blockZ = floor(checkZ).toInt()
+        val pos = BlockPos.MutableBlockPos()
+
+        for (y in targetY downTo VOID_MIN_Y) {
+            pos.set(blockX, y, blockZ)
+            val state = level.getBlockState(pos)
+
+            if (isSupportingBlock(level, pos, state)) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    private fun isSupportingBlock(level: Level, pos: BlockPos, state: BlockState): Boolean {
+        if (state.isAir) {
+            return false
+        }
+
+        return !state.getCollisionShape(level, pos).isEmpty
+    }
+
+    private fun findKnockbackSlot(): HotbarItemSlot? {
+        var bestSlot: HotbarItemSlot? = null
+        var bestLevel = 0
+
+        for (slot in Slots.Hotbar) {
+            val knockbackLevel = slot.itemStack.getEnchantment(Enchantments.KNOCKBACK)
+            if (knockbackLevel <= 0) {
+                continue
+            }
+
+            if (knockbackLevel > bestLevel) {
+                bestLevel = knockbackLevel
+                bestSlot = slot
+                continue
+            }
+
+            if (knockbackLevel == bestLevel && bestSlot != null &&
+                HotbarItemSlot.PREFER_NEARBY.compare(slot, bestSlot) < 0
+            ) {
+                bestSlot = slot
+            }
+        }
+
+        return bestSlot
+    }
+
+    private fun List<WeaponItemFacet>.firstBestMatching(
+        predicate: (WeaponItemFacet) -> Boolean,
+    ): WeaponItemFacet? = filter(predicate).maxOrNull()
+
     private fun determineWeaponSlot(target: LivingEntity?, enforceShield: Boolean = false): HotbarItemSlot? {
         val itemCategorization = ItemCategorization(Slots.Hotbar)
         val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
+        val requiresLegacySword = isOlderThanOrEqual1_8 && KillAuraAutoBlock.enabled &&
+            KillAuraAutoBlock.isOnlyWhenInDanger && KillAuraAutoBlock.isInDanger
+        val prioritizeKnockback = target?.let(::shouldPrioritizeKnockback) == true
 
-        val bestSlot = Slots.Hotbar
+        val weaponFacets = Slots.Hotbar
             .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
-            .filter { itemFacet ->
-                val itemStack = itemFacet.itemStack
-                when {
-                    // A mace's smash attack cannot be blocked by a shield
-                    requiresMace -> WeaponType.MACE.test(itemStack)
-                    // An axe will stun the target if it is blocking with a shield
-                    requiresShield -> WeaponType.AXE.test(itemStack)
-                    // Fall back to a preferred weapon when no special case applies
-                    else -> preferredWeapon.matchesAny(itemStack)
-                }
-            }
-            .maxOrNull()
 
-        return bestSlot?.itemSlot as HotbarItemSlot?
+        val specialSlot = when {
+            // A mace's smash attack cannot be blocked by a shield
+            requiresMace -> weaponFacets.firstBestMatching { WeaponType.MACE.test(it.itemStack) }
+            // An axe will stun the target if it is blocking with a shield
+            requiresShield -> weaponFacets.firstBestMatching { WeaponType.AXE.test(it.itemStack) }
+            // Legacy blocking favors swords when only blocking on danger
+            requiresLegacySword -> weaponFacets.firstBestMatching { WeaponType.SWORD.test(it.itemStack) }
+            else -> null
+        }
+
+        if (specialSlot != null) {
+            return specialSlot.itemSlot as HotbarItemSlot?
+        }
+
+        if (prioritizeKnockback) {
+            val knockbackSlot = findKnockbackSlot()
+            if (knockbackSlot != null) {
+                return knockbackSlot
+            }
+        }
+
+        val preferredSlot = weaponFacets
+            .firstBestMatching { preferredWeapon.matchesAny(it.itemStack) }
+
+        return preferredSlot?.itemSlot as HotbarItemSlot?
     }
 
     /**
