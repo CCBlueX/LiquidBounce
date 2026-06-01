@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
-import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
 
@@ -82,7 +81,8 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
             return@handler
         }
 
-        val blockReach = auraReach + (if (useReachModule && ModuleReach.running) ModuleReach.blockRangeIncrease else 0.0f)
+        val blockReach = auraReach +
+                (if (useReachModule && ModuleReach.running) ModuleReach.blockRangeIncrease else 0.0f)
         val blockReachInt = ceil(blockReach).toInt()
 
         var bestPlan: PlacementPlan? = null
@@ -115,7 +115,9 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
     private val tickHandler = handler<GameTickEvent> {
         val target = currentTarget ?: return@handler
 
-        val rayTraceResult = traceFromPlayer()
+        val blockReach = auraReach +
+                (if (useReachModule && ModuleReach.running) ModuleReach.blockRangeIncrease else 0.0f)
+        val rayTraceResult = traceFromPlayer(range = blockReach.toDouble())
 
         if (!target.doesCorrespondTo(rayTraceResult)) {
             return@handler
@@ -124,7 +126,7 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
         if (silentSelection) {
             SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
         } else {
-            player.inventory.selectedSlot = target.hotbarItemSlot.hotbarIndex
+            player.inventory.selectedSlot = target.hotbarItemSlot.hotbarIndex ?: 0
         }
 
         val onSuccess: () -> Boolean = {
