@@ -68,7 +68,6 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import org.joml.Vector2f
 import org.joml.Vector3f
-import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.max
@@ -375,7 +374,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val dynamicCount by boolean("DynamicCount", true)
             private val heartCount by int("HeartCount", 10, 1..32)
             private val yOffset by float("YOffset", 0.1f, -1f..3f)
-            private val size by float("Size", 0.1f, 0.05f..0.2f)
+            private val size by float("Size", 0.15f, 0.05f..1f)
             private class OrbitSettings : ValueGroup("Orbit") {
                 val radius by float("Radius", 0.5f, 0.1f..1f)
                 val speed by float("Speed", 35f, -360f..360f, "deg/s")
@@ -391,53 +390,6 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private var lastUpdTime = 0L
             private val heartInstances = mutableListOf<HeartInstance>()
 
-            private var heartsPos: Pair<List<Double>, List<Float>> =
-                emptyList<Double>() to emptyList()
-
-            private fun generatePoses() {
-                val angles = mutableListOf<Double>()
-                val heights = mutableListOf<Float>()
-
-                var attempts = 0
-
-                // Base angles calc
-                while (angles.size < 32 && attempts < 1000) {
-                    attempts++
-
-                    val nextAngle = Random.nextDouble(0.0, 360.0)
-                    val nextHeight = Random.nextDouble(0.0, 1.0).toFloat()
-
-                    val tooClose = angles.indices.any { i ->
-                        val existingAngle = angles[i]
-                        val existingHeight = heights[i]
-
-                        val angleDiff = abs(existingAngle - nextAngle)
-                        val isAngleClose = angleDiff < size * 115.0 || (360.0 - angleDiff) < size * 115.0
-
-                        val isHeightClose = abs(existingHeight - nextHeight) < size * 2.0
-
-                        isAngleClose && isHeightClose
-                    }
-
-                    if (!tooClose || attempts > 800) {
-                        angles.add(nextAngle)
-                        heights.add(nextHeight)
-                    }
-                }
-
-                // Fallback if attempts greater than 999 and angles lesser than 32
-                while (angles.size < 32) {
-                    angles.add(Random.nextDouble(0.0, 360.0))
-                    heights.add(Random.nextDouble(0.0, 1.0).toFloat())
-                }
-
-                heartsPos = angles to heights
-            }
-
-            init {
-                generatePoses()
-            }
-
             override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
                 val target = entity as? LivingEntity ?: return
 
@@ -450,9 +402,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                 for (index in 0 until renderedCount) {
                     val instance =
-                        heartInstances.getOrNull(index) ?: HeartInstance(
-                        heartsPos.first[index], heartsPos.second[index]
-                        ).also(heartInstances::add)
+                        heartInstances.getOrNull(index) ?: HeartInstance(index).also(heartInstances::add)
 
                     val orbitAngleDegrees = instance.baseOrbitAngle + nowSeconds * orbit.speed
 
@@ -490,7 +440,6 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 if (target.id != currentTargetId) {
                     currentTargetId = target.id
                     damageFlashStrength = 0f
-                    generatePoses()
                     respawnHearts(target)
                 }
 
@@ -542,18 +491,13 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 }
 
                 repeat(minimum - heartInstances.size) {
-                    val index = heartInstances.size
-                    heartInstances.add(HeartInstance(
-                        heartsPos.first[index], heartsPos.second[index],
-                    ))
+                    heartInstances.add(HeartInstance(heartInstances.size))
                 }
             }
 
             private fun respawnHearts(target: LivingEntity) {
                 heartInstances.clear()
-                repeat(heartCounts(target).total) { heartInstances += HeartInstance(
-                    heartsPos.first[it], heartsPos.second[it],
-                ) }
+                repeat(heartCounts(target).total) { heartInstances += HeartInstance(it) }
             }
 
             private fun heartCounts(target: LivingEntity): HeartCounts {
@@ -580,7 +524,15 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private data class HeartInstance(
                 val baseOrbitAngle: Double,
                 val heightFactor: Float,
-            )
+            ) {
+                constructor(
+                    index: Int,
+                    random: Random = Random(("$index".hashCode() xor ("$index".hashCode() ushr 16)).toLong())
+                ) : this(
+                    baseOrbitAngle = random.nextDouble(0.0, 360.0),
+                    heightFactor = random.nextDouble(0.0, 1.0).toFloat()
+                )
+            }
         }
 
     }
