@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.aiming.projectiles
 
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.math.toDegrees
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
@@ -27,8 +28,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan
-import kotlin.math.atan2
-import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
@@ -49,7 +48,7 @@ object PolynomialProjectileAngleCalculator: ProjectileAngleCalculator {
 
         val diff: Vec3 = targetPosFunction.getPositionInTicks(estimatedTicksUntilImpact).subtract(sourcePos)
 
-        val horizontalDistance = hypot(diff.x, diff.z)
+        val horizontalDistance = diff.horizontalDistance()
         val pearlInfo = TrajectoryInfo.GENERIC
 
         val velocity = pearlInfo.initialVelocity
@@ -66,10 +65,8 @@ object PolynomialProjectileAngleCalculator: ProjectileAngleCalculator {
         }
 
         val pitchRad = atan((velocity2 - sqrt(sqrt)) / (gravity * horizontalDistance))
-        val yawRad = atan2(diff.z, diff.x)
-
         return Rotation(
-            Mth.wrapDegrees(yawRad.toDegrees().toFloat() - 90f),
+            diff.yaw,
             Mth.wrapDegrees(-pitchRad.toDegrees().toFloat())
         )
     }

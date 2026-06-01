@@ -23,7 +23,7 @@ import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.math.toDegrees
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.iterator
@@ -35,7 +35,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.math.atan2
 
 
 /**
@@ -47,8 +46,7 @@ fun getDegreesRelativeToView(
     positionRelativeToPlayer: Vec3,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yRot,
 ): Float {
-    val optimalYaw =
-        atan2(-positionRelativeToPlayer.x, positionRelativeToPlayer.z).toFloat().toDegrees()
+    val optimalYaw = positionRelativeToPlayer.yaw
     val currentYaw = Mth.wrapDegrees(yaw)
 
     return Mth.wrapDegrees(optimalYaw - currentYaw)

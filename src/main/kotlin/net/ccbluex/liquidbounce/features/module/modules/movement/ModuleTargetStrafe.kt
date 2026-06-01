@@ -55,7 +55,7 @@ import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.MoverType
 import net.minecraft.world.phys.Vec3
-import java.lang.Math.toDegrees
+import net.ccbluex.liquidbounce.utils.math.yaw
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.floor
@@ -289,13 +289,13 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
                 if (SpeedHypixelLowHop.shouldStrafe) {
                     event.movement = event.movement.withStrafe(
-                        yaw = toDegrees(atan2(-strafePlan.strafeVec.x, strafePlan.strafeVec.z)).toFloat(),
+                        yaw = strafePlan.strafeVec.yaw,
                         speed = player.horizontalSpeed.coerceAtLeast(minSpeed),
                         input = null
                     )
                 } else {
                     event.movement = event.movement.withStrafe(
-                        yaw = toDegrees(atan2(-strafePlan.strafeVec.x, strafePlan.strafeVec.z)).toFloat(),
+                        yaw = strafePlan.strafeVec.yaw,
                         speed = player.horizontalSpeed.coerceAtLeast(minSpeed),
                         strength = 0.02,
                         input = null
@@ -303,7 +303,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
                 }
             } else {
                 event.movement = event.movement.withStrafe(
-                    yaw = toDegrees(atan2(-strafePlan.strafeVec.x, strafePlan.strafeVec.z)).toFloat(),
+                    yaw = strafePlan.strafeVec.yaw,
                     speed = player.horizontalSpeed,
                     input = null
                 )
