@@ -2,4 +2,4 @@
 *.kt text eol=lf
 *.java text eol=lf
 *.sh text eol=lf
-; *.bat text eol=crlf
+*.bat text eol=crlf
