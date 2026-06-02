@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.kotlin.getValue
 import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
-import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.toBlockBox
@@ -72,7 +71,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         // Invalidate old ones
         if (state.isAir) {
             // if one of the neighbor blocks becomes air, invalidate the hole
-            holes.removeIf { it.positions.iterate().any { p -> p.distManhattan(pos) == 1 } }
+            holes.removeIf { it.asList().any { p -> p.distManhattan(pos) == 1 } }
         } else {
             holes.removeIf { it.isInvalidatedByFilling(pos) }
         }
@@ -97,8 +96,8 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
 
         val holesInRegion = if (holes.size >= 32) {
             holes.subSet(
-                Hole(Hole.Type.ONE_ONE, BoundingBox(mutableLocal.set(minX() - 2, minY() - 2, minZ() - 2))), true,
-                Hole(Hole.Type.ONE_ONE, BoundingBox(mutableLocal.set(maxX() + 2, maxY() + 2, maxZ() + 2))), true
+                Hole.OneByOne(BlockPos(minX() - 2, minY() - 2, minZ() - 2)), true,
+                Hole.OneByOne(BlockPos(maxX() + 2, maxY() + 2, maxZ() + 2)), true
             )
         } else {
             holes
@@ -123,7 +122,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                         cached == INDESTRUCTIBLE
                     }
 
-                    holes += Hole(Hole.Type.ONE_ONE, BoundingBox(pos), bedrockOnly)
+                    holes += Hole.OneByOne(pos.immutable(), bedrockOnly)
                 }
                 // 1*2
                 3 -> {
@@ -142,7 +141,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                     }
 
                     if (buffer.checkSurroundings(another, checkDirections)) {
-                        holes += Hole(Hole.Type.ONE_TWO, BoundingBox.fromCorners(pos, another))
+                        holes += Hole.OneByTwo(minOf(pos, another).immutable(), airDirection.axis)
                     }
                 }
                 // 2*2
@@ -169,7 +168,9 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                         continue
                     }
 
-                    holes += Hole(Hole.Type.TWO_TWO, BoundingBox.fromCorners(pos, mutableLocal))
+                    holes += Hole.TwoByTwo(
+                        BlockPos(minOf(pos.x, mutableLocal.x), pos.y, minOf(pos.z, mutableLocal.z))
+                    )
                 }
             }
         }
