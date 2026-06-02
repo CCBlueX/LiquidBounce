@@ -99,10 +99,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     private val prioritizeBlocking by boolean("PrioritizeBlocking", true)
     val onScanRange by boolean("OnScanRange", true)
-    private val onlyWhenInDanger by boolean("OnlyWhenInDanger", false)
-
-    val isOnlyWhenInDanger: Boolean
-        get() = onlyWhenInDanger
+    val onlyWhenInDanger by boolean("OnlyWhenInDanger", false)
 
     /** For 1.9~1.21.4 protocol on 1.8 server, server will send a shield to your offhand on using item */
     private val assumeShield by boolean("AssumeShield", false)

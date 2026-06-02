@@ -33,7 +33,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAu
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
@@ -51,8 +53,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.enchantment.Enchantments
-import net.minecraft.world.level.Level
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
 
@@ -213,7 +213,6 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     }
 
     private fun isNearVoidInDirection(target: LivingEntity, direction: Vec3): Boolean {
-        val level = target.level()
         val targetY = floor(target.boundingBox.minY).toInt()
         var voidBlocksCount = 0
 
@@ -221,7 +220,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
             val checkX = target.x + direction.x * distance
             val checkZ = target.z + direction.z * distance
 
-            if (isNearVoidAt(level, targetY, checkX, checkZ)) {
+            if (isNearVoidAt(targetY, checkX, checkZ)) {
                 voidBlocksCount++
                 if (voidBlocksCount >= VOID_HITS_THRESHOLD) {
                     return true
@@ -233,7 +232,6 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     }
 
     private fun isNearVoidAt(
-        level: Level,
         targetY: Int,
         checkX: Double,
         checkZ: Double,
@@ -243,23 +241,13 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         val pos = BlockPos.MutableBlockPos()
 
         for (y in targetY downTo VOID_MIN_Y) {
-            pos.set(blockX, y, blockZ)
-            val state = level.getBlockState(pos)
-
-            if (isSupportingBlock(level, pos, state)) {
+            // A column counts as void only when no block below has a collision shape to stand on.
+            if (!pos.set(blockX, y, blockZ).collisionShape.isEmpty) {
                 return false
             }
         }
 
         return true
-    }
-
-    private fun isSupportingBlock(level: Level, pos: BlockPos, state: BlockState): Boolean {
-        if (state.isAir) {
-            return false
-        }
-
-        return !state.getCollisionShape(level, pos).isEmpty
     }
 
     private fun findKnockbackSlot(): HotbarItemSlot? {
@@ -296,8 +284,10 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         val itemCategorization = ItemCategorization(Slots.Hotbar)
         val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
-        val requiresLegacySword = isOlderThanOrEqual1_8 && KillAuraAutoBlock.enabled &&
-            KillAuraAutoBlock.isOnlyWhenInDanger && KillAuraAutoBlock.isInDanger
+        // When AutoBlock only blocks on danger and we are in danger, favor a sword so we can block with it.
+        // Sword blocking is not a 1.8-only feature: it also applies on 1.21.5+ where any item can block.
+        val requiresBlockingSword = isBlocksAttacksExisting && KillAuraAutoBlock.enabled &&
+            KillAuraAutoBlock.onlyWhenInDanger && KillAuraAutoBlock.isInDanger
         val prioritizeKnockback = target?.let(::shouldPrioritizeKnockback) == true
 
         val weaponFacets = Slots.Hotbar
@@ -308,8 +298,8 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
             requiresMace -> weaponFacets.firstBestMatching { WeaponType.MACE.test(it.itemStack) }
             // An axe will stun the target if it is blocking with a shield
             requiresShield -> weaponFacets.firstBestMatching { WeaponType.AXE.test(it.itemStack) }
-            // Legacy blocking favors swords when only blocking on danger
-            requiresLegacySword -> weaponFacets.firstBestMatching { WeaponType.SWORD.test(it.itemStack) }
+            // Favor a sword so AutoBlock can block with it when only blocking on danger
+            requiresBlockingSword -> weaponFacets.firstBestMatching { WeaponType.SWORD.test(it.itemStack) }
             else -> null
         }
 
