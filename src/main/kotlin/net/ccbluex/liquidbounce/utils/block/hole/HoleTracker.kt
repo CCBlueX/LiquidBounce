@@ -74,7 +74,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
             // if one of the neighbor blocks becomes air, invalidate the hole
             holes.removeIf { it.positions.iterate().any { p -> p.distManhattan(pos) == 1 } }
         } else {
-            holes.removeIf { it.blockInvalidators.isInside(pos) }
+            holes.removeIf { it.isInvalidatedByFilling(pos) }
         }
 
         // Check new ones
@@ -106,7 +106,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
 
         // Only check positions in this chunk (pos is BlockPos.Mutable)
         for (pos in this) {
-            if (pos.y >= topY || holesInRegion.any { pos in it } || !buffer.checkSameXZ(pos)) {
+            if (pos.y >= topY || holesInRegion.any { pos in it } || !buffer.checkColumnOf(pos)) {
                 continue
             }
 
@@ -130,7 +130,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                     val airDirection = Direction.BY_2D_DATA.first { it !in surroundings }
                     val another = pos.relative(airDirection)
 
-                    if (!buffer.checkSameXZ(another)) {
+                    if (!buffer.checkColumnOf(another)) {
                         continue
                     }
 
@@ -192,7 +192,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         }
     }
 
-    private fun BlockStateBuffer.checkSameXZ(blockPos: BlockPos): Boolean {
+    private fun BlockStateBuffer.checkColumnOf(blockPos: BlockPos): Boolean {
         mutable.set(blockPos.x, blockPos.y - 1, blockPos.z)
         val cached = cache(mutable)
         if (cached != BLAST_RESISTANT && cached != INDESTRUCTIBLE) {
@@ -223,7 +223,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         blockPos: BlockPos,
         vararg directions: Direction
     ): Boolean {
-        return checkSameXZ(blockPos) && checkSurroundings(blockPos, directions)
+        return checkColumnOf(blockPos) && checkSurroundings(blockPos, directions)
     }
 
     override fun chunkUpdate(chunk: LevelChunk) {

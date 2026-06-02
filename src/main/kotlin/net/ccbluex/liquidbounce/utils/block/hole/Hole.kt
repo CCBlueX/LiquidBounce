@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.block.hole
 
-import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.core.Vec3i
 import net.minecraft.world.level.levelgen.structure.BoundingBox
 
@@ -27,12 +26,11 @@ data class Hole(
     val type: Type,
     val positions: BoundingBox,
     val bedrockOnly: Boolean = false,
-    val blockInvalidators: BoundingBox = positions.copy(maxY = positions.maxY() + 2),
 ) : Comparable<Hole> {
 
     override fun compareTo(other: Hole): Int {
-        val yDiff = this.positions.maxY() - other.positions.maxY()
-        val zDiff = this.positions.maxZ() - other.positions.maxZ()
+        val yDiff = this.positions.minY() - other.positions.minY()
+        val zDiff = this.positions.minZ() - other.positions.minZ()
         val xDiff = this.positions.minX() - other.positions.minX()
         return when {
             yDiff != 0 -> yDiff
@@ -43,9 +41,45 @@ data class Hole(
 
     operator fun contains(pos: Vec3i): Boolean = positions.isInside(pos)
 
+    /**
+     * Checks whether placing a block at [pos] would invalidate this hole.
+     *
+     * A block can invalidate the hole if its position falls within the hole's
+     * bounding box, extended upward by 2 blocks to account for the player's height.
+     */
+    fun isInvalidatedByFilling(pos: Vec3i): Boolean {
+        return pos.x in this.positions.minX()..this.positions.maxX()
+            && pos.y in this.positions.minY()..this.positions.maxY() + 2 // <- player height
+            && pos.z in this.positions.minZ()..this.positions.maxZ()
+    }
+
     enum class Type(val size: Int) {
+        /**
+         * ```
+         * ? x ?
+         * x o x
+         * ? x ?
+         * ```
+         */
         ONE_ONE(1),
+
+        /**
+         * ```
+         * ? x x ?
+         * x o o x
+         * ? x x ?
+         * ```
+         */
         ONE_TWO(2),
+
+        /**
+         * ```
+         * ? x x ?
+         * x o o x
+         * x o o x
+         * ? x x ?
+         * ```
+         */
         TWO_TWO(4),
     }
 
