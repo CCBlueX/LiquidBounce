@@ -38,8 +38,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
-import net.ccbluex.liquidbounce.utils.math.from
-import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
@@ -108,7 +106,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
         // all holes, if required 1x1 holes filtered out
-        val holes = HoleTracker.holes.filter { Features.ONLY_ONE_BY_ONE !in features || it.type == Hole.Type.ONE_ONE }
+        val holes = HoleTracker.holes.filter { Features.ONLY_ONE_BY_ONE !in features || it is Hole.OneByOne }
 
         val blockPos = player.blockPosition()
         val selfInHole = holes.any { it.contains(blockPos) }
@@ -152,13 +150,13 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
     @Suppress("ComplexCondition")
     private fun collectHolesSimple(holeContext: HoleContext) {
         holeContext.holes.forEach { hole ->
-            val y = hole.positions.from.y + 1.0
+            val y = hole.pos.y + 1.0
             if (Features.PREVENT_SELF_FILL !in features
                 || y > player.y
                 || holeContext.selfInHole
                 || !hole.positions.intersects(holeContext.selfRegion)
             ) {
-                hole.positions.iterate().mapTo(holeContext.blocks) { it.immutable() }
+                hole.asList().toCollection(holeContext.blocks)
             }
         }
     }
@@ -209,7 +207,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
                 return@forEach
             }
 
-            val holeSize = hole.type.size
+            val holeSize = hole.size
             remainingItems1 -= holeSize
             if (remainingItems1 < 0 && !player.abilities.instabuild) {
                 remainingItems1 += holeSize
@@ -217,7 +215,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
             }
 
             checkedHoles += hole
-            hole.positions.iterate().mapTo(found) {
+            hole.asList().mapTo(found) {
                 DoubleLongPair.of(valid.rightDouble(), it.asLong())
             }
 
@@ -236,7 +234,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         selfInHole: Boolean,
         selfRegion: BoundingBox
     ) : BooleanDoubleImmutablePair {
-        val y = hole.positions.from.y + 1.0
+        val y = hole.pos.y + 1.0
         val movingTowardsHole = isMovingTowardsHole(hole, entity)
         val requirementsMet = movingTowardsHole.firstBoolean() && hole.positions.intersects(region) && y <= entity.y
 
@@ -250,7 +248,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
     }
 
     private fun isMovingTowardsHole(hole: Hole, entity: Entity): BooleanDoubleImmutablePair {
-        val holePos = hole.positions.from.center
+        val holePos = hole.positions.center
         val velocity = entity.position().subtract(entity.xo, entity.yo, entity.zo)
         val playerPos = entity.position()
 

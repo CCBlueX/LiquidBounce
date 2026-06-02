@@ -115,7 +115,7 @@ class ValueGroupSerializer(
          * Do not include values that are not supposed to be shared
          * with other users
          */
-        if (value.doNotInclude()) {
+        if (value.doNotInclude.asBoolean) {
             return false
         }
 

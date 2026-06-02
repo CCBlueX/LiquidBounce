@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
-import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_HORIZONTAL
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.immutable
@@ -176,7 +175,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             // Eye above web => standard "place on top" path is most reliable.
             eyes.y > webBox.maxY -> buildTopPlaceAction(webPos, waterSlot)
             // Otherwise keep side-only fallback to avoid clicking through the lower half.
-            else -> buildDirectionalPlaceAction(webPos, waterSlot, DIRECTIONS_HORIZONTAL)
+            else -> buildDirectionalPlaceAction(webPos, waterSlot, Direction.BY_2D_DATA)
         }
     }
 
