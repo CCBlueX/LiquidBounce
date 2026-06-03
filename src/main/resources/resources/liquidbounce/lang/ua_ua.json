@@ -301,6 +301,8 @@
   "liquidbounce.module.antiVanish.messages.staffDetected": "Ми зафіксували людину з персоналу в невидимці.",
   "liquidbounce.module.antiVanish.messages.allClear": "Жодного невидимого гравця не було знайдено.",
   "liquidbounce.module.autoWeapon.description": "Автоматично вибирає найкращу зброю у вашому арсеналі.",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "Обирає меч, коли AutoBlock блокує лише в небезпеці й ви в небезпеці — щоб у руці був предмет для блоку.",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Надає перевагу зброї із зачаруванням «Відкидання», коли ціль стоїть біля безодні, щоб скинути її вниз.",
   "liquidbounce.module.derp.description": "Змушує інших гравців бачити вас так, як ніби ви обертаєте головою у всі сторони.",
   "liquidbounce.module.handDerp.description": "Постійно перемикає основну руку між лівою та правою.",
   "liquidbounce.command.config.subcommand.load.result.notFoundLocal": "Локальний конфігураційний файл з назвою %s не існує.",

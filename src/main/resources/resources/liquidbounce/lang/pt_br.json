@@ -301,6 +301,8 @@
   "liquidbounce.module.antiVanish.messages.staffDetected": "Detectamos um membro da equipe que está desaparecido.",
   "liquidbounce.module.antiVanish.messages.allClear": "Nenhum jogador desaparecido foi encontrado.",
   "liquidbounce.module.autoWeapon.description": "Seleciona automaticamente a melhor arma na sua barra de ferramentas.",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "Prefere uma espada quando o AutoBlock só bloqueia em perigo e você está em perigo, para ter um item bloqueável na mão.",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Prefere uma arma encantada com Repulsão quando o alvo está perto do vazio, para empurrá-lo da borda.",
   "liquidbounce.module.derp.description": "Faz parecer que você está derpando por aí.",
   "liquidbounce.command.config.subcommand.load.result.notFoundLocal": "O arquivo de configuração local chamado %s não existe.",
   "liquidbounce.command.config.subcommand.load.result.failedToLoadLocal": "Falha ao carregar o arquivo de configuração local chamado %s.",

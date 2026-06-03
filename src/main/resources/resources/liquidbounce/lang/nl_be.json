@@ -331,6 +331,8 @@
     "liquidbounce.module.autoTool.description": "Kiest automatisch het beste gereedschap in je inventaris om een blok te breken.",
     "liquidbounce.module.autoWalk.description": "Laat je automatisch lopen in de richting waarin je kijkt.",
     "liquidbounce.module.autoWeapon.description": "Kiest automatisch het beste wapen uit je hotbar.",
+    "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "Geeft de voorkeur aan een zwaard wanneer AutoBlock alleen bij gevaar blokkeert en je in gevaar bent, zodat je een blokkeerbaar item vast hebt.",
+    "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Geeft de voorkeur aan een wapen met Terugslag wanneer het doelwit naast de leegte staat, om het van de rand te duwen.",
     "liquidbounce.module.avoidHazards.description": "Voorkomt dat je op schadelijke blokken stapt.",
     "liquidbounce.module.backtrack.description": "Laat je doelwit even haperen, zodat je het makkelijker raakt.",
     "liquidbounce.module.blink.description": "Laat het lijken alsof je teleporteert voor andere spelers.",

@@ -75,6 +75,18 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     private val autoShieldBreak by boolean("AutoShieldBreak", true)
     private val autoMace by boolean("AutoMace", true)
 
+    /**
+     * Favor a sword when KillAura AutoBlock only blocks on danger and we are currently in danger,
+     * so there is a blockable item in hand. Applies wherever item blocking exists (1.8 and 1.21.5+).
+     */
+    private val preferBlockingSword by boolean("PreferBlockingSword", true)
+
+    /**
+     * When the target stands next to the void, prefer a weapon enchanted with Knockback to push
+     * them off the edge.
+     */
+    private val prioritizeVoidKnockback by boolean("PrioritizeVoidKnockback", true)
+
     private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
 
     private val changeOnActions by multiEnumChoice<ChangeOnAction>(
@@ -286,9 +298,9 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         val requiresMace = autoMace && canMaceSmash
         // When AutoBlock only blocks on danger and we are in danger, favor a sword so we can block with it.
         // Sword blocking is not a 1.8-only feature: it also applies on 1.21.5+ where any item can block.
-        val requiresBlockingSword = isBlocksAttacksExisting && KillAuraAutoBlock.enabled &&
-            KillAuraAutoBlock.onlyWhenInDanger && KillAuraAutoBlock.isInDanger
-        val prioritizeKnockback = target?.let(::shouldPrioritizeKnockback) == true
+        val requiresBlockingSword = preferBlockingSword && isBlocksAttacksExisting &&
+            KillAuraAutoBlock.enabled && KillAuraAutoBlock.onlyWhenInDanger && KillAuraAutoBlock.isInDanger
+        val prioritizeKnockback = prioritizeVoidKnockback && target?.let(::shouldPrioritizeKnockback) == true
 
         val weaponFacets = Slots.Hotbar
             .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }

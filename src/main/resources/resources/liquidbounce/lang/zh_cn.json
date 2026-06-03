@@ -492,6 +492,8 @@
   "liquidbounce.module.autoTool.description": "自动用背包里最好的工具挖方块。",
   "liquidbounce.module.autoWalk.description": "自动向前移动。",
   "liquidbounce.module.autoWeapon.description": "自动切换到快捷栏中最好的武器。",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "当 AutoBlock 仅在危险时格挡且你处于危险中时，优先选择剑，以便手中持有可格挡的物品。",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "当目标站在虚空旁边时，优先选择附有击退的武器，将其推下边缘。",
   "liquidbounce.module.avoidHazards.description": "防止你走进可能对你产生负面影响的方块。",
   "liquidbounce.module.backtrack.description": "使目标卡住，让你能更有效的攻击它们。",
   "liquidbounce.module.blink.description": "允许你看起来像是从一个地方闪现到另外一个地方。",

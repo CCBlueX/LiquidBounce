@@ -382,6 +382,8 @@
   "liquidbounce.module.autoTrap.description": "Автоматически поджигает цели вокруг вас.",
   "liquidbounce.module.autoWalk.description": "Автоматически заставляет вас идти в том направлении, куда вы смотрите.",
   "liquidbounce.module.autoWeapon.description": "Автоматически выбирает лучшее оружие в вашем арсенале.",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "Выбирает меч, когда AutoBlock блокирует только в опасности и вы в опасности — чтобы в руке был блокируемый предмет.",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Предпочитает предмет с зачаром «Отбрасывание», когда цель стоит у бездны, чтобы скинуть её в пустоту.",
   "liquidbounce.module.avoidHazards.description": "Не даёт попасть в блоки, которые могут быть опасными.",
   "liquidbounce.module.backtrack.description": "Вызывает задержку у целей, что позволяет вам более эффективно их атаковать.",
   "liquidbounce.module.bedDefender.description": "Автоматически размещает блоки для защиты вашей кровати в BedWars.",
