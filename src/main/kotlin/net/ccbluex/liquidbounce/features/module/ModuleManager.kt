@@ -139,6 +139,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTargetStr
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSnapTap
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
@@ -586,6 +587,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSpider,
             ModuleTargetStrafe,
             ModuleAnchor,
+            ModuleSnapTap,
 
             // Player
             ModuleAntiVoid,
