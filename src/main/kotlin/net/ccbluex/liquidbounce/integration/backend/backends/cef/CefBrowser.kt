@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.minecraft.Util
+import net.minecraft.util.Util
 import org.apache.logging.log4j.Logger
 import org.joml.component1
 import org.joml.component2
