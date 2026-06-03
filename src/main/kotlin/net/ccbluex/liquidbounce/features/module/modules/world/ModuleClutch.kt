@@ -130,13 +130,15 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
             return@handler
         }
 
-        if (silentSelection) {
-            target.hotbarItemSlot.hotbarIndex?.let {
-                SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
-            }
-        } else {
-            target.hotbarItemSlot.hotbarIndex?.let {
-                player.inventory.selectedSlot = it
+        val slot = target.hotbarItemSlot
+
+        // Offhand blocks have no hotbar index, so there is nothing to select: we place straight
+        // through [useHand] (OFF_HAND) below. Only hotbar slots need a selection step.
+        slot.hotbarIndex?.let { hotbarIndex ->
+            if (silentSelection) {
+                SilentHotbar.selectSlotSilently(this, slot, 1)
+            } else {
+                player.inventory.selectedSlot = hotbarIndex
             }
         }
 
@@ -147,7 +149,7 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
 
         doPlacement(
             rayTraceResult,
-            hand = target.hotbarItemSlot.useHand,
+            hand = slot.useHand,
             onItemUseSuccess = onSuccess,
             onPlacementSuccess = onSuccess,
         )
