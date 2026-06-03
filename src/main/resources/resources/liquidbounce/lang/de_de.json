@@ -313,6 +313,7 @@
   "liquidbounce.module.clickGUI.description": "Zeigt dir ein benutzerfreundliches Menü zum Umschalten und Konfigurieren von Modulen.",
   "liquidbounce.module.clientSpoofer.description": "Verfälscht die Client deines Spiel-Clients mit einer anderen.",
   "liquidbounce.module.clip.description": "Ermöglicht das umgehen von Blöcken.",
+  "liquidbounce.module.clutch.description": "Platziert automatisch einen Block unter dir, wenn du in die Leere fällst.",
   "liquidbounce.module.clip.messages.whoosh": "Zack!",
   "liquidbounce.module.combineMobs.description": "Kombiniert beengte Entities.",
   "liquidbounce.module.criticals.description": "Verursacht jedes Mal automatisch kritischen Schaden, wenn du ein Entity angreifst.",

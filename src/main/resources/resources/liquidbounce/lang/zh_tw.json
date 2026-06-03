@@ -414,6 +414,7 @@
   "liquidbounce.module.clickGUI.description": "顯示一個易於使用的選單，用於開關或設定模組。",
   "liquidbounce.module.clientSpoofer.description": "將你的遊戲客戶端標識偽裝為另一個。",
   "liquidbounce.module.clip.description": "允許你穿過方塊。",
+  "liquidbounce.module.clutch.description": "當你掉入虛空時自動在腳下放置方塊。",
   "liquidbounce.module.clip.messages.whoosh": "嗖嗖！",
   "liquidbounce.module.combineMobs.description": "合併擠在一起的實體。",
   "liquidbounce.module.criticals.description": "每次攻擊實體的時候自動暴擊。",

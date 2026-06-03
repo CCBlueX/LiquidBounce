@@ -167,6 +167,7 @@
   "liquidbounce.module.abortBreaking.description": "Deixa você parar de quebrar um bloco sem perder progresso.",
   "liquidbounce.module.bedWalk.description": "Deixa andar em camas em quanto dorme.",
   "liquidbounce.module.clip.description": "Deixa você passar por blocos.",
+  "liquidbounce.module.clutch.description": "Coloca automaticamente um bloco abaixo de você ao cair no vazio.",
   "liquidbounce.module.damage.description": "Da uma quantidade de dano em você mesmo.",
   "liquidbounce.module.disabler.description": "Desativa o anticheat de um servidor.",
   "liquidbounce.module.forceUnicodeChat.description": "Traduz todas as mensagens para unicode.",

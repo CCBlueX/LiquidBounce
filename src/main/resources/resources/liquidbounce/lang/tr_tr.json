@@ -325,6 +325,7 @@
   "liquidbounce.module.clickGUI.description": "Modülleri açıp kapatmak ve ayar yapmak için kolay bir menü gösterir.",
   "liquidbounce.module.clientSpoofer.description": "Oyun istemci markanızı başka bir şeymiş gibi gösterir.",
   "liquidbounce.module.clip.description": "Blokların içinden geçmenizi sağlar.",
+  "liquidbounce.module.clutch.description": "Boşluğa düşerken otomatik olarak altına bir blok yerleştirir.",
   "liquidbounce.module.clip.messages.whoosh": "Vınn!",
   "liquidbounce.module.combineMobs.description": "Sıkışmış varlıkları birleştirir.",
   "liquidbounce.module.criticals.description": "Bir varlığa her saldırdığınızda otomatik olarak kritik hasar verir.",
