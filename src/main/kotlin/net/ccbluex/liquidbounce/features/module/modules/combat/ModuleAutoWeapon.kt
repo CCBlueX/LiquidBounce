@@ -54,7 +54,9 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.phys.Vec3
+import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.sin
 
 /**
  * AutoWeapon module
@@ -150,9 +152,26 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     private val voidCheckCache = Int2BooleanOpenHashMap()
     private var voidCheckCacheTick = -1
 
-    private val voidCheckDistances = doubleArrayOf(0.5, 1.0, 1.5, 2.0, 2.5)
+    /**
+     * Distances (in blocks, away from the target along the knockback direction) at which we sample
+     * the landing zone. Knockback throws the target roughly 3+ blocks, so we start right behind its
+     * hitbox and walk outward.
+     */
+    private val voidCheckDistances = doubleArrayOf(1.0, 1.5, 2.0, 2.75, 3.5)
 
-    private const val VOID_HITS_THRESHOLD = 3
+    /**
+     * Yaw offsets (in radians) for the rays we cast away from the target. Knockback has spread and
+     * the target may stand on a narrow strip rather than a solid platform, so we fan out a center
+     * ray plus two angled side rays instead of trusting a single line.
+     */
+    private val voidRayAngles = doubleArrayOf(0.0, 0.30, -0.30)
+
+    /**
+     * How many of the *nearest* samples along a ray must all be void for that ray to count as a
+     * push-into-void. Requiring the closest samples (not just any) avoids false positives from a
+     * far-away pit beyond solid ground the target would actually land on.
+     */
+    private const val VOID_NEAR_SAMPLES = 2
     private const val VOID_MIN_Y = -64
     private const val DIRECTION_EPSILON = 1.0E-4
 
@@ -226,21 +245,50 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     private fun isNearVoidInDirection(target: LivingEntity, direction: Vec3): Boolean {
         val targetY = floor(target.boundingBox.minY).toInt()
-        var voidBlocksCount = 0
 
-        for (distance in voidCheckDistances) {
-            val checkX = target.x + direction.x * distance
-            val checkZ = target.z + direction.z * distance
+        // Fan out several rays away from the target. If any single ray drops straight into the void
+        // over its nearest samples, knockback there sends the target off the edge — so prioritize it.
+        // This catches narrow strips/ledges that a single-ray majority vote would miss.
+        for (angle in voidRayAngles) {
+            val cos = cos(angle)
+            val sin = sin(angle)
+            // Rotate the horizontal direction by [angle] around the Y axis.
+            val dirX = direction.x * cos - direction.z * sin
+            val dirZ = direction.x * sin + direction.z * cos
 
-            if (isNearVoidAt(targetY, checkX, checkZ)) {
-                voidBlocksCount++
-                if (voidBlocksCount >= VOID_HITS_THRESHOLD) {
-                    return true
-                }
+            if (isVoidAlongRay(targetY, target.x, target.z, dirX, dirZ)) {
+                return true
             }
         }
 
         return false
+    }
+
+    /**
+     * A ray counts as a push-into-void when its [VOID_NEAR_SAMPLES] closest samples are all over the
+     * void. Requiring the nearest contiguous samples (rather than any) prevents firing when the
+     * target stands on solid ground that merely has a distant pit beyond it.
+     */
+    private fun isVoidAlongRay(targetY: Int, originX: Double, originZ: Double, dirX: Double, dirZ: Double): Boolean {
+        for (i in voidCheckDistances.indices) {
+            val distance = voidCheckDistances[i]
+            val checkX = originX + dirX * distance
+            val checkZ = originZ + dirZ * distance
+
+            val isVoid = isNearVoidAt(targetY, checkX, checkZ)
+            if (i < VOID_NEAR_SAMPLES) {
+                // All of the nearest samples must be void.
+                if (!isVoid) {
+                    return false
+                }
+            } else if (isVoid) {
+                // Past the near zone any additional void sample only reinforces the verdict.
+                return true
+            }
+        }
+
+        // The near samples were all void (and there were no farther samples to contradict it).
+        return true
     }
 
     private fun isNearVoidAt(
