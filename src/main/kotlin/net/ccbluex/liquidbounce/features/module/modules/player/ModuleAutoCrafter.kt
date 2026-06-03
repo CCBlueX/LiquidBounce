@@ -23,6 +23,8 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.mergeableCapacityFor
 import net.minecraft.client.gui.screens.recipebook.SearchRecipeBookCategory
 import net.minecraft.world.inventory.AbstractFurnaceMenu
 import net.minecraft.world.inventory.BlastFurnaceMenu
@@ -33,7 +35,6 @@ import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.world.inventory.RecipeBookMenu
 import net.minecraft.world.inventory.RecipeBookType
 import net.minecraft.world.inventory.SmokerMenu
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.display.SlotDisplayContext
 
@@ -53,6 +54,7 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
     private val delay by intRange("Delay", 2..3, 1..20, "ticks")
     private val stackCrafting by boolean("StackCrafting", true)
     private val sequentialCrafting by boolean("SequentialCrafting", true)
+    private val onFull by enumChoice("OnFull", OnFull.WAIT)
     private val allowedContainers by multiEnumChoice("AllowedContainers", RecipeBookMenuType.CRAFTING_TABLE)
 
     @Suppress("unused")
@@ -70,6 +72,9 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
         val collections = player.recipeBook.getCollection(menuType.searchCategory)
 
         for ((index, targetItem) in itemsToCraft.withIndex()) {
+            val currentMenu = player.containerMenu
+            if (currentMenu !== menu) break
+
             val remainingItems = itemsToCraft.subList(index + 1, itemsToCraft.size)
 
             val recipe = collections.firstNotNullOfOrNull { collection ->
@@ -81,26 +86,55 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
                         // by rejecting recipes that use items that appear later in the list
                         && (recipe.craftingRequirements.isEmpty ||
                         recipe.craftingRequirements.get()
-                            .none { req -> remainingItems.any { req.test(ItemStack(it)) } })
+                            .none { req -> remainingItems.any { req.test(it.defaultInstance) } })
                 }
             } ?: continue
 
             val resultSlotId = if (menu is AbstractFurnaceMenu) 2 else 0
             val resultSlot = menu.slots[resultSlotId]
             if (resultSlot.item.isEmpty) {
-                interaction.handlePlaceRecipe(menu.containerId, recipe.id(), stackCrafting)
+                interaction.handlePlaceRecipe(menu.containerId, recipe.id, stackCrafting)
             } else {
-                val hasSpace = player.inventory.freeSlot != -1
-                val clickType = if (hasSpace) ContainerInput.QUICK_MOVE else ContainerInput.THROW
-                val mouseButton = if (hasSpace) 0 else 1
-                interaction.handleContainerInput(
-                    menu.containerId, resultSlotId, mouseButton, clickType, player
-                )
+                if (Slots.HotbarAndInventory.mergeableCapacityFor(resultSlot.item) >= resultSlot.item.count) {
+                    interaction.handleContainerInput(
+                        menu.containerId, resultSlotId, 0, ContainerInput.QUICK_MOVE, player
+                    )
+                } else {
+                    when (onFull) {
+                        OnFull.DISABLE -> {
+                            enabled = false
+                            return@tickHandler
+                        }
+
+                        OnFull.CLOSE_SCREEN -> {
+                            player.closeContainer()
+                            return@tickHandler
+                        }
+
+                        OnFull.WAIT -> {
+                            waitTicks(delay.random())
+                            return@tickHandler
+                        }
+
+                        OnFull.THROW -> {
+                            interaction.handleContainerInput(
+                                menu.containerId, resultSlotId, 1, ContainerInput.THROW, player
+                            )
+                        }
+                    }
+                }
             }
             waitTicks(delay.random())
             if (sequentialCrafting || menu is AbstractFurnaceMenu) return@tickHandler
         }
 
+    }
+
+    private enum class OnFull(override val tag: String) : Tagged {
+        DISABLE("Disable"),
+        CLOSE_SCREEN("CloseScreen"),
+        WAIT("Wait"),
+        THROW("Throw"),
     }
 
     private enum class RecipeBookMenuType(
