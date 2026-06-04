@@ -87,7 +87,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
                 pass.bindTexture("texture0", mc.gameRenderer.mainRenderTarget().colorTextureView, overlaySampler)
                 pass.bindTexture("overlay", overlayTexture, overlaySampler)
                 pass.setUniform(ClientUniformDefine.GUI_BLUR.uboName, GUI_BLUR_UNIFORM_BUFFER)
-                pass.draw(0, 3)
+                pass.draw(3, 1, 0, 0)
             }
 
         mc.gameRenderer.mainRenderTarget().colorTextureView!!
@@ -97,7 +97,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
                 // @see RenderTarget.blitAndBlendToTexture
                 pass.setPipeline(ClientRenderPipelines.JCEF.Blit)
                 pass.bindTexture("InSampler", overlayTexture, overlaySampler)
-                pass.draw(0, 3)
+                pass.draw(3, 1, 0, 0)
             }
     }
 

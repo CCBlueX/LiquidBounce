@@ -146,7 +146,7 @@ sealed interface ThemeBackground : Closeable {
             ).use { pass ->
                 pass.setPipeline(pipeline)
                 pass.setUniform(ClientUniformDefine.THEME_BACKGROUND.uboName, uboSlice)
-                pass.draw(0, 3)
+                pass.draw(3, 1, 0, 0)
             }
 
             context.drawBlitOnCurrentLayer(

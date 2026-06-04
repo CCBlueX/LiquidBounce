@@ -105,7 +105,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
                 pass.bindTexture("image", textureView, sampler)
                 pass.setUniform(ClientUniformDefine.HAND_ITEM_LIGHTMAP.uboName, UBO)
 
-                pass.draw(0, 3)
+                pass.draw(3, 1, 0, 0)
             }
 
             edited = true

@@ -35,7 +35,6 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuSampler
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
-import com.mojang.blaze3d.textures.TextureFormat
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.PoseStack
@@ -66,7 +65,7 @@ fun PoseStack.reset() {
 }
 
 inline fun ByteBufferBuilder.begin(pipeline: RenderPipeline): BufferBuilder =
-    BufferBuilder(this, pipeline.vertexFormatMode, pipeline.vertexFormat)
+    BufferBuilder(this, pipeline.primitiveTopology, pipeline.vertexFormat)
 
 inline fun withOutputTextureOverride(
     color: GpuTextureView? = null,
@@ -86,13 +85,13 @@ inline fun withOutputTextureOverride(
     }
 }
 
-inline fun GpuTexture.clearColor(color: Int = 0) =
-    gpuDevice.createCommandEncoder().clearColorTexture(this, color)
+inline fun GpuTexture.clearColor(color: Color4b = Color4b.WHITE) =
+    gpuDevice.createCommandEncoder().clearColorTexture(this, color.toVector4f())
 
 inline fun GpuTexture.clearDepth(depth: Double = 1.0) =
     gpuDevice.createCommandEncoder().clearDepthTexture(this, depth)
 
-fun RenderTarget.clearColorAndDepth(color: Int = 0, depth: Double = 1.0) {
+fun RenderTarget.clearColorAndDepth(color: Color4b = Color4b.WHITE, depth: Double = 1.0) {
     val colorAttachment = colorTexture
     val depthAttachment = depthTexture.takeIf { useDepth }
 
