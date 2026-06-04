@@ -41,11 +41,11 @@ open class RangeValueGroup(
     /**
      * @see net.minecraft.world.entity.player.Player.entityInteractionRange
      */
-    internal val interactionRange: Float
+    val interactionRange: Float
         get() = (mc.player?.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE)?.toFloat()
             ?: 3.0F) + maxRangeIncrease
 
-    internal val interactionThroughWallsRange
+    val interactionThroughWallsRange
         get() = throughWallsRange
 
     /**
