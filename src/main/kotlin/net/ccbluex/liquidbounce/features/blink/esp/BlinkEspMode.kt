@@ -123,7 +123,7 @@ class BlinkEspModel(
             rs.y - cameraState.pos.y,
             rs.z - cameraState.pos.z,
             poseStack,
-            mc.gameRenderer.submitNodeStorage,
+            mc.levelRenderer.submitNodeStorage,
         )
     }
 }
