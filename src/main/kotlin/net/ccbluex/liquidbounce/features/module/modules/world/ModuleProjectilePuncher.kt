@@ -151,7 +151,7 @@ object ModuleProjectilePuncher : ClientModule(
         }
 
         // Check if the fireball is going towards the player
-        val vecToPlayer = player.box.center - entity.position()
+        val vecToPlayer = player.boundingBox.center - entity.position()
 
         val dot = vecToPlayer.dot(fireballVelocity)
 

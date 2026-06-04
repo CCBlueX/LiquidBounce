@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import kotlin.random.Random
 
 /**
  * @anticheat Watchdog (NCP)
@@ -80,7 +81,7 @@ object FlyHypixelFlat : Mode("HypixelFlat") {
         }
 
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
-        player.deltaMovement.y = 0.0314 + (Math.random() / 1000f)
+        player.deltaMovement.y = 0.0314 + (Random.nextDouble() / 1000f)
         player.deltaMovement = player.deltaMovement.withStrafe(speed = player.horizontalSpeed)
     }
 

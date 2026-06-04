@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.io
 
 import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import net.minecraft.world.phys.Vec3
 
 fun Vec3.toJsonArray(): JsonArray {
@@ -27,5 +28,13 @@ fun Vec3.toJsonArray(): JsonArray {
         add(x)
         add(y)
         add(z)
+    }
+}
+
+fun Vec3.toJsonObject(): JsonObject {
+    return JsonObject().apply {
+        addProperty("x", x)
+        addProperty("y", y)
+        addProperty("z", z)
     }
 }

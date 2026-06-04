@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
-import java.awt.Toolkit
-import java.awt.datatransfer.StringSelection
+import org.lwjgl.glfw.GLFW
+import kotlin.math.floor
 
 /**
  * Teleport Command
@@ -64,9 +64,10 @@ object CommandPlayerTeleport : Command.Factory, MinecraftShortcuts {
                     }
 
                 if (args.size > 1 && args[1] == "copy") {
-                    val clipboard = ".teleport ${player.x.toInt()} ${y.toInt()} ${player.z.toInt()}"
+                    val clipboard = ".teleport ${floor(player.x).toInt()} " +
+                        "${floor(y.toDouble()).toInt()} ${floor(player.z).toInt()}"
 
-                    Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(clipboard), null)
+                    GLFW.glfwSetClipboardString(mc.window.handle(), clipboard)
                     return@handler
                 }
 

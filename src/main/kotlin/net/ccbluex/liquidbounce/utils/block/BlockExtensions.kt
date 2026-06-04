@@ -460,7 +460,7 @@ inline fun AABB.collideBlockIntersects(
 
 val AABB.collidingRegion: BoundingBox
     get() = BoundingBox(
-        this.minX.toInt(), this.minY.toInt(), this.minZ.toInt(),
+        floor(this.minX).toInt(), floor(this.minY).toInt(), floor(this.minZ).toInt(),
         ceil(this.maxX).toInt(), ceil(this.maxY).toInt(), ceil(this.maxZ).toInt(),
     )
 

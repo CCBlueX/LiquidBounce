@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.plus
@@ -77,7 +76,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
         @Suppress("unused")
         private val render2DHandler = handler<OverlayRenderEvent> { event ->
             for (tnt in tntEntities) {
-                val pos = tnt.box.center.add(0.0, renderY.toDouble(), 0.0)
+                val pos = tnt.boundingBox.center.add(0.0, renderY.toDouble(), 0.0)
 
                 val screenPos = WorldToScreen.calculateScreenPos(pos) ?: continue
 

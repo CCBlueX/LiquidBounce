@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
@@ -73,7 +72,7 @@ internal object KillAuraNotifyWhenFail {
 
         when (mode.activeMode) {
             Box -> {
-                val centerDistance = entity.box.center.subtract(player.eyePosition).length()
+                val centerDistance = entity.boundingBox.center.distanceTo(player.eyePosition)
                 val boxSpot = player.eyePosition.add(rotation.directionVector.scale(centerDistance))
 
                 failedHits.add(ObjectLongMutablePair(boxSpot, 0L))
