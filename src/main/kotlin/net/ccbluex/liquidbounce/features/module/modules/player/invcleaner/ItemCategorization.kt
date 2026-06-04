@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.CrossbowItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.FoodItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.KnockbackItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MaceItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MiningToolItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PotionItemFacet
@@ -45,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.foodComponent
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isFood
@@ -73,6 +75,7 @@ import net.minecraft.world.item.PotionItem
 import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.WindChargeItem
+import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.material.LavaFluid
 import net.minecraft.world.level.material.WaterFluid
 import java.util.function.Predicate
@@ -107,6 +110,15 @@ enum class ItemType(
     WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
     SPEAR(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
     MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
+
+    /**
+     * A dedicated slot for the best Knockback item (e.g. a Knockback stick for sending players into
+     * the void). Intentionally a LOW allocation priority and NOT a [ItemFunction.WEAPON_LIKE], so a
+     * real weapon is still picked as the main weapon first, while a separate, lesser Knockback item
+     * is still kept and sorted into its own slot rather than thrown away. Only the single best
+     * Knockback item is kept ([oneIsSufficient]); worse Knockback items are discarded.
+     */
+    KNOCKBACK(true, allocationPriority = Priority.NORMAL),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -144,6 +156,11 @@ enum class ItemSortChoice(
     WEAPON("Weapon", ItemType.WEAPON.defaultCategory),
     SPEAR("Spear", ItemType.SPEAR.defaultCategory, { it.isSpear }),
     MACE("Mace", ItemType.MACE.defaultCategory, { it.item is MaceItem }),
+    BEST_KNOCKBACK(
+        "BestKnockback",
+        ItemType.KNOCKBACK.defaultCategory,
+        { it.getEnchantment(Enchantments.KNOCKBACK) > 0 },
+    ),
     BOW("Bow", ItemType.BOW.defaultCategory),
     CROSSBOW("Crossbow", ItemType.CROSSBOW.defaultCategory),
     AXE("Axe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_AXE), { it.isAxe }),
@@ -234,6 +251,12 @@ class ItemCategorization(
         return buildList {
             // Everything could be a weapon (i.e. a stick with Knockback II should be considered a weapon)
             add(WeaponItemFacet(slot))
+
+            // Anything with Knockback can serve as a dedicated "best knockback" item (e.g. a stick
+            // with Knockback II for sending players into the void).
+            if (itemStack.getEnchantment(Enchantments.KNOCKBACK) > 0) {
+                add(KnockbackItemFacet(slot))
+            }
 
             when (val item = itemStack.item) {
                 is BowItem -> add(BowItemFacet(slot))
