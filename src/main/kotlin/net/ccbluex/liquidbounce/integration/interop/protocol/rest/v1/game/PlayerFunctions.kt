@@ -195,9 +195,9 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
                 scoreboard.getPlayersTeam(player.scoreboardName)
             }
 
-            val objective = team?.let {
-                DisplaySlot.teamColorToSlot(team.color)?.let { scoreboard.getDisplayObjective(it) }
-            } ?: scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR) ?: return null
+            val objective = scoreboard.getDisplayObjective(
+                team?.color?.orElse(null)?.displaySlot() ?: DisplaySlot.SIDEBAR
+            ) ?: return null
 
             val objectiveScoreboard: Scoreboard = objective.scoreboard
             val numberFormat: NumberFormat = objective.numberFormatOrDefault(StyledFormat.SIDEBAR_DEFAULT)
