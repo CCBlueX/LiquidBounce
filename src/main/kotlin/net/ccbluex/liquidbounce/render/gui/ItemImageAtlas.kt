@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.gui
 
+import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.platform.Lighting
@@ -125,6 +126,7 @@ private class ItemTextureRenderer(
         textureSize,
         textureSize,
         true,
+        GpuFormat.RGBA8_UNORM,
     )
     private val submitNodeCollector = SubmitNodeStorage()
     private val bufferSource = mc.gameRenderer.renderBuffers.bufferSource()
@@ -138,7 +140,7 @@ private class ItemTextureRenderer(
         mc.gameRenderer.renderBuffers.outlineBufferSource(), // No operation
         mc.gameRenderer.renderBuffers.crumblingBufferSource(), // No operation
         mc.font, // No operation
-        mc.gameRenderer.gameRenderState, // No operation
+        mc.gameRenderer.gameRenderState(), // No operation
     )
 
     private val projection = Projection()

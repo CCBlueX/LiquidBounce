@@ -56,8 +56,8 @@ import org.joml.Vector3fc
  * But as of now, 01.02.2025, they haven't.
  */
 @JvmField
-val HAS_AMD_VEGA_APU = (gpuDevice.renderer?.startsWith("AMD Radeon(TM) RX Vega") ?: false) &&
-    gpuDevice.vendor == "ATI Technologies Inc."
+val HAS_AMD_VEGA_APU = gpuDevice.deviceInfo.name.startsWith("AMD Radeon(TM) RX Vega") &&
+    gpuDevice.deviceInfo.vendorName == "ATI Technologies Inc."
 
 @JvmField
 val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)

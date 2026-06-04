@@ -33,12 +33,11 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.minecraft.client.renderer.texture.AbstractTexture
 import org.joml.Matrix4f
-import org.joml.Matrix4fc
 import org.joml.Vector3f
-import org.joml.Vector3fc
 import org.joml.Vector4f
+import org.joml.Vector4fc
+import java.util.Optional
 import java.util.OptionalDouble
-import java.util.OptionalInt
 import java.util.function.Supplier
 
 inline fun RenderPass.bindTextures(textures: Map<String, AbstractTexture?>) =
@@ -116,13 +115,13 @@ private val TEXTURE_MATRIX = Matrix4f()
 
 @JvmOverloads
 fun getDynamicTransformsUniform(
-    modelView: Matrix4fc? = null,
+    modelView: Matrix4f? = null,
     colorModulator: Color4b = Color4b.WHITE,
-    modelOffset: Vector3fc? = null,
+    modelOffset: Vector3f? = null,
 ): GpuBufferSlice {
     val slice = RenderSystem.getDynamicUniforms()
         .writeTransform(
-            modelView ?: RenderSystem.getModelViewMatrix(),
+            modelView ?: RenderSystem.getModelViewMatrixCopy(),
             colorModulator.toVector4f(COLOR_MODULATOR),
             modelOffset ?: VECTOR3F_0,
             TEXTURE_MATRIX,
@@ -136,7 +135,7 @@ private val RENDER_PASS_DEFAULT_LABEL = Supplier { LiquidBounce.CLIENT_NAME + " 
 @JvmOverloads
 fun RenderTarget.createRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
-    clearColor: OptionalInt = OptionalInt.empty(),
+    clearColor: Optional<Vector4fc> = Optional.empty(),
     clearDepth: OptionalDouble = OptionalDouble.empty(),
     useDepthAttachment: Boolean = true,
     allowOverride: Boolean = false,
@@ -157,7 +156,7 @@ fun RenderTarget.createRenderPass(
 @JvmOverloads
 fun GpuTextureView.createRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
-    clearColor: OptionalInt = OptionalInt.empty(),
+    clearColor: Optional<Vector4fc> = Optional.empty(),
     allowOverride: Boolean = false,
 ): RenderPass = newRenderPass(
     labelGetter,
@@ -169,7 +168,7 @@ fun GpuTextureView.createRenderPass(
 private inline fun newRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
     colorAttachment: GpuTextureView,
-    clearColor: OptionalInt = OptionalInt.empty(),
+    clearColor: Optional<Vector4fc> = Optional.empty(),
     depthAttachment: GpuTextureView? = null,
     clearDepth: OptionalDouble = OptionalDouble.empty(),
 ): RenderPass = gpuDevice.createCommandEncoder().createRenderPass(
