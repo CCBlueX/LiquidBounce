@@ -54,7 +54,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     private var lastAlphaBlendRange = 0f..1f
 
     private fun hasNoFullScreen(): Boolean =
-        mc.screen == null || mc.screen is ChatScreen || FeatureSilentScreen.shouldHide
+        mc.gui.screen() == null || mc.gui.screen() is ChatScreen || FeatureSilentScreen.shouldHide
 
     fun shouldDrawBlur(): Boolean = inGame && hasNoFullScreen() &&
         ModuleHud.running && ModuleHud.isBlurEffectActive

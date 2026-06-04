@@ -163,9 +163,9 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
             return
         }
 
-        val prevShopStacks = (mc.screen as ContainerScreen).stacks()
+        val prevShopStacks = (mc.gui.screen() as ContainerScreen).stacks()
         interaction.handleContainerInput(
-            (mc.screen as ContainerScreen).menu.containerId,
+            (mc.gui.screen() as ContainerScreen).menu.containerId,
             nextCategorySlot,
             0,
             NormalPurchaseMode.action.input,
@@ -185,7 +185,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         val currentInventory = AutoShopInventoryManager.getInventoryItems()
 
         interaction.handleContainerInput(
-            (mc.screen as ContainerScreen).menu.containerId,
+            (mc.gui.screen() as ContainerScreen).menu.containerId,
             itemSlot,
             0,
             NormalPurchaseMode.action.input,
@@ -222,7 +222,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = true)
         val slotsToClick = simulationResult.first
         val prevInventory = AutoShopInventoryManager.getInventoryItems()
-        val prevShopStacks = (mc.screen as ContainerScreen).stacks()
+        val prevShopStacks = (mc.gui.screen() as ContainerScreen).stacks()
 
         slotsToClick.forEachInt { slot ->
             if (slot == -1) {
@@ -232,7 +232,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
             delay(QuickPurchaseMode.delayMs.random().milliseconds)
 
             interaction.handleContainerInput(
-                (mc.screen as ContainerScreen).menu.containerId,
+                (mc.gui.screen() as ContainerScreen).menu.containerId,
                 slot,
                 0,
                 ContainerInput.PICKUP,
@@ -272,7 +272,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     }
 
     private fun hasItemCategoryChanged(prevShopStacks: List<String>): Boolean {
-        val currentShopStacks = (mc.screen as ContainerScreen).stacks()
+        val currentShopStacks = (mc.gui.screen() as ContainerScreen).stacks()
 
         val difference = currentShopStacks
             .filter { !prevShopStacks.contains(it) }
@@ -455,7 +455,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     }
 
     private fun isShopOpen(): Boolean {
-        val screen = mc.screen as? ContainerScreen ?: return false
+        val screen = mc.gui.screen() as? ContainerScreen ?: return false
 
         val title = screen.title.string.stripMinecraftColorCodes()
         val isTitleValid = currentConfig.traderTitles.any {

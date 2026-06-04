@@ -82,7 +82,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     }
 
     val isBlurEffectActive
-        get() = Blur.enabled && !(mc.options.hideGui && mc.screen == null)
+        get() = Blur.enabled && !(mc.options.hideGui && mc.gui.screen() == null)
 
     val themes = tree(ValueGroup("Themes"))
 

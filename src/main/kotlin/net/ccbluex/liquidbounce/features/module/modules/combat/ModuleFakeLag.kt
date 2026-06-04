@@ -129,7 +129,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     @Suppress("unused", "ComplexCondition")
     private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin != TransferOrigin.OUTGOING || player.isDeadOrDying || player.isInWater
-            || mc.screen != null
+            || mc.gui.screen() != null
         ) {
             return@handler
         }

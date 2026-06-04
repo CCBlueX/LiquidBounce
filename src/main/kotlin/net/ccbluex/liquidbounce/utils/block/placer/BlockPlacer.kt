@@ -154,7 +154,7 @@ class BlockPlacer(
             ticksToWait = cooldown.random()
         }
 
-        val inventoryOpen = !ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>
+        val inventoryOpen = !ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>
         val usingItem = !ignoreUsingItem && player.isUsingItem
         if (inventoryOpen || usingItem) {
             return@handler

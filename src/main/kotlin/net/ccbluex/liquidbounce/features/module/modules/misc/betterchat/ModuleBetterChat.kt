@@ -134,7 +134,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
 
     @Suppress("unused")
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> {
-        if (keepAfterDeath && mc.screen !is DeathScreen) {
+        if (keepAfterDeath && mc.gui.screen() !is DeathScreen) {
             return@handler
         }
 

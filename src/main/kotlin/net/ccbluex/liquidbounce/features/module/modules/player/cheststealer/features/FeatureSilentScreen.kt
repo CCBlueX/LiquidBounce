@@ -83,7 +83,7 @@ object FeatureSilentScreen : ToggleableValueGroup(ModuleChestStealer, "SilentScr
 
             val pos = getRenderPos() ?: return@handler
 
-            val containerScreen = mc.screen as AbstractContainerScreen<*>
+            val containerScreen = mc.gui.screen() as AbstractContainerScreen<*>
 
             event.context.drawItemStackList(containerScreen.getSlotsInContainer().mapToArray { it.itemStack })
                 .title(containerScreen.title.takeIf { showTitle })

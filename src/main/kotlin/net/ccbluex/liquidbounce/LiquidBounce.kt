@@ -496,7 +496,7 @@ object LiquidBounce : EventListener {
 
         if (!taskManager.isCompleted && event.screen !is TaskProgressScreen) {
             event.cancelEvent()
-            mc.setScreen(TaskProgressScreen("Loading Required Libraries", taskManager))
+            mc.gui.setScreen(TaskProgressScreen("Loading Required Libraries", taskManager))
         }
     }
 

@@ -136,7 +136,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         return event.getText();
     }
 
-    @ModifyArgs(method = "setTitlesAnimation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;setTimes(III)V"))
+    @ModifyArgs(method = "setTitlesAnimation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Hud;setTimes(III)V"))
     private void hookOnTitleFade(Args args, @Cancellable CallbackInfo ci) {
         var event = new TitleEvent.Fade(args.get(0), args.get(1), args.get(2));
         EventManager.INSTANCE.callEvent(event);
@@ -160,9 +160,9 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
             ci.cancel();
             return;
         }
-        this.minecraft.gui.clearTitles();
+        this.minecraft.gui.hud.clearTitles();
         if (event.getReset()) {
-            this.minecraft.gui.resetTitleTimes();
+            this.minecraft.gui.hud.resetTitleTimes();
         }
         ci.cancel();
     }
@@ -241,7 +241,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
     @Inject(method = "handleMovePlayer", at = @At("RETURN"))
     private void injectNoRotateSet(ClientboundPlayerPositionPacket packet, CallbackInfo ci, @Local(name = "player") Player playerEntity) {
-        if (!ModuleNoRotateSet.INSTANCE.getRunning() || Minecraft.getInstance().screen instanceof LevelLoadingScreen) {
+        if (!ModuleNoRotateSet.INSTANCE.getRunning() || Minecraft.getInstance().gui.screen() instanceof LevelLoadingScreen) {
             return;
         }
 

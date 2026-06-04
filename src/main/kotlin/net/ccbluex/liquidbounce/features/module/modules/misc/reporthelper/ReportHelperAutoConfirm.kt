@@ -50,7 +50,7 @@ internal object ReportHelperAutoConfirm : ToggleableValueGroup(ModuleReportHelpe
                 }
 
                 // Wait for screen update
-                if (tickConditional(5) { mc.screen === screen }) {
+                if (tickConditional(5) { mc.gui.screen() === screen }) {
                     return@sequenceHandler
                 }
 

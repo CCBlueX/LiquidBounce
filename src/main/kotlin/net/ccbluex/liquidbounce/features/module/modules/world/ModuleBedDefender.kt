@@ -77,7 +77,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (!placer.ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+        if (!placer.ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@handler
         }
 
