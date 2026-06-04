@@ -287,11 +287,11 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
     }
 
     override fun onEnabled() {
-        mc.levelRenderer.allChanged()
+        mc.levelExtractor.allChanged()
     }
 
     override fun onDisabled() {
-        mc.levelRenderer.allChanged()
+        mc.levelExtractor.allChanged()
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -300,7 +300,7 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
         mc.execute {
             // Reload world renderer on block list change
-            mc.levelRenderer.allChanged()
+            mc.levelExtractor.allChanged()
         }
     }
 

@@ -74,3 +74,5 @@ val Minecraft.isSingleplayer: Boolean
         val singleplayerServer = this.singleplayerServer
         return singleplayerServer != null && !singleplayerServer.isPublished
     }
+
+// Copied from 26.1.2 end
