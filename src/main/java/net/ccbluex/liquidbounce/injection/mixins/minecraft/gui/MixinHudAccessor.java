@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.scores.PlayerScoreEntry;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,8 +27,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Comparator;
 
-@Mixin(Gui.class)
-public interface MixinGuiAccessor {
+@Mixin(Hud.class)
+public interface MixinHudAccessor {
 
     @Accessor("HOTBAR_SELECTION_SPRITE")
     static Identifier getHotbarSelectionTexture() {

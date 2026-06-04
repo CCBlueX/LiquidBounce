@@ -44,7 +44,7 @@ public abstract class MixinChatScreen extends MixinScreen {
     @Inject(method = "handleChatInput", at = @At("HEAD"), cancellable = true)
     private void handleChatMessage(String chatText, boolean addToHistory, CallbackInfo ci) {
         if (EventManager.INSTANCE.callEvent(new ChatSendEvent(chatText)).isCancelled()) {
-            minecraft.gui.getChat().addRecentChat(chatText);
+            minecraft.gui.hud.getChat().addRecentChat(chatText);
             ci.cancel();
         }
     }
@@ -61,7 +61,7 @@ public abstract class MixinChatScreen extends MixinScreen {
             return;
         }
 
-        var chatHud = (MixinChatComponentAccessor) this.minecraft.gui.getChat();
+        var chatHud = (MixinChatComponentAccessor) this.minecraft.gui.hud.getChat();
 
         var visibleMessages = chatHud.getTrimmedMessages();
         var messageBounds = ModuleBetterChat.resolveMessageBounds(visibleMessages, activeMessage);
@@ -78,7 +78,7 @@ public abstract class MixinChatScreen extends MixinScreen {
 
     @Unique
     private @Nullable Integer getActiveMessage(MouseButtonEvent click) {
-        var chatHud = (MixinChatComponentAccessor) this.minecraft.gui.getChat();
+        var chatHud = (MixinChatComponentAccessor) this.minecraft.gui.hud.getChat();
         var visibleMessages = chatHud.getTrimmedMessages();
         if (visibleMessages.isEmpty()) {
             return null;

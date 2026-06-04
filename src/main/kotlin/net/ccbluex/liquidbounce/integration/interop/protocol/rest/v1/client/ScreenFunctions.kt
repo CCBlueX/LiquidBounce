@@ -33,7 +33,7 @@ import net.minecraft.client.gui.screens.TitleScreen
 private fun Routing.getVirtualScreenInfo() = get("/virtualScreen") {
     call.respond(JsonObject().apply {
         addProperty("name", ScreenManager.screen?.type?.routeName)
-        addProperty("showingSplash", mc.overlay is LoadingOverlay)
+        addProperty("showingSplash", mc.gui.overlay() is LoadingOverlay)
     })
 }
 

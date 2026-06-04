@@ -94,7 +94,7 @@ object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQu
 
     override suspend fun enabledEffect() {
         val messageMetadata = MessageMetadata(id = "M${this.name}#loaded", remove = false)
-        mc.gui.chat.removeMessage(messageMetadata.id)
+        mc.gui.hud.chat.removeMessage(messageMetadata.id)
 
         if (!checkRequirements()) {
             this.enabled = false
@@ -196,7 +196,7 @@ object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQu
     private val progressMessageMetadata = MessageMetadata(id = "M$name#progress", remove = false)
 
     private fun removeProgressMessage() {
-        mc.gui.chat.removeMessage(progressMessageMetadata.id)
+        mc.gui.hud.chat.removeMessage(progressMessageMetadata.id)
     }
 
     fun sendNewProgressMessage(name: MutableComponent, progress: Int, total: Int) {

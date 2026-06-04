@@ -206,7 +206,7 @@ fun chat(text: Component, metadata: MessageMetadata = defaultMessageMetadata) {
         return
     }
 
-    val chatHud = mc.gui.chat
+    val chatHud = mc.gui.hud.chat
 
     if (metadata.remove && !metadata.id.isNullOrEmpty()) {
         chatHud.removeMessage(metadata.id)

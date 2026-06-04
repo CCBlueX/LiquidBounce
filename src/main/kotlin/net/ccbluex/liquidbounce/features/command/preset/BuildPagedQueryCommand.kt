@@ -149,7 +149,7 @@ fun <T> CommandBuilder.pagedQuery(
             all.drop((currentPage - 1) * pageSize).subList(0, minOf(pageSize, all.size))
         }
 
-        mc.gui.chat.removeMessage(msgId) // remove old
+        mc.gui.hud.chat.removeMessage(msgId) // remove old
 
         // Header
         send(header(this))

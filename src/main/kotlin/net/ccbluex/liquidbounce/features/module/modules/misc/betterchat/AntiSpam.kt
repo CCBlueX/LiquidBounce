@@ -69,7 +69,7 @@ object AntiSpam : ToggleableValueGroup(ModuleBetterChat, "AntiSpam", true) {
             val text = event.applyChatDecoration.apply(event.textData)
             chatText += text
 
-            val other = mc.gui.chat.allMessages.find {
+            val other = mc.gui.hud.chat.allMessages.find {
                 (it as GuiMessageLineAddition).`liquid_bounce$getId`() == id
             }
 
