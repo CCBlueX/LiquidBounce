@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.render.gui.element;
 
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +42,7 @@ public record TriangleGuiElementRenderState(
 ) implements PoseReusableGuiElementRenderState {
 
     public TriangleGuiElementRenderState {
-        assert pipeline.getVertexFormatMode() == VertexFormat.Mode.TRIANGLES;
+        assert pipeline.getPrimitiveTopology() == PrimitiveTopology.TRIANGLES;
     }
 
     @Override

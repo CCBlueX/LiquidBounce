@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.copyFrom
 import net.ccbluex.liquidbounce.utils.render.copyFully
 import net.ccbluex.liquidbounce.utils.render.putVec4
@@ -95,10 +94,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
                 uboDirty = false
             }
 
-            textureView.createRenderPass(
-                { "$name Pass" },
-                clearColor = optional(-1),
-            ).use { pass ->
+            textureView.createRenderPass({ "$name Pass" }).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.ItemChams)
 
                 pass.bindTexture("texture0", textureView, sampler)

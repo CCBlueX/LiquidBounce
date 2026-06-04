@@ -148,6 +148,14 @@ accessible method com/mojang/blaze3d/platform/NativeImage writeToChannel (Ljava/
 accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder <init> ()V
 accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder withSnippet (Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;)V
 
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat POSITION_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat COLOR_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat UV0_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat UV1_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat UV2_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat NORMAL_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat LINE_WIDTH_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+
 accessible class net/minecraft/client/renderer/state/gui/GuiRenderState$Node
 accessible class net/minecraft/client/gui/render/GuiRenderer$Draw
 accessible class net/minecraft/client/gui/Hud$ContextualInfo

@@ -94,17 +94,16 @@ inline fun RenderPass.setupRenderTypeScissor() {
 fun RenderPass.bindAndDraw(
     vertexSlice: GpuBufferSlice,
     indexSlice: GpuBufferSlice,
-    vertexFormat: VertexFormat,
     indexType: IndexType,
     indexCount: Int,
 ) {
     setVertexBuffer(0, vertexSlice)
     setIndexBuffer(indexSlice.buffer, indexType)
     drawIndexed(
-        (vertexSlice.offset / vertexFormat.vertexSize).toInt(),
-        (indexSlice.offset / indexType.bytes).toInt(),
         indexCount,
         1,
+        (indexSlice.offset / indexType.bytes).toInt(),
+        0,
         0,
     )
 }

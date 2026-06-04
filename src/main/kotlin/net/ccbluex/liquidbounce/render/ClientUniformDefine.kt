@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
+import com.mojang.blaze3d.pipeline.BindGroupLayout
+import com.mojang.blaze3d.shaders.UniformType
 import com.mojang.blaze3d.systems.RenderPass
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
@@ -37,6 +39,10 @@ enum class ClientUniformDefine(val uboName: String, val size: Int) {
     BLEND("BlendData", std140Size { vec4 }),
     THEME_BACKGROUND("ThemeBackgroundData", std140Size { float + vec2 + vec2 }),
     ;
+
+    val bindGroupLayout: BindGroupLayout = BindGroupLayout.builder()
+        .withUniform(this.uboName, UniformType.UNIFORM_BUFFER)
+        .build()
 
     fun label(): String = "${LiquidBounce.CLIENT_NAME} Uniform ${this.uboName} (${this.size}b)"
 

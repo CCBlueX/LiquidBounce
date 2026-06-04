@@ -26,6 +26,7 @@ import com.mojang.blaze3d.platform.CompareOp
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.minecraft.client.renderer.BindGroupLayouts
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.rendertype.RenderSetup
 import net.minecraft.client.renderer.rendertype.RenderSetup.OutlineProperty
@@ -51,7 +52,7 @@ object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER) {
             withSnippet(RenderPipelines.ENTITY_SNIPPET)
             withShaderDefine("ALPHA_CUTOUT", 0.1F)
             withShaderDefine("PER_FACE_LIGHTING")
-            withSampler("Sampler1")
+            withBindGroupLayout(BindGroupLayouts.SAMPLER1)
             withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
             withCull(false)
             forChams()
@@ -61,7 +62,7 @@ object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER) {
         ClientRenderPipelines.newPipeline("chams/entity_cutout") {
             withSnippet(RenderPipelines.ENTITY_SNIPPET)
             withShaderDefine("ALPHA_CUTOUT", 0.1f)
-            withSampler("Sampler1")
+            withBindGroupLayout(BindGroupLayouts.SAMPLER1)
             forChams()
         }
 
@@ -70,7 +71,7 @@ object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER) {
             withSnippet(RenderPipelines.ENTITY_SNIPPET)
             withShaderDefine("ALPHA_CUTOUT", 0.1f)
             withShaderDefine("PER_FACE_LIGHTING")
-            withSampler("Sampler1")
+            withBindGroupLayout(BindGroupLayouts.SAMPLER1)
             withCull(false)
             forChams()
         }

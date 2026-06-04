@@ -66,7 +66,13 @@ fun PoseStack.reset() {
 }
 
 inline fun ByteBufferBuilder.begin(pipeline: RenderPipeline): BufferBuilder =
-    BufferBuilder(this, pipeline.primitiveTopology, pipeline.vertexFormat)
+    BufferBuilder(
+        this,
+        pipeline.primitiveTopology,
+        requireNotNull(pipeline.getVertexFormatBinding(0)) {
+            "Pipeline ${pipeline.location} has no vertex format binding"
+        },
+    )
 
 inline fun withOutputTextureOverride(
     color: GpuTextureView? = null,
@@ -86,13 +92,13 @@ inline fun withOutputTextureOverride(
     }
 }
 
-inline fun GpuTexture.clearColor(color: Color4b = Color4b.WHITE) =
+inline fun GpuTexture.clearColor(color: Color4b = Color4b.TRANSPARENT) =
     gpuDevice.createCommandEncoder().clearColorTexture(this, color.toVector4f())
 
 inline fun GpuTexture.clearDepth(depth: Double = 1.0) =
     gpuDevice.createCommandEncoder().clearDepthTexture(this, depth)
 
-fun RenderTarget.clearColorAndDepth(color: Color4b = Color4b.WHITE, depth: Double = 1.0) {
+fun RenderTarget.clearColorAndDepth(color: Color4b = Color4b.TRANSPARENT, depth: Double = 1.0) {
     val colorAttachment = colorTexture
     val depthAttachment = depthTexture.takeIf { useDepth }
 

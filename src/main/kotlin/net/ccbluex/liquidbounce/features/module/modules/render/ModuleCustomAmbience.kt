@@ -106,7 +106,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
                 private val color by color("Color", Color4b.BLUE)
 
                 override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
-                    texture.clearColor(color.argb)
+                    texture.clearColor(color)
                     return true
                 }
             }

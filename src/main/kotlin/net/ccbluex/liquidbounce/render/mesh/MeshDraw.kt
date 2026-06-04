@@ -46,7 +46,6 @@ import java.util.function.Function
 data class MeshDraw(
     val vertexSlice: GpuBufferSlice,
     val indexSlice: GpuBufferSlice,
-    val vertexFormat: VertexFormat,
     val indexType: IndexType,
     val indexCount: Int,
 ) {
@@ -103,6 +102,10 @@ data class MeshDraw(
             vboGetter: Function<VertexFormat, GrowableMappableRingBuffer> = sharedVboGetter,
             iboGetter: Function<IndexType, GrowableMappableRingBuffer> = sharedIboGetter,
         ): MeshDraw {
+            val vertexFormat = requireNotNull(pipeline.getVertexFormatBinding(0)) {
+                "Pipeline ${pipeline.location} has no vertex format binding"
+            }
+
             if (pipeline.primitiveTopology === PrimitiveTopology.QUADS) {
                 this.sortQuads(
                     ClientTesselator.Shared,
@@ -110,7 +113,7 @@ data class MeshDraw(
                 )
             }
 
-            val vertexSlice = vboGetter.apply(pipeline.vertexFormat).upload(this.vertexBuffer())
+            val vertexSlice = vboGetter.apply(vertexFormat).upload(this.vertexBuffer())
 
             val rawIndices = this.indexBuffer()
             val indexCount = this.drawState().indexCount
@@ -129,7 +132,6 @@ data class MeshDraw(
             return MeshDraw(
                 vertexSlice,
                 indexSlice,
-                pipeline.vertexFormat,
                 indexType,
                 indexCount,
             )
@@ -142,7 +144,6 @@ data class MeshDraw(
         fun RenderPass.bindAndDraw(meshDraw: MeshDraw) = bindAndDraw(
             meshDraw.vertexSlice,
             meshDraw.indexSlice,
-            meshDraw.vertexFormat,
             meshDraw.indexType,
             meshDraw.indexCount,
         )

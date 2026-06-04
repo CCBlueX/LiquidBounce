@@ -49,7 +49,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.shapes.VoxelShape
-import org.joml.Matrix4fc
+import org.joml.Matrix4f
 import java.util.concurrent.ConcurrentSkipListSet
 
 /**
@@ -109,7 +109,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         }
 
         protected fun getDynamicTransformsUniform(
-            modelView: Matrix4fc? = null,
+            modelView: Matrix4f? = null,
             colorModulatorAlpha: Int = -1,
         ) = getDynamicTransformsUniform(
             modelView = modelView,
