@@ -85,7 +85,7 @@ inline fun renderEnvironmentForWorld(
     poseStack: PoseStack,
     renderTarget: RenderTarget = mc.gameRenderer.mainRenderTarget(),
     mode: DrawMode = DrawMode.BATCH,
-    camera: Camera = mc.gameRenderer.mainCamera,
+    camera: Camera = mc.gameRenderer.mainCamera(),
     draw: WorldRenderEnvironment.() -> Unit,
 ) {
     val environment = WorldRenderEnvironment.create(renderTarget, poseStack, camera)

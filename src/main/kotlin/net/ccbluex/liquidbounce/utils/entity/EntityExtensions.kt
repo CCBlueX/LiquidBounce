@@ -384,7 +384,7 @@ val LocalPlayer.lastRotation: Rotation
 val Entity.box: AABB
     get() = boundingBox.inflate(pickRadius.toDouble())
 
-private val cameraPos: Vec3 get() = mc.gameRenderer.mainCamera.position()
+private val cameraPos: Vec3 get() = mc.gameRenderer.mainCamera().position()
 
 fun Position.cameraDistanceSq() = cameraPos.distanceToSqr(x(), y(), z())
 
