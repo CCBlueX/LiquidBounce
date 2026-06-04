@@ -221,6 +221,18 @@ class ItemCategorization(
     private val futureArmorToKeep: List<ItemSlot>
     private val armorComparator: ArmorComparator
 
+    /**
+     * The highest Knockback level among real weapons (swords, spears, maces, axes) in the inventory.
+     * A dedicated "best knockback" item is only worth keeping if it knocks back *harder* than the
+     * weapon we would already be holding — otherwise it is redundant and should be thrown out.
+     */
+    private val maxWeaponKnockback: Int =
+        availableItems.asSequence()
+            .map { it.itemStack }
+            .filter { it.isSword || it.isSpear || it.item is MaceItem || it.isAxe }
+            .maxOfOrNull { it.getEnchantment(Enchantments.KNOCKBACK) }
+            ?: 0
+
     init {
         val findBestArmorPieces = ArmorEvaluation.findBestArmorPieces(slots = availableItems)
 
@@ -253,8 +265,10 @@ class ItemCategorization(
             add(WeaponItemFacet(slot))
 
             // Anything with Knockback can serve as a dedicated "best knockback" item (e.g. a stick
-            // with Knockback II for sending players into the void).
-            if (itemStack.getEnchantment(Enchantments.KNOCKBACK) > 0) {
+            // with Knockback II for sending players into the void) — but only if it knocks back
+            // harder than the weapon we already keep. A spare item with the same (or lower) Knockback
+            // as our main weapon is redundant, so we don't keep it in a dedicated slot.
+            if (itemStack.getEnchantment(Enchantments.KNOCKBACK) > maxWeaponKnockback) {
                 add(KnockbackItemFacet(slot))
             }
 
