@@ -160,7 +160,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
                 val posAsLong = entry.longKey
 
                 // find the list of current breaking data, or else return
-                val breakingProgressions = mc.levelRenderer.destructionProgress[posAsLong] ?: continue
+                val breakingProgressions = world.destructionProgress()[posAsLong] ?: continue
 
                 // find the braking info that doesn't belong to us, if we mine our own surround, it should be ignored
                 val breakingInfo = breakingProgressions.lastOrNull { it.id != player.id } ?: continue
