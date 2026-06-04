@@ -29,6 +29,7 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.levelgen.structure.BoundingBox
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
@@ -216,6 +217,13 @@ fun Iterable<Vec3>.average(): Vec3 {
         i++
     }
     return Vec3(x / i, y / i, z / i)
+}
+
+fun Vec3.expandToCube(halfExtents: Double): AABB {
+    return AABB(
+        this.x - halfExtents, this.y - halfExtents, this.z - halfExtents,
+        this.x + halfExtents, this.y + halfExtents, this.z + halfExtents,
+    )
 }
 
 inline fun Vec3i.toVec3d(
