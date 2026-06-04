@@ -57,7 +57,7 @@ import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.EyeOfEnder
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ChunkPos
@@ -367,7 +367,7 @@ object ModuleStrongholdFinder : ClientModule(
     }
 
     private fun handleEyeSpawnPacket(packet: ClientboundAddEntityPacket) {
-        if (packet.type != EntityType.EYE_OF_ENDER) {
+        if (packet.type != EntityTypes.EYE_OF_ENDER) {
             return
         }
 
