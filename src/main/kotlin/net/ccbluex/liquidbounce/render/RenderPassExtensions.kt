@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.IndexType
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderPass
@@ -95,16 +96,17 @@ fun RenderPass.bindAndDraw(
     vertexSlice: GpuBufferSlice,
     indexSlice: GpuBufferSlice,
     vertexFormat: VertexFormat,
-    indexType: VertexFormat.IndexType,
+    indexType: IndexType,
     indexCount: Int,
 ) {
-    setVertexBuffer(0, vertexSlice.buffer)
+    setVertexBuffer(0, vertexSlice)
     setIndexBuffer(indexSlice.buffer, indexType)
     drawIndexed(
         (vertexSlice.offset / vertexFormat.vertexSize).toInt(),
         (indexSlice.offset / indexType.bytes).toInt(),
         indexCount,
         1,
+        0,
     )
 }
 

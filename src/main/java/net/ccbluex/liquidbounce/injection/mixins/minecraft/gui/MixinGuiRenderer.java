@@ -22,12 +22,13 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.IndexType;
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
 import net.ccbluex.liquidbounce.render.gui.GuiCircleLutAtlas;
 import net.minecraft.client.Minecraft;
@@ -60,19 +61,19 @@ public abstract class MixinGuiRenderer {
      * https://github.com/FabricMC/fabric/blob/320674d1c713640a2e71834c1e3eb379e80a49fb/fabric-rendering-v1/src/client/java/net/fabricmc/fabric/mixin/client/rendering/GuiRendererMixin.java#L111-L128
      */
     @WrapOperation(
-        method = "executeDraw(Lnet/minecraft/client/gui/render/GuiRenderer$Draw;Lcom/mojang/blaze3d/systems/RenderPass;Lcom/mojang/blaze3d/buffers/GpuBuffer;Lcom/mojang/blaze3d/vertex/VertexFormat$IndexType;)V",
+        method = "executeDraw(Lnet/minecraft/client/gui/render/GuiRenderer$Draw;Lcom/mojang/blaze3d/systems/RenderPass;Lcom/mojang/blaze3d/buffers/GpuBuffer;Lcom/mojang/blaze3d/IndexType;)V",
         at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;setIndexBuffer(Lcom/mojang/blaze3d/buffers/GpuBuffer;Lcom/mojang/blaze3d/vertex/VertexFormat$IndexType;)V")
     )
     private void fixIndexBufferType(
         RenderPass instance,
         GpuBuffer gpuBuffer,
-        VertexFormat.IndexType indexType,
+        IndexType indexType,
         Operation<Void> original,
         @Local(argsOnly = true, name = "draw") GuiRenderer.Draw draw
     ) {
         var pipeline = draw.pipeline();
-        if (pipeline.getVertexFormatMode() != VertexFormat.Mode.QUADS) {
-            var shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.getVertexFormatMode());
+        if (pipeline.getPrimitiveTopology() != PrimitiveTopology.QUADS) {
+            var shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.getPrimitiveTopology());
             gpuBuffer = shapeIndexBuffer.getBuffer(draw.indexCount());
             indexType = shapeIndexBuffer.type();
         }

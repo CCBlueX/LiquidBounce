@@ -399,7 +399,7 @@ private fun PoseStack.copyFrom(source: PoseStack) {
 }
 
 private fun RenderPipeline.requiresImmediateDrawInBatch(): Boolean =
-    vertexFormatMode.connectedPrimitives
+    primitiveTopology.connectedPrimitives
 
 private fun Vec3f.relativeTo(camera: Camera): Vec3 = Vec3(
     x - camera.position().x,

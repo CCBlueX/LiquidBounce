@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.render.mesh
 
+import com.mojang.blaze3d.IndexType
+import com.mojang.blaze3d.PrimitiveTopology
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
@@ -45,7 +47,7 @@ data class MeshDraw(
     val vertexSlice: GpuBufferSlice,
     val indexSlice: GpuBufferSlice,
     val vertexFormat: VertexFormat,
-    val indexType: VertexFormat.IndexType,
+    val indexType: IndexType,
     val indexCount: Int,
 ) {
 
@@ -66,12 +68,12 @@ data class MeshDraw(
             }
 
         /**
-         * Shared dynamic IBO pool (keyed by [VertexFormat.IndexType]).
+         * Shared dynamic IBO pool (keyed by [IndexType]).
          *
          * This is the default upload target for per-frame dynamic meshes.
          */
         private val sharedIboGetter =
-            memorizingFunction<VertexFormat.IndexType, GrowableMappableRingBuffer>(enumMapOf()) {
+            memorizingFunction<IndexType, GrowableMappableRingBuffer>(enumMapOf()) {
                 GrowableMappableRingBuffer(
                     "${LiquidBounce.CLIENT_NAME} Shared IBO for $it",
                     GpuBuffer.USAGE_INDEX,
@@ -99,9 +101,9 @@ data class MeshDraw(
         fun MeshData.toMeshDraw(
             pipeline: RenderPipeline,
             vboGetter: Function<VertexFormat, GrowableMappableRingBuffer> = sharedVboGetter,
-            iboGetter: Function<VertexFormat.IndexType, GrowableMappableRingBuffer> = sharedIboGetter,
+            iboGetter: Function<IndexType, GrowableMappableRingBuffer> = sharedIboGetter,
         ): MeshDraw {
-            if (pipeline.vertexFormatMode === VertexFormat.Mode.QUADS) {
+            if (pipeline.primitiveTopology === PrimitiveTopology.QUADS) {
                 this.sortQuads(
                     ClientTesselator.Shared,
                     RenderSystem.getProjectionType().vertexSorting(),
@@ -113,9 +115,9 @@ data class MeshDraw(
             val rawIndices = this.indexBuffer()
             val indexCount = this.drawState().indexCount
             val indexSlice: GpuBufferSlice
-            val indexType: VertexFormat.IndexType
+            val indexType: IndexType
             if (rawIndices == null) {
-                val shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.vertexFormatMode)
+                val shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.primitiveTopology)
                 indexType = shapeIndexBuffer.type()
                 indexSlice = shapeIndexBuffer.getBuffer(indexCount)
                     .slice(0L, indexCount.toLong() * indexType.bytes)
