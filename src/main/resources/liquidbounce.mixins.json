@@ -132,6 +132,7 @@
     "minecraft.render.MixinScreenEffectRenderer",
     "minecraft.render.MixinSignText",
     "minecraft.render.MixinSkyRenderer",
+    "minecraft.render.MixinSubmitNodeCollection",
     "minecraft.render.MixinVisGraph",
     "minecraft.render.MixinWeatherEffectRenderer",
     "minecraft.render.MixinWorldBorderRenderer",
