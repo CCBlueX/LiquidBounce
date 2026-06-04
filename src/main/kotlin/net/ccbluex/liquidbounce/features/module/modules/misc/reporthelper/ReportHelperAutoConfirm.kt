@@ -79,9 +79,9 @@ internal object ReportHelperAutoConfirm : ToggleableValueGroup(ModuleReportHelpe
                 return
             }
 
-            if (!slots[11].itemStack.`is`(Items.GREEN_TERRACOTTA) ||
+            if (!slots[11].itemStack.`is`(Items.DYED_TERRACOTTA.green) ||
                 !slots[13].itemStack.`is`(Items.PLAYER_HEAD) ||
-                !slots[15].itemStack.`is`(Items.RED_TERRACOTTA)) {
+                !slots[15].itemStack.`is`(Items.DYED_TERRACOTTA.red)) {
                 return
             }
 
