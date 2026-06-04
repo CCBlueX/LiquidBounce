@@ -23,7 +23,6 @@ import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderPass;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
@@ -107,7 +106,7 @@ public final class StaticMeshStorage {
     }
 
     private void writeBaseBlockPosUniform(BlockPos baseBlockPos) {
-        try (var view = RenderSystem.getDevice().createCommandEncoder().mapBuffer(this.baseBlockPosUniform, false, true)) {
+        try (var view = this.baseBlockPosUniform.map(false, true)) {
             Std140Builder.intoBuffer(view.data())
                 .putIVec3(baseBlockPos.getX(), baseBlockPos.getY(), baseBlockPos.getZ());
         }

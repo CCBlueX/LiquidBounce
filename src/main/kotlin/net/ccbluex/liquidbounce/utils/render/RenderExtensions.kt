@@ -109,11 +109,11 @@ fun RenderTarget.clearColorAndDepth(color: Int = 0, depth: Double = 1.0) {
 inline fun GpuTexture.asView(baseMipLevel: Int = 0, mipLevels: Int = this.mipLevels): GpuTextureView =
     gpuDevice.createTextureView(this, baseMipLevel, mipLevels)
 
-inline fun GpuBuffer.mapBuffer(read: Boolean = false, write: Boolean = false): GpuBuffer.MappedView =
-    gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
+inline fun GpuBuffer.mapBuffer(read: Boolean = false, write: Boolean = false): GpuBufferSlice.MappedView =
+    this.map(read, write)
 
-inline fun GpuBufferSlice.mapBuffer(read: Boolean = false, write: Boolean = false): GpuBuffer.MappedView =
-    gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
+inline fun GpuBufferSlice.mapBuffer(read: Boolean = false, write: Boolean = false): GpuBufferSlice.MappedView =
+    this.map(read, write)
 
 inline fun GpuBufferSlice.write(byteBuffer: ByteBuffer) =
     gpuDevice.createCommandEncoder().writeToBuffer(this, byteBuffer)
