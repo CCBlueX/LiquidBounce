@@ -2,6 +2,8 @@
     import type {ListSetting, ModuleSetting} from "../../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import {createEventDispatcher} from "svelte";
+    import SettingButton from "../common/SettingButton.svelte";
+    import RemovableItem from "../common/RemovableItem.svelte";
 
     export let setting: ModuleSetting;
 
@@ -28,39 +30,22 @@
 
 <div class="setting">
     <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <button class="button-add" on:click={addValueIndex}>Add value</button>
+    <SettingButton value="Add value" on:click={addValueIndex} />
     {#if cSetting.value.length > 0}
         <div class="inputs">
             {#each cSetting.value as _, index}
-                <div class="input-wrapper">
+                <RemovableItem on:remove={() => removeValueIndex(index)}>
                     <input type="text" class="value" spellcheck="false" placeholder={setting.name} bind:value={cSetting.value[index]}
                            on:input={handleChange}>
-                    <button class="button-remove" title="Remove" on:click={() => removeValueIndex(index)}>
-                        <img src="img/clickgui/icon-cross.svg" alt="remove">
-                    </button>
-                </div>
+                </RemovableItem>
             {/each}
         </div>
     {/if}
 </div>
 
 <style lang="scss">
-
-  .input-wrapper {
-    display: grid;
-    grid-template-columns: 1fr max-content;
-    column-gap: 5px;
-    align-items: center;
-  }
-
-  .button-remove {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-  }
-
   .setting {
-    padding: 7px 0px;
+    padding: 7px 0;
   }
 
   .inputs {
@@ -75,23 +60,6 @@
     color: var(--clickgui-text-color);
     font-size: 12px;
     margin-bottom: 5px;
-  }
-
-  .button-add {
-    font-family: monospace;
-    font-size: 12px;
-    color: var(--clickgui-text-color);
-    background-color: var(--clickgui-button-background-color);
-    border: none;
-    padding: 6px 10px;
-    border-radius: 3px;
-    width: 100%;
-    cursor: pointer;
-    transition: ease background-color .2s;
-
-    &:hover {
-        background-color: var(--clickgui-button-hover-background-color);
-    }
   }
 
   .value {

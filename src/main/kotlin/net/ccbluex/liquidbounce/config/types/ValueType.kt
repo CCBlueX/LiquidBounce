@@ -67,6 +67,7 @@ enum class ValueType(
     MUTABLE_LIST,
     NAMED_ITEM_LIST,
     REGISTRY_LIST,
+    REGISTRY_MUTABLE_LIST,
     CURVE,
 
     // Groups
