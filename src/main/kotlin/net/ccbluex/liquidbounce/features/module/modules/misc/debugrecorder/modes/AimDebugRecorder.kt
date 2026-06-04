@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -69,7 +68,7 @@ object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim
                 val velocity = it.position() - it.lastPos
                 add("velocity", velocity.toJsonObject())
                 addProperty("distance", player.distanceTo(it))
-                val rotation = Rotation.lookingAt(point = it.box.center, from = player.eyePosition)
+                val rotation = Rotation.lookingAt(point = it.boundingBox.center, from = player.eyePosition)
 
                 val delta = rotation.rotationDeltaTo(playerRotation)
 

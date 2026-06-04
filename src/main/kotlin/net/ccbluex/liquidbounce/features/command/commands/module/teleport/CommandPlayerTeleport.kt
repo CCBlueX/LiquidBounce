@@ -64,7 +64,8 @@ object CommandPlayerTeleport : Command.Factory, MinecraftShortcuts {
                     }
 
                 if (args.size > 1 && args[1] == "copy") {
-                    val clipboard = ".teleport ${floor(player.x).toInt()} ${floor(y.toDouble()).toInt()} ${floor(player.z).toInt()}"
+                    val clipboard = ".teleport ${floor(player.x).toInt()} " +
+                        "${floor(y.toDouble()).toInt()} ${floor(player.z).toInt()}"
 
                     GLFW.glfwSetClipboardString(mc.window.handle(), clipboard)
                     return@handler

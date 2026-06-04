@@ -139,7 +139,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         val focusedEntity = this.focusedEntity
 
         if (mc.options.keyShift.isPressedOnAny && focusedEntity != null) {
-            val rot = Rotation.lookingAt(point = focusedEntity.entity.box.center, from = this.cameraPos)
+            val rot = Rotation.lookingAt(point = focusedEntity.entity.boundingBox.center, from = this.cameraPos)
 
             this.cameraRotation = rot
         }

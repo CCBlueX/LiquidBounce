@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.io.toJsonObject
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.world.getEntitiesInCube
@@ -50,7 +49,7 @@ object BoxDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Box
             }.minByOrNull {
                 it.distanceToSqr(player)
             }?.let {
-                val vector = it.box.center - crosshairTarget.location
+                val vector = it.boundingBox.center - crosshairTarget.location
                 add("vec", vector.toJsonObject())
             }
         })
