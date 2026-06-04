@@ -22,6 +22,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -80,6 +81,10 @@ public abstract class MixinGameRenderer {
     @Final
     private Lightmap lightmap;
 
+    @Shadow
+    @Final
+    private RenderTarget mainRenderTarget;
+
     /**
      * Hook game render event
      */
@@ -112,7 +117,7 @@ public abstract class MixinGameRenderer {
         var newMatStack = Pools.MatStack.borrow();
         try {
             newMatStack.mulPose(modelViewMatrix);
-            WorldRenderEnvironment.beginWorldFrame(minecraft.getMainRenderTarget(), newMatStack, this.mainCamera);
+            WorldRenderEnvironment.beginWorldFrame(this.mainRenderTarget, newMatStack, this.mainCamera);
             EventManager.INSTANCE.callEvent(
                 new WorldRenderEvent(newMatStack, this.mainCamera, deltaTracker.getGameTimeDeltaPartialTick(false))
             );

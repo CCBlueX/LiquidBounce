@@ -83,7 +83,7 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
  */
 inline fun renderEnvironmentForWorld(
     poseStack: PoseStack,
-    renderTarget: RenderTarget = mc.mainRenderTarget,
+    renderTarget: RenderTarget = mc.gameRenderer.mainRenderTarget(),
     mode: DrawMode = DrawMode.BATCH,
     camera: Camera = mc.gameRenderer.mainCamera,
     draw: WorldRenderEnvironment.() -> Unit,

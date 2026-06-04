@@ -142,7 +142,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
             if (outline) {
-                mc.mainRenderTarget.drawGenericBlockESP(
+                mc.gameRenderer.mainRenderTarget().drawGenericBlockESP(
                     outlinesRenderState,
                     ClientRenderPipelines.relativeLines(useColor),
                     distanceFade,
@@ -154,7 +154,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 }
             }
 
-            mc.mainRenderTarget.drawGenericBlockESP(
+            mc.gameRenderer.mainRenderTarget().drawGenericBlockESP(
                 facesRenderState,
                 ClientRenderPipelines.relativeQuads(useColor),
                 distanceFade,

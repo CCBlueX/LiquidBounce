@@ -67,7 +67,11 @@ object WorldToScreen {
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
         val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
-            .mul(guiScaleMul * mc.mainRenderTarget.width, guiScaleMul * mc.mainRenderTarget.height, 1.0F)
+            .mul(
+                guiScaleMul * mc.gameRenderer.mainRenderTarget().width,
+                guiScaleMul * mc.gameRenderer.mainRenderTarget().height,
+                1.0F,
+            )
 
         return if (screenPos.x.isFinite() && screenPos.y.isFinite() && screenPos.z.isFinite() && screenPos.z < 1.0F) {
             Vec3f(screenPos)
@@ -85,8 +89,8 @@ object WorldToScreen {
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
         val transformedPos = screenVec.mul(
-            1.0F / (guiScaleMul * mc.mainRenderTarget.width),
-            1.0F / (guiScaleMul * mc.mainRenderTarget.height),
+            1.0F / (guiScaleMul * mc.gameRenderer.mainRenderTarget().width),
+            1.0F / (guiScaleMul * mc.gameRenderer.mainRenderTarget().height),
             1.0F
         ).sub(1.0F, 1.0F, 0.0F).mul(1.0F, -1.0F, 1.0F)
 
