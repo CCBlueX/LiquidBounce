@@ -80,7 +80,7 @@
     "minecraft.gui.MixinGuiRenderState",
     "minecraft.gui.MixinGuiRenderStateLayer",
     "minecraft.gui.MixinLoadingOverlay",
-    "minecraft.gui.MixinLocatorBarRenderer",
+    "minecraft.gui.MixinLocatorBar",
     "minecraft.gui.MixinPlayerTabOverlay",
     "minecraft.gui.MixinScoreboard",
     "minecraft.gui.MixinScreen",
