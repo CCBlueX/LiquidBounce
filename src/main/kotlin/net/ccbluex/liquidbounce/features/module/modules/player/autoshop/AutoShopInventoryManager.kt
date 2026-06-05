@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 import it.unimi.dsi.fastutil.objects.Object2IntMap
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.kotlin.sumValues
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.tags.ItemTags
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.PotionItem
 
@@ -55,8 +57,8 @@ object AutoShopInventoryManager : EventListener {
             // collects all kinds of colorful blocks together
             // so that there is no dependency on color
             when {
-                stack.item.isWool() -> newItems.addTo(WOOL_ID, stack.count)
-                stack.item.isTerracotta() -> newItems.addTo(TERRACOTTA_ID, stack.count)
+                stack.`is`(ItemTags.WOOL) -> newItems.addTo(WOOL_ID, stack.count)
+                stack.`is`(ItemTags.TERRACOTTA) -> newItems.addTo(TERRACOTTA_ID, stack.count)
                 stack.item.isStainedGlass() -> newItems.addTo(STAINED_GLASS_ID, stack.count)
                 stack.item.isConcrete() -> newItems.addTo(CONCRETE_ID, stack.count)
             }
@@ -75,7 +77,7 @@ object AutoShopInventoryManager : EventListener {
             // groups items by enchantments
             // example: [chainmail_chestplate:protection:2 = 1, iron_sword:sharpness:3 = 1]
             stack.enchantments.entrySet().forEach {
-                val enchantmentID = it.key.registeredName.replace("minecraft:", "")
+                val enchantmentID = it.key.registeredName.removePrefix("minecraft:")
                 val level = it.intValue
                 val enchantedItemID = "$id:$enchantmentID:$level"
                 newItems.addTo(enchantedItemID, stack.count)
@@ -100,7 +102,7 @@ object AutoShopInventoryManager : EventListener {
         inventoryItems.clear()
     }
 
-    private fun update(newItems: Map<String, Int>) {
+    private fun update(newItems: Object2IntMap<String>) {
         prevInventoryItems.clear()
         prevInventoryItems.putAll(currentInventoryItems)
 
@@ -115,10 +117,11 @@ object AutoShopInventoryManager : EventListener {
         val itemsToRemove = ObjectOpenHashSet<String>()
         val itemsToUpdate = Object2IntOpenHashMap<String>()
 
-        pendingItems.forEach { (item, _) ->
+        pendingItems.fastIterator().forEach {
+            val item = it.key
+            val currentPendingAmount = it.intValue
             val newAmount = currentInventoryItems.getOrDefault(item, 0)
             val prevAmount = prevInventoryItems.getOrDefault(item, 0)
-            val currentPendingAmount = pendingItems.getOrDefault(item, 0)
 
             // doesn't increase the pending items amount
             // if the player loses those items somehow and vise versa
@@ -129,13 +132,13 @@ object AutoShopInventoryManager : EventListener {
                 val newPendingAmount = currentPendingAmount - (newAmount - prevAmount)
                 when {
                     newPendingAmount <= 0 -> itemsToRemove.add(item)
-                    else -> itemsToUpdate[item] = newPendingAmount
+                    else -> itemsToUpdate.put(item, newPendingAmount)
                 }
             } else if (lostNegativeItems) {
                 val newPendingAmount = currentPendingAmount + (prevAmount - newAmount)
                 when {
                     newPendingAmount >= 0 -> itemsToRemove.add(item)
-                    else -> itemsToUpdate[item] = newPendingAmount
+                    else -> itemsToUpdate.put(item, newPendingAmount)
                 }
             }
         }

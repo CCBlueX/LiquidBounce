@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent
@@ -30,7 +31,6 @@ import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -53,7 +53,7 @@ import net.minecraft.stats.Stats
 
 object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
 
-    var modes = choices("Mode", Instant, arrayOf(
+    private val modes = choices("Mode", Instant, arrayOf(
         Instant,
         Legit,
         Vulcan286,
@@ -61,7 +61,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         Hypixel
     )).apply { tagBy(this) }
 
-    object Legit : Mode("Legit") {
+    private object Legit : Mode("Legit") {
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
@@ -72,7 +72,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
 
     }
 
-    object Instant : Mode("Instant") {
+    private object Instant : Mode("Instant") {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
@@ -90,7 +90,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
          * PlayerMoveC2SPacket 206.86667393775122 63.024424088213685 149.86882962108763 0.0 0.0 false
          * PlayerMoveC2SPacket 206.73323484244284 63.0 149.86938899209406 0.0 0.0 true
          */
-        private val jumpOrder = arrayOf(
+        private val jumpOrder = doubleArrayOf(
             0.0, // This is for the sake of configuration simplicity. A normal human considers 0 to be NOTHING.
             0.41999998688698,
             0.7531999805212,
@@ -119,7 +119,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         private var ticksWait = 0
 
         @Suppress("unused")
-        private val tickHandler = tickHandler {
+        private val tickHandler = handler<GameTickEvent> {
             if (ticksWait > 0) {
                 ticksWait--
             }
@@ -180,7 +180,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author InspectorBoat (and translated by 1zuna)
      */
-    object Vulcan286 : Mode("Vulcan286") {
+    private object Vulcan286 : Mode("Vulcan286") {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
@@ -225,7 +225,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author @liquidsquid1
      */
-    object BlocksMC : Mode("BlocksMC") {
+    private object BlocksMC : Mode("BlocksMC") {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
@@ -275,13 +275,13 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
     /**
      * does not seem to work above a certain y level for some reason
      */
-    object Hypixel : Mode("Hypixel") {
+    private object Hypixel : Mode("Hypixel") {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        val alternateBypass by boolean("AlternateBypass", false)
-        val spoof by boolean("Spoof", false)
+        private val alternateBypass by boolean("AlternateBypass", false)
+        private val spoof by boolean("Spoof", false)
 
         private var stepping = false
 
@@ -324,7 +324,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
 
         @Suppress("unused")
         private val networkTickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
-            if(spoof && player.airTicks == 8) {
+            if (spoof && player.airTicks == 8) {
                 event.ground = true
             }
         }

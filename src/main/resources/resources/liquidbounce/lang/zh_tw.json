@@ -330,6 +330,10 @@
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.notifyDeveloper": "檢查你的遊戲日誌並通知我們。",
   "liquidbounce.generic.locked": "此模組已鎖定，無法開啟。因為很可能不繞過。",
+  "liquidbounce.tooltip.clickToCopy": "點擊複製",
+  "liquidbounce.fileDialog.mode.openFile": "開啟檔案",
+  "liquidbounce.fileDialog.mode.saveFile": "另存新檔",
+  "liquidbounce.fileDialog.mode.openDirectory": "選擇資料夾",
   "liquidbounce.liquidchat.authenticationFailed": "身份驗證失敗！ LiquidChat需要Minecraft正版帳號。",
   "liquidbounce.liquidchat.jwtTokenReceived": "接收到JWT令牌！ 重新登錄中...",
   "liquidbounce.liquidchat.notConnected": "未鏈結聊天伺服器！ 請開啟LiquidChat模組！",
@@ -651,5 +655,8 @@
   "liquidbounce.module.anchor.description": "讓你移動到水晶PvP的安全點里。",
   "liquidbounce.module.macros.description": "允許你透過自訂按鍵快速執行聊天訊息或物品操作。",
   "liquidbounce.module.autoMobHeal.description": "自動使用生物對應的原版修復或餵食物品，為附近可透過原版方式回血的生物恢復生命。",
+  "liquidbounce.module.liquidFiller.description": "自動在你附近的液體源方塊內放置方塊。",
+  "liquidbounce.module.liquidFiller.value.placeOrder.description": "控制液體源方塊加入放置佇列的順序。",
+  "liquidbounce.module.liquidFiller.value.useSponge.description": "對水源方塊使用海綿，利用原版海綿行為吸收附近的水。",
   "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect 將嘗試在你下次加入任何伺服器/遊戲時，通過監控 ping 參數來檢測伺服器的反作弊系統。請注意，結果可能不準確，特別是當伺服器上有多個反作弊系統時。"
 }

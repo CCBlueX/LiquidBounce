@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.objectArraySetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_HORIZONTAL
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -56,7 +55,7 @@ sealed interface AutoFarmTrackedState {
             override fun findPlantableNeighbors0(pos: BlockPos, state: BlockState): Collection<Direction> {
                 val result = enumSetOf<Direction>()
                 val mutable = BlockPos.MutableBlockPos()
-                for (dir in DIRECTIONS_HORIZONTAL) {
+                for (dir in Direction.BY_2D_DATA) {
                     mutable.setWithOffset(pos, dir)
                     if (world.getBlockState(mutable).isAir) {
                         result.add(dir)

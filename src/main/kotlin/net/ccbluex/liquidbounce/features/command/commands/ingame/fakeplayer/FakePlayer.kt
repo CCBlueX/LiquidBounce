@@ -69,9 +69,14 @@ open class FakePlayer @JvmOverloads constructor(
         this.walkAnimation.position = snapshot.limbPos
     }
 
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.checkTotemDeathProtection
+     * @see net.minecraft.world.item.component.DeathProtection.TOTEM_OF_UNDYING
+     */
     override fun setHealth(health: Float) {
         super.setHealth(health)
         if (getHealth() <= 0f) {
+            removeAllEffects()
             addEffect(MobEffectInstance(MobEffects.REGENERATION, 900, 1))
             addEffect(MobEffectInstance(MobEffects.ABSORPTION, 100, 1))
             addEffect(MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 0))

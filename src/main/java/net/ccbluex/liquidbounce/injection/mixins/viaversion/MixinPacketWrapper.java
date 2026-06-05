@@ -69,7 +69,7 @@ public abstract class MixinPacketWrapper {
             || packetType == ServerboundPackets1_21_4.CONTAINER_CLICK && this.get(Types.VAR_INT, 0) == 0) {
             // Note: this doesn't cover all handlers of PacketEvent
             InventoryManager.onClickOccurs();
-            InventoryManager.INSTANCE.setInventoryOpenServerSide$liquidbounce(true);
+            InventoryManager.INSTANCE.setInventoryOpenServerSide(true);
         }
     }
 

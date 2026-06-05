@@ -91,7 +91,7 @@ import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.allEmpty
-import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.math.topCenter
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -395,7 +395,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
         debugGeometry("lineToBlock") {
             // Debug stuff
-            val b = target?.placedBlock?.toVec3d(0.5, 1.0, 0.5) ?: return@debugGeometry null
+            val b = target?.placedBlock?.topCenter ?: return@debugGeometry null
             val a = optimalLine?.getNearestPointTo(b)  ?: return@debugGeometry null
 
             // Debug the line a-b

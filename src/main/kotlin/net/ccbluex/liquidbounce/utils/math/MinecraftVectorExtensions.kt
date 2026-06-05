@@ -24,16 +24,19 @@ import it.unimi.dsi.fastutil.longs.LongComparator
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Position
+import net.minecraft.core.SectionPos
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.levelgen.structure.BoundingBox
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import java.lang.Math.fma
 import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.sqrt
 
 inline operator fun Vec2.component1() = this.x
@@ -64,6 +67,17 @@ object BlockPosAsLongComparator : LongComparator {
 inline operator fun BlockPos.rangeTo(other: BlockPos): BoundingBox = BoundingBox.fromCorners(this, other)
 
 inline fun BlockPos.MutableBlockPos.set(pos: Position): BlockPos.MutableBlockPos = set(pos.x(), pos.y(), pos.z())
+
+inline val Vec3i.center: Vec3
+    get() = Vec3.atCenterOf(this)
+
+inline val Vec3i.bottomCenter: Vec3
+    get() = Vec3.atBottomCenterOf(this)
+
+inline val Vec3i.topCenter: Vec3
+    get() = Vec3.upFromBottomCenterOf(this, 1.0)
+
+inline fun Vec3i.bottomCenter(yOffset: Double): Vec3 = Vec3.upFromBottomCenterOf(this, yOffset)
 
 inline operator fun Vec3i.unaryMinus(): Vec3i = Vec3i(-x, -y, -z)
 
@@ -142,6 +156,12 @@ inline val Vec3.isLikelyZero: Boolean
 inline val Vec2.isLikelyZero: Boolean
     get() = Mth.equal(this.lengthSquared(), 0.0F)
 
+/**
+ * @see Vec3.rotation
+ */
+val Vec3.yaw: Float
+    get() = atan2(-this.x, this.z).toFloat().toDegrees()
+
 inline fun Vec3.copy(x: Double = this.x, y: Double = this.y, z: Double = this.z) = Vec3(x, y, z)
 
 fun Vector3fc.toVec3d(): Vec3 =
@@ -162,7 +182,13 @@ inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: 
 inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
     multiply(factorX, factorY, factorZ)
 
-fun Vec3.horizontalDistanceTo(other: Vec3): Double = Mth.length(this.x - other.x, this.z - other.z)
+fun Vec3.horizontalDistanceTo(other: Vec3): Double = horizontalDistanceTo(other.x, other.z)
+
+fun Vec3.horizontalDistanceTo(x: Double, z: Double): Double = sqrt(horizontalDistanceToSqr(x, z))
+
+fun Vec3.horizontalDistanceToSqr(other: Vec3): Double = horizontalDistanceToSqr(other.x, other.z)
+
+fun Vec3.horizontalDistanceToSqr(x: Double, z: Double): Double = Mth.lengthSquared(this.x - x, this.z - z)
 
 fun Position.distanceToCenterSqr(blockPos: Long): Double {
     val dx = this.x() - BlockPos.getX(blockPos)
@@ -176,7 +202,8 @@ inline operator fun Vec3.component2(): Double = this.y
 inline operator fun Vec3.component3(): Double = this.z
 
 operator fun ChunkPos.contains(blockPos: Long): Boolean =
-    BlockPos.getX(blockPos) in minBlockX..maxBlockX && BlockPos.getZ(blockPos) in minBlockZ..maxBlockZ
+    SectionPos.blockToSectionCoord(BlockPos.getX(blockPos)) == this.x
+        && SectionPos.blockToSectionCoord(BlockPos.getZ(blockPos)) == this.z
 
 fun Iterable<Vec3>.average(): Vec3 {
     var x = 0.0
@@ -190,6 +217,13 @@ fun Iterable<Vec3>.average(): Vec3 {
         i++
     }
     return Vec3(x / i, y / i, z / i)
+}
+
+fun Vec3.expandToCube(halfExtents: Double): AABB {
+    return AABB(
+        this.x - halfExtents, this.y - halfExtents, this.z - halfExtents,
+        this.x + halfExtents, this.y + halfExtents, this.z + halfExtents,
+    )
 }
 
 inline fun Vec3i.toVec3d(

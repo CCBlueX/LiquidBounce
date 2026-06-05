@@ -16,21 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.io
 
-import io.netty.bootstrap.AbstractBootstrap
-import io.netty.channel.Channel
-import net.minecraft.server.network.EventLoopGroupHolder
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-/**
- * Shortcut for Netty client [io.netty.bootstrap.Bootstrap],
- * using shared [io.netty.channel.EventLoopGroup] from [EventLoopGroupHolder]
- */
-internal fun <B : AbstractBootstrap<B, Channel>> AbstractBootstrap<B, Channel>.clientChannelAndGroup(
-    useEpoll: Boolean = true
-): B {
-    val networkingBackend = EventLoopGroupHolder.remote(useEpoll)
-    return channel(networkingBackend.channelCls())
-            .group(networkingBackend.eventLoopGroup())
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.entity.LevelEntityGetter;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Invoker;
+
+@Mixin(Level.class)
+public interface MixinLevelInvoker {
+
+    @Invoker
+    LevelEntityGetter<Entity> invokeGetEntities();
+
 }
-

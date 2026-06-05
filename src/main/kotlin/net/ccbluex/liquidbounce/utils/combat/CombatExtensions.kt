@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.world.getEntitiesInCuboid
+import net.ccbluex.liquidbounce.utils.world.getEntitiesInCube
 import net.minecraft.client.CameraType
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.component.DataComponents
@@ -212,7 +212,7 @@ fun ClientLevel.findEnemies(
     val maxRangeSqr = maxRange * maxRange
     val result = ArrayList<ObjectDoubleImmutablePair<Entity>>()
 
-    getEntitiesInCuboid(player.eyePosition, maxRange.toDouble()) {
+    getEntitiesInCube(player.eyePosition, maxRange.toDouble()) {
         it.shouldBeAttacked(enemyConf)
     }.forEach { entity ->
         val distSqr = entity.squaredBoxedDistanceTo(player)
@@ -231,7 +231,7 @@ inline fun ClientLevel.getEntitiesBoxInRange(
 ): MutableList<Entity> {
     val rangeSquared = range * range
 
-    return getEntitiesInCuboid(midPos, range) {
+    return getEntitiesInCube(midPos, range) {
         predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared
     }
 }

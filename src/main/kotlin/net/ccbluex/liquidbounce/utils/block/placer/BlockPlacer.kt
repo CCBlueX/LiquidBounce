@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
 import net.ccbluex.liquidbounce.utils.block.isInteractable
@@ -64,6 +63,7 @@ import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
+import java.util.function.LongPredicate
 import kotlin.math.max
 
 @Suppress("TooManyFunctions")
@@ -367,7 +367,7 @@ class BlockPlacer(
 
     fun canReach(pos: BlockPos, rotation: Rotation): Boolean {
         // not the exact distance but good enough
-        val distance = pos.getCenterDistanceSquaredEyes()
+        val distance = pos.distToCenterSqr(player.eyePosition)
         val wallRangeSq = wallRange.toDouble().sq()
 
         // if the wall range already covers it, the actual range doesn't matter
@@ -406,10 +406,10 @@ class BlockPlacer(
      * @param update Whether the renderer should update the culling.
      */
     fun addToQueue(pos: BlockPos, update: Boolean = true, isSupport: Boolean = false) {
-        blocks.computeIfAbsent(pos.asLong()) {
+        blocks.computeIfAbsent(pos.asLong(), LongPredicate {
             targetRenderer.addBlock(blockPosCache.set(it), update, FULL_BOX)
             isSupport
-        }
+        })
     }
 
     /**

@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -47,9 +49,9 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
     // DO NOT USE TREE TO MAKE SURE THAT THE ROTATIONS ARE NOT CHANGED
     private val rotations = RotationsValueGroup(this)
 
-    val repeatable = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (notDuringSprint && (mc.options.keySprint.isDown || player.isSprinting)) {
-            return@tickHandler
+            return@handler
         }
 
         val yaw = yawMode.activeMode.yaw
@@ -153,13 +155,13 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     }
 
-    abstract class YawMode(name: String) : Mode(name) {
+    private sealed class YawMode(name: String) : Mode(name) {
         override val parent: ModeValueGroup<*>
             get() = yawMode
         abstract val yaw: Float
     }
 
-    abstract class PitchMode(name: String) : Mode(name) {
+    private sealed class PitchMode(name: String) : Mode(name) {
         override val parent: ModeValueGroup<*>
             get() = pitchMode
         abstract val pitch: Float
