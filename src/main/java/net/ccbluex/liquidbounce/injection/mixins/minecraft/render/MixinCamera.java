@@ -30,16 +30,17 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
-import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
@@ -70,6 +71,10 @@ public abstract class MixinCamera {
 
     @Shadow
     private @Nullable Entity entity;
+
+    @Shadow
+    @Final
+    private Minecraft minecraft;
 
     @Inject(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V", shift = At.Shift.AFTER))
     private void hookFreeCamModifiedPosition(float partialTicks, CallbackInfo ci) {
@@ -102,7 +107,7 @@ public abstract class MixinCamera {
             }
 
             float scale = this.entity instanceof LivingEntity livingEntity ? livingEntity.getScale() : 1.0F;
-            float desiredCameraDistance = ModuleCameraClip.INSTANCE.getRunning() ? ModuleCameraClip.INSTANCE.getDistance() : 4f;
+            float desiredCameraDistance = PerspectiveEvent.INSTANCE.getDistance();
 
             if (!rearView) {
                 move(-getMaxZoom(desiredCameraDistance * scale), 0.0f, 0.0f);
@@ -124,16 +129,6 @@ public abstract class MixinCamera {
         if (ModuleFreeCam.INSTANCE.getRunning()) {
             this.detached = true;
         }
-    }
-
-    @ModifyConstant(method = "getMaxZoom", constant = @Constant(intValue = 8))
-    private int hookCameraClip(int constant) {
-        return ModuleCameraClip.INSTANCE.getRunning() ? 0 : constant;
-    }
-
-    @ModifyExpressionValue(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
-    private float modifyDesiredCameraDistance(float original) {
-        return ModuleCameraClip.INSTANCE.getRunning() ? getMaxZoom(ModuleCameraClip.INSTANCE.getDistance()) : original;
     }
 
     @Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
@@ -206,6 +201,14 @@ public abstract class MixinCamera {
         }
     }
 
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void tick(CallbackInfo ci) {
+        final PerspectiveEvent event = PerspectiveEvent.INSTANCE;
+        event.update(minecraft, entity);
+
+        EventManager.INSTANCE.callEvent(event);
+    }
+
     @ModifyExpressionValue(method = "alignWithEntity",
         at = @At(
             value = "INVOKE",
@@ -213,7 +216,19 @@ public abstract class MixinCamera {
         )
     )
     private CameraType hookPerspectiveEventOnCamera(CameraType original) {
-        return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
+        return PerspectiveEvent.INSTANCE.getPerspective();
+    }
+
+    @ModifyConstant(method = "getMaxZoom", constant = @Constant(intValue = 8))
+    private int hookCameraClip(int constant) {
+        return (PerspectiveEvent.INSTANCE.getNoClip()) ? 0 : constant;
+    }
+
+    @ModifyExpressionValue(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
+    private float hookCameraDistance(float original, float partialTicks) {
+        final float lastDistance = PerspectiveEvent.INSTANCE.getLastDistance();
+        final float distance = PerspectiveEvent.INSTANCE.getDistance();
+        return distance != lastDistance ? Mth.lerp(partialTicks, lastDistance, distance) : distance;
     }
 
 }

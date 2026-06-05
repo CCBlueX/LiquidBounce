@@ -226,7 +226,7 @@ public abstract class MixinGameRenderer {
             )
     )
     private CameraType hookPerspectiveEventOnCamera(CameraType original) {
-        return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
+        return PerspectiveEvent.INSTANCE.getPerspective();
     }
 
 }

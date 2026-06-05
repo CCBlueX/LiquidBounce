@@ -199,17 +199,10 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
         }
     }
 
-    private fun getEspData(): BlinkEspData? {
-        val pos = positions.firstOrNull() ?: return null
-        val rotation = RotationManager.actualServerRotation
-
-        val perspectiveEvent = EventManager.callEvent(PerspectiveEvent(mc.options.cameraType))
-        if (perspectiveEvent.perspective == CameraType.FIRST_PERSON) {
-            return null
-        }
-
-        return BlinkEspData(player, pos, rotation)
-    }
+    private fun getEspData() = positions
+        .firstOrNull()
+        ?.takeUnless { PerspectiveEvent.perspective == CameraType.FIRST_PERSON }
+        ?.let { BlinkEspData(player, it, RotationManager.actualServerRotation) }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
