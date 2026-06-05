@@ -472,7 +472,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
             private fun updateState(target: LivingEntity, heartCounts: HeartCounts) {
                 val now = System.currentTimeMillis()
-                val deltaSeconds =
+                var deltaSeconds =
                     if (lastUpdTime != 0L) ((now - lastUpdTime) / 1000f).coerceAtMost(0.25f) else 0f
 
                 lastUpdTime = now
@@ -480,6 +480,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 if (target.id != currentTargetId) {
                     currentTargetId = target.id
                     damageFlashStrength = 0f
+                    damageSqueezeStrength = 0f
+                    deltaSeconds = 0f
                     heartLayoutDirty = true
                 }
 
@@ -492,9 +494,9 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val outAnim = (1 + orbit.squeezeSpeed)..(4 + orbit.squeezeSpeed)
 
                 damageSqueezeStrength +=
-                    when(target.hurtTime) {
+                    when (target.hurtTime) {
                         in inAnim -> max(0f, deltaSeconds * (orbitSqueezeStrength * 5))
-                        in outAnim -> min(0f, -deltaSeconds * (orbitSqueezeStrength * 5))
+                        in outAnim -> -min(damageSqueezeStrength, deltaSeconds * (orbitSqueezeStrength * 5))
                         else -> -damageSqueezeStrength
                     }
 
