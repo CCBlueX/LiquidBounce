@@ -41,13 +41,14 @@ import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.inputByName
+import java.util.function.BooleanSupplier
 import java.util.function.Consumer
-import java.util.function.Function
 import java.util.function.Supplier
+import java.util.function.UnaryOperator
 import kotlin.reflect.KProperty
 import org.graalvm.polyglot.Value as PolyglotValue
 
-typealias ValueListener<T> = Function<T, T>
+typealias ValueListener<T> = UnaryOperator<T>
 typealias ValueChangedListener<T> = Consumer<T>
 
 /**
@@ -99,7 +100,7 @@ open class Value<T : Any>(
      */
     @Exclude
     @ProtocolExclude
-    var doNotInclude = { false }
+    var doNotInclude: BooleanSupplier = { false }
         private set
 
     /**
@@ -228,7 +229,7 @@ open class Value<T : Any>(
         set(t) { inner = it }
     }
 
-    fun set(t: T, apply: Consumer<in T>) {
+    fun set(t: T, apply: ValueChangedListener<T>) {
         var currT = t
         runCatching {
             listeners.forEach {
@@ -273,7 +274,7 @@ open class Value<T : Any>(
         doNotInclude = { true }
     }
 
-    fun doNotIncludeWhen(condition: () -> Boolean) = apply {
+    fun doNotIncludeWhen(condition: BooleanSupplier) = apply {
         doNotInclude = condition
     }
 
@@ -299,7 +300,7 @@ open class Value<T : Any>(
             try {
                 r = gson.fromJson(element, clazz) as T?
                 break
-            } catch (@Suppress("SwallowedException") e: ClassCastException) {
+            } catch (@Suppress("SwallowedException") _: ClassCastException) {
                 clazz = clazz.superclass
             }
         }

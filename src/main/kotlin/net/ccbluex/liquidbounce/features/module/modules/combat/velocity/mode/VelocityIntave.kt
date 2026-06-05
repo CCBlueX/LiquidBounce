@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import kotlin.random.Random
 
 object VelocityIntave : VelocityMode("Intave") {
 
@@ -74,7 +75,7 @@ object VelocityIntave : VelocityMode("Intave") {
 
         @Suppress("unused")
         private val tickJumpHandler = handler<MovementInputEvent> {
-            val shouldJump = Math.random() * 100 < chance && player.hurtTime > 5 && !isFallDamage
+            val shouldJump = Random.nextInt(100) < chance && player.hurtTime > 5 && !isFallDamage
             val canJump = player.onGround() && mc.screen !is InventoryScreen
             val shouldFinallyJump = shouldJump && canJump
 

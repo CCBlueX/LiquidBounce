@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
 import net.ccbluex.liquidbounce.utils.block.dijkstraShortestPath
-import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
+import net.ccbluex.liquidbounce.utils.block.hasAnySolidPlacementNeighbor
 import net.ccbluex.liquidbounce.utils.kotlin.toOrderedSet
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
@@ -93,10 +93,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
     }
 
     private fun canPlace(pos: BlockPos): Boolean {
-        val cache = BlockPos.MutableBlockPos()
-        return Direction.entries.any {
-            !cache.setWithOffset(pos, it).stateOrEmpty.canBeReplaced()
-        }
+        return pos.hasAnySolidPlacementNeighbor()
     }
 
 }
