@@ -432,11 +432,17 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
     }
 
-       @ModifyReturnValue(method = "shouldStopRunSprinting", at = @At("RETURN"))
+    @ModifyReturnValue(method = "shouldStopRunSprinting", at = @At("RETURN"))
     private boolean hookForceStopSprinting(boolean shouldStop) {
         return shouldStop || shouldForceStopSprinting();
     }
-    
+
+    /**
+     * ViaFabricPlus injects at HEAD of shouldStopRunSprinting with cancellable=true,
+     * bypassing the RETURN instruction so @ModifyReturnValue never fires.
+     * Intercepting the call site within aiStep works around this.
+     * @see <a href="https://github.com/ViaVersion/ViaFabricPlus/blob/618332d/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/movement/sprinting_and_sneaking/MixinLocalPlayer.java#L262-L270">ViaFabricPlus changeStopSprintingConditions</a>
+     */
     @ModifyExpressionValue(
         method = "aiStep",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;shouldStopRunSprinting()Z")
@@ -454,7 +460,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     
         EventManager.INSTANCE.callEvent(event);
         return !event.getSprint();
-    } 
+    }
 
     @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;hasForwardImpulse()Z"))
     private boolean hookIsWalking(boolean original) {
