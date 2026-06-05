@@ -434,7 +434,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
 
     @ModifyReturnValue(method = "shouldStopRunSprinting", at = @At("RETURN"))
     private boolean hookForceStopSprinting(boolean shouldStop) {
-        return shouldStop || shouldForceStopSprinting();
+        return shouldStop || liquid_bounce$shouldForceStopSprinting();
     }
 
     /**
@@ -448,10 +448,11 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;shouldStopRunSprinting()Z")
     )
     private boolean hookVfpSprintStop(boolean shouldStop) {
-        return shouldStop || shouldForceStopSprinting();
+        return shouldStop || liquid_bounce$shouldForceStopSprinting();
     }
-    
-    private boolean shouldForceStopSprinting() {
+
+    @Unique
+    private boolean liquid_bounce$shouldForceStopSprinting() {
         var event = new SprintEvent(
             new DirectionalInput(input),
             true,
