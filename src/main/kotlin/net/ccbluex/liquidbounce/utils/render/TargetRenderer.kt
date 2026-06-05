@@ -70,7 +70,6 @@ import org.joml.Vector2f
 import org.joml.Vector3f
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.cos
@@ -434,15 +433,16 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
             override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
                 val target = entity as? LivingEntity ?: return
-                val heartCounts = heartCounts(target)
+                val heartSlots = heartSlots(target)
 
-                updateState(target, heartCounts)
+                updateState(target, heartSlots.size)
 
                 val nowSeconds = System.currentTimeMillis() / 1000.0
                 val targetPos = target.interpolateCurrentPosition(partialTicks)
 
-                for (index in 0 until heartCounts.total) {
+                for (index in heartSlots.indices) {
                     val instance = heartLayout[index]
+                    val heartSlot = heartSlots[index]
 
                     val orbitAngleDegrees = instance.baseOrbitAngle + nowSeconds * orbit.speed
 
@@ -458,19 +458,21 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     )
 
                     val worldPos = targetPos.add(localOffset)
-                    val baseColor =
-                        if (index >= heartCounts.base) Color4b(255, 214, 72, color.a) else color
+                    val baseColor = when (heartSlot.type) {
+                        HeartType.Health -> color
+                        HeartType.Absorption -> Color4b(255, 214, 72, color.a)
+                    }
 
                     val renderColor = baseColor.interpolateTo(
                         Color4b.RED.alpha(color.a),
                         damageFlashStrength.toDouble()
                     )
 
-                    drawHeart(worldPos, targetPos, renderColor)
+                    drawHeart(worldPos, targetPos, renderColor, heartSlot.fill)
                 }
             }
 
-            private fun updateState(target: LivingEntity, heartCounts: HeartCounts) {
+            private fun updateState(target: LivingEntity, heartCount: Int) {
                 val now = System.currentTimeMillis()
                 var deltaSeconds =
                     if (lastUpdTime != 0L) ((now - lastUpdTime) / 1000f).coerceAtMost(0.25f) else 0f
@@ -500,50 +502,74 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                         else -> -damageSqueezeStrength
                     }
 
-                ensureHeartLayout(heartCounts.total)
+                ensureHeartLayout(heartCount)
             }
 
-            private fun WorldRenderEnvironment.drawHeart(pos: Vec3, targetPos: Vec3, color: Color4b) {
+            private fun WorldRenderEnvironment.drawHeart(pos: Vec3, targetPos: Vec3, color: Color4b, fill: Float) {
                 withPositionRelativeToCamera(pos) {
                     val directionToTarget = targetPos.subtract(pos)
                     val targetYaw = atan2(directionToTarget.x, directionToTarget.z).toDegrees().toFloat()
                     poseStack.mulPose(Axis.YP.rotationDegrees(targetYaw))
 
-                    drawHeartSDF(color, size)
+                    drawHeartSDF(color.alpha((color.a * 0.25f).toInt()), size)
+                    drawHeartSDF(color, size, fill)
                 }
             }
 
-            private fun WorldRenderEnvironment.drawHeartSDF(color: Color4b, size: Float) {
+            private fun WorldRenderEnvironment.drawHeartSDF(color: Color4b, size: Float, fill: Float = 1f) {
+                val clampedFill = fill.coerceIn(0f, 1f)
+                if (clampedFill <= 0f) {
+                    return
+                }
+
                 val argb = color.argb
                 drawCustomMesh(ClientRenderPipelines.heart(noDepthTest = !canBeCovered)) { pose ->
                     // Preserve the native aspect ratio of sdHeart() in heart.fsh.
                     val halfWidth = size * 1.0938363f
+                    val right = -halfWidth + halfWidth * 2f * clampedFill
                     addVertex(pose, -halfWidth, -size, 0f).setUv(0f, 0f).setColor(argb)
                     addVertex(pose, -halfWidth,  size, 0f).setUv(0f, 1f).setColor(argb)
-                    addVertex(pose,  halfWidth,  size, 0f).setUv(1f, 1f).setColor(argb)
-                    addVertex(pose,  halfWidth, -size, 0f).setUv(1f, 0f).setColor(argb)
+                    addVertex(pose,  right,  size, 0f).setUv(clampedFill, 1f).setColor(argb)
+                    addVertex(pose,  right, -size, 0f).setUv(clampedFill, 0f).setColor(argb)
                 }
             }
 
-            private fun heartCounts(target: LivingEntity): HeartCounts {
-                fun Float.toHeartSlots(): Int = ceil(coerceAtLeast(0f) / 2f).toInt()
+            private fun heartSlots(target: LivingEntity): List<HeartSlot> {
+                fun MutableList<HeartSlot>.addSlots(type: HeartType, amount: Float) {
+                    val hearts = amount.coerceAtLeast(0f) / 2f
+                    val fullHearts = hearts.toInt()
+                    val partialHeart = hearts - fullHearts
 
-                val base = if (dynamicCount) {
-                    target.health.toHeartSlots()
-                } else {
-                    heartCount
+                    repeat(fullHearts) {
+                        add(HeartSlot(type, 1f))
+                    }
+
+                    if (partialHeart > 0f) {
+                        add(HeartSlot(type, partialHeart))
+                    }
                 }
-                val absorption = target.absorptionAmount.toHeartSlots()
 
-                return HeartCounts(base, absorption)
+                return buildList {
+                    if (dynamicCount) {
+                        addSlots(HeartType.Health, target.health)
+                    } else {
+                        repeat(heartCount) {
+                            add(HeartSlot(HeartType.Health, 1f))
+                        }
+                    }
+
+                    addSlots(HeartType.Absorption, target.absorptionAmount)
+                }
             }
 
-            private data class HeartCounts(
-                val base: Int,
-                val absorption: Int,
-            ) {
-                val total: Int
-                    get() = base + absorption
+            private data class HeartSlot(
+                val type: HeartType,
+                val fill: Float,
+            )
+
+            private enum class HeartType {
+                Health,
+                Absorption,
             }
 
             private data class HeartPlacement(
