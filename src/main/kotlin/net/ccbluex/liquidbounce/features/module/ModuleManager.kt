@@ -176,6 +176,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReplenish
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleSmartEat
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoCrafter
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
@@ -594,6 +595,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleAntiAFK,
             ModuleAntiExploit,
             ModuleAutoBreak,
+            ModuleAutoCrafter,
             ModuleAutoFish,
             ModuleAutoRespawn,
             ModuleAutoWindCharge,

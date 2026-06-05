@@ -1,4 +1,3 @@
-
 export interface Metadata {
     id: string;
     name: string;
@@ -46,6 +45,7 @@ export type ModuleSetting =
     | ListSetting
     | RegistryListSetting
     | ItemListSetting
+    | RegistryMutableListSetting
     | ConfigurableSetting
     | TogglableSetting
     | ColorSetting
@@ -161,6 +161,10 @@ export interface ListSetting extends Setting<string[]> {
 }
 
 export interface RegistryListSetting extends ListSetting {
+    registry: string;
+}
+
+export interface RegistryMutableListSetting extends Setting<string[]> {
     registry: string;
 }
 

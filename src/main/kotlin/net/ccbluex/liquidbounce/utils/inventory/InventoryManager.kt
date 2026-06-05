@@ -70,7 +70,7 @@ object InventoryManager : EventListener {
         get() = mc.screen is AbstractContainerScreen<*> || isInventoryOpenServerSide
 
     var isInventoryOpenServerSide = false
-        internal set(value) {
+        set(value) {
             if (!field && value) {
                 onInventoryOpened()
             }

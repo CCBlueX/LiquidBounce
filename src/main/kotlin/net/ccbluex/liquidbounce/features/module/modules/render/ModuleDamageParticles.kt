@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.fma
@@ -93,7 +92,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
                 System.currentTimeMillis(),
                 FORMATTER.format(delta),
                 color,
-                entity.box.center.add(entity.knownMovement),
+                entity.boundingBox.center.add(entity.knownMovement),
             )
         }
     }
