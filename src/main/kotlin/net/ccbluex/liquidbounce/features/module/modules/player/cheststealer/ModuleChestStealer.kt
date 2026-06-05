@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findItemsInContainer
+import net.ccbluex.liquidbounce.utils.inventory.mergeableCapacityFor
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.item.isMergeable
 import net.minecraft.client.gui.screens.Screen
@@ -79,8 +80,6 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         tree(FeatureSilentScreen)
     }
 
-    private val mainInventory = Slots.Inventory + Slots.Hotbar
-
     @Suppress("unused")
     private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
         // Check if we are in a chest screen
@@ -100,7 +99,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         val targetBlacklist = objectHashSetOf<ItemSlot>()
 
         for (slot in itemsToCollect) {
-            val moveActions = mainInventory.findPossiblePickActions(screen, slot, targetBlacklist)
+            val moveActions = Slots.HotbarAndInventory.findPossiblePickActions(screen, slot, targetBlacklist)
 
             if (moveActions != null) {
                 event.schedule(
@@ -127,20 +126,6 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     }
 
     /**
-     * Calculates the mergeable count.
-     */
-    private fun Iterable<ItemSlot>.mergeableCountFor(itemStack: ItemStack, blacklist: Set<ItemSlot>?): Int =
-        sumOf {
-            val targetStack = it.itemStack
-            when {
-                blacklist != null && it in blacklist -> 0
-                targetStack.isEmpty -> itemStack.maxStackSize
-                targetStack.isMergeable(itemStack) -> targetStack.maxStackSize - targetStack.count
-                else -> 0
-            }
-        }
-
-    /**
      * Gets the clicks from mergeable or empty slots, or null if impossible to pick
      */
     @Suppress("CognitiveComplexMethod")
@@ -150,7 +135,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         targetBlacklist: MutableSet<ItemSlot>? = null,
     ): List<InventoryAction.Click>? {
         val fromStack = from.itemStack
-        val remaining = mergeableCountFor(fromStack, blacklist = targetBlacklist)
+        val remaining = mergeableCapacityFor(fromStack, blacklist = targetBlacklist)
 
         // Impossible to pick any item into inventory
         if (remaining == 0) return null
@@ -229,7 +214,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         cleanupPlan: InventoryCleanupPlan,
         slotsToCollect: Int,
     ): Int {
-        val freeSlotsInInv = mainInventory.count { it.itemStack.isEmpty }
+        val freeSlotsInInv = Slots.HotbarAndInventory.count { it.itemStack.isEmpty }
 
         val spaceGainedThroughMerge = cleanupPlan.mergeableItems.entries.sumOf { (id, slots) ->
             val slotsInChest = slots.count { it.slotType == ItemSlot.Type.CONTAINER }

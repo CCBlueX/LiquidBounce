@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -176,7 +175,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
     override fun getMovementRotation(): Rotation {
         val movementRotation = super.getMovementRotation()
         val movementPitch = targetTracker.target?.let { entity ->
-            Rotation.lookingAt(point = entity.box.center, from = player.eyePosition).pitch
+            Rotation.lookingAt(point = entity.boundingBox.center, from = player.eyePosition).pitch
         } ?: return movementRotation
 
         return movementRotation.copy(pitch = movementPitch)

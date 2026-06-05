@@ -775,7 +775,7 @@ fun Entity.doesCollideAt(pos: Vec3 = player.position()): Boolean {
  * Check if the entity is likely falling to the void based on the given position and bounding box.
  */
 fun Entity.wouldFallIntoVoid(pos: Vec3, voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
-    val offsetBb = boundingBox.move(pos - this.position())
+    val offsetBb = getBoundingBoxAt(pos)
 
     if (pos.y < voidLevel || offsetBb.minY < voidLevel) {
         return true

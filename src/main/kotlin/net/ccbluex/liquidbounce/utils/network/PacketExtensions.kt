@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_9
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
@@ -77,3 +78,9 @@ val Packet<*>.entityIdC2SInteractOrAttack: Int?
         is ServerboundSpectateEntityPacket -> this.entityId
         else -> null
     }
+
+/**
+ * @see net.minecraft.world.entity.LivingEntity.checkTotemDeathProtection
+ */
+val ClientboundEntityEventPacket.isDeathProtection: Boolean
+    get() = this.eventId == 35.toByte()

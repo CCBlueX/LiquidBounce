@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.math.toDegrees
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.math.vertices
@@ -329,9 +329,7 @@ abstract class BaseYawTargetPositionFactory(
     }
 
     private fun calculateYaw(point: Vec3): Float {
-        val dx = point.x - config.eyePos.x
-        val dz = point.z - config.eyePos.z
-        return Mth.wrapDegrees(Mth.atan2(dz, dx).toFloat().toDegrees() - 90f)
+        return point.subtract(config.eyePos).yaw
     }
 
     private fun calculateYawDifference(point: Vec3, targetYaw: Float): Float {

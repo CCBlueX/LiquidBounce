@@ -17,24 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.io
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
-import net.minecraft.world.phys.Vec3
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.entity.LevelEntityGetter;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
-fun Vec3.toJsonArray(): JsonArray {
-    return JsonArray(3).apply {
-        add(x)
-        add(y)
-        add(z)
-    }
-}
+@Mixin(Level.class)
+public interface MixinLevelInvoker {
 
-fun Vec3.toJsonObject(): JsonObject {
-    return JsonObject().apply {
-        addProperty("x", x)
-        addProperty("y", y)
-        addProperty("z", z)
-    }
+    @Invoker
+    LevelEntityGetter<Entity> invokeGetEntities();
+
 }
