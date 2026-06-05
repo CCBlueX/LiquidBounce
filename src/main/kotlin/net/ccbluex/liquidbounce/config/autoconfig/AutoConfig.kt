@@ -255,16 +255,29 @@ object AutoConfig {
      * Created an auto config, which stores the moduleConfigur
      */
     fun serializeAutoConfig(
-        writer: Writer,
-        includeConfiguration: IncludeConfiguration = IncludeConfiguration.DEFAULT,
-        autoSettingsType: AutoSettingsType = AutoSettingsType.RAGE,
-        statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING
+     writer: Writer,
+     includeConfiguration: IncludeConfiguration = IncludeConfiguration.DEFAULT,
+     autoSettingsType: AutoSettingsType = AutoSettingsType.RAGE,
+     statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING
     ) {
-        this.includeConfiguration = includeConfiguration
+     this.includeConfiguration = includeConfiguration
 
-        // Store the config
-        val moduleTree = ConfigSystem.serializeValueGroup(ModuleManager.modulesConfig, publicGson)
-        val spooferTree = ConfigSystem.serializeValueGroup(SpooferManager, publicGson)
+     // Optionally filter out render modules before serializing
+     val modulesToSerialize = if (includeConfiguration.includeRender) {
+      ModuleManager.modulesConfig
+     } else {
+      object : ValueGroup(ModuleManager.modulesConfig.name) {
+       init {
+        inner.addAll(ModuleManager.modulesConfig.inner.filter { module ->
+         module !is ClientModule || module.category != ModuleCategories.RENDER
+        })
+       }
+      }
+     }
+
+     // Store the config
+     val moduleTree = ConfigSystem.serializeValueGroup(modulesToSerialize, publicGson)
+     val spooferTree = ConfigSystem.serializeValueGroup(SpooferManager, publicGson)
 
         if (!moduleTree.isJsonObject || !spooferTree.isJsonObject) {
             error("Root element is not a json object")

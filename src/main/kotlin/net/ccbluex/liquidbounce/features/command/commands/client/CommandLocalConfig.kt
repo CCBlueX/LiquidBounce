@@ -111,12 +111,12 @@ object CommandLocalConfig : Command.Factory {
                 .build()
         )
         .parameter(
-            ParameterBuilder.begin<String>("include")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedFrom { listOf("binds", "hidden") }
-                .vararg()
-                .optional()
-                .build()
+         ParameterBuilder.begin<String>("include")
+         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+         .autocompletedFrom { listOf("binds", "hidden", "render") }
+         .vararg()
+         .optional()
+         .build()
         )
         .handler {
             val name = args[0] as String
@@ -130,8 +130,9 @@ object CommandLocalConfig : Command.Factory {
             val include = args.getOrNull(2) as Array<*>? ?: emptyArray<String>()
 
             val includeConfiguration = IncludeConfiguration(
-                includeBinds = include.contains("binds"),
-                includeHidden = include.contains("hidden"),
+             includeBinds = include.contains("binds"),
+             includeHidden = include.contains("hidden"),
+             includeRender = include.contains("render"),
             )
 
             val file = ConfigSystem.userConfigsFolder.resolve("$name.json")

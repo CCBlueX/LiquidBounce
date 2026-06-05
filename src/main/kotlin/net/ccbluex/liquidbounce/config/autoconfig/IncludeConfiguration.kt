@@ -21,12 +21,13 @@ package net.ccbluex.liquidbounce.config.autoconfig
 
 @JvmRecord
 data class IncludeConfiguration(
-    val includeBinds: Boolean = false,
-    val includeAction: Boolean = false,
-    val includeHidden: Boolean = false,
+ val includeBinds: Boolean = false,
+ val includeAction: Boolean = false,
+ val includeHidden: Boolean = false,
+ val includeRender: Boolean = false,
 ) {
-    companion object {
-        @JvmField
-        val DEFAULT = IncludeConfiguration()
-    }
+ companion object {
+  @JvmField
+  val DEFAULT = IncludeConfiguration()
+ }
 }
