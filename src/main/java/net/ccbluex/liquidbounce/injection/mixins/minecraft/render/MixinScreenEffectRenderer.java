@@ -20,31 +20,50 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ScreenEffectRenderer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.util.ARGB;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ScreenEffectRenderer.class)
 public abstract class MixinScreenEffectRenderer {
 
-    @Redirect(method = "renderFire", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/VertexConsumer;setColor(FFFF)Lcom/mojang/blaze3d/vertex/VertexConsumer;"))
-    private static VertexConsumer injectFireOpacity(VertexConsumer vertexConsumer, float red, float green, float blue, float alpha) {
-        return vertexConsumer.setColor(red,
-                green,
-                blue,
-                ModuleAntiBlind.INSTANCE.getFireOpacityPercentage() * alpha);
+    @Unique
+    private static boolean liquid_bounce$submittingFire = false;
+
+    @Inject(method = "submitFire", at = @At("HEAD"))
+    private static void injectFireHead(PoseStack poseStack, SubmitNodeCollector submitNodeCollector,
+        TextureAtlasSprite sprite, CallbackInfo ci) {
+        liquid_bounce$submittingFire = true;
     }
 
-    @Inject(method = "renderTex", at = @At("HEAD"), cancellable = true)
-    private static void hookWallOverlay(TextureAtlasSprite sprite, PoseStack matrices, MultiBufferSource vertexConsumers, CallbackInfo ci) {
+    @Inject(method = "submitFire", at = @At("TAIL"))
+    private static void injectFireTail(PoseStack poseStack, SubmitNodeCollector submitNodeCollector,
+        TextureAtlasSprite sprite, CallbackInfo ci) {
+        liquid_bounce$submittingFire = false;
+    }
+
+    @ModifyArg(
+        method = "buildQuad",
+        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/VertexConsumer;setColor(I)Lcom/mojang/blaze3d/vertex/VertexConsumer;")
+    )
+    private static int injectFireOpacity(int color) {
+        return liquid_bounce$submittingFire
+            ? ARGB.multiplyAlpha(color, ModuleAntiBlind.INSTANCE.getFireOpacityPercentage())
+            : color;
+    }
+
+    @Inject(method = "submitBlockSprite", at = @At("HEAD"), cancellable = true)
+    private static void hookWallOverlay(TextureAtlasSprite sprite, PoseStack poseStack,
+        SubmitNodeCollector submitNodeCollector, int color, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.WALL_OVERLAY)) {
             ci.cancel();
         }
