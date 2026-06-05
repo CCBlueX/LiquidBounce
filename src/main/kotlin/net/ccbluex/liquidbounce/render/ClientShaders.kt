@@ -97,6 +97,9 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.fsh")
 
+        @JvmField
+        val HeartSDF = "heart_sdf"("shaders/heart/heart.fsh")
+
     }
 
     private fun newShader(id: String, path: String): Identifier {
