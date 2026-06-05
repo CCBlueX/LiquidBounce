@@ -123,7 +123,6 @@
     "minecraft.render.MixinLightmapRenderStateExtractor",
     "minecraft.render.MixinMapRenderer",
     "minecraft.render.MixinModelBlockRenderer",
-    "minecraft.render.MixinOutlineBufferSource",
     "minecraft.render.MixinRenderSetup",
     "minecraft.render.MixinRenderSetupAccessor",
     "minecraft.render.MixinRenderTickCounter",

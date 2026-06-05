@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
@@ -55,10 +54,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelRenderer.class)
 public abstract class MixinLevelRenderer {
-
-    @Shadow
-    @Final
-    private Minecraft minecraft;
 
     @Shadow
     @Nullable
@@ -96,25 +91,27 @@ public abstract class MixinLevelRenderer {
         return ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyClearColor(original);
     }
 
-    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OutlineBufferSource;endOutlineBatch()V"))
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeOutline()V", shift = At.Shift.AFTER))
     private void onDrawOutlines(CallbackInfo ci) {
-        OutlineShaderRenderer.INSTANCE.drawBlitIfDirty(this.minecraft.getMainRenderTarget());
+        OutlineShaderRenderer.INSTANCE.drawBlitIfDirty(Minecraft.getInstance().gameRenderer.mainRenderTarget());
     }
 
-    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OutlineBufferSource;endOutlineBatch()V", shift = At.Shift.BEFORE))
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeOutline()V", shift = At.Shift.BEFORE))
     private void onRenderGlow(CallbackInfo ci) {
         var entityOutlineFb = entityOutlineTarget();
         if (!this.shouldShowEntityOutlines() || entityOutlineFb == null) {
             return;
         }
 
+        var minecraft = Minecraft.getInstance();
         var matrixStack = Pools.MatStack.borrow();
-        entityOutlineFb.blitToScreen();
-        final var cameraState = this.minecraft.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
+        var mainRenderTarget = minecraft.gameRenderer.mainRenderTarget();
+        entityOutlineFb.blitAndBlendToTexture(mainRenderTarget.getColorTextureView(), mainRenderTarget.getDepthTextureView());
+        final var cameraState = minecraft.gameRenderer.gameRenderState().levelRenderState.cameraRenderState;
         var event = new DrawOutlinesEvent(
             entityOutlineFb, matrixStack,
             cameraState,
-            this.minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false),
+            minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false),
             DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
         );
         EventManager.INSTANCE.callEvent(event);
@@ -142,7 +139,7 @@ public abstract class MixinLevelRenderer {
     }
 
     @Inject(method = "renderBlockOutline", at = @At("HEAD"), cancellable = true)
-    private void cancelBlockOutline(MultiBufferSource.BufferSource immediate, PoseStack matrices, boolean renderBlockOutline, LevelRenderState renderStates, CallbackInfo ci) {
+    private void cancelBlockOutline(PoseStack matrices, SubmitNodeCollector submitNodeCollector, LevelRenderState renderStates, CallbackInfo ci) {
         if (ModuleBlockOutline.INSTANCE.getRunning()) {
             ci.cancel();
         }
