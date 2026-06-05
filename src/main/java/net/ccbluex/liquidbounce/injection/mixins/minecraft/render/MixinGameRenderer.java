@@ -68,9 +68,6 @@ public abstract class MixinGameRenderer {
     private Minecraft minecraft;
 
     @Shadow
-    public abstract Minecraft getMinecraft();
-
-    @Shadow
     @Final
     private Camera mainCamera;
 
@@ -139,12 +136,12 @@ public abstract class MixinGameRenderer {
         return fogMode;
     }
 
-    @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/player/LocalPlayer;I)V"))
+    @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;submitHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/player/LocalPlayer;I)V"))
     public void drawItemCharms(ItemInHandRenderer instance, float frameInterp, PoseStack poseStack,
                                SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords,
                                Operation<Void> original) {
         ModuleItemChams.Lightmap.INSTANCE.applyToTexture(this.lightmap.getTextureView());
-        original.call(instance, frameInterp, poseStack, submitNodeCollector, player, lightCoords);
+        original.call(instance, frameInterp, poseStack, submitNodeCollector, player, lightCoords); // TODO(26.2): check if this works
         ModuleItemChams.Lightmap.INSTANCE.resetTexture(this.lightmap.getTextureView());
     }
 
