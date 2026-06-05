@@ -14,7 +14,6 @@
     "blaze3d.MixinRenderSystem",
     "blaze3d.MixinWindow",
     "blaze3d.gl.MixinGlDebug",
-    "blaze3d.gl.MixinGlRenderPass",
     "djl.MixinUtils",
     "lithium.MixinChunkAwareBlockCollisionSweeperBlockPos",
     "lithium.MixinChunkAwareBlockCollisionSweeperVoxelShape",
