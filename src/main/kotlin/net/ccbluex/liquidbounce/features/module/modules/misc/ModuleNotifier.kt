@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -25,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
@@ -33,10 +35,15 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.network.isDeathProtection
 import net.minecraft.client.player.RemotePlayer
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.Items
@@ -70,6 +77,9 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val heldItemMessageFormat by text("HeldItemMessageFormat", $$"%1$s holds %2$s x%3$s in %4$s")
     private val heldItems by items("HeldItems", itemSortedSetOf(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE))
 
+    private val totemPopMessages by boolean("TotemPopMessages", true)
+    private val totemPopMessageFormat by text("TotemPopMessageFormat", $$"%1$s popped a totem %2$s times")
+
     private val useNotification by boolean("UseNotification", false)
 
     private val uuidNameCache = Object2ObjectOpenHashMap<UUID, String>()
@@ -77,6 +87,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val itemConsumptionCache = Object2ObjectOpenHashMap<UUID, ItemConsumptionState>()
     private val heldItemCache = Object2ObjectOpenHashMap<UUID, HeldItemState>()
     private val observedPlayers = ObjectOpenHashSet<UUID>()
+    private val totemPopCounter = Object2IntOpenHashMap<UUID>()
 
     override fun onEnabled() {
         for (entry in network.onlinePlayers) {
@@ -91,6 +102,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
         itemConsumptionCache.clear()
         heldItemCache.clear()
         observedPlayers.clear()
+        totemPopCounter.clear()
     }
 
     val packetHandler = handler<PacketEvent> { event ->
@@ -126,6 +138,26 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
                     }
                 }
             }
+
+            is ClientboundEntityEventPacket -> if (packet.isDeathProtection) {
+                mc.execute {
+                    val entity = packet.getEntity(world) as? Player ?: return@execute
+                    if (entity === mc.player || FriendManager.isFriend(entity.name.string)) return@execute
+
+                    totemPopCounter.addTo(entity.uuid, 1)
+
+                    if (totemPopMessages) {
+                        sendNotifierMessage(
+                            totemPopMessageFormat.format(
+                                entity.name.string,
+                                totemPopCounter.getInt(entity.uuid)
+                            )
+                        )
+                    }
+                }
+            }
+
+            is ClientboundDisconnectPacket, is ClientboundLoginPacket -> mc.execute(totemPopCounter::clear)
         }
     }
 

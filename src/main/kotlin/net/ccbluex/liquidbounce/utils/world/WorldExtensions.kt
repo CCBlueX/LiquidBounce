@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.world
 
 import com.google.common.base.Predicates
 import net.ccbluex.fastutil.asObjectList
+import net.ccbluex.liquidbounce.utils.math.expandToCube
 import net.minecraft.core.BlockPos
 import net.minecraft.world.attribute.BedRule
 import net.minecraft.world.attribute.EnvironmentAttributes
@@ -97,7 +98,19 @@ inline fun LevelChunkSection.forEachBlock(action: (localX: Int, localY: Int, loc
  */
 fun ChunkAccess.sectionBottomY(index: Int): Int = (index + (this.minY shr 4)) shl 4
 
-fun EntityGetter.getEntitiesInCuboid(
+inline fun <reified T : Entity> EntityGetter.getEntitiesInCube(
+    midPos: Vec3,
+    range: Double,
+    predicate: Predicate<T> = Predicates.alwaysTrue(),
+): MutableList<T> {
+    return getEntitiesOfClass(
+        T::class.java,
+        midPos.expandToCube(range),
+        predicate,
+    ) // -> ArrayList
+}
+
+fun EntityGetter.getEntitiesInCube(
     midPos: Vec3,
     range: Double,
     exclusion: Entity? = null,

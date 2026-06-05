@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.utils.aiming.utils
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.util.Mth
@@ -58,7 +57,7 @@ object RotationUtil {
         val player = mc.player ?: return 0.0F
         val eyes = player.eyePosition
 
-        val rotationToEntity = Rotation.lookingAt(point = entity.box.center, from = eyes)
+        val rotationToEntity = Rotation.lookingAt(point = entity.boundingBox.center, from = eyes)
 
         return player.rotation.angleTo(rotationToEntity)
     }

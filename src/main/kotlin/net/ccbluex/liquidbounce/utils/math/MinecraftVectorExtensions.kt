@@ -29,12 +29,14 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.levelgen.structure.BoundingBox
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import java.lang.Math.fma
 import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.sqrt
 
 inline operator fun Vec2.component1() = this.x
@@ -154,6 +156,12 @@ inline val Vec3.isLikelyZero: Boolean
 inline val Vec2.isLikelyZero: Boolean
     get() = Mth.equal(this.lengthSquared(), 0.0F)
 
+/**
+ * @see Vec3.rotation
+ */
+val Vec3.yaw: Float
+    get() = atan2(-this.x, this.z).toFloat().toDegrees()
+
 inline fun Vec3.copy(x: Double = this.x, y: Double = this.y, z: Double = this.z) = Vec3(x, y, z)
 
 fun Vector3fc.toVec3d(): Vec3 =
@@ -209,6 +217,13 @@ fun Iterable<Vec3>.average(): Vec3 {
         i++
     }
     return Vec3(x / i, y / i, z / i)
+}
+
+fun Vec3.expandToCube(halfExtents: Double): AABB {
+    return AABB(
+        this.x - halfExtents, this.y - halfExtents, this.z - halfExtents,
+        this.x + halfExtents, this.y + halfExtents, this.z + halfExtents,
+    )
 }
 
 inline fun Vec3i.toVec3d(
