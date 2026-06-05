@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.Modul
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -92,7 +91,7 @@ object DebugCombatTrainerRecorder : ModuleDebugRecorder.DebugRecorderMode<Combat
                         currentVector = current.directionVector,
                         previousVector = previous.directionVector,
                         targetVector = Rotation.lookingAt(
-                            point = target.box.center,
+                            point = target.boundingBox.center,
                             from = player.eyePosition
                         ).directionVector,
                         velocityDelta = current.rotationDeltaTo(next).toVec2f(),

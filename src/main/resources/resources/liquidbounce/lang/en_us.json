@@ -766,6 +766,7 @@
   "liquidbounce.module.autoWindCharge.description": "Automatically boosts you using wind charges when holding jump.",
   "liquidbounce.module.autoMobHeal.description": "Automatically heals nearby vanilla-healable mobs using their vanilla repair or feeding items.",
   "liquidbounce.module.airPlace.description": "Allows you to place blocks in mid-air.",
+  "liquidbounce.module.autoCrafter.description": "Automatically crafts items using the Recipe Book.",
   "liquidbounce.module.liquidFiller.description": "Places blocks inside of liquid source blocks within range of you.",
   "liquidbounce.module.liquidFiller.value.placeOrder.description": "Controls the order in which liquid source blocks are queued for placing.",
   "liquidbounce.module.liquidFiller.value.useSponge.description": "Uses sponge for water source blocks to absorb nearby water with vanilla sponge behavior.",
