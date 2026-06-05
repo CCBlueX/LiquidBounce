@@ -860,8 +860,8 @@ fun AABB.isOnMagmaBlock(): Boolean {
 
 val Entity?.cameraDistance: Float
     get() {
-        val scale: Float
-        val distance: Float
+        var scale: Float
+        var distance: Float
         if (this is LivingEntity) {
             scale = this.scale
             distance = this.getAttributeValue(Attributes.CAMERA_DISTANCE).toFloat()
