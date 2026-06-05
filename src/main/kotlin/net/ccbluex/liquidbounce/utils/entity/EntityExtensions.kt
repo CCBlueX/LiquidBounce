@@ -862,13 +862,16 @@ fun AABB.isOnMagmaBlock(): Boolean {
 
 val Entity?.cameraDistance: Float
     get() {
-        var distance = 4f
-        var scale = 1f
-
+        val scale: Float
+        val distance: Float
         if (this is LivingEntity) {
-            scale = this@cameraDistance.scale
-            distance = getAttributeValue(Attributes.CAMERA_DISTANCE).toFloat()
+            scale = this.scale
+            distance = this.getAttributeValue(Attributes.CAMERA_DISTANCE).toFloat()
+        } else {
+            scale = 1f
+            distance = 4f
         }
+
         (this?.vehicle as? LivingEntity)
             ?.takeIf { this.isPassenger }
             ?.also { mount ->
