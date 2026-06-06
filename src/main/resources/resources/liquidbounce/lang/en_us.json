@@ -674,6 +674,7 @@
   "liquidbounce.module.rotations.description": "Allows you to see server-sided rotations.",
   "liquidbounce.module.silentHotbar.description": "Disables showing silently selected items in your hand.",
   "liquidbounce.module.safeWalk.description": "Prevents you from falling down block (as if you were sneaking).",
+  "liquidbounce.module.snapTap.description": "Prioritize the last pressed movement key.",
   "liquidbounce.module.scaffold.description": "Automatically places blocks beneath your feet allowing you to walk across gaps.",
   "liquidbounce.module.serverCrasher.description": "Attempts to crash the server by exploiting known bugs.",
   "liquidbounce.module.serverCrasher.messages.singleplayer": "Server Crasher is intended for multiplayer servers only.",
