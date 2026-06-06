@@ -165,6 +165,7 @@
     "truffle.MixinCommonJSRequireBuiltin",
     "truffle.MixinNpmCompatibleESModuleLoader",
     "truffle.MixinTruffleLanguage",
+    "truffle.MixinCallerSensitiveDetection",
     "viaversion.MixinPacketWrapper"
   ],
   "server": [],
