@@ -137,7 +137,7 @@ public abstract class MixinMinecraft {
     /**
      * Exit point
      */
-    @Inject(method = "destroy", at = @At("HEAD"))
+    @Inject(method = "close", at = @At("HEAD"))
     private void stopClient(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(ClientShutdownEvent.INSTANCE);
     }
