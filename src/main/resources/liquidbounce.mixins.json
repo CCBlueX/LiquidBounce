@@ -10,7 +10,6 @@
     "authlib.MixinYggdrasilMinecraftSessionService",
     "authlib.MixinYggdrasilMinecraftSessionServiceAccessor",
     "blaze3d.MixinGLX",
-    "blaze3d.MixinGpuBuffer",
     "blaze3d.MixinRenderSystem",
     "blaze3d.MixinWindow",
     "blaze3d.gl.MixinGlDebug",
