@@ -41,6 +41,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
+import net.ccbluex.liquidbounce.render.ClientTesselator;
+import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer;
+import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
@@ -485,4 +488,12 @@ public abstract class MixinMinecraft {
             ci.cancel();
         }
     }
+
+    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;endFrame()V", shift = At.Shift.AFTER))
+    private void onFlipFrame(boolean advanceGameTime, CallbackInfo ci) {
+        RenderingDebug.flipFrame();
+        ClientTesselator.Shared.clear();
+        GrowableMappableRingBuffer.cleanup();
+    }
+
 }
