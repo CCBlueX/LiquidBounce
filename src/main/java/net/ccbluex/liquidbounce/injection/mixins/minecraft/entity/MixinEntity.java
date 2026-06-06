@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slime.NoSlowSlime;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.Minecraft;
 import net.minecraft.tags.TagKey;
@@ -36,6 +37,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SlimeBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.Vec3;
 import org.objectweb.asm.Opcodes;
@@ -76,6 +79,16 @@ public abstract class MixinEntity {
     @ModifyExpressionValue(method = "isSuppressingBounce", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;isShiftKeyDown()Z"))
     private boolean hookAntiBounce(boolean original) {
         return ModuleAntiBounce.INSTANCE.getRunning() || original;
+    }
+
+    @ModifyExpressionValue(method = "restituteMovementAfterCollisions", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(DD)D", remap = false))
+    private double hookSlimeBounce(double original, @Local(argsOnly = true, name = "effectState") BlockState effectState) {
+        // TODO(26.2): Re-check the old exact Y-velocity conditions after vanilla moved slime bounce into Entity restitution.
+        if (NoSlowSlime.INSTANCE.getRunning() && effectState.getBlock() instanceof SlimeBlock) {
+            return 0.0;
+        }
+
+        return original;
     }
 
     /**
