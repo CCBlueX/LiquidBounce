@@ -75,10 +75,22 @@ object ModuleSnapTap : ClientModule("SnapTap", ModuleCategories.MOVEMENT, aliase
         val released = event.action == GLFW.GLFW_RELEASE
 
         when {
-            keyboardLeft.matches(keyEvent) -> if (pressed) horizontal.onPress(false) else if (released) horizontal.onRelease(false)
-            keyboardRight.matches(keyEvent) -> if (pressed) horizontal.onPress(true) else if (released) horizontal.onRelease(true)
-            keyboardBack.matches(keyEvent) -> if (pressed) vertical.onPress(false) else if (released) vertical.onRelease(false)
-            keyboardForward.matches(keyEvent) -> if (pressed) vertical.onPress(true) else if (released) vertical.onRelease(true)
+            keyboardLeft.matches(keyEvent) -> {
+                if (pressed) { horizontal.onPress(false) }
+                else if (released) { horizontal.onRelease(false) }
+            }
+            keyboardRight.matches(keyEvent) -> {
+                if (pressed) { horizontal.onPress(true) }
+                else if (released) { horizontal.onRelease(true) }
+            }
+            keyboardBack.matches(keyEvent) -> {
+                if (pressed) { vertical.onPress(false) }
+                else if (released) { vertical.onRelease(false) }
+            }
+            keyboardForward.matches(keyEvent) -> {
+                if (pressed) { vertical.onPress(true) }
+                else if (released) { vertical.onRelease(true) }
+            }
         }
     }
 
