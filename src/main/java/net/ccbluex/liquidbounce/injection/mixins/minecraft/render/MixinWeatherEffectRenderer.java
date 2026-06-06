@@ -19,9 +19,12 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.WeatherEffectRenderer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.biome.Biome;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(WeatherEffectRenderer.class)
 public abstract class MixinWeatherEffectRenderer {
 
-    @ModifyExpressionValue(method = "tickRainParticles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"))
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"))
     private float ambientPrecipitation2(float original) {
         var moduleCustomAmbience = ModuleCustomAmbience.INSTANCE;
         if (moduleCustomAmbience.getRunning() && moduleCustomAmbience.getWeather().get() == ModuleCustomAmbience.WeatherType.SNOWY) {
@@ -50,14 +53,15 @@ public abstract class MixinWeatherEffectRenderer {
         return original;
     }
 
-    @ModifyReturnValue(method = "getPrecipitationAt", at = @At(value = "RETURN", ordinal = 1))
-    private Biome.Precipitation modifyBiomePrecipitation(Biome.Precipitation original) {
+    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getPrecipitationAt(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/biome/Biome$Precipitation;"))
+    private Biome.Precipitation modifyBiomePrecipitation(ClientLevel instance, BlockPos pos, Operation<Biome.Precipitation> original) {
+        var precipitation = original.call(instance, pos);
         var moduleOverrideWeather = ModuleCustomAmbience.INSTANCE;
         if (moduleOverrideWeather.getRunning() && moduleOverrideWeather.getWeather().get() == ModuleCustomAmbience.WeatherType.SNOWY) {
             return Biome.Precipitation.SNOW;
         }
 
-        return original;
+        return precipitation;
     }
 
 }
