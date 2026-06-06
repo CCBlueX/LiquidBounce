@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.input.KeyEvent
 import org.lwjgl.glfw.GLFW
@@ -31,7 +32,7 @@ import org.lwjgl.glfw.GLFW
 /**
  * Snaptap module
  *
- * Proritize last movement key pressed.
+ * Prioritize the last pressed movement key.
  */
 
 object ModuleSnapTap : ClientModule("SnapTap", ModuleCategories.MOVEMENT, aliases = listOf("NullMove", "SOCD")) {
@@ -70,18 +71,21 @@ object ModuleSnapTap : ClientModule("SnapTap", ModuleCategories.MOVEMENT, aliase
         val keyboardBack = mc.options.keyDown
 
         val keyEvent = KeyEvent(event.keyCode, event.scanCode, event.mods)
-        val pressed = event.action != GLFW.GLFW_RELEASE
+        val pressed = event.action == GLFW.GLFW_PRESS
+        val released = event.action == GLFW.GLFW_RELEASE
 
         when {
-            keyboardLeft.matches(keyEvent) -> if (pressed) horizontal.onPress(false) else horizontal.onRelease(false)
-            keyboardRight.matches(keyEvent) -> if (pressed) horizontal.onPress(true) else horizontal.onRelease(true)
-            keyboardBack.matches(keyEvent) -> if (pressed) vertical.onPress(false) else vertical.onRelease(false)
-            keyboardForward.matches(keyEvent) -> if (pressed) vertical.onPress(true) else vertical.onRelease(true)
+            keyboardLeft.matches(keyEvent) -> if (pressed) horizontal.onPress(false) else if (released) horizontal.onRelease(false)
+            keyboardRight.matches(keyEvent) -> if (pressed) horizontal.onPress(true) else if (released) horizontal.onRelease(true)
+            keyboardBack.matches(keyEvent) -> if (pressed) vertical.onPress(false) else if (released) vertical.onRelease(false)
+            keyboardForward.matches(keyEvent) -> if (pressed) vertical.onPress(true) else if (released) vertical.onRelease(true)
         }
     }
 
     @Suppress("unused")
     val onMovementInput = handler<MovementInputEvent> { event ->
+        if (mc.screen != null && !ModuleInventoryMove.enabled) return@handler
+
         var isKeyLeftHeld = event.directionalInput.left
         var isKeyRightHeld = event.directionalInput.right
         var isKeyForwardHeld = event.directionalInput.forwards
@@ -97,14 +101,6 @@ object ModuleSnapTap : ClientModule("SnapTap", ModuleCategories.MOVEMENT, aliase
             val posIsLast = vertical.lastPositivePressTime >= vertical.lastNegativePressTime
             isKeyBackwardHeld = !posIsLast
             isKeyForwardHeld = posIsLast
-        }
-
-        // Disable SnapTap if in GUI
-        if (mc.screen != null) {
-            isKeyLeftHeld = false
-            isKeyRightHeld = false
-            isKeyForwardHeld = false
-            isKeyBackwardHeld = false
         }
 
         event.directionalInput = DirectionalInput(isKeyForwardHeld, isKeyBackwardHeld, isKeyLeftHeld, isKeyRightHeld)
