@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
@@ -36,12 +34,12 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4fc;
 import org.joml.Vector4f;
+import org.joml.Vector4fc;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -59,12 +57,9 @@ public abstract class MixinLevelRenderer {
     @Nullable
     public abstract RenderTarget entityOutlineTarget();
 
-    @Shadow
-    protected abstract boolean shouldShowEntityOutlines();
-
     // After ModelViewMatrix setup
-    @Inject(method = "renderLevel", at = @At(value = "NEW", target = "()Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;"))
-    private void onRender(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
+    @Inject(method = "render", at = @At(value = "NEW", target = "Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;"))
+    private void onRender(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {
         OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
         if (!renderer.shouldRender()) {
             return;
@@ -86,8 +81,12 @@ public abstract class MixinLevelRenderer {
         }
     }
 
-    @ModifyExpressionValue(method = "lambda$renderLevel$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/ARGB;colorFromFloat(FFFF)I"))
-    private int customFogClearColor(int original) {
+    @ModifyArg(
+        method = "lambda$render$0",
+        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;clearColorAndDepthTextures(Lcom/mojang/blaze3d/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/blaze3d/textures/GpuTexture;D)V"),
+        index = 1
+    )
+    private Vector4fc customFogClearColor(Vector4fc original) {
         return ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyClearColor(original);
     }
 
@@ -99,7 +98,7 @@ public abstract class MixinLevelRenderer {
     @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeOutline()V", shift = At.Shift.BEFORE))
     private void onRenderGlow(CallbackInfo ci) {
         var entityOutlineFb = entityOutlineTarget();
-        if (!this.shouldShowEntityOutlines() || entityOutlineFb == null) {
+        if (!Minecraft.getInstance().gameRenderer.gameRenderState().levelRenderState.shouldShowEntityOutlines || entityOutlineFb == null) {
             return;
         }
 
@@ -119,27 +118,18 @@ public abstract class MixinLevelRenderer {
         OutlineFlag.drawOutline |= event.getDirtyFlag();
     }
 
-    @WrapOperation(method = "renderLevel", at = @At(
-        value = "FIELD",
-        target = "Lnet/minecraft/client/renderer/state/level/LevelRenderState;haveGlowingEntities:Z",
-        opcode = Opcodes.GETFIELD
-    ))
-    private boolean modifyDrawOutline(LevelRenderState instance, Operation<Boolean> original) {
+    @ModifyExpressionValue(method = "submitFeatures", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/LevelRenderState;shouldShowEntityOutlines:Z", opcode = Opcodes.GETFIELD))
+    private boolean modifyDrawOutline(boolean original) {
         var flag = OutlineFlag.drawOutline;
         if (flag) {
             OutlineFlag.drawOutline = false;
             return true;
         }
-        return original.call(instance);
+        return original;
     }
 
-    @ModifyArg(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;cullTerrain(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;Z)V"), index = 2)
-    private boolean renderSetupTerrainModifyArg(boolean spectator) {
-        return ModuleFreeCam.INSTANCE.getRunning() || spectator;
-    }
-
-    @Inject(method = "renderBlockOutline", at = @At("HEAD"), cancellable = true)
-    private void cancelBlockOutline(PoseStack matrices, SubmitNodeCollector submitNodeCollector, LevelRenderState renderStates, CallbackInfo ci) {
+    @Inject(method = "submitBlockOutline", at = @At("HEAD"), cancellable = true)
+    private void cancelBlockOutline(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LevelRenderState levelRenderState, CallbackInfo ci) {
         if (ModuleBlockOutline.INSTANCE.getRunning()) {
             ci.cancel();
         }
