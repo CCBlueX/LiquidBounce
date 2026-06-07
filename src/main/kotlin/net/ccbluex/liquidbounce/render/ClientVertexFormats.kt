@@ -20,11 +20,17 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.COLOR_FORMAT
+import com.mojang.blaze3d.vertex.DefaultVertexFormat.COLOR_SEMANTIC_NAME
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.LINE_WIDTH_FORMAT
+import com.mojang.blaze3d.vertex.DefaultVertexFormat.LINE_WIDTH_SEMANTIC_NAME
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_FORMAT
+import com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_SEMANTIC_NAME
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV0_FORMAT
+import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV0_SEMANTIC_NAME
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV1_FORMAT
+import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV1_SEMANTIC_NAME
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV2_FORMAT
+import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV2_SEMANTIC_NAME
 import com.mojang.blaze3d.vertex.VertexFormat
 
 object ClientVertexFormats {
@@ -40,12 +46,12 @@ object ClientVertexFormats {
      */
     @JvmField
     val GUI_ROUNDED_RECT: VertexFormat = VertexFormat.builder(0)
-        .addAttribute("Position", POSITION_FORMAT)
-        .addAttribute("UV0", UV0_FORMAT)
-        .addAttribute("Color", COLOR_FORMAT)
-        .addAttribute("Size", UV1_FORMAT)
-        .addAttribute("Parameters", UV2_FORMAT)
-        .addAttribute("StrokeWidth", LINE_WIDTH_FORMAT)
+        .addAttribute(POSITION_SEMANTIC_NAME, POSITION_FORMAT)
+        .addAttribute(UV0_SEMANTIC_NAME, UV0_FORMAT)
+        .addAttribute(COLOR_SEMANTIC_NAME, COLOR_FORMAT)
+        .addAttribute(UV1_SEMANTIC_NAME, UV1_FORMAT)
+        .addAttribute(UV2_SEMANTIC_NAME, UV2_FORMAT)
+        .addAttribute(LINE_WIDTH_SEMANTIC_NAME, LINE_WIDTH_FORMAT)
         .build()
 
     /**
@@ -57,9 +63,9 @@ object ClientVertexFormats {
      */
     @JvmField
     val GUI_CIRCLE_LUT: VertexFormat = VertexFormat.builder(0)
-        .addAttribute("Position", POSITION_FORMAT)
-        .addAttribute("UV0", UV0_FORMAT)
-        .addAttribute("UV2", UV2_FORMAT)
+        .addAttribute(POSITION_SEMANTIC_NAME, POSITION_FORMAT)
+        .addAttribute(UV0_SEMANTIC_NAME, UV0_FORMAT)
+        .addAttribute(UV2_SEMANTIC_NAME, UV2_FORMAT)
         .build()
 
     /**
@@ -72,10 +78,10 @@ object ClientVertexFormats {
      */
     @JvmField
     val GRADIENT_CIRCLE: VertexFormat = VertexFormat.builder(0)
-        .addAttribute("Position", POSITION_FORMAT)
-        .addAttribute("UV0", UV0_FORMAT)
-        .addAttribute("OuterColor", UV1_FORMAT)
-        .addAttribute("InnerColor", UV2_FORMAT)
-        .addAttribute("InnerRatio", LINE_WIDTH_FORMAT)
+        .addAttribute(POSITION_SEMANTIC_NAME, POSITION_FORMAT)
+        .addAttribute(UV0_SEMANTIC_NAME, UV0_FORMAT)
+        .addAttribute(UV1_SEMANTIC_NAME, UV1_FORMAT)
+        .addAttribute(UV2_SEMANTIC_NAME, UV2_FORMAT)
+        .addAttribute(LINE_WIDTH_SEMANTIC_NAME, LINE_WIDTH_FORMAT)
         .build()
 }
