@@ -130,3 +130,16 @@ object PreferStackSize {
     @JvmField
     val PREFER_MORE: Comparator<ItemStack> = PREFER_FEWER.reversed()
 }
+
+/**
+ * Prefers the stack with MORE items, but only when the difference is meaningful (greater than
+ * [hysteresis]). Counts within [hysteresis] of each other are treated as equal, so the inventory
+ * cleaner does not keep swapping between two near-equal stacks (e.g. 63 vs 64); a clearly larger stack
+ * still wins. The remaining tie is left for a later comparator (e.g. hotbar preference) to break.
+ */
+class PreferMoreBlocksFuzzy(private val hysteresis: Int = 1) : Comparator<ItemStack> {
+    override fun compare(o1: ItemStack, o2: ItemStack): Int {
+        val diff = o1.count - o2.count
+        return if (diff in -hysteresis..hysteresis) 0 else diff
+    }
+}
