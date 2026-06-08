@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.minecraft.util.Util
+import net.minecraft.client.input.InputQuirks
 import org.apache.logging.log4j.Logger
 import org.joml.component1
 import org.joml.component2
@@ -243,7 +243,7 @@ class CefBrowser(
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {
         browserApi.setFocus(true)
 
-        if (Util.getPlatform() == Util.OS.OSX && handleMacClipboardShortcut(keyCode, modifiers)) {
+        if (InputQuirks.REPLACE_CTRL_KEY_WITH_CMD_KEY && handleMacClipboardShortcut(keyCode, modifiers)) {
             return
         }
 
@@ -260,6 +260,7 @@ class CefBrowser(
         browserApi.sendKeyTyped(codepoint.toChar(), 0) // TODO: GLFW update removed modifiers here
     }
 
+    // TODO: Temporary fix. Should be removed after fix in JCEF
     private fun handleMacClipboardShortcut(keyCode: Int, modifiers: Int): Boolean {
         val isCommandPressed = modifiers and GLFW.GLFW_MOD_SUPER != 0
         if (!isCommandPressed) {
