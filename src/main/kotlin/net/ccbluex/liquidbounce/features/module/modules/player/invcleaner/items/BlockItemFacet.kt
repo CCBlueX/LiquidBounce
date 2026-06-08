@@ -34,14 +34,19 @@ class BlockItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
         private val COMPARATOR =
             ComparatorChain<BlockItemFacet>(
-                // Block quality first: a worse block with more count should not beat a good block.
+                // First, usability gates: a non-favourable block (slab, slime, entity block...) or a
+                // non-full-cube must never be kept over a normal full block, regardless of count.
                 PreferFavourableBlocks.asHolderComparator(),
-                PreferSolidBlocks.asHolderComparator(),
                 PreferFullCubeBlocks.asHolderComparator(),
+                // Then COUNT — among usable full-cube blocks the fullest stack wins. This is what stops a
+                // big stack of glass (full cube, favourable) being ignored for a tiny stack of a "nicer"
+                // block like stone, just because glass is not a redstone conductor. Glass — stained or
+                // not — is a normal scaffolding block here.
+                PreferMoreBlocksFuzzy().asHolderComparator(),
+                // Soft quality preferences only break ties between similarly-sized usable stacks.
+                PreferSolidBlocks.asHolderComparator(),
                 PreferWalkableBlocks.asHolderComparator(),
                 PreferAverageHardBlocks(neutralRange = true).asHolderComparator(),
-                // Among equally good blocks, keep the fullest stack (with hysteresis).
-                PreferMoreBlocksFuzzy().asHolderComparator(),
                 PREFER_ITEMS_IN_HOTBAR,
                 PreferAverageHardBlocks(neutralRange = false).asHolderComparator(),
                 STABILIZE_COMPARISON,
