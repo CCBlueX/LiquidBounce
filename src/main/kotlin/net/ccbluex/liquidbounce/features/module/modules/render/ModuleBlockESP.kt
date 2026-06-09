@@ -90,7 +90,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         markDirtyForModes()
     }
 
-    private sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
+    sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
         final override val parent get() = modes
 
         protected var useColor = false
@@ -209,7 +209,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
     }
 
-    private object GlowMode : Mode("Glow") {
+    object GlowMode : Mode("Glow") {
         private val renderState = StaticMeshStorage("${ModuleBlockESP.name} $name")
 
         override fun disable() {
