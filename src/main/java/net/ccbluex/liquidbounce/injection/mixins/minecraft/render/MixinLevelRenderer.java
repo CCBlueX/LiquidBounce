@@ -20,25 +20,18 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
-import net.ccbluex.liquidbounce.render.engine.OutlineShaderRenderer;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4fc;
-import org.joml.Vector4f;
 import org.joml.Vector4fc;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -57,29 +50,30 @@ public abstract class MixinLevelRenderer {
     @Nullable
     public abstract RenderTarget entityOutlineTarget();
 
-    // After ModelViewMatrix setup
-    @Inject(method = "render", at = @At(value = "NEW", target = "Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;"))
-    private void onRender(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {
-        OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
-        if (!renderer.shouldRender()) {
-            return;
-        }
-
-        var matrixStack = Pools.MatStack.borrow();
-        var event = new DrawOutlinesEvent(
-            renderer.prepareRenderTarget(),
-            matrixStack,
-            cameraState,
-            deltaTracker.getGameTimeDeltaPartialTick(false),
-            DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE
-        );
-        EventManager.INSTANCE.callEvent(event);
-        Pools.MatStack.recycle(matrixStack);
-
-        if (event.getDirtyFlag()) {
-            renderer.setDirty(true);
-        }
-    }
+    // TODO: removed because of vanilla changes
+//    // After ModelViewMatrix setup
+//    @Inject(method = "render", at = @At(value = "NEW", target = "Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;"))
+//    private void onRender(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {
+//        OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
+//        if (!renderer.shouldRender()) {
+//            return;
+//        }
+//
+//        var matrixStack = Pools.MatStack.borrow();
+//        var event = new DrawOutlinesEvent(
+//            renderer.prepareRenderTarget(),
+//            matrixStack,
+//            cameraState,
+//            deltaTracker.getGameTimeDeltaPartialTick(false),
+//            DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE
+//        );
+//        EventManager.INSTANCE.callEvent(event);
+//        Pools.MatStack.recycle(matrixStack);
+//
+//        if (event.getDirtyFlag()) {
+//            renderer.setDirty(true);
+//        }
+//    }
 
     @ModifyArg(
         method = "lambda$render$0",
@@ -90,10 +84,10 @@ public abstract class MixinLevelRenderer {
         return ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyClearColor(original);
     }
 
-    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeOutline()V", shift = At.Shift.AFTER))
-    private void onDrawOutlines(CallbackInfo ci) {
-        OutlineShaderRenderer.INSTANCE.drawBlitIfDirty(Minecraft.getInstance().gameRenderer.mainRenderTarget());
-    }
+//    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeOutline()V", shift = At.Shift.AFTER))
+//    private void onDrawOutlines(CallbackInfo ci) {
+//        OutlineShaderRenderer.INSTANCE.drawBlitIfDirty(Minecraft.getInstance().gameRenderer.mainRenderTarget());
+//    }
 
     @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeOutline()V", shift = At.Shift.BEFORE))
     private void onRenderGlow(CallbackInfo ci) {
@@ -106,12 +100,9 @@ public abstract class MixinLevelRenderer {
         var matrixStack = Pools.MatStack.borrow();
         var mainRenderTarget = minecraft.gameRenderer.mainRenderTarget();
         entityOutlineFb.blitAndBlendToTexture(mainRenderTarget.getColorTextureView(), mainRenderTarget.getDepthTextureView());
-        final var cameraState = minecraft.gameRenderer.gameRenderState().levelRenderState.cameraRenderState;
         var event = new DrawOutlinesEvent(
             entityOutlineFb, matrixStack,
-            cameraState,
-            minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false),
-            DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
+            minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false)
         );
         EventManager.INSTANCE.callEvent(event);
         Pools.MatStack.recycle(matrixStack);

@@ -314,10 +314,6 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
         @Suppress("unused")
         private val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
-                return@handler
-            }
-
             val dirty = event.renderTarget.drawGenericBlockESP(
                 renderState = renderState,
                 pipeline = ClientRenderPipelines.outlineQuads(useColor = true),

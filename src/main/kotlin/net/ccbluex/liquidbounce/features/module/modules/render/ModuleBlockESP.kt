@@ -63,8 +63,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     private val modes = choices("Mode", 0) {
         arrayOf(
             BoxMode,
-            OutlineMode("Glow", DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW),
-            OutlineMode("Outline", DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE),
+            GlowMode,
         )
     }
     private val targets by blocks(
@@ -210,7 +209,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
     }
 
-    private class OutlineMode(name: String, type: DrawOutlinesEvent.OutlineType) : Mode(name) {
+    private object GlowMode : Mode("Glow") {
         private val renderState = StaticMeshStorage("${ModuleBlockESP.name} $name")
 
         override fun disable() {
@@ -221,10 +220,6 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
         @Suppress("unused")
         private val renderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != type) {
-                return@handler
-            }
-
             val dirty = event.renderTarget.drawGenericBlockESP(
                 renderState,
                 ClientRenderPipelines.outlineQuads(useColor),
