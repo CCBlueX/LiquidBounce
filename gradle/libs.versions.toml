@@ -34,17 +34,23 @@ discordIpc = "0.6.0-SNAPSHOT"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
 fastutil4k = "0.2.8"
+# Transitive dependency of DiscordIPC; constrained on NeoForge for Java 25 support
+lenni0451-reflect = "1.6.2"
 
 # Recommended mods
 modmenu = "20.0.0-beta.4"
 exploit_preventer_api = "1.0.0"
 exploit_preventer_mod = "1.1.0+26.2"
 sodium = "mc26.2-0.9.0-fabric"
+sodium-neoforge = "mc26.1.2-0.8.12-neoforge"
 lithium = "mc26.2-0.25.0-fabric"
+lithium-neoforge = "mc26.1.2-0.24.2-neoforge"
 viafabricplus = "4.6.1"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.16.0+26.2-fabric"
+immediatelyFast-neoforge = "1.15.2+26.1.2-neoforge"
 iris = "1.11.1+26.2-fabric"
+iris-neoforge = "1.10.9+26.1-neoforge"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
@@ -124,13 +130,18 @@ djl-pytorch = { group = "ai.djl.pytorch", name = "pytorch-engine", version.ref =
 # mods
 modmenu = { group = "maven.modrinth", name = "modmenu", version.ref = "modmenu" }
 sodium = { group = "maven.modrinth", name = "sodium", version.ref = "sodium" }
+sodium-neoforge = { group = "maven.modrinth", name = "sodium", version.ref = "sodium-neoforge" }
 lithium = { group = "maven.modrinth", name = "lithium", version.ref = "lithium" }
+lithium-neoforge = { group = "maven.modrinth", name = "lithium", version.ref = "lithium-neoforge" }
 vfp-api = { group = "com.viaversion", name = "viafabricplus-api", version.ref = "viafabricplus" }
 vfp = { group = "com.viaversion", name = "viafabricplus", version.ref = "viafabricplus" }
 exploitPreventer-api = { group = "com.nikoverflow", name = "exploit-preventer-api", version.ref = "exploit_preventer_api" }
 exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
+lenni0451-reflect = { group = "net.lenni0451", name = "Reflect", version.ref = "lenni0451-reflect" }
 immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
+immediatelyFast-neoforge = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast-neoforge" }
 iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
+iris-neoforge = { group = "maven.modrinth", name = "iris", version.ref = "iris-neoforge" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

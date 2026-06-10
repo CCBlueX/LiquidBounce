@@ -33,6 +33,7 @@ import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.RecordComponentVisitor
 import java.io.File
 import java.util.jar.JarFile
 
@@ -121,6 +122,14 @@ abstract class CompareJsonKeysTask : DefaultTask() {
  * recompiled. javac rejects overrides of a widened method that keep the
  * original, now weaker, access level, so method widenings are propagated to
  * all overrides found in [hierarchyClasspath].
+ *
+ * Records need special handling for the same reason:
+ * - Their component fields only exist in class files, not in source, so field
+ *   widenings targeting them are dropped. Nothing is lost: record classes
+ *   already expose a public accessor per component.
+ * - A widened record class declares its canonical constructor with the
+ *   original, now weaker, access level, so the constructor is widened along
+ *   with the class.
  */
 abstract class ConvertAccessWidenerTask : DefaultTask() {
 
@@ -151,6 +160,10 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
         val entries = LinkedHashMap<String, Boolean>()
         // Internal class name -> argument descriptors of widened methods
         val widenedMethods = LinkedHashMap<String, MutableSet<MethodKey>>()
+        // Internal class names of widened classes
+        val widenedClasses = LinkedHashSet<String>()
+        // Entry -> internal owner name and field name of widened fields
+        val widenedFields = LinkedHashMap<String, Pair<String, String>>()
 
         for ((index, raw) in lines.withIndex().drop(1)) {
             val line = raw.substringBefore('#').trim()
@@ -168,11 +181,14 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
             val entry = when (kind) {
                 "class" -> {
                     if (parts.size != 3) fail("malformed class entry")
+                    widenedClasses += parts[2]
                     parts[2].toBinaryName()
                 }
                 "field" -> {
                     if (parts.size != 5) fail("malformed field entry")
-                    "${parts[2].toBinaryName()} ${parts[3]}"
+                    val entry = "${parts[2].toBinaryName()} ${parts[3]}"
+                    widenedFields[entry] = parts[2] to parts[3]
+                    entry
                 }
                 "method" -> {
                     if (parts.size != 5) fail("malformed method entry")
@@ -196,14 +212,50 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
             }
         }
 
-        val overrides = collectOverrides(widenedMethods).filterNot { it in entries }
+        val classes = scanHierarchyClasspath()
+
+        val overrides = collectOverrides(widenedMethods, classes).filterNot { it in entries }
+
+        val recordComponentFields = widenedFields.filterValues { (owner, fieldName) ->
+            classes[owner]?.let { info -> info.recordComponents.any { it.name == fieldName } } == true
+        }.keys
+
+        for (entry in recordComponentFields) {
+            if (entries[entry] == true) {
+                throw GradleException(
+                    "Cannot definalize record component field '$entry': access transformers " +
+                        "are applied to sources, where record component fields do not exist"
+                )
+            }
+        }
+
+        val recordConstructors = widenedClasses.mapNotNull { owner ->
+            val components = classes[owner]?.recordComponents?.takeIf { it.isNotEmpty() }
+                ?: return@mapNotNull null
+            "${owner.toBinaryName()} <init>(${components.joinToString("") { it.desc }})V"
+        }.filterNot { it in entries }
 
         val outputFile = output.get().asFile
         outputFile.parentFile.mkdirs()
         outputFile.writeText(buildString {
             appendLine("# Generated from ${file.name} - do not edit, edit the access widener instead.")
             for ((entry, definalize) in entries) {
+                if (entry in recordComponentFields) {
+                    // The accessible-only widening is redundant in source form: the
+                    // component already has a public accessor.
+                    appendLine("# omitted record component field: $entry")
+                    continue
+                }
+
                 appendLine(if (definalize) "public-f $entry" else "public $entry")
+            }
+            if (recordConstructors.isNotEmpty()) {
+                appendLine()
+                appendLine("# Canonical constructors of the widened record classes above, which must not keep")
+                appendLine("# a weaker access level than their class.")
+                for (entry in recordConstructors) {
+                    appendLine("public $entry")
+                }
             }
             if (overrides.isNotEmpty()) {
                 appendLine()
@@ -216,23 +268,17 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
     }
 
     /**
-     * Returns the entries for all overrides of [widenedMethods] declared by their
-     * subtypes in [hierarchyClasspath], in the entry format used above. Matching
-     * ignores the return type to include covariant overrides; compiler-generated
-     * (bridge/synthetic) methods are skipped because they do not exist in source.
+     * Reads the class hierarchy, member and record metadata of every class in
+     * [hierarchyClasspath], keyed by internal class name.
      */
-    private fun collectOverrides(widenedMethods: Map<String, Set<MethodKey>>): List<String> {
-        if (widenedMethods.isEmpty()) {
-            return emptyList()
-        }
-
+    private fun scanHierarchyClasspath(): Map<String, ClassInfo> {
         if (hierarchyClasspath.isEmpty) {
             throw GradleException(
-                "hierarchyClasspath is required to propagate widened methods to their overrides"
+                "hierarchyClasspath is required to resolve record classes and method overrides"
             )
         }
 
-        val subtypes = HashMap<String, MutableList<ClassInfo>>()
+        val classes = HashMap<String, ClassInfo>()
 
         for (jar in hierarchyClasspath.files) {
             JarFile(jar).use { jarFile ->
@@ -250,10 +296,33 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
                         }.toClassInfo()
                     }
 
-                    for (parent in info.parents) {
-                        subtypes.getOrPut(parent, ::ArrayList) += info
-                    }
+                    classes[info.name] = info
                 }
+            }
+        }
+
+        return classes
+    }
+
+    /**
+     * Returns the entries for all overrides of [widenedMethods] declared by their
+     * subtypes in [classes], in the entry format used above. Matching ignores the
+     * return type to include covariant overrides; compiler-generated
+     * (bridge/synthetic) methods are skipped because they do not exist in source.
+     */
+    private fun collectOverrides(
+        widenedMethods: Map<String, Set<MethodKey>>,
+        classes: Map<String, ClassInfo>,
+    ): List<String> {
+        if (widenedMethods.isEmpty()) {
+            return emptyList()
+        }
+
+        val subtypes = HashMap<String, MutableList<ClassInfo>>()
+
+        for (info in classes.values) {
+            for (parent in info.parents) {
+                subtypes.getOrPut(parent, ::ArrayList) += info
             }
         }
 
@@ -285,13 +354,21 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
 
     private class MethodInfo(val name: String, val desc: String)
 
-    private class ClassInfo(val name: String, val parents: List<String>, val methods: List<MethodInfo>)
+    private class RecordComponentInfo(val name: String, val desc: String)
+
+    private class ClassInfo(
+        val name: String,
+        val parents: List<String>,
+        val methods: List<MethodInfo>,
+        val recordComponents: List<RecordComponentInfo>,
+    )
 
     private class ClassInfoCollector : ClassVisitor(Opcodes.ASM9) {
 
         private lateinit var name: String
         private val parents = ArrayList<String>()
         private val methods = ArrayList<MethodInfo>()
+        private val recordComponents = ArrayList<RecordComponentInfo>()
 
         override fun visit(
             version: Int,
@@ -304,6 +381,15 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
             this.name = name
             superName?.let(parents::add)
             interfaces?.let(parents::addAll)
+        }
+
+        override fun visitRecordComponent(
+            name: String,
+            descriptor: String,
+            signature: String?,
+        ): RecordComponentVisitor? {
+            recordComponents += RecordComponentInfo(name, descriptor)
+            return null
         }
 
         override fun visitMethod(
@@ -319,7 +405,7 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
             return null
         }
 
-        fun toClassInfo() = ClassInfo(name, parents, methods)
+        fun toClassInfo() = ClassInfo(name, parents, methods, recordComponents)
 
     }
 

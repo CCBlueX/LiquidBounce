@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.platform.Platform
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.world.item.CreativeModeTab
 import net.minecraft.world.item.ItemStack
@@ -30,6 +29,9 @@ import net.neoforged.fml.ModList
 import net.neoforged.fml.loading.FMLPaths
 import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent
 import java.nio.file.Path
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executor
 import java.util.function.Supplier
 
 /**
@@ -88,33 +90,69 @@ class NeoForgePlatform : Platform {
     }
 
     /**
-     * NeoForge collects reload listeners through [AddClientReloadListenersEvent] on the
-     * mod event bus, which fires after the client start hook. Listeners registered
-     * before that are buffered until [LiquidBounceNeoForge] forwards the event here.
+     * NeoForge collects reload listeners through [AddClientReloadListenersEvent], which
+     * fires before the client start hook where the listeners are registered (and the
+     * resource manager rejects registrations once the event's sorted listener list has
+     * been applied). The event therefore registers a lazy wrapper per known listener id,
+     * and this method binds the actual listener as the wrapper's delegate. The wrappers
+     * are part of the resource manager's listener list from the start, so the delegates
+     * take part in the initial resource load and in every manual reload (F3+T).
+     *
+     * Ids not in [KNOWN_LISTENER_IDS] are rejected, which callers handle with their
+     * direct-reload fallback.
      */
     override fun registerResourceReloadListener(id: String, listener: PreparableReloadListener): Boolean {
-        synchronized(bufferedReloadListeners) {
-            if (reloadListenersCollected) {
-                return false
-            }
-
-            bufferedReloadListeners[LiquidBounce.identifier(id)] = listener
+        if (id !in KNOWN_LISTENER_IDS) {
+            return false
         }
 
+        reloadListenerDelegates[id] = listener
         return true
+    }
+
+    /**
+     * Forwards reloads to the listener registered under [id], or releases the
+     * preparation barrier untouched while no listener is bound yet.
+     */
+    private class LazyReloadListener(private val id: String) : PreparableReloadListener {
+
+        private val delegate: PreparableReloadListener?
+            get() = reloadListenerDelegates[id]
+
+        override fun prepareSharedState(state: PreparableReloadListener.SharedState) {
+            delegate?.prepareSharedState(state)
+        }
+
+        override fun reload(
+            state: PreparableReloadListener.SharedState,
+            backgroundExecutor: Executor,
+            barrier: PreparableReloadListener.PreparationBarrier,
+            gameExecutor: Executor
+        ): CompletableFuture<Void> {
+            val delegate = this.delegate
+                ?: return barrier.wait(net.minecraft.util.Unit.INSTANCE).thenAccept { }
+
+            return delegate.reload(state, backgroundExecutor, barrier, gameExecutor)
+        }
+
+        override fun getName() = "LiquidBounce/$id"
+
     }
 
     companion object {
 
-        private val bufferedReloadListeners = LinkedHashMap<Identifier, PreparableReloadListener>()
-        private var reloadListenersCollected = false
+        /**
+         * The reload listeners LiquidBounce registers during client start. New listener
+         * ids must be added here to participate in resource reloads on NeoForge.
+         */
+        private val KNOWN_LISTENER_IDS = listOf("client_resources", "theme")
+
+        private val reloadListenerDelegates = ConcurrentHashMap<String, PreparableReloadListener>()
 
         @JvmStatic
         fun onAddReloadListeners(event: AddClientReloadListenersEvent) {
-            synchronized(bufferedReloadListeners) {
-                reloadListenersCollected = true
-                bufferedReloadListeners.forEach(event::addListener)
-                bufferedReloadListeners.clear()
+            for (id in KNOWN_LISTENER_IDS) {
+                event.addListener(LiquidBounce.identifier(id), LazyReloadListener(id))
             }
         }
 

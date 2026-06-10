@@ -21,6 +21,8 @@ plugins {
     `java-library`
     alias(libs.plugins.moddev)
     alias(libs.plugins.kotlin.jvm)
+    // Generates git.properties (read by GitInfo) for this module's own resources output
+    alias(libs.plugins.gradleGitProperties)
 }
 
 base {
@@ -73,6 +75,7 @@ neoForge {
     version = libs.versions.neoforge.get()
 
     accessTransformers.from(convertAccessWidener.map { it.output })
+    validateAccessTransformers = true
 
     runs {
         register("client") {
@@ -97,9 +100,23 @@ dependencies {
 
     // Mixin targets of the mod-compat mixins, which are inert at runtime unless
     // the target classes are present. Sodium and Lithium are multiloader, so the
-    // Fabric artifacts provide the correct classes to compile against.
+    // Fabric artifacts provide the correct classes to compile against; the dev
+    // run loads the NeoForge variants of the same versions instead.
     compileOnly(libs.sodium)
     compileOnly(libs.lithium)
+    runtimeOnly(libs.sodium.neoforge)
+    runtimeOnly(libs.lithium.neoforge)
+
+    // Mods for compatibility test (runtime only)
+    runtimeOnly(libs.immediatelyFast.neoforge)
+    runtimeOnly(libs.iris.neoforge)
+
+    constraints {
+        // DiscordIPC pulls Reflect 1.6.1, which breaks on Java 25. ImmediatelyFast
+        // bundles 1.6.2 but binds the older copy from the dev classpath, crashing
+        // the dev run; 1.6.2 works for both.
+        jij(libs.lenni0451.reflect)
+    }
 
     // JCEF Support - nested as a NeoForge mod jar, like the Fabric jar includes
     // the mcef artifact. Without it at runtime, the browser backend is skipped.
