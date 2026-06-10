@@ -101,9 +101,9 @@ dependencies {
     compileOnly(libs.sodium)
     compileOnly(libs.lithium)
 
-    // JCEF Support - compile-time until the MCEF NeoForge artifact is available;
-    // without it at runtime, the browser backend is skipped (LB_BROWSER_SKIP behavior).
-    compileOnly(libs.mcef)
+    // JCEF Support - nested as a NeoForge mod jar, like the Fabric jar includes
+    // the mcef artifact. Without it at runtime, the browser backend is skipped.
+    jij(libs.mcef.neoforge)
 
     // Minecraft Authlib
     jij(libs.mcAuthlib)

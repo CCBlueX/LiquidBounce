@@ -136,15 +136,17 @@ object HttpClient {
         .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
         .proxy(java.net.Proxy.NO_PROXY)
         .build().also {
-            try {
-                MCEF.INSTANCE.settings.okHttpClient = it
-            } catch (ignored: NoClassDefFoundError) {
-                // MCEF is not bundled on every loader; the browser backend
-                // degrades separately, see BrowserBackendManager
-                logger.warn("Skipping MCEF HTTP client setup, MCEF is not available")
-            }
             Authlib.client = it
         }
+
+    /**
+     * Makes MCEF reuse this client. Called when the browser backend initializes;
+     * loading the MCEF class any earlier (e.g. during class initialization of
+     * this object) captures a Minecraft instance that may not exist yet.
+     */
+    fun shareClientWithMCEF() {
+        MCEF.INSTANCE.settings.okHttpClient = defaultClient
+    }
 
     /**
      * This interceptor rejects all non-2xx responses

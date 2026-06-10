@@ -104,6 +104,7 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 okhttp-coroutines = { group = "com.squareup.okhttp3", name = "okhttp-coroutines", version.ref = "okhttp" }
 mcAuthlib = { group = "net.ccbluex", name = "mc-authlib", version.ref = "mc_authlib" }
 mcef = { group = "net.ccbluex", name = "mcef", version.ref = "mcef" }
+mcef-neoforge = { group = "net.ccbluex", name = "mcef-neoforge", version.ref = "mcef" }
 httpServer = { group = "net.ccbluex", name = "netty-httpserver", version.ref = "httpServer" }
 discordIpc = { group = "com.jagrosh", name = "DiscordIPC", version.ref = "discordIpc" }
 semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }

@@ -78,6 +78,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
         cleanup()
 
         if (!MCEF.INSTANCE.isInitialized) {
+            HttpClient.shareClientWithMCEF()
             MCEF.INSTANCE.settings.apply {
                 userAgent = HttpClient.DEFAULT_AGENT
                 cacheDirectory = cacheFolder.resolve(System.currentTimeMillis().toString(16)).apply {
