@@ -22,8 +22,8 @@ import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.Protocol
 import com.viaversion.viaversion.api.protocol.packet.PacketType
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
+import net.ccbluex.liquidbounce.platform.Platform
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl
 
 /**
@@ -68,7 +68,7 @@ inline fun ClientCommonPacketListenerImpl.sendPacket(
     onFailure: () -> Unit = {}
 ) {
     runCatching {
-        val isViaFabricPlusLoaded = FabricLoader.getInstance().isModLoaded("viafabricplus")
+        val isViaFabricPlusLoaded = Platform.current.isModLoaded("viafabricplus")
         if (!isViaFabricPlusLoaded) {
             return
         }

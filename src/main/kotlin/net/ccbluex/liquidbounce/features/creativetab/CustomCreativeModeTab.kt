@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.creativetab
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.platform.Platform
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.item.CreativeModeTab
@@ -38,18 +38,14 @@ open class CustomCreativeModeTab(
     val items: Consumer<CreativeModeTab.Output>,
 ) {
 
-    fun init(): CreativeModeTab {
-        val creativeTab = FabricCreativeModeTab.builder()
-            .title(plainName.asPlainText())
-            .icon(icon)
-            .displayItems { _, entries ->
-                runCatching {
-                    items.accept(entries)
-                }.onFailure {
-                    logger.error("Unable to create creative tab $plainName", it)
-                }
+    fun init(): CreativeModeTab? {
+        val creativeTab = Platform.current.buildCreativeTab(plainName.asPlainText(), icon) { _, entries ->
+            runCatching {
+                items.accept(entries)
+            }.onFailure {
+                logger.error("Unable to create creative tab $plainName", it)
             }
-            .build()
+        } ?: return null
 
         // Add a creative tab to creative inventory
         Registry.register(

@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 /**
  * LiquidBounce Creative Item Groups with useful items and blocks
  *
- * @depends FabricAPI (for page buttons)
+ * @depends FabricAPI (for page buttons) on Fabric
  */
 object CustomCreativeModeTabs {
 
@@ -39,31 +39,22 @@ object CustomCreativeModeTabs {
             return
         }
 
-        // Check if FabricAPI is installed, otherwise we can't use the page buttons
-        // Use net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab
         runCatching {
-            Class.forName("net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab")
-        }.onFailure {
-            logger.error("FabricAPI is not installed, please install it to use the page buttons " +
-                "in the creative inventory")
-        }.onSuccess {
-            runCatching {
-                val creativeTabs = arrayOf(
-                    HeadsCreativeModeTab(),
-                    ExploitsCreativeModeTab()
-                )
+            val creativeTabs = arrayOf(
+                HeadsCreativeModeTab(),
+                ExploitsCreativeModeTab()
+            )
 
-                for (creativeTab in creativeTabs) {
-                    creativeTab.init()
-                }
-                isInitialized = true
+            // [CustomCreativeModeTab.init] returns null when the platform has no support
+            // for additional creative tabs available (e.g. Fabric API is missing)
+            val registeredTabs = creativeTabs.filter { creativeTab -> creativeTab.init() != null }
+            isInitialized = registeredTabs.isNotEmpty()
 
-                creativeTabs
-            }.onFailure { exception ->
-                logger.error("Unable to setup creative tabs", exception)
-            }.onSuccess { creativeTabs ->
-                logger.info("Creative Tabs: [ ${creativeTabs.joinToString { tab -> tab.plainName }} ]")
-            }
+            registeredTabs
+        }.onFailure { exception ->
+            logger.error("Unable to setup creative tabs", exception)
+        }.onSuccess { creativeTabs ->
+            logger.info("Creative Tabs: [ ${creativeTabs.joinToString { tab -> tab.plainName }} ]")
         }
     }
 

@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce.common;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.texture.MipmapStrategy;
 import net.minecraft.client.renderer.texture.ReloadableTexture;
 import net.minecraft.client.renderer.texture.TextureContents;
@@ -40,7 +38,6 @@ import java.util.Objects;
  * Should be drawn using [CustomRenderPhase::getTextureBilinear] to make it look smoother.
  */
 @NullMarked
-@Environment(EnvType.CLIENT)
 public final class ClientLogoTexture extends ReloadableTexture {
 
     public static final Identifier CLIENT_LOGO = LiquidBounce.identifier("logo");

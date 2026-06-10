@@ -274,8 +274,12 @@ tasks.register<NodeTask>("bundleTheme") {
 
 sourceSets {
     main {
+        // Fabric-specific sources, kept separate from the loader-agnostic code in src/main
+        // so that the NeoForge module (:neoforge) can reuse src/main as-is.
+        java.srcDir("src/fabric/java")
+        kotlin.srcDir("src/fabric/kotlin")
         resources {
-            srcDirs("src-theme/resources")
+            srcDirs("src-theme/resources", "src/fabric/resources")
         }
     }
 }
@@ -320,6 +324,18 @@ tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
 }
 
 // i18n check
+
+tasks.register<CheckLoaderPurityTask>("checkLoaderPurity") {
+    group = "verification"
+    description = "Ensures the loader-agnostic sources in src/main do not import loader-specific packages."
+
+    sources.from("src/main/java", "src/main/kotlin")
+    forbiddenPackages.set(listOf("net.fabricmc.", "com.terraformersmc.", "net.neoforged."))
+}
+
+tasks.named("check") {
+    dependsOn("checkLoaderPurity")
+}
 
 tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
     val baselineFileName = "en_us.json"
