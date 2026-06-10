@@ -34,7 +34,7 @@ base {
 
 // If NeoForge lags behind after a Minecraft update, it must not break the Fabric
 // build: disable this module's tasks while the versions do not match.
-val neoForgeMinecraftVersion = libs.versions.neoforge.get().substringBeforeLast('.')
+val neoForgeMinecraftVersion = libs.versions.neoforge.get().split('.').take(3).joinToString(".")
 val paddedMinecraftVersion = (libs.versions.minecraft.get().split('.') + listOf("0", "0"))
     .take(3)
     .joinToString(".")
