@@ -23,6 +23,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     // Generates git.properties (read by GitInfo) for this module's own resources output
     alias(libs.plugins.gradleGitProperties)
+    alias(libs.plugins.detekt)
 }
 
 base {
@@ -118,6 +119,9 @@ dependencies {
         jij(libs.lenni0451.reflect)
     }
 
+    // The bundled (jij) dependencies below mirror the root project's list -
+    // keep the two in sync.
+
     // JCEF Support - nested as a NeoForge mod jar, like the Fabric jar includes
     // the mcef artifact. Without it at runtime, the browser backend is skipped.
     jij(libs.mcef.neoforge)
@@ -186,7 +190,8 @@ tasks.processResources {
     }
 
     val modVersion = rootProject.providers.gradleProperty("mod_version")
-    val minecraftVersionRange = libs.versions.minecraft.map { "[$it,)" }
+    // Exact Minecraft version, like the Fabric manifest: the mixins do not survive game updates
+    val minecraftVersionRange = libs.versions.minecraft.map { "[$it]" }
     val neoforgeVersionRange = libs.versions.neoforge.map { "[$it,)" }
 
     inputs.property("version", modVersion)
@@ -202,6 +207,22 @@ tasks.processResources {
             )
         )
     }
+}
+
+detekt {
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    baseline = rootProject.file("config/detekt/baseline.xml")
+    // The shared sources of the root project are part of this source set, but
+    // they are already analyzed by the root project's detekt task.
+    source.setFrom(files("src/main/kotlin", "src/main/java"))
+}
+
+gitProperties {
+    // A dedicated output directory; generating into the default (the resources
+    // output directory) overlaps with processResources' outputs, and Gradle
+    // deletes files of overlapping outputs as stale when tasks re-execute.
+    gitPropertiesResourceDir = layout.buildDirectory.dir("generated/gitProperties")
 }
 
 tasks.withType<JavaCompile>().configureEach {

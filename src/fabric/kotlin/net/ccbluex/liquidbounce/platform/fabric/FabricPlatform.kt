@@ -39,8 +39,6 @@ import java.util.function.Supplier
  */
 class FabricPlatform : Platform {
 
-    override val loaderName = "fabric"
-
     override val gameDirectory: Path
         get() = FabricLoader.getInstance().gameDir
 
@@ -134,11 +132,11 @@ class FabricPlatform : Platform {
             .build()
     }
 
-    override fun registerResourceReloadListener(id: String, listener: PreparableReloadListener): Boolean {
+    override fun registerResourceReloadListeners(listeners: Map<String, PreparableReloadListener>): Boolean {
         val resourceManager = Minecraft.getInstance().resourceManager as? ReloadableResourceManager
             ?: return false
 
-        resourceManager.registerReloadListener(listener)
+        listeners.values.forEach(resourceManager::registerReloadListener)
         return true
     }
 

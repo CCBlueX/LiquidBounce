@@ -421,6 +421,10 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
  * Verifies that the loader-agnostic sources (src/main) do not import loader-specific
  * packages. This keeps the Fabric/NeoForge source split honest without requiring a
  * NeoForge build for fast feedback.
+ *
+ * This is a heuristic: it only checks import statements, so fully qualified
+ * references without an import pass. Compiling the NeoForge module remains the
+ * authoritative check.
  */
 abstract class CheckLoaderPurityTask : DefaultTask() {
 

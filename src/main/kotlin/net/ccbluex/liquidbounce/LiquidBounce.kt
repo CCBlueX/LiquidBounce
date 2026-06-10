@@ -471,10 +471,12 @@ object LiquidBounce : EventListener {
             EventManager
 
             // Register resource reloader
-            val platform = Platform.current
-            val reloadersRegistered =
-                platform.registerResourceReloadListener("client_resources", ClientResourceReloader) &&
-                    platform.registerResourceReloadListener("theme", ThemeManager.reloader)
+            val reloadersRegistered = Platform.current.registerResourceReloadListeners(
+                linkedMapOf(
+                    Platform.RELOAD_LISTENER_CLIENT_RESOURCES to ClientResourceReloader,
+                    Platform.RELOAD_LISTENER_THEME to ThemeManager.reloader,
+                )
+            )
             if (!reloadersRegistered) {
                 logger.warn("Failed to register resource reloader!")
 

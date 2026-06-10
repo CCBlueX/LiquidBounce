@@ -119,6 +119,9 @@ dependencies {
     api(libs.exploitPreventer.api)
     runtimeOnly(libs.exploitPreventer)
 
+    // The bundled (jij) dependencies below are mirrored in
+    // neoforge/build.gradle.kts - keep the two in sync.
+
     // Minecraft Authlib
     jij(libs.mcAuthlib)
 

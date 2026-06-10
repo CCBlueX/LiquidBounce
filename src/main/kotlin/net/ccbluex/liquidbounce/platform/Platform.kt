@@ -35,11 +35,6 @@ import java.util.function.Supplier
 interface Platform {
 
     /**
-     * Lowercase name of the mod loader, e.g. `"fabric"` or `"neoforge"`.
-     */
-    val loaderName: String
-
-    /**
      * The game (run) directory of the running instance. Unlike
      * `Minecraft.getInstance().gameDirectory`, this is available before the
      * client instance exists.
@@ -88,25 +83,49 @@ interface Platform {
     ): CreativeModeTab?
 
     /**
-     * Registers a client resource reload listener with the loader's resource
-     * reloading mechanism. The [id] is a path unique within the `liquidbounce`
+     * Registers client resource reload listeners with the loader's resource
+     * reloading mechanism. Each key is a listener id from
+     * [CLIENT_RELOAD_LISTENER_IDS], a path unique within the `liquidbounce`
      * namespace.
      *
-     * @return true if the listener was registered and will run with the
-     * (initial) resource reload, false when the loader has no way to register
-     * it and the caller has to reload the listener itself
+     * Registration is all or nothing: either every listener is registered and
+     * will run with the (initial) resource reload, or none is and the caller
+     * has to reload the listeners itself.
+     *
+     * @return true if the listeners were registered
      */
-    fun registerResourceReloadListener(id: String, listener: PreparableReloadListener): Boolean
+    fun registerResourceReloadListeners(listeners: Map<String, PreparableReloadListener>): Boolean
 
     companion object {
+
+        const val RELOAD_LISTENER_CLIENT_RESOURCES = "client_resources"
+        const val RELOAD_LISTENER_THEME = "theme"
+
+        /**
+         * Every listener id the client passes to [registerResourceReloadListeners]
+         * during startup. Loaders that have to set up their reload integration
+         * before the listeners exist (NeoForge) rely on this list being complete.
+         */
+        val CLIENT_RELOAD_LISTENER_IDS = listOf(
+            RELOAD_LISTENER_CLIENT_RESOURCES,
+            RELOAD_LISTENER_THEME,
+        )
 
         /**
          * The [Platform] implementation of the mod loader we are running on.
          */
         @JvmStatic
-        val current: Platform = ServiceLoader.load(Platform::class.java, Platform::class.java.classLoader)
-            .findFirst()
-            .orElseThrow { IllegalStateException("No Platform implementation found on the classpath") }
+        val current: Platform = run {
+            val found = ServiceLoader.load(Platform::class.java, Platform::class.java.classLoader).toList()
+
+            checkNotNull(found.singleOrNull()) {
+                if (found.isEmpty()) {
+                    "No Platform implementation found on the classpath"
+                } else {
+                    "Multiple Platform implementations found: ${found.map { it.javaClass.name }}"
+                }
+            }
+        }
 
     }
 

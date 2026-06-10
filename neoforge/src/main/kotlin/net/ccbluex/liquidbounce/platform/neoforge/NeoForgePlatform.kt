@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.platform.neoforge
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.platform.Platform
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.server.packs.resources.PreparableReloadListener
@@ -28,6 +29,7 @@ import net.minecraft.world.item.ItemStack
 import net.neoforged.fml.ModList
 import net.neoforged.fml.loading.FMLPaths
 import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
@@ -38,8 +40,6 @@ import java.util.function.Supplier
  * [Platform] implementation for the NeoForge loader.
  */
 class NeoForgePlatform : Platform {
-
-    override val loaderName = "neoforge"
 
     override val gameDirectory: Path
         get() = FMLPaths.GAMEDIR.get()
@@ -62,7 +62,10 @@ class NeoForgePlatform : Platform {
         val modFile = ModList.get().getModFileById(id)?.file ?: return false
 
         runCatching {
-            modFile.filePath.toFile().delete()
+            Files.deleteIfExists(modFile.filePath)
+        }.onFailure { exception ->
+            // Nested (jar-in-jar) mods live in a virtual file system and cannot be deleted
+            logger.debug("Unable to delete the jar of mod '$id'", exception)
         }
 
         return true
@@ -80,7 +83,7 @@ class NeoForgePlatform : Platform {
     ): CreativeModeTab? {
         val freeColumn = BuiltInRegistries.CREATIVE_MODE_TAB
             .filter { tab -> tab.row() == CreativeModeTab.Row.TOP }
-            .maxOf(CreativeModeTab::column) + 1
+            .maxOfOrNull(CreativeModeTab::column)?.plus(1) ?: 0
 
         return CreativeModeTab.builder(CreativeModeTab.Row.TOP, freeColumn)
             .title(title)
@@ -93,20 +96,21 @@ class NeoForgePlatform : Platform {
      * NeoForge collects reload listeners through [AddClientReloadListenersEvent], which
      * fires before the client start hook where the listeners are registered (and the
      * resource manager rejects registrations once the event's sorted listener list has
-     * been applied). The event therefore registers a lazy wrapper per known listener id,
-     * and this method binds the actual listener as the wrapper's delegate. The wrappers
-     * are part of the resource manager's listener list from the start, so the delegates
-     * take part in the initial resource load and in every manual reload (F3+T).
+     * been applied). The event therefore registers a lazy wrapper per listener id in
+     * [Platform.CLIENT_RELOAD_LISTENER_IDS], and this method binds the actual listeners
+     * as the wrappers' delegates. The wrappers are part of the resource manager's
+     * listener list from the start, so the delegates take part in the initial resource
+     * load and in every manual reload (F3+T).
      *
-     * Ids not in [KNOWN_LISTENER_IDS] are rejected, which callers handle with their
-     * direct-reload fallback.
+     * Ids without a wrapper are rejected without binding anything, which callers
+     * handle with their direct-reload fallback.
      */
-    override fun registerResourceReloadListener(id: String, listener: PreparableReloadListener): Boolean {
-        if (id !in KNOWN_LISTENER_IDS) {
+    override fun registerResourceReloadListeners(listeners: Map<String, PreparableReloadListener>): Boolean {
+        if (!Platform.CLIENT_RELOAD_LISTENER_IDS.containsAll(listeners.keys)) {
             return false
         }
 
-        reloadListenerDelegates[id] = listener
+        reloadListenerDelegates.putAll(listeners)
         return true
     }
 
@@ -141,17 +145,11 @@ class NeoForgePlatform : Platform {
 
     companion object {
 
-        /**
-         * The reload listeners LiquidBounce registers during client start. New listener
-         * ids must be added here to participate in resource reloads on NeoForge.
-         */
-        private val KNOWN_LISTENER_IDS = listOf("client_resources", "theme")
-
         private val reloadListenerDelegates = ConcurrentHashMap<String, PreparableReloadListener>()
 
         @JvmStatic
         fun onAddReloadListeners(event: AddClientReloadListenersEvent) {
-            for (id in KNOWN_LISTENER_IDS) {
+            for (id in Platform.CLIENT_RELOAD_LISTENER_IDS) {
                 event.addListener(LiquidBounce.identifier(id), LazyReloadListener(id))
             }
         }
