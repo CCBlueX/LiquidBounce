@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
@@ -37,12 +35,12 @@ import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleC
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentTweak;
+import net.ccbluex.liquidbounce.interfaces.GuiAddition;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Hud;
-import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
@@ -61,7 +59,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Hud.class)
-public abstract class MixinHud {
+public abstract class MixinHud implements GuiAddition {
 
     @Final
     @Shadow
@@ -79,10 +77,12 @@ public abstract class MixinHud {
     protected abstract void extractSlot(GuiGraphicsExtractor context, int x, int y, DeltaTracker tickCounter, Player player, ItemStack stack, int seed);
 
     /**
-     * Hook render hud event at the top layer
+     * Hook render hud event at the top layer. Called from the loader-specific
+     * companion mixins, which anchor it at the start of the hotbar extraction.
      */
-    @Inject(method = "extractHotbarAndDecorations", at = @At("HEAD"))
-    private void hookRenderEventStart(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
+    @Override
+    @Unique
+    public void liquid_bounce$extractOverlay(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
         if (HideAppearance.INSTANCE.isHidingNow()) {
             return;
         }
@@ -162,14 +162,6 @@ public abstract class MixinHud {
             return Hud.ContextualInfo.EMPTY;
         }
         return original;
-    }
-
-    @WrapOperation(method = "extractHotbarAndDecorations", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;hasExperience()Z"))
-    private boolean tweakExpLevelText(MultiPlayerGameMode instance, Operation<Boolean> original) {
-        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_EXP_BAR)) {
-            return false;
-        }
-        return original.call(instance);
     }
 
     @Inject(method = "extractSelectedItemName", at = @At("HEAD"), cancellable = true)

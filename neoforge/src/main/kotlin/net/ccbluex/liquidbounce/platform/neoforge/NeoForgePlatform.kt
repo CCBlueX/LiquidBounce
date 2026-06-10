@@ -18,11 +18,18 @@
  */
 package net.ccbluex.liquidbounce.platform.neoforge
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.platform.Platform
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
+import net.minecraft.resources.Identifier
+import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.world.item.CreativeModeTab
 import net.minecraft.world.item.ItemStack
 import net.neoforged.fml.ModList
+import net.neoforged.fml.loading.FMLPaths
+import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent
+import java.nio.file.Path
 import java.util.function.Supplier
 
 /**
@@ -31,6 +38,9 @@ import java.util.function.Supplier
 class NeoForgePlatform : Platform {
 
     override val loaderName = "neoforge"
+
+    override val gameDirectory: Path
+        get() = FMLPaths.GAMEDIR.get()
 
     override fun isModLoaded(id: String) = ModList.get().isLoaded(id)
 
@@ -56,14 +66,58 @@ class NeoForgePlatform : Platform {
         return true
     }
 
+    /**
+     * The tab is built with the first free column of the top row, because
+     * `CreativeModeTabs.validate()` requires a unique position for every tab in
+     * the registry. The actual placement is handled by NeoForge's tab paging.
+     */
     override fun buildCreativeTab(
         title: Component,
         icon: Supplier<ItemStack>,
         displayItems: CreativeModeTab.DisplayItemsGenerator
-    ): CreativeModeTab? = CreativeModeTab.builder()
-        .title(title)
-        .icon(icon)
-        .displayItems(displayItems)
-        .build()
+    ): CreativeModeTab? {
+        val freeColumn = BuiltInRegistries.CREATIVE_MODE_TAB
+            .filter { tab -> tab.row() == CreativeModeTab.Row.TOP }
+            .maxOf(CreativeModeTab::column) + 1
+
+        return CreativeModeTab.builder(CreativeModeTab.Row.TOP, freeColumn)
+            .title(title)
+            .icon(icon)
+            .displayItems(displayItems)
+            .build()
+    }
+
+    /**
+     * NeoForge collects reload listeners through [AddClientReloadListenersEvent] on the
+     * mod event bus, which fires after the client start hook. Listeners registered
+     * before that are buffered until [LiquidBounceNeoForge] forwards the event here.
+     */
+    override fun registerResourceReloadListener(id: String, listener: PreparableReloadListener): Boolean {
+        synchronized(bufferedReloadListeners) {
+            if (reloadListenersCollected) {
+                return false
+            }
+
+            bufferedReloadListeners[LiquidBounce.identifier(id)] = listener
+        }
+
+        return true
+    }
+
+    companion object {
+
+        private val bufferedReloadListeners = LinkedHashMap<Identifier, PreparableReloadListener>()
+        private var reloadListenersCollected = false
+
+        @JvmStatic
+        fun onAddReloadListeners(event: AddClientReloadListenersEvent) {
+            synchronized(bufferedReloadListeners) {
+                reloadListenersCollected = true
+                bufferedReloadListeners.forEach(event::addListener)
+                bufferedReloadListeners.clear()
+            }
+        }
+
+    }
 
 }

@@ -156,7 +156,7 @@ dependencies {
 }
 
 addResolvedDependencies(jij, "compileOnly", "jarJar", "api")
-addResolvedDependencies(kotlinRuntime, "compileOnly", "jarJar")
+addResolvedDependencies(kotlinRuntime, "compileOnly", "jarJar", "runtimeOnly")
 
 tasks.processResources {
     dependsOn(rootProject.tasks.named("bundleTheme"))

@@ -27,20 +27,17 @@ import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.FakePlayer;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint;
-import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX;
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
+import net.ccbluex.liquidbounce.interfaces.PlayerAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
@@ -54,7 +51,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(Player.class)
-public abstract class MixinPlayer extends MixinLivingEntity {
+public abstract class MixinPlayer extends MixinLivingEntity implements PlayerAddition {
 
     @Shadow
     public abstract void tick();
@@ -117,47 +114,6 @@ public abstract class MixinPlayer extends MixinLivingEntity {
         if (!this.noPhysics && clip.getRunning() && !clip.paused()) {
             this.noPhysics = true;
         }
-    }
-
-    @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/entity/player/Player;hasEffect(Lnet/minecraft/core/Holder;)Z"))
-    private boolean injectFatigueNoSlow(boolean original) {
-        if (liquid_bounce$isClientPlayer() && ModuleNoSlowBreak.getMiningFatigue()) {
-            return false;
-        }
-
-        return original;
-    }
-
-
-    @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/entity/player/Player;isEyeInFluid(Lnet/minecraft/tags/TagKey;)Z"))
-    private boolean injectWaterNoSlow(boolean original) {
-        if (liquid_bounce$isClientPlayer() && ModuleNoSlowBreak.getWater()) {
-            return false;
-        }
-
-        return original;
-    }
-
-    @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/entity/player/Player;onGround()Z"))
-    private boolean injectOnAirNoSlow(boolean original) {
-        if (liquid_bounce$isClientPlayer()) {
-            if (ModuleNoSlowBreak.getOnAir()) {
-                return true;
-            }
-
-            if (NoFallNoGround.INSTANCE.getRunning()) {
-                return false;
-            }
-
-            if (CriticalsNoGround.INSTANCE.getRunning()) {
-                return false;
-            }
-        }
-
-        return original;
     }
 
     @ModifyArgs(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;multiply(DDD)Lnet/minecraft/world/phys/Vec3;"))
@@ -251,18 +207,12 @@ public abstract class MixinPlayer extends MixinLivingEntity {
         }
     }
 
-    @Inject(method = "doSweepAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;playServerSideSound(Lnet/minecraft/sounds/SoundEvent;)V", ordinal = 0))
-    private void hookPlaySound4(Entity target, float damage, DamageSource damageSource, float cooldownProgress, CallbackInfo ci) {
-        if(!ModuleHitFX.INSTANCE.getRunning()) {
-            liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.PLAYER_ATTACK_SWEEP);
-        }
-    }
-
     /**
      * When the target is a fake player, this method will play a client side sound.
      */
+    @Override
     @Unique
-    private void liquid_bounce$playSoundIfFakePlayer(Entity target, SoundEvent soundEvent) {
+    public void liquid_bounce$playSoundIfFakePlayer(Entity target, SoundEvent soundEvent) {
         if (target instanceof FakePlayer) {
             level().playSound(Player.class.cast(this), getX(), getY(), getZ(), soundEvent, getSoundSource(), 1F, 1F);
         }

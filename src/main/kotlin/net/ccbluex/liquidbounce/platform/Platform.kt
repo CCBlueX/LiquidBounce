@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.platform
 
 import net.minecraft.network.chat.Component
+import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.world.item.CreativeModeTab
 import net.minecraft.world.item.ItemStack
+import java.nio.file.Path
 import java.util.ServiceLoader
 import java.util.function.Supplier
 
@@ -36,6 +38,13 @@ interface Platform {
      * Lowercase name of the mod loader, e.g. `"fabric"` or `"neoforge"`.
      */
     val loaderName: String
+
+    /**
+     * The game (run) directory of the running instance. Unlike
+     * `Minecraft.getInstance().gameDirectory`, this is available before the
+     * client instance exists.
+     */
+    val gameDirectory: Path
 
     /**
      * Whether the mod with the given [id] is currently loaded.
@@ -77,6 +86,17 @@ interface Platform {
         icon: Supplier<ItemStack>,
         displayItems: CreativeModeTab.DisplayItemsGenerator
     ): CreativeModeTab?
+
+    /**
+     * Registers a client resource reload listener with the loader's resource
+     * reloading mechanism. The [id] is a path unique within the `liquidbounce`
+     * namespace.
+     *
+     * @return true if the listener was registered and will run with the
+     * (initial) resource reload, false when the loader has no way to register
+     * it and the caller has to reload the listener itself
+     */
+    fun registerResourceReloadListener(id: String, listener: PreparableReloadListener): Boolean
 
     companion object {
 

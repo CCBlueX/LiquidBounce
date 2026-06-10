@@ -18,6 +18,9 @@ logoFile = "resources/liquidbounce/icon_64x64.png"
 [[mixins]]
 config = "liquidbounce.mixins.json"
 
+[[mixins]]
+config = "liquidbounce-neoforge.mixins.json"
+
 [[dependencies.liquidbounce]]
 modId = "neoforge"
 type = "required"

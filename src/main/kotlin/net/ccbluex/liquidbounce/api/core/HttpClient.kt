@@ -136,7 +136,13 @@ object HttpClient {
         .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
         .proxy(java.net.Proxy.NO_PROXY)
         .build().also {
-            MCEF.INSTANCE.settings.okHttpClient = it
+            try {
+                MCEF.INSTANCE.settings.okHttpClient = it
+            } catch (ignored: NoClassDefFoundError) {
+                // MCEF is not bundled on every loader; the browser backend
+                // degrades separately, see BrowserBackendManager
+                logger.warn("Skipping MCEF HTTP client setup, MCEF is not available")
+            }
             Authlib.client = it
         }
 

@@ -25,9 +25,13 @@ import net.ccbluex.liquidbounce.utils.client.modmenu.ModMenuCompatibility
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.impl.FabricLoaderImpl
+import net.minecraft.client.Minecraft
 import net.minecraft.network.chat.Component
+import net.minecraft.server.packs.resources.PreparableReloadListener
+import net.minecraft.server.packs.resources.ReloadableResourceManager
 import net.minecraft.world.item.CreativeModeTab
 import net.minecraft.world.item.ItemStack
+import java.nio.file.Path
 import java.util.function.Supplier
 
 /**
@@ -36,6 +40,9 @@ import java.util.function.Supplier
 class FabricPlatform : Platform {
 
     override val loaderName = "fabric"
+
+    override val gameDirectory: Path
+        get() = FabricLoader.getInstance().gameDir
 
     private val modMenuPresent = runCatching {
         Class.forName("com.terraformersmc.modmenu.ModMenu")
@@ -125,6 +132,14 @@ class FabricPlatform : Platform {
             .icon(icon)
             .displayItems(displayItems)
             .build()
+    }
+
+    override fun registerResourceReloadListener(id: String, listener: PreparableReloadListener): Boolean {
+        val resourceManager = Minecraft.getInstance().resourceManager as? ReloadableResourceManager
+            ?: return false
+
+        resourceManager.registerReloadListener(listener)
+        return true
     }
 
 }

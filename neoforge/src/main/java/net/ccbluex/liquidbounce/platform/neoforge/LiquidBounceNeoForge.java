@@ -20,19 +20,22 @@
 package net.ccbluex.liquidbounce.platform.neoforge;
 
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
 
 /**
  * NeoForge entry point.
  * <p>
  * LiquidBounce bootstraps through {@code MixinMinecraft} firing {@code ClientStartEvent},
- * identical to the Fabric distribution. This class only exists because FML requires
- * every mod to declare an entry point class.
+ * identical to the Fabric distribution. This class only hosts the loader event
+ * subscriptions that NeoForge requires mods to register through the mod event bus.
  */
 @Mod(value = "liquidbounce", dist = Dist.CLIENT)
 public final class LiquidBounceNeoForge {
 
-    public LiquidBounceNeoForge() {
+    public LiquidBounceNeoForge(IEventBus modEventBus) {
+        modEventBus.addListener(AddClientReloadListenersEvent.class, NeoForgePlatform::onAddReloadListeners);
     }
 
 }
