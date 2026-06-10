@@ -129,7 +129,12 @@ public final class StaticMeshStorage {
             this.iboStorage.rotate();
         }
 
-        this.meshDraw = MeshDraw.create(meshData, pipeline, _ -> this.vboStorage, _ -> this.iboStorage);
+        this.meshDraw = MeshDraw.create(
+            meshData,
+            pipeline,
+            (_, data) -> this.vboStorage.upload(data),
+            (_, data) -> this.iboStorage.upload(data)
+        );
     }
 
     /**

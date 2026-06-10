@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.render.ClientTesselator
 import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer
 import net.ccbluex.liquidbounce.render.bindAndDraw
 import net.ccbluex.liquidbounce.utils.kotlin.memorizingFunction
-import java.util.function.Function
+import java.nio.ByteBuffer
 
 /**
  * GPU-ready draw descriptor produced from [MeshData].
@@ -50,10 +50,18 @@ data class MeshDraw(
     val indexCount: Int,
 ) {
 
-    companion object {
+    fun interface VertexUploader {
+        fun upload(format: VertexFormat, data: ByteBuffer): GpuBufferSlice
+    }
+
+    fun interface IndexUploader {
+        fun upload(type: IndexType, data: ByteBuffer): GpuBufferSlice
+    }
+
+    companion object DefaultUploader : VertexUploader, IndexUploader {
 
         /**
-         * Shared dynamic VBO pool (keyed by [VertexFormat]).
+         * Shared dynamic VBO pool (keyed by [VertexFormat] for auto-alignment).
          *
          * This is the default upload target for per-frame dynamic meshes.
          */
@@ -67,7 +75,7 @@ data class MeshDraw(
             }
 
         /**
-         * Shared dynamic IBO pool (keyed by [IndexType]).
+         * Shared dynamic IBO pool (keyed by [IndexType] for auto-alignment).
          *
          * This is the default upload target for per-frame dynamic meshes.
          */
@@ -80,18 +88,25 @@ data class MeshDraw(
                 )
             }
 
+        override fun upload(format: VertexFormat, data: ByteBuffer): GpuBufferSlice {
+            return sharedVboGetter.apply(format).upload(data)
+        }
+
+        override fun upload(type: IndexType, data: ByteBuffer): GpuBufferSlice {
+            return sharedIboGetter.apply(type).upload(data)
+        }
+
         /**
-         * Sort Quads (If needed) and upload vertices and indices of [MeshData] to given [GrowableMappableRingBuffer].
+         * Sort Quads (If needed) and upload vertices and indices of [MeshData].
          *
          * This might use shared index buffer from [RenderSystem.getSequentialBuffer],
          * if [MeshData.indexBuffer] returns null.
          *
          * This function doesn't close the [MeshData].
          *
-         * [vboGetter]/[iboGetter] decide the storage strategy:
-         * default shared getters are intended for dynamic per-frame meshes,
-         * while custom getters (e.g. from [net.ccbluex.liquidbounce.render.StaticMeshStorage])
-         * allow static meshes to keep dedicated buffers.
+         * [vertexUploader]/[indexUploader] decide the storage strategy:
+         * the default companion uploader uses shared dynamic per-frame buffers,
+         * while custom uploaders can use dedicated static buffers or staged upload paths.
          *
          * @return The uploaded data. The lifecycle is handled by backend buffer storage.
          */
@@ -99,8 +114,8 @@ data class MeshDraw(
         @JvmName("create")
         fun MeshData.toMeshDraw(
             pipeline: RenderPipeline,
-            vboGetter: Function<VertexFormat, GrowableMappableRingBuffer> = sharedVboGetter,
-            iboGetter: Function<IndexType, GrowableMappableRingBuffer> = sharedIboGetter,
+            vertexUploader: VertexUploader = DefaultUploader,
+            indexUploader: IndexUploader = DefaultUploader,
         ): MeshDraw {
             val vertexFormat = requireNotNull(pipeline.getVertexFormatBinding(0)) {
                 "Pipeline ${pipeline.location} has no vertex format binding"
@@ -113,7 +128,7 @@ data class MeshDraw(
                 )
             }
 
-            val vertexSlice = vboGetter.apply(vertexFormat).upload(this.vertexBuffer())
+            val vertexSlice = vertexUploader.upload(vertexFormat, this.vertexBuffer())
 
             val rawIndices = this.indexBuffer()
             val indexCount = this.drawState().indexCount
@@ -126,7 +141,7 @@ data class MeshDraw(
                     .slice(0L, indexCount.toLong() * indexType.bytes)
             } else {
                 indexType = this.drawState().indexType
-                indexSlice = iboGetter.apply(indexType).upload(rawIndices)
+                indexSlice = indexUploader.upload(indexType, rawIndices)
             }
 
             return MeshDraw(
