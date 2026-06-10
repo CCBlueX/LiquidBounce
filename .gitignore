@@ -8,6 +8,8 @@
 /.settings/
 /.gradle/
 /build/
+/neoforge/build/
+/neoforge/run/
 /run/
 /mcef/
 /logs/

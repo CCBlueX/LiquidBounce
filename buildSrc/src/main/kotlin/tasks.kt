@@ -23,12 +23,18 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
 import java.io.File
+import java.util.jar.JarFile
 
 abstract class CompareJsonKeysTask : DefaultTask() {
 
@@ -109,11 +115,24 @@ abstract class CompareJsonKeysTask : DefaultTask() {
  * `mutable` has no exact equivalent in access transformers, which always pair
  * definalization with an access level; `public-f` is a strict superset of the
  * Fabric behavior.
+ *
+ * Unlike access wideners, which Fabric applies to class files, access
+ * transformers are applied to the decompiled Minecraft sources before they are
+ * recompiled. javac rejects overrides of a widened method that keep the
+ * original, now weaker, access level, so method widenings are propagated to
+ * all overrides found in [hierarchyClasspath].
  */
 abstract class ConvertAccessWidenerTask : DefaultTask() {
 
     @get:InputFile
     abstract val accessWidener: RegularFileProperty
+
+    /**
+     * Jars to scan for overrides of widened methods. Class and member names
+     * must use the same mappings as the access widener.
+     */
+    @get:Classpath
+    abstract val hierarchyClasspath: ConfigurableFileCollection
 
     @get:OutputFile
     abstract val output: RegularFileProperty
@@ -130,6 +149,8 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
 
         // Entry (class + optional member) -> definalize flag, preserving first-seen order
         val entries = LinkedHashMap<String, Boolean>()
+        // Internal class name -> argument descriptors of widened methods
+        val widenedMethods = LinkedHashMap<String, MutableSet<MethodKey>>()
 
         for ((index, raw) in lines.withIndex().drop(1)) {
             val line = raw.substringBefore('#').trim()
@@ -155,7 +176,12 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
                 }
                 "method" -> {
                     if (parts.size != 5) fail("malformed method entry")
-                    "${parts[2].toBinaryName()} ${parts[3]}${parts[4]}"
+                    val (_, _, owner, name, desc) = parts
+                    if (name != "<init>" && name != "<clinit>") {
+                        widenedMethods.getOrPut(owner, ::LinkedHashSet) +=
+                            MethodKey(name, desc.substring(0, desc.indexOf(')') + 1))
+                    }
+                    "${owner.toBinaryName()} $name$desc"
                 }
                 else -> fail("unsupported member kind '$kind'")
             }
@@ -170,6 +196,8 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
             }
         }
 
+        val overrides = collectOverrides(widenedMethods).filterNot { it in entries }
+
         val outputFile = output.get().asFile
         outputFile.parentFile.mkdirs()
         outputFile.writeText(buildString {
@@ -177,7 +205,122 @@ abstract class ConvertAccessWidenerTask : DefaultTask() {
             for ((entry, definalize) in entries) {
                 appendLine(if (definalize) "public-f $entry" else "public $entry")
             }
+            if (overrides.isNotEmpty()) {
+                appendLine()
+                appendLine("# Overrides of the widened methods above, which must not keep a weaker access level.")
+                for (entry in overrides) {
+                    appendLine("public $entry")
+                }
+            }
         })
+    }
+
+    /**
+     * Returns the entries for all overrides of [widenedMethods] declared by their
+     * subtypes in [hierarchyClasspath], in the entry format used above. Matching
+     * ignores the return type to include covariant overrides; compiler-generated
+     * (bridge/synthetic) methods are skipped because they do not exist in source.
+     */
+    private fun collectOverrides(widenedMethods: Map<String, Set<MethodKey>>): List<String> {
+        if (widenedMethods.isEmpty()) {
+            return emptyList()
+        }
+
+        if (hierarchyClasspath.isEmpty) {
+            throw GradleException(
+                "hierarchyClasspath is required to propagate widened methods to their overrides"
+            )
+        }
+
+        val subtypes = HashMap<String, MutableList<ClassInfo>>()
+
+        for (jar in hierarchyClasspath.files) {
+            JarFile(jar).use { jarFile ->
+                for (jarEntry in jarFile.entries()) {
+                    if (!jarEntry.name.endsWith(".class")) {
+                        continue
+                    }
+
+                    val info = jarFile.getInputStream(jarEntry).use { stream ->
+                        ClassInfoCollector().also {
+                            ClassReader(stream).accept(
+                                it,
+                                ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
+                            )
+                        }.toClassInfo()
+                    }
+
+                    for (parent in info.parents) {
+                        subtypes.getOrPut(parent, ::ArrayList) += info
+                    }
+                }
+            }
+        }
+
+        val overrides = sortedSetOf<String>()
+
+        for ((owner, methods) in widenedMethods) {
+            val queue = ArrayDeque(subtypes[owner].orEmpty())
+            val visited = HashSet<String>()
+
+            while (true) {
+                val subtype = queue.removeFirstOrNull() ?: break
+                if (!visited.add(subtype.name)) {
+                    continue
+                }
+                queue += subtypes[subtype.name].orEmpty()
+
+                subtype.methods
+                    .filter { method -> methods.any { it.matches(method) } }
+                    .mapTo(overrides) { "${subtype.name.toBinaryName()} ${it.name}${it.desc}" }
+            }
+        }
+
+        return overrides.toList()
+    }
+
+    private data class MethodKey(val name: String, val args: String) {
+        fun matches(method: MethodInfo) = method.name == name && method.desc.startsWith(args)
+    }
+
+    private class MethodInfo(val name: String, val desc: String)
+
+    private class ClassInfo(val name: String, val parents: List<String>, val methods: List<MethodInfo>)
+
+    private class ClassInfoCollector : ClassVisitor(Opcodes.ASM9) {
+
+        private lateinit var name: String
+        private val parents = ArrayList<String>()
+        private val methods = ArrayList<MethodInfo>()
+
+        override fun visit(
+            version: Int,
+            access: Int,
+            name: String,
+            signature: String?,
+            superName: String?,
+            interfaces: Array<String>?,
+        ) {
+            this.name = name
+            superName?.let(parents::add)
+            interfaces?.let(parents::addAll)
+        }
+
+        override fun visitMethod(
+            access: Int,
+            name: String,
+            descriptor: String,
+            signature: String?,
+            exceptions: Array<String>?,
+        ): MethodVisitor? {
+            if (access and (Opcodes.ACC_PUBLIC or Opcodes.ACC_PRIVATE or Opcodes.ACC_BRIDGE or Opcodes.ACC_SYNTHETIC) == 0) {
+                methods += MethodInfo(name, descriptor)
+            }
+            return null
+        }
+
+        fun toClassInfo() = ClassInfo(name, parents, methods)
+
     }
 
     private fun String.toBinaryName() = replace('/', '.')
