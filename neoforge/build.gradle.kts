@@ -32,6 +32,25 @@ base {
     group = rootProject.property("maven_group") as String
 }
 
+// If NeoForge lags behind after a Minecraft update, it must not break the Fabric
+// build: disable this module's tasks while the versions do not match.
+val neoForgeMinecraftVersion = libs.versions.neoforge.get().substringBeforeLast('.')
+val paddedMinecraftVersion = (libs.versions.minecraft.get().split('.') + listOf("0", "0"))
+    .take(3)
+    .joinToString(".")
+
+if (neoForgeMinecraftVersion != paddedMinecraftVersion) {
+    logger.warn(
+        "NeoForge ${libs.versions.neoforge.get()} targets Minecraft $neoForgeMinecraftVersion, but the " +
+            "project is on Minecraft ${libs.versions.minecraft.get()}. The neoforge tasks are disabled " +
+            "until a matching NeoForge version is available."
+    )
+
+    tasks.configureEach {
+        enabled = false
+    }
+}
+
 /** Includes dependency recursively in the JAR file (NeoForge jarJar) */
 val jij: Configuration by configurations.creating
 
