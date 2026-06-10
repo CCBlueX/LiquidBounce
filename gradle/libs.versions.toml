@@ -42,13 +42,13 @@ iris = "1.10.9+26.1-fabric"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
-kotlin = "2.3.10"
+kotlin = "2.4.0"
 # JUnit
 junit = "6.1.0"
 # https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test/overview
 kotlinx-coroutines = "1.11.0"
 # https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
-fabric-kotlin = "1.13.9+kotlin.2.3.10"
+fabric-kotlin = "1.13.12+kotlin.2.4.0"
 
 # Netty, should be sync with game version
 # https://mvnrepository.com/artifact/io.netty/netty-all
