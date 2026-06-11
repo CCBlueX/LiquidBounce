@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
-import it.unimi.dsi.fastutil.objects.AbstractObjectList
 import net.ccbluex.fastutil.asObjectList
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_15_2
@@ -226,6 +225,7 @@ enum class HotbarItemSlot(
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Int? {
         return when {
+            isOffHand && isOlderThanOrEqual1_8 -> null
             screen == null -> playerInventoryMenuSlot
             hotbarIndex != null -> screen.itemCount() - Inventory.SELECTION_SIZE + hotbarIndex
             else -> null
