@@ -38,11 +38,8 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.Lightmap;
-import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
@@ -134,13 +131,24 @@ public abstract class MixinGameRenderer {
         return fogMode;
     }
 
-    @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;submitHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/player/LocalPlayer;I)V"))
-    public void drawItemCharms(ItemInHandRenderer instance, float frameInterp, PoseStack poseStack,
-                               SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords,
-                               Operation<Void> original) {
+    @WrapOperation(
+        method = "renderItemInHand",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher;renderAllFeatures(Lnet/minecraft/client/renderer/SubmitNodeStorage;)V"
+        )
+    )
+    private void drawItemCharmsOnHandFeatureExecution(
+        net.minecraft.client.renderer.feature.FeatureRenderDispatcher instance,
+        net.minecraft.client.renderer.SubmitNodeStorage submitNodeStorage,
+        Operation<Void> original
+    ) {
         ModuleItemChams.Lightmap.INSTANCE.applyToTexture(this.lightmap.getTextureView());
-        original.call(instance, frameInterp, poseStack, submitNodeCollector, player, lightCoords); // TODO(26.2): check if this works
-        ModuleItemChams.Lightmap.INSTANCE.resetTexture(this.lightmap.getTextureView());
+        try {
+            original.call(instance, submitNodeStorage);
+        } finally {
+            ModuleItemChams.Lightmap.INSTANCE.resetTexture(this.lightmap.getTextureView());
+        }
     }
 
     @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true)
