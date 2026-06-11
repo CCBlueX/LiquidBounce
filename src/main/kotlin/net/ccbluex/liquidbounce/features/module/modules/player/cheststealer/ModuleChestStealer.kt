@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
-import net.ccbluex.fastutil.objectHashSetOf
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.fastutil.swap
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -43,10 +45,12 @@ import net.ccbluex.liquidbounce.utils.inventory.findItemsInContainer
 import net.ccbluex.liquidbounce.utils.inventory.mergeableCapacityFor
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.item.isMergeable
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.world.item.ItemStack
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.ceil
 
 /**
@@ -60,7 +64,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     private val inventoryConstrains = tree(InventoryConstraints())
     private val autoClose by boolean("AutoClose", true)
 
-    private val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE)
+    private val selectionMode = choices("SelectionMode", Distance, arrayOf(Distance, Index, Random)).apply(::tagBy)
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
@@ -94,9 +98,9 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         val itemsToCollect = cleanupPlan.usefulItems.filterIsInstanceTo(ArrayList<ContainerItemSlot>())
 
         val stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
-        selectionMode.process(itemsToCollect)
+        selectionMode.activeMode.process(itemsToCollect)
 
-        val targetBlacklist = objectHashSetOf<ItemSlot>()
+        val targetBlacklist = ObjectOpenHashSet<ItemSlot>()
 
         for (slot in itemsToCollect) {
             val moveActions = Slots.HotbarAndInventory.findPossiblePickActions(screen, slot, targetBlacklist)
@@ -302,7 +306,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = screen.findItemsInContainer()
 
-            InventoryCleanupPlan(HashSet(usefulItems), mutableListOf(), hashMapOf())
+            InventoryCleanupPlan(ObjectOpenHashSet(usefulItems), mutableListOf(), hashMapOf())
         } else {
             val availableItems = findNonEmptySlotsInInventory() + screen.findItemsInContainer()
 
@@ -312,44 +316,97 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         return cleanupPlan
     }
 
-    @Suppress("unused")
-    private enum class SelectionMode(
-        override val tag: String,
-    ) : Tagged {
-        DISTANCE("Distance") {
-            override fun process(slots: MutableList<ContainerItemSlot>) {
-                val n = slots.size
-                if (n <= 2) return
+    private sealed class SelectionMode(name: String) : Mode(name) {
+        final override val parent: ModeValueGroup<*>
+            get() = selectionMode
 
-                for (i in 0..<n - 1) {
-                    var bestIdx = i + 1
-                    var bestDist = Int.MAX_VALUE
+        abstract fun process(slots: ArrayList<ContainerItemSlot>)
+    }
 
-                    val current = slots[i]
+    private object Distance : SelectionMode("Distance") {
+        private val startItem by enumChoice("StartItem", StartItem.DEFAULT)
+        private val randomFactor by floatRange("RandomFactor", 1.0f..1.0f, 0.25f..2f)
 
-                    for (j in i + 1..<n) {
-                        val d = current.distance(slots[j])
+        override fun process(slots: ArrayList<ContainerItemSlot>) {
+            val n = slots.size
+            if (n <= 1) return
 
-                        if (d < bestDist) {
-                            bestDist = d
-                            bestIdx = j
-                        }
-                    }
-
-                    slots.swap(i + 1, bestIdx)
-                }
+            val startIndex = startItem.getStartIndex(slots)
+            if (startIndex != 0) {
+                slots.swap(0, startIndex)
             }
-        },
-        INDEX("Index")  {
-            private val comparator: Comparator<ContainerItemSlot> = Comparator.comparingInt { it.slotInContainer }
 
-            override fun process(slots: MutableList<ContainerItemSlot>) = slots.sortWith(this.comparator)
-        },
-        RANDOM("Random") {
-            override fun process(slots: MutableList<ContainerItemSlot>) = slots.shuffle()
-        };
+            if (n <= 2) return
 
-        abstract fun process(slots: MutableList<ContainerItemSlot>)
+            for (i in 0..<n - 1) {
+                var bestIdx = i + 1
+                var bestDist = Float.POSITIVE_INFINITY
+
+                val current = slots[i]
+
+                for (j in i + 1..<n) {
+                    val candidate = slots[j]
+                    val distance = current.distance(candidate).toFloat()
+                    val factor = if (randomFactor.isEmpty()) 1F else randomFactor.random()
+                    val effectiveDistance = distance * factor
+
+                    if (effectiveDistance < bestDist) {
+                        bestDist = effectiveDistance
+                        bestIdx = j
+                    }
+                }
+
+                slots.swap(i + 1, bestIdx)
+            }
+        }
+
+        private enum class StartItem(override val tag: String) : Tagged {
+            DEFAULT("Default") {
+                override fun getStartIndex(slots: List<ContainerItemSlot>): Int = 0
+            },
+            RANDOM("Random") {
+                override fun getStartIndex(slots: List<ContainerItemSlot>): Int {
+                    return ThreadLocalRandom.current().nextInt(slots.size)
+                }
+            },
+            MAX_SLOT("MaxSlot") {
+                override fun getStartIndex(slots: List<ContainerItemSlot>): Int {
+                    return slots.indices.maxBy { slots[it].slotInContainer }
+                }
+            },
+            MIN_SLOT("MinSlot") {
+                override fun getStartIndex(slots: List<ContainerItemSlot>): Int {
+                    return slots.indices.minBy { slots[it].slotInContainer }
+                }
+            };
+
+            abstract fun getStartIndex(slots: List<ContainerItemSlot>): Int
+        }
+    }
+
+    private object Index : SelectionMode("Index") {
+        private val order by enumChoice("Order", Order.ASCENDING)
+
+        override fun process(slots: ArrayList<ContainerItemSlot>) {
+            slots.sortWith(order)
+        }
+
+        private enum class Order(override val tag: String) : Tagged, Comparator<ContainerItemSlot> {
+            ASCENDING("Ascending") {
+                override fun compare(o1: ContainerItemSlot, o2: ContainerItemSlot): Int {
+                    return o1.slotInContainer.compareTo(o2.slotInContainer)
+                }
+            },
+            DESCENDING("Descending") {
+                override fun compare(o1: ContainerItemSlot, o2: ContainerItemSlot): Int {
+                    return o2.slotInContainer.compareTo(o1.slotInContainer)
+                }
+            },
+        }
+    }
+
+    private object Random : SelectionMode("Random") {
+        override fun process(slots: ArrayList<ContainerItemSlot>) = slots.shuffle()
     }
 
     /**
