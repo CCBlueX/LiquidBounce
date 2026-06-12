@@ -187,7 +187,7 @@ sealed interface ThemeBackground : Closeable {
                 background?.close()
                 background = gpuDevice.createTexture(
                     "ThemeBackground/Shader - ${metadata.name} ($framebufferWidth x $framebufferHeight)",
-                    GpuTexture.USAGE_RENDER_ATTACHMENT,
+                    GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_TEXTURE_BINDING,
                     TextureFormat.RGBA8, framebufferWidth, framebufferHeight,
                     1, 1,
                 )
