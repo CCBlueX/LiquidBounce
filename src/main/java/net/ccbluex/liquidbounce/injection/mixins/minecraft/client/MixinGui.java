@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -38,7 +39,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Gui.class)
@@ -85,13 +85,11 @@ public abstract class MixinGui {
         }
     }
 
-    @Redirect(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MouseHandler;releaseMouse()V"))
-    private void cancelScreenMouseForChestStealer(MouseHandler instance) {
+    @WrapWithCondition(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MouseHandler;releaseMouse()V"))
+    private boolean cancelScreenMouseForChestStealer(MouseHandler instance) {
         // Allows rotation.
-        if (!LiquidBounce.INSTANCE.isInitialized() ||
-            !FeatureSilentScreen.INSTANCE.getShouldHide() || FeatureSilentScreen.INSTANCE.getUnlockCursor()) {
-            instance.releaseMouse();
-        }
+        return !LiquidBounce.INSTANCE.isInitialized() ||
+            !FeatureSilentScreen.INSTANCE.getShouldHide() || FeatureSilentScreen.INSTANCE.getUnlockCursor();
     }
 
     /**

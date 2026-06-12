@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.blaze3d;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.platform.IconSet;
 import com.mojang.blaze3d.platform.Window;
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -33,7 +35,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.IOException;
@@ -52,10 +53,11 @@ public abstract class MixinWindow {
      *
      * @return modified game icon
      */
-    @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/IconSet;getStandardIcons(Lnet/minecraft/server/packs/PackResources;)Ljava/util/List;"))
-    private List<IoSupplier<InputStream>> setupIcon(IconSet instance, PackResources resourcePack) throws IOException {
+    @WrapOperation(method = "setIcon", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/IconSet;getStandardIcons(Lnet/minecraft/server/packs/PackResources;)Ljava/util/List;"))
+    private List<IoSupplier<InputStream>> setupIcon(IconSet instance, PackResources resources,
+        Operation<List<IoSupplier<InputStream>>> original) throws IOException {
         if (HideAppearance.INSTANCE.isHidingNow()) {
-            return instance.getStandardIcons(resourcePack);
+            return original.call(instance, resources);
         }
 
         LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
@@ -69,7 +71,7 @@ public abstract class MixinWindow {
             LiquidBounce.INSTANCE.getLogger().error("Unable to find client icons.");
 
             // Load default icons
-            return instance.getStandardIcons(resourcePack);
+            return original.call(instance, resources);
         }
 
         return List.of(() -> stream16, () -> stream32);
