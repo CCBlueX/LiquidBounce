@@ -6,11 +6,11 @@ jdk = "25"
 # Fabric Properties
 # Check these on https://fabricmc.net/versions.html
 # https://mods.upcraft.dev/dev/versions
-minecraft = "26.2-pre-4"
+minecraft = "26.2-rc-1"
 fabric-loom = "1.17-SNAPSHOT"
 fabric-loader = "0.19.2"
 fabric-loaderMin = "0.18.4"
-fabric-api = "0.150.3+26.2"
+fabric-api = "0.152.0+26.2"
 
 # mcef
 mcef = "3.3.1-26.2-SNAPSHOT"
@@ -52,7 +52,7 @@ fabric-kotlin = "1.13.12+kotlin.2.4.0"
 
 # Netty, should be sync with game version
 # https://mvnrepository.com/artifact/io.netty/netty-all
-netty = "4.2.13.Final"
+netty = "4.2.15.Final"
 
 # LWJGL
 lwjgl = "3.4.1"

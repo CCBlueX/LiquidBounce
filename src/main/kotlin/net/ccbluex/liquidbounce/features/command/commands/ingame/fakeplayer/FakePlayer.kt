@@ -111,7 +111,7 @@ open class FakePlayer @JvmOverloads constructor(
      * The fake player takes no knockback.
      */
     // this could perhaps be an option, but it could conflict with the recording
-    override fun knockback(power: Double, xd: Double, zd: Double, source: DamageSource, damage: Float) {
+    override fun knockback(power: Double, xd: Double, zd: Double, source: DamageSource, damage: Float, comesFromEffect: Boolean) {
         /* nope */
     }
 
