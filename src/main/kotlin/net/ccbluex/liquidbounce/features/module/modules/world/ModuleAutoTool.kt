@@ -83,7 +83,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
             private val swapController = AnchoredHotbarSwapController(
                 owner = this,
                 inventoryConstraints = inventoryConstraints,
-                swapDelayProvider = { swapPreviousDelay },
+                swapDelayProvider = { swapBackDelay },
             )
 
             override fun onDisabled() {
@@ -164,7 +164,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
         tree(SilkTouchHandler)
     }
 
-    private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
+    private val swapBackDelay by int("SwapBackDelay", 20, 1..100, "ticks", aliases = listOf("SwapPreviousDelay"))
 
     private val requireSneaking by boolean("RequireSneaking", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)
@@ -223,7 +223,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
 
         val blockState = pos.stateOrEmpty
         val slot = toolSelector.activeMode.getTool(blockState) ?: return
-        SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
+        SilentHotbar.selectSlotSilently(this, slot, swapBackDelay)
     }
 
     override fun onDisabled() {
