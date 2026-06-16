@@ -111,7 +111,7 @@ object HttpClient {
         .dispatcher(
             Dispatcher(
                 Executors.newThreadPerTaskExecutor(
-                    Thread.ofVirtual().name("OkHttpClient Dispatcher", 0L).factory()
+                    Thread.ofVirtual().name("OkHttpClient Dispatcher ", 0L).factory()
                 )
             )
         )

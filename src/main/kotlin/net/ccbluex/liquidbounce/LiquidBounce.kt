@@ -506,7 +506,7 @@ object LiquidBounce : EventListener {
      *
      * For now this is only used to check for updates and request additional information from the internet.
      *
-     * @see net.fabricmc.fabric.api.resource.v1.reloader.SimpleResourceReloader
+     * @see net.fabricmc.fabric.api.resource.v1.reloader.SimpleReloadListener
      * @see PreparableReloadListener
      */
     private object ClientResourceReloader : PreparableReloadListener {
