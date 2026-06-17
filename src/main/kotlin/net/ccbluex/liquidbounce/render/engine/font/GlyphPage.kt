@@ -68,12 +68,10 @@ class GlyphAtlasLocation(val pixelBoundingBox: BoundingBox2f, atlasDimensions: D
         val atlasHeight = atlasDimensions.height.toFloat()
 
         this.uvCoordinatesOnTexture = BoundingBox2s(
-            BoundingBox2f(
-                pixelBoundingBox.xMin / atlasWidth,
-                pixelBoundingBox.yMin / atlasHeight,
-                pixelBoundingBox.xMax / atlasWidth,
-                pixelBoundingBox.yMax / atlasHeight
-            )
+            pixelBoundingBox.xMin / atlasWidth,
+            pixelBoundingBox.yMin / atlasHeight,
+            pixelBoundingBox.xMax / atlasWidth,
+            pixelBoundingBox.yMax / atlasHeight,
         )
 
         this.atlasWidth = pixelBoundingBox.xMax - pixelBoundingBox.xMin
