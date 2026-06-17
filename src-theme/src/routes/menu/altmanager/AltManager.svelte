@@ -1,7 +1,8 @@
 <script lang="ts">
-    import {
-        deleteScreen,
-        getAccounts,
+   import {
+    browse,
+    deleteScreen,
+    getAccounts,
         loginToAccount as loginToAccountRest,
         orderAccounts,
         removeAccount as restRemoveAccount,
@@ -159,11 +160,13 @@
 
     <BottomButtonWrapper>
         <ButtonContainer>
-            <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addAccountModalVisible = true}/>
-            <IconTextButton icon="icon-plane.svg" title="Direct" on:click={() => directLoginModalVisible = true}/>
-            <IconTextButton icon="icon-random.svg" disabled={renderedAccounts.length === 0} title="Random"
-                            on:click={loginToRandomAccount}/>
-            <IconTextButton icon="icon-refresh.svg" title="Restore" on:click={restoreSession}/>
+         <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addAccountModalVisible = true}/>
+<IconTextButton icon="icon-plane.svg" title="Direct" on:click={() => directLoginModalVisible = true}/>
+<IconTextButton icon="altmanager/icon-thealtening.svg" title="Free Alt Pass"
+                on:click={() => browse("THE_ALTENING_LIQUIDBOUNCE_OFFER")}/>
+<IconTextButton icon="icon-random.svg" disabled={renderedAccounts.length === 0} title="Random"
+                on:click={loginToRandomAccount}/>
+<IconTextButton icon="icon-refresh.svg" title="Restore" on:click={restoreSession}/>
         </ButtonContainer>
 
         <ButtonContainer>
