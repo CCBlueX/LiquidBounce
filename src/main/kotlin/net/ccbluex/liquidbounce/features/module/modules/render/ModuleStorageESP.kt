@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
+import net.ccbluex.liquidbounce.render.CachedMeshStorage
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.StaticMeshStorage
 import net.ccbluex.liquidbounce.render.addShapeFaces
 import net.ccbluex.liquidbounce.render.addShapeOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
@@ -156,8 +156,8 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
         private val dirtyFlag = atomic(true)
 
-        private val blockFacesRenderState = StaticMeshStorage("${ModuleStorageESP.name} $name BlockFaces")
-        private val blockOutlinesRenderState = StaticMeshStorage("${ModuleStorageESP.name} $name BlockOutlines")
+        private val blockFacesRenderState = CachedMeshStorage("${ModuleStorageESP.name} $name BlockFaces")
+        private val blockOutlinesRenderState = CachedMeshStorage("${ModuleStorageESP.name} $name BlockOutlines")
 
         fun markDirty() {
             if (this.running) {
@@ -290,7 +290,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     object GlowMode : Mode("Glow") {
         private val dirtyFlag = atomic(true)
 
-        private val renderState = StaticMeshStorage("${ModuleStorageESP.name} $name")
+        private val renderState = CachedMeshStorage("${ModuleStorageESP.name} $name")
 
         internal fun markDirty() {
             if (this.running) {

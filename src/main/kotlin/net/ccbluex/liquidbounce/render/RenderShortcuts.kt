@@ -129,7 +129,7 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw:
 }
 
 internal inline fun RenderTarget.drawGenericBlockESP(
-    renderState: StaticMeshStorage,
+    renderState: CachedMeshStorage,
     pipeline: RenderPipeline,
     distanceFade: DistanceFadeUniformValueGroup,
     dynamicTransforms: () -> GpuBufferSlice = ::getDynamicTransformsUniform,

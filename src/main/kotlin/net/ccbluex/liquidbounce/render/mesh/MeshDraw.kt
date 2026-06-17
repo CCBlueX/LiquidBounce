@@ -33,22 +33,47 @@ import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.ClientTesselator
 import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer
-import net.ccbluex.liquidbounce.render.bindAndDraw
 import net.ccbluex.liquidbounce.utils.kotlin.memorizingFunction
 import java.nio.ByteBuffer
 
 /**
  * GPU-ready draw descriptor produced from [MeshData].
  *
- * It stores uploaded vertex/index slices plus the draw parameters needed by [RenderPass.bindAndDraw].
+ * It stores uploaded vertex data plus an index binding strategy and the draw parameters needed by [RenderPass.bindAndDraw].
  */
 @JvmRecord
 data class MeshDraw(
     val vertexSlice: GpuBufferSlice,
-    val indexSlice: GpuBufferSlice,
-    val indexType: IndexType,
+    val indexBinding: MeshIndexBinding,
     val indexCount: Int,
 ) {
+
+    /**
+     * Describes how a [MeshDraw] resolves its index buffer when it is submitted.
+     *
+     * Some meshes own a dedicated uploaded index buffer, while others rely on
+     * vanilla's shared sequential buffers and must resolve the current buffer
+     * lazily at draw time.
+     */
+    sealed interface MeshIndexBinding {
+        /**
+         * A dedicated uploaded index buffer owned by the mesh storage strategy.
+         */
+        data class Uploaded(
+            val slice: GpuBufferSlice,
+            val type: IndexType,
+        ) : MeshIndexBinding
+
+        /**
+         * A draw that uses vanilla's shared sequential index buffer for the given topology.
+         *
+         * The actual [GpuBuffer] and [IndexType] are looked up at draw time so long-lived
+         * meshes do not retain a stale slice when the shared sequential buffer grows.
+         */
+        data class Sequential(
+            val primitiveTopology: PrimitiveTopology,
+        ) : MeshIndexBinding
+    }
 
     fun interface VertexUploader {
         fun upload(format: VertexFormat, data: ByteBuffer): GpuBufferSlice
@@ -97,10 +122,11 @@ data class MeshDraw(
         }
 
         /**
-         * Sort Quads (If needed) and upload vertices and indices of [MeshData].
+         * Sort quads (if needed) and upload or describe the buffers needed by [MeshData].
          *
-         * This might use shared index buffer from [RenderSystem.getSequentialBuffer],
-         * if [MeshData.indexBuffer] returns null.
+         * If [MeshData.indexBuffer] returns null, the resulting [MeshDraw] resolves
+         * vanilla's shared sequential index buffer lazily via [RenderSystem.getSequentialBuffer]
+         * when it is drawn.
          *
          * This function doesn't close the [MeshData].
          *
@@ -132,22 +158,17 @@ data class MeshDraw(
 
             val rawIndices = this.indexBuffer()
             val indexCount = this.drawState().indexCount
-            val indexSlice: GpuBufferSlice
-            val indexType: IndexType
-            if (rawIndices == null) {
-                val shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.primitiveTopology)
-                indexType = shapeIndexBuffer.type()
-                indexSlice = shapeIndexBuffer.getBuffer(indexCount)
-                    .slice(0L, indexCount.toLong() * indexType.bytes)
+            val indexBinding = if (rawIndices == null) {
+                MeshIndexBinding.Sequential(pipeline.primitiveTopology)
             } else {
-                indexType = this.drawState().indexType
-                indexSlice = indexUploader.upload(indexType, rawIndices)
+                val indexType = this.drawState().indexType
+                val indexSlice = indexUploader.upload(indexType, rawIndices)
+                MeshIndexBinding.Uploaded(indexSlice, indexType)
             }
 
             return MeshDraw(
                 vertexSlice,
-                indexSlice,
-                indexType,
+                indexBinding,
                 indexCount,
             )
         }
@@ -156,12 +177,37 @@ data class MeshDraw(
          * Bind mesh buffers and issue one indexed draw call.
          */
         @JvmStatic
-        fun RenderPass.bindAndDraw(meshDraw: MeshDraw) = bindAndDraw(
-            meshDraw.vertexSlice,
-            meshDraw.indexSlice,
-            meshDraw.indexType,
-            meshDraw.indexCount,
-        )
+        fun RenderPass.bindAndDraw(meshDraw: MeshDraw) {
+            setVertexBuffer(0, meshDraw.vertexSlice)
+
+            when (val indexBinding = meshDraw.indexBinding) {
+                is MeshIndexBinding.Uploaded -> {
+                    setIndexBuffer(indexBinding.slice.buffer, indexBinding.type)
+                    drawIndexed(
+                        meshDraw.indexCount,
+                        1,
+                        (indexBinding.slice.offset / indexBinding.type.bytes).toInt(),
+                        0,
+                        0,
+                    )
+                }
+
+                is MeshIndexBinding.Sequential -> {
+                    val sequentialBuffer = RenderSystem.getSequentialBuffer(indexBinding.primitiveTopology)
+                    val indexBuffer = sequentialBuffer.getBuffer(meshDraw.indexCount)
+                    val indexType = sequentialBuffer.type()
+
+                    setIndexBuffer(indexBuffer, indexType)
+                    drawIndexed(
+                        meshDraw.indexCount,
+                        1,
+                        0,
+                        0,
+                        0,
+                    )
+                }
+            }
+        }
 
     }
 }

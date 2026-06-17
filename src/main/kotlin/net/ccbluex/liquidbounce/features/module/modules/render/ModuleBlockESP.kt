@@ -25,11 +25,11 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.CachedMeshStorage
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.MapColorMode
-import net.ccbluex.liquidbounce.render.StaticMeshStorage
 import net.ccbluex.liquidbounce.render.addShapeFaces
 import net.ccbluex.liquidbounce.render.addShapeOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
@@ -127,8 +127,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 outlinesRenderState.clearStates()
             }
         }
-        private val facesRenderState = StaticMeshStorage("${ModuleBlockESP.name} $name Faces")
-        private val outlinesRenderState = StaticMeshStorage("${ModuleBlockESP.name} $name Outlines")
+        private val facesRenderState = CachedMeshStorage("${ModuleBlockESP.name} $name Faces")
+        private val outlinesRenderState = CachedMeshStorage("${ModuleBlockESP.name} $name Outlines")
 
         override fun disable() {
             facesRenderState.clearStates()
@@ -210,7 +210,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     object GlowMode : Mode("Glow") {
-        private val renderState = StaticMeshStorage("${ModuleBlockESP.name} $name")
+        private val renderState = CachedMeshStorage("${ModuleBlockESP.name} $name")
 
         override fun disable() {
             renderState.clearStates()

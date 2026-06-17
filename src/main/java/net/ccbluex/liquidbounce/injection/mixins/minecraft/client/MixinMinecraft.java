@@ -41,7 +41,9 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.render.ClientTesselator;
+import net.ccbluex.liquidbounce.render.GpuBufferRecycler;
 import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer;
+import net.ccbluex.liquidbounce.render.StaticGpuBufferPool;
 import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
@@ -434,6 +436,7 @@ public abstract class MixinMinecraft {
         RenderingDebug.flipFrame();
         ClientTesselator.Shared.clear();
         GrowableMappableRingBuffer.cleanup();
+        StaticGpuBufferPool.cleanup();
     }
 
 }
