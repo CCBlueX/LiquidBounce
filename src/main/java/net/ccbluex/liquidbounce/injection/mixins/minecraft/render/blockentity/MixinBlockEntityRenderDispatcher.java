@@ -62,12 +62,7 @@ public abstract class MixinBlockEntityRenderDispatcher {
             }
         }
 
-        int previousOutlineColor = StorageEspOutlineContext.push(outlineColor);
-        try {
-            original.call(renderer, state, poseStack, submitNodeCollector, camera);
-        } finally {
-            StorageEspOutlineContext.restore(previousOutlineColor);
-        }
+        StorageEspOutlineContext.render(outlineColor, () -> original.call(renderer, state, poseStack, submitNodeCollector, camera));
     }
 
 }

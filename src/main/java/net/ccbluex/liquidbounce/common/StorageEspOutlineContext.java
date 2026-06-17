@@ -20,27 +20,22 @@ package net.ccbluex.liquidbounce.common;
 
 public final class StorageEspOutlineContext {
 
-    private static final ThreadLocal<Integer> OUTLINE_COLOR = ThreadLocal.withInitial(() -> 0);
+    private static final ScopedValue<Integer> OUTLINE_COLOR = ScopedValue.newInstance();
 
     private StorageEspOutlineContext() {
     }
 
     public static int getOutlineColor() {
-        return OUTLINE_COLOR.get();
+        return OUTLINE_COLOR.isBound() ? OUTLINE_COLOR.get() : 0;
     }
 
-    public static int push(int outlineColor) {
-        int previous = OUTLINE_COLOR.get();
-        OUTLINE_COLOR.set(outlineColor);
-        return previous;
-    }
-
-    public static void restore(int outlineColor) {
+    public static void render(int outlineColor, Runnable render) {
         if (outlineColor == 0) {
-            OUTLINE_COLOR.remove();
-        } else {
-            OUTLINE_COLOR.set(outlineColor);
+            render.run();
+            return;
         }
+
+        ScopedValue.where(OUTLINE_COLOR, outlineColor).run(render);
     }
 
 }
