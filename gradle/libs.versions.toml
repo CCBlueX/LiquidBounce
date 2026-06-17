@@ -34,11 +34,11 @@ modmenu = "20.0.0-alpha.1"
 exploit_preventer_api = "1.0.0"
 exploit_preventer_mod = "1.0.7+26.1"
 sodium = "mc26.2-0.9.0-fabric"
-lithium = "mc26.1.2-0.24.2-fabric"
+lithium = "mc26.2-0.25.0-fabric"
 viafabricplus = "4.5.3"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.15.2+26.1.2-fabric"
-iris = "1.10.9+26.1-fabric"
+iris = "1.11.0+26.2-fabric"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
