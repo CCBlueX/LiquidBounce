@@ -53,7 +53,7 @@ public abstract class MixinGui {
      * Can also happen when opening a screen during [ScreenEvent].
      */
     @Unique
-    private boolean recursiveScreenOpening = false;
+    private static final ScopedValue<Void> RECURSIVE_SCREEN_OPENING = ScopedValue.newInstance();
 
     /**
      * Handle opening screens
@@ -62,20 +62,16 @@ public abstract class MixinGui {
      * @param callbackInfo callback
      */
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
-    private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
-        if (recursiveScreenOpening) {
+    private void hookScreen(@Nullable Screen screen, CallbackInfo callbackInfo) {
+        if (RECURSIVE_SCREEN_OPENING.isBound()) {
             return;
         }
 
-        try {
-            recursiveScreenOpening = true;
+        var event = ScopedValue.where(RECURSIVE_SCREEN_OPENING, null)
+            .call(() -> EventManager.INSTANCE.callEvent(new ScreenEvent(screen)));
 
-            var event = EventManager.INSTANCE.callEvent(new ScreenEvent(screen));
-            if (event.isCancelled()) {
-                callbackInfo.cancel();
-            }
-        } finally {
-            recursiveScreenOpening = false;
+        if (event.isCancelled()) {
+            callbackInfo.cancel();
         }
 
         // Who need this GUI?

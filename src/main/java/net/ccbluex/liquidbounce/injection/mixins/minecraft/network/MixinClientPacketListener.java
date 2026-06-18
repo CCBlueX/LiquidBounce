@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.sugar.Cancellable;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.common.ChunkUpdateFlag;
@@ -75,9 +77,12 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         EventManager.INSTANCE.callEvent(new ChunkUnloadEvent(packet.pos()));
     }
 
-    @Inject(method = "handleChunkBlocksUpdate", at = @At("HEAD"))
-    private void onChunkDeltaUpdateStart(ClientboundSectionBlocksUpdatePacket packet, CallbackInfo ci) {
-        ChunkUpdateFlag.chunkDeltaUpdating = true;
+    @WrapMethod(method = "handleChunkBlocksUpdate")
+    private void onChunkDeltaUpdateStart(ClientboundSectionBlocksUpdatePacket packet, Operation<Void> original) {
+        ChunkUpdateFlag.withChunkDeltaUpdating(() -> {
+            original.call(packet);
+            EventManager.INSTANCE.callEvent(new ChunkDeltaUpdateEvent(packet));
+        });
     }
 
     @Inject(method = "handleTeleportEntity", at = @At("RETURN"))
@@ -108,12 +113,6 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
     @Inject(method = "handleRemoveEntities", at = @At("RETURN"))
     private void hookOnEntitiesDestroy(ClientboundRemoveEntitiesPacket packet, CallbackInfo ci) {
         CrystalDestroyTrigger.INSTANCE.notify(packet);
-    }
-
-    @Inject(method = "handleChunkBlocksUpdate", at = @At("RETURN"))
-    private void onChunkDeltaUpdateEnd(ClientboundSectionBlocksUpdatePacket packet, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new ChunkDeltaUpdateEvent(packet));
-        ChunkUpdateFlag.chunkDeltaUpdating = false;
     }
 
     @ModifyExpressionValue(method = "setTitleText", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ClientboundSetTitleTextPacket;text()Lnet/minecraft/network/chat/Component;"))
@@ -235,12 +234,12 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
     @Inject(method = "handleMovePlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;setValuesFromPositionPacket(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;Lnet/minecraft/world/entity/Entity;Z)Z"))
     private void injectPlayerPositionLook(
-        ClientboundPlayerPositionPacket packet, CallbackInfo ci, @Local(name = "player") Player playerEntity) {
-        rotationThreadLocal.set(new Rotation(playerEntity.getYRot(), playerEntity.getXRot(), true));
+        ClientboundPlayerPositionPacket packet, CallbackInfo ci, @Local(name = "player") Player player) {
+        rotationThreadLocal.set(new Rotation(player.getYRot(), player.getXRot(), true));
     }
 
     @Inject(method = "handleMovePlayer", at = @At("RETURN"))
-    private void injectNoRotateSet(ClientboundPlayerPositionPacket packet, CallbackInfo ci, @Local(name = "player") Player playerEntity) {
+    private void injectNoRotateSet(ClientboundPlayerPositionPacket packet, CallbackInfo ci, @Local(name = "player") Player player) {
         if (!ModuleNoRotateSet.INSTANCE.getRunning() || Minecraft.getInstance().gui.screen() instanceof LevelLoadingScreen) {
             return;
         }
@@ -254,7 +253,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         if (ModuleNoRotateSet.INSTANCE.getMode().getActiveMode() == ModuleNoRotateSet.ResetRotation.INSTANCE) {
             // Changes your server side rotation and then resets it with provided settings
             var rotationTarget = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotations().toRotationTarget(
-                    new Rotation(playerEntity.getYRot(), playerEntity.getXRot(), true),
+                    new Rotation(player.getYRot(), player.getXRot(), true),
                     null,
                     true,
                     null
@@ -264,8 +263,8 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
         // Increase yaw and pitch by a value so small that the difference cannot be seen,
         // just to update the rotation server-side.
-        playerEntity.setYRot(prevRotation.yRot() + 0.000001f);
-        playerEntity.setXRot(prevRotation.xRot() + 0.000001f);
+        player.setYRot(prevRotation.yRot() + 0.000001f);
+        player.setXRot(prevRotation.xRot() + 0.000001f);
     }
 
     @ModifyVariable(method = "sendChat", at = @At("HEAD"), argsOnly = true, name = "content")

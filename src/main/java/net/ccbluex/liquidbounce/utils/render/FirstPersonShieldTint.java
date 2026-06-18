@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.utils.render;
 
 public final class FirstPersonShieldTint {
 
-    private static final ScopedValue<Boolean> RENDERING = ScopedValue.newInstance();
+    private static final ScopedValue<Void> RENDERING = ScopedValue.newInstance();
 
     private FirstPersonShieldTint() {
     }
 
     public static void render(Runnable render) {
-        ScopedValue.where(RENDERING, true).run(render);
+        ScopedValue.where(RENDERING, null).run(render);
     }
 
     public static boolean isRendering() {

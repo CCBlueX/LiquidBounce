@@ -19,7 +19,10 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.minecraft.client.renderer.ScreenEffectRenderer;
@@ -37,18 +40,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinScreenEffectRenderer {
 
     @Unique
-    private static boolean liquid_bounce$submittingFire = false;
+    private static final ScopedValue<Float> FIRE_ALPHA = ScopedValue.newInstance();
 
-    @Inject(method = "submitFire", at = @At("HEAD"))
-    private static void injectFireHead(PoseStack poseStack, SubmitNodeCollector submitNodeCollector,
-        TextureAtlasSprite sprite, CallbackInfo ci) {
-        liquid_bounce$submittingFire = true;
-    }
-
-    @Inject(method = "submitFire", at = @At("TAIL"))
-    private static void injectFireTail(PoseStack poseStack, SubmitNodeCollector submitNodeCollector,
-        TextureAtlasSprite sprite, CallbackInfo ci) {
-        liquid_bounce$submittingFire = false;
+    @WrapMethod(method = "lambda$submitFire$0")
+    private static void wrapFireRenderer(TextureAtlasSprite sprite, PoseStack.Pose basePose, VertexConsumer builder, Operation<Void> original) {
+        ScopedValue.where(FIRE_ALPHA, ModuleAntiBlind.INSTANCE.getFireOpacityPercentage())
+            .run(() -> original.call(sprite, basePose, builder));
     }
 
     @ModifyArg(
@@ -56,8 +53,8 @@ public abstract class MixinScreenEffectRenderer {
         at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/VertexConsumer;setColor(I)Lcom/mojang/blaze3d/vertex/VertexConsumer;")
     )
     private static int injectFireOpacity(int color) {
-        return liquid_bounce$submittingFire
-            ? ARGB.multiplyAlpha(color, ModuleAntiBlind.INSTANCE.getFireOpacityPercentage())
+        return FIRE_ALPHA.isBound()
+            ? ARGB.multiplyAlpha(color, FIRE_ALPHA.get())
             : color;
     }
 
