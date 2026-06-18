@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.WeaponType
+import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isConsumable
@@ -180,31 +181,23 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     }
 
     private fun getBestDamageItem(): ItemStack? {
-        return Slots.Hotbar
-            .map { player.inventory.getItem(it.inventorySlot) }
+        return Slots.Hotbar.stacks
             .filter { !it.isEmpty && preferredWeapon.matchesAny(it) }
-            .maxByOrNull { it.damageValue }
+            .maxByOrNull { it.attackDamage }
     }
 
-    private fun getBestAttackSpeedItem(itemCategorization: ItemCategorization): ItemStack? {
-        return Slots.Hotbar
-            .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
-            .map { it.itemStack }
-            .filter { preferredWeapon.matchesAny(it) }
+    private fun getBestAttackSpeedItem(): ItemStack? {
+        return Slots.Hotbar.stacks
+            .filter { !it.isEmpty && preferredWeapon.matchesAny(it) }
             .maxByOrNull { it.attackSpeed }
     }
 
-    private fun getBestKnockbackItem(itemCategorization: ItemCategorization): ItemStack? {
-        return Slots.Hotbar
-            .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
-            .map { it.itemStack }
-            .filter { preferredWeapon.matchesAny(it) }
+    private fun getBestKnockbackItem(): ItemStack? {
+        return Slots.Hotbar.stacks
+            .filter { !it.isEmpty && preferredWeapon.matchesAny(it) }
             .maxByOrNull { itemStack ->
                 val enchantments = itemStack.enchantments
-
-                enchantments.entrySet().firstOrNull { entry ->
-                    entry.key.`is`(Enchantments.KNOCKBACK)
-                }?.intValue ?: 0
+                enchantments.entrySet().firstOrNull { it.key.`is`(Enchantments.KNOCKBACK) }?.intValue ?: 0
             }
     }
 
@@ -228,7 +221,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
                     // All items
                     PriorityChoice == Priorities.KNOCKBACK -> {
-                        val bestKnockbackItem = getBestKnockbackItem(itemCategorization)
+                        val bestKnockbackItem = getBestKnockbackItem()
                         itemStack == bestKnockbackItem
                     }
 
@@ -240,7 +233,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
                     // All items
                     PriorityChoice == Priorities.ATTACK_SPEED -> {
-                        val bestSpeedItem = getBestAttackSpeedItem(itemCategorization)
+                        val bestSpeedItem = getBestAttackSpeedItem()
                         itemStack == bestSpeedItem
                     }
 
