@@ -19,17 +19,15 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import com.google.common.base.Predicates;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.multiplayer.resolver.AddressCheck;
-import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.client.multiplayer.resolver.ServerNameResolver;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -40,22 +38,22 @@ import java.util.function.Predicate;
 @Mixin(ServerNameResolver.class)
 public abstract class MixinServerNameResolver {
 
-    @WrapOperation(method = "resolveAddress", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/multiplayer/resolver/AddressCheck;isAllowed(Lnet/minecraft/client/multiplayer/resolver/ServerAddress;)Z"))
-    private boolean isAllowedA(AddressCheck instance, ServerAddress serverAddress, Operation<Boolean> original) {
+    @WrapOperation(
+        method = "resolveAddress",
+        at = {
+            @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/resolver/AddressCheck;isAllowed(Lnet/minecraft/client/multiplayer/resolver/ServerAddress;)Z"),
+            @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/resolver/AddressCheck;isAllowed(Lnet/minecraft/client/multiplayer/resolver/ResolvedServerAddress;)Z"),
+        }
+    )
+    private boolean isAllowed(AddressCheck instance, ServerAddress serverAddress, Operation<Boolean> original) {
         return true;
     }
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @WrapOperation(method = "resolveAddress", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/multiplayer/resolver/AddressCheck;isAllowed(Lnet/minecraft/client/multiplayer/resolver/ResolvedServerAddress;)Z"))
-    private boolean isAllowedB(AddressCheck instance, ResolvedServerAddress address, Operation<Boolean> original) {
-        return true;
-    }
-
-    @ModifyArg(method = "resolveAddress", at = @At(value = "INVOKE",
         target = "Ljava/util/Optional;filter(Ljava/util/function/Predicate;)Ljava/util/Optional;"))
-    private Predicate<?> isAllowedC(Predicate<?> predicate) {
-        return Predicates.alwaysTrue();
+    private Optional<?> isAllowedC(Optional<?> instance, Predicate<?> predicate, Operation<Optional<?>> original) {
+        return instance;
     }
 
 }

@@ -59,10 +59,7 @@ public abstract class MixinYggdrasilMinecraftSessionService {
             remap = false
     )
     private boolean bypassUrlCheck(String url, Operation<Boolean> original) {
-        if (ModuleYggdrasilSignatureFix.INSTANCE.getRunning()) {
-            return true;
-        }
-        return original.call(url);
+        return ModuleYggdrasilSignatureFix.INSTANCE.getRunning() || original.call(url);
     }
 
 

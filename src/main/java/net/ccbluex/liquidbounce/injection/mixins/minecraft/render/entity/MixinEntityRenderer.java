@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -130,9 +131,9 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
         ((EntityRenderStateAddition) state).liquid_bounce$setEntity(entity);
     }
 
-    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;shouldEntityAppearGlowing(Lnet/minecraft/world/entity/Entity;)Z"))
-    private boolean modifyShouldRenderOutline(Minecraft instance, Entity entity, Operation<Boolean> operation) {
-        return operation.call(instance, entity) || liquid_bounce$shouldRenderOutline(entity);
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;shouldEntityAppearGlowing(Lnet/minecraft/world/entity/Entity;)Z"))
+    private boolean modifyShouldRenderOutline(boolean original, @Local(argsOnly = true, name = "entity") Entity entity) {
+        return original || liquid_bounce$shouldRenderOutline(entity);
     }
 
     @Unique
