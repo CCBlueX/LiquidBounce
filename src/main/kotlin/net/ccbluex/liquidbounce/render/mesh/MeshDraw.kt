@@ -39,7 +39,8 @@ import java.nio.ByteBuffer
 /**
  * GPU-ready draw descriptor produced from [MeshData].
  *
- * It stores uploaded vertex data plus an index binding strategy and the draw parameters needed by [RenderPass.bindAndDraw].
+ * It stores uploaded vertex data plus an index binding strategy
+ * and the draw parameters needed by [RenderPass.bindAndDraw].
  */
 @JvmRecord
 data class MeshDraw(
@@ -59,6 +60,7 @@ data class MeshDraw(
         /**
          * A dedicated uploaded index buffer owned by the mesh storage strategy.
          */
+        @JvmRecord
         data class Uploaded(
             val slice: GpuBufferSlice,
             val type: IndexType,
@@ -70,6 +72,7 @@ data class MeshDraw(
          * The actual [GpuBuffer] and [IndexType] are looked up at draw time so long-lived
          * meshes do not retain a stale slice when the shared sequential buffer grows.
          */
+        @JvmRecord
         data class Sequential(
             val primitiveTopology: PrimitiveTopology,
         ) : MeshIndexBinding
