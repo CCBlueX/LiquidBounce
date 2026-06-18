@@ -679,6 +679,7 @@
   "liquidbounce.module.snapTap.description": "Prioritize the last pressed movement key.",
   "liquidbounce.module.scaffold.description": "Automatically places blocks beneath your feet allowing you to walk across gaps.",
   "liquidbounce.module.serverCrasher.description": "Attempts to crash the server by exploiting known bugs.",
+  "liquidbounce.module.targetIcon.description": "Render a Image when attacking someone.",
   "liquidbounce.module.serverCrasher.messages.singleplayer": "Server Crasher is intended for multiplayer servers only.",
   "liquidbounce.module.serverCrasher.messages.signExploit.missingProtocolTranslator": "ViaFabricPlus is required for this exploit to work.",
   "liquidbounce.module.serverCrasher.messages.signExploit.wrongProtocolVersion": "Select 1.8 as protocol version for this exploit to work.",
