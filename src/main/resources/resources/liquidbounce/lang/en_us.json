@@ -449,6 +449,7 @@
   "liquidbounce.module.logoffSpot.messages.disappeared": "%s disappeared at X: %s, Y: %s, Z: %s.",
   "liquidbounce.module.logoffSpot.messages.reappeared": "%s reappeared.",
   "liquidbounce.module.logoffSpot.messages.unloaded": "%s position was unloaded and is no longer visible.",
+  "liquidbounce.module.autoTpa.description": "Automatically accepts teleportation requests",
   "liquidbounce.module.tntTimer.description": "Highlight the active TNTs.",
   "liquidbounce.module.abortBreaking.description": "Allows you to abort breaking without losing progress.",
   "liquidbounce.module.aimbot.description": "Automatically faces targets nearby.",

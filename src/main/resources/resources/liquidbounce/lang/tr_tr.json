@@ -262,6 +262,7 @@
   "liquidbounce.module.packetLogger.messages.send": "Gönderiliyor",
   "liquidbounce.module.packetLogger.messages.receive": "Alınıyor",
   "liquidbounce.module.packetLogger.messages.canceled": "iptal edildi",
+  "liquidbounce.module.autoTpa.description": "Işınlanma isteklerini otomatik olarak kabul eder",
   "liquidbounce.module.ESP.description": "Hedefleri duvarların içinden görmenizi sağlar.",
   "liquidbounce.module.tntTimer.description": "Aktif TNT’leri öne çıkarır.",
   "liquidbounce.module.abortBreaking.description": "Blok kırmayı ilerlemenizi kaybetmeden iptal etmenizi sağlar.",

@@ -283,6 +283,7 @@
     "liquidbounce.module.packetLogger.messages.send": "Versturen",
     "liquidbounce.module.packetLogger.messages.receive": "Ontvangen",
     "liquidbounce.module.packetLogger.messages.canceled": "geannuleerd",
+    "liquidbounce.module.autoTpa.description": "Accepteert automatisch teleportatieverzoeken",
     "liquidbounce.module.ESP.description": "Laat je doelwitten door muren zien.",
     "liquidbounce.module.tntTimer.description": "Markeert actieve TNT's.",
     "liquidbounce.module.abortBreaking.description": "Maakt het mogelijk het breken van een blok te annuleren zonder voortgang te verliezen.",

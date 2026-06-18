@@ -347,6 +347,7 @@
   "liquidbounce.module.packetLogger.messages.send": "發送",
   "liquidbounce.module.packetLogger.messages.receive": "接收",
   "liquidbounce.module.packetLogger.messages.canceled": "已取消",
+  "liquidbounce.module.autoTpa.description": "自動接受傳送請求",
   "liquidbounce.module.ESP.description": "允許你透過牆看到你選中的目標實體。",
   "liquidbounce.module.logoffSpot.description": "允許您看到已退出伺服器或超出可視範圍的玩家。",
   "liquidbounce.module.logoffSpot.messages.disappeared": "%s 消失於 X: %s, Y: %s, Z: %s.",
