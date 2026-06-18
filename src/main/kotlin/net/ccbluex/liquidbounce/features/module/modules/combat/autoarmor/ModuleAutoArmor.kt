@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparatorMode
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -44,6 +47,40 @@ import net.minecraft.world.item.Items
 object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
 
     val inventoryConstraints = tree(PlayerInventoryConstraints())
+
+    /**
+     * Selects how armor pieces are ranked against each other. See [ArmorComparatorMode].
+     */
+    val modes = choices("Mode", Smart, arrayOf(Smart, RawDefense))
+
+    /**
+     * The original damage-model ranking. Weighs every protection enchantment into the modern,
+     * toughness-aware damage formula.
+     */
+    object Smart : Mode("Smart") {
+        override val parent: ModeValueGroup<Mode>
+            get() = modes
+
+        val comparatorMode = ArmorComparatorMode.SMART
+    }
+
+    /**
+     * SkyWars/BedWars oriented ranking. Picks the armor with the highest real damage reduction under the
+     * legacy 1.8 model, ignoring niche enchantments (Fire/Blast Protection, Thorns, Unbreaking, ...) that
+     * would otherwise trick the module into preferring objectively worse armor.
+     */
+    object RawDefense : Mode("RawDefense") {
+        override val parent: ModeValueGroup<Mode>
+            get() = modes
+
+        /**
+         * Whether Projectile Protection should influence the ranking as a deciding argument (useful on
+         * archer-heavy servers). When disabled it only matters when everything else is equal.
+         */
+        val considerProjectileProtection by boolean("ConsiderProjectileProtection", true)
+
+        val comparatorMode = ArmorComparatorMode.RAW_DEFENSE
+    }
 
     /**
      * Should the module use the hotbar to equip armor pieces?
@@ -70,8 +107,15 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
         // Filter out already equipped armor pieces
         val durabilityThreshold = if (AutoArmorSaveArmor.enabled) durabilityThreshold else Int.MIN_VALUE
 
+        val comparatorMode = (modes.activeMode as? RawDefense)?.comparatorMode ?: Smart.comparatorMode
+        val considerProjectileProtection = RawDefense.considerProjectileProtection
+
         val armorToEquip = ArmorEvaluation
-            .findBestArmorPieces(durabilityThreshold = durabilityThreshold)
+            .findBestArmorPieces(
+                durabilityThreshold = durabilityThreshold,
+                mode = comparatorMode,
+                considerProjectileProtection = considerProjectileProtection
+            )
             .values.filterNotNull().filter { !it.isAlreadyEquipped }
 
         for (armorPiece in armorToEquip) {
