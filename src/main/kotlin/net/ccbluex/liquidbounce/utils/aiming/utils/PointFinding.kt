@@ -45,7 +45,6 @@ import org.joml.Matrix3f
 import org.joml.Vector3f
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.atan2
-import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 
@@ -54,7 +53,7 @@ import kotlin.math.min
  * The second allows to turn the given vec into (1.0, 0.0, 0.0).
  */
 fun getRotationMatricesForVec(vec: Vec3): Pair<Matrix3f, Matrix3f> {
-    val hypotenuse = hypot(vec.x, vec.z)
+    val hypotenuse = vec.horizontalDistance()
 
     val yawAtan = atan2(vec.z, vec.x).toFloat()
     val pitchAtan = atan2(vec.y, hypotenuse).toFloat()

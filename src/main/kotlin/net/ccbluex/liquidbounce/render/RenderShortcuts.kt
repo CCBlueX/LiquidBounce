@@ -106,27 +106,27 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRender
     }
 }
 
-/**
- * Shorthand for `withPosition(relativeToCamera(pos))`
- */
-inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) {
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(
+    x: Double, y: Double, z: Double, draw: WorldRenderEnvironment.() -> Unit
+) {
     poseStack.withPush {
         val cameraPos = camera.position()
-        translate(pos.x - cameraPos.x, pos.y - cameraPos.y, pos.z - cameraPos.z)
+        translate(x - cameraPos.x, y - cameraPos.y, z - cameraPos.z)
         draw()
     }
 }
 
 /**
+ * Shorthand for `withPosition(relativeToCamera(pos))`
+ */
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) =
+    withPositionRelativeToCamera(pos.x, pos.y, pos.z, draw)
+
+/**
  * Shortcut of `withPositionRelativeToCamera(Vec3.atLowerCornerOf(pos))`
  */
-inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) {
-    poseStack.withPush {
-        val cameraPos = camera.position()
-        translate(pos.x - cameraPos.x, pos.y - cameraPos.y, pos.z - cameraPos.z)
-        draw()
-    }
-}
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) =
+    withPositionRelativeToCamera(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), draw)
 
 internal inline fun RenderTarget.drawGenericBlockESP(
     renderState: CachedMeshStorage,
