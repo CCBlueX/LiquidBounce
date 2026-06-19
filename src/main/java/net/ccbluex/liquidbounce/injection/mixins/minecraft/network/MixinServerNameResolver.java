@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.multiplayer.resolver.AddressCheck;
+import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.client.multiplayer.resolver.ServerNameResolver;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,18 +41,23 @@ public abstract class MixinServerNameResolver {
 
     @WrapOperation(
         method = "resolveAddress",
-        at = {
-            @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/resolver/AddressCheck;isAllowed(Lnet/minecraft/client/multiplayer/resolver/ServerAddress;)Z"),
-            @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/resolver/AddressCheck;isAllowed(Lnet/minecraft/client/multiplayer/resolver/ResolvedServerAddress;)Z"),
-        }
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/resolver/AddressCheck;isAllowed(Lnet/minecraft/client/multiplayer/resolver/ServerAddress;)Z")
     )
-    private boolean isAllowed(AddressCheck instance, ServerAddress serverAddress, Operation<Boolean> original) {
+    private boolean isAllowedA(AddressCheck instance, ServerAddress serverAddress, Operation<Boolean> original) {
+        return true;
+    }
+
+    @WrapOperation(
+        method = "resolveAddress",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/resolver/AddressCheck;isAllowed(Lnet/minecraft/client/multiplayer/resolver/ResolvedServerAddress;)Z")
+    )
+    private boolean isAllowedB(AddressCheck instance, ResolvedServerAddress resolvedServerAddress, Operation<Boolean> original) {
         return true;
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @WrapOperation(method = "resolveAddress", at = @At(value = "INVOKE",
-        target = "Ljava/util/Optional;filter(Ljava/util/function/Predicate;)Ljava/util/Optional;"))
+        target = "Ljava/util/Optional;filter(Ljava/util/function/Predicate;)Ljava/util/Optional;", remap = false))
     private Optional<?> isAllowedC(Optional<?> instance, Predicate<?> predicate, Operation<Optional<?>> original) {
         return instance;
     }
