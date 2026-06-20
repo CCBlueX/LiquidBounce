@@ -112,7 +112,7 @@ public abstract class MixinChatComponent {
         //noinspection DataFlowIssue
         var id = removable.liquid_bounce$getId();
 
-        for(int j = 0; j < lines.size(); ++j) {
+        for (int j = 0; j < lines.size(); ++j) {
             FormattedCharSequence orderedText = lines.get(j);
             if (focused && chatScrollbarPos > 0) {
                 newMessageSinceScroll = true;
