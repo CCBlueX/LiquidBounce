@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.interfaces;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Additions to {@link net.minecraft.client.GuiMessage} and
- * {@link net.minecraft.client.GuiMessage.Line}.
+ * Additions to {@link net.minecraft.client.multiplayer.chat.GuiMessage} and
+ * {@link net.minecraft.client.multiplayer.chat.GuiMessage.Line}.
  */
 public interface GuiMessageLineAddition {
 
