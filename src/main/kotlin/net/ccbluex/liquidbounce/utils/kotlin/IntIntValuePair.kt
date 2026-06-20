@@ -17,8 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.interfaces;
+package net.ccbluex.liquidbounce.utils.kotlin
 
-public interface ChatComponentAddition {
-    int liquidbounce_getChatY();
+import net.ccbluex.liquidbounce.utils.math.high32
+import net.ccbluex.liquidbounce.utils.math.longFrom32
+import net.ccbluex.liquidbounce.utils.math.low32
+
+@JvmInline
+value class IntIntValuePair private constructor(private val bits: Long) {
+    constructor(left: Int, right: Int): this(longFrom32(left, right))
+    inline val left get() = component1()
+    inline val right get() = component2()
+
+    operator fun component1(): Int = bits.high32()
+    operator fun component2(): Int = bits.low32()
 }

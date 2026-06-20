@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(SubmitNodeCollection.class)
 public abstract class MixinSubmitNodeCollection {
 
-    @ModifyVariable(method = "submitModel", at = @At("HEAD"), argsOnly = true, ordinal = 3)
+    @ModifyVariable(method = "submitModel", at = @At("HEAD"), argsOnly = true, name = "outlineColor")
     private int injectStorageEspGlowOutlineColor(int outlineColor) {
         int storageEspOutlineColor = StorageEspOutlineContext.getOutlineColor();
         return outlineColor == 0 && storageEspOutlineColor != 0 ? storageEspOutlineColor : outlineColor;

@@ -196,10 +196,6 @@ public abstract class MixinGameRenderer {
         ci.cancel();
     }
 
-    @Inject(method = "resize", at = @At("HEAD"))
-    private void hookBlurEffectResize(int width, int height, CallbackInfo ci) {
-    }
-
     @Inject(method = "displayItemActivation", at = @At("HEAD"), cancellable = true)
     private void hookShowFloatingItem(ItemStack floatingItem, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.FLOATING_ITEMS)) {

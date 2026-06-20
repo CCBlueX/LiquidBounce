@@ -37,7 +37,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -55,7 +54,7 @@ public abstract class MixinWindow {
      */
     @WrapOperation(method = "setIcon", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/IconSet;getStandardIcons(Lnet/minecraft/server/packs/PackResources;)Ljava/util/List;"))
     private List<IoSupplier<InputStream>> setupIcon(IconSet instance, PackResources resources,
-        Operation<List<IoSupplier<InputStream>>> original) throws IOException {
+        Operation<List<IoSupplier<InputStream>>> original) {
         if (HideAppearance.INSTANCE.isHidingNow()) {
             return original.call(instance, resources);
         }

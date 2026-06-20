@@ -40,7 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinGuiRenderer {
 
     @ModifyExpressionValue(method = "addElementToMesh", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/render/GuiRenderer;scissorChanged(Lnet/minecraft/client/gui/navigation/ScreenRectangle;Lnet/minecraft/client/gui/navigation/ScreenRectangle;)Z"))
-    private boolean uploadPrimitivesIndividually(boolean original, @Local RenderPipeline pipeline) {
+    private boolean uploadPrimitivesIndividually(boolean original, @Local(name = "pipeline") RenderPipeline pipeline) {
         return original || pipeline.getPrimitiveTopology().connectedPrimitives;
     }
 

@@ -24,6 +24,7 @@ import com.mojang.authlib.yggdrasil.ServicesKeySet
 import com.mojang.blaze3d.platform.Window
 import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.utils.kotlin.IntIntValuePair
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.multiplayer.ClientPacketListener
@@ -33,12 +34,11 @@ import net.minecraft.server.Services
 import net.minecraft.server.players.ProfileResolver
 import net.minecraft.server.players.UserNameToIdResolver
 
-
 val Window.dimensions
-    get() = intArrayOf(screenWidth, screenHeight)
+    get() = IntIntValuePair(screenWidth, screenHeight)
 
 val Window.scaledDimension
-    get() = intArrayOf(guiScaledWidth, guiScaledHeight)
+    get() = IntIntValuePair(guiScaledWidth, guiScaledHeight)
 
 val mc: Minecraft
     inline get() = Minecraft.getInstance()

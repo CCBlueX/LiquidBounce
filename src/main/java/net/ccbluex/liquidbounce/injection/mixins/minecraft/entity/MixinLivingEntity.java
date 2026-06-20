@@ -362,7 +362,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @ModifyExpressionValue(method = "getCurrentSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)
     private int hookSwingSpeed(int duration) {
         var animations = ModuleAnimations.INSTANCE;
-        return animations.getRunning() && Minecraft.getInstance().player == (Object) this ? animations.getSwingDuration() : duration;
+        return animations.getRunning() && liquid_bounce$isClientPlayer() ? animations.getSwingDuration() : duration;
     }
 
     @ModifyExpressionValue(method = "handleDamageEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getHurtSound(Lnet/minecraft/world/damagesource/DamageSource;)Lnet/minecraft/sounds/SoundEvent;"))

@@ -45,6 +45,7 @@ public abstract class MixinPacketWrapper {
     @Shadow
     public abstract <T> T get(Type<T> type, int index) throws InformativeException;
 
+    @SuppressWarnings("rawtypes")
     @Inject(method = "scheduleSendToServer", at = @At("HEAD"), cancellable = true)
     private void vfpSendPacketHandler(Class<? extends Protocol> protocol, boolean skipCurrentPipeline, CallbackInfo ci) {
         PacketType packetType = this.getPacketType();

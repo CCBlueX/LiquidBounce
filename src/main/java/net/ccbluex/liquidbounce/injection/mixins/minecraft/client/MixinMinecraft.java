@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.render.ClientTesselator;
-import net.ccbluex.liquidbounce.render.GpuBufferRecycler;
 import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer;
 import net.ccbluex.liquidbounce.render.StaticGpuBufferPool;
 import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
