@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleN
 import net.minecraft.client.gui.Font;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.FormattedCharSink;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;

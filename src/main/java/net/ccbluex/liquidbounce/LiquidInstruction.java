@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce;
 
 import net.ccbluex.liquidbounce.utils.client.GitInfo;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
 
 import javax.swing.*;
 import java.awt.*;
@@ -33,11 +33,12 @@ import java.util.stream.Stream;
  * It should not use any other external libraries such as Kotlin stdlib, JavaFX or Minecraft
  * because they are not included in the jar.
  */
+@NullMarked
 public final class LiquidInstruction {
 
   private LiquidInstruction() {}
 
-  private static @NotNull List<Image> loadIcons() {
+  private static List<Image> loadIcons() {
     return Stream.of(
             "/resources/liquidbounce/icon_64x64.png",
             "/resources/liquidbounce/icon_32x32.png",
@@ -48,7 +49,7 @@ public final class LiquidInstruction {
         .toList();
   }
 
-  private static boolean browse(@NotNull URI uri) {
+  private static boolean browse(URI uri) {
     try {
       Desktop.getDesktop().browse(uri);
       return true;

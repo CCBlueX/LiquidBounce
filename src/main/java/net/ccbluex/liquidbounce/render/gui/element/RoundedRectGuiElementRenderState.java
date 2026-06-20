@@ -23,7 +23,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
 /**

@@ -30,7 +30,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.joml.Vector4fc;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
