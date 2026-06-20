@@ -133,6 +133,7 @@ object HttpClient {
         }
         .addInterceptor(CacheBlacklistInterceptor(setOf("localhost", "127.0.0.1")))
         .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
+        .proxy(java.net.Proxy.NO_PROXY)
         .build().also {
             MCEF.INSTANCE.settings.okHttpClient = it
             Authlib.client = it
