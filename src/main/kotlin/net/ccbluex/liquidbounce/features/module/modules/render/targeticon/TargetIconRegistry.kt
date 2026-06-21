@@ -19,16 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.targeticon
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
-import net.minecraft.client.renderer.texture.AbstractTexture
+import net.minecraft.client.renderer.texture.DynamicTexture
 
 @Suppress("unused")
 enum class TargetIconRegistry(
     override val tag: String,
     hasTexture: Boolean = true,
-) : Tagged {
+) : TextureMode.Builtin.Preset {
     NONE("None", false),
     WEARY("Weary"),
     ANGRY("Angry"),
@@ -41,7 +41,7 @@ enum class TargetIconRegistry(
     CAT("Cat"),
     SUNNA("Sunna");
 
-    val texture: AbstractTexture? = if (hasTexture) {
+    override val texture: DynamicTexture? = if (hasTexture) {
         LiquidBounce.resource("images/${name.lowercase()}.png")
             .readNativeImage()
             .asTexture { "TargetIcon: $tag" }

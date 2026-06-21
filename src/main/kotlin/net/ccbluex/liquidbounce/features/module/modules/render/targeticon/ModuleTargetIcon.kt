@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.targeticon
 
+import net.ccbluex.fastutil.toEnumSet
+import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,30 +32,42 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.textureSetup
+import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.world.entity.LivingEntity
 
 object ModuleTargetIcon : ClientModule("TargetIcon", ModuleCategories.RENDER) {
 
+    private val textureMode = choices("Source", 1) {
+        arrayOf(
+            TextureMode.Custom(it),
+            TextureMode.Builtin(
+                it,
+                TargetIconRegistry.WEARY,
+                TargetIconRegistry.entries.filter { e -> e.texture != null }.toEnumSet()
+            )
+        )
+    }
+
     private val onlyKillAura by boolean("OnlyKillAura", false)
-    private val icon by enumChoice("Icon", TargetIconRegistry.NONE)
     private val randomIcon by boolean("RandomIcon", false)
     private val iconSize by int("Size", 80, 16..256)
-    private const val DISPLAY_DURATION = 1000L
-
     private val heightFraction by float("Height", 0.85f, 0f..1.5f)
     private val offsetX by float("OffsetX", 0f, -200f..200f)
     private val offsetY by float("OffsetY", -10f, -200f..200f)
 
     @Volatile private var trackedEntity: LivingEntity? = null
-    @Volatile private var activeIcon: TargetIconRegistry = TargetIconRegistry.NONE
+    @Volatile private var randomTexture: DynamicTexture? = null
     @Volatile private var showUntil: Long = 0L
     @Volatile private var shownSince: Long = 0L
+
+    private val currentTexture: DynamicTexture?
+        get() = if (randomIcon) randomTexture ?: textureMode.activeMode.texture else textureMode.activeMode.texture
 
     override fun onDisabled() {
         showUntil = 0L
         shownSince = 0L
         trackedEntity = null
-        activeIcon = TargetIconRegistry.NONE
+        randomTexture = null
     }
 
     @Suppress("unused")
@@ -66,37 +80,30 @@ object ModuleTargetIcon : ClientModule("TargetIcon", ModuleCategories.RENDER) {
         val now = System.currentTimeMillis()
         val isNewTarget = now >= showUntil || trackedEntity !== target
 
-        val selectedIcon = if (isNewTarget) {
-            if (randomIcon) {
-                TargetIconRegistry.entries.filter { it.texture != null }.randomOrNull() ?: icon
-            } else {
-                icon
-            }
-        } else {
-            activeIcon
+        if (isNewTarget && randomIcon) {
+            randomTexture = TargetIconRegistry.entries.filter { it.texture != null }.randomOrNull()?.texture
         }
 
-        if (selectedIcon.texture == null) return@handler
+        if (currentTexture == null) return@handler
 
         if (now >= showUntil) {
             shownSince = now
         }
 
         trackedEntity = target
-        activeIcon = selectedIcon
-        showUntil = now + DISPLAY_DURATION
+        showUntil = now + 1000L
     }
 
     @Suppress("unused")
     private val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
-        val texture = activeIcon.texture ?: return@handler
+        val texture = currentTexture ?: return@handler
         val now = System.currentTimeMillis()
 
         if (now >= showUntil) {
             showUntil = 0L
             shownSince = 0L
             trackedEntity = null
-            activeIcon = TargetIconRegistry.NONE
+            randomTexture = null
             return@handler
         }
 
@@ -105,7 +112,7 @@ object ModuleTargetIcon : ClientModule("TargetIcon", ModuleCategories.RENDER) {
             showUntil = 0L
             shownSince = 0L
             trackedEntity = null
-            activeIcon = TargetIconRegistry.NONE
+            randomTexture = null
             return@handler
         }
 
@@ -119,14 +126,10 @@ object ModuleTargetIcon : ClientModule("TargetIcon", ModuleCategories.RENDER) {
 
         event.context.drawTexQuad(
             textureSetup = texture.textureSetup,
-            x0 = x0,
-            y0 = y0,
-            x1 = x0 + size,
-            y1 = y0 + size,
-            u1 = 0f,
-            v1 = 0f,
-            u2 = 1f,
-            v2 = 1f,
+            x0 = x0, y0 = y0,
+            x1 = x0 + size, y1 = y0 + size,
+            u1 = 0f, v1 = 0f,
+            u2 = 1f, v2 = 1f,
             argb = Color4b(255, 255, 255, 255).argb,
             pipeline = ClientRenderPipelines.GUI.TexQuadNoCull,
         )
