@@ -42,6 +42,7 @@ import net.minecraft.client.KeyMapping
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.DoorBlock
@@ -49,6 +50,7 @@ import net.minecraft.world.level.block.FenceGateBlock
 import net.minecraft.world.level.block.TrapDoorBlock
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
+import kotlin.random.Random
 
 /**
  * AutoClicker module
@@ -69,6 +71,14 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
         private val weapon by multiEnumChoice("Weapon", enumSetOf(WeaponType.ANY), canBeNone = false)
         private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
+        private object ClickFilter : ToggleableValueGroup(this, "ClickFilter", false) {
+            val combatAccuracy by int("CombatAccuracy", 80, 0..100, "%")
+            val airSwingChance by int("AirSwingChance ", 70, 0..100, "%")
+        }
+
+        init {
+            tree(ClickFilter)
+        }
 
         private enum class ObjectiveType(override val tag: String) : Tagged {
             ENEMY("Enemy"),
@@ -100,6 +110,19 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
             return criticalsSelectionMode.isCriticalHit(entity)
         }
 
+        fun attackFilter(entity: Entity): Boolean {
+            if (!ClickFilter.enabled) return true
+            if (entity is LivingEntity && entity.hurtTime == 0) return true
+            if (entity !is LivingEntity) return true
+
+            return ClickFilter.combatAccuracy < Random.nextInt(1, 101)
+        }
+
+        fun missChance(): Boolean {
+            if (!ClickFilter.enabled) return true
+            return ClickFilter.airSwingChance > Random.nextInt(1, 101)
+        }
+
         suspend fun encounterItemUse(): Boolean {
             return when (onItemUse) {
                 Use.WAIT -> {
@@ -121,9 +144,8 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
         @Suppress("unused")
         private val sprintHandler = handler<SprintEvent> { event ->
             if (event.source == SprintEvent.Source.MOVEMENT_TICK || event.source == SprintEvent.Source.INPUT) {
-                if (!attack || !isOnObjective() || !isWeaponSelected()) {
-                    return@handler
-                }
+                if (!attack || !isOnObjective() || !isWeaponSelected()) return@handler
+
 
                 val target = mc.hitResult as? EntityHitResult ?: return@handler
                 if (criticalsSelectionMode.shouldStopSprinting(clicker, target.entity)) {
@@ -198,34 +220,30 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
     @Suppress("unused")
     private val tickHandler = tickHandler {
         AttackButton.run {
-            if (!enabled || !attack || !isWeaponSelected() || !isOnObjective()) {
-                return@run
-            }
+            if (!enabled || !attack || !isWeaponSelected() || !isOnObjective()) return@run
 
             // Check if the player is breaking a block, if so, return
-            if (interaction.isDestroying) {
-                return@run
-            }
+            if (interaction.isDestroying) return@run
 
-            if ((System.currentTimeMillis() - lastFinishBreak < 300L) && delayOnBroken) {
-                return@run
-            }
+            if ((System.currentTimeMillis() - lastFinishBreak < 300L) && delayOnBroken) return@run
 
-            val crosshairTarget = mc.hitResult
-            if (crosshairTarget is EntityHitResult) {
-                ModuleAutoWeapon.onTarget(crosshairTarget.entity)
+            when (val crosshairTarget = mc.hitResult) {
+                is EntityHitResult -> {
+                    ModuleAutoWeapon.onTarget(crosshairTarget.entity)
 
-                if (!isCriticalHit(crosshairTarget.entity)) {
-                    return@run
+                    // Check if the target is currently immune to damage (in hurt time)
+                    if (!attackFilter(crosshairTarget.entity)) return@run
+
+                    if (!isCriticalHit(crosshairTarget.entity)) return@run
                 }
+                // Check if the player attacking air
+                else -> if (!missChance()) return@run
             }
 
             if (player.isUsingItem) {
                 val encounterItemUse = encounterItemUse()
 
-                if (encounterItemUse) {
-                    return@tickHandler
-                }
+                if (encounterItemUse) return@tickHandler
             }
 
             clicker.click {
@@ -244,24 +262,16 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
 
             val mainHandStack = player.mainHandItem
             val offHandStack = player.offhandItem
-            if (mainHandStack.item in SPECIAL_ITEMS_FOR_IGNORE && mainHandStack.customName != null) {
-                return@run
-            }
+            if (mainHandStack.item in SPECIAL_ITEMS_FOR_IGNORE && mainHandStack.customName != null) return@run
 
-            if (mainHandStack.item in holdingItemsForIgnore || offHandStack.item in holdingItemsForIgnore) {
-                return@run
-            }
+            if (mainHandStack.item in holdingItemsForIgnore || offHandStack.item in holdingItemsForIgnore) return@run
 
-            if (onlyBlock && mainHandStack.item !is BlockItem && offHandStack.item !is BlockItem) {
-                return@run
-            }
+            if (onlyBlock && mainHandStack.item !is BlockItem && offHandStack.item !is BlockItem) return@run
 
             val crosshairTarget = mc.hitResult
             if (crosshairTarget is BlockHitResult) {
                 val blockState = mc.level?.getBlockState(crosshairTarget.blockPos)
-                if (blockState?.block in blocksForIgnore) {
-                    return@run
-                }
+                if (blockState?.block in blocksForIgnore) return@run
             }
 
             if (delayStart && needToWait) {
