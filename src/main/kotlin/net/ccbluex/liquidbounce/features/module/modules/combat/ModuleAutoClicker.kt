@@ -120,7 +120,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
 
         fun missChance(): Boolean {
             if (!ClickFilter.enabled) return true
-            return ClickFilter.airSwingChance > Random.nextInt(1, 101)
+            return ClickFilter.airSwingChance >= Random.nextInt(1, 101)
         }
 
         suspend fun encounterItemUse(): Boolean {
