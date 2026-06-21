@@ -32,7 +32,7 @@ object CommandItemStack : Command.Factory, MinecraftShortcuts {
 
     private val amountParameter = ParameterBuilder
         .begin<Int>("amount")
-        .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
+        .verifiedBy(ParameterBuilder.intRange(1, 64))
         .autocompletedFrom { listOf("16", "32", "64") }
         .optional()
         .build()
@@ -54,8 +54,7 @@ object CommandItemStack : Command.Factory, MinecraftShortcuts {
                     throw CommandException(command.result("noItem"))
                 }
 
-                val amount = (args.getOrElse(0, defaultValue = { 64 }) as Int)
-                    .coerceIn(1, 64)
+                val amount = args.getOrElse(0, defaultValue = { 64 }) as Int
 
                 if (mainHandStack.count == amount) {
                     chat(regular(command.result("hasAlreadyAmount", variable(amount.toString()))), command)
