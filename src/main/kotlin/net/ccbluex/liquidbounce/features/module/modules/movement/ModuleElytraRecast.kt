@@ -18,9 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast.shouldRecast
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EquipmentSlot
@@ -29,20 +30,31 @@ import net.minecraft.world.item.Items
 /**
  * Elytra recast module
  *
- * Recasts elytra when holding the jump key
+ * Recasts elytra when holding the jump key after landing
  *
  * @author Pivo1lovv
  */
 object ModuleElytraRecast : ClientModule("ElytraRecast", ModuleCategories.MOVEMENT) {
 
+    private var wasFlying = false
+
     private val shouldRecast: Boolean
         get() {
             val itemStack = player.getItemBySlot(EquipmentSlot.CHEST)
 
-            return !player.abilities.flying && !player.isPassenger && !player.onClimbable() &&
-                !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) &&
+            return !player.isFallFlying && !player.abilities.flying && !player.isPassenger &&
+                !player.onClimbable() && !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) &&
                 itemStack.`is`(Items.ELYTRA) && !itemStack.nextDamageWillBreak() && mc.options.keyJump.isDown
         }
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        val isFlying = player.isFallFlying
+        if (wasFlying && !isFlying) {
+            recastElytra()
+        }
+        wasFlying = isFlying
+    }
 
     /**
      * Recast elytra when [shouldRecast] says it should
