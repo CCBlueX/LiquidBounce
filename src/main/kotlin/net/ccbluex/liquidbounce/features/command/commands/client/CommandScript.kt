@@ -113,7 +113,7 @@ object CommandScript : Command.Factory {
         )
         .parameter(
             ParameterBuilder.begin<Int>("port")
-                .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+                .verifiedBy(ParameterBuilder.intRange(1, 65535))
                 .optional()
                 .build()
         )
