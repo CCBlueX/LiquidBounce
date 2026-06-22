@@ -220,24 +220,24 @@ class CefBrowser(
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
         browserApi.setFocus(true)
-        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
-        browserApi.sendMousePress(scaledX, scaledY, mouseButton)
+        val q = GlobalBrowserSettings.quality
+        browserApi.sendMousePress((mouseX * q).toInt(), (mouseY * q).toInt(), mouseButton)
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int) {
         browserApi.setFocus(true)
-        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
-        browserApi.sendMouseRelease(scaledX, scaledY, mouseButton)
+        val q = GlobalBrowserSettings.quality
+        browserApi.sendMouseRelease((mouseX * q).toInt(), (mouseY * q).toInt(), mouseButton)
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
-        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
-        browserApi.sendMouseMove(scaledX, scaledY)
+        val q = GlobalBrowserSettings.quality
+        browserApi.sendMouseMove((mouseX * q).toInt(), (mouseY * q).toInt())
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double) {
-        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
-        browserApi.sendMouseWheel(scaledX, scaledY, delta)
+        val q = GlobalBrowserSettings.quality
+        browserApi.sendMouseWheel((mouseX * q).toInt(), (mouseY * q).toInt(), delta)
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {
