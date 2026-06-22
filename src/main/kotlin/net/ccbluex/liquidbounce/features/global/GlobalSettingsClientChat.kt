@@ -79,6 +79,13 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
 
     private val chatClient = AxochatClient()
+
+    /**
+     * Tracks authentication retry attempts. Reset on successful login or reconnect.
+     */
+    private var authRetryCount = 0
+    private const val MAX_AUTH_RETRIES = 3
+    private val AUTH_RETRY_DELAYS = longArrayOf(3_000L, 8_000L, 15_000L)
     private val prefix: Component = "".asText()
         .withStyle(ChatFormatting.RESET).withStyle(ChatFormatting.GRAY)
         .append(this.name.asPlainText(ChatFormatting.BLUE))
@@ -169,6 +176,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     @Suppress("unused")
     private val sessionChange = suspendHandler<SessionEvent>(behavior = CancelPrevious) {
+        authRetryCount = 0
         chatClient.reconnect()
     }
 
@@ -246,6 +254,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                 }
             }
             ClientChatStateChange.State.LOGGED_IN -> {
+                authRetryCount = 0
                 notification(
                     "LiquidChat",
                     translation("liquidbounce.liquidchat.states.loggedIn"),
@@ -265,7 +274,28 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                     translation("liquidbounce.liquidchat.authenticationFailed"),
                     NotificationEvent.Severity.ERROR
                 )
-                logger.warn("Failed authentication to LiquidChat")
+                logger.warn("Failed authentication to LiquidChat (attempt ${authRetryCount + 1}/$MAX_AUTH_RETRIES)")
+
+                if (authRetryCount < MAX_AUTH_RETRIES) {
+                    val delayMs = AUTH_RETRY_DELAYS[authRetryCount]
+                    authRetryCount++
+                    logger.info("Retrying authentication in ${delayMs / 1000}s...")
+                    eventListenerScope.launch {
+                        delay(delayMs)
+                        if (chatClient.isConnected && !chatClient.isLoggedIn) {
+                            chatClient.requestMojangLogin()
+                        }
+                    }
+                } else {
+                    chat(
+                        prefix,
+                        "Authentication failed after $MAX_AUTH_RETRIES attempts. ".asText()
+                            .withStyle(ChatFormatting.RED),
+                        "Try restarting the game or re-logging into your account.".asText()
+                            .withStyle(ChatFormatting.GRAY),
+                        metadata = exceptionData
+                    )
+                }
             }
 
             else -> {} // do not bother

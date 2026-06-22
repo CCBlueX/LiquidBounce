@@ -283,8 +283,10 @@ class AxochatClient {
                     )
                 }.onFailure { cause ->
                     if (cause is InvalidCredentialsException) {
+                        logger.warn("Authentication to LiquidChat failed - credentials may be expired")
                         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.AUTHENTICATION_FAILED))
                     } else {
+                        logger.error("LiquidChat authentication error", cause)
                         EventManager.callEvent(ClientChatErrorEvent(
                             cause.localizedMessage ?: cause.message ?: cause.javaClass.name
                         ))
