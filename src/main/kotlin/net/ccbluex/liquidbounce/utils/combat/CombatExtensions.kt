@@ -146,12 +146,14 @@ private fun Set<Targets>.isInteresting(suspect: Entity): Boolean {
     }
 
     // Check if enemy is a player and should be considered as a target
+    val info = EntityTaggingManager.getTag(suspect).targetingInfo
     return when (suspect) {
         is Player -> when {
             suspect === mc.player -> false
             // Check if enemy is sleeping (or ignore being sleeping)
             suspect.isSleeping && Targets.SLEEPING !in this -> false
-            else -> Targets.PLAYERS in this
+            // Allow targeting friends even when Players is disabled, as long as Friends is enabled
+            else -> Targets.PLAYERS in this || (info.isFriend && Targets.FRIENDS in this)
         }
         is WaterAnimal -> Targets.WATER_CREATURE in this
         is AgeableMob, is Bat, is Allay -> Targets.PASSIVE in this
