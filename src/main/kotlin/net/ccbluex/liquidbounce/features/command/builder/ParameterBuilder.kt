@@ -57,8 +57,44 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
             val integer = sourceText.toIntOrNull()
             when {
                 integer == null -> Result.Error("'$sourceText' is not a valid integer")
-                integer >= 0 -> Result.Ok(integer)
+                integer > 0 -> Result.Ok(integer)
                 else -> Result.Error("The integer must be positive")
+            }
+        }
+        @JvmField
+        val NON_NEGATIVE_INTEGER_VALIDATOR: Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
+            val integer = sourceText.toIntOrNull()
+            when {
+                integer == null -> Result.Error("'$sourceText' is not a valid integer")
+                integer >= 0 -> Result.Ok(integer)
+                else -> Result.Error("The integer must not be negative")
+            }
+        }
+        @JvmStatic
+        fun intRange(min: Int, max: Int): Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
+            val integer = sourceText.toIntOrNull()
+            when {
+                integer == null -> Result.Error("'$sourceText' is not a valid integer")
+                integer in min..max -> Result.Ok(integer)
+                else -> Result.Error("The integer must be between $min and $max")
+            }
+        }
+        @JvmField
+        val POSITIVE_FLOAT_VALIDATOR: Parameter.Verificator<Float> = Parameter.Verificator { sourceText ->
+            val float = sourceText.toFloatOrNull()
+            when {
+                float == null -> Result.Error("'$sourceText' is not a valid float")
+                float > 0 -> Result.Ok(float)
+                else -> Result.Error("The float must be positive")
+            }
+        }
+        @JvmStatic
+        fun floatRange(min: Float, max: Float): Parameter.Verificator<Float> = Parameter.Verificator { sourceText ->
+            val float = sourceText.toFloatOrNull()
+            when {
+                float == null -> Result.Error("'$sourceText' is not a valid float")
+                float in min..max -> Result.Ok(float)
+                else -> Result.Error("The float must be between $min and $max")
             }
         }
         @JvmField
