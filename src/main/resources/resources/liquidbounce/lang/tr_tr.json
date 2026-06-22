@@ -323,6 +323,7 @@
   "liquidbounce.module.capeTransfer.description": "Bağışçı pelerinini mevcut hesabınıza otomatik olarak aktarır. Bağış için: liquidbounce.net/donate.",
   "liquidbounce.module.chestStealer.description": "Bir sandıktaki tüm eşyaları otomatik olarak çalar.",
   "liquidbounce.module.clickGUI.description": "Modülleri açıp kapatmak ve ayar yapmak için kolay bir menü gösterir.",
+  "liquidbounce.module.clientIdSpoofer.description": "Emulates the ClientID mod by sending a configurable mod and resource pack list to servers.",
   "liquidbounce.module.clientSpoofer.description": "Oyun istemci markanızı başka bir şeymiş gibi gösterir.",
   "liquidbounce.module.clip.description": "Blokların içinden geçmenizi sağlar.",
   "liquidbounce.module.clip.messages.whoosh": "Vınn!",

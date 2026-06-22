@@ -163,6 +163,7 @@
   "liquidbounce.module.antiBlind.description": "Pwewents u fwom weceiving pwotentiawwy annywoying scween effects dat bwock ywouw view",
   "liquidbounce.module.breadcrumbs.description": "Weawes a winye behind u two twack ywouw muvmwent",
   "liquidbounce.module.clickGUI.description": "Shwows u an easy two nyavigate mwenyu two twoggwal and cwonfwiguwe othew mwoduwes",
+  "liquidbounce.module.clientIdSpoofer.description": "Emulates the ClientID mod by sending a configurable mod and resource pack list to servers.",
   "liquidbounce.module.fullBright.description": "Awwows u two see in teh dawk",
   "liquidbounce.module.hud.description": "Shwows u an in-gamwe oworlay wif a wist of aww enyabwed & nywot-hidden mwoduwes and a TabGUI",
   "liquidbounce.module.itemEsp.description": "Awwows u two see items dat way on teh fwoow fwough wawws",

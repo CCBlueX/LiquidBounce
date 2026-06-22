@@ -506,6 +506,7 @@
   "liquidbounce.module.chestCleaner.description": "自动从箱子里扔掉不想要的物品。",
   "liquidbounce.module.chestStealer.description": "自动拿走箱子里的物品。",
   "liquidbounce.module.clickGUI.description": "显示一个易于使用的菜单，用于开关或配置模块。",
+  "liquidbounce.module.clientIdSpoofer.description": "Emulates the ClientID mod by sending a configurable mod and resource pack list to servers.",
   "liquidbounce.module.clientSpoofer.description": "将你的游戏客户端标识伪装为另一个。",
   "liquidbounce.module.clip.description": "允许你穿过方块。",
   "liquidbounce.module.clip.messages.whoosh": "嗖嗖！",
