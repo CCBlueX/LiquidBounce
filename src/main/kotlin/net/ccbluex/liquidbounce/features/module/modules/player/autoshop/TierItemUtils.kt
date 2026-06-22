@@ -33,7 +33,10 @@ fun String.autoShopItemTier() : Int {
     }
 
     // example: sword:tier:2 -> 2
-    return this.split(TIER_ID)[1].toIntOrNull() ?: 0
+    val tierPart = this.split(TIER_ID)[1]
+    val tier = tierPart.toIntOrNull()
+        ?: throw IllegalArgumentException("Invalid tier format in item '$this': expected numeric tier after '$TIER_ID'")
+    return tier
 }
 
 /**
