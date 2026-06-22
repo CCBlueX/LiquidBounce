@@ -109,15 +109,14 @@ export function deleteListener<NAME extends keyof EventMap>(eventName: NAME, cb:
     );
 }
 
+const PING_PAYLOAD = JSON.stringify({ name: "ping", event: {} });
+
 // Send ping to server every 5 seconds
 setInterval(() => {
     if (!ws) return;
     if (ws.readyState !== 1) return;
 
-    ws.send(JSON.stringify({
-        name: "ping",
-        event: {}
-    }));
+    ws.send(PING_PAYLOAD);
 }, 5000);
 
 connect();

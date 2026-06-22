@@ -19,6 +19,17 @@
     let selectedIndex = 0;
     let hasFocus = false;
 
+    // Cache lowercase names/aliases to avoid repeated toLowerCase() per keystroke.
+    // Key = module name, value = pre-lowercased data. Rebuilt when modules array changes.
+    let lowerCache = new Map<string, { name: string; aliases: string[] }>();
+
+    $: lowerCache = new Map(
+        modules.map(m => [m.name, {
+            name: m.name.toLowerCase(),
+            aliases: m.aliases.map(a => a.toLowerCase())
+        }])
+    );
+
     function reset() {
         filteredModules = [];
         query = "";
@@ -37,9 +48,12 @@
 
         const pureQuery = query.toLowerCase().replaceAll(" ", "");
 
-        filteredModules = modules.filter((m) => m.name.toLowerCase().includes(pureQuery)
-            || m.aliases.some(a => a.toLowerCase().includes(pureQuery))
-        );
+        filteredModules = modules.filter((m) => {
+            const cached = lowerCache.get(m.name);
+            if (!cached) return false;
+            return cached.name.includes(pureQuery)
+                || cached.aliases.some(a => a.includes(pureQuery));
+        });
     }
 
     async function handleKeyDown(e: KeyboardKeyEvent) {
