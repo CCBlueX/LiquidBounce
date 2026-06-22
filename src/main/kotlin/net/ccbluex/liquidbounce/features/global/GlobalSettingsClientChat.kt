@@ -266,6 +266,14 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                     NotificationEvent.Severity.ERROR
                 )
                 logger.warn("Failed authentication to LiquidChat")
+                chat(
+                    prefix,
+                    "Authentication failed! Your Minecraft session may have expired. ".asText()
+                        .withStyle(ChatFormatting.RED),
+                    "Try restarting the game or re-logging into your account.".asText()
+                        .withStyle(ChatFormatting.GRAY),
+                    metadata = exceptionData
+                )
             }
 
             else -> {} // do not bother
