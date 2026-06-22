@@ -48,11 +48,17 @@ import kotlin.math.atan2
 import kotlin.math.max
 import kotlin.math.min
 
+@JvmRecord
+data class RotationMatrices(
+    val toMatrix: Matrix3f,
+    val backMatrix: Matrix3f,
+)
+
 /**
  * Creates rotation matrices: The first allows to turn the vec (1.0, 0.0, 0.0) into the given [vec].
  * The second allows to turn the given vec into (1.0, 0.0, 0.0).
  */
-fun getRotationMatricesForVec(vec: Vec3): Pair<Matrix3f, Matrix3f> {
+fun getRotationMatricesForVec(vec: Vec3): RotationMatrices {
     val hypotenuse = vec.horizontalDistance()
 
     val yawAtan = atan2(vec.z, vec.x).toFloat()
@@ -61,7 +67,7 @@ fun getRotationMatricesForVec(vec: Vec3): Pair<Matrix3f, Matrix3f> {
     val toMatrix = Matrix3f().rotateY(-yawAtan).mul(Matrix3f().rotateZ(pitchAtan))
     val backMatrix = Matrix3f().rotateZ(-pitchAtan).mul(Matrix3f().rotateY(yawAtan))
 
-    return toMatrix to backMatrix
+    return RotationMatrices(toMatrix, backMatrix)
 }
 
 /**

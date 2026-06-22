@@ -220,7 +220,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
 
     private suspend fun buyAllItemsInCategory(remainingElements: List<ShopElement>) {
         val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = true)
-        val slotsToClick = simulationResult.first
+        val slotsToClick = simulationResult.slots
         val prevInventory = AutoShopInventoryManager.getInventoryItems()
         val prevShopStacks = (mc.gui.screen() as ContainerScreen).stacks()
 
@@ -252,18 +252,18 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         // expects to get items later
         val newPendingItems = if (QuickPurchaseMode.waitForItems) {
             val map = Object2IntOpenHashMap<String>()
-            simulationResult.second.fastIterator().forEach {
+            simulationResult.expectedItems.fastIterator().forEach {
                 if (it.key.isArmorItem()) map.put(it.key, it.intValue)
             }
             map
         } else {
-            simulationResult.second
+            simulationResult.expectedItems
         }
         AutoShopInventoryManager.addPendingItems(newPendingItems)
 
         // waits for an inventory update and for an item category update
         tickUntil {
-            !isShopOpen() || (hasReceivedItems(prevInventory, simulationResult.second)
+            !isShopOpen() || (hasReceivedItems(prevInventory, simulationResult.expectedItems)
                 && (nextCategorySlot == -1 || hasItemCategoryChanged(prevShopStacks)))
         }
 
@@ -325,10 +325,10 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     private fun simulateNextPurchases(
         remainingElements: List<ShopElement>,
         onlySameCategory: Boolean,
-    ): Pair<IntList, Object2IntMap<String>> {
+    ): PurchaseSimulationResult {
 
         if (remainingElements.isEmpty()) {
-            return Pair(intListOf(), Object2IntMaps.emptyMap())
+            return PurchaseSimulationResult(intListOf(), Object2IntMaps.emptyMap())
         }
 
         val initialCategorySlot = remainingElements.first().categorySlot
@@ -379,9 +379,13 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         }
 
         slots.add(nextCategorySlot)
-        return Pair(slots, expectedItems)
+        return PurchaseSimulationResult(slots, expectedItems)
     }
 
+    private data class PurchaseSimulationResult(
+        val slots: IntList,
+        val expectedItems: Object2IntMap<String>,
+    )
 
     /**
      * Returns the limited items and their amounts required to buy an item
@@ -406,7 +410,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         // checks if the player is capable of buying a better item so that this item is not actually needed
         if (shopElement.item.id.isItemWithTiers() && remainingElements != null) {
             val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = false)
-            val hasBetterItem = hasBetterTierItem(shopElement.item.id, simulationResult.second)
+            val hasBetterItem = hasBetterTierItem(shopElement.item.id, simulationResult.expectedItems)
             if (hasBetterItem) {
                 return null
             }
