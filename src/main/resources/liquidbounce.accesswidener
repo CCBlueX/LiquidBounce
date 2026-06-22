@@ -1,0 +1,185 @@
+accessWidener	v1	official
+
+accessible field net/minecraft/world/entity/AreaEffectCloud potionContents Lnet/minecraft/world/item/alchemy/PotionContents;
+accessible field net/minecraft/client/Minecraft user Lnet/minecraft/client/User;
+mutable field net/minecraft/client/Minecraft user Lnet/minecraft/client/User;
+accessible field net/minecraft/client/Minecraft profileKeyPairManager Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;
+mutable field net/minecraft/client/Minecraft profileKeyPairManager Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;
+accessible field net/minecraft/client/Minecraft missTime I
+accessible field net/minecraft/client/Minecraft services Lnet/minecraft/server/Services;
+mutable field net/minecraft/client/Minecraft services Lnet/minecraft/server/Services;
+
+accessible method net/minecraft/world/entity/LivingEntity updatingUsingItem ()V
+accessible field net/minecraft/world/entity/HumanoidArm id I
+
+accessible class net/minecraft/world/item/CreativeModeTab$Output
+
+mutable field net/minecraft/world/phys/Vec3 x D
+mutable field net/minecraft/world/phys/Vec3 y D
+mutable field net/minecraft/world/phys/Vec3 z D
+accessible method net/minecraft/world/phys/shapes/EntityCollisionContext <init> (ZZDLnet/minecraft/world/item/ItemStack;ZLnet/minecraft/world/entity/Entity;)V
+
+mutable field net/minecraft/network/protocol/common/ServerboundKeepAlivePacket id J
+accessible field net/minecraft/network/protocol/common/ServerboundKeepAlivePacket id J
+accessible field net/minecraft/network/protocol/game/ServerboundChatPacket message Ljava/lang/String;
+
+accessible field net/minecraft/client/player/LocalPlayer xLast D # 1.21.4 laseX
+accessible field net/minecraft/client/player/LocalPlayer yLast D # 1.21.4 laseBaseY
+accessible field net/minecraft/client/player/LocalPlayer zLast D # 1.21.4 laseZ
+accessible field net/minecraft/client/player/LocalPlayer yRotLast F # 1.21.4 lastYaw
+accessible field net/minecraft/client/player/LocalPlayer xRotLast F # 1.21.4 lastPitch
+accessible field net/minecraft/client/player/LocalPlayer lastOnGround Z
+accessible field net/minecraft/client/player/LocalPlayer wasSprinting Z
+accessible field net/minecraft/client/player/LocalPlayer usingItemHand Lnet/minecraft/world/InteractionHand;
+accessible method net/minecraft/client/player/LocalPlayer sendPosition ()V
+
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket x D
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket y D
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket z D
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket yRot F
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket xRot F
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket onGround Z
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket hasPos Z
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket hasRot Z
+
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket x D
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket y D
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket z D
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket yRot F
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket xRot F
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket onGround Z
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket hasPos Z
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket hasRot Z
+
+accessible field net/minecraft/client/gui/Gui title Lnet/minecraft/network/chat/Component;
+accessible field net/minecraft/client/gui/Gui subtitle Lnet/minecraft/network/chat/Component;
+
+accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode destroyProgress F
+accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode destroyDelay I
+accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode localPlayerMode Lnet/minecraft/world/level/GameType;
+
+accessible field net/minecraft/network/protocol/common/ServerboundResourcePackPacket action Lnet/minecraft/network/protocol/common/ServerboundResourcePackPacket$Action;
+
+accessible field net/minecraft/world/item/BucketItem content Lnet/minecraft/world/level/material/Fluid;
+
+accessible field net/minecraft/client/KeyMapping key Lcom/mojang/blaze3d/platform/InputConstants$Key;
+accessible field net/minecraft/world/entity/LivingEntity attackStrengthTicker I
+accessible field net/minecraft/world/entity/LivingEntity jumping Z
+accessible field net/minecraft/world/entity/LivingEntity noJumpDelay I
+accessible method net/minecraft/world/entity/Entity isInvulnerableToBase (Lnet/minecraft/world/damagesource/DamageSource;)Z
+accessible method net/minecraft/world/entity/Entity canAddPassenger (Lnet/minecraft/world/entity/Entity;)Z
+
+accessible field net/minecraft/client/Options modelParts Ljava/util/Set;
+
+accessible method net/minecraft/world/entity/player/Player getBlockSpeedFactor ()F
+accessible method net/minecraft/world/entity/player/Player getEnchantedDamage (Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/damagesource/DamageSource;)F
+accessible class net/minecraft/world/item/ItemCooldowns$CooldownInstance
+accessible field net/minecraft/world/entity/LivingEntity autoSpinAttackDmg F
+accessible method net/minecraft/world/entity/Entity getInputVector (Lnet/minecraft/world/phys/Vec3;FF)Lnet/minecraft/world/phys/Vec3;
+accessible method net/minecraft/world/phys/AABB getDirection (Lnet/minecraft/world/phys/AABB;Lnet/minecraft/world/phys/Vec3;[DLnet/minecraft/core/Direction;DDD)Lnet/minecraft/core/Direction;
+
+accessible field net/minecraft/client/multiplayer/ClientChunkCache storage Lnet/minecraft/client/multiplayer/ClientChunkCache$Storage;
+accessible field net/minecraft/world/level/chunk/LevelChunk loaded Z
+accessible field net/minecraft/client/multiplayer/ClientChunkCache$Storage chunks Ljava/util/concurrent/atomic/AtomicReferenceArray;
+
+accessible field net/minecraft/client/renderer/LevelRenderer destructionProgress Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;
+
+accessible method net/minecraft/world/entity/LivingEntity getJumpPower ()F
+accessible method net/minecraft/world/entity/LivingEntity calculateFallDamage (DF)I
+
+accessible field net/minecraft/world/entity/monster/Creeper explosionRadius I
+
+accessible method net/minecraft/client/Camera setPosition (Lnet/minecraft/world/phys/Vec3;)V
+
+accessible method net/minecraft/client/multiplayer/MultiPlayerGameMode startPrediction (Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/multiplayer/prediction/PredictiveAction;)V
+
+accessible field net/minecraft/client/gui/screens/inventory/CreativeModeInventoryScreen selectedTab Lnet/minecraft/world/item/CreativeModeTab;
+
+accessible field net/minecraft/client/renderer/PostChain passes Ljava/util/List;
+
+accessible field net/minecraft/network/Connection channel Lio/netty/channel/Channel;
+
+accessible class net/minecraft/client/MouseHandler$LastClick
+accessible method net/minecraft/client/player/KeyboardInput calculateImpulse (ZZ)F
+
+accessible field net/minecraft/client/KeyMapping clickCount I
+
+accessible field net/minecraft/client/StringSplitter widthProvider Lnet/minecraft/client/StringSplitter$WidthProvider;
+
+accessible method net/minecraft/world/entity/LivingEntity getDamageAfterArmorAbsorb (Lnet/minecraft/world/damagesource/DamageSource;F)F
+accessible method net/minecraft/world/entity/LivingEntity getDamageAfterMagicAbsorb (Lnet/minecraft/world/damagesource/DamageSource;F)F
+
+accessible method net/minecraft/world/item/BlockItem getPlacementState (Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/level/block/state/BlockState;
+
+accessible field net/minecraft/world/entity/Entity dimensions Lnet/minecraft/world/entity/EntityDimensions;
+accessible field net/minecraft/world/entity/Entity fluidInteraction Lnet/minecraft/world/entity/EntityFluidInteraction;
+
+accessible field net/minecraft/network/protocol/game/VecDeltaCodec base Lnet/minecraft/world/phys/Vec3;
+
+accessible field net/minecraft/client/gui/components/PlayerTabOverlay header Lnet/minecraft/network/chat/Component;
+accessible field net/minecraft/client/gui/components/PlayerTabOverlay footer Lnet/minecraft/network/chat/Component;
+
+accessible field net/minecraft/network/protocol/common/ClientboundPingPacket id I
+mutable field net/minecraft/network/protocol/common/ClientboundPingPacket id I
+
+accessible field net/minecraft/world/entity/WalkAnimationState position F
+
+accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket sectionPos Lnet/minecraft/core/SectionPos;
+
+accessible field net/minecraft/client/gui/components/ChatComponent allMessages Ljava/util/List;
+accessible field net/minecraft/client/gui/components/ChatComponent trimmedMessages Ljava/util/List;
+accessible method net/minecraft/client/gui/components/ChatComponent logChatMessage (Lnet/minecraft/client/multiplayer/chat/GuiMessage;)V
+accessible method net/minecraft/client/gui/components/ChatComponent addMessageToDisplayQueue (Lnet/minecraft/client/multiplayer/chat/GuiMessage;)V
+accessible method net/minecraft/client/gui/components/ChatComponent addMessageToQueue (Lnet/minecraft/client/multiplayer/chat/GuiMessage;)V
+
+accessible method net/minecraft/network/chat/TextColor <init> (ILjava/lang/String;)V
+
+accessible field net/minecraft/client/Minecraft clientStartTimeMs J
+
+accessible field net/minecraft/core/Direction BY_2D_DATA [Lnet/minecraft/core/Direction;
+
+accessible field com/mojang/blaze3d/platform/InputConstants$Type map Lit/unimi/dsi/fastutil/ints/Int2ObjectMap;
+
+accessible method net/minecraft/client/multiplayer/MultiPlayerGameMode ensureHasSentCarriedItem ()V
+
+accessible method net/minecraft/world/entity/Entity unsetRemoved ()V
+
+accessible method net/minecraft/world/entity/projectile/arrow/AbstractArrow isInGround ()Z
+
+accessible method net/minecraft/world/level/block/state/BlockBehaviour getCloneItemStack (Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)Lnet/minecraft/world/item/ItemStack;
+
+accessible method com/mojang/blaze3d/platform/NativeImage writeToChannel (Ljava/nio/channels/WritableByteChannel;)Z
+
+accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder <init> ()V
+accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder withSnippet (Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;)V
+
+accessible class net/minecraft/client/renderer/state/gui/GuiRenderState$Node
+accessible class net/minecraft/client/gui/render/GuiRenderer$Draw
+accessible class net/minecraft/client/gui/Gui$ContextualInfo
+
+accessible method net/minecraft/client/gui/screens/ConnectScreen connect (Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/multiplayer/resolver/ServerAddress;Lnet/minecraft/client/multiplayer/ServerData;Lnet/minecraft/client/multiplayer/TransferState;)V
+accessible method net/minecraft/client/gui/screens/ConnectScreen updateStatus (Lnet/minecraft/network/chat/Component;)V
+
+accessible method net/minecraft/client/multiplayer/PlayerInfo createSkinLookup (Lcom/mojang/authlib/GameProfile;)Ljava/util/function/Supplier;
+accessible method net/minecraft/client/player/AbstractClientPlayer getPlayerInfo ()Lnet/minecraft/client/multiplayer/PlayerInfo;
+
+accessible field net/minecraft/client/renderer/GameRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
+
+accessible class net/minecraft/client/renderer/OutlineBufferSource$EntityOutlineGenerator
+accessible method net/minecraft/client/renderer/OutlineBufferSource$EntityOutlineGenerator <init> (Lcom/mojang/blaze3d/vertex/VertexConsumer;I)V
+
+accessible field net/minecraft/client/renderer/RenderPipelines ENTITY_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines MATRICES_PROJECTION_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines DEBUG_FILLED_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines GUI_TEXTURED_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines GUI_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines LINES_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines GLOBALS_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+
+accessible method net/minecraft/client/renderer/rendertype/RenderType create (Ljava/lang/String;Lnet/minecraft/client/renderer/rendertype/RenderSetup;)Lnet/minecraft/client/renderer/rendertype/RenderType;
+
+accessible class net/minecraft/client/gui/GuiGraphicsExtractor$ScissorStack
+accessible field net/minecraft/client/gui/GuiGraphicsExtractor scissorStack Lnet/minecraft/client/gui/GuiGraphicsExtractor$ScissorStack;
+accessible field net/minecraft/client/gui/GuiGraphicsExtractor guiRenderState Lnet/minecraft/client/renderer/state/gui/GuiRenderState;
+
+accessible method net/minecraft/world/item/enchantment/EnchantmentHelper getComponentType (Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/core/component/DataComponentType;

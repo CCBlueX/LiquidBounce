@@ -1,0 +1,128 @@
+{
+  "name": "Text",
+  "enabled": false,
+  "singleton": false,
+  "alignment": {
+    "horizontalAlignment": "Center",
+    "horizontalOffset": 0,
+    "verticalAlignment": "Center",
+    "verticalOffset": 0
+  },
+  "values": [
+    {
+      "type": "TEXT",
+      "name": "Text",
+      "value": "Text"
+    },
+    {
+      "type": "COLOR",
+      "name": "Color",
+      "value": 4294967295
+    },
+    {
+      "type": "TEXT",
+      "name": "Font",
+      "value": "Inter"
+    },
+    {
+      "type": "INT",
+      "name": "Size",
+      "value": 14,
+      "range": {
+        "min": 1,
+        "max": 100
+      },
+      "suffix": "px"
+    },
+    {
+      "type": "CONFIGURABLE",
+      "name": "Decorations",
+      "values": [
+        {
+          "type": "BOOLEAN",
+          "name": "Bold",
+          "value": false
+        },
+        {
+          "type": "BOOLEAN",
+          "name": "Italic",
+          "value": false
+        },
+        {
+          "type": "BOOLEAN",
+          "name": "Underline",
+          "value": false
+        },
+        {
+          "type": "BOOLEAN",
+          "name": "Strikethrough",
+          "value": false
+        }
+      ]
+    },
+    {
+      "type": "TOGGLEABLE",
+      "name": "Shadow",
+      "value": false,
+      "values": [
+        {
+          "type": "INT",
+          "name": "OffsetX",
+          "value": 0,
+          "range": {
+            "min": -10,
+            "max": 10
+          },
+          "suffix": "px"
+        },
+        {
+          "type": "INT",
+          "name": "OffsetY",
+          "value": 0,
+          "range": {
+            "min": -10,
+            "max": 10
+          },
+          "suffix": "px"
+        },
+        {
+          "type": "INT",
+          "name": "BlurRadius",
+          "value": 0,
+          "range": {
+            "min": 0,
+            "max": 10
+          },
+          "suffix": "px"
+        },
+        {
+          "type": "COLOR",
+          "name": "Color",
+          "value": 4278190080
+        }
+      ]
+    },
+    {
+      "type": "TOGGLEABLE",
+      "name": "Glow",
+      "value": false,
+      "values": [
+        {
+          "type": "INT",
+          "name": "Radius",
+          "value": 0,
+          "range": {
+            "min": 0,
+            "max": 10
+          },
+          "suffix": "px"
+        },
+        {
+          "type": "COLOR",
+          "name": "Color",
+          "value": 4294967295
+        }
+      ]
+    }
+  ]
+}

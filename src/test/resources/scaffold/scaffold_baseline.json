@@ -1,0 +1,305 @@
+{
+  "name": "Scaffold",
+  "value": [
+    {
+      "name": "Enabled",
+      "value": true
+    },
+    {
+      "name": "Silent",
+      "value": false
+    },
+    {
+      "name": "SlotResetDelay",
+      "value": 10
+    },
+    {
+      "name": "Delay",
+      "value": {
+        "from": 0,
+        "to": 0
+      }
+    },
+    {
+      "name": "Swing",
+      "value": true
+    },
+    {
+      "name": "Rotations",
+      "value": [
+        {
+          "name": "TurnSpeed",
+          "value": {
+            "from": 180.0,
+            "to": 180.0
+          }
+        },
+        {
+          "name": "SmoothMode",
+          "value": "Relative"
+        },
+        {
+          "name": "FixVelocity",
+          "value": true
+        },
+        {
+          "name": "ResetThreshold",
+          "value": 2.0
+        },
+        {
+          "name": "TicksUntilReset",
+          "value": 5
+        },
+        {
+          "name": "Silent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "name": "RotationMode",
+      "value": "Stabilized"
+    },
+    {
+      "name": "IgnoreOpenInventory",
+      "value": true
+    },
+    {
+      "name": "MinDist",
+      "value": 0.0
+    },
+    {
+      "name": "SafeWalk",
+      "active": "None",
+      "value": [],
+      "choices": {
+        "None": {
+          "name": "None",
+          "value": []
+        },
+        "Safe": {
+          "name": "Safe",
+          "value": []
+        },
+        "Simulate": {
+          "name": "Simulate",
+          "value": [
+            {
+              "name": "Ticks",
+              "value": 5
+            }
+          ]
+        },
+        "OnEdge": {
+          "name": "OnEdge",
+          "value": [
+            {
+              "name": "EdgeDistance",
+              "value": 0.01
+            }
+          ]
+        }
+      },
+      "valueType": "CHOICE"
+    },
+    {
+      "name": "ZitterMode",
+      "active": "Off",
+      "value": [],
+      "choices": {
+        "Off": {
+          "name": "Off",
+          "value": []
+        },
+        "Teleport": {
+          "name": "Teleport",
+          "value": [
+            {
+              "name": "Speed",
+              "value": 0.13
+            },
+            {
+              "name": "Strength",
+              "value": 0.05
+            },
+            {
+              "name": "GroundOnly",
+              "value": true
+            }
+          ]
+        },
+        "Smooth": {
+          "name": "Smooth",
+          "value": []
+        }
+      },
+      "valueType": "CHOICE"
+    },
+    {
+      "name": "Timer",
+      "value": 1.0
+    },
+    {
+      "name": "SameY",
+      "value": false
+    },
+    {
+      "name": "SimulatePlacementAttempts",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": false
+        },
+        {
+          "name": "ClickScheduler",
+          "value": [
+            {
+              "name": "CPS",
+              "value": {
+                "from": 5,
+                "to": 8
+              }
+            }
+          ]
+        },
+        {
+          "name": "FailedAttemptsOnly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "name": "Slow",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": false
+        },
+        {
+          "name": "SlowSpeed",
+          "value": 0.6
+        }
+      ]
+    },
+    {
+      "name": "SpeedLimiter",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": false
+        },
+        {
+          "name": "SpeedLimit",
+          "value": 0.11
+        }
+      ]
+    },
+    {
+      "name": "Eagle",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": false
+        },
+        {
+          "name": "BlocksToEagle",
+          "value": 0
+        },
+        {
+          "name": "EagleEdgeDistance",
+          "value": 0.01
+        }
+      ]
+    },
+    {
+      "name": "Down",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": false
+        }
+      ]
+    },
+    {
+      "name": "AutoJump",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": false
+        },
+        {
+          "name": "WhenGoingDiagonal",
+          "value": false
+        },
+        {
+          "name": "PredictFactor",
+          "value": 0.54
+        },
+        {
+          "name": "UseDelay",
+          "value": true
+        },
+        {
+          "name": "MaxBlocks",
+          "value": 8
+        }
+      ]
+    },
+    {
+      "name": "AdvancedRotation",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": false
+        },
+        {
+          "name": "XRange",
+          "value": {
+            "from": 0.1,
+            "to": 0.9
+          }
+        },
+        {
+          "name": "YRange",
+          "value": {
+            "from": 0.33,
+            "to": 0.85
+          }
+        },
+        {
+          "name": "ZRange",
+          "value": {
+            "from": 0.1,
+            "to": 0.9
+          }
+        },
+        {
+          "name": "Step",
+          "value": 0.1
+        }
+      ]
+    },
+    {
+      "name": "StabilizeMovement",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": true
+        }
+      ]
+    },
+    {
+      "name": "Tower",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": false
+        },
+        {
+          "name": "Mode",
+          "value": "Jump"
+        }
+      ]
+    }
+  ]
+}

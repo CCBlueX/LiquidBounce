@@ -1,0 +1,85 @@
+config:
+  validation: true
+  warningsAsErrors: false
+  checkExhaustiveness: false
+  # when writing own rules with new properties, exclude the property path e.g.: 'my_rule_set,.*>.*>[my_property]'
+#  excludes: ''
+
+complexity:
+  active: true
+  NamedArguments:
+    active: true
+    allowedArguments: 4
+  ComplexCondition:
+    allowedConditions: 5
+  LongParameterList:
+    allowedFunctionParameters: 7
+    allowedConstructorParameters: 7
+  CyclomaticComplexMethod:
+    active: false
+  CognitiveComplexMethod:
+    active: true
+    allowedComplexity: 16
+  StringLiteralDuplication:
+    active: false
+
+performance:
+  active: true
+  ArrayPrimitive:
+    active: true
+  CouldBeSequence:
+    active: true
+  ForEachOnRange:
+    active: true
+  UnnecessaryPartOfBinaryExpression:
+    active: true
+  UnnecessaryTemporaryInstantiation:
+    active: true
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+
+style:
+  DestructuringDeclarationWithTooManyEntries:
+    maxDestructuringEntries: 4
+  MagicNumber:
+    active: false
+  ReturnCount:
+    active: true
+    excludeGuardClauses: true
+    max: 4
+  LoopWithTooManyJumpStatements:
+    active: true
+    maxJumpCount: 3
+  #  UnusedImports:
+  #    active: true
+  WildcardImport:
+    active: true
+  ForbiddenComment:
+    active: false
+  UnusedPrivateProperty:
+    allowedNames: '_|ignored|expected|serialVersionUID|.+Handler\d*|repeatable'
+  ForbiddenMethodCall:
+    active: true
+    methods:
+      - value: 'kotlin.io.print'
+      - value: 'kotlin.io.println'
+      - value: 'java.math.BigDecimal.<init>(kotlin.Double)'
+      - value: 'java.math.BigDecimal.<init>(kotlin.String)'
+      - value: 'kotlin.system.measureTimeMillis'
+      - value: 'org.lwjgl.opengl.GL11.glBindTexture'
+        reason: 'replace with GlStateManager._bindTexture(), because everything else will mess up the internal state handling.'
+      # Java stuffs
+      - value: 'java.util.Vector.<init>'
+        reason: 'Replaced with CopyOnWriteArrayList and list.synchronized()'
+      - value: 'java.util.Stack.<init>'
+        reason: 'Replaced with CopyOnWriteArrayList and list.synchronized()'
+      - value: 'java.util.Hashtable.<init>'
+        reason: 'Replaced with ConcurrentHashMap'
+      - value: 'java.util.LinkedList.<init>'
+        reason: 'Use ArrayDeque for deque usage, ArrayList for list usage'
+  BracesOnIfStatements:
+    active: true
+    singleLine: 'never'
+    multiLine: 'always'

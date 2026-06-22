@@ -1,0 +1,88 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.features.module.modules.combat
+
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.entity.warp
+import net.ccbluex.liquidbounce.utils.math.allEmpty
+import net.minecraft.world.item.Items
+import kotlin.math.abs
+import kotlin.math.ceil
+
+/**
+ * Makes the mace powerful by faking fall height.
+ */
+object ModuleMaceKill : ClientModule("MaceKill", ModuleCategories.COMBAT) {
+
+    private val fallHeight by int("FallHeight", 22, 1..170).apply { tagBy(this) }
+
+    @Suppress("unused")
+    private val attackHandler = handler<AttackEntityEvent> { event ->
+        // Check if player is holding a mace
+        val mainHandStack = player.mainHandItem
+
+        if (mainHandStack.item != Items.MACE) return@handler
+
+        val height = determineHeight()
+
+        // Use Paper/Spigot teleport exploit if height is greater than 10
+        if (height > 10) {
+            repeat(ceil(abs(height / 10.0)).toInt()) {
+                player.warp(null, onGround = false)
+            }
+        } else {
+            // Do it at least twice to neutralize horizontal distance
+            repeat(2) { player.warp(null, onGround = player.onGround()) }
+        }
+
+        // Teleport to the calculated height
+        player.warp(player.position().add(0.0, height.toDouble(), 0.0), onGround = false)
+
+        // Make sure we get back to the ground
+        player.warp(player.position(), onGround = false)
+    }
+
+    /**
+     * In this case we can easily determine the height
+     * by checking if the player would collide with a block
+     * from the highest possible fall height to 1.
+     *
+     * We do not have to check in-between heights, because
+     * we immediately teleport through the block and
+     * Minecraft has no collision check for that.
+     */
+    private fun determineHeight(): Int {
+        val boundingBox = player.boundingBox
+        for (i in fallHeight downTo 1) {
+            // Offset bounding box by i blocks
+            val newBoundingBox = boundingBox.move(0.0, i.toDouble(), 0.0)
+
+            // Check if the player would collide with a block
+            if (world.getBlockCollisions(player, newBoundingBox).allEmpty()) {
+                return i
+            }
+        }
+
+        return 0
+    }
+
+}

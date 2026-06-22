@@ -1,0 +1,189 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.features.module.modules.misc
+
+import it.unimi.dsi.fastutil.ints.Int2LongLinkedOpenHashMap
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.TagEntityEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.client.player.AbstractClientPlayer
+
+/**
+ * TargetLock module
+ *
+ * Locks on to a target and prevents targeting other entities,
+ * either [Temporary]ly on attack or by [Filter]ing by username.
+ */
+object ModuleTargetLock : ClientModule("TargetLock", ModuleCategories.MISC) {
+
+    init {
+        doNotIncludeAlways()
+    }
+
+    private val mode = choices("Mode", Temporary, arrayOf(Temporary, Filter))
+
+    /**
+     * This option will only lock the enemy on combat modules
+     */
+    private val combatOnly by boolean("Combat", false)
+
+    private sealed class LockMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
+            get() = mode
+        abstract fun isLockedOn(playerEntity: AbstractClientPlayer): Boolean
+    }
+
+    private object Filter : LockMode("Filter") {
+
+        private val usernames by textList("Usernames", mutableListOf("Notch"))
+        private val filterType by enumChoice("FilterType", FilterType.WHITELIST)
+
+        enum class FilterType(override val tag: String) : Tagged {
+            WHITELIST("Whitelist"),
+            BLACKLIST("Blacklist")
+        }
+
+        override fun isLockedOn(playerEntity: AbstractClientPlayer): Boolean {
+            val name = playerEntity.gameProfile.name
+
+            return when (filterType) {
+                FilterType.WHITELIST -> usernames.any { it.equals(name, true) }
+                FilterType.BLACKLIST -> usernames.none {
+                    it.equals(name, true)
+                }
+            }
+
+        }
+    }
+
+    private object Temporary : LockMode("Temporary") {
+
+        private val timeUntilReset by int("MaximumTime", 30, 0..120, "s")
+        private val outOfRange by float("MaximumRange", 20f, 8f..40f)
+
+        private val whenNoLock by enumChoice("WhenNoLock", NoLockMode.ALLOW_ALL)
+
+        // Combination of [entityId] and [time]
+        private val lockList = Int2LongLinkedOpenHashMap()
+
+        enum class NoLockMode(override val tag: String) : Tagged {
+            ALLOW_ALL("AllowAll"),
+            ALLOW_NONE("AllowNone")
+        }
+
+        @Suppress("unused")
+        private val attackHandler = handler<AttackEntityEvent> { event ->
+            val target = event.entity as? AbstractClientPlayer ?: return@handler
+
+            if (!lockList.containsKey(target.id)) {
+                notification(
+                    "TargetLock",
+                    message("lockedOn", target.gameProfile.name, timeUntilReset),
+                    NotificationEvent.Severity.INFO
+                )
+            }
+            lockList.put(target.id, System.currentTimeMillis() + timeUntilReset * 1000L)
+        }
+
+        @Suppress("unused")
+        private val cleanUpTask = tickHandler {
+            if (player.isDeadOrDying) {
+                lockList.clear()
+                return@tickHandler
+            }
+
+            val currentTime = System.currentTimeMillis()
+            lockList.int2LongEntrySet().removeIf {
+                val entityId = it.intKey
+                val time = it.longValue
+                // Remove if entity is out of range
+                val entity = world.getEntity(entityId) as? AbstractClientPlayer ?: return@removeIf true
+
+                if (entity.isRemoved || entity.distanceToSqr(player) > outOfRange.sq()) {
+                    notification(
+                        "TargetLock",
+                        message("outOfRange", entity.gameProfile.name),
+                        NotificationEvent.Severity.INFO
+                    )
+                    return@removeIf true
+                }
+
+                // Remove if time is up
+                if (time < currentTime) {
+                    notification(
+                        "TargetLock",
+                        message("timeUp", entity.gameProfile.name),
+                        NotificationEvent.Severity.INFO
+                    )
+                    return@removeIf true
+                }
+
+                false
+            }
+        }
+
+        override fun isLockedOn(playerEntity: AbstractClientPlayer): Boolean {
+            val entityId = playerEntity.id
+
+            if (lockList.isEmpty()) {
+                return when (whenNoLock) {
+                    NoLockMode.ALLOW_ALL -> true
+                    NoLockMode.ALLOW_NONE -> false
+                }
+            }
+
+            return lockList.containsKey(entityId)
+        }
+
+    }
+
+    @Suppress("unused")
+    private val tagEntityEvent = handler<TagEntityEvent> { event ->
+        if (event.entity !is AbstractClientPlayer || this@ModuleTargetLock.isLockedOn(event.entity)) {
+            return@handler
+        }
+
+        if (combatOnly) {
+            event.dontTarget()
+        } else {
+           event.ignore()
+        }
+    }
+
+    /**
+     * Check if [entity] is in your focus
+     */
+    private fun isLockedOn(entity: AbstractClientPlayer): Boolean {
+        if (!running) {
+            return false
+        }
+
+        return mode.activeMode.isLockedOn(entity)
+    }
+
+}

@@ -1,0 +1,289 @@
+<script lang="ts">
+    import type {ConfigurableSetting, Module} from "../../integration/types";
+    import {getModuleSettings, setModuleEnabled, setTyping} from "../../integration/rest";
+    import {listen} from "../../integration/ws";
+    import type {ClickGuiValueChangeEvent, KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
+    import {highlightModuleName} from "./clickgui_store";
+    import {onMount} from "svelte";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
+    import {isClickGuiScreen} from "../../util/utils";
+
+    export let modules: Module[];
+
+    let resultElements: HTMLElement[] = [];
+    let searchContainerElement: HTMLElement;
+    let autoFocus: boolean = true
+    let searchInputElement: HTMLElement;
+    let query: string;
+    let filteredModules: Module[] = [];
+    let selectedIndex = 0;
+    let hasFocus = false;
+
+    function reset() {
+        filteredModules = [];
+        query = "";
+        $highlightModuleName = null;
+    }
+
+    function filterModules(resetIndex: boolean) {
+        if (!query) {
+            reset();
+            return;
+        }
+
+        if (resetIndex) {
+            selectedIndex = 0;
+        }
+
+        const pureQuery = query.toLowerCase().replaceAll(" ", "");
+
+        filteredModules = modules.filter((m) => m.name.toLowerCase().includes(pureQuery)
+            || m.aliases.some(a => a.toLowerCase().includes(pureQuery))
+        );
+    }
+
+    async function handleKeyDown(e: KeyboardKeyEvent) {
+        if (!isClickGuiScreen(e.screen)) {
+            return;
+        }
+
+        if (filteredModules.length === 0 || e.action === 0) {
+            return;
+        }
+
+        switch (e.key) {
+            case "key.keyboard.down":
+                selectedIndex = (selectedIndex + 1) % filteredModules.length;
+                break;
+            case "key.keyboard.up":
+                selectedIndex =
+                    (selectedIndex - 1 + filteredModules.length) %
+                    filteredModules.length;
+                break;
+            case "key.keyboard.enter":
+                await toggleModule(
+                    filteredModules[selectedIndex].name,
+                    !filteredModules[selectedIndex].enabled,
+                );
+                break;
+            case "key.keyboard.tab":
+                const m = filteredModules[selectedIndex]?.name;
+                if (m) {
+                    $highlightModuleName = m;
+                }
+                break;
+        }
+
+        resultElements[selectedIndex]?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+        });
+    }
+
+    function handleBrowserKeyDown(e: KeyboardEvent) {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Tab") {
+            e.preventDefault();
+        }
+    }
+
+    async function toggleModule(name: string, enabled: boolean) {
+        await setModuleEnabled(name, enabled);
+    }
+
+    function handleWindowClick(e: MouseEvent) {
+        if (!searchContainerElement.contains(e.target as Node) && !hasFocus) {
+            reset();
+        }
+    }
+
+    function handleMouseOut() {
+        hasFocus = false;
+        reset();
+    }
+
+    function handleWindowKeyDown() {
+        if (document.activeElement !== document.body) {
+            return;
+        }
+
+        if (autoFocus) {
+            searchInputElement.focus();
+        }
+    }
+
+    function applyValues(configurable: ConfigurableSetting) {
+        autoFocus = configurable.value.find(v => v.name === "SearchBarAutoFocus")?.value as boolean ?? true;
+    }
+
+    onMount(async () => {
+        const clickGuiSettings = await getModuleSettings("ClickGUI");
+        applyValues(clickGuiSettings);
+
+        if (autoFocus) {
+            searchInputElement.focus();
+        }
+    });
+
+    listen("moduleToggle", (e: ModuleToggleEvent) => {
+        const mod = modules.find((m) => m.name === e.moduleName);
+        if (!mod) {
+            return;
+        }
+        mod.enabled = e.enabled;
+
+        // Refilter modules to update enabled state
+        filterModules(false);
+    });
+
+    listen("keyboardKey", handleKeyDown);
+
+    listen("clickGuiValueChange", (e: ClickGuiValueChangeEvent) => {
+        applyValues(e.configurable);
+    });
+</script>
+
+<svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeyDown} on:contextmenu={handleWindowClick}/>
+
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div
+        class="search"
+        class:has-results={query}
+        class:has-focus={hasFocus}
+        bind:this={searchContainerElement}
+        on:mouseenter={() => hasFocus = true}
+        on:mouseleave={handleMouseOut}
+>
+    <input
+            type="text"
+            class="search-input"
+            placeholder="Search"
+            spellcheck="false"
+            bind:value={query}
+            bind:this={searchInputElement}
+            on:input={() => filterModules(true)}
+            on:keydown={handleBrowserKeyDown}
+            on:focusin={async () => await setTyping(true)}
+            on:focusout={async () => await setTyping(false)}
+    />
+
+    {#if query}
+        <div class="results">
+            {#if filteredModules.length > 0}
+                {#each filteredModules as {name, enabled, aliases}, index (name)}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    <div
+                            class="result"
+                            class:enabled
+                            on:click={() => toggleModule(name, !enabled)}
+                            on:contextmenu|preventDefault={() => $highlightModuleName = name}
+                            class:selected={selectedIndex === index}
+                            bind:this={resultElements[index]}
+                    >
+                        <div class="module-name">
+                            {$spaceSeperatedNames ? convertToSpacedString(name) : name}
+                        </div>
+                        <div class="aliases">
+                            {#if aliases.length > 0}
+                                (aka {aliases.map(name => $spaceSeperatedNames ? convertToSpacedString(name) : name).join(", ")})
+                            {/if}
+                        </div>
+                    </div>
+                {/each}
+            {:else}
+                <div class="placeholder">No modules found</div>
+            {/if}
+        </div>
+    {/if}
+</div>
+
+<style lang="scss">
+
+  .search {
+    position: fixed;
+    left: 50%;
+    top: 70px;
+    transform: translateX(-50%);
+    background-color: var(--clickgui-search-background-color);
+    width: 600px;
+    border-radius: 30px;
+    overflow: hidden;
+    transition: ease border-radius 0.2s;
+    box-shadow: 0 0 10px var(--clickgui-search-shadow-color);
+
+    &.has-results {
+      border-radius: 10px;
+    }
+
+    &:focus-within,
+    &.has-focus {
+      z-index: 9999999999;
+    }
+  }
+
+  .results {
+    border-top: solid 2px var(--clickgui-search-border-color);
+    padding: 5px 25px;
+    max-height: 250px;
+    overflow: auto;
+
+    .result {
+      font-size: 16px;
+      padding: 10px 0;
+      transition: ease padding-left 0.2s;
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: max-content 1fr max-content;
+
+      .module-name {
+        color: var(--clickgui-text-dimmed-color);
+        transition: ease color 0.2s;
+      }
+
+      &.enabled {
+        .module-name {
+          color: var(--clickgui-search-enabled-color);
+        }
+      }
+
+      .aliases {
+        color: var(--clickgui-search-alias-color);
+        margin-left: 10px;
+      }
+
+      &.selected {
+        padding-left: 10px;
+      }
+
+      &:hover {
+        color: var(--clickgui-text-color);
+
+        &::after {
+          content: "Right-click to locate";
+          color: var(--clickgui-search-hint-color);
+          font-size: 12px;
+        }
+      }
+    }
+
+    .placeholder {
+      color: var(--clickgui-text-dimmed-color);
+      font-size: 16px;
+      padding: 10px 0;
+    }
+
+    &::-webkit-scrollbar {
+      width: 0;
+    }
+  }
+
+  .search-input {
+    padding: 15px 25px;
+    background-color: transparent;
+    border: none;
+    font-family: "Inter", sans-serif;
+    font-size: 16px;
+    color: var(--clickgui-text-color);
+    width: 100%;
+  }
+</style>

@@ -1,0 +1,66 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
+
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+
+object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
+
+    private val inventoryConstraints = tree(PlayerInventoryConstraints())
+
+    fun execute(event: ScheduleInventoryActionEvent) {
+        // Check if we have space in the hotbar
+        if (!findEmptyHotbarSlot()) {
+            return
+        }
+
+        val validFeatures = ModuleAutoBuff.activeFeatures
+
+        // Find valid items in the inventory
+        val validItems = Slots.Inventory.filter {
+            val itemStack = it.itemStack
+            validFeatures.any { f -> f.isValidItem(itemStack, false) }
+        }
+
+        // Check if we have any valid items
+        if (validItems.isEmpty()) {
+            return
+        }
+
+        // Sort the items by the order of the features
+        for (slot in validItems) {
+            event.schedule(
+                inventoryConstraints, InventoryAction.Click.performQuickMove(slot = slot),
+                Priority.IMPORTANT_FOR_USAGE_1
+            )
+        }
+    }
+
+    private fun findEmptyHotbarSlot(): Boolean {
+        return Slots.OffhandWithHotbar.findSlot { it.isEmpty } != null
+    }
+
+}

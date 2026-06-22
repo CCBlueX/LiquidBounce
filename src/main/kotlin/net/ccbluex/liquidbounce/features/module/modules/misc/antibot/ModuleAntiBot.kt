@@ -1,0 +1,114 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.features.module.modules.misc.antibot
+
+import com.mojang.authlib.GameProfile
+import net.ccbluex.liquidbounce.event.events.TagEntityEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.CustomAntiBotMode
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.HorizonAntiBotMode
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.IntaveHeavyAntiBotMode
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.MatrixAntiBotMode
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
+
+object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
+
+    val modes = choices("Mode", CustomAntiBotMode, arrayOf(
+        CustomAntiBotMode,
+        MatrixAntiBotMode,
+        IntaveHeavyAntiBotMode,
+        HorizonAntiBotMode
+    ))
+
+    private val literalNPC by boolean("LiteralNPC", false)
+    private val notInTabList by boolean("NotInTabList", false)
+
+    @Suppress("unused")
+    private val tagHandler = handler<TagEntityEvent> {
+        if (it.entity === player) {
+            return@handler
+        }
+
+        if (isBot(it.entity)) {
+           it.ignore()
+        }
+    }
+
+    private fun reset() = this.modes.modes.forEach {
+        it.reset()
+    }
+
+    override fun onDisabled() {
+        reset()
+    }
+
+    @Suppress("unused")
+    private val handleWorldChange = handler<WorldChangeEvent> {
+        reset()
+    }
+
+    fun isADuplicate(profile: GameProfile): Boolean {
+        return network.onlinePlayers.count { it.profile.name == profile.name && it.profile.id != profile.id } == 1
+    }
+
+    /**
+     * Checks if the game profile is known at most once in the player list.
+     *
+     * Used to prevent false positives when a player is on a minigame such as Practice and joins a duel
+     */
+    fun isGameProfileUnique(profile: GameProfile): Boolean {
+        return network.onlinePlayers.count { it.profile.name == profile.name && it.profile.id == profile.id } == 1
+    }
+
+    /**
+     * Check if player might be a bot
+     */
+    fun isBot(player: Entity): Boolean {
+        if (!running || player === mc.player) {
+            return false
+        }
+
+        if (player !is Player) {
+            return false
+        }
+
+        if (literalNPC && !network.onlinePlayerIds.contains(player.uuid)) {
+            return true
+        }
+
+        if (notInTabList && isMissingFromTabList(player)) {
+            return true
+        }
+
+        return this.modes.activeMode.isBot(player)
+    }
+
+    /**
+     * @see net.minecraft.client.multiplayer.ClientPacketListener.getListedOnlinePlayers
+     * @see net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED
+     */
+    private fun isMissingFromTabList(player: Player): Boolean {
+        return network.listedOnlinePlayers.none { it.profile.id == player.uuid }
+    }
+
+}

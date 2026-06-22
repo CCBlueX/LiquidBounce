@@ -1,0 +1,122 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.utils.render
+
+import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.render.engine.type.Rect
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.math.vertices
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec2
+import net.minecraft.world.phys.Vec3
+import org.joml.Matrix4f
+import org.joml.Matrix4fc
+import org.joml.Vector3f
+import java.text.NumberFormat
+
+/**
+ * This util should only be called from main thread
+ */
+object WorldToScreen {
+
+    private val projModelViewMatrix = Matrix4f()
+    private var cachedCameraPos: Vec3 = Vec3.ZERO
+
+    private val cacheMat4f = Matrix4f()
+    private val cacheVec3f = Vector3f()
+
+    @JvmStatic
+    fun setMatrices(projectionMatrix: Matrix4fc, modelViewMatrix: Matrix4fc, cameraPos: Vec3) {
+        this.projModelViewMatrix.set(projectionMatrix).mul(modelViewMatrix)
+        this.cachedCameraPos = cameraPos
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun calculateScreenPos(
+        pos: Vec3,
+        cameraPos: Vec3 = this.cachedCameraPos,
+    ): Vec3f? {
+        val transformedPos = cacheVec3f.set(
+            pos.x - cameraPos.x,
+            pos.y - cameraPos.y,
+            pos.z - cameraPos.z
+        ).mulProject(this.projModelViewMatrix)
+
+        val scaleFactor = mc.window.guiScale
+        val guiScaleMul = 0.5f / scaleFactor.toFloat()
+
+        val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
+            .mul(guiScaleMul * mc.mainRenderTarget.width, guiScaleMul * mc.mainRenderTarget.height, 1.0F)
+
+        return if (screenPos.x.isFinite() && screenPos.y.isFinite() && screenPos.z.isFinite() && screenPos.z < 1.0F) {
+            Vec3f(screenPos)
+        } else {
+            null
+        }
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun calculateMouseRay(posOnScreen: Vec2, cameraPos: Vec3 = this.cachedCameraPos): Line {
+        val screenVec = cacheVec3f.set(posOnScreen.x, posOnScreen.y, 1.0F)
+
+        val scaleFactor = mc.window.guiScale
+        val guiScaleMul = 0.5f / scaleFactor.toFloat()
+
+        val transformedPos = screenVec.mul(
+            1.0F / (guiScaleMul * mc.mainRenderTarget.width),
+            1.0F / (guiScaleMul * mc.mainRenderTarget.height),
+            1.0F
+        ).sub(1.0F, 1.0F, 0.0F).mul(1.0F, -1.0F, 1.0F)
+
+        val relativePos = cacheVec3f.set(transformedPos)
+            .mulProject(this.projModelViewMatrix.invert(cacheMat4f))
+
+        ModuleProjectileAimbot.debugParameter("s2w") {
+            relativePos.toString(NumberFormat.getInstance())
+        }
+
+        return Line(cameraPos, relativePos.toVec3d())
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun calculateScreenRect(box: AABB, cameraPos: Vec3 = this.cachedCameraPos): Rect? {
+        var minX = Float.POSITIVE_INFINITY
+        var minY = Float.POSITIVE_INFINITY
+        var maxX = Float.NEGATIVE_INFINITY
+        var maxY = Float.NEGATIVE_INFINITY
+        for (vertex in box.vertices) {
+            val (x, y, _) = calculateScreenPos(vertex, cameraPos) ?: continue
+            if (minX > x) minX = x
+            if (minY > y) minY = y
+            if (maxX < x) maxX = x
+            if (maxY < y) maxY = y
+        }
+
+        if (maxX <= minX || maxY <= minY) return null
+        return Rect(minX, minY, maxX, maxY)
+    }
+
+}

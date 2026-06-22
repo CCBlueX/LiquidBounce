@@ -1,0 +1,77 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+env:
+  ZIP_NAME: theme            # Name for the distribution archive
+  MARKETPLACE_ITEM_ID: 12345        # Replace with your actual marketplace item ID
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Create dist archive
+        run: zip -r ${{ env.ZIP_NAME }}.zip dist/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: ${{ env.ZIP_NAME }}.zip
+
+      - name: Generate version tag
+        id: version_tag
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          TAG="build-$COMMIT_HASH-$(date +'%Y%m%d%H%M%S')"
+          echo "version=$TAG" >> $GITHUB_OUTPUT
+
+      # Uncomment the sections below to enable GitHub releases and marketplace publishing
+      #
+      # - name: Create and push Git tag
+      #   run: |
+      #     git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      #     git config --local user.name "github-actions[bot]"
+      #     git tag ${{ steps.version_tag.outputs.version }}
+      #     git push origin ${{ steps.version_tag.outputs.version }}
+      #
+      # - name: Upload to GitHub Release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: ${{ env.ZIP_NAME }}.zip
+      #     tag_name: ${{ steps.version_tag.outputs.version }}
+      #     prerelease: true
+      #     name: "Build Release ${{ steps.version_tag.outputs.version }}"
+      #
+      # - name: Upload to LiquidBounce Marketplace
+      #   run: |
+      #     curl -X POST \
+      #       "https://api.liquidbounce.net/api/v3/marketplace/${{ env.MARKETPLACE_ITEM_ID }}/revisions" \
+      #       -H "Authorization: Bearer ${{ secrets.API_TOKEN }}" \
+      #       -F "file=@${{ env.ZIP_NAME }}.zip" \
+      #       -F "version=${{ steps.version_tag.outputs.version }}" \
+      #       -F "changelog=Automated build from commit ${{ github.sha }}" \
+      #       -F "channel=alpha" \
+      #       --fail-with-body

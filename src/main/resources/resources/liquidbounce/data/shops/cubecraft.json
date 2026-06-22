@@ -1,0 +1,105 @@
+{
+  "comment": "An example config for CubeCraft",
+  "traderTitles": ["EggWars Shop"],
+  "initialCategorySlot": 0,
+  "itemsWithTiers": {
+    "sword": 		["wooden_sword", "stone_sword", "iron_sword", "diamond_sword", "netherite_sword", "diamond_sword:sharpness:5", "netherite_sword:sharpness:5"],
+    "helmet": 		["iron_helmet", "diamond_helmet", "netherite_helmet"],
+    "chestplate":	["iron_chestplate", "diamond_chestplate", "netherite_chestplate"],
+    "leggings":		["iron_leggings", "diamond_leggings", "netherite_leggings"],
+    "boots":		["iron_boots", "diamond_boots", "netherite_boots"]
+  },
+  "elements": [
+    {
+      "item": {"id": "concrete", "minAmount": 63},
+      "amountPerClick": 3,
+      "categorySlot": 0, "itemSlot": 11,
+      "price": {"id": "iron_ingot", "minAmount": 1}
+    },
+    {
+      "item": {"id": "golden_apple"},
+      "categorySlot": 1, "itemSlot": 22,
+      "price": {"id": "gold_ingot", "minAmount": 2}
+    },
+    {
+      "item": {"id": "chestplate:tier:2"},
+      "categorySlot": 3, "itemSlot": 23,
+      "price": {"id": "gold_ingot", "minAmount": 6}
+    },
+    {
+      "item": {"id": "leggings:tier:2"},
+      "categorySlot": 3, "itemSlot": 24,
+      "price": {"id": "gold_ingot", "minAmount": 6}
+    },
+    {
+      "item": {"id": "boots:tier:2"},
+      "categorySlot": 3, "itemSlot": 25,
+      "price": {"id": "gold_ingot", "minAmount": 5}
+    },
+    {
+      "item": {"id": "helmet:tier:2"},
+      "categorySlot": 3, "itemSlot": 22,
+      "price": {"id": "gold_ingot", "minAmount": 4}
+    },
+    {
+      "item": {"id": "chestplate:tier:1"},
+      "categorySlot": 3, "itemSlot": 14,
+      "price": {"id": "iron_ingot", "minAmount": 3}
+    },
+    {
+      "item": {"id": "leggings:tier:1"},
+      "categorySlot": 3, "itemSlot": 15,
+      "price": {"id": "iron_ingot", "minAmount": 3}
+    },
+    {
+      "item": {"id": "boots:tier:1"},
+      "categorySlot": 3, "itemSlot": 16,
+      "price": {"id": "iron_ingot", "minAmount": 2}
+    },
+    {
+      "item": {"id": "helmet:tier:1"},
+      "categorySlot": 3, "itemSlot": 13,
+      "price": {"id": "iron_ingot", "minAmount": 2}
+    },
+    {
+      "item": {"id": "golden_apple", "minAmount": 5},
+      "categorySlot": 1, "itemSlot": 22,
+      "price": {"id": "gold_ingot", "minAmount": 2},
+      "purchaseConditions": {"all": [
+        {"id": "helmet:tier:2"},
+        {"id": "chestplate:tier:2"},
+        {"id": "leggings:tier:2"},
+        {"id": "boots:tier:2"}
+      ]}
+    },
+    {
+      "item": {"id": "sword:tier:7"},
+      "categorySlot": 2, "itemSlot": 33,
+      "price": {"id": "diamond", "minAmount": 128}
+    },
+    {
+      "item": {"id": "sword:tier:6"},
+      "categorySlot": 2, "itemSlot": 32,
+      "price": {"id": "diamond", "minAmount": 64}
+    },
+    {
+      "item": {"id": "sword:tier:5"},
+      "categorySlot": 2, "itemSlot": 24,
+      "price": {"id": "diamond", "minAmount": 24}
+    },
+    {
+      "item": {"id": "sword:tier:4"},
+      "categorySlot": 2, "itemSlot": 23,
+      "price": {"id": "diamond", "minAmount": 12}
+    },
+    {
+      "item": {"id": "sword:tier:3"},
+      "categorySlot": 2, "itemSlot": 22,
+      "price": {"id": "gold_ingot", "minAmount": 8}
+    },
+    {
+      "item": {"id": "sword:tier:2"},
+      "categorySlot": 2, "itemSlot": 21,
+      "price": {"id": "iron_ingot", "minAmount": 18}
+    }]
+}

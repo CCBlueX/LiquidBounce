@@ -1,0 +1,116 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.features.module.modules.world.packetmine
+
+import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor
+import net.ccbluex.liquidbounce.render.EMPTY_BOX
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
+import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.math.distanceToSqr
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.world.level.block.state.BlockState
+
+class MineTarget(val targetPos: BlockPos) {
+
+    var finished = false
+    var progress = 0f
+    var started = false
+    var finishReadyTick: Long? = null
+    var direction: Direction? = null
+    var blockState = targetPos.getState()!!
+        private set
+
+    fun init() {
+        with(ModulePacketMine) {
+            targetRenderer.addBlock(targetPos, box = EMPTY_BOX.inflate(1e-5))
+        }
+    }
+
+    fun cleanUp() {
+        with(ModulePacketMine) {
+            targetRenderer.removeBlock(targetPos)
+            if (!finished && mode.activeMode.canAbort) {
+                abort(true)
+            }
+        }
+    }
+
+    fun updateBlockState() {
+        blockState = targetPos.getState()!!
+    }
+
+    fun isInvalidOrOutOfRange(): Boolean {
+        val state = targetPos.getState()!!
+        val invalid = ModulePacketMine.mode.activeMode.isInvalid(this, state)
+        return invalid || isOutOfRange(targetPos, state)
+    }
+
+    private fun isOutOfRange(pos: BlockPos, state: BlockState): Boolean {
+        val outlineShape = state.getShape(world, pos).move(pos)
+        return outlineShape.distanceToSqr(player.eyePosition) > ModulePacketMine.keepRange.sq()
+    }
+
+    fun abort(force: Boolean = false) {
+        val notPossible = !started || finished || !ModulePacketMine.mode.activeMode.canAbort
+        if (notPossible || !force && !isOutOfRange(targetPos, targetPos.stateOrEmpty)) {
+            return
+        }
+
+        val dir = if (ModulePacketMine.abortAlwaysDown) {
+            Direction.DOWN
+        } else {
+            direction ?: Direction.DOWN
+        }
+
+        TickLoopTaskExecutor.executeInTickLoop {
+            network.send(
+                ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK,
+                    targetPos,
+                    dir,
+                )
+            )
+        }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        if (javaClass != other?.javaClass) {
+            return false
+        }
+
+        return targetPos == (other as MineTarget).targetPos
+    }
+
+    override fun hashCode(): Int {
+        return targetPos.hashCode()
+    }
+
+    fun copy() = MineTarget(targetPos)
+
+}

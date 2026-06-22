@@ -1,0 +1,83 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features
+
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.ScreenEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.text.formatAsTime
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+
+object InventoryMoveBlinkFeature : ToggleableValueGroup(ModuleInventoryMove, "Blink", false) {
+
+    /**
+     * After reaching this time, we will close the inventory and blink.
+     */
+    private val maximumTime by int("MaximumTime", 10000, 0..30000, "ms")
+
+    private val chronometer = Chronometer()
+
+    @Suppress("unused")
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
+        val packet = event.packet
+
+        if (mc.screen is AbstractContainerScreen<*> && event.origin == TransferOrigin.OUTGOING) {
+            event.action = when {
+                packet.isC2SContainerPacket() -> BlinkManager.Action.PASS
+                else -> BlinkManager.Action.QUEUE
+            }
+        }
+    }
+
+    @Suppress("unused")
+    val screenHandler = handler<ScreenEvent> { event ->
+        if (event.screen is AbstractContainerScreen<*>) {
+            chronometer.reset()
+
+            notification(
+                "InventoryMove",
+                ModuleBlink.message("blinkStart", maximumTime.formatAsTime()),
+                NotificationEvent.Severity.INFO
+            )
+        }
+    }
+
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
+        if (mc.screen is AbstractContainerScreen<*> && chronometer.hasElapsed(maximumTime.toLong())) {
+            player.closeContainer()
+            notification(
+                "InventoryMove",
+                ModuleBlink.message("blinkEnd"),
+                NotificationEvent.Severity.INFO
+            )
+        }
+    }
+
+}

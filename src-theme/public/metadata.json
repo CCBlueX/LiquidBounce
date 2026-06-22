@@ -1,0 +1,65 @@
+{
+  "id": "liquidbounce",
+  "name": "LiquidBounce",
+  "version": "0.1.0",
+  "authors": ["CCBlueX"],
+  "colors": {
+    "Accent": "#4677ff",
+    "Tint": "#000000"
+  },
+  "screens": [
+    "clickgui",
+    "title",
+    "proxymanager",
+    "multiplayer",
+    "altmanager",
+    "customize",
+    "singleplayer"
+  ],
+  "overlays": [
+    "hud",
+    "inventory",
+    "container",
+    "disconnected",
+    "browser"
+  ],
+  "components": [
+    "Watermark",
+    "TabGui",
+    "ArrayList",
+    "Notifications",
+    "Hotbar",
+    "Scoreboard",
+    "ArmorItems",
+    "InventoryStatistics",
+    "Inventory",
+    "CraftingInventory",
+    "EnderChestInventory",
+    "TargetHud",
+    "BlockCounter",
+    "Effects",
+    "Keystrokes",
+    "Taco",
+    "Image",
+    "Text",
+    "KeyBinds"
+  ],
+  "fonts": [
+    "Inter-Black.ttf",
+    "Inter-Bold.ttf",
+    "Inter-ExtraBold.ttf",
+    "Inter-ExtraLight.ttf",
+    "Inter-Light.ttf",
+    "Inter-Medium.ttf",
+    "Inter-Regular.ttf",
+    "Inter-SemiBold.ttf",
+    "Inter-Thin.ttf"
+  ],
+  "backgrounds": [
+    {
+      "name": "background",
+      "types": ["frag", "png"]
+    }
+  ],
+  "values": []
+}

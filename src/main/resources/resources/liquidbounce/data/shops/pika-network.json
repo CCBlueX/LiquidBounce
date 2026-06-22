@@ -1,0 +1,98 @@
+{
+  "comment": "An example config for PіkаNеtwоrk",
+  "traderTitles": ["shop"],
+  "initialCategorySlot": 0,
+  "itemsWithTiers": {
+    "sword": 		["stone_sword", "iron_sword", "diamond_sword"],
+    "armor": 		["chainmail_boots", "iron_boots", "diamond_boots"]
+  },
+  "elements": [
+    {
+      "item": {"id": "wool", "minAmount": 64},
+      "amountPerClick": 16,
+      "categorySlot": 2, "itemSlot": 19,
+      "price": {"id": "iron_ingot", "minAmount": 4}
+    },
+    {
+      "item": {"id": "armor:tier:3"},
+      "categorySlot": 1, "itemSlot": 21,
+      "price": {"id": "emerald", "minAmount": 6}
+    },
+    {
+      "item": {"id": "armor:tier:2"},
+      "categorySlot": 1, "itemSlot": 20,
+      "price": {"id": "gold_ingot", "minAmount": 12}
+    },
+    {
+      "item": {"id": "armor:tier:1"},
+      "categorySlot": 1, "itemSlot": 19,
+      "price": {"id": "iron_ingot", "minAmount": 24}
+    },
+    {
+      "item": {"id": "sword:tier:3"},
+      "categorySlot": 3, "itemSlot": 21,
+      "price": {"id": "emerald", "minAmount": 4},
+      "purchaseConditions": {"id": "armor:tier:3"}
+    },
+    {
+      "item": {"id": "sword:tier:2"},
+      "categorySlot": 3, "itemSlot": 20,
+      "price": {"id": "gold_ingot", "minAmount": 8},
+      "purchaseConditions": {"id": "armor:tier:2"}
+    },
+    {
+      "item": {"id": "sword:tier:1"},
+      "categorySlot": 3, "itemSlot": 19,
+      "price": {"id": "iron_ingot", "minAmount": 12}
+    },
+    {
+      "comment": "extra 32 blocks after getting a sword",
+      "item": {"id": "wool", "minAmount": 96},
+      "amountPerClick": 16,
+      "categorySlot": 2, "itemSlot": 19,
+      "price": {"id": "iron_ingot", "minAmount": 4},
+      "purchaseConditions": {"id": "sword:tier:1"}
+    },
+    {
+      "item": {"id": "wooden_pickaxe"},
+      "categorySlot": 5, "itemSlot": 20,
+      "price": {"id": "iron_ingot", "minAmount": 10}
+    },
+    {
+      "item": {"id": "wooden_axe"},
+      "categorySlot": 5, "itemSlot": 24,
+      "price": {"id": "iron_ingot", "minAmount": 10}
+    },
+    {
+      "item": {"id": "shears"},
+      "categorySlot": 5, "itemSlot": 23,
+      "price": {"id": "iron_ingot", "minAmount": 20}
+    },
+    {
+      "item": {"id": "golden_apple", "minAmount": 1},
+      "categorySlot": 6, "itemSlot": 19,
+      "price": {"id": "gold_ingot", "minAmount": 3}
+    },
+    {
+      "item": {"id": "golden_apple", "minAmount": 5},
+      "categorySlot": 6, "itemSlot": 19,
+      "price": {"id": "gold_ingot", "minAmount": 3},
+      "purchaseConditions": {"id": "armor:tier:2"}
+    },
+    {
+      "item": {"id": "fire_charge", "minAmount": 5},
+      "categorySlot": 6, "itemSlot": 22,
+      "price": {"id": "iron_ingot", "minAmount": 40}
+    },
+    {
+      "item": {"id": "potion:speed"},
+      "categorySlot": 7, "itemSlot": 19,
+      "price": {"id": "emerald", "minAmount": 1}
+    },
+    {
+      "item": {"id": "potion:jump_boost"},
+      "categorySlot": 7, "itemSlot": 20,
+      "price": {"id": "emerald", "minAmount": 1}
+    }
+  ]
+}

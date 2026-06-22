@@ -1,0 +1,96 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.script.bindings.api
+
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.math.Axis
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.script.bindings.features.ScriptSetting
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
+import net.minecraft.util.Mth
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.Vec3
+import org.graalvm.polyglot.Context
+import org.graalvm.polyglot.Value
+import java.util.concurrent.ConcurrentHashMap
+
+/**
+ * The main hub of the ScriptAPI that provides access to a useful set of members.
+ */
+object ScriptContextProvider {
+
+    private val localStorage = ConcurrentHashMap<String, Any>()
+
+    internal fun cleanup() {
+        localStorage.clear()
+    }
+
+    internal fun Context.setupContext(language: String, bindings: Value) {
+        bindings.apply {
+            // Class bindings
+            // -> Client API
+            putMember("Setting", ScriptSetting)
+
+            // -> Minecraft API
+            putMember("Vec3i", Vec3i::class.java)
+            putMember("Vec3", Vec3::class.java)
+            putMember("Mth", Mth::class.java)
+            putMember("BlockPos", BlockPos::class.java)
+            putMember("InteractionHand", InteractionHand::class.java)
+            putMember("Axis", Axis::class.java)
+            putMember("RenderSystem", RenderSystem::class.java)
+            // Yarn names compatibility
+            putMember("Vec3d", Vec3::class.java)
+            putMember("MathHelper", Mth::class.java)
+            putMember("Hand", InteractionHand::class.java)
+            putMember("RotationAxis", Axis::class.java)
+
+            // Client utils
+            putMember("Color4b", Color4b::class.java)
+
+            // Variable bindings
+            putMember("mc", mc)
+            putMember("Client", ScriptClient)
+
+            // Register utilities
+            putMember("RotationUtil", ScriptRotationUtil)
+            putMember("ItemUtil", ScriptItemUtil)
+            putMember("NetworkUtil", ScriptNetworkUtil)
+            putMember("InteractionUtil", ScriptInteractionUtil)
+            putMember("BlockUtil", ScriptBlockUtil)
+            putMember("MovementUtil", ScriptMovementUtil)
+            putMember("ReflectionUtil", ScriptReflectionUtil())
+            putMember("ParameterValidator", ScriptParameterValidator(bindings))
+            putMember("UnsafeThread", ScriptUnsafeThread)
+            putMember("Primitives", ScriptPrimitives)
+
+            // Global variables
+            putMember("localStorage", localStorage)
+
+            // Async support (JavaScript only)
+            if (language.equals("js", true)) {
+                // Init Promise constructor
+                val asyncUtil = ScriptAsyncUtil(getBindings(language).getMember("Promise"))
+                putMember("AsyncUtil", asyncUtil)
+            }
+        }
+    }
+}

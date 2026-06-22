@@ -1,0 +1,179 @@
+name: Build
+
+on:
+  push:
+    branches: [ nextgen ]
+  pull_request:
+    branches: [ nextgen ]
+
+jobs:
+  extract-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      lb_version: ${{ steps.versions.outputs.lb_version }}
+      jdk_version: ${{ steps.versions.outputs.jdk_version }}
+      minecraft_version: ${{ steps.versions.outputs.minecraft_version }}
+      loader_version: ${{ steps.versions.outputs.loader_version }}
+      fabricapi_version: ${{ steps.versions.outputs.fabricapi_version }}
+      kotlin_version: ${{ steps.versions.outputs.kotlin_version }}
+      fabric_kotlin_version: ${{ steps.versions.outputs.fabric_kotlin_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Extract versions
+        id: versions
+        run: |
+          set -euo pipefail
+          
+          function gradleprop {
+            local key="$1"
+            local value=$(grep "^${key}=" gradle.properties | head -n1 | cut -d'=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            if [ -z "$value" ]; then
+              echo "[ERROR] gradleprop: '${key}' not found or blank in gradle.properties" >&2
+              exit 1
+            fi
+            echo "$value"
+          }
+          
+          function tomlprop {
+            local key="$1"
+            local value=$(grep "^${key}[[:space:]]*=" gradle/libs.versions.toml | head -n1 | sed -n 's/^[^=]*=[[:space:]]*"\([^"]*\)".*/\1/p')
+            if [ -z "$value" ]; then
+              echo "[ERROR] tomlprop: '${key}' not found or blank in gradle/libs.versions.toml" >&2
+              exit 1
+            fi
+            echo "$value"
+          }
+          
+          LB_VERSION=$(gradleprop 'mod_version')
+          JDK_VERSION=$(tomlprop 'jdk')
+          MINECRAFT_VERSION=$(tomlprop 'minecraft')
+          LOADER_VERSION=$(tomlprop 'fabric-loader')
+          FABRICAPI_VERSION=$(tomlprop 'fabric-api')
+          KOTLIN_VERSION=$(tomlprop 'kotlin')
+          FABRIC_KOTLIN_VERSION=$(tomlprop 'fabric-kotlin')
+          
+          echo "lb_version=$LB_VERSION" >> "$GITHUB_OUTPUT"
+          echo "jdk_version=$JDK_VERSION" >> "$GITHUB_OUTPUT"
+          echo "minecraft_version=$MINECRAFT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "loader_version=$LOADER_VERSION" >> "$GITHUB_OUTPUT"
+          echo "fabricapi_version=$FABRICAPI_VERSION" >> "$GITHUB_OUTPUT"
+          echo "kotlin_version=$KOTLIN_VERSION" >> "$GITHUB_OUTPUT"
+          echo "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" >> "$GITHUB_OUTPUT"
+          
+          echo "LiquidBounce: $LB_VERSION"
+          echo "JDK: $JDK_VERSION"
+          echo "Minecraft: $MINECRAFT_VERSION"
+          echo "Fabric Loader: $LOADER_VERSION"
+          echo "Fabric API: $FABRICAPI_VERSION"
+          echo "Kotlin: $KOTLIN_VERSION"
+          echo "Fabric Kotlin: $FABRIC_KOTLIN_VERSION"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: extract-versions
+    if: github.ref == 'refs/heads/nextgen'
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Cache npm dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('src-theme/package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+      - name: Setting up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: ${{ needs.extract-versions.outputs.jdk_version }}
+      - name: Grant permissions to src-theme
+        run: sudo chmod -R 777 src-theme
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
+      - name: Build
+        env:
+          CI: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew build -x test -x detekt
+      - name: Upload artifact
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          JDK_VERSION: ${{ needs.extract-versions.outputs.jdk_version }}
+          LB_VERSION: ${{ needs.extract-versions.outputs.lb_version }}
+          MINECRAFT_VERSION: ${{ needs.extract-versions.outputs.minecraft_version }}
+          LOADER_VERSION: ${{ needs.extract-versions.outputs.loader_version }}
+          FABRICAPI_VERSION: ${{ needs.extract-versions.outputs.fabricapi_version }}
+          KOTLIN_VERSION: ${{ needs.extract-versions.outputs.kotlin_version }}
+          FABRIC_KOTLIN_VERSION: ${{ needs.extract-versions.outputs.fabric_kotlin_version }}
+        run: |
+          set -euo pipefail
+          
+          cd build/libs
+          JAR=$(find . -regex '.*liquidbounce-[0-9.]*\.jar')
+          if [ -z "$JAR" ]; then
+            echo "[ERROR] built jar not found in build/libs" >&2
+            exit 1
+          fi
+          
+          cp $JAR zip/liquidbounce.jar
+          cd zip
+          zip -r liquidbounce.zip *
+          md5sum liquidbounce.zip
+          
+          curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" \
+            -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" \
+            -F "gh_id=${{ github.event.head_commit.id }}" \
+            -F "gh_ref=${{ github.ref }}" \
+            -F "gh_message=${COMMIT_MESSAGE}" \
+            -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" \
+            -F "lb_version=$LB_VERSION" \
+            -F "mc_version=$MINECRAFT_VERSION" \
+            -F "subsystem=fabric" \
+            -F "jre_version=$JDK_VERSION" \
+            -F "fabric_loader_version=$LOADER_VERSION" \
+            -F "fabric_api_version=$FABRICAPI_VERSION" \
+            -F "kotlin_version=$KOTLIN_VERSION" \
+            -F "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" \
+            https://api.liquidbounce.net/api/v1/version/new
+
+  verify-pr:
+    runs-on: ubuntu-latest
+    needs: extract-versions
+    if: github.ref != 'refs/heads/nextgen'
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Cache npm dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('src-theme/package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+      - name: Setting up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: ${{ needs.extract-versions.outputs.jdk_version }}
+      - name: Grant permissions to src-theme
+        run: sudo chmod -R 777 src-theme
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
+      - name: Build
+        env:
+          CI: true
+        run: ./gradlew build
+      - name: Upload SARIF to GitHub using the upload-sarif action
+        uses: github/codeql-action/upload-sarif@v4
+        if: success() || failure()
+        with:
+          sarif_file: build/reports/detekt/detekt.sarif

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="34" height="34"
+     viewBox="0 0 34 34">
+    <defs>
+        <clipPath id="a">
+            <rect width="34" height="34" transform="translate(38 28.011)" fill="#fff"/>
+        </clipPath>
+    </defs>
+    <g transform="translate(-38 -28.011)" clip-path="url(#a)">
+        <g transform="translate(38 28.011)">
+            <path d="M2.162,26.2,0,34l7.8-2.162Z" fill="#fff"/>
+            <path d="M33.128,2.28,31.72.872a3,3,0,0,0-4.226,0L26.488,1.878l5.635,5.635,1.006-1.006A3,3,0,0,0,33.128,2.28Z"
+                  fill="#fff"/>
+            <rect width="1.992" height="7.969" transform="translate(23.67 4.695) rotate(-45)" fill="#fff"/>
+            <rect width="26.432" height="2.988" transform="translate(7.092 28.316) rotate(-45)" fill="#fff"/>
+            <rect width="26.432" height="2.988" transform="translate(3.571 24.794) rotate(-45)" fill="#fff"/>
+            <path d="M32.1,22.948a6.463,6.463,0,0,0-5.37-1.848l-2.691-2.691-5.635,5.635L21.1,26.735a6.47,6.47,0,0,0,1.2,4.611l5.933-5.933,5.061,5.061A6.477,6.477,0,0,0,32.1,22.948Z"
+                  fill="#fff"/>
+            <path d="M26.821,29.639l-3.115,3.115a6.482,6.482,0,0,0,6.768.538Z" fill="#fff"/>
+            <path d="M3.526.708,7.179,4.361l3.115-3.115A6.482,6.482,0,0,0,3.526.708Z" fill="#fff"/>
+            <path d="M12.9,7.265a6.47,6.47,0,0,0-1.2-4.611L5.77,8.587.709,3.526A6.476,6.476,0,0,0,7.266,12.9l2.691,2.691,5.635-5.635Z"
+                  fill="#fff"/>
+        </g>
+    </g>
+</svg>
