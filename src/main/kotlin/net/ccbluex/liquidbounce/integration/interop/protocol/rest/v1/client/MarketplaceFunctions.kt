@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.routing.Routing
+import net.ccbluex.netty.http.application.ApplicationCall
 
 
 /**
