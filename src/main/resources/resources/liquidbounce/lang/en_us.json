@@ -506,7 +506,7 @@
   "liquidbounce.module.chestCleaner.description": "Automatically drops unwanted items from a chest.",
   "liquidbounce.module.chestStealer.description": "Automatically steals all items from a chest.",
   "liquidbounce.module.clickGUI.description": "Shows you an easy to use menu to toggle and configure modules.",
-  "liquidbounce.module.clientIdSpoofer.description": "Emulates the ClientID mod by sending a configurable mod and resource pack list to servers.",
+  "liquidbounce.module.clientIdSpoofer.description": "Emulates the ClientID mod by sending configurable mod and resource pack lists to servers.",
   "liquidbounce.module.clientSpoofer.description": "Spoofs your game client brand to another.",
   "liquidbounce.module.clip.description": "Allows you to clip through blocks.",
   "liquidbounce.module.clip.messages.whoosh": "Whoosh!",

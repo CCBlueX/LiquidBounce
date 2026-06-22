@@ -311,7 +311,7 @@
 	"liquidbounce.module.clickTp.messages.failed": "%s, %s, %sへのテレポートに失敗しました。",
 	"liquidbounce.module.clickTp.messages.start": "%s, %s, %sへテレポート中です...",
 	"liquidbounce.module.clickTp.messages.success": "%s, %s, %sへテレポートしました。",
-	"liquidbounce.module.clientIdSpoofer.description": "Emulates the ClientID mod by sending a configurable mod and resource pack list to servers.",
+	"liquidbounce.module.clientIdSpoofer.description": "設定可能なMod一覧とリソースパック一覧をサーバーへ送信して、ClientID Modをエミュレートします。",
 	"liquidbounce.module.clientSpoofer.description": "ゲームクライアントを別のものに偽装します。",
 	"liquidbounce.module.clip.description": "ブロックをすり抜けることができます。",
 	"liquidbounce.module.clip.messages.whoosh": "ウーシュ!",

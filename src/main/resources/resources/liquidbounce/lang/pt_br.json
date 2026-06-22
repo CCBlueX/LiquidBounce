@@ -203,7 +203,7 @@
   "liquidbounce.module.antiBlind.description": "Te protege de efeitos não desejados.",
   "liquidbounce.module.breadcrumbs.description": "Deixa uma trilha atras você.",
   "liquidbounce.module.clickGUI.description": "Mostra o menu do client.",
-  "liquidbounce.module.clientIdSpoofer.description": "Emulates the ClientID mod by sending a configurable mod and resource pack list to servers.",
+  "liquidbounce.module.clientIdSpoofer.description": "Emula o mod ClientID enviando aos servidores uma lista configurável de mods e pacotes de recursos.",
   "liquidbounce.module.fullBright.description": "Faz o mundo mais claro.",
   "liquidbounce.module.hud.description": "Mostra o hud do client.",
   "liquidbounce.module.itemEsp.description": "Deixa você ver itens dropados pela parede.",

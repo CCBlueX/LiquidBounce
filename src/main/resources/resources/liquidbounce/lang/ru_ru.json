@@ -420,7 +420,7 @@
   "liquidbounce.module.clickTp.messages.noSuitableBlock": "%s, %s, %s не подходит для телепортации.",
   "liquidbounce.module.clickTp.messages.start": "Телепортируюсь в %s, %s, %s...",
   "liquidbounce.module.clickTp.messages.success": "Телепортировал вас в %s, %s, %s",
-  "liquidbounce.module.clientIdSpoofer.description": "Emulates the ClientID mod by sending a configurable mod and resource pack list to servers.",
+  "liquidbounce.module.clientIdSpoofer.description": "Эмулирует мод ClientID, отправляя серверам настраиваемый список модов и ресурс-паков.",
   "liquidbounce.module.clientSpoofer.description": "Подменяет ваш игровой клиент другим.",
   "liquidbounce.module.clip.description": "Позволяет проходить сквозь блоки.",
   "liquidbounce.module.clip.messages.whoosh": "Вжуух!",

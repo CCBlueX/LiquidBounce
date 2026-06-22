@@ -215,7 +215,7 @@
   "liquidbounce.module.antiBlind.description": "Захищає вас від потенційно дратівливих екранних ефектів, що блокують огляд.",
   "liquidbounce.module.breadcrumbs.description": "Залишає лінію позаду вас.",
   "liquidbounce.module.clickGUI.description": "Показує просте у використанні меню для перемикання і налаштування модулів.",
-  "liquidbounce.module.clientIdSpoofer.description": "Emulates the ClientID mod by sending a configurable mod and resource pack list to servers.",
+  "liquidbounce.module.clientIdSpoofer.description": "Емулює мод ClientID, надсилаючи серверам налаштовуваний список модів і ресурспаків.",
   "liquidbounce.module.fullBright.description": "Робить світ яскравішим.",
   "liquidbounce.module.hud.description": "Показує в ігровому інтерфейсі різні корисні інструменти.",
   "liquidbounce.module.itemEsp.description": "Дозволяє бачити предмети, що лежать, через стіни.",
