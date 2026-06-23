@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ResourcePolicy
 import net.ccbluex.liquidbounce.event.EventListener
@@ -46,8 +47,12 @@ import net.minecraft.network.chat.Component
 import net.minecraft.server.network.EventLoopGroupHolder
 import net.minecraft.util.CommonColors
 import net.minecraft.util.Util
+import java.net.DatagramPacket
+import java.net.InetAddress
+import java.net.MulticastSocket
 import java.net.UnknownHostException
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Future
 
 // GET /api/v1/client/servers
@@ -184,6 +189,135 @@ object ActiveServerList : EventListener {
 
     private val pingTasks = mutableListOf<Future<*>>()
 
+    // LAN server detection - listens for UDP multicast from LAN worlds
+    private val LAN_GROUP = InetAddress.getByName("224.0.2.60")
+    private const val LAN_PORT = 4445
+    private const val LAN_SERVER_TTL_MS = 15_000L // Remove servers not seen for 15 seconds
+
+    private data class LanServerEntry(val motd: String, val lastSeen: Long, val serverData: ServerData)
+
+    // ConcurrentHashMap: address -> entry (thread-safe without explicit synchronization)
+    private val lanServers = ConcurrentHashMap<String, LanServerEntry>()
+
+    @Volatile
+    private var lanDetectorThread: Thread? = null
+
+    @Volatile
+    private var lanSocket: MulticastSocket? = null
+
+    init {
+        startLanDetection()
+        // Shutdown hook to clean up socket when client closes
+        Runtime.getRuntime().addShutdownHook(Thread { stopLanDetection() })
+    }
+
+    private fun startLanDetection() {
+        try {
+            val socket = MulticastSocket(LAN_PORT)
+            socket.joinGroup(LAN_GROUP)
+            socket.soTimeout = 5000
+            lanSocket = socket
+
+            lanDetectorThread = Thread({
+                runLanDetectionLoop(socket)
+            }, "LanServerDetector").apply { isDaemon = true; start() }
+        } catch (e: Exception) {
+            logger.warn("Unable to start LAN server detection: {}", e.message)
+        }
+    }
+
+    private fun runLanDetectionLoop(socket: MulticastSocket) {
+        try {
+            val buf = ByteArray(1024)
+            val packet = DatagramPacket(buf, buf.size)
+
+            while (!Thread.currentThread().isInterrupted) {
+                try {
+                    socket.receive(packet)
+                    handleLanBroadcast(packet)
+                } catch (_: java.net.SocketTimeoutException) {
+                    pruneStaleServers()
+                }
+            }
+        } catch (e: Exception) {
+            if (!Thread.currentThread().isInterrupted) {
+                logger.warn("LAN server detection error: {}", e.message)
+            }
+        } finally {
+            runCatching { socket.leaveGroup(LAN_GROUP) }
+            runCatching { socket.close() }
+        }
+    }
+
+    private fun handleLanBroadcast(packet: DatagramPacket) {
+        val response = String(packet.data, packet.offset, packet.length)
+        // LAN broadcast format: "MOTD§port" (e.g., "My World§25565")
+        val parts = response.split("\u00A7".toRegex(), limit = 2)
+        if (parts.size != 2) return
+
+        val motd = parts[0]
+        val addrPart = parts[1]
+        // addrPart can be "port" or "address:port"
+        val address = if (addrPart.contains(":")) {
+            addrPart
+        } else {
+            "${packet.address.hostAddress}:$addrPart"
+        }
+
+        val existing = lanServers[address]
+        if (existing != null) {
+            // Update lastSeen, keep existing ServerData (preserves ping state)
+            lanServers[address] = existing.copy(lastSeen = System.currentTimeMillis())
+        } else {
+            // New LAN server: create ServerData and trigger ping
+            val serverData = ServerData(motd, address, ServerData.Type.LAN)
+            lanServers[address] = LanServerEntry(motd, System.currentTimeMillis(), serverData)
+            ping(serverData)
+        }
+    }
+
+    private fun stopLanDetection() {
+        lanDetectorThread?.interrupt()
+        lanSocket?.close()
+        lanServers.clear()
+    }
+
+    private fun pruneStaleServers() {
+        val now = System.currentTimeMillis()
+        lanServers.entries.removeIf { now - it.value.lastSeen > LAN_SERVER_TTL_MS }
+    }
+
+    /**
+     * Returns the list of currently detected LAN servers with full Server-compatible JSON fields.
+     * Uses negative IDs prefixed to avoid collision with regular server IDs.
+     */
+    fun getLanServers(): List<JsonObject> {
+        pruneStaleServers()
+        return lanServers.entries.mapIndexed { index, (address, entry) ->
+            val sd = entry.serverData
+            JsonObject().apply {
+                // Use negative IDs to distinguish from regular servers (e.g., -1, -2, ...)
+                addProperty("id", -(index + 1))
+                addProperty("address", address)
+                addProperty("name", entry.motd)
+                addProperty("lan", true)
+                // Use pinged data from ServerData
+                addProperty("ping", sd.ping)
+                addProperty("icon", sd.iconBytes?.let { java.util.Base64.getEncoder().encodeToString(it) } ?: "")
+                addProperty("label", sd.motd?.string ?: entry.motd)
+                add("players", JsonObject().apply {
+                    addProperty("max", sd.players?.max() ?: 0)
+                    addProperty("online", sd.players?.online() ?: 0)
+                })
+                addProperty("online", sd.ping > 0)
+                addProperty("playerCountLabel", sd.status?.string ?: "")
+                addProperty("protocolVersion", sd.protocol)
+                addProperty("version", sd.version?.string ?: "LAN")
+                addProperty("resourcePackPolicy", sd.resourcePackStatus?.name ?: "PROMPT")
+            }
+        }
+    }
+
     private fun cancelTasks() {
         pingTasks.forEach { it.cancel(true) }
         pingTasks.clear()
@@ -248,8 +382,18 @@ val ServerList.servers: List<ServerData>
 
 fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.ip == address }
 
+// GET /api/v1/client/servers/lan
+private fun Routing.getLanServers() = get("/lan") {
+    runCatching {
+        val servers = JsonArray()
+        ActiveServerList.getLanServers().forEach { servers.add(it) }
+        call.respond(servers)
+    }.getOrElse { call.internalServerError("Failed to get LAN servers due to ${it.message}") }
+}
+
 internal fun Routing.serverListRoutes() = route("/servers") {
     getServers()
+    getLanServers()
     putAddServer()
     deleteServer()
     putEditServer()
