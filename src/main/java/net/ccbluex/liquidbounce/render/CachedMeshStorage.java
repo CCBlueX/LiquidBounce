@@ -19,26 +19,30 @@
 
 package net.ccbluex.liquidbounce.render;
 
+import com.mojang.blaze3d.IndexType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderPass;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw;
 import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
+
+import java.nio.ByteBuffer;
 
 /**
  * Storage for a reusable (static) mesh draw call.
  *
  * <p>Unlike the dynamic path that uploads per frame into shared buffers,
- * this class keeps dedicated VBO/IBO storage and a cached {@link MeshDraw}
- * so the same geometry can be rendered across multiple frames.</p>
+ * this class keeps uploaded vertex data, optional dedicated index storage,
+ * and a cached {@link MeshDraw} so the same geometry can be rendered across
+ * multiple frames.</p>
  */
-public final class StaticMeshStorage {
+public final class CachedMeshStorage implements AutoCloseable {
 
     /**
      * Align block positions to 4096 to reduce writing to buffer.
@@ -46,26 +50,18 @@ public final class StaticMeshStorage {
     private static final int BASE_BLOCK_POS_MASK = ~0xFFF;
 
     public final ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(0xC0000);
-    private final GrowableMappableRingBuffer vboStorage;
-    private final GrowableMappableRingBuffer iboStorage;
     private final GpuBufferSlice baseBlockPosUniform;
 
     private @Nullable MeshDraw meshDraw;
+    private @Nullable GpuBuffer vertexBuffer;
+    private @Nullable GpuBuffer indexBuffer;
     private long baseBlockPosAsLong;
     private final BlockPos.MutableBlockPos baseBlockPos = new BlockPos.MutableBlockPos();
     private boolean hasBaseBlockPosUniformValue;
 
     public final String label;
 
-    public StaticMeshStorage(String label) {
-        this.vboStorage = new GrowableMappableRingBuffer(
-            label + " VBO",
-            GpuBuffer.USAGE_VERTEX
-        );
-        this.iboStorage = new GrowableMappableRingBuffer(
-            label + " IBO",
-            GpuBuffer.USAGE_INDEX
-        );
+    public CachedMeshStorage(String label) {
         this.baseBlockPosUniform = ClientUniformDefine.MESH_BASE_BLOCK_POS.createSingleBuffer(() -> label + " BaseBlockPos UBO");
         this.label = label;
     }
@@ -107,7 +103,7 @@ public final class StaticMeshStorage {
     }
 
     private void writeBaseBlockPosUniform(BlockPos baseBlockPos) {
-        try (var view = RenderSystem.getDevice().createCommandEncoder().mapBuffer(this.baseBlockPosUniform, false, true)) {
+        try (var view = this.baseBlockPosUniform.map(false, true)) {
             Std140Builder.intoBuffer(view.data())
                 .putIVec3(baseBlockPos.getX(), baseBlockPos.getY(), baseBlockPos.getZ());
         }
@@ -118,19 +114,29 @@ public final class StaticMeshStorage {
      *
      * @param meshData built mesh data to upload
      * @param pipeline pipeline used to determine vertex/index layout
-     * @param rotate whether to rotate ring buffers before upload (recommended when rebuilding after a frame boundary)
      */
     public void uploadAndSet(
         MeshData meshData,
-        RenderPipeline pipeline,
-        boolean rotate
+        RenderPipeline pipeline
     ) {
-        if (rotate) {
-            this.vboStorage.rotate();
-            this.iboStorage.rotate();
-        }
+        var uploadContext = new UploadContext();
 
-        this.meshDraw = MeshDraw.create(meshData, pipeline, _ -> this.vboStorage, _ -> this.iboStorage);
+        try {
+            var newMeshDraw = MeshDraw.create(meshData, pipeline, uploadContext, uploadContext);
+
+            var oldVertexBuffer = this.vertexBuffer;
+            var oldIndexBuffer = this.indexBuffer;
+
+            this.meshDraw = newMeshDraw;
+            this.vertexBuffer = uploadContext.vertexBuffer;
+            this.indexBuffer = uploadContext.indexBuffer;
+
+            StaticGpuBufferPool.release(oldVertexBuffer);
+            StaticGpuBufferPool.release(oldIndexBuffer);
+        } catch (Throwable throwable) {
+            uploadContext.release();
+            throw throwable;
+        }
     }
 
     /**
@@ -149,8 +155,52 @@ public final class StaticMeshStorage {
     }
 
     public void clearBuffers() {
-        this.vboStorage.clear();
-        this.iboStorage.clear();
+        this.clearStates();
+        StaticGpuBufferPool.release(this.vertexBuffer);
+        StaticGpuBufferPool.release(this.indexBuffer);
+        this.vertexBuffer = null;
+        this.indexBuffer = null;
+    }
+
+    @Override
+    public void close() {
+        this.clearBuffers();
+        this.baseBlockPosUniform.buffer().close();
+        this.byteBufferBuilder.close();
+    }
+
+    private final class UploadContext implements MeshDraw.IndexUploader, MeshDraw.VertexUploader {
+        private @Nullable GpuBuffer vertexBuffer;
+        private @Nullable GpuBuffer indexBuffer;
+
+        private void release() {
+            StaticGpuBufferPool.release(this.vertexBuffer);
+            StaticGpuBufferPool.release(this.indexBuffer);
+            this.vertexBuffer = null;
+            this.indexBuffer = null;
+        }
+
+        @Override
+        public GpuBufferSlice upload(IndexType type, ByteBuffer data) {
+            var upload = StaticGpuBufferPool.upload(
+                () -> CachedMeshStorage.this.label + " IBO",
+                GpuBuffer.USAGE_INDEX,
+                data
+            );
+            this.indexBuffer = upload.buffer();
+            return upload;
+        }
+
+        @Override
+        public GpuBufferSlice upload(VertexFormat format, ByteBuffer data) {
+            var upload = StaticGpuBufferPool.upload(
+                () -> CachedMeshStorage.this.label + " VBO",
+                GpuBuffer.USAGE_VERTEX,
+                data
+            );
+            this.vertexBuffer = upload.buffer();
+            return upload;
+        }
     }
 
 }

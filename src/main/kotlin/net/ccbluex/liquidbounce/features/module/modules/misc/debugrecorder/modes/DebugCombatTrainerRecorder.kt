@@ -37,9 +37,9 @@ import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.monster.Slime
+import net.minecraft.world.entity.monster.cubemob.Slime
 import java.util.UUID
 import kotlin.random.Random
 
@@ -127,7 +127,7 @@ object DebugCombatTrainerRecorder : ModuleDebugRecorder.DebugRecorderMode<Combat
      * in a random direction and at a different height.
      */
     fun spawn(): LivingEntity {
-        val slime = Slime(EntityType.SLIME, world)
+        val slime = Slime(EntityTypes.SLIME, world)
         slime.setUUID(UUID.randomUUID())
 
         val distance = Random.nextDouble() * 0.9 + 2.0

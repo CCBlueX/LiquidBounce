@@ -37,7 +37,7 @@ class CustomStandaloneMinecraftScreen(
         priority = 20,
         settings = ScreenManager.browserSettings
     ) {
-        mc.screen == this@CustomStandaloneMinecraftScreen
+        mc.gui.screen() == this@CustomStandaloneMinecraftScreen
     }
 
     init {

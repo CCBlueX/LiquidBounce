@@ -89,7 +89,7 @@ object ThemeManager : Config("theme") {
     val isThemeExternal: Boolean
         get() = theme?.origin?.external == true
 
-    private val takesInputHandler = InputAcceptor { mc.screen != null && mc.screen !is ChatScreen }
+    private val takesInputHandler = InputAcceptor { mc.gui.screen() != null && mc.gui.screen() !is ChatScreen }
 
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->

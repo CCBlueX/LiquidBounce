@@ -66,7 +66,7 @@ object ModuleMiddleClickAction : ClientModule(
         private var wasPressed = false
 
         val repeatable = handler<GameTickEvent> {
-            if (mc.screen != null) {
+            if (mc.gui.screen() != null) {
                 wasPressed = false
                 return@handler
             }

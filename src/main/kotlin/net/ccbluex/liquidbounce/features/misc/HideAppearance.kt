@@ -132,7 +132,7 @@ object HideAppearance : EventListener {
         isHidingNow = true
         isDestructed = true
 
-        mc.gui.chat.recentChat.removeIf {
+        mc.gui.hud.chat.recentChat.removeIf {
             it.startsWith(CommandManager.GlobalSettings.prefix)
         }
 
@@ -188,7 +188,7 @@ object HideAppearance : EventListener {
         }
 
         // History clear
-        mc.gui.chat.clearMessages(true)
+        mc.gui.hud.chat.clearMessages(true)
     }
 
 }

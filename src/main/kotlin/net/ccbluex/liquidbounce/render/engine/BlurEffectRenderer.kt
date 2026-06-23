@@ -54,7 +54,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     private var lastAlphaBlendRange = 0f..1f
 
     private fun hasNoFullScreen(): Boolean =
-        mc.screen == null || mc.screen is ChatScreen || FeatureSilentScreen.shouldHide
+        mc.gui.screen() == null || mc.gui.screen() is ChatScreen || FeatureSilentScreen.shouldHide
 
     fun shouldDrawBlur(): Boolean = inGame && hasNoFullScreen() &&
         ModuleHud.running && ModuleHud.isBlurEffectActive
@@ -79,25 +79,25 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
 
         val overlayTexture = overlayRenderTargetHolder.raw!!.colorTextureView
-        mc.mainRenderTarget
+        mc.gameRenderer.mainRenderTarget()
             .createRenderPass({ "GUI blur pass" })
             .use { pass ->
                 // Draw blur areas
                 pass.setPipeline(ClientRenderPipelines.GuiBlur)
-                pass.bindTexture("texture0", mc.mainRenderTarget.colorTextureView, overlaySampler)
+                pass.bindTexture("texture0", mc.gameRenderer.mainRenderTarget().colorTextureView, overlaySampler)
                 pass.bindTexture("overlay", overlayTexture, overlaySampler)
                 pass.setUniform(ClientUniformDefine.GUI_BLUR.uboName, GUI_BLUR_UNIFORM_BUFFER)
-                pass.draw(0, 3)
+                pass.draw(3, 1, 0, 0)
             }
 
-        mc.mainRenderTarget.colorTextureView!!
+        mc.gameRenderer.mainRenderTarget().colorTextureView!!
             .createRenderPass({ "GUI blur overlay blit pass" })
             .use { pass ->
                 // Blit overlay texture
                 // @see RenderTarget.blitAndBlendToTexture
                 pass.setPipeline(ClientRenderPipelines.JCEF.Blit)
                 pass.bindTexture("InSampler", overlayTexture, overlaySampler)
-                pass.draw(0, 3)
+                pass.draw(3, 1, 0, 0)
             }
     }
 

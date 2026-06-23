@@ -66,7 +66,7 @@ public enum VfpCompatibility {
 
     public void unsafeOpenVfpProtocolSelection() {
         try {
-            var currentScreen = Minecraft.getInstance().screen;
+            var currentScreen = Minecraft.getInstance().gui.screen();
             if (currentScreen == null) {
                 currentScreen = new TitleScreen();
             }

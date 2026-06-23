@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.shouldHideOffhand
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinGuiAccessor
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -195,16 +195,16 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
                 scoreboard.getPlayersTeam(player.scoreboardName)
             }
 
-            val objective = team?.let {
-                DisplaySlot.teamColorToSlot(team.color)?.let { scoreboard.getDisplayObjective(it) }
-            } ?: scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR) ?: return null
+            val objective = scoreboard.getDisplayObjective(
+                team?.color?.orElse(null)?.displaySlot() ?: DisplaySlot.SIDEBAR
+            ) ?: return null
 
             val objectiveScoreboard: Scoreboard = objective.scoreboard
             val numberFormat: NumberFormat = objective.numberFormatOrDefault(StyledFormat.SIDEBAR_DEFAULT)
 
             val sidebarEntries = objectiveScoreboard.listPlayerScores(objective)
                 .filter { score: PlayerScoreEntry -> !score.isHidden }
-                .sortedWith(MixinGuiAccessor.getScoreboardEntryComparator())
+                .sortedWith(MixinHudAccessor.getScoreboardEntryComparator())
                 .take(15)
                 .mapToArray { scoreboardEntry: PlayerScoreEntry ->
                     val team = objectiveScoreboard.getPlayersTeam(scoreboardEntry.owner())

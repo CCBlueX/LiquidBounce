@@ -33,7 +33,7 @@ import net.minecraft.client.gui.screens.TitleScreen
 private fun Routing.getVirtualScreenInfo() = get("/virtualScreen") {
     call.respond(JsonObject().apply {
         addProperty("name", ScreenManager.screen?.type?.routeName)
-        addProperty("showingSplash", mc.overlay is LoadingOverlay)
+        addProperty("showingSplash", mc.gui.overlay() is LoadingOverlay)
     })
 }
 
@@ -53,7 +53,7 @@ private fun Routing.postVirtualScreen() = post("/virtualScreen") {
 
 // GET /api/v1/client/screen
 private fun Routing.getScreenInfo() = get {
-    val mcScreen = mc.screen ?: call.forbidden("No screen")
+    val mcScreen = mc.gui.screen() ?: call.forbidden("No screen")
     val name = CustomScreenType.recognize(mcScreen)?.routeName ?: mcScreen::class.qualifiedName
 
     call.respond(JsonObject().apply {
@@ -81,18 +81,18 @@ private fun Routing.putScreen() = put {
 
 // DELETE /api/v1/client/screen
 private fun Routing.deleteScreen() = delete {
-    val screen = mc.screen ?: call.forbidden("No screen")
+    val screen = mc.gui.screen() ?: call.forbidden("No screen")
 
     if (screen is CustomSharedMinecraftScreen && screen.parentScreen != null) {
         mc.execute {
-            mc.setScreen(screen.parentScreen)
+            mc.gui.setScreen(screen.parentScreen)
         }
         call.respondNoContent()
         return@delete
     }
 
     mc.execute {
-        mc.setScreen(
+        mc.gui.setScreen(
             if (inGame) {
                 null
             } else {

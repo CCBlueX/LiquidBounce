@@ -74,7 +74,7 @@ object ModuleVomit : ClientModule("Vomit", ModuleCategories.FUN) {
             // We specifically only want to choose slots that we can store items in, as
             // e.g. the offhand slot is not a storage slot on 1.8 servers and therefore can cause issues
             val playerSlot = findNonEmptyStorageSlotsInInventory()
-            val container = mc.screen as? ContainerScreen
+            val container = mc.gui.screen() as? ContainerScreen
 
             val randomSlot = if (playerSlot.isEmpty()) {
                 // Attempt to drop from the container

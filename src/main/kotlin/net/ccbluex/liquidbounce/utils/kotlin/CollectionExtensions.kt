@@ -18,11 +18,14 @@
  */
 
 @file:Suppress("NOTHING_TO_INLINE")
+
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
+import net.minecraft.world.level.block.ColorCollection
+import net.minecraft.world.level.block.WeatheringCopperCollection
 import java.util.Collections
 import java.util.SequencedCollection
 import java.util.function.Predicate
@@ -48,3 +51,33 @@ fun <T> Iterable<Predicate<T>>.matchesAny(t: T): Boolean =
 
 fun <T> Iterable<Predicate<T>>.matchesAll(t: T): Boolean =
     all { it.test(t) }
+
+operator fun <T : Any> ColorCollection<T>.contains(e: T) =
+    e === this.white ||
+        e === this.orange ||
+        e === this.magenta ||
+        e === this.lightBlue ||
+        e === this.yellow ||
+        e === this.lime ||
+        e === this.pink ||
+        e === this.gray ||
+        e === this.lightGray ||
+        e === this.cyan ||
+        e === this.purple ||
+        e === this.blue ||
+        e === this.brown ||
+        e === this.green ||
+        e === this.red ||
+        e === this.black
+
+fun <T : Any> MutableCollection<T>.addAll(other: ColorCollection<T>) =
+    other.forEach(this::add)
+
+operator fun <T : Any> WeatheringCopperCollection<T>.contains(e: T) =
+    this.weathering.contains(e) || this.waxed.contains(e)
+
+operator fun <T : Any> WeatheringCopperCollection.ByState<T>.contains(e: T) =
+    e === this.unaffected || e === this.exposed || e === this.weathered || e === this.oxidized
+
+fun <T : Any> MutableCollection<T>.addAll(other: WeatheringCopperCollection<T>) =
+    other.forEach(this::add)

@@ -91,7 +91,7 @@ object CommandFriend : Command.Factory {
                         metadata = MessageMetadata(id = MESSAGE_ID)
                     )
                 } else {
-                    mc.gui.chat.removeMessage(MESSAGE_ID)
+                    mc.gui.hud.chat.removeMessage(MESSAGE_ID)
                     val data = MessageMetadata(id = MESSAGE_ID, remove = false)
 
                     FriendManager.friends.forEachIndexed { index, friend ->

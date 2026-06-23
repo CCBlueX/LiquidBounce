@@ -63,7 +63,7 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
     /**
      * Hook mouse button event
      */
-    @Inject(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getOverlay()Lnet/minecraft/client/gui/screens/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
+    @Inject(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;overlay()Lnet/minecraft/client/gui/screens/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookMouseButton(long window, MouseButtonInfo input, int action, CallbackInfo ci) {
         final var button = input.button();
         EventManager.INSTANCE.callEvent(new MouseButtonEvent(
@@ -71,14 +71,14 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
                 button,
                 action,
                 input.modifiers(),
-                this.minecraft.screen
+                this.minecraft.gui.screen()
         ));
     }
 
     /**
      * Hook mouse scroll event
      */
-    @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getOverlay()Lnet/minecraft/client/gui/screens/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
+    @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;overlay()Lnet/minecraft/client/gui/screens/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookMouseScroll(long window, double horizontal, double vertical, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new MouseScrollEvent(horizontal, vertical));
     }

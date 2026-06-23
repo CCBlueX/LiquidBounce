@@ -124,7 +124,7 @@ object CommandExecutor : EventListener {
             }.invokeOnCompletion {
                 running.set(false)
                 progressJob.cancel()
-                mc.gui.chat.removeMessage(progressMessageMetadata.id)
+                mc.gui.hud.chat.removeMessage(progressMessageMetadata.id)
             }
         }
     }
@@ -150,7 +150,7 @@ object CommandExecutor : EventListener {
     internal fun handleExceptions(e: Throwable) {
         when (e) {
             is CommandException -> {
-                mc.gui.chat.removeMessage("CommandManager#error")
+                mc.gui.hud.chat.removeMessage("CommandManager#error")
                 val data = MessageMetadata(id = "CommandManager#error", remove = false)
                 chat(e.text.withStyle(ChatFormatting.RED), metadata = data)
 

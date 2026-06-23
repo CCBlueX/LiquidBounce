@@ -65,7 +65,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
             return@tickHandler
         }
 
-        val inGameHud = mc.gui ?: return@tickHandler
+        val inGameHud = mc.gui.hud ?: return@tickHandler
         val playerListHeader = inGameHud.tabList.header
 
         if (playerListHeader == null) {

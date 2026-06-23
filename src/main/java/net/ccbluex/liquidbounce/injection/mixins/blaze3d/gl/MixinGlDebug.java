@@ -19,11 +19,12 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.blaze3d.gl;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.opengl.GlDebug;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(GlDebug.class)
 public abstract class MixinGlDebug {
@@ -31,8 +32,8 @@ public abstract class MixinGlDebug {
     /**
      * Adds source information to GL errors.
      */
-    @Redirect(method = "printDebugLog", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;Ljava/lang/Object;)V"), remap = false)
-    private void injectAdvancedDebugInfo(Logger logger, String format, Object arg) {
+    @WrapOperation(method = "printDebugLog", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;Ljava/lang/Object;)V"), remap = false)
+    private void injectAdvancedDebugInfo(Logger logger, String format, Object arg, Operation<Void> original) {
         var exception = new Exception();
 
         var currState = 0;

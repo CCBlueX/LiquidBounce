@@ -18,14 +18,15 @@
  */
 package net.ccbluex.liquidbounce.utils.client;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+@NullMarked
 public final class GitInfo {
 
   private GitInfo() {}
@@ -43,23 +44,23 @@ public final class GitInfo {
     }
   }
 
-  public static @NotNull String version() {
+  public static String version() {
     return getOrDefault("git.build.version", "unofficial");
   }
 
-  public static @NotNull String branch() {
+  public static String branch() {
     return getOrDefault("git.branch", "nextgen");
   }
 
-  public static @Nullable String get(@NotNull String key) {
+  public static @Nullable String get(String key) {
     return properties.getProperty(key);
   }
 
-  public static @NotNull String getOrDefault(@NotNull String key, @NotNull String defaultValue) {
+  public static String getOrDefault(String key, String defaultValue) {
     return properties.getProperty(key, defaultValue);
   }
 
-  public static @NotNull Set<Map.Entry<Object, Object>> entries() {
+  public static Set<Map.Entry<Object, Object>> entries() {
     return Collections.unmodifiableSet(properties.entrySet());
   }
 

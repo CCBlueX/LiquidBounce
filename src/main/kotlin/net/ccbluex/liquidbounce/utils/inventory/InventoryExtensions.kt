@@ -28,10 +28,10 @@ val AbstractContainerMenu.isPlayerInventory: Boolean
     get() = this.containerId == 0
 
 val isInInventoryScreen
-    get() = mc.screen is InventoryScreen
+    get() = mc.gui.screen() is InventoryScreen
 
 val isInContainerScreen
-    get() = mc.screen is ContainerScreen
+    get() = mc.gui.screen() is ContainerScreen
 
 val canCloseMainInventory
     get() = !isInInventoryScreen && mc.player?.containerMenu?.isPlayerInventory == true

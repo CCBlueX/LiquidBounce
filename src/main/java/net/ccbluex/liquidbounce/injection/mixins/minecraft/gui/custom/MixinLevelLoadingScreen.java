@@ -38,7 +38,7 @@ public abstract class MixinLevelLoadingScreen extends MixinScreen {
             return;
         }
 
-        Button quitButton = Button.builder(CommonComponents.GUI_PROCEED, button -> this.minecraft.setScreen(null))
+        Button quitButton = Button.builder(CommonComponents.GUI_PROCEED, _ -> this.minecraft.gui.setScreen(null))
             .pos(this.width / 2 - 100, this.height / 2 + 50)
             .size(200, 20)
             .build();

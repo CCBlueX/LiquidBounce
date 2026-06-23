@@ -413,7 +413,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
      * @return the chest screen if it is open and the title matches the chest title
      */
     private fun getChestScreen(): AbstractContainerScreen<*>? {
-        return mc.screen?.takeIf { it.canBeStolen() } as AbstractContainerScreen<*>?
+        return mc.gui.screen()?.takeIf { it.canBeStolen() } as AbstractContainerScreen<*>?
     }
 
     fun Screen.canBeStolen(): Boolean {

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine.font
 
+import com.mojang.blaze3d.GpuFormat
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2s
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
@@ -67,12 +68,10 @@ class GlyphAtlasLocation(val pixelBoundingBox: BoundingBox2f, atlasDimensions: D
         val atlasHeight = atlasDimensions.height.toFloat()
 
         this.uvCoordinatesOnTexture = BoundingBox2s(
-            BoundingBox2f(
-                pixelBoundingBox.xMin / atlasWidth,
-                pixelBoundingBox.yMin / atlasHeight,
-                pixelBoundingBox.xMax / atlasWidth,
-                pixelBoundingBox.yMax / atlasHeight
-            )
+            pixelBoundingBox.xMin / atlasWidth,
+            pixelBoundingBox.yMin / atlasHeight,
+            pixelBoundingBox.xMax / atlasWidth,
+            pixelBoundingBox.yMax / atlasHeight,
         )
 
         this.atlasWidth = pixelBoundingBox.xMax - pixelBoundingBox.xMin
@@ -96,7 +95,7 @@ abstract class GlyphPage {
         protected val maxTextureSize = lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
             // As specified in the OpenGL reference, GL_MAX_TEXTURE_SIZE must be at least 1024.
             // If it is less than that, an error occurred, the 1024 is just a failsafe.
-            max(gpuDevice.maxTextureSize, 1024)
+            max(gpuDevice.deviceInfo.limits().maxTextureSizeForFormat(GpuFormat.RGBA8_UNORM), 1024)
         }
 
         @JvmStatic

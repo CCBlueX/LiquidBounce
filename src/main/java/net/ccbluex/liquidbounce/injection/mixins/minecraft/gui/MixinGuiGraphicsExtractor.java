@@ -23,8 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInven
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -50,18 +49,18 @@ public abstract class MixinGuiGraphicsExtractor implements GuiGraphicsExtractorA
     }
 
     @Override
-    public void liquidbounce$drawItemBar(@NotNull ItemStack stack, int x, int y) {
+    public void liquidbounce$drawItemBar(ItemStack stack, int x, int y) {
         itemBar(stack, x, y);
     }
 
     @Override
-    public void liquidbounce$drawStackCount(@NotNull Font textRenderer, @NotNull ItemStack stack, int x, int y,
+    public void liquidbounce$drawStackCount(Font textRenderer, ItemStack stack, int x, int y,
             @Nullable String stackCountText) {
         itemCount(textRenderer, stack, x, y, stackCountText);
     }
 
     @Override
-    public void liquidbounce$drawCooldownProgress(@NotNull ItemStack stack, int x, int y) {
+    public void liquidbounce$drawCooldownProgress(ItemStack stack, int x, int y) {
         itemCooldown(stack, x, y);
     }
 }

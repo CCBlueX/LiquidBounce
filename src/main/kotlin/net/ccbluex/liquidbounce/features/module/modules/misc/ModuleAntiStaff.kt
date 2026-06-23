@@ -68,7 +68,7 @@ object ModuleAntiStaff : ClientModule("AntiStaff", ModuleCategories.MISC) {
         serverStaffList[address] = emptySet()
 
         // Keeps us from loading the staff list multiple times
-        tickUntil { inGame && mc.screen != null }
+        tickUntil { inGame && mc.gui.screen() != null }
 
         // Load the staff list
         loadStaffList(address)

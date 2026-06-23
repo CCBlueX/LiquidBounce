@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.interfaces;
 
+import org.jspecify.annotations.Nullable;
+
 /**
- * Additions to {@link net.minecraft.client.GuiMessage} and
- * {@link net.minecraft.client.GuiMessage.Line}.
+ * Additions to {@link net.minecraft.client.multiplayer.chat.GuiMessage} and
+ * {@link net.minecraft.client.multiplayer.chat.GuiMessage.Line}.
  */
 public interface GuiMessageLineAddition {
 
@@ -28,11 +30,11 @@ public interface GuiMessageLineAddition {
      * Sets the ID for the chat message.
      * The ID will be used for removing chat messages.
      */
-    void liquid_bounce$setId(String id);
+    void liquid_bounce$setId(@Nullable String id);
 
     /**
      * Gets the ID of the chat message.
      */
-    String liquid_bounce$getId();
+    @Nullable String liquid_bounce$getId();
 
 }

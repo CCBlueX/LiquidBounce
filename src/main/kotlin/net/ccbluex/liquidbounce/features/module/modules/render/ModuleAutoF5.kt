@@ -37,7 +37,7 @@ object ModuleAutoF5 : ClientModule("AutoF5", ModuleCategories.RENDER) {
 
     @Suppress("unused")
     private val perspectiveHandler = handler<PerspectiveEvent> { event ->
-        val screen = mc.screen
+        val screen = mc.gui.screen()
 
         if (screen is AbstractContainerScreen<*>
             && checkScreenHandlerType.isValid(screen) && checkScreenTitle.isValid(screen)

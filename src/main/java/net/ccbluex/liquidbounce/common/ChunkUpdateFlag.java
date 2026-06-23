@@ -22,5 +22,13 @@ public final class ChunkUpdateFlag {
     /**
      * Marks if the client world is processing a {@link net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket}.
      */
-    public static volatile boolean chunkDeltaUpdating = false;
+    private static final ScopedValue<Void> CHUNK_DELTA_UPDATING = ScopedValue.newInstance();
+
+    public static boolean isChunkDeltaUpdating() {
+        return CHUNK_DELTA_UPDATING.isBound();
+    }
+
+    public static void withChunkDeltaUpdating(Runnable action) {
+        ScopedValue.where(CHUNK_DELTA_UPDATING, null).run(action);
+    }
 }

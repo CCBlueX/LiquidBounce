@@ -160,14 +160,14 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
     }
 
     private val SPECIAL_ITEMS_FOR_IGNORE = ReferenceOpenHashSet.of(
-        Items.RED_BED,
+        Items.BED.red,
         Items.PLAYER_HEAD,
         Items.COMPASS,
         Items.EMERALD,
         Items.LAPIS_LAZULI,
-        Items.GREEN_DYE,
-        Items.GRAY_DYE,
-        Items.PINK_DYE,
+        Items.DYE.green,
+        Items.DYE.gray,
+        Items.DYE.pink,
         Items.SLIME_BALL,
     )
 

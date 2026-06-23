@@ -28,7 +28,7 @@ object AutoQueueTriggerTabHeader : AutoQueueTrigger("TabHeader") {
 
     override val isTriggered: Boolean
         get() {
-            val playerListHeader = mc.gui?.tabList?.header ?: return false
+            val playerListHeader = mc.gui?.hud?.tabList?.header ?: return false
             return playerListHeader.string.contains(text)
         }
 

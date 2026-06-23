@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
-import net.ccbluex.fastutil.referenceHashSetOf
+import net.ccbluex.liquidbounce.utils.kotlin.contains
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.item.BlockItem
@@ -44,11 +44,11 @@ val LIMITED_ITEMS: Set<String> = hashSetOf(
 )
 
 fun Item.isStainedGlass() : Boolean {
-    return this is BlockItem && this in STAINED_GLASS_BLOCKS
+    return this is BlockItem && this in Items.STAINED_GLASS
 }
 
 fun Item.isConcrete() : Boolean {
-    return this is BlockItem && this in CONCRETE_BLOCKS
+    return this is BlockItem && this in Items.CONCRETE
 }
 
 fun String.isArmorItem() : Boolean {
@@ -69,23 +69,6 @@ fun ContainerScreen.stacks(): List<String> {
         }
         .mapNotNull { BuiltInRegistries.ITEM.getKey(it.item.item).path }
 }
-
-private val STAINED_GLASS_BLOCKS: Set<Item> = referenceHashSetOf(
-    Items.BLACK_STAINED_GLASS, Items.BLUE_STAINED_GLASS, Items.BROWN_STAINED_GLASS,
-    Items.CYAN_STAINED_GLASS, Items.GRAY_STAINED_GLASS, Items.GREEN_STAINED_GLASS,
-    Items.LIGHT_BLUE_STAINED_GLASS, Items.LIGHT_GRAY_STAINED_GLASS,
-    Items.LIME_STAINED_GLASS, Items.MAGENTA_STAINED_GLASS,
-    Items.ORANGE_STAINED_GLASS, Items.PINK_STAINED_GLASS, Items.PURPLE_STAINED_GLASS,
-    Items.RED_STAINED_GLASS, Items.WHITE_STAINED_GLASS, Items.YELLOW_STAINED_GLASS
-)
-
-private val CONCRETE_BLOCKS: Set<Item> = referenceHashSetOf(
-    Items.BLACK_CONCRETE, Items.BLUE_CONCRETE, Items.BROWN_CONCRETE, Items.CYAN_CONCRETE,
-    Items.GRAY_CONCRETE, Items.GREEN_CONCRETE, Items.LIGHT_BLUE_CONCRETE,
-    Items.LIGHT_GRAY_CONCRETE, Items.LIME_CONCRETE, Items.MAGENTA_CONCRETE,
-    Items.ORANGE_CONCRETE, Items.PINK_CONCRETE, Items.PURPLE_CONCRETE,
-    Items.RED_CONCRETE, Items.WHITE_CONCRETE, Items.YELLOW_CONCRETE
-)
 
 /**
  * Some BedWars implementations don't give players armor straight after a purchase.

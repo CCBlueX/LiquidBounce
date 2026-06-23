@@ -79,7 +79,7 @@ object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
     }
 
     private fun track() {
-        val screen = mc.screen as? ContainerScreen ?: run {
+        val screen = mc.gui.screen() as? ContainerScreen ?: run {
             isInEnderChestScreen = false
             return
         }

@@ -18,14 +18,19 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render.blockentity;
 
-import net.ccbluex.liquidbounce.common.OutlineFlag;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.ccbluex.liquidbounce.common.StorageEspOutlineContext;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @Mixin(BlockEntityRenderDispatcher.class)
 public abstract class MixinBlockEntityRenderDispatcher {
@@ -35,11 +40,15 @@ public abstract class MixinBlockEntityRenderDispatcher {
      *
      * @author 1zuna
      */
-    @ModifyArg(
+    @WrapOperation(
             method = "submit",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderer;submit(Lnet/minecraft/client/renderer/blockentity/state/BlockEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V")
     )
-    private static <S extends BlockEntityRenderState> S render(S state) {
+    private <S extends BlockEntityRenderState> void injectStorageEspGlow(
+        BlockEntityRenderer<?, S> renderer, S state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector,
+        CameraRenderState camera, Operation<Void> original
+    ) {
+        int outlineColor = 0;
         var client = Minecraft.getInstance();
         if (ModuleStorageESP.GlowMode.INSTANCE.getRunning() && client.level != null) {
             var type = ModuleStorageESP.categorize(client.level.getBlockEntity(state.blockPos));
@@ -48,16 +57,12 @@ public abstract class MixinBlockEntityRenderDispatcher {
                 var color = type.getColor();
 
                 if (!color.isTransparent()) {
-                    var outlineVertexConsumerProvider = client.renderBuffers()
-                        .outlineBufferSource();
-                    outlineVertexConsumerProvider.setColor(color.argb());
-                    OutlineFlag.drawOutline = true;
-                    return state;
+                    outlineColor = color.argb();
                 }
             }
         }
 
-        return state;
+        StorageEspOutlineContext.render(outlineColor, () -> original.call(renderer, state, poseStack, submitNodeCollector, camera));
     }
 
 }

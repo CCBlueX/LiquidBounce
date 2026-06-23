@@ -99,7 +99,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     }
 
     fun shouldHandleInputs(keyBinding: KeyMapping): Boolean {
-        val screen = mc.screen ?: return true
+        val screen = mc.gui.screen() ?: return true
 
         if (!running || screen is ChatScreen || screen.isInCreativeSearchField() || ModuleClickGui.isInSearchBar) {
             return false

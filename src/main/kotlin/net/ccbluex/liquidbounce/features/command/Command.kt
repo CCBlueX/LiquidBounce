@@ -204,11 +204,11 @@ class Command(
 
     fun autoComplete(
         builder: SuggestionsBuilder,
-        tokenizationResult: Pair<List<String>, List<Int>>,
+        tokenizationResult: CommandManager.TokenizationResult,
         commandIdx: Int,
         isNewParameter: Boolean
     ) {
-        val args = tokenizationResult.first
+        val args = tokenizationResult.tokens
 
         val offset = args.size - commandIdx - 1
 

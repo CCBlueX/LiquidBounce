@@ -42,112 +42,118 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.protocol.PacketFlow
 import net.minecraft.resources.Identifier
-import net.minecraft.tags.BlockTags
-import net.minecraft.tags.ItemTags
 import net.minecraft.tags.TagKey
 import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Block
 import java.util.Locale
 import kotlin.jvm.optionals.getOrNull
 
+private fun itemTag(name: String): TagKey<Item> =
+    TagKey.create(Registries.ITEM, Identifier.withDefaultNamespace(name))
+
+private fun blockTag(name: String): TagKey<Block> =
+    TagKey.create(Registries.BLOCK, Identifier.withDefaultNamespace(name))
+
 private val ACCEPTED_ITEM_TAGS =
     arrayOf(
-        ItemTags.WOOL,
-        ItemTags.PLANKS,
-        ItemTags.STONE_BRICKS,
-        ItemTags.BUTTONS,
-        ItemTags.WOOL_CARPETS,
-        ItemTags.FENCE_GATES,
-        ItemTags.WOODEN_PRESSURE_PLATES,
-        ItemTags.DOORS,
-        ItemTags.LOGS,
-        ItemTags.BANNERS,
-        ItemTags.SAND,
-        ItemTags.STAIRS,
-        ItemTags.SLABS,
-        ItemTags.WALLS,
-        ItemTags.ANVIL,
-        ItemTags.RAILS,
-        ItemTags.SMALL_FLOWERS,
-        ItemTags.SAPLINGS,
-        ItemTags.LEAVES,
-        ItemTags.TRAPDOORS,
-        ItemTags.BEDS,
-        ItemTags.FENCES,
-        ItemTags.GOLD_ORES,
-        ItemTags.IRON_ORES,
-        ItemTags.DIAMOND_ORES,
-        ItemTags.REDSTONE_ORES,
-        ItemTags.LAPIS_ORES,
-        ItemTags.COAL_ORES,
-        ItemTags.EMERALD_ORES,
-        ItemTags.COPPER_ORES,
-        ItemTags.CANDLES,
-        ItemTags.DIRT,
-        ItemTags.TERRACOTTA,
-        ItemTags.BOATS,
-        ItemTags.FISHES,
-        ItemTags.SIGNS,
-        ItemTags.CREEPER_DROP_MUSIC_DISCS,
-        ItemTags.COALS,
-        ItemTags.ARROWS,
-        ItemTags.COMPASSES,
-        ItemTags.TRIM_MATERIALS,
-        ItemTags.SWORDS,
-        ItemTags.AXES,
-        ItemTags.HOES,
-        ItemTags.PICKAXES,
-        ItemTags.SHOVELS,
+        itemTag("wool"),
+        itemTag("planks"),
+        itemTag("stone_bricks"),
+        itemTag("buttons"),
+        itemTag("wool_carpets"),
+        itemTag("fence_gates"),
+        itemTag("wooden_pressure_plates"),
+        itemTag("doors"),
+        itemTag("logs"),
+        itemTag("banners"),
+        itemTag("sand"),
+        itemTag("stairs"),
+        itemTag("slabs"),
+        itemTag("walls"),
+        itemTag("anvil"),
+        itemTag("rails"),
+        itemTag("small_flowers"),
+        itemTag("saplings"),
+        itemTag("leaves"),
+        itemTag("trapdoors"),
+        itemTag("beds"),
+        itemTag("fences"),
+        itemTag("gold_ores"),
+        itemTag("iron_ores"),
+        itemTag("diamond_ores"),
+        itemTag("redstone_ores"),
+        itemTag("lapis_ores"),
+        itemTag("coal_ores"),
+        itemTag("emerald_ores"),
+        itemTag("copper_ores"),
+        itemTag("candles"),
+        itemTag("dirt"),
+        itemTag("terracotta"),
+        itemTag("boats"),
+        itemTag("fishes"),
+        itemTag("signs"),
+        itemTag("creeper_drop_music_discs"),
+        itemTag("coals"),
+        itemTag("arrows"),
+        itemTag("compasses"),
+        itemTag("trim_materials"),
+        itemTag("swords"),
+        itemTag("axes"),
+        itemTag("hoes"),
+        itemTag("pickaxes"),
+        itemTag("shovels"),
     )
 
 private val ACCEPTED_BLOCK_TAGS =
     arrayOf(
-        BlockTags.WOOL,
-        BlockTags.PLANKS,
-        BlockTags.STONE_BRICKS,
-        BlockTags.BUTTONS,
-        BlockTags.WOOL_CARPETS,
-        BlockTags.PRESSURE_PLATES,
-        BlockTags.DOORS,
-        BlockTags.FLOWERS,
-        BlockTags.SAPLINGS,
-        BlockTags.LOGS,
-        BlockTags.BANNERS,
-        BlockTags.SAND,
-        BlockTags.STAIRS,
-        BlockTags.SLABS,
-        BlockTags.WALLS,
-        BlockTags.ANVIL,
-        BlockTags.RAILS,
-        BlockTags.LEAVES,
-        BlockTags.TRAPDOORS,
-        BlockTags.BEDS,
-        BlockTags.FENCES,
-        BlockTags.GOLD_ORES,
-        BlockTags.IRON_ORES,
-        BlockTags.DIAMOND_ORES,
-        BlockTags.REDSTONE_ORES,
-        BlockTags.LAPIS_ORES,
-        BlockTags.COAL_ORES,
-        BlockTags.EMERALD_ORES,
-        BlockTags.COPPER_ORES,
-        BlockTags.CANDLES,
-        BlockTags.DIRT,
-        BlockTags.TERRACOTTA,
-        BlockTags.FLOWER_POTS,
-        BlockTags.ICE,
-        BlockTags.CORALS,
-        BlockTags.ALL_SIGNS,
-        BlockTags.BEEHIVES,
-        BlockTags.CROPS,
-        BlockTags.PORTALS,
-        BlockTags.FIRE,
-        BlockTags.NYLIUM,
-        BlockTags.SHULKER_BOXES,
-        BlockTags.CAMPFIRES,
-        BlockTags.FENCE_GATES,
-        BlockTags.CAULDRONS,
-        BlockTags.SNOW,
+        blockTag("wool"),
+        blockTag("planks"),
+        blockTag("stone_bricks"),
+        blockTag("buttons"),
+        blockTag("wool_carpets"),
+        blockTag("pressure_plates"),
+        blockTag("doors"),
+        blockTag("flowers"),
+        blockTag("saplings"),
+        blockTag("logs"),
+        blockTag("banners"),
+        blockTag("sand"),
+        blockTag("stairs"),
+        blockTag("slabs"),
+        blockTag("walls"),
+        blockTag("anvil"),
+        blockTag("rails"),
+        blockTag("leaves"),
+        blockTag("trapdoors"),
+        blockTag("beds"),
+        blockTag("fences"),
+        blockTag("gold_ores"),
+        blockTag("iron_ores"),
+        blockTag("diamond_ores"),
+        blockTag("redstone_ores"),
+        blockTag("lapis_ores"),
+        blockTag("coal_ores"),
+        blockTag("emerald_ores"),
+        blockTag("copper_ores"),
+        blockTag("candles"),
+        blockTag("dirt"),
+        blockTag("terracotta"),
+        blockTag("flower_pots"),
+        blockTag("ice"),
+        blockTag("corals"),
+        blockTag("all_signs"),
+        blockTag("beehives"),
+        blockTag("crops"),
+        blockTag("portals"),
+        blockTag("fire"),
+        blockTag("nylium"),
+        blockTag("shulker_boxes"),
+        blockTag("campfires"),
+        blockTag("fence_gates"),
+        blockTag("cauldrons"),
+        blockTag("snow"),
     )
 
 private fun <T : Any> constructMap(
@@ -277,63 +283,63 @@ private fun Routing.getRegistryGroups() = get("/groups") {
         val registryName = call.parameters["name"]
             ?: call.forbidden("Missing registry name parameter")
         when (registryName.lowercase(Locale.ENGLISH)) {
-        "items" -> {
-            for ((k, v) in constructMap(BuiltInRegistries.ITEM, ACCEPTED_ITEM_TAGS)) {
-                add(
-                    k.toString(),
-                    JsonObject().apply {
-                        addProperty("relation", "group")
-                        addProperty("relative", v.toString())
-                    }
-                )
-            }
-        }
-
-        "blocks" -> {
-            val parentMap = hashMapOf<Identifier, Identifier>()
-            val world = mc.level ?: forbidden("No world")
-
-            BuiltInRegistries.BLOCK.forEach { block ->
-                val pickStack = block.getCloneItemStack(world, BlockPos.ZERO, block.defaultBlockState(), false)
-                val id = BuiltInRegistries.BLOCK.getKey(block)
-
-                when (val item = pickStack.item) {
-                    is BlockItem -> {
-                        if (item.block != block) {
-                            parentMap[id] = BuiltInRegistries.BLOCK.getKey(item.block)
+            "items" -> {
+                for ((k, v) in constructMap(BuiltInRegistries.ITEM, ACCEPTED_ITEM_TAGS)) {
+                    add(
+                        k.toString(),
+                        JsonObject().apply {
+                            addProperty("relation", "group")
+                            addProperty("relative", v.toString())
                         }
-                    }
-
-                    else -> {
-                        if (!pickStack.isEmpty) {
-                            logger.warn("Invalid pick stack for $id: $pickStack")
-                        }
-                    }
+                    )
                 }
             }
 
-            val constructedMap = constructMap(BuiltInRegistries.BLOCK, ACCEPTED_BLOCK_TAGS)
+            "blocks" -> {
+                val parentMap = hashMapOf<Identifier, Identifier>()
+                val world = mc.level ?: forbidden("No world")
 
-            BuiltInRegistries.BLOCK.forEach { block ->
-                val id = BuiltInRegistries.BLOCK.getKey(block)
+                BuiltInRegistries.BLOCK.forEach { block ->
+                    val pickStack = block.getCloneItemStack(world, BlockPos.ZERO, block.defaultBlockState(), false)
+                    val id = BuiltInRegistries.BLOCK.getKey(block)
 
-                val obj = when (id) {
-                    in parentMap -> JsonObject().apply {
-                        addProperty("relation", "parent")
-                        addProperty("relative", parentMap[id]!!.toString())
+                    when (val item = pickStack.item) {
+                        is BlockItem -> {
+                            if (item.block != block) {
+                                parentMap[id] = BuiltInRegistries.BLOCK.getKey(item.block)
+                            }
+                        }
+
+                        else -> {
+                            if (!pickStack.isEmpty) {
+                                logger.warn("Invalid pick stack for $id: $pickStack")
+                            }
+                        }
                     }
-
-                    in constructedMap -> JsonObject().apply {
-                        addProperty("relation", "group")
-                        addProperty("relative", constructedMap[id]!!.toString())
-                    }
-
-                    else -> return@forEach
                 }
 
-                add(id.toString(), obj)
+                val constructedMap = constructMap(BuiltInRegistries.BLOCK, ACCEPTED_BLOCK_TAGS)
+
+                BuiltInRegistries.BLOCK.forEach { block ->
+                    val id = BuiltInRegistries.BLOCK.getKey(block)
+
+                    val obj = when (id) {
+                        in parentMap -> JsonObject().apply {
+                            addProperty("relation", "parent")
+                            addProperty("relative", parentMap[id]!!.toString())
+                        }
+
+                        in constructedMap -> JsonObject().apply {
+                            addProperty("relation", "group")
+                            addProperty("relative", constructedMap[id]!!.toString())
+                        }
+
+                        else -> return@forEach
+                    }
+
+                    add(id.toString(), obj)
+                }
             }
-        }
 
             else -> call.forbidden("Invalid registry name: $registryName")
         }

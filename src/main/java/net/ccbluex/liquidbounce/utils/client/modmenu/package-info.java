@@ -17,27 +17,5 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
-
-import net.minecraft.client.gui.Gui;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.scores.PlayerScoreEntry;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-
-import java.util.Comparator;
-
-@Mixin(Gui.class)
-public interface MixinGuiAccessor {
-
-    @Accessor("HOTBAR_SELECTION_SPRITE")
-    static Identifier getHotbarSelectionTexture() {
-        throw new AssertionError();
-    }
-
-    @Accessor("SCORE_DISPLAY_ORDER")
-    static Comparator<PlayerScoreEntry> getScoreboardEntryComparator() {
-        throw new AssertionError();
-    }
-
-}
+@org.jspecify.annotations.NullMarked
+package net.ccbluex.liquidbounce.utils.client.modmenu;

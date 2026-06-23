@@ -37,7 +37,7 @@ public abstract class MixinLevel {
 
     @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", at = @At("RETURN"))
     private void injectBlockStateChange(BlockPos pos, BlockState state, int flags, int maxUpdateDepth, CallbackInfoReturnable<Boolean> cir) {
-        if (Minecraft.getInstance().level != (Object) this || ChunkUpdateFlag.chunkDeltaUpdating) {
+        if (Minecraft.getInstance().level != (Object) this || ChunkUpdateFlag.isChunkDeltaUpdating()) {
             return;
         }
 

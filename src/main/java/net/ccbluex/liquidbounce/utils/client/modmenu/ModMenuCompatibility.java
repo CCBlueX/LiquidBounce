@@ -21,10 +21,8 @@ package net.ccbluex.liquidbounce.utils.client.modmenu;
 
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.util.mod.Mod;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@NullMarked
 public enum ModMenuCompatibility {
     INSTANCE;
 

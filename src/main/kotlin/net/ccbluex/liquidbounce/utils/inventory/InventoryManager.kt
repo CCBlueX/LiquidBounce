@@ -67,7 +67,7 @@ object InventoryManager : EventListener {
         get() = isInInventoryScreen || isInventoryOpenServerSide
 
     val isHandledScreenOpen
-        get() = mc.screen is AbstractContainerScreen<*> || isInventoryOpenServerSide
+        get() = mc.gui.screen() is AbstractContainerScreen<*> || isInventoryOpenServerSide
 
     var isInventoryOpenServerSide = false
         set(value) {

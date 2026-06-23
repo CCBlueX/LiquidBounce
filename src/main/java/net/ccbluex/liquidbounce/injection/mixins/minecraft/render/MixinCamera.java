@@ -30,8 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -209,6 +207,14 @@ public abstract class MixinCamera {
         EventManager.INSTANCE.callEvent(event);
     }
 
+    /**
+     * Set as spectator to disable smart culling
+     */
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSpectator()Z"))
+    private boolean hookFreeCamDisableSmartCullInBlocks(boolean original) {
+        return original || ModuleFreeCam.INSTANCE.getRunning();
+    }
+
     @ModifyExpressionValue(method = "alignWithEntity",
         at = @At(
             value = "INVOKE",
@@ -232,4 +238,3 @@ public abstract class MixinCamera {
     }
 
 }
-

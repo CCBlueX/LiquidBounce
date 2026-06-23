@@ -30,7 +30,7 @@ import net.ccbluex.netty.http.routing.Routing
 // GET /api/v1/client/browser
 private fun Routing.getBrowserInfo() = get {
     call.respond(JsonObject().apply {
-        val internetExplorerScreen = mc.screen as? InternetExplorerScreen ?: return@apply
+        val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen ?: return@apply
         val browser = internetExplorerScreen.browserBrowser ?: return@apply
 
         addProperty("url", browser.url)
@@ -40,7 +40,7 @@ private fun Routing.getBrowserInfo() = get {
 // POST /api/v1/client/browser/navigate
 private fun Routing.postBrowserNavigate() = post("/navigate") { with(call.receive<Navigate>()) {
     val url = this.url
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
         ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
         ?: call.badRequest("No browser tab")
@@ -53,17 +53,17 @@ private data class Navigate(val url: String)
 
 // POST /api/v1/client/browser/close
 private fun Routing.postBrowserClose() = post("/close") { withContext(Dispatchers.Minecraft) {
-    if (mc.screen !is InternetExplorerScreen) {
+    if (mc.gui.screen() !is InternetExplorerScreen) {
         call.badRequest("No browser screen")
     } else {
-        mc.setScreen(null)
+        mc.gui.setScreen(null)
         call.respondNoContent()
     }
 } }
 
 // POST /api/v1/client/browser/reload
 private fun Routing.postBrowserReload() = post("/reload") {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
         ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
         ?: call.badRequest("No browser tab")
@@ -74,7 +74,7 @@ private fun Routing.postBrowserReload() = post("/reload") {
 
 // POST /api/v1/client/browser/forceReload
 private fun Routing.postBrowserForceReload() = post("/forceReload") {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
         ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
         ?: call.badRequest("No browser tab")
@@ -85,7 +85,7 @@ private fun Routing.postBrowserForceReload() = post("/forceReload") {
 
 // POST /api/v1/client/browser/forward
 private fun Routing.postBrowserForward() = post("/forward") {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
         ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
         ?: call.badRequest("No browser tab")
@@ -96,7 +96,7 @@ private fun Routing.postBrowserForward() = post("/forward") {
 
 // POST /api/v1/client/browser/back
 private fun Routing.postBrowserBack() = post("/back") {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
         ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
         ?: call.badRequest("No browser tab")
@@ -107,7 +107,7 @@ private fun Routing.postBrowserBack() = post("/back") {
 
 // POST /api/v1/client/browser/closeTab
 private fun Routing.postBrowserCloseTab() = post("/closeTab") {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
         ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
         ?: call.badRequest("No browser tab")

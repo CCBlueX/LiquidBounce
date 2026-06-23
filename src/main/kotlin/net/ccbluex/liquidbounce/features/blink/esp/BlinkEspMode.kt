@@ -115,7 +115,7 @@ class BlinkEspModel(
             rs.setRotation(rotation)
         }
 
-        val cameraState = mc.gameRenderer.gameRenderState.levelRenderState.cameraRenderState
+        val cameraState = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
         mc.entityRenderDispatcher.submit(
             rs,
             cameraState,
@@ -123,7 +123,7 @@ class BlinkEspModel(
             rs.y - cameraState.pos.y,
             rs.z - cameraState.pos.z,
             poseStack,
-            mc.gameRenderer.submitNodeStorage,
+            mc.levelRenderer.submitNodeStorage,
         )
     }
 }

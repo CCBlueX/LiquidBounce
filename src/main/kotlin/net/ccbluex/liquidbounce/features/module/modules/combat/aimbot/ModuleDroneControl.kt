@@ -42,12 +42,12 @@ object ModuleDroneControl : ClientModule("DroneControl", ModuleCategories.COMBAT
     override fun onEnabled() {
         screen = DroneControlScreen()
 
-        mc.setScreen(screen)
+        mc.gui.setScreen(screen)
     }
 
     override fun onDisabled() {
-        if (mc.screen == screen) {
-            mc.setScreen(null)
+        if (mc.gui.screen() == screen) {
+            mc.gui.setScreen(null)
         }
 
         screen = null

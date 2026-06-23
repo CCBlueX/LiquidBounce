@@ -37,22 +37,21 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
-import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(Player.class)
 public abstract class MixinPlayer extends MixinLivingEntity {
@@ -80,7 +79,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyExpressionValue(method = {"causeExtraKnockback",
         "doSweepAttack"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getYRot()F"))
     private float hookFixRotation(float original) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return original;
         }
 
@@ -104,7 +103,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
     @Inject(method = "isMobilityRestricted", at = @At("HEAD"), cancellable = true)
     private void hookSprintIgnoreBlindness(CallbackInfoReturnable<Boolean> cir) {
-        if ((Object) this == Minecraft.getInstance().player && ModuleSprint.INSTANCE.getShouldIgnoreBlindness()) {
+        if (liquid_bounce$isClientPlayer() && ModuleSprint.INSTANCE.getShouldIgnoreBlindness()) {
             cir.setReturnValue(false);
         }
     }
@@ -123,7 +122,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/player/Player;hasEffect(Lnet/minecraft/core/Holder;)Z"))
     private boolean injectFatigueNoSlow(boolean original) {
-        if ((Object) this == Minecraft.getInstance().player && ModuleNoSlowBreak.getMiningFatigue()) {
+        if (liquid_bounce$isClientPlayer() && ModuleNoSlowBreak.getMiningFatigue()) {
             return false;
         }
 
@@ -134,7 +133,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/player/Player;isEyeInFluid(Lnet/minecraft/tags/TagKey;)Z"))
     private boolean injectWaterNoSlow(boolean original) {
-        if ((Object) this == Minecraft.getInstance().player && ModuleNoSlowBreak.getWater()) {
+        if (liquid_bounce$isClientPlayer() && ModuleNoSlowBreak.getWater()) {
             return false;
         }
 
@@ -144,7 +143,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/player/Player;onGround()Z"))
     private boolean injectOnAirNoSlow(boolean original) {
-        if ((Object) this == Minecraft.getInstance().player) {
+        if (liquid_bounce$isClientPlayer()) {
             if (ModuleNoSlowBreak.getOnAir()) {
                 return true;
             }
@@ -161,14 +160,13 @@ public abstract class MixinPlayer extends MixinLivingEntity {
         return original;
     }
 
-    @SuppressWarnings("ConstantValue")
-    @Redirect(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;multiply(DDD)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 hookSlowVelocity(Vec3 instance, double x, double y, double z) {
-        if ((Object) this == Minecraft.getInstance().player && ModuleKeepSprint.INSTANCE.getRunning()) {
-            x = z = ModuleKeepSprint.INSTANCE.getMotion();
+    @ModifyArgs(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;multiply(DDD)Lnet/minecraft/world/phys/Vec3;"))
+    private void hookSlowVelocity(Args args) {
+        if (liquid_bounce$isClientPlayer() && ModuleKeepSprint.INSTANCE.getRunning()) {
+            double motion = ModuleKeepSprint.INSTANCE.getMotion();
+            args.set(0, motion); // x
+            args.set(2, motion); // z
         }
-
-        return instance.multiply(x, y, z);
     }
 
     /**
@@ -176,7 +174,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
      */
     @WrapWithCondition(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setSprinting(Z)V", ordinal = 0))
     private boolean hookSlowVelocity(Player instance, boolean b) {
-        if ((Object) this == Minecraft.getInstance().player) {
+        if (liquid_bounce$isClientPlayer()) {
             ModuleKeepSprint.INSTANCE.setSprinting(b);
             return !ModuleKeepSprint.INSTANCE.getRunning() || b;
         }
@@ -184,10 +182,9 @@ public abstract class MixinPlayer extends MixinLivingEntity {
         return true;
     }
 
-    @SuppressWarnings({"UnreachableCode", "ConstantValue"})
     @ModifyExpressionValue(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;isSprinting()Z"))
     private boolean hookSlowVelocity(boolean original) {
-        if ((Object) this == Minecraft.getInstance().player && ModuleKeepSprint.INSTANCE.getRunning()) {
+        if (liquid_bounce$isClientPlayer() && ModuleKeepSprint.INSTANCE.getRunning()) {
             return ModuleKeepSprint.INSTANCE.getSprinting();
         }
 
@@ -196,7 +193,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
     @ModifyReturnValue(method = "entityInteractionRange", at = @At("RETURN"))
     private double hookEntityInteractionRange(double original) {
-        if ((Object) this == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
+        if (liquid_bounce$isClientPlayer() && ModuleReach.INSTANCE.getRunning()) {
             return ModuleReach.INSTANCE.getEntity().getInteractionRange();
         }
 
@@ -205,7 +202,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
     @ModifyReturnValue(method = "blockInteractionRange", at = @At("RETURN"))
     private double hookBlockInteractionRange(double original) {
-        if ((Object) this == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
+        if (liquid_bounce$isClientPlayer() && ModuleReach.INSTANCE.getRunning()) {
             return ModuleReach.INSTANCE.getBlockRangeIncrease() + original;
         }
 
@@ -214,7 +211,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
     @ModifyExpressionValue(method = "getCurrentItemAttackStrengthDelay", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getAttributeValue(Lnet/minecraft/core/Holder;)D"))
     private double hookAutoWeaponAttackSpeed(double original) {
-        if ((Object) this == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
+        if (liquid_bounce$isClientPlayer() && ModuleReach.INSTANCE.getRunning()) {
             return original;
         }
 

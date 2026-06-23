@@ -82,15 +82,15 @@ public abstract class MixinItemInHandRenderer {
         original.call(instance, poseStack, submitNodeCollector, lightCoords, overlayCoords, outlineColor);
     }
 
-    @Inject(method = "renderArmWithItem", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER))
+    @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER))
     private void hookRenderFirstPersonItem(
-        AbstractClientPlayer player, float tickProgress, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector orderedRenderCommandQueue, int light, CallbackInfo ci) {
+        AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
         if (ModuleAnimations.INSTANCE.getRunning()) {
-            var isInBothHands = InteractionHand.MAIN_HAND == hand && item.has(DataComponents.MAP_ID) && offHandItem.isEmpty();
+            var isInBothHands = InteractionHand.MAIN_HAND == hand && itemStack.has(DataComponents.MAP_ID) && offHandItem.isEmpty();
             ModuleAnimations.MainHand mainHand = ModuleAnimations.MainHand.INSTANCE;
             ModuleAnimations.OffHand offHand = ModuleAnimations.OffHand.INSTANCE;
             if (isInBothHands && mainHand.getRunning() && offHand.getRunning()) {
-                liquid_bounce$applyTransformations(matrices,
+                liquid_bounce$applyTransformations(poseStack,
                         (mainHand.getMainHandX() + offHand.getOffHandX()) / 2f,
                         (mainHand.getMainHandY() + offHand.getOffHandY()) / 2f,
                         (mainHand.getMainHandItemScale() + offHand.getOffHandItemScale()) / 2f,
@@ -99,11 +99,11 @@ public abstract class MixinItemInHandRenderer {
                         (mainHand.getMainHandPositiveZ() + offHand.getOffHandPositiveZ()) / 2f
                 );
             } else if (isInBothHands && mainHand.getRunning()) {
-                matrices.translate(0f, 0f, mainHand.getMainHandItemScale());
+                poseStack.translate(0f, 0f, mainHand.getMainHandItemScale());
             } else if (InteractionHand.MAIN_HAND == hand && mainHand.getRunning()) {
-                liquid_bounce$applyTransformations(matrices, mainHand.getMainHandX(), mainHand.getMainHandY(), mainHand.getMainHandItemScale(), mainHand.getMainHandPositiveX(), mainHand.getMainHandPositiveY(), mainHand.getMainHandPositiveZ());
+                liquid_bounce$applyTransformations(poseStack, mainHand.getMainHandX(), mainHand.getMainHandY(), mainHand.getMainHandItemScale(), mainHand.getMainHandPositiveX(), mainHand.getMainHandPositiveY(), mainHand.getMainHandPositiveZ());
             } else if (offHand.getRunning()) {
-                liquid_bounce$applyTransformations(matrices, offHand.getOffHandX(), offHand.getOffHandY(), offHand.getOffHandItemScale(), offHand.getOffHandPositiveX(), offHand.getOffHandPositiveY(), offHand.getOffHandPositiveZ());
+                liquid_bounce$applyTransformations(poseStack, offHand.getOffHandX(), offHand.getOffHandY(), offHand.getOffHandItemScale(), offHand.getOffHandPositiveX(), offHand.getOffHandPositiveY(), offHand.getOffHandPositiveZ());
             }
         }
     }
@@ -116,33 +116,33 @@ public abstract class MixinItemInHandRenderer {
         matrices.mulPose(Axis.ZP.rotationDegrees(rotateZ));
     }
 
-    @Inject(method = "renderArmWithItem",
+    @Inject(method = "submitArmWithItem",
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;getUseAnimation()Lnet/minecraft/world/item/ItemUseAnimation;")),
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;applyItemArmTransform(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/entity/HumanoidArm;F)V", ordinal = 0, shift = At.Shift.AFTER))
     private void transformBlockAnimation(
-        AbstractClientPlayer player, float tickProgress, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector orderedRenderCommandQueue, int light, CallbackInfo ci) {
-        if (ItemCategorizationsKt.isSword(item)) {
+        AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+        if (ItemCategorizationsKt.isSword(itemStack)) {
             var arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getRunning()) {
                 var activeChoice = ModuleAnimations.INSTANCE.getBlockAnimationChoice().getActiveMode();
-                activeChoice.transform(matrices, arm, equipProgress, swingProgress);
+                activeChoice.transform(poseStack, arm, inverseArmHeight, attack);
             } else {
                 // Default animation
-                ModuleAnimations.OneSevenAnimation.INSTANCE.transform(matrices, arm, equipProgress, swingProgress);
+                ModuleAnimations.OneSevenAnimation.INSTANCE.transform(poseStack, arm, inverseArmHeight, attack);
             }
         }
     }
 
-    @Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
-    private void hideShield(AbstractClientPlayer player, float tickProgress, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector orderedRenderCommandQueue, int light, CallbackInfo ci) {
+    @Inject(method = "submitArmWithItem", at = @At("HEAD"), cancellable = true)
+    private void hideShield(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
         if (hand == InteractionHand.OFF_HAND && player == Minecraft.getInstance().player &&
-            ModuleSwordBlock.INSTANCE.shouldHideOffhand(item)) {
+            ModuleSwordBlock.INSTANCE.shouldHideOffhand(itemStack)) {
             ci.cancel();
         }
     }
 
-    @ModifyArg(method = "renderArmWithItem", at = @At(
+    @ModifyArg(method = "submitArmWithItem", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;applyItemArmTransform(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/entity/HumanoidArm;F)V",
             ordinal = 3
@@ -182,11 +182,11 @@ public abstract class MixinItemInHandRenderer {
     }
 
     @Inject(method = "shouldInstantlyReplaceVisibleItem", at = @At("RETURN"), cancellable = true)
-    private void injectIgnoreAmount(ItemStack from, ItemStack to, CallbackInfoReturnable<Boolean> cir) {
+    private void injectIgnoreAmount(ItemStack currentlyVisibleItem, ItemStack expectedItem, CallbackInfoReturnable<Boolean> cir) {
         if (ModuleAnimations.INSTANCE.getRunning() && !cir.getReturnValueZ()) {
             cir.setReturnValue(!ModuleAnimations.EquipOffset.INSTANCE.getRunning()
-                    || (from.getCount() == to.getCount() || ModuleAnimations.EquipOffset.INSTANCE.getIgnoreAmount())
-                    && ItemStack.isSameItemSameComponents(from, to)
+                    || (currentlyVisibleItem.getCount() == expectedItem.getCount() || ModuleAnimations.EquipOffset.INSTANCE.getIgnoreAmount())
+                    && ItemStack.isSameItemSameComponents(currentlyVisibleItem, expectedItem)
             );
         }
     }
@@ -199,51 +199,51 @@ public abstract class MixinItemInHandRenderer {
         return y;
     }
 
-    @ModifyExpressionValue(method = "renderArmWithItem", at = @At(
+    @ModifyExpressionValue(method = "submitArmWithItem", at = @At(
         value = "INVOKE",
         target = "Lnet/minecraft/world/item/ItemStack;getUseAnimation()Lnet/minecraft/world/item/ItemUseAnimation;",
         ordinal = 0
     ))
-    private ItemUseAnimation hookUseAction(ItemUseAnimation original, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack, @Local(argsOnly = true, name = "player") AbstractClientPlayer entity) {
-        if (ModuleSwordBlock.shouldAnimateSwordBlock(entity, itemStack)) {
+    private ItemUseAnimation hookUseAction(ItemUseAnimation original, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack, @Local(argsOnly = true, name = "player") AbstractClientPlayer player) {
+        if (ModuleSwordBlock.shouldAnimateSwordBlock(player, itemStack)) {
             return ItemUseAnimation.BLOCK;
         }
         return original;
     }
 
-    @ModifyExpressionValue(method = "renderArmWithItem", at = @At(
+    @ModifyExpressionValue(method = "submitArmWithItem", at = @At(
         value = "INVOKE",
         target = "Lnet/minecraft/client/player/AbstractClientPlayer;isUsingItem()Z",
         ordinal = 1
     ))
-    private boolean hookIsUseItem(boolean original, @Local(argsOnly = true, name = "player") AbstractClientPlayer entity) {
-        if (ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
+    private boolean hookIsUseItem(boolean original, @Local(argsOnly = true, name = "player") AbstractClientPlayer player) {
+        if (ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
             return true;
         }
 
         return original;
     }
 
-    @ModifyExpressionValue(method = "renderArmWithItem", at = @At(
+    @ModifyExpressionValue(method = "submitArmWithItem", at = @At(
         value = "INVOKE",
         target = "Lnet/minecraft/client/player/AbstractClientPlayer;getUsedItemHand()Lnet/minecraft/world/InteractionHand;",
         ordinal = 1
     ))
-    private InteractionHand hookActiveHand(InteractionHand original, @Local(argsOnly = true, name = "player") AbstractClientPlayer entity) {
-        if (ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
+    private InteractionHand hookActiveHand(InteractionHand original, @Local(argsOnly = true, name = "player") AbstractClientPlayer player) {
+        if (ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
             return InteractionHand.MAIN_HAND;
         }
 
         return original;
     }
 
-    @ModifyExpressionValue(method = "renderArmWithItem", at = @At(
+    @ModifyExpressionValue(method = "submitArmWithItem", at = @At(
         value = "INVOKE",
         target = "Lnet/minecraft/client/player/AbstractClientPlayer;getUseItemRemainingTicks()I",
         ordinal = 2
     ))
-    private int hookItemUseItem(int original, @Local(argsOnly = true, name = "player") AbstractClientPlayer entity) {
-        if (ModuleSwordBlock.shouldAnimateSwordBlock(entity)) {
+    private int hookItemUseItem(int original, @Local(argsOnly = true, name = "player") AbstractClientPlayer player) {
+        if (ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
             return 7200;
         }
 

@@ -245,7 +245,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         HOLDING_CONSUMABLE("HoldingConsumable");
 
         override fun getAsBoolean(): Boolean = when (this) {
-            OPEN_INVENTORY -> InventoryManager.isInventoryOpen || mc.screen is AbstractContainerScreen<*>
+            OPEN_INVENTORY -> InventoryManager.isInventoryOpen || mc.gui.screen() is AbstractContainerScreen<*>
             USING_ITEM -> player.isUsingItem
             HOLDING_CONSUMABLE -> player.mainHandItem.isConsumable || player.offhandItem.isConsumable
         }

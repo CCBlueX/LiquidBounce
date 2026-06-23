@@ -39,7 +39,7 @@ object CommandClientBrowserSubcommand {
         ).handler {
             chat(regular("Opening browser..."))
             mc.schedule {
-                mc.setScreen(InternetExplorerScreen(args[0] as String))
+                mc.gui.setScreen(InternetExplorerScreen(args[0] as String))
             }
         }.build()
 }

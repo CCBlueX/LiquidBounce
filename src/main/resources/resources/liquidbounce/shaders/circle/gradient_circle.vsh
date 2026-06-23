@@ -13,9 +13,9 @@ layout(std140) uniform Projection {
 
 in vec3 Position;
 in vec2 UV0;
-in ivec2 OuterColor;
-in ivec2 InnerColor;
-in float InnerRatio;
+in ivec2 UV1;
+in ivec2 UV2;
+in float LineWidth;
 
 out vec2 vUv;
 flat out ivec2 vOuterPacked;
@@ -25,7 +25,7 @@ out float vInnerRatio;
 void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
     vUv = UV0;
-    vOuterPacked = OuterColor;
-    vInnerPacked = InnerColor;
-    vInnerRatio = clamp(InnerRatio, 0.0, 1.0);
+    vOuterPacked = UV1;
+    vInnerPacked = UV2;
+    vInnerRatio = clamp(LineWidth, 0.0, 1.0);
 }

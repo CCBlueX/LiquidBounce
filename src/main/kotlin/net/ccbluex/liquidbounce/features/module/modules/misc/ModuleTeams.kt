@@ -64,7 +64,7 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
         val entityToColor: (Entity) -> Int?,
     ) : Tagged {
         TEAM("Team", { entity ->
-            entity.team?.color?.color
+            entity.team?.color?.orElse(null)?.rgb()
         }),
         ARMOR("Armor", { entity ->
             val armorColorSlots = armorColorSlots

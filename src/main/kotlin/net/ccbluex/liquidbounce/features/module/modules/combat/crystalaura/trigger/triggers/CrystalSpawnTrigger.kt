@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.world
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.PostPacketTrigger
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 /**
@@ -37,7 +37,7 @@ import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 object CrystalSpawnTrigger : PostPacketTrigger<ClientboundAddEntityPacket>("CrystalSpawn", true) {
 
     override fun postPacketHandler(packet: ClientboundAddEntityPacket) {
-        if (packet.type != EntityType.END_CRYSTAL) {
+        if (packet.type != EntityTypes.END_CRYSTAL) {
             return
         }
 

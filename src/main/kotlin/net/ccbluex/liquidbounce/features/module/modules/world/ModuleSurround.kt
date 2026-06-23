@@ -44,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.entity.getFeetBlockPos
 import net.ccbluex.liquidbounce.utils.entity.isInHole
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.center
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -159,7 +160,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
                 val posAsLong = entry.longKey
 
                 // find the list of current breaking data, or else return
-                val breakingProgressions = mc.levelRenderer.destructionProgress[posAsLong] ?: continue
+                val breakingProgressions = world.destructionProgress()[posAsLong] ?: continue
 
                 // find the braking info that doesn't belong to us, if we mine our own surround, it should be ignored
                 val breakingInfo = breakingProgressions.lastOrNull { it.id != player.id } ?: continue

@@ -42,7 +42,7 @@ object ModuleAutoRespawn : ClientModule("AutoRespawn", ModuleCategories.PLAYER) 
             }
 
             player.respawn()
-            mc.setScreen(null)
+            mc.gui.setScreen(null)
         }
     }
 

@@ -46,7 +46,7 @@ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.entity.EntitySpawnReason
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
@@ -90,7 +90,7 @@ object ModuleAutoPearl : ClientModule(
 
     @Suppress("unused")
     private val pearlSpawnHandler = handler<PacketEvent> { event ->
-        if (event.packet !is ClientboundAddEntityPacket || event.packet.type != EntityType.ENDER_PEARL) {
+        if (event.packet !is ClientboundAddEntityPacket || event.packet.type != EntityTypes.ENDER_PEARL) {
             return@handler
         }
 

@@ -127,7 +127,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
                 }
 
                 if (playersToRemove.isEmpty()) {
-                    mc.gui.chat.removeMessage("CFakePlayer#info")
+                    mc.gui.hud.chat.removeMessage("CFakePlayer#info")
                     val data = MessageMetadata(id = "CFakePlayer#info", remove = false)
 
                     chat(warning((command.result("noFakePlayerNamed", name))), metadata = data)

@@ -46,9 +46,7 @@ class WorldRenderEvent(val matrixStack: PoseStack, val camera: Camera, val parti
 class DrawOutlinesEvent(
     val renderTarget: RenderTarget,
     val pose: PoseStack,
-    val cameraState: CameraRenderState,
     val partialTicks: Float,
-    val type: OutlineType,
 ) : Event() {
     var dirtyFlag: Boolean = false
         private set
@@ -58,11 +56,6 @@ class DrawOutlinesEvent(
      */
     fun markDirty() {
         this.dirtyFlag = true
-    }
-
-    enum class OutlineType {
-        INBUILT_OUTLINE,
-        MINECRAFT_GLOW
     }
 }
 

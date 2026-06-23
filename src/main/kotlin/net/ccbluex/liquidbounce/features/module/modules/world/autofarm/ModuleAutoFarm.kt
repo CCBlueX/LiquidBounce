@@ -131,7 +131,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         // Return if the user is inside a screen like the inventory
-        if (mc.screen is AbstractContainerScreen<*>) {
+        if (mc.gui.screen() is AbstractContainerScreen<*>) {
             return@handler
         }
 
@@ -141,7 +141,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     @Suppress("unused")
     private val tickHandler = tickHandler {
         // Return if the user is inside a screen like the inventory
-        if (mc.screen is AbstractContainerScreen<*>) {
+        if (mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
         }
 

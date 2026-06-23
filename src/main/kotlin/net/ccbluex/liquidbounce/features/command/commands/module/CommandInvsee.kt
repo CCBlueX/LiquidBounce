@@ -60,7 +60,7 @@ object CommandInvsee : Command.Factory {
                 }
 
                 mc.schedule {
-                    mc.setScreen(ViewedInventoryScreen(player))
+                    mc.gui.setScreen(ViewedInventoryScreen(player))
                 }
 
                 viewedPlayer = playerID

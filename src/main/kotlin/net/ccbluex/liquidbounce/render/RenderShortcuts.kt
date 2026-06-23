@@ -56,8 +56,8 @@ import org.joml.Vector3fc
  * But as of now, 01.02.2025, they haven't.
  */
 @JvmField
-val HAS_AMD_VEGA_APU = (gpuDevice.renderer?.startsWith("AMD Radeon(TM) RX Vega") ?: false) &&
-    gpuDevice.vendor == "ATI Technologies Inc."
+val HAS_AMD_VEGA_APU = gpuDevice.deviceInfo.name.startsWith("AMD Radeon(TM) RX Vega") &&
+    gpuDevice.deviceInfo.vendorName == "ATI Technologies Inc."
 
 @JvmField
 val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
@@ -83,9 +83,9 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
  */
 inline fun renderEnvironmentForWorld(
     poseStack: PoseStack,
-    renderTarget: RenderTarget = mc.mainRenderTarget,
+    renderTarget: RenderTarget = mc.gameRenderer.mainRenderTarget(),
     mode: DrawMode = DrawMode.BATCH,
-    camera: Camera = mc.gameRenderer.mainCamera,
+    camera: Camera = mc.gameRenderer.mainCamera(),
     draw: WorldRenderEnvironment.() -> Unit,
 ) {
     val environment = WorldRenderEnvironment.create(renderTarget, poseStack, camera)
@@ -106,30 +106,30 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRender
     }
 }
 
-/**
- * Shorthand for `withPosition(relativeToCamera(pos))`
- */
-inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) {
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(
+    x: Double, y: Double, z: Double, draw: WorldRenderEnvironment.() -> Unit
+) {
     poseStack.withPush {
         val cameraPos = camera.position()
-        translate(pos.x - cameraPos.x, pos.y - cameraPos.y, pos.z - cameraPos.z)
+        translate(x - cameraPos.x, y - cameraPos.y, z - cameraPos.z)
         draw()
     }
 }
+
+/**
+ * Shorthand for `withPosition(relativeToCamera(pos))`
+ */
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) =
+    withPositionRelativeToCamera(pos.x, pos.y, pos.z, draw)
 
 /**
  * Shortcut of `withPositionRelativeToCamera(Vec3.atLowerCornerOf(pos))`
  */
-inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) {
-    poseStack.withPush {
-        val cameraPos = camera.position()
-        translate(pos.x - cameraPos.x, pos.y - cameraPos.y, pos.z - cameraPos.z)
-        draw()
-    }
-}
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) =
+    withPositionRelativeToCamera(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), draw)
 
 internal inline fun RenderTarget.drawGenericBlockESP(
-    renderState: StaticMeshStorage,
+    renderState: CachedMeshStorage,
     pipeline: RenderPipeline,
     distanceFade: DistanceFadeUniformValueGroup,
     dynamicTransforms: () -> GpuBufferSlice = ::getDynamicTransformsUniform,

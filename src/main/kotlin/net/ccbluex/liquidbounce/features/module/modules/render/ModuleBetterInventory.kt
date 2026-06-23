@@ -25,13 +25,12 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinGuiAccessor
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
-import net.minecraft.client.gui.Gui
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
@@ -68,12 +67,12 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
 
             object Texture : Mode("Texture") {
                 /**
-                 * @see Gui.renderItemHotbar
+                 * @see net.minecraft.client.gui.Hud.extractItemHotbar
                  */
                 override fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot) {
                     context.blitSprite(
                         RenderPipelines.GUI_TEXTURED,
-                        MixinGuiAccessor.getHotbarSelectionTexture(),
+                        MixinHudAccessor.getHotbarSelectionTexture(),
                         slot.x - 3,
                         slot.y - 3,
                         22,

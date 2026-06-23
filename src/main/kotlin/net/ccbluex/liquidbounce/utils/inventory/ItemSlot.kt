@@ -47,7 +47,7 @@ sealed interface ItemSlot : ItemStackHolder {
      */
     fun getIdForServer(screen: AbstractContainerScreen<*>?): Int?
 
-    fun getIdForServerWithCurrentScreen() = getIdForServer(mc.screen as? AbstractContainerScreen<*>)
+    fun getIdForServerWithCurrentScreen() = getIdForServer(mc.gui.screen() as? AbstractContainerScreen<*>)
 
     override fun hashCode(): Int
 
@@ -122,7 +122,7 @@ class VirtualItemSlot(
 class ContainerItemSlot(val slotInContainer: Int) : ItemSlot {
 
     override val itemStack: ItemStack
-        get() = (mc.screen as AbstractContainerScreen<*>).menu.slots[this.slotInContainer].item
+        get() = (mc.gui.screen() as AbstractContainerScreen<*>).menu.slots[this.slotInContainer].item
 
     override val slotType: ItemSlot.Type
         get() = ItemSlot.Type.CONTAINER

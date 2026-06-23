@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStackTemplate
 import net.minecraft.world.item.Items
@@ -42,7 +43,7 @@ object ModuleNoEntityInteract : ClientModule("NoEntityInteract", ModuleCategorie
     private fun defaultEntityTypes(): SequencedSet<EntityType<*>> {
         return objectRBTreeSetOf(
             BuiltInRegistries.ENTITY_TYPE.asComparator(),
-            EntityType.VILLAGER, EntityType.ARMOR_STAND
+            EntityTypes.VILLAGER, EntityTypes.ARMOR_STAND
         )
     }
 

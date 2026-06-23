@@ -414,7 +414,7 @@ object AutoMobHeal : ClientModule(
 
     @Suppress("unused")
     private val repeatable = tickHandler {
-        if (player.isUsingItem || mc.screen != null) {
+        if (player.isUsingItem || mc.gui.screen() != null) {
             return@tickHandler
         }
 

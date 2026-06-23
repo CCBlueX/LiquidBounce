@@ -185,7 +185,7 @@ data class InputBind(
 
         val eventAction = event.action
         return when (eventAction) {
-            GLFW.GLFW_PRESS if mc.screen == null -> when (action) {
+            GLFW.GLFW_PRESS if mc.gui.screen() == null -> when (action) {
                 BindAction.TOGGLE -> !currentState
                 BindAction.HOLD, BindAction.SMART -> true
             }

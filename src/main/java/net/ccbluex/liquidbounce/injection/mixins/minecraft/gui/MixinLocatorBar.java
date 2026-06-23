@@ -17,26 +17,31 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.blaze3d;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import com.mojang.blaze3d.TracyFrameCapture;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.ccbluex.liquidbounce.render.ClientTesselator;
-import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer;
-import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager;
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentTweak;
+import net.minecraft.client.gui.contextualbar.LocatorBar;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(RenderSystem.class)
-public abstract class MixinRenderSystem {
+@Mixin(LocatorBar.class)
+public abstract class MixinLocatorBar {
 
-    @Inject(method = "flipFrame", at = @At("RETURN"))
-    private static void onFlipFrame(TracyFrameCapture tracyFrameCapture, CallbackInfo ci) {
-        RenderingDebug.flipFrame();
-        ClientTesselator.Shared.clear();
-        GrowableMappableRingBuffer.cleanup();
+    @Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
+    private void hookDisableLocatorBarTweak(final CallbackInfo ci) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_LOCATOR_BAR)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "extractBackground", at = @At("HEAD"), cancellable = true)
+    private void hookDisableLocatorBarTweakOnBackground(final CallbackInfo ci) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_LOCATOR_BAR)) {
+            ci.cancel();
+        }
     }
 
 }

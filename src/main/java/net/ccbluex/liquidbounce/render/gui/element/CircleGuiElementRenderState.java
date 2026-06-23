@@ -19,14 +19,14 @@
 
 package net.ccbluex.liquidbounce.render.gui.element;
 
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
+import org.jspecify.annotations.Nullable;
 
 public record CircleGuiElementRenderState(
     float x,
@@ -44,7 +44,7 @@ public record CircleGuiElementRenderState(
     private static final int INNER_RATIO_SCALE = 32767;
 
     public CircleGuiElementRenderState {
-        assert pipeline.getVertexFormatMode() == VertexFormat.Mode.QUADS;
+        assert pipeline.getPrimitiveTopology() == PrimitiveTopology.QUADS;
     }
 
     @Override

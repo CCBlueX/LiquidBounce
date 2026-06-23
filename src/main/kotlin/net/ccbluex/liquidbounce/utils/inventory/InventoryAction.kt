@@ -140,7 +140,7 @@ sealed interface InventoryAction {
             }
 
             // Check if current screen is the same as the screen we want to interact with
-            val screen = mc.screen as? AbstractContainerScreen<*> ?: return false
+            val screen = mc.gui.screen() as? AbstractContainerScreen<*> ?: return false
             return screen.syncId == this.screen.syncId
         }
 

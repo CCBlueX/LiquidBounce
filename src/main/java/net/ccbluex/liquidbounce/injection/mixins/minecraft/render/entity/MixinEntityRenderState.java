@@ -21,10 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render.entity;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.world.entity.Entity;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-
 
 @Mixin(EntityRenderState.class)
 public abstract class MixinEntityRenderState implements EntityRenderStateAddition {
@@ -37,7 +35,7 @@ public abstract class MixinEntityRenderState implements EntityRenderStateAdditio
 
     @Unique
     @Override
-    public void liquid_bounce$setEntity(@NotNull Entity entity) {
+    public void liquid_bounce$setEntity(Entity entity) {
         this.liquid_bounce$entity = entity;
     }
 

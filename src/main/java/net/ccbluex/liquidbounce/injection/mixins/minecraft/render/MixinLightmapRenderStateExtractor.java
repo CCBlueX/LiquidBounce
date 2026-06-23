@@ -19,20 +19,15 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFullBright;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LightmapRenderStateExtractor;
-import net.minecraft.core.Holder;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffects;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @NullMarked
 @Mixin(LightmapRenderStateExtractor.class)
@@ -44,8 +39,8 @@ public abstract class MixinLightmapRenderStateExtractor {
      *     float brightnessOption = ((Double)this.minecraft.options.gamma().get()).floatValue();
      * </pre>
      */
-    @ModifyExpressionValue(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/OptionInstance;get()Ljava/lang/Object;", ordinal = 1))
-    private Object injectXRayFullBright(Object original) {
+    @ModifyVariable(method = "extract", at = @At(value = "STORE"), name = "brightnessOption")
+    private float injectXRayFullBright(float brightnessOption) {
         // If fullBright is enabled, we need to return our own gamma value
         if (ModuleFullBright.FullBrightGamma.INSTANCE.getRunning()) {
             return ModuleFullBright.FullBrightGamma.INSTANCE.getGamma();
@@ -54,22 +49,18 @@ public abstract class MixinLightmapRenderStateExtractor {
         // Xray fullBright
         final ModuleXRay module = ModuleXRay.INSTANCE;
         if (!module.getRunning() || !module.getFullBright()) {
-            return original;
+            return brightnessOption;
         }
 
         // They use .floatValue() afterward on the return value,
         // so we need to return a value which is not bigger than Float.MAX_VALUE
-        return (double) Float.MAX_VALUE;
+        return Float.MAX_VALUE;
     }
 
     // Turns off blinking when the darkness effect is active.
-    @Redirect(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEffectBlendFactor(Lnet/minecraft/core/Holder;F)F"))
-    private float injectAntiDarkness(LocalPlayer instance, Holder<MobEffect> registryEntry, float v) {
-        if (!ModuleAntiBlind.canRender(DoRender.DARKNESS) && registryEntry == MobEffects.DARKNESS) {
-            return 0f;
-        }
-
-        return instance.getEffectBlendFactor(registryEntry, v);
+    @ModifyVariable(method = "extract", at = @At(value = "STORE"), name = "darknessEffectScaleOption")
+    private float injectAntiDarkness(float darknessEffectScaleOption) {
+        return ModuleAntiBlind.canRender(DoRender.DARKNESS) ? darknessEffectScaleOption : 0f;
     }
 
 }

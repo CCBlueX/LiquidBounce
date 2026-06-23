@@ -6,14 +6,14 @@ jdk = "25"
 # Fabric Properties
 # Check these on https://fabricmc.net/versions.html
 # https://mods.upcraft.dev/dev/versions
-minecraft = "26.1.2"
+minecraft = "26.2"
 fabric-loom = "1.17-SNAPSHOT"
-fabric-loader = "0.19.2"
+fabric-loader = "0.19.3"
 fabric-loaderMin = "0.18.4"
-fabric-api = "0.149.1+26.1.2"
+fabric-api = "0.152.1+26.2"
 
 # mcef
-mcef = "3.3.1-26.1-SNAPSHOT"
+mcef = "3.3.2-26.2-SNAPSHOT"
 # mc-authlib
 mc_authlib = "1.7.0"
 # Polyglot
@@ -30,15 +30,15 @@ ahocorasick = "0.6.3"
 fastutil4k = "0.2.8"
 
 # Recommended mods
-modmenu = "18.0.0-alpha.7"
+modmenu = "20.0.0-beta.4"
 exploit_preventer_api = "1.0.0"
-exploit_preventer_mod = "1.0.7+26.1"
-sodium = "mc26.1.2-0.8.12-fabric"
-lithium = "mc26.1.2-0.24.2-fabric"
-viafabricplus = "4.5.3"
+exploit_preventer_mod = "1.1.0+26.2"
+sodium = "mc26.2-0.9.0-fabric"
+lithium = "mc26.2-0.25.0-fabric"
+viafabricplus = "4.6.0"
 # Mods for compatibility test (runtime only)
-immediatelyFast = "1.15.2+26.1.2-fabric"
-iris = "1.10.9+26.1-fabric"
+immediatelyFast = "1.16.0+26.2-fabric"
+iris = "1.11.1+26.2-fabric"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
@@ -52,7 +52,7 @@ fabric-kotlin = "1.13.12+kotlin.2.4.0"
 
 # Netty, should be sync with game version
 # https://mvnrepository.com/artifact/io.netty/netty-all
-netty = "4.2.7.Final"
+netty = "4.2.15.Final"
 
 # LWJGL
 lwjgl = "3.4.1"

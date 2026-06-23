@@ -19,25 +19,28 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerVerusScaffoldG;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.world.phys.BlockHitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ServerboundUseItemOnPacket.class)
 public abstract class MixinServerboundUseItemOnPacket {
-    @Redirect(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/FriendlyByteBuf;writeBlockHitResult(Lnet/minecraft/world/phys/BlockHitResult;)V"))
-    private void writeBlockHitResult(FriendlyByteBuf buf, BlockHitResult hitResult) {
+    @WrapOperation(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/FriendlyByteBuf;writeBlockHitResult(Lnet/minecraft/world/phys/BlockHitResult;)V"))
+    private void writeBlockHitResult(FriendlyByteBuf buf, BlockHitResult blockHit, Operation<Void> original) {
         if (DisablerVerusScaffoldG.INSTANCE.getRunning()) {
-            buf.writeBlockPos(hitResult.getBlockPos());
-            buf.writeVarInt(6 + hitResult.getDirection().ordinal() * 7);
-            buf.writeFloat((float) hitResult.getLocation().x - hitResult.getBlockPos().getX());
-            buf.writeFloat((float) hitResult.getLocation().y - hitResult.getBlockPos().getY());
-            buf.writeFloat((float) hitResult.getLocation().z - hitResult.getBlockPos().getZ());
-            buf.writeBoolean(hitResult.isInside());
-        } else buf.writeBlockHitResult(hitResult);
+            buf.writeBlockPos(blockHit.getBlockPos());
+            buf.writeVarInt(6 + blockHit.getDirection().ordinal() * 7);
+            buf.writeFloat((float) blockHit.getLocation().x - blockHit.getBlockPos().getX());
+            buf.writeFloat((float) blockHit.getLocation().y - blockHit.getBlockPos().getY());
+            buf.writeFloat((float) blockHit.getLocation().z - blockHit.getBlockPos().getZ());
+            buf.writeBoolean(blockHit.isInside());
+        } else {
+            original.call(buf, blockHit);
+        }
     }
 }

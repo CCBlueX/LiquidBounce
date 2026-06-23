@@ -147,7 +147,7 @@ object RotationManager : EventListener {
         }
 
         if (rotationTarget.considerInventory) {
-            if (InventoryManager.isInventoryOpen || mc.screen is ContainerScreen) {
+            if (InventoryManager.isInventoryOpen || mc.gui.screen() is ContainerScreen) {
                 return false
             }
         }
