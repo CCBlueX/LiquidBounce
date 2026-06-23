@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.netty.http.routing.Routing
-import net.minecraft.client.gui.Gui
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.NumberFormat
@@ -184,8 +183,8 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
          *
          * Taken from the Minecraft source code
          *
-         * @see Gui.extractScoreboardSidebar
-         * @see Gui.displayScoreboardSidebar
+         * @see net.minecraft.client.gui.Hud.extractScoreboardSidebar
+         * @see net.minecraft.client.gui.Hud.displayScoreboardSidebar
          */
         @JvmStatic
         fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
@@ -195,9 +194,9 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
                 scoreboard.getPlayersTeam(player.scoreboardName)
             }
 
-            val objective = scoreboard.getDisplayObjective(
-                team?.color?.orElse(null)?.displaySlot() ?: DisplaySlot.SIDEBAR
-            ) ?: return null
+            val objective = team?.color?.orElse(null)?.displaySlot()?.let(scoreboard::getDisplayObjective)
+                ?: scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR)
+                ?: return null
 
             val objectiveScoreboard: Scoreboard = objective.scoreboard
             val numberFormat: NumberFormat = objective.numberFormatOrDefault(StyledFormat.SIDEBAR_DEFAULT)
