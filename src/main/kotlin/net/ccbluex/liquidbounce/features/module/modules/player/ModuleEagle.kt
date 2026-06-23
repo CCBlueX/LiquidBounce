@@ -99,7 +99,7 @@ object ModuleEagle : ClientModule(
             get() = enabled && Condition.SNEAK in conditions
 
         fun shouldSneak(event: MovementInputEvent) =
-            !enabled || player.xRot in pitch && conditions.matchesAll(event)
+            !enabled || player.xRot.coerceIn(-90f, 90f) in pitch && conditions.matchesAll(event)
 
         @Suppress("unused")
         private enum class Condition(override val tag: String) : Tagged, Predicate<MovementInputEvent> {
