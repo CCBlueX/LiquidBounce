@@ -18,5 +18,14 @@
  */
 package net.ccbluex.liquidbounce.render.engine.type
 
-@JvmRecord
-data class UV2f(val u: Float, val v: Float)
+import net.ccbluex.liquidbounce.utils.math.high32
+import net.ccbluex.liquidbounce.utils.math.longFrom32
+import net.ccbluex.liquidbounce.utils.math.low32
+
+@JvmInline
+value class UV2f private constructor(private val bits: Long) {
+    val u: Float get() = Float.fromBits(bits.high32())
+    val v: Float get() = Float.fromBits(bits.low32())
+
+    constructor(u: Float, v: Float) : this(longFrom32(u.toRawBits(), v.toRawBits()))
+}

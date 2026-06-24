@@ -87,6 +87,10 @@ object ClientInteropServer {
         this.PORT = startServer(this.PORT)
     }
 
+    suspend fun stop() {
+        httpServer.stop()
+    }
+
     private var attempt = 0
 
     private suspend fun startServer(port: Int): Int {

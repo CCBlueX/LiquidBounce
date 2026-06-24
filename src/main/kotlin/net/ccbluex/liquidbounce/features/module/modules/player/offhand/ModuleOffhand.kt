@@ -113,7 +113,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     private var lastMode: Mode? = null
     private var lastTagMode: Mode = Mode.NONE
     private var staticMode = Mode.NONE
-    private var last: Pair<Item, ItemSlot>? = null
+    private var last: LastSwitch? = null
 
     override val tag: String
         get() = activeMode.modeName
@@ -199,7 +199,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         }
 
         if (Totem.Health.switchBack) {
-            last = slot.itemStack.item to slot
+            last = LastSwitch(slot.itemStack.item, slot)
         }
 
         val actions = switchMode.performSwitch(slot)
@@ -237,6 +237,8 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             }
         }
     }
+
+    private data class LastSwitch(val item: Item, val slot: ItemSlot)
 
     fun isOperating() = running && activeMode != Mode.NONE
 
@@ -307,7 +309,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         BACK("Back") {
             override fun getSlot(): ItemSlot? {
                 return last?.let {
-                    if (it.first == it.second.itemStack.item) it.second else null
+                    if (it.item == it.slot.itemStack.item) it.slot else null
                 }
             }
         },

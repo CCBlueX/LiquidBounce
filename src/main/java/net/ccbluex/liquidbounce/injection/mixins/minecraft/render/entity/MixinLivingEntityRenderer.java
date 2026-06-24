@@ -25,6 +25,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
+import kotlin.Pair;
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory;
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
@@ -49,7 +50,6 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import org.jspecify.annotations.Nullable;
@@ -70,19 +70,19 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     public abstract Identifier getTextureLocation(S state);
 
     @Unique
-    private @Nullable Tuple<Rotation, Rotation> getOverwriteRotation(ModuleRotations.BodyPart bodyPart) {
+    private @Nullable Pair<Rotation, Rotation> getOverwriteRotation(ModuleRotations.BodyPart bodyPart) {
         if (ModuleRotations.INSTANCE.getRunning() && ModuleRotations.INSTANCE.isPartAllowed(bodyPart)) {
             var rotation = ModuleRotations.INSTANCE.getModelRotation();
             var prevRotation = ModuleRotations.INSTANCE.getPrevModelRotation();
 
             if (rotation != null && prevRotation != null) {
-                return new Tuple<>(prevRotation, rotation);
+                return new Pair<>(prevRotation, rotation);
             }
         }
 
         if (ModuleFreeCam.INSTANCE.getRunning()) {
             var serverRotation = RotationManager.INSTANCE.getServerRotation();
-            return new Tuple<>(serverRotation, serverRotation);
+            return new Pair<>(serverRotation, serverRotation);
         }
 
         return null;
@@ -96,7 +96,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.BODY);
         if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getA().yRot(), overwriteRotation.getB().yRot());
+            return Mth.rotLerp(tickDelta, overwriteRotation.getFirst().yRot(), overwriteRotation.getSecond().yRot());
         }
 
         return original;
@@ -110,7 +110,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.HEAD);
         if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getA().yRot(), overwriteRotation.getB().yRot());
+            return Mth.rotLerp(tickDelta, overwriteRotation.getFirst().yRot(), overwriteRotation.getSecond().yRot());
         }
 
         return original;
@@ -124,7 +124,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.HEAD);
         if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getA().xRot(), overwriteRotation.getB().xRot());
+            return Mth.rotLerp(tickDelta, overwriteRotation.getFirst().xRot(), overwriteRotation.getSecond().xRot());
         }
 
         return original;

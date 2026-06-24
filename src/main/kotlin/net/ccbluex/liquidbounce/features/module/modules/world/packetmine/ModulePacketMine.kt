@@ -335,7 +335,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
     @Suppress("unused")
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
-        val openScreen = mc.screen != null
+        val openScreen = mc.gui.screen() != null
         val unchangeableActive = !mode.activeMode.canManuallyChange && _target != null
         if (openScreen || unchangeableActive || !player.abilities.mayBuild) {
             return@handler
