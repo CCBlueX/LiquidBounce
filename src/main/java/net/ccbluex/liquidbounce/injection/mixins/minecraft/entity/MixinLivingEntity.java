@@ -166,7 +166,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "jumpFromGround", at = @At("HEAD"), cancellable = true)
     private void hookJumpEvent(CallbackInfo ci) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return;
         }
 
@@ -200,7 +200,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     private void hookAfterJumpEvent(CallbackInfo ci) {
         jumpEvent = null;
 
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return;
         }
 
@@ -217,7 +217,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         var rotation = RotationManager.INSTANCE.getCurrentRotation();
         var rotationTarget = RotationManager.INSTANCE.getActiveRotationTarget();
 
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return original;
         }
 
@@ -258,7 +258,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "updateFallFlying", at = @At("TAIL"))
     public void recastIfLanded(CallbackInfo callbackInfo) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return;
         }
 
@@ -278,7 +278,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
      */
     @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot()F"))
     private float hookModifyFallFlyingPitch(float original) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return original;
         }
 
@@ -304,7 +304,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
      */
     @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 hookModifyFallFlyingRotationVector(Vec3 original) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return original;
         }
 
@@ -323,7 +323,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "isFallFlying", at = @At("RETURN"), cancellable = true)
     private void hookIsGliding(CallbackInfoReturnable<Boolean> cir) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return;
         }
 
@@ -362,12 +362,12 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @ModifyExpressionValue(method = "getCurrentSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)
     private int hookSwingSpeed(int duration) {
         var animations = ModuleAnimations.INSTANCE;
-        return animations.getRunning() && Minecraft.getInstance().player == (Object) this ? animations.getSwingDuration() : duration;
+        return animations.getRunning() && liquid_bounce$isClientPlayer() ? animations.getSwingDuration() : duration;
     }
 
     @ModifyExpressionValue(method = "handleDamageEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getHurtSound(Lnet/minecraft/world/damagesource/DamageSource;)Lnet/minecraft/sounds/SoundEvent;"))
     private SoundEvent hookHitFxSound(SoundEvent original) {
-        if ((Object) this == Minecraft.getInstance().player && ModuleHitFX.INSTANCE.getRunning()) {
+        if (liquid_bounce$isClientPlayer() && ModuleHitFX.INSTANCE.getRunning()) {
             var hitFxSound = ModuleHitFX.INSTANCE.getSelfSound();
             if (hitFxSound != null) {
                 return hitFxSound;

@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import it.unimi.dsi.fastutil.ints.IntArrayList
+import it.unimi.dsi.fastutil.ints.IntList
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import it.unimi.dsi.fastutil.objects.ObjectArrays
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
@@ -192,8 +194,8 @@ object CommandManager : Collection<Command> by commandSet {
      *
      * @return A [Pair] of the subcommand and the index of the tokenized [cmd] it is in, if none was found, null
      */
-    private fun getSubCommand(cmd: String): Pair<Command, Int>? {
-        return getSubCommand(tokenizeCommand(cmd).first)
+    private fun getSubCommand(cmd: String): ResolvedSubCommand? {
+        return getSubCommand(tokenizeCommand(cmd).tokens)
     }
 
     /**
@@ -207,20 +209,20 @@ object CommandManager : Collection<Command> by commandSet {
      */
     private fun getSubCommand(
         args: List<String>,
-        currentCommand: Pair<Command, Int>? = null,
+        currentCommand: ResolvedSubCommand? = null,
         idx: Int = 0
-    ): Pair<Command, Int>? {
+    ): ResolvedSubCommand? {
         // Return the last command when there are no more arguments
         if (idx >= args.size) {
             return currentCommand
         }
 
         // If currentCommand is null, idx must be 0, so search in all commands
-        val commandMap = currentCommand?.first?.subcommandMap ?: rootCommandMap
+        val commandMap = currentCommand?.command?.subcommandMap ?: rootCommandMap
 
         // Look if something matches the current index, if it does, look if there are further matches
         commandMap[args[idx]]?.let {
-            return getSubCommand(args, Pair(it, idx), idx + 1)
+            return getSubCommand(args, ResolvedSubCommand(it, idx), idx + 1)
         }
 
         // If no match was found, currentCommand is the subcommand that we searched for
@@ -235,7 +237,7 @@ object CommandManager : Collection<Command> by commandSet {
     @ScriptApiRequired
     @JvmName("execute")
     fun execute(cmd: String) {
-        val args = tokenizeCommand(cmd).first
+        val args = tokenizeCommand(cmd).tokens
 
         // Prevent bugs
         if (args.isEmpty()) {
@@ -278,7 +280,7 @@ object CommandManager : Collection<Command> by commandSet {
                 }
             }
         )
-        val command = pair.first
+        val command = pair.command
 
         // If the command is not executable, don't allow it to be executed
         if (!command.executable) {
@@ -289,7 +291,7 @@ object CommandManager : Collection<Command> by commandSet {
         }
 
         // The index the command is in
-        val idx = pair.second
+        val idx = pair.index
         val remainingArgsCount = args.size - idx - 1
 
         // If there are more arguments for a command that takes no parameters
@@ -395,9 +397,9 @@ object CommandManager : Collection<Command> by commandSet {
      *
      * @return A pair of the tokenized command and the starting indices of the tokens
      */
-    fun tokenizeCommand(line: String): Pair<List<String>, List<Int>> {
+    fun tokenizeCommand(line: String): TokenizationResult {
         val output = ArrayList<String>()
-        val outputIndices = ArrayList<Int>()
+        val outputIndices = IntArrayList()
         val stringBuilder = StringBuilder()
 
         outputIndices.add(0)
@@ -442,8 +444,12 @@ object CommandManager : Collection<Command> by commandSet {
         // Is there something left in the buffer?
         if (stringBuilder.isNotBlank()) output.add(stripOuterQuotes(stringBuilder))
 
-        return Pair(output, outputIndices)
+        return TokenizationResult(output, outputIndices)
     }
+
+    private data class ResolvedSubCommand(val command: Command, val index: Int)
+
+    data class TokenizationResult(val tokens: List<String>, val tokenStartIndices: IntList)
 
     private fun stripOuterQuotes(token: CharSequence): String {
         if (token.length >= 2 && token.startsWith('"') && token.endsWith('"')) {
@@ -464,18 +470,14 @@ object CommandManager : Collection<Command> by commandSet {
         try {
             val cmd = origCmd.substring(GlobalSettings.prefix.length, start)
             val tokenized = tokenizeCommand(cmd)
-            var args = tokenized.first
+            var args = tokenized.tokens
 
             if (args.isEmpty()) {
                 args = listOf("")
             }
 
             val nextParameter = !args.last().endsWith(' ') && cmd.endsWith(' ')
-            var currentArgStart = tokenized.second.lastOrNull()
-
-            if (currentArgStart == null) {
-                currentArgStart = 0
-            }
+            var currentArgStart = tokenized.tokenStartIndices.lastOrNull() ?: 0
 
             if (nextParameter) {
                 currentArgStart = cmd.length
@@ -505,7 +507,7 @@ object CommandManager : Collection<Command> by commandSet {
                 return Suggestions.empty()
             }
 
-            pair.first.autoComplete(builder, tokenized, pair.second, nextParameter)
+            pair.command.autoComplete(builder, tokenized, pair.index, nextParameter)
 
             return builder.buildFuture()
         } catch (e: Exception) {

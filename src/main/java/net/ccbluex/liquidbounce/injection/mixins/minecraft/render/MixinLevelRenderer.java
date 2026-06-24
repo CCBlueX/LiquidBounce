@@ -20,136 +20,123 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
-import net.ccbluex.liquidbounce.render.engine.OutlineShaderRenderer;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
-import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4fc;
-import org.joml.Vector4f;
+import org.jspecify.annotations.Nullable;
+import org.joml.Vector4fc;
 import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
+
 @Mixin(LevelRenderer.class)
 public abstract class MixinLevelRenderer {
-
-    @Shadow
-    @Final
-    private Minecraft minecraft;
 
     @Shadow
     @Nullable
     public abstract RenderTarget entityOutlineTarget();
 
-    @Shadow
-    protected abstract boolean shouldShowEntityOutlines();
+    @Unique
+    private boolean liquid_bounce$hasCustomOutlineMesh = false;
 
-    // After ModelViewMatrix setup
-    @Inject(method = "renderLevel", at = @At(value = "NEW", target = "()Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;"))
-    private void onRender(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
-        OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
-        if (!renderer.shouldRender()) {
-            return;
-        }
+    // TODO: removed because of vanilla changes
+//    // After ModelViewMatrix setup
+//    @Inject(method = "render", at = @At(value = "NEW", target = "Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;"))
+//    private void onRender(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {
+//        OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
+//        if (!renderer.shouldRender()) {
+//            return;
+//        }
+//
+//        var matrixStack = Pools.MatStack.borrow();
+//        var event = new DrawOutlinesEvent(
+//            renderer.prepareRenderTarget(),
+//            matrixStack,
+//            cameraState,
+//            deltaTracker.getGameTimeDeltaPartialTick(false),
+//            DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE
+//        );
+//        EventManager.INSTANCE.callEvent(event);
+//        Pools.MatStack.recycle(matrixStack);
+//
+//        if (event.getDirtyFlag()) {
+//            renderer.setDirty(true);
+//        }
+//    }
 
-        var matrixStack = Pools.MatStack.borrow();
-        var event = new DrawOutlinesEvent(
-            renderer.prepareRenderTarget(),
-            matrixStack,
-            cameraState,
-            deltaTracker.getGameTimeDeltaPartialTick(false),
-            DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE
-        );
-        EventManager.INSTANCE.callEvent(event);
-        Pools.MatStack.recycle(matrixStack);
-
-        if (event.getDirtyFlag()) {
-            renderer.setDirty(true);
-        }
-    }
-
-    @ModifyExpressionValue(method = "lambda$renderLevel$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/ARGB;colorFromFloat(FFFF)I"))
-    private int customFogClearColor(int original) {
+    @ModifyArg(
+        method = "lambda$render$0",
+        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;clearColorAndDepthTextures(Lcom/mojang/blaze3d/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/blaze3d/textures/GpuTexture;D)V"),
+        index = 1
+    )
+    private Vector4fc customFogClearColor(Vector4fc original) {
         return ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyClearColor(original);
     }
 
-    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OutlineBufferSource;endOutlineBatch()V"))
-    private void onDrawOutlines(CallbackInfo ci) {
-        OutlineShaderRenderer.INSTANCE.drawBlitIfDirty(this.minecraft.getMainRenderTarget());
-    }
+//    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeOutline()V", shift = At.Shift.AFTER))
+//    private void onDrawOutlines(CallbackInfo ci) {
+//        OutlineShaderRenderer.INSTANCE.drawBlitIfDirty(Minecraft.getInstance().gameRenderer.mainRenderTarget());
+//    }
 
-    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OutlineBufferSource;endOutlineBatch()V", shift = At.Shift.BEFORE))
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeOutline()V", shift = At.Shift.BEFORE))
     private void onRenderGlow(CallbackInfo ci) {
+        var minecraft = Minecraft.getInstance();
         var entityOutlineFb = entityOutlineTarget();
-        if (!this.shouldShowEntityOutlines() || entityOutlineFb == null) {
+        if (entityOutlineFb == null
+            || !minecraft.gameRenderer.gameRenderState().levelRenderState.shouldShowEntityOutlines) {
             return;
         }
 
+        liquid_bounce$hasCustomOutlineMesh = false;
         var matrixStack = Pools.MatStack.borrow();
-        entityOutlineFb.blitToScreen();
-        final var cameraState = this.minecraft.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
         var event = new DrawOutlinesEvent(
             entityOutlineFb, matrixStack,
-            cameraState,
-            this.minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false),
-            DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
+            minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false)
         );
         EventManager.INSTANCE.callEvent(event);
+        liquid_bounce$hasCustomOutlineMesh = event.getDirtyFlag();
         Pools.MatStack.recycle(matrixStack);
-        OutlineFlag.drawOutline |= event.getDirtyFlag();
     }
 
-    @WrapOperation(method = "renderLevel", at = @At(
-        value = "FIELD",
-        target = "Lnet/minecraft/client/renderer/state/level/LevelRenderState;haveGlowingEntities:Z",
-        opcode = Opcodes.GETFIELD
-    ))
-    private boolean modifyDrawOutline(LevelRenderState instance, Operation<Boolean> original) {
-        var flag = OutlineFlag.drawOutline;
-        if (flag) {
-            OutlineFlag.drawOutline = false;
-            return true;
-        }
-        return original.call(instance);
+    @ModifyExpressionValue(
+        method = {"submitFeatures", "lambda$addMainPass$0"},
+        at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/LevelRenderState;shouldShowEntityOutlines:Z", opcode = Opcodes.GETFIELD)
+    )
+    private boolean includeCustomOutlines(boolean original) {
+        return original || liquid_bounce$hasCustomOutlineMesh;
     }
 
-    @ModifyArg(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;cullTerrain(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;Z)V"), index = 2)
-    private boolean renderSetupTerrainModifyArg(boolean spectator) {
-        return ModuleFreeCam.INSTANCE.getRunning() || spectator;
+    @ModifyExpressionValue(
+        method = {"render", "addMainPass"},
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;hasAnyOutline()Z")
+    )
+    private boolean includeCustomOutlineTargetInMainPass(boolean original) {
+        return original || liquid_bounce$hasCustomOutlineMesh;
     }
 
-    @Inject(method = "renderBlockOutline", at = @At("HEAD"), cancellable = true)
-    private void cancelBlockOutline(MultiBufferSource.BufferSource immediate, PoseStack matrices, boolean renderBlockOutline, LevelRenderState renderStates, CallbackInfo ci) {
+    @Inject(method = "submitBlockOutline", at = @At("HEAD"), cancellable = true)
+    private void cancelBlockOutline(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LevelRenderState levelRenderState, CallbackInfo ci) {
         if (ModuleBlockOutline.INSTANCE.getRunning()) {
             ci.cancel();
         }
     }
 
-    @WrapWithCondition(method = "submitBlockDestroyAnimation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitBreakingBlockModel(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/block/dispatch/BlockStateModel;JI)V"))
-    private boolean cancelRenderBreakingTexture(SubmitNodeCollector instance, PoseStack poseStack, BlockStateModel blockStateModel, long l, int i) {
+    @WrapWithCondition(method = "submitBlockDestroyAnimation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitBreakingBlockModel(Lcom/mojang/blaze3d/vertex/PoseStack;Ljava/util/List;I)V"))
+    private boolean cancelRenderBreakingTexture(SubmitNodeCollector instance, PoseStack poseStack, List<?> list, int i) {
         return ModuleAntiBlind.canRender(DoRender.BLOCK_BREAK_OVERLAY);
     }
 

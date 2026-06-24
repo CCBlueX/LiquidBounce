@@ -166,8 +166,8 @@ fun MutableComponent.bypassNameProtection(): MutableComponent = withStyle {
  * or set the text of current [ChatScreen]
  */
 fun Minecraft.openChat(text: String, draft: Boolean = false, closeOnSubmit: Boolean = true) = schedule {
-    (screen as? MixinChatScreenAccessor)?.input?.setValue(text)
-        ?: setScreen(ChatScreen(text, draft, closeOnSubmit))
+    (this.gui.screen() as? MixinChatScreenAccessor)?.input?.setValue(text)
+        ?: this.gui.setScreen(ChatScreen(text, draft, closeOnSubmit))
 }
 
 private val defaultMessageMetadata = MessageMetadata()
@@ -206,7 +206,7 @@ fun chat(text: Component, metadata: MessageMetadata = defaultMessageMetadata) {
         return
     }
 
-    val chatHud = mc.gui.chat
+    val chatHud = mc.gui.hud.chat
 
     if (metadata.remove && !metadata.id.isNullOrEmpty()) {
         chatHud.removeMessage(metadata.id)

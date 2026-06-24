@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '25'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Create Mods Directory
         run: mkdir -p run/mods
@@ -50,13 +50,13 @@ jobs:
           timeout 60m xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" ./gradlew runClient -Dfabric.headless=true || exit 0
 
       - name: Upload TypeScript Definitions
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'liquidbounce-script-api'
           path: run/LiquidBounce/scripts/@ccbluex/liquidbounce-script-api/
 
       - name: Publish to NPM
-        uses: JS-DevTools/npm-publish@v3
+        uses: JS-DevTools/npm-publish@v4
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: run/LiquidBounce/scripts/@ccbluex/liquidbounce-script-api/package.json

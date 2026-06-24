@@ -294,13 +294,9 @@ fun String.hideSensitiveAddress(): String {
 }
 
 @JvmRecord
-data class ColoredChar(val char: Char, val color: ChatFormatting) {
-    init {
-        requireNotNull(color.color) { "The formatting must be a color formatting!" }
-    }
-}
+data class ColoredChar(val char: Char, val color: TextColor)
 
-inline fun Char.colored(color: ChatFormatting) = ColoredChar(this, color)
+inline fun Char.colored(color: TextColor) = ColoredChar(this, color)
 
 fun Char.repeat(n: Int): String = CharArray(n) { this }.concatToString()
 
@@ -309,8 +305,8 @@ fun Char.repeat(n: Int): String = CharArray(n) { this }.concatToString()
  */
 fun textLoadingBar(
     percent: Int,
-    progress: ColoredChar = '█'.colored(ChatFormatting.WHITE),
-    remaining: ColoredChar = '░'.colored(ChatFormatting.DARK_GRAY),
+    progress: ColoredChar = '█'.colored(TextColor.WHITE),
+    remaining: ColoredChar = '░'.colored(TextColor.DARK_GRAY),
     length: Int = 10
 ): Component {
     val clampedPercent = percent.coerceIn(0, 100)
@@ -320,7 +316,7 @@ fun textLoadingBar(
     val remainingPart = remaining.char.repeat(length - filledBars)
 
     return textOf(
-        progressPart.asPlainText(progress.color),
-        remainingPart.asPlainText(remaining.color),
+        progressPart.asPlainText(Style.EMPTY + progress.color),
+        remainingPart.asPlainText(Style.EMPTY + remaining.color),
     )
 }
