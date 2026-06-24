@@ -31,7 +31,7 @@ class CustomSharedMinecraftScreen(
     val screenType: CustomScreenType,
     private val theme: Theme = ThemeManager.getScreenLocation(screenType).theme,
     val originalScreen: Screen? = null,
-    val parentScreen: Screen? = mc.screen
+    val parentScreen: Screen? = mc.gui.screen()
 ) : Screen("VS-${screenType.routeName.uppercase()}".asPlainText()) {
 
     override fun init() {
@@ -40,7 +40,7 @@ class CustomSharedMinecraftScreen(
 
     override fun onClose() {
         if (parentScreen is CustomSharedMinecraftScreen) {
-            mc.setScreen(parentScreen)
+            mc.gui.setScreen(parentScreen)
         } else {
             ScreenManager.closeScreen()
             mc.mouseHandler.grabMouse()

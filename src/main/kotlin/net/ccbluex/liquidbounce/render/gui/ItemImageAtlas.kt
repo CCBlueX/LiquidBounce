@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.gui
 
+import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.platform.Lighting
@@ -55,6 +56,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.Items
+import org.apache.commons.lang3.function.Consumers
 import java.awt.image.BufferedImage
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
@@ -125,20 +127,17 @@ private class ItemTextureRenderer(
         textureSize,
         textureSize,
         true,
+        GpuFormat.RGBA8_UNORM,
     )
     private val submitNodeCollector = SubmitNodeStorage()
-    private val bufferSource = mc.gameRenderer.renderBuffers.bufferSource()
 
     // Note: no operation -> use shared one or skip it
     private val featureRenderDispatcher = FeatureRenderDispatcher(
-        this.submitNodeCollector,
+        mc.gameRenderer.renderBuffers,
         mc.modelManager, // No operation
-        bufferSource,
         mc.atlasManager, // No operation
-        mc.gameRenderer.renderBuffers.outlineBufferSource(), // No operation
-        mc.gameRenderer.renderBuffers.crumblingBufferSource(), // No operation
         mc.font, // No operation
-        mc.gameRenderer.gameRenderState, // No operation
+        mc.gameRenderer.gameRenderState(), // No operation
     )
 
     private val projection = Projection()
@@ -147,7 +146,7 @@ private class ItemTextureRenderer(
     private fun close() {
         projectionMatrixBuffer.close()
         itemAtlasFramebuffer.destroyBuffers()
-        submitNodeCollector.clear()
+        submitNodeCollector.drainPhases(Consumers.nop())
         featureRenderDispatcher.close()
     }
 
@@ -156,7 +155,7 @@ private class ItemTextureRenderer(
      * From 1.21.5 DrawContext code
      */
     fun render(): CompletableFuture<Atlas> {
-        itemAtlasFramebuffer.clearColorAndDepth()
+        itemAtlasFramebuffer.clearColorAndDepth(depth = 0.0)
         RenderSystem.backupProjectionMatrix()
         this.projection.setupOrtho(-1000.0F, 1000.0F, this.textureSize.toFloat(), this.textureSize.toFloat(), true)
         RenderSystem.setProjectionMatrix(
@@ -224,7 +223,7 @@ private class ItemTextureRenderer(
             0.0f,
         )
         matrices.scale(itemPixelSize.toFloat(), -itemPixelSize.toFloat(), itemPixelSize.toFloat())
-        mc.gameRenderer.lighting.setupFor(
+        mc.gameRenderer.lighting().setupFor(
             if (state.usesBlockLight()) Lighting.Entry.ITEMS_3D else Lighting.Entry.ITEMS_FLAT
         )
 
@@ -232,8 +231,7 @@ private class ItemTextureRenderer(
             scaledX, textureSize - scaledY - itemPixelSize, itemPixelSize, itemPixelSize
         )
         state.submit(matrices, this.submitNodeCollector, 0xf000f0, OverlayTexture.NO_OVERLAY, 0)
-        featureRenderDispatcher.renderAllFeatures()
-        bufferSource.endBatch()
+        featureRenderDispatcher.renderAllFeatures(this.submitNodeCollector)
         RenderSystem.disableScissorForRenderTypeDraws()
         matrices.popPose()
     }

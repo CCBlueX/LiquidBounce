@@ -43,20 +43,13 @@ class InterpolationAngleSmooth(
 
     private val midpoint by float("Midpoint", 0.35f, 0.0f..1.0f)
 
-    private class Sigmoid {
-        fun transform(t: Float): Float {
-            return 1f / (1f + exp(-0.5f * (t - 0.3f)))
-        }
+    private fun sigmoid(t: Float): Float {
+        return 1f / (1f + exp(-0.5f * (t - 0.3f)))
     }
 
-    private class Bezier {
-        fun transform(start: Float, end: Float, t: Float): Float {
-            return (1f - t) * (1f - t) * start + 2f * (1f - t) * t * 1f + t * t * end
-        }
+    private fun bezier(start: Float, end: Float, t: Float): Float {
+        return (1f - t) * (1f - t) * start + 2f * (1f - t) * t * 1f + t * t * end
     }
-
-    private val sigmoid = Sigmoid()
-    private val bezier = Bezier()
 
     /**
      * Calculate the factors for the rotation towards the target rotation.
@@ -109,8 +102,8 @@ class InterpolationAngleSmooth(
         val t = normalizeDirectionChange(rotationDifference)
         ModuleDebug.debugParameter(this, "$name T", t)
 
-        val bezierSpeed = bezier.transform(0.05f, 1f, 1f - t)
-        val sigmoidSpeed = sigmoid.transform(t)
+        val bezierSpeed = bezier(0.05f, 1f, 1f - t)
+        val sigmoidSpeed = sigmoid(t)
 
         ModuleDebug.debugParameter(this, "$name Bezier", bezierSpeed)
         ModuleDebug.debugParameter(this, "$name Sigmoid", sigmoidSpeed)

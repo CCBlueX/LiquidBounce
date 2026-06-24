@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.utils.render
 
 import com.google.common.base.Suppliers
 import com.google.common.util.concurrent.Runnables
+import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.buffers.Std140Builder
@@ -35,7 +36,6 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuSampler
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
-import com.mojang.blaze3d.textures.TextureFormat
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.PoseStack
@@ -66,7 +66,13 @@ fun PoseStack.reset() {
 }
 
 inline fun ByteBufferBuilder.begin(pipeline: RenderPipeline): BufferBuilder =
-    BufferBuilder(this, pipeline.vertexFormatMode, pipeline.vertexFormat)
+    BufferBuilder(
+        this,
+        pipeline.primitiveTopology,
+        requireNotNull(pipeline.getVertexFormatBinding(0)) {
+            "Pipeline ${pipeline.location} has no vertex format binding"
+        },
+    )
 
 inline fun withOutputTextureOverride(
     color: GpuTextureView? = null,
@@ -86,20 +92,20 @@ inline fun withOutputTextureOverride(
     }
 }
 
-inline fun GpuTexture.clearColor(color: Int = 0) =
-    gpuDevice.createCommandEncoder().clearColorTexture(this, color)
+inline fun GpuTexture.clearColor(color: Color4b = Color4b.TRANSPARENT) =
+    gpuDevice.createCommandEncoder().clearColorTexture(this, color.toVector4f())
 
 inline fun GpuTexture.clearDepth(depth: Double = 1.0) =
     gpuDevice.createCommandEncoder().clearDepthTexture(this, depth)
 
-fun RenderTarget.clearColorAndDepth(color: Int = 0, depth: Double = 1.0) {
+fun RenderTarget.clearColorAndDepth(color: Color4b = Color4b.TRANSPARENT, depth: Double = 1.0) {
     val colorAttachment = colorTexture
     val depthAttachment = depthTexture.takeIf { useDepth }
 
     when {
         colorAttachment != null && depthAttachment != null ->
             gpuDevice.createCommandEncoder().clearColorAndDepthTextures(
-                colorAttachment, color, depthAttachment, depth
+                colorAttachment, color.toVector4f(), depthAttachment, depth
             )
         colorAttachment != null -> colorAttachment.clearColor(color)
         depthAttachment != null -> depthAttachment.clearDepth(depth)
@@ -109,11 +115,11 @@ fun RenderTarget.clearColorAndDepth(color: Int = 0, depth: Double = 1.0) {
 inline fun GpuTexture.asView(baseMipLevel: Int = 0, mipLevels: Int = this.mipLevels): GpuTextureView =
     gpuDevice.createTextureView(this, baseMipLevel, mipLevels)
 
-inline fun GpuBuffer.mapBuffer(read: Boolean = false, write: Boolean = false): GpuBuffer.MappedView =
-    gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
+inline fun GpuBuffer.mapBuffer(read: Boolean = false, write: Boolean = false): GpuBufferSlice.MappedView =
+    this.map(read, write)
 
-inline fun GpuBufferSlice.mapBuffer(read: Boolean = false, write: Boolean = false): GpuBuffer.MappedView =
-    gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
+inline fun GpuBufferSlice.mapBuffer(read: Boolean = false, write: Boolean = false): GpuBufferSlice.MappedView =
+    this.map(read, write)
 
 inline fun GpuBufferSlice.write(byteBuffer: ByteBuffer) =
     gpuDevice.createCommandEncoder().writeToBuffer(this, byteBuffer)
@@ -132,11 +138,16 @@ inline fun GpuTexture.write(
     height: Int = getWidth(mipLevel),
     sourceX: Int = 0,
     sourceY: Int = 0,
-) = gpuDevice.createCommandEncoder().writeToTexture(
-    this, source,
-    mipLevel, depthOrLayer,
-    destX, destY, width, height, sourceX, sourceY,
-)
+) {
+    val commandEncoder = gpuDevice.createCommandEncoder()
+    val slice = commandEncoder.transientMemory()
+        .uploadStaging(source.pixelBytes, 1L, GpuBuffer.USAGE_COPY_SRC)
+    commandEncoder.copyBufferToTexture(
+        slice, sourceX, sourceY, source.width, source.height,
+        this, destX, destY, width, height,
+        mipLevel,depthOrLayer,
+    )
+}
 
 inline fun GpuTexture.copyTo(
     destination: GpuBuffer,
@@ -214,7 +225,7 @@ private fun GpuBufferSlice.readNativeImageRGBA(
     this.mapBuffer(read = true, write = false).use { mappedView ->
         for (y in 0..<height) {
             for (x in 0..<width) {
-                val abgr = mappedView.data().getInt((x + y * width) * TextureFormat.RGBA8.pixelSize())
+                val abgr = mappedView.data().getInt((x + y * width) * GpuFormat.RGBA8_UNORM.blockSize())
                 destination.setPixelABGR(x, height - y - 1, abgr)
             }
         }
@@ -229,7 +240,7 @@ private fun GpuBufferSlice.readNativeImageRGBA(
 fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> {
     val width = this.getWidth(mipLevel)
     val height = this.getHeight(mipLevel)
-    val pixelSize = this.format.pixelSize()
+    val pixelSize = this.format.blockSize()
     val gpuBuffer = gpuDevice.createBuffer(
         { "PixelBuffer - " + (this.label ?: "Anonymous") },
         GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
@@ -250,7 +261,7 @@ fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> 
 fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedImage> {
     val width = this.getWidth(mipLevel)
     val height = this.getHeight(mipLevel)
-    val pixelSize = this.format.pixelSize()
+    val pixelSize = this.format.blockSize()
     val gpuBuffer = gpuDevice.createBuffer(
         { "PixelBuffer - " + (this.label ?: "Anonymous") },
         GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,

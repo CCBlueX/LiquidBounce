@@ -19,7 +19,7 @@ jobs:
       fabric_kotlin_version: ${{ steps.versions.outputs.fabric_kotlin_version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Extract versions
         id: versions
@@ -76,24 +76,24 @@ jobs:
     if: github.ref == 'refs/heads/nextgen'
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('src-theme/package-lock.json') }}
           restore-keys: npm-${{ runner.os }}-
       - name: Setting up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: ${{ needs.extract-versions.outputs.jdk_version }}
       - name: Grant permissions to src-theme
         run: sudo chmod -R 777 src-theme
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
       - name: Build
@@ -148,24 +148,24 @@ jobs:
     if: github.ref != 'refs/heads/nextgen'
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('src-theme/package-lock.json') }}
           restore-keys: npm-${{ runner.os }}-
       - name: Setting up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: ${{ needs.extract-versions.outputs.jdk_version }}
       - name: Grant permissions to src-theme
         run: sudo chmod -R 777 src-theme
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
       - name: Build

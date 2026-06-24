@@ -47,7 +47,7 @@ import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
-import net.minecraft.network.protocol.game.ServerboundSpectateEntityPacket
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.phys.Vec3
@@ -73,7 +73,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
         private val testPacket: Predicate<Packet<*>?>
     ) : Tagged, Predicate<Packet<*>?> by testPacket {
         ENTITY_INTERACT("EntityInteract", {
-            it is ServerboundInteractPacket || it is ServerboundAttackPacket || it is ServerboundSpectateEntityPacket
+            it is ServerboundInteractPacket || it is ServerboundAttackPacket || it is ServerboundSpectatorActionPacket
             || it is ServerboundSwingPacket
         }),
         BLOCK_INTERACT("BlockInteract", {
@@ -129,7 +129,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     @Suppress("unused", "ComplexCondition")
     private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin != TransferOrigin.OUTGOING || player.isDeadOrDying || player.isInWater
-            || mc.screen != null
+            || mc.gui.screen() != null
         ) {
             return@handler
         }
@@ -158,7 +158,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
 
             is ServerboundInteractPacket,
             is ServerboundAttackPacket,
-            is ServerboundSpectateEntityPacket,
+            is ServerboundSpectatorActionPacket,
             is ServerboundSwingPacket -> {
                 if (FlushOn.ENTITY_INTERACT in flushOn) {
                     chronometer.reset()

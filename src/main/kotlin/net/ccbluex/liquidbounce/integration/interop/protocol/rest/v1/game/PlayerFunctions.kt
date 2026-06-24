@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.shouldHideOffhand
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinGuiAccessor
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.netty.http.routing.Routing
-import net.minecraft.client.gui.Gui
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.NumberFormat
@@ -184,8 +183,8 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
          *
          * Taken from the Minecraft source code
          *
-         * @see Gui.extractScoreboardSidebar
-         * @see Gui.displayScoreboardSidebar
+         * @see net.minecraft.client.gui.Hud.extractScoreboardSidebar
+         * @see net.minecraft.client.gui.Hud.displayScoreboardSidebar
          */
         @JvmStatic
         fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
@@ -195,16 +194,16 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
                 scoreboard.getPlayersTeam(player.scoreboardName)
             }
 
-            val objective = team?.let {
-                DisplaySlot.teamColorToSlot(team.color)?.let { scoreboard.getDisplayObjective(it) }
-            } ?: scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR) ?: return null
+            val objective = team?.color?.orElse(null)?.displaySlot()?.let(scoreboard::getDisplayObjective)
+                ?: scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR)
+                ?: return null
 
             val objectiveScoreboard: Scoreboard = objective.scoreboard
             val numberFormat: NumberFormat = objective.numberFormatOrDefault(StyledFormat.SIDEBAR_DEFAULT)
 
             val sidebarEntries = objectiveScoreboard.listPlayerScores(objective)
                 .filter { score: PlayerScoreEntry -> !score.isHidden }
-                .sortedWith(MixinGuiAccessor.getScoreboardEntryComparator())
+                .sortedWith(MixinHudAccessor.getScoreboardEntryComparator())
                 .take(15)
                 .mapToArray { scoreboardEntry: PlayerScoreEntry ->
                     val team = objectiveScoreboard.getPlayersTeam(scoreboardEntry.owner())

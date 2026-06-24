@@ -182,9 +182,13 @@ inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: 
 inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
     multiply(factorX, factorY, factorZ)
 
+fun Vec3.horizontalDistanceTo(other: Vec3i): Double = horizontalDistanceTo(other.x.toDouble(), other.z.toDouble())
+
 fun Vec3.horizontalDistanceTo(other: Vec3): Double = horizontalDistanceTo(other.x, other.z)
 
 fun Vec3.horizontalDistanceTo(x: Double, z: Double): Double = sqrt(horizontalDistanceToSqr(x, z))
+
+fun Vec3.horizontalDistanceToSqr(other: Vec3i): Double = horizontalDistanceToSqr(other.x.toDouble(), other.z.toDouble())
 
 fun Vec3.horizontalDistanceToSqr(other: Vec3): Double = horizontalDistanceToSqr(other.x, other.z)
 

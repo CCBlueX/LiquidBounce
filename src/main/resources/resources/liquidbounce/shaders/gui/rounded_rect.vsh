@@ -14,9 +14,9 @@ layout(std140) uniform Projection {
 in vec3 Position;
 in vec2 UV0;
 in vec4 Color;
-in ivec2 Size;
-in ivec2 Parameters;
-in float StrokeWidth;
+in ivec2 UV1;
+in ivec2 UV2;
+in float LineWidth;
 
 out vec2 vUv;
 out vec4 vColor;
@@ -28,7 +28,7 @@ void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
     vUv = UV0;
     vColor = Color;
-    vSize = Size;
-    vParameters = Parameters;
-    vStrokeWidth = max(StrokeWidth, 0.0);
+    vSize = UV1;
+    vParameters = UV2;
+    vStrokeWidth = max(LineWidth, 0.0);
 }

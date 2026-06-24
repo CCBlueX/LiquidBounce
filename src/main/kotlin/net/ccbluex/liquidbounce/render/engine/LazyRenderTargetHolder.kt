@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine
 
+import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.pipeline.TextureTarget
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -53,7 +54,7 @@ class LazyRenderTargetHolder(
         val current = this.raw
 
         if (current == null) {
-            val new = TextureTarget(name, width, height, useDepth)
+            val new = TextureTarget(name, width, height, useDepth, GpuFormat.RGBA8_UNORM)
             this.raw = new
             return new
         } else {

@@ -18,6 +18,24 @@
  */
 package net.ccbluex.liquidbounce.common;
 
-public final class OutlineFlag {
-    public static boolean drawOutline = false;
+public final class StorageEspOutlineContext {
+
+    private static final ScopedValue<Integer> OUTLINE_COLOR = ScopedValue.newInstance();
+
+    private StorageEspOutlineContext() {
+    }
+
+    public static int getOutlineColor() {
+        return OUTLINE_COLOR.isBound() ? OUTLINE_COLOR.get() : 0;
+    }
+
+    public static void render(int outlineColor, Runnable render) {
+        if (outlineColor == 0) {
+            render.run();
+            return;
+        }
+
+        ScopedValue.where(OUTLINE_COLOR, outlineColor).run(render);
+    }
+
 }

@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.CharacterEvent;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,7 +44,7 @@ public abstract class MixinKeyboardHandler {
     /**
      * Hook key event
      */
-    @Inject(method = "keyPress", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", shift = At.Shift.BEFORE, ordinal = 0, opcode = Opcodes.GETFIELD))
+    @Inject(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;screen()Lnet/minecraft/client/gui/screens/Screen;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookKeyboardKey(long l, int action, net.minecraft.client.input.KeyEvent keyEvent, CallbackInfo ci) {
         // does if (window == this.client.getWindow().getHandle())
         var inputKey = InputConstants.getKey(keyEvent);
@@ -53,9 +52,9 @@ public abstract class MixinKeyboardHandler {
         EventManager.INSTANCE.callEvent(new KeyboardKeyEvent(
             inputKey, keyEvent.key(),
             keyEvent.scancode(), action,
-            keyEvent.modifiers(), this.minecraft.screen
+            keyEvent.modifiers(), this.minecraft.gui.screen()
         ));
-        if (minecraft.screen == null) {
+        if (minecraft.gui.screen() == null) {
             EventManager.INSTANCE.callEvent(new KeyEvent(inputKey, action));
         }
     }
@@ -63,7 +62,7 @@ public abstract class MixinKeyboardHandler {
     /**
      * Hook char event
      */
-    @Inject(method = "charTyped", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", shift = At.Shift.BEFORE, opcode = Opcodes.GETFIELD))
+    @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;screen()Lnet/minecraft/client/gui/screens/Screen;", shift = At.Shift.BEFORE))
     private void hookKeyboardChar(long window, CharacterEvent input, CallbackInfo ci) {
         // does if (window == this.client.getWindow().getHandle())
         EventManager.INSTANCE.callEvent(new KeyboardCharEvent(input.codepoint()));
