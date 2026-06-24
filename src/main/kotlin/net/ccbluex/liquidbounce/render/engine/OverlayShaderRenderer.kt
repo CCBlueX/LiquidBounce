@@ -80,7 +80,7 @@ abstract class OverlayShaderRenderer(
             }
             pass.bindTexture("InSampler", colorTexture, sampler)
             onRender(pass)
-            pass.draw(0, 3)
+            pass.draw(3, 1, 0, 0)
         }
 
         postRender()

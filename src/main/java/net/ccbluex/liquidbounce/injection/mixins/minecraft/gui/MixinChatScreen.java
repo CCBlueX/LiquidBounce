@@ -25,13 +25,14 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.util.ArrayListDeque;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.OptionalInt;
 
 @Mixin(ChatScreen.class)
 public abstract class MixinChatScreen extends MixinScreen {
@@ -44,7 +45,7 @@ public abstract class MixinChatScreen extends MixinScreen {
     @Inject(method = "handleChatInput", at = @At("HEAD"), cancellable = true)
     private void handleChatMessage(String chatText, boolean addToHistory, CallbackInfo ci) {
         if (EventManager.INSTANCE.callEvent(new ChatSendEvent(chatText)).isCancelled()) {
-            minecraft.gui.getChat().addRecentChat(chatText);
+            minecraft.gui.hud.getChat().addRecentChat(chatText);
             ci.cancel();
         }
     }
@@ -55,16 +56,16 @@ public abstract class MixinChatScreen extends MixinScreen {
             return;
         }
 
-        Integer activeMessage = getActiveMessage(click);
+        var activeMessage = getActiveMessage(click);
 
-        if (activeMessage == null) {
+        if (activeMessage.isEmpty()) {
             return;
         }
 
-        var chatHud = (MixinChatComponentAccessor) this.minecraft.gui.getChat();
+        var chatHud = (MixinChatComponentAccessor) this.minecraft.gui.hud.getChat();
 
         var visibleMessages = chatHud.getTrimmedMessages();
-        var messageBounds = ModuleBetterChat.resolveMessageBounds(visibleMessages, activeMessage);
+        var messageBounds = ModuleBetterChat.resolveMessageBounds(visibleMessages, activeMessage.getAsInt());
         var messageParts = new ArrayListDeque<GuiMessage.Line>(messageBounds.getEndInclusive() - messageBounds.getStart() + 1);
         for (int index = messageBounds.getEndInclusive(); index >= messageBounds.getStart(); index--) {
             messageParts.addLast(visibleMessages.get(index));
@@ -77,43 +78,43 @@ public abstract class MixinChatScreen extends MixinScreen {
     }
 
     @Unique
-    private @Nullable Integer getActiveMessage(MouseButtonEvent click) {
-        var chatHud = (MixinChatComponentAccessor) this.minecraft.gui.getChat();
+    private OptionalInt getActiveMessage(MouseButtonEvent click) {
+        var chatHud = (MixinChatComponentAccessor) this.minecraft.gui.hud.getChat();
         var visibleMessages = chatHud.getTrimmedMessages();
         if (visibleMessages.isEmpty()) {
-            return null;
+            return OptionalInt.empty();
         }
 
         double chatScale = chatHud.invokeGetScale();
         if (chatScale <= 0.0) {
-            return null;
+            return OptionalInt.empty();
         }
 
         int chatWidth = (int) Math.ceil(chatHud.invokeGetWidth() / chatScale);
         double localMouseX = click.x() / chatScale - 4.0;
         if (localMouseX < 0.0 || localMouseX > chatWidth) {
-            return null;
+            return OptionalInt.empty();
         }
 
         int lineHeight = chatHud.invokeGetLineHeight();
         if (lineHeight <= 0) {
-            return null;
+            return OptionalInt.empty();
         }
 
         int guiHeight = this.minecraft.getWindow().getGuiScaledHeight();
         int chatBottom = (int) Math.floor((guiHeight - 40) / chatScale);
         double localMouseY = chatBottom - click.y() / chatScale;
         if (localMouseY < 0.0) {
-            return null;
+            return OptionalInt.empty();
         }
 
         int lineIndex = (int) Math.floor(localMouseY / lineHeight);
         int visibleLineCount = Math.min(chatHud.invokeGetLinesPerPage(), visibleMessages.size() - chatHud.getChatScrollbarPos());
         if (lineIndex < 0 || lineIndex >= visibleLineCount) {
-            return null;
+            return OptionalInt.empty();
         }
 
         int messageIndex = lineIndex + chatHud.getChatScrollbarPos();
-        return messageIndex >= 0 && messageIndex < visibleMessages.size() ? messageIndex : null;
+        return messageIndex >= 0 && messageIndex < visibleMessages.size() ? OptionalInt.of(messageIndex) : OptionalInt.empty();
     }
 }

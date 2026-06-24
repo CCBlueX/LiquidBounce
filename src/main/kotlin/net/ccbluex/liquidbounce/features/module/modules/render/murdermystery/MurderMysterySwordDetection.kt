@@ -69,7 +69,7 @@ object MurderMysterySwordDetection {
             Items.MUSIC_DISC_STRAD,
             Items.MUSIC_DISC_WARD,
             Items.MUSIC_DISC_WAIT,
-            Items.RED_DYE,
+            Items.DYE.red,
             Items.OAK_BOAT,
             Items.BOOK,
             Items.GLISTERING_MELON_SLICE,

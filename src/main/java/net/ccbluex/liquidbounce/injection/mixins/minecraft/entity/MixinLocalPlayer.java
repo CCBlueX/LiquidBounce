@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
 import net.ccbluex.liquidbounce.utils.raytracing.EntityRaytracingKt;
 import net.ccbluex.liquidbounce.utils.raytracing.RaytracingKt;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.ClientInput;
@@ -60,7 +61,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -272,7 +273,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
 
         // Through Walls Reach
         if (ModuleReach.INSTANCE.getRunning()) {
-            var throughWallsRange = ModuleReach.INSTANCE.getEntity().getInteractionThroughWallsRange$liquidbounce();
+            var throughWallsRange = ModuleReach.INSTANCE.getEntity().getInteractionThroughWallsRange();
 
             if (throughWallsRange > 0.0) {
                 var hitEntityResult = EntityRaytracingKt.findEntityInCrosshair(throughWallsRange, rotation, null);
@@ -432,6 +433,37 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
     }
 
+    @ModifyReturnValue(method = "shouldStopRunSprinting", at = @At("RETURN"))
+    private boolean hookForceStopSprinting(boolean shouldStop) {
+        return shouldStop || liquid_bounce$shouldForceStopSprinting();
+    }
+
+    /**
+     * ViaFabricPlus injects at HEAD of shouldStopRunSprinting with cancellable=true,
+     * bypassing the RETURN instruction so @ModifyReturnValue never fires.
+     * Intercepting the call site within aiStep works around this.
+     * @see <a href="https://github.com/ViaVersion/ViaFabricPlus/blob/618332d/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/movement/sprinting_and_sneaking/MixinLocalPlayer.java#L262-L270">ViaFabricPlus changeStopSprintingConditions</a>
+     */
+    @ModifyExpressionValue(
+        method = "aiStep",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;shouldStopRunSprinting()Z")
+    )
+    private boolean hookVfpSprintStop(boolean shouldStop) {
+        return shouldStop || liquid_bounce$shouldForceStopSprinting();
+    }
+
+    @Unique
+    private boolean liquid_bounce$shouldForceStopSprinting() {
+        var event = new SprintEvent(
+            new DirectionalInput(input),
+            true,
+            SprintEvent.Source.MOVEMENT_TICK
+        );
+
+        EventManager.INSTANCE.callEvent(event);
+        return !event.getSprint();
+    }
+
     @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;hasForwardImpulse()Z"))
     private boolean hookIsWalking(boolean original) {
         if (!ModuleSprint.INSTANCE.getShouldSprintOmnidirectional()) {
@@ -457,8 +489,8 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return event.getSprint();
     }
 
-    @WrapWithCondition(method = "clientSideCloseContainer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
-    private boolean preventCloseScreen(Minecraft instance, Screen screen) {
+    @WrapWithCondition(method = "clientSideCloseContainer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
+    private boolean preventCloseScreen(Gui instance, Screen screen) {
         // Prevent closing screen if the current screen is a client screen
         return !ScreenManager.isClientScreen(screen);
     }

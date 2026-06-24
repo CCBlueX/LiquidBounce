@@ -189,9 +189,11 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         }
 
         private fun calculateRelativePos(cameraPos: Vec3, pos: Vec3): Vector3f {
-            val point = pos.toVector3f()
-            point.sub(cameraPos.x.toFloat(), cameraPos.y.toFloat(), cameraPos.z.toFloat())
-            return point
+            return Vector3f().set(
+                pos.x - cameraPos.x,
+                pos.y - cameraPos.y,
+                pos.z - cameraPos.z,
+            )
         }
 
         private fun addVerticesToBuffer(renderData: RenderData, list: Array<out ObjectFloatPair<Vector3f>>) {

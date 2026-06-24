@@ -27,7 +27,7 @@ import com.viaversion.viaversion.protocols.v1_16_1to1_16_2.packet.ServerboundPac
 import com.viaversion.viaversion.protocols.v1_21_2to1_21_4.packet.ServerboundPackets1_21_4;
 import com.viaversion.viaversion.protocols.v1_9_1to1_9_3.packet.ServerboundPackets1_9_3;
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,6 +45,7 @@ public abstract class MixinPacketWrapper {
     @Shadow
     public abstract <T> T get(Type<T> type, int index) throws InformativeException;
 
+    @SuppressWarnings("rawtypes")
     @Inject(method = "scheduleSendToServer", at = @At("HEAD"), cancellable = true)
     private void vfpSendPacketHandler(Class<? extends Protocol> protocol, boolean skipCurrentPipeline, CallbackInfo ci) {
         PacketType packetType = this.getPacketType();
@@ -69,7 +70,7 @@ public abstract class MixinPacketWrapper {
             || packetType == ServerboundPackets1_21_4.CONTAINER_CLICK && this.get(Types.VAR_INT, 0) == 0) {
             // Note: this doesn't cover all handlers of PacketEvent
             InventoryManager.onClickOccurs();
-            InventoryManager.INSTANCE.setInventoryOpenServerSide$liquidbounce(true);
+            InventoryManager.INSTANCE.setInventoryOpenServerSide(true);
         }
     }
 

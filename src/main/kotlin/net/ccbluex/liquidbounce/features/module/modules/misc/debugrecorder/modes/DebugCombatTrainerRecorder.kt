@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.Modul
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -38,9 +37,9 @@ import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.monster.Slime
+import net.minecraft.world.entity.monster.cubemob.Slime
 import java.util.UUID
 import kotlin.random.Random
 
@@ -92,7 +91,7 @@ object DebugCombatTrainerRecorder : ModuleDebugRecorder.DebugRecorderMode<Combat
                         currentVector = current.directionVector,
                         previousVector = previous.directionVector,
                         targetVector = Rotation.lookingAt(
-                            point = target.box.center,
+                            point = target.boundingBox.center,
                             from = player.eyePosition
                         ).directionVector,
                         velocityDelta = current.rotationDeltaTo(next).toVec2f(),
@@ -128,7 +127,7 @@ object DebugCombatTrainerRecorder : ModuleDebugRecorder.DebugRecorderMode<Combat
      * in a random direction and at a different height.
      */
     fun spawn(): LivingEntity {
-        val slime = Slime(EntityType.SLIME, world)
+        val slime = Slime(EntityTypes.SLIME, world)
         slime.setUUID(UUID.randomUUID())
 
         val distance = Random.nextDouble() * 0.9 + 2.0

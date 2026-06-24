@@ -91,6 +91,7 @@ import java.lang.Math.fma
 import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -383,7 +384,7 @@ val LocalPlayer.lastRotation: Rotation
 val Entity.box: AABB
     get() = boundingBox.inflate(pickRadius.toDouble())
 
-private val cameraPos: Vec3 get() = mc.gameRenderer.mainCamera.position()
+private val cameraPos: Vec3 get() = mc.gameRenderer.mainCamera().position()
 
 fun Position.cameraDistanceSq() = cameraPos.distanceToSqr(x(), y(), z())
 
@@ -775,7 +776,7 @@ fun Entity.doesCollideAt(pos: Vec3 = player.position()): Boolean {
  * Check if the entity is likely falling to the void based on the given position and bounding box.
  */
 fun Entity.wouldFallIntoVoid(pos: Vec3, voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
-    val offsetBb = boundingBox.move(pos - this.position())
+    val offsetBb = getBoundingBoxAt(pos)
 
     if (pos.y < voidLevel || offsetBb.minY < voidLevel) {
         return true
@@ -856,3 +857,25 @@ fun AABB.isOnMagmaBlock(): Boolean {
             expandedBox.intersects(it.collisionShape.bounds().move(it))
     }
 }
+
+val Entity?.cameraDistance: Float
+    get() {
+        var scale: Float
+        var distance: Float
+        if (this is LivingEntity) {
+            scale = this.scale
+            distance = this.getAttributeValue(Attributes.CAMERA_DISTANCE).toFloat()
+        } else {
+            scale = 1f
+            distance = 4f
+        }
+
+        (this?.vehicle as? LivingEntity)
+            ?.takeIf { this.isPassenger }
+            ?.also { mount ->
+                scale = max(scale, mount.scale)
+                distance = max(distance, mount.getAttributeValue(Attributes.CAMERA_DISTANCE).toFloat())
+            }
+
+        return scale * distance
+    }

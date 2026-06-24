@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.utils.kotlin.contains
 import net.minecraft.core.TypedInstance
 import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
@@ -49,7 +50,7 @@ val TypedInstance<Item>.isAnyChest: Boolean
     get() = this.`is`(Items.CHEST)
         || this.`is`(Items.TRAPPED_CHEST)
         || this.`is`(Items.ENDER_CHEST)
-        || this.`is`(ItemTags.COPPER_CHESTS)
+        || this.typeHolder().value() in Items.COPPER_CHEST
 
 // Tools
 

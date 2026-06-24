@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.world.getEntitiesInCuboid
+import net.ccbluex.liquidbounce.utils.world.getEntitiesInCube
 import net.minecraft.client.CameraType
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.component.DataComponents
@@ -110,7 +110,7 @@ private fun Set<Targets>.shouldAttack(entity: Entity): Boolean {
 
     return when {
         info.isFriend && Targets.FRIENDS !in this -> false
-        info.classification === EntityTargetClassification.TARGET -> isInteresting(entity)
+        info.classification === EntityTargetClassification.TARGET -> isInteresting(entity, info)
         else -> false
     }
 }
@@ -125,7 +125,7 @@ private fun Set<Targets>.shouldShow(entity: Entity): Boolean {
 
     return when {
         info.isFriend && Targets.FRIENDS !in this -> false
-        info.classification !== EntityTargetClassification.IGNORED -> isInteresting(entity)
+        info.classification !== EntityTargetClassification.IGNORED -> isInteresting(entity, info)
         else -> false
     }
 }
@@ -134,7 +134,7 @@ private fun Set<Targets>.shouldShow(entity: Entity): Boolean {
  * Check if an entity is considered a target
  */
 @Suppress("CyclomaticComplexMethod", "ReturnCount")
-private fun Set<Targets>.isInteresting(suspect: Entity): Boolean {
+private fun Set<Targets>.isInteresting(suspect: Entity, info: EntityTargetingInfo): Boolean {
     // Check if the enemy is living and not dead (or ignore being dead)
     if (suspect !is LivingEntity || !(Targets.DEAD in this || suspect.isAlive)) {
         return false
@@ -151,7 +151,8 @@ private fun Set<Targets>.isInteresting(suspect: Entity): Boolean {
             suspect === mc.player -> false
             // Check if enemy is sleeping (or ignore being sleeping)
             suspect.isSleeping && Targets.SLEEPING !in this -> false
-            else -> Targets.PLAYERS in this
+            // Allow targeting friends even when Players is disabled, as long as Friends is enabled
+            else -> Targets.PLAYERS in this || (info.isFriend && Targets.FRIENDS in this)
         }
         is WaterAnimal -> Targets.WATER_CREATURE in this
         is AgeableMob, is Bat, is Allay -> Targets.PASSIVE in this
@@ -212,7 +213,7 @@ fun ClientLevel.findEnemies(
     val maxRangeSqr = maxRange * maxRange
     val result = ArrayList<ObjectDoubleImmutablePair<Entity>>()
 
-    getEntitiesInCuboid(player.eyePosition, maxRange.toDouble()) {
+    getEntitiesInCube(player.eyePosition, maxRange.toDouble()) {
         it.shouldBeAttacked(enemyConf)
     }.forEach { entity ->
         val distSqr = entity.squaredBoxedDistanceTo(player)
@@ -231,7 +232,7 @@ inline fun ClientLevel.getEntitiesBoxInRange(
 ): MutableList<Entity> {
     val rangeSquared = range * range
 
-    return getEntitiesInCuboid(midPos, range) {
+    return getEntitiesInCube(midPos, range) {
         predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared
     }
 }

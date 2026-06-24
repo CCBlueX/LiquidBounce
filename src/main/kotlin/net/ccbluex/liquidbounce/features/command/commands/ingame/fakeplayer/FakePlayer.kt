@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
+import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import java.util.function.Consumer
@@ -69,9 +70,14 @@ open class FakePlayer @JvmOverloads constructor(
         this.walkAnimation.position = snapshot.limbPos
     }
 
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.checkTotemDeathProtection
+     * @see net.minecraft.world.item.component.DeathProtection.TOTEM_OF_UNDYING
+     */
     override fun setHealth(health: Float) {
         super.setHealth(health)
         if (getHealth() <= 0f) {
+            removeAllEffects()
             addEffect(MobEffectInstance(MobEffects.REGENERATION, 900, 1))
             addEffect(MobEffectInstance(MobEffects.ABSORPTION, 100, 1))
             addEffect(MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 0))
@@ -105,7 +111,8 @@ open class FakePlayer @JvmOverloads constructor(
      * The fake player takes no knockback.
      */
     // this could perhaps be an option, but it could conflict with the recording
-    override fun knockback(strength: Double, x: Double, z: Double) {
+    override fun knockback(power: Double, xd: Double, zd: Double,
+                           source: DamageSource, damage: Float, comesFromEffect: Boolean) {
         /* nope */
     }
 

@@ -37,8 +37,10 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.math.toDegrees
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.math.toVec3f
@@ -55,16 +57,14 @@ import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.resources.ResourceKey
-import net.minecraft.util.Mth
 import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.EyeOfEnder
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
-import kotlin.math.atan2
 import kotlin.math.hypot
 
 private const val RAY_RENDER_LENGTH = 2048.0
@@ -218,7 +218,7 @@ object ModuleStrongholdFinder : ClientModule(
 
             val throwPos = trackedEye.throwPosition
             val eyePos = eye.position()
-            val yaw = vectorToYaw(eyePos.x - throwPos.x, eyePos.z - throwPos.z)
+            val yaw = eyePos.subtract(throwPos).yaw
 
             measurements += EyeMeasurement(
                 throwPos,
@@ -281,7 +281,7 @@ object ModuleStrongholdFinder : ClientModule(
                 }
 
                 if ((index == 0 && renderBestChunk) || (index > 0 && renderTopChunks)) {
-                    withPositionRelativeToCamera(Vec3(minX.toDouble(), drawY, minZ.toDouble())) {
+                    withPositionRelativeToCamera(minX.toDouble(), drawY, minZ.toDouble()) {
                         drawPlane(16f, 16f, color, color.darker())
                     }
                 }
@@ -368,7 +368,7 @@ object ModuleStrongholdFinder : ClientModule(
     }
 
     private fun handleEyeSpawnPacket(packet: ClientboundAddEntityPacket) {
-        if (packet.type != EntityType.EYE_OF_ENDER) {
+        if (packet.type != EntityTypes.EYE_OF_ENDER) {
             return
         }
 
@@ -379,10 +379,8 @@ object ModuleStrongholdFinder : ClientModule(
             .filter { it.dimension == world.dimension() && nowTick - it.tick in 0..maxSampleAgeTicks }
             .minWithOrNull(
                 compareBy<PendingThrow> { nowTick - it.tick }
-                    .thenBy {
-                        val dx = it.throwPosition.x - packet.x
-                        val dz = it.throwPosition.z - packet.z
-                        dx * dx + dz * dz
+                    .thenComparingDouble {
+                        it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z)
                     }
             ) ?: return
 
@@ -418,9 +416,7 @@ object ModuleStrongholdFinder : ClientModule(
     }
 
     private fun removePortalBlocksInChunk(chunkPos: ChunkPos) {
-        detectedPortalBlocks.entries.removeIf { (pos, _) ->
-            chunkPos.contains(pos)
-        }
+        detectedPortalBlocks.keys.removeIf(chunkPos::contains)
     }
 
     private fun WorldRenderEnvironment.renderDetectedPortalBlocks(event: WorldRenderEvent) {
@@ -467,10 +463,6 @@ object ModuleStrongholdFinder : ClientModule(
 
     private fun isOverworld(): Boolean {
         return world.dimension() == Level.OVERWORLD
-    }
-
-    private fun vectorToYaw(dx: Double, dz: Double): Float {
-        return Mth.wrapDegrees(atan2(dz, dx).toDegrees().toFloat() - 90f)
     }
 
     private data class PendingThrow(

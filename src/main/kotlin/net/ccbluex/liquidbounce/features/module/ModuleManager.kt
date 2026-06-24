@@ -139,6 +139,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTargetStr
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSnapTap
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
@@ -175,6 +176,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReplenish
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleSmartEat
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoCrafter
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
@@ -297,7 +299,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     @Suppress("unused")
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> { event ->
         when (event.action) {
-            GLFW.GLFW_PRESS -> if (mc.screen == null) {
+            GLFW.GLFW_PRESS -> if (mc.gui.screen() == null) {
                 // Usually nobody actually wants a module to activate when they press the Minecraft debug key combo.
                 if (mc.options.keyDebugModifier.isDown) return@handler
                 for (m in modules) {
@@ -357,7 +359,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     @Suppress("unused")
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
         when (event.action) {
-            GLFW.GLFW_PRESS -> if (mc.screen == null) {
+            GLFW.GLFW_PRESS -> if (mc.gui.screen() == null) {
                 for (m in modules) {
                     if (!m.bind.matchesMousePress(event)) {
                         continue
@@ -586,12 +588,14 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSpider,
             ModuleTargetStrafe,
             ModuleAnchor,
+            ModuleSnapTap,
 
             // Player
             ModuleAntiVoid,
             ModuleAntiAFK,
             ModuleAntiExploit,
             ModuleAutoBreak,
+            ModuleAutoCrafter,
             ModuleAutoFish,
             ModuleAutoRespawn,
             ModuleAutoWindCharge,

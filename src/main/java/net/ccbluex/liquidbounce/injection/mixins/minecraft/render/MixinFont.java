@@ -19,15 +19,15 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect;
 import net.minecraft.client.gui.Font;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.FormattedCharSink;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(Font.class)
 public abstract class MixinFont {
@@ -43,12 +43,12 @@ public abstract class MixinFont {
         return ModuleNameProtect.INSTANCE.replace(text);
     }
 
-    @Redirect(
+    @ModifyReceiver(
         method = "prepareText(Lnet/minecraft/util/FormattedCharSequence;FFIZZI)Lnet/minecraft/client/gui/Font$PreparedText;",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/util/FormattedCharSequence;accept(Lnet/minecraft/util/FormattedCharSink;)Z")
     )
-    private boolean injectNameProtectB(FormattedCharSequence orderedText, FormattedCharSink visitor) {
-        return ModuleNameProtect.INSTANCE.wrap(orderedText).accept(visitor);
+    private FormattedCharSequence injectNameProtectB(FormattedCharSequence instance, FormattedCharSink formattedCharSink) {
+        return ModuleNameProtect.INSTANCE.wrap(instance);
     }
 
     @ModifyArg(method = "width(Ljava/lang/String;)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/StringSplitter;stringWidth(Ljava/lang/String;)F"), index = 0)

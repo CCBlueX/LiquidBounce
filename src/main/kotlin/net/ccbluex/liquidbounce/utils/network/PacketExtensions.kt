@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.utils.network
 
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_9
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.toNullable
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
@@ -33,7 +35,7 @@ import net.minecraft.network.protocol.game.ServerboundContainerSlotStateChangedP
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
-import net.minecraft.network.protocol.game.ServerboundSpectateEntityPacket
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.world.phys.Vec3
 
 fun Packet<*>?.isC2SContainerPacket() =
@@ -67,13 +69,19 @@ fun ClientboundSetEntityMotionPacket.isMovementYFallDamage(): Boolean {
 }
 
 /**
- * In version <= 1.21.11 [ServerboundAttackPacket] & [ServerboundSpectateEntityPacket]
+ * In version <= 1.21.11 [ServerboundAttackPacket] & [ServerboundSpectatorActionPacket]
  * belong to [ServerboundInteractPacket]
  */
 val Packet<*>.entityIdC2SInteractOrAttack: Int?
     get() = when (this) {
         is ServerboundInteractPacket -> this.entityId
         is ServerboundAttackPacket -> this.entityId
-        is ServerboundSpectateEntityPacket -> this.entityId
+        is ServerboundSpectatorActionPacket -> this.spectateEntityId.toNullable()
         else -> null
     }
+
+/**
+ * @see net.minecraft.world.entity.LivingEntity.checkTotemDeathProtection
+ */
+val ClientboundEntityEventPacket.isDeathProtection: Boolean
+    get() = this.eventId == 35.toByte()

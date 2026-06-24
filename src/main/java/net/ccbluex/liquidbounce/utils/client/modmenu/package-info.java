@@ -16,8 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.common;
 
-public final class OutlineFlag {
-    public static boolean drawOutline = false;
-}
+@org.jspecify.annotations.NullMarked
+package net.ccbluex.liquidbounce.utils.client.modmenu;

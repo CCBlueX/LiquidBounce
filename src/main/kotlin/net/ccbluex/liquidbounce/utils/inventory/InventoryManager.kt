@@ -67,10 +67,10 @@ object InventoryManager : EventListener {
         get() = isInInventoryScreen || isInventoryOpenServerSide
 
     val isHandledScreenOpen
-        get() = mc.screen is AbstractContainerScreen<*> || isInventoryOpenServerSide
+        get() = mc.gui.screen() is AbstractContainerScreen<*> || isInventoryOpenServerSide
 
     var isInventoryOpenServerSide = false
-        internal set(value) {
+        set(value) {
             if (!field && value) {
                 onInventoryOpened()
             }

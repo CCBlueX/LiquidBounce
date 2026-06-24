@@ -17,27 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import net.minecraft.client.gui.Gui;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.scores.PlayerScoreEntry;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.entity.LevelEntityGetter;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
-import java.util.Comparator;
+@Mixin(Level.class)
+public interface MixinLevelInvoker {
 
-@Mixin(Gui.class)
-public interface MixinGuiAccessor {
-
-    @Accessor("HOTBAR_SELECTION_SPRITE")
-    static Identifier getHotbarSelectionTexture() {
-        throw new AssertionError();
-    }
-
-    @Accessor("SCORE_DISPLAY_ORDER")
-    static Comparator<PlayerScoreEntry> getScoreboardEntryComparator() {
-        throw new AssertionError();
-    }
+    @Invoker
+    LevelEntityGetter<Entity> invokeGetEntities();
 
 }

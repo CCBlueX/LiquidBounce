@@ -36,6 +36,8 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
  */
 object ModuleFastBreak : ClientModule("FastBreak", ModuleCategories.WORLD) {
 
+    private const val VANILLA_DESTROY_DELAY = 5
+
     private val breakDamage by float("BreakDamage", 0.8f, 0.1f..1f)
     private val onlyTool by boolean("OnlyTool", false)
 
@@ -51,6 +53,11 @@ object ModuleFastBreak : ClientModule("FastBreak", ModuleCategories.WORLD) {
         if (interaction.destroyProgress > breakDamage) {
             interaction.destroyProgress = 1f
         }
+    }
+
+    override fun onDisabled() {
+        interaction.destroyDelay = VANILLA_DESTROY_DELAY
+        super.onDisabled()
     }
 
     /**

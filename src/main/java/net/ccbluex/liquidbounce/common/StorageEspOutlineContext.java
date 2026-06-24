@@ -16,22 +16,26 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.common;
 
-package net.ccbluex.liquidbounce.interfaces;
+public final class StorageEspOutlineContext {
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
+    private static final ScopedValue<Integer> OUTLINE_COLOR = ScopedValue.newInstance();
 
-@NullMarked
-public interface OutlineBufferSourceSingleDrawAddition {
-    /**
-     * {@link net.minecraft.client.renderer.OutlineBufferSource#getBuffer(RenderType)} creates a consumer which
-     * renders to the outline framebuffer but also to the original framebuffer.
-     * <p>
-     * If you only want to render to the outline framebuffer, use this method.
-     */
-    @Nullable
-    VertexConsumer liquid_bounce_getSingleDrawBuffers(RenderType layer);
+    private StorageEspOutlineContext() {
+    }
+
+    public static int getOutlineColor() {
+        return OUTLINE_COLOR.isBound() ? OUTLINE_COLOR.get() : 0;
+    }
+
+    public static void render(int outlineColor, Runnable render) {
+        if (outlineColor == 0) {
+            render.run();
+            return;
+        }
+
+        ScopedValue.where(OUTLINE_COLOR, outlineColor).run(render);
+    }
+
 }

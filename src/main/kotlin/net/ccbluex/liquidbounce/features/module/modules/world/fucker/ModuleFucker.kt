@@ -150,7 +150,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+        if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@handler
         }
 
@@ -164,7 +164,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
     @Suppress("unused")
     private val breaker = tickHandler {
-        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+        if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
         }
 

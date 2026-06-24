@@ -57,8 +57,8 @@ data class Rotation @JvmOverloads constructor(
         @JvmStatic
         fun fromRotationVec(diffX: Double, diffY: Double, diffZ: Double): Rotation {
             return Rotation(
-                Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
-                Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat())
+                yaw = Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
+                pitch = Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat()),
             )
         }
     }
@@ -132,9 +132,9 @@ data class Rotation @JvmOverloads constructor(
         val straightLineYaw = abs(diff.deltaYaw / rotationDifference) * horizontalFactor
         val straightLinePitch = abs(diff.deltaPitch / rotationDifference) * verticalFactor
 
-        return Rotation(
-            this.yaw + diff.deltaYaw.coerceIn(-straightLineYaw, straightLineYaw),
-            this.pitch + diff.deltaPitch.coerceIn(-straightLinePitch, straightLinePitch)
+        return this.add(
+            y = diff.deltaYaw.coerceIn(-straightLineYaw, straightLineYaw),
+            x = diff.deltaPitch.coerceIn(-straightLinePitch, straightLinePitch),
         )
     }
 
