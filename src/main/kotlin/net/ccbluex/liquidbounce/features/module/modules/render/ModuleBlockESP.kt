@@ -25,11 +25,11 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.CachedMeshStorage
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.MapColorMode
-import net.ccbluex.liquidbounce.render.StaticMeshStorage
 import net.ccbluex.liquidbounce.render.addShapeFaces
 import net.ccbluex.liquidbounce.render.addShapeOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
@@ -49,7 +49,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.shapes.VoxelShape
-import org.joml.Matrix4fc
+import org.joml.Matrix4f
 import java.util.concurrent.ConcurrentSkipListSet
 
 /**
@@ -63,8 +63,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     private val modes = choices("Mode", 0) {
         arrayOf(
             BoxMode,
-            OutlineMode("Glow", DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW),
-            OutlineMode("Outline", DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE),
+            GlowMode,
         )
     }
     private val targets by blocks(
@@ -91,7 +90,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         markDirtyForModes()
     }
 
-    private sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
+    sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
         final override val parent get() = modes
 
         protected var useColor = false
@@ -109,7 +108,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         }
 
         protected fun getDynamicTransformsUniform(
-            modelView: Matrix4fc? = null,
+            modelView: Matrix4f? = null,
             colorModulatorAlpha: Int = -1,
         ) = getDynamicTransformsUniform(
             modelView = modelView,
@@ -128,8 +127,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 outlinesRenderState.clearStates()
             }
         }
-        private val facesRenderState = StaticMeshStorage("${ModuleBlockESP.name} $name Faces")
-        private val outlinesRenderState = StaticMeshStorage("${ModuleBlockESP.name} $name Outlines")
+        private val facesRenderState = CachedMeshStorage("${ModuleBlockESP.name} $name Faces")
+        private val outlinesRenderState = CachedMeshStorage("${ModuleBlockESP.name} $name Outlines")
 
         override fun disable() {
             facesRenderState.clearStates()
@@ -142,7 +141,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
             if (outline) {
-                mc.mainRenderTarget.drawGenericBlockESP(
+                mc.gameRenderer.mainRenderTarget().drawGenericBlockESP(
                     outlinesRenderState,
                     ClientRenderPipelines.relativeLines(useColor),
                     distanceFade,
@@ -154,7 +153,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 }
             }
 
-            mc.mainRenderTarget.drawGenericBlockESP(
+            mc.gameRenderer.mainRenderTarget().drawGenericBlockESP(
                 facesRenderState,
                 ClientRenderPipelines.relativeQuads(useColor),
                 distanceFade,
@@ -210,8 +209,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
     }
 
-    private class OutlineMode(name: String, type: DrawOutlinesEvent.OutlineType) : Mode(name) {
-        private val renderState = StaticMeshStorage("${ModuleBlockESP.name} $name")
+    object GlowMode : Mode("Glow") {
+        private val renderState = CachedMeshStorage("${ModuleBlockESP.name} $name")
 
         override fun disable() {
             renderState.clearStates()
@@ -221,10 +220,6 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
         @Suppress("unused")
         private val renderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != type) {
-                return@handler
-            }
-
             val dirty = event.renderTarget.drawGenericBlockESP(
                 renderState,
                 ClientRenderPipelines.outlineQuads(useColor),

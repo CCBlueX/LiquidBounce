@@ -356,8 +356,6 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(libs.versions.jdk.get().toInt())
-        freeCompilerArgs.add("-Xexplicit-backing-fields")
-        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 
@@ -391,7 +389,7 @@ tasks.register<Copy>("copyZipInclude") {
 }
 
 tasks.named("sourcesJar") {
-    dependsOn("bundleTheme")
+    dependsOn("bundleTheme", "generateGitProperties")
 }
 
 tasks.named("build") {

@@ -48,11 +48,7 @@ vec3 auroraLayer(vec2 uv, float speed, float intensity, vec3 color) {
     vec2 p = uv * scaleXY + t * movement;
     float n = noise(p + noise(color.xy + p + t));
 
-    float topEdgeSharpness = 0.0; // The smaller this value, the crisper the edge
-    float bottomFadeOut = 0.3;   // The higher this value, the more solid the aurora appears
-    float aurora = smoothstep(0.0, topEdgeSharpness, n - uv.y) * (1.0 - smoothstep(0.0, bottomFadeOut, n - uv.y));
-
-    aurora = (n - uv.y * 0.6);
+    float aurora = n - uv.y * 0.6;
 
     return aurora * intensity * color * 0.5;
 }
@@ -72,21 +68,22 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec3 skyColor1 = vec3(0.2, 0.0, 0.4);
     vec3 skyColor2 = vec3(0.15, 0.2, 0.35);
     // Add a gradient to simulate the night sky
-    color += skyColor2 * (1.0 - smoothstep(1.0, 1.0, uv.y));
+    color += skyColor2 * (1.0 - step(1.0, uv.y));
     color += skyColor1 * (1.0 - smoothstep(0.0, 0.5, uv.y));
 
     int numLayers = 5;
     for (int i = 0; i < numLayers; i++) {
         // Calculate the height of the mountain range
         float height = float(numLayers - i) * 0.1 *
-        smoothstep(1.0, 0.0,
-        mountainRange(
-        vec2(time * 0.03 * (float(i) + 1.0) + float(i) * 4.0, 0.0)
-        + uv * vec2(1.0 + float(numLayers - i) * 0.05, 0.23)
-        ));
+            (1.0 - smoothstep(0.0, 1.0,
+                mountainRange(
+                    vec2(time * 0.03 * (float(i) + 1.0) + float(i) * 4.0, 0.0)
+                    + uv * vec2(1.0 + float(numLayers - i) * 0.05, 0.23)
+                )
+            ));
 
         // Create the black silhouette of the mountain range
-        float mountain = smoothstep(0.0, 0.0, height - uv.y);
+        float mountain = step(0.0, height - uv.y);
 
         // Combine the mountain range and sky
         color = mix(color, skyColor2 * float(numLayers - i) / 4.0, mountain);

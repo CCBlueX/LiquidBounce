@@ -145,7 +145,7 @@ object AutoArmorSaveArmor : ToggleableValueGroup(ModuleAutoArmor, "SaveArmor", t
         waitTicks(ModuleAutoArmor.inventoryConstraints.closeDelay.random())
 
         // the current screen might change while the module is waiting
-        if (mc.screen is InventoryScreen) {
+        if (mc.gui.screen() is InventoryScreen) {
             player.closeContainer()
         }
     }
@@ -154,26 +154,26 @@ object AutoArmorSaveArmor : ToggleableValueGroup(ModuleAutoArmor, "SaveArmor", t
      * Closes the previous game screen and opens the inventory.
      */
     private suspend fun openInventory(hasArmorToReplace: Boolean) {
-        while (hasArmorToReplace && mc.screen !is InventoryScreen) {
+        while (hasArmorToReplace && mc.gui.screen() !is InventoryScreen) {
 
-            if (mc.screen is AbstractContainerScreen<*>) {
+            if (mc.gui.screen() is AbstractContainerScreen<*>) {
                 // closes chests/crating tables/etc. (it never happens)
                 player.closeContainer()
-            } else if (mc.screen != null) {
+            } else if (mc.gui.screen() != null) {
                 // closes ClickGUI, game chat, etc. to save some armor :)
-                mc.screen!!.onClose()
+                mc.gui.screen()!!.onClose()
             }
 
             waitTicks(1)
 
             // again, the current screen might change while the module is waiting
-            if (mc.screen == null) {
-                mc.setScreen(InventoryScreen(player))
+            if (mc.gui.screen() == null) {
+                mc.gui.setScreen(InventoryScreen(player))
                 hasOpenedInventory = true
             }
         }
     }
 
     private val shouldTrackArmor : Boolean
-        get() = mc.screen !is InventoryScreen && mc.screen is AbstractContainerScreen<*>
+        get() = mc.gui.screen() !is InventoryScreen && mc.gui.screen() is AbstractContainerScreen<*>
 }

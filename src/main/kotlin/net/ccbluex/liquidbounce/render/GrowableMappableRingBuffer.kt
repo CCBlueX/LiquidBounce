@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.mapBuffer
 import net.minecraft.client.renderer.MappableRingBuffer
+import net.minecraft.util.Mth
 import org.lwjgl.system.MemoryUtil
 import java.nio.ByteBuffer
 
@@ -89,14 +90,19 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
      * Upload [data] into the ring buffer and return a slice covering the written region.
      *
      * Upload decision:
-     * 1. If the current buffer has enough remaining space, append at [currentOffset].
-     * 2. Otherwise, if the buffer is large enough, rotate() and write from offset 0.
-     * 3. If the buffer is still too small for this upload, grow the ring and write from 0.
+     * 1. Align the current write offset to [alignment].
+     * 2. If the current buffer has enough remaining space, append at the aligned offset.
+     * 3. Otherwise, if the buffer is large enough, rotate() and write from offset 0.
+     * 4. If the buffer is still too small for this upload, grow the ring and write from 0.
      *
      * @param data The data to upload. Its remaining() bytes will be copied.
+     * @param alignment Byte alignment for the returned slice offset.
      * @return The uploaded [GpuBufferSlice]. Its lifetime is tied to the underlying ring buffer.
      */
-    fun upload(data: ByteBuffer): GpuBufferSlice {
+    @JvmOverloads
+    fun upload(data: ByteBuffer, alignment: Int = 1): GpuBufferSlice {
+        require(alignment > 0) { "alignment must be positive" }
+
         val byteCount = data.remaining()
         require(byteCount >= 0) { "byteCount must be non-negative" }
 
@@ -106,9 +112,10 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
         // ring is guaranteed non-null and large enough at this point
         var ring = checkNotNull(this.ring) { "Ring buffer not initialized" }
         var capacity = ring.size()
+        var alignedOffset = if (alignment == 1) currentOffset else Mth.roundToward(currentOffset, alignment)
 
         // Step 1 / 2: decide whether to append or rotate
-        if (currentOffset + byteCount > capacity) {
+        if (alignedOffset + byteCount > capacity) {
             // Not enough remaining space in this backing buffer.
             // Case 2: buffer is big enough, but remaining < byteCount → rotate and reset offset.
             rotate()
@@ -117,11 +124,12 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
             // but size() is the same for all buffers in the ring.
             ring = checkNotNull(this.ring)
             capacity = ring.size()
+            alignedOffset = 0
         }
 
-        // At this point we know byteCount <= capacity and currentOffset + byteCount <= capacity.
+        // At this point we know byteCount <= capacity and alignedOffset + byteCount <= capacity.
         val buffer = ring.currentBuffer()
-        val sliceOffset = currentOffset.toLong()
+        val sliceOffset = alignedOffset.toLong()
         val slice = buffer.slice(sliceOffset, byteCount.toLong())
 
         // Map the buffer slice and copy data into it.
@@ -129,7 +137,7 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
             MemoryUtil.memCopy(data, mappedView.data())
         }
 
-        currentOffset += byteCount
+        currentOffset = alignedOffset + byteCount
         return slice
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "Hotbar",
-  "enabled": true,
+  "enabled": false,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "CenterTranslated",

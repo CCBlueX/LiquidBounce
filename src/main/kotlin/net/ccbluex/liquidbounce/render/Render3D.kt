@@ -35,8 +35,8 @@ import net.ccbluex.fastutil.Pool
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw
-import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.bindAndDraw
-import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.toMeshDraw
+import net.ccbluex.liquidbounce.render.mesh.MeshDraw.DefaultUploader.bindAndDraw
+import net.ccbluex.liquidbounce.render.mesh.MeshDraw.DefaultUploader.toMeshDraw
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.immutableCopy
 import net.ccbluex.liquidbounce.utils.kotlin.memorizingFunction
@@ -399,7 +399,7 @@ private fun PoseStack.copyFrom(source: PoseStack) {
 }
 
 private fun RenderPipeline.requiresImmediateDrawInBatch(): Boolean =
-    vertexFormatMode.connectedPrimitives
+    primitiveTopology.connectedPrimitives
 
 private fun Vec3f.relativeTo(camera: Camera): Vec3 = Vec3(
     x - camera.position().x,

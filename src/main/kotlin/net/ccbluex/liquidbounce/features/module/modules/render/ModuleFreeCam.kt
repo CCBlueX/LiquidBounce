@@ -279,7 +279,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
             return
         }
 
-        val camera = mc.gameRenderer.mainCamera
+        val camera = mc.gameRenderer.mainCamera()
 
         return camera.setPosition(PositionState.interpolate(partialTicks))
     }
@@ -289,7 +289,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
             return entity.isSleeping
         }
 
-        return entity.isSleeping || !mc.gameRenderer.mainCamera.isDetached
+        return entity.isSleeping || !mc.gameRenderer.mainCamera().isDetached
     }
 
     /**

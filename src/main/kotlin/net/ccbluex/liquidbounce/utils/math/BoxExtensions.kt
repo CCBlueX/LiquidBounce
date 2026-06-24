@@ -56,9 +56,11 @@ inline operator fun AABB.plus(offset: Vec3i): AABB =
 inline operator fun AABB.minus(offset: Vec3i): AABB =
     this.move(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
 
-fun AABB.worldToLocal(): Pair<Vec3, AABB> {
+data class WorldLocalBox(val origin: Vec3, val localBox: AABB)
+
+fun AABB.worldToLocal(): WorldLocalBox {
     val origin = this.minPosition
-    return origin to (this - origin)
+    return WorldLocalBox(origin, this - origin)
 }
 
 fun AABB.iterateBlockPos(
