@@ -57,6 +57,12 @@ data class NbsNoteBlock(
 data class InstrumentNote(val instrument: Int, val noteValue: Int) {
 
     companion object {
+        /**
+         * Maps vanilla NBS instrument ids to Minecraft note block instruments.
+         *
+         * @see net.minecraft.world.level.block.NoteBlock
+         * @see net.minecraft.world.level.block.state.properties.NoteBlockInstrument
+         */
         fun getInstrumentEnumFromId(id: Int): NoteBlockInstrument {
             return when (id) {
                 1 -> NoteBlockInstrument.BASS
@@ -74,6 +80,10 @@ data class InstrumentNote(val instrument: Int, val noteValue: Int) {
                 13 -> NoteBlockInstrument.BIT
                 14 -> NoteBlockInstrument.BANJO
                 15 -> NoteBlockInstrument.PLING
+                16 -> NoteBlockInstrument.TRUMPET
+                17 -> NoteBlockInstrument.TRUMPET_EXPOSED
+                18 -> NoteBlockInstrument.TRUMPET_WEATHERED
+                19 -> NoteBlockInstrument.TRUMPET_OXIDIZED
                 else -> NoteBlockInstrument.HARP // 0
             }
         }
