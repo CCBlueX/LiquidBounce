@@ -35,10 +35,9 @@ import net.ccbluex.netty.http.application.ApplicationCall
 /**
  * Extract a required integer path parameter or respond with 403 Forbidden
  */
-suspend fun ApplicationCall.requireId(parameter: String = "id"): Int {
+private suspend fun ApplicationCall.requireId(parameter: String = "id"): Int {
     return parameters[parameter]?.toIntOrNull() ?: forbidden("Invalid $parameter")
 }
-
 
 /**
  * GET /api/v1/marketplace
