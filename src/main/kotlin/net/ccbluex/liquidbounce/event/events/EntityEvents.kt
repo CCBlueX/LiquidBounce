@@ -35,6 +35,11 @@ class AttackEntityEvent(
     val entity: Entity
 ) : CancellableEvent()
 
+@Tag("postAttack")
+class PostAttackEntityEvent(
+    val entity: Entity
+) : Event()
+
 @Tag("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 

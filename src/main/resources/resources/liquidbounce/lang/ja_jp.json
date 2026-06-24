@@ -370,6 +370,7 @@
 	"liquidbounce.module.kick.description": "サーバーから自分を追い出します。",
 	"liquidbounce.module.kick.messages.cantEnableInSingleplayer": "シングルプレイで %s を有効にできません。",
 	"liquidbounce.module.killAura.description": "自動的に敵を攻撃します。",
+  "liquidbounce.module.knockbackDisplacement.description": "攻撃時の回転を操作して、ターゲットに与えるノックバックの方向を制御します。",
 	"liquidbounce.module.killAura.messages.badCooldown": "クールダウンは1.0以上である必要があります。そうでなければ、クリティカルダメージを適切に与えることができません。",
 	"liquidbounce.module.liquidChat.description": "他のLiquidBounceユーザーとチャットをすることができます。",
 	"liquidbounce.module.liquidWalk.description": "水の上を歩くことができます。",

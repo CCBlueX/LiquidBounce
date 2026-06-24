@@ -111,6 +111,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
+import net.ccbluex.liquidbounce.event.events.PostAttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
@@ -176,6 +177,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     KeybindChangeEvent::class.java,
     KeybindIsPressedEvent::class.java,
     AttackEntityEvent::class.java,
+    PostAttackEntityEvent::class.java,
     SessionEvent::class.java,
     ScreenEvent::class.java,
     ChatSendEvent::class.java,

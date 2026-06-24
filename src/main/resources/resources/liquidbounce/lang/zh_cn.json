@@ -617,6 +617,7 @@
   "liquidbounce.module.kick.description": "将自己踢出服务器。",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "单人游戏中无法开启Kick。",
   "liquidbounce.module.killAura.description": "自动攻击周围的敌人。",
+  "liquidbounce.module.knockbackDisplacement.description": "通过操纵攻击角度来控制对目标造成的击退方向。",
   "liquidbounce.module.tpAura.description": "自动传送到敌人周围并攻击它们。",
   "liquidbounce.module.killAura.messages.badCooldown": "冷却时间至少应为 1.0，否则无法正确造成暴击伤害。",
   "liquidbounce.module.noMissCooldown.description": "禁用1.8攻击冷却时间或完全取消未击中的攻击。",

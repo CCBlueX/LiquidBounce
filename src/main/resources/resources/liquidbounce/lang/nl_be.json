@@ -443,6 +443,7 @@
     "liquidbounce.module.kick.description": "Kickt jezelf van de server.",
     "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Kick kan niet in singleplayer worden ingeschakeld.",
     "liquidbounce.module.killAura.description": "Val automatisch vijanden in je omgeving aan.",
+  "liquidbounce.module.knockbackDisplacement.description": "Bepaalt de richting van knockback die aan doelen wordt gegeven door aanvalsrotatie te manipuleren.",
     "liquidbounce.module.tpAura.description": "Teleport en val vijanden in je omgeving aan.",
     "liquidbounce.module.killAura.messages.badCooldown": "De cooldown moet minimaal 1.0 zijn om kritieke hits te kunnen doen.",
     "liquidbounce.module.noMissCooldown.description": "Schakelt de 1.8-aanvalscooldown uit of annuleert gemiste hits.",

@@ -422,6 +422,7 @@
   "liquidbounce.module.kick.description": "Kendinizi sunucudan atar.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Tek oyunculu modda Kick açılamaz.",
   "liquidbounce.module.killAura.description": "Etrafınızdaki düşmanlara otomatik olarak saldırır.",
+  "liquidbounce.module.knockbackDisplacement.description": "Saldırı rotasyonunu manipüle ederek hedeflere verilen knockback yönünü kontrol eder.",
   "liquidbounce.module.tpAura.description": "Etrafınızdaki düşmanlara otomatik olarak teleport olur ve saldırır.",
   "liquidbounce.module.killAura.messages.badCooldown": "Bekleme süresi en az 1.0 olmalı, yoksa kritik hasar düzgün verilemez.",
   "liquidbounce.module.noMissCooldown.description": "1.8 vuruş bekleme süresini devre dışı bırakır veya kaçırılan saldırıları tamamen iptal eder.",

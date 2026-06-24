@@ -617,6 +617,7 @@
   "liquidbounce.module.kick.description": "Kicks yourself from the server.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Kick cannot be enabled in single player.",
   "liquidbounce.module.killAura.description": "Automatically attacks enemies around you.",
+  "liquidbounce.module.knockbackDisplacement.description": "Controls the direction of knockback dealt to targets by manipulating attack rotation.",
   "liquidbounce.module.tpAura.description": "Automatically teleports and attacks enemies around you.",
   "liquidbounce.module.killAura.messages.badCooldown": "The cooldown should be at least 1.0, otherwise you will not be able to deal critical damage properly.",
   "liquidbounce.module.noMissCooldown.description": "Disables 1.8 hit cooldown or cancels missed attacks entirely.",

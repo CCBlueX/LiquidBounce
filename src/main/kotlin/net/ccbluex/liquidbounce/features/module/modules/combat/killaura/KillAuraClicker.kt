@@ -112,8 +112,14 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
      * - Closing the inventory if we are simulating inventory closing
      * - Unblocking if we are blocking and the tick on is 0
      */
+    /**
+     * @param rotation The rotation to send before the attack (e.g., knockback displacement).
+     * @param returnRotation The rotation to return to after the attack. If null, uses [rotation].
+     *   This is useful for knockback displacement where we want to send a custom rotation
+     *   before the attack but return to the target rotation after.
+     */
     @Suppress("CognitiveComplexMethod")
-    fun prepareForAttack(rotation: Rotation? = null, attack: () -> Boolean) {
+    fun prepareForAttack(rotation: Rotation? = null, returnRotation: Rotation? = null, attack: () -> Boolean) {
         if (!canExecuteClickNow()) {
             // If we are not going to click, we don't need to prepare the environment
             return
@@ -162,15 +168,16 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
         // Run the attack
         click(attack)
 
-        // 1. Rotate back
+        // 1. Rotate back (to target rotation if provided, otherwise based on attack rotation)
         if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
+            val backRotation = returnRotation ?: rotation
             network.send(
                 PosRot(
                     player.x,
                     player.y,
                     player.z,
-                    player.withFixedYaw(rotation),
-                    player.xRot,
+                    player.withFixedYaw(backRotation),
+                    backRotation.pitch,
                     player.onGround(),
                     player.horizontalCollision
                 )

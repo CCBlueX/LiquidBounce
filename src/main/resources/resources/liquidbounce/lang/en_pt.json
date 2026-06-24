@@ -124,6 +124,7 @@
   "liquidbounce.module.criticals.description": "Autwomaticawwy cwits ewewwy tim u attack swomweonye",
   "liquidbounce.module.hitbox.description": "Mwodify teh enyemy hitbwox mawgin (・`ω´・) which makes it easiew two aim",
   "liquidbounce.module.killAura.description": "Autwomaticawwy attacks enyemies",
+  "liquidbounce.module.knockbackDisplacement.description": "Controls th' direction o' knockback dealt to targets by manipulatin' attack rotation.",
   "liquidbounce.module.superKnockback.description": "Incweases knywockback deawt two othew entities ^w^",
   "liquidbounce.module.trigger.description": "Autwomaticawwy attacks enyemy on ywouw cwosshaiw",
   "liquidbounce.module.velocity.description": "Mwodify teh wewocity u take",

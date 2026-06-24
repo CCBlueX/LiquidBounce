@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.dealWithFakeSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFightBot
+
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.failedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.renderFailedHits
@@ -280,7 +281,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         // Attack enemy, according to the attack scheduler
         if (clicker.isClickTick && canAttackNow(target, mainHandStack) &&
             !KillAuraAutoBlock.isPrioritizingBlocking) {
-            clicker.prepareForAttack(rotation) {
+            clicker.prepareForAttack(rotation, null) {
                 // On each click, we check if we are still ready to attack
                 if (!canAttackNow(target, mainHandStack)) {
                     return@prepareForAttack false

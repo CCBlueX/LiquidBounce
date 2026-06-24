@@ -500,6 +500,7 @@
   "liquidbounce.module.kick.description": "Кикает вас сервера.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Невозможно включить %s в одиночной игре.",
   "liquidbounce.module.killAura.description": "Автоматически атакует врагов",
+  "liquidbounce.module.knockbackDisplacement.description": "Управляет направлением отбрасывания целей путём манипуляции углом атаки.",
   "liquidbounce.module.killAura.messages.badCooldown": "Кулдаун должен быть не менее 1.0, иначе вы не сможете наносить критический урон должным образом.",
   "liquidbounce.module.liquidChat.description": "Позволяет общаться с другими пользователями LiquidBounce.",
   "liquidbounce.module.liquidPlace.description": "Позволяет ставить блоки на жидкости.",
