@@ -17,8 +17,5 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@org.jspecify.annotations.NullMarked
 package net.ccbluex.liquidbounce.interfaces;
-
-public interface ChatComponentAddition {
-    int liquidbounce_getChatY();
-}

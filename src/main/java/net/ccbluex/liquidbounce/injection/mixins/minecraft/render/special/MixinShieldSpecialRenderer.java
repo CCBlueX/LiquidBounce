@@ -26,14 +26,13 @@ import net.ccbluex.liquidbounce.utils.render.FirstPersonShieldTint;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.special.ShieldSpecialRenderer;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.sprite.SpriteGetter;
 import net.minecraft.client.resources.model.sprite.SpriteId;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @Mixin(ShieldSpecialRenderer.class)
 public abstract class MixinShieldSpecialRenderer {
@@ -68,19 +67,11 @@ public abstract class MixinShieldSpecialRenderer {
         );
     }
 
-    @WrapOperation(method = "submit(Lnet/minecraft/core/component/DataComponentMap;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;IIZI)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V"))
-    private <S> void hookFirstPersonShieldGlintTint(
-        SubmitNodeCollector instance, Model<? super S> model, S state, PoseStack poseStack, RenderType renderType,
-        int lightCoords, int overlayCoords, int tintedColor, TextureAtlasSprite sprite, int outlineColor,
-        ModelFeatureRenderer.CrumblingOverlay crumblingOverlay, Operation<Void> original
-    ) {
-        original.call(
-            instance, model, state, poseStack, renderType, lightCoords, overlayCoords,
-            FirstPersonShieldTint.isRendering()
-                ? ModuleItemChams.Shield.INSTANCE.applyTint(tintedColor)
-                : tintedColor,
-            sprite, outlineColor, crumblingOverlay
-        );
+    @ModifyArg(method = "submit(Lnet/minecraft/core/component/DataComponentMap;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;IIZI)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OrderedSubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V"), index = 6)
+    private int hookFirstPersonShieldGlintTint(int tintedColor) {
+        return FirstPersonShieldTint.isRendering()
+            ? ModuleItemChams.Shield.INSTANCE.applyTint(tintedColor)
+            : tintedColor;
     }
 
 }

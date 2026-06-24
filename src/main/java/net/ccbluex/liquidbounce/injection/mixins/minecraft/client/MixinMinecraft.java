@@ -37,21 +37,20 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAc
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
-import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
+import net.ccbluex.liquidbounce.render.ClientTesselator;
+import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer;
+import net.ccbluex.liquidbounce.render.StaticGpuBufferPool;
+import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.MouseHandler;
 import net.minecraft.client.Options;
 import net.minecraft.client.User;
-import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
-import net.minecraft.client.gui.screens.Overlay;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -70,10 +69,8 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -112,27 +109,21 @@ public abstract class MixinMinecraft {
     public abstract Window getWindow();
 
     @Shadow
-    public abstract void setScreen(@Nullable Screen screen);
-
-    @Shadow
     public abstract int getFps();
 
     @Shadow
     public abstract User getUser();
 
     @Shadow
-    @Nullable
-    public Screen screen;
-
-    @Shadow
     protected abstract void continueAttack(boolean breaking);
-
-    @Shadow
-    private @Nullable Overlay overlay;
 
     @Shadow
     @Nullable
     public ClientLevel level;
+
+    @Shadow
+    @Final
+    public Gui gui;
 
     /**
      * Entry point
@@ -145,7 +136,7 @@ public abstract class MixinMinecraft {
     /**
      * Exit point
      */
-    @Inject(method = "destroy", at = @At("HEAD"))
+    @Inject(method = "close", at = @At("HEAD"))
     private void stopClient(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(ClientShutdownEvent.INSTANCE);
     }
@@ -233,53 +224,6 @@ public abstract class MixinMinecraft {
         }
 
         callback.setReturnValue(titleBuilder.toString());
-    }
-
-    /**
-     * Fixes recursive screen opening,
-     * this is usually caused by another mod such as Lunar Client.
-     * Can also happen when opening a screen during [ScreenEvent].
-     */
-    @Unique
-    private boolean recursiveScreenOpening = false;
-
-    /**
-     * Handle opening screens
-     *
-     * @param screen       to be opened (null = no screen at all)
-     * @param callbackInfo callback
-     */
-    @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
-    private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
-        if (recursiveScreenOpening) {
-            return;
-        }
-
-        try {
-            recursiveScreenOpening = true;
-
-            var event = EventManager.INSTANCE.callEvent(new ScreenEvent(screen));
-            if (event.isCancelled()) {
-                callbackInfo.cancel();
-            }
-        } finally {
-            recursiveScreenOpening = false;
-        }
-
-        // Who need this GUI?
-        if (screen instanceof AccessibilityOnboardingScreen) {
-            callbackInfo.cancel();
-            this.setScreen(new TitleScreen(true));
-        }
-    }
-
-    @Redirect(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MouseHandler;releaseMouse()V"))
-    private void cancelScreenMouseForChestStealer(MouseHandler instance) {
-        // Allows rotation.
-        if (!LiquidBounce.INSTANCE.isInitialized() ||
-            !FeatureSilentScreen.INSTANCE.getShouldHide() || FeatureSilentScreen.INSTANCE.getUnlockCursor()) {
-            instance.releaseMouse();
-        }
     }
 
     /**
@@ -431,10 +375,10 @@ public abstract class MixinMinecraft {
     /**
      * Alternative input handler of [handleInputEvents] while being inside a client-side screen.
      */
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 4, shift = At.Shift.BEFORE, opcode = Opcodes.GETFIELD), locals = LocalCapture.CAPTURE_FAILSOFT)
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;screen()Lnet/minecraft/client/gui/screens/Screen;", ordinal = 1, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void passthroughInputHandler(CallbackInfo ci, @Local(name = "profiler") ProfilerFiller profiler) {
-        if (this.overlay == null && this.player != null && this.level
-            != null && ScreenManager.isClientScreen(this.screen)) {
+        if (this.gui.overlay() == null && this.player != null && this.level
+            != null && ScreenManager.isClientScreen(this.gui.screen())) {
             profiler.popPush("Keybindings");
 
             if (ModuleAutoBreak.INSTANCE.getEnabled()) {
@@ -465,7 +409,7 @@ public abstract class MixinMinecraft {
     private boolean injectFixAttackCooldownOnVirtualBrowserScreen(Minecraft instance, int value) {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.
-        return !ScreenManager.isClientScreen(this.screen);
+        return !ScreenManager.isClientScreen(this.gui.screen());
     }
 
     @Inject(method = "clearDownloadedResourcePacks", at = @At("HEAD"))
@@ -485,4 +429,13 @@ public abstract class MixinMinecraft {
             ci.cancel();
         }
     }
+
+    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;endFrame()V", shift = At.Shift.AFTER))
+    private void onFlipFrame(boolean advanceGameTime, CallbackInfo ci) {
+        RenderingDebug.flipFrame();
+        ClientTesselator.Shared.clear();
+        GrowableMappableRingBuffer.cleanup();
+        StaticGpuBufferPool.cleanup();
+    }
+
 }

@@ -19,5 +19,8 @@
 package net.ccbluex.liquidbounce.common;
 
 public final class ShapeFlag {
-    public static boolean noShapeChange = false;
+
+    private ShapeFlag() {}
+
+    public static volatile boolean noShapeChange = false;
 }

@@ -171,5 +171,5 @@ private fun Proxy.connect(
             Connection.configureSerialization(channelPipeline, PacketFlow.CLIENTBOUND, false, null)
             connection.configurePacketHandler(channelPipeline)
         }
-    }).connect(address.address, address.port)
+    }).connect(address)
 }

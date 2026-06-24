@@ -36,6 +36,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
 import net.minecraft.world.level.block.Block
+import java.util.TreeSet
 import kotlin.jvm.optionals.getOrNull
 
 private fun <V : Value<*>> ParameterBuilder.Companion.value(
@@ -112,7 +113,7 @@ fun ParameterBuilder.Companion.valueGroupKeyPath(
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
     .autocompletedWith { begin, _ ->
-        suggestKeySegments(begin) { prefix -> ConfigSystem.valueGroupsKeySequence(prefix) }
+        suggestKeySegments(begin, ConfigSystem::valueGroupsKeySequence)
     }
 
 fun ParameterBuilder.Companion.valueKeyPath(
@@ -120,7 +121,7 @@ fun ParameterBuilder.Companion.valueKeyPath(
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
     .autocompletedWith { begin, _ ->
-        suggestKeySegments(begin) { prefix -> ConfigSystem.valueKeySequence(prefix) }
+        suggestKeySegments(begin, ConfigSystem::valueKeySequence)
     }
 
 inline fun <reified T> ParameterBuilder.Companion.enumChoice(
@@ -236,7 +237,7 @@ private data class KeySegmentQuery(
     val depth: Int,
 )
 
-private fun suggestKeySegments(begin: String, keyProvider: (String) -> Sequence<String>): List<String> {
+private fun suggestKeySegments(begin: String, keyProvider: (String) -> Sequence<String>): Iterable<String> {
     val query = buildKeySegmentQuery(begin)
     return keyProvider(query.prefix)
         .map { it.lowercase() }
@@ -245,10 +246,9 @@ private fun suggestKeySegments(begin: String, keyProvider: (String) -> Sequence<
         .filter { it.size > query.depth }
         .map { it[query.depth] }
         .filter { it.startsWith(query.typed, true) }
-        .map { formatSuggestion(query.prefix, it) }
-        .distinct()
-        .sorted()
-        .toList()
+        .mapTo(TreeSet(String.CASE_INSENSITIVE_ORDER)) {
+            formatSuggestion(query.prefix, it)
+        }
 }
 
 private fun buildKeySegmentQuery(begin: String): KeySegmentQuery {
@@ -259,12 +259,14 @@ private fun buildKeySegmentQuery(begin: String): KeySegmentQuery {
     return KeySegmentQuery(prefix, typed, depth)
 }
 
-private fun splitKeyPrefix(input: String): Pair<String, String> {
+private data class KeyPrefixParts(val prefix: String, val typed: String)
+
+private fun splitKeyPrefix(input: String): KeyPrefixParts {
     val endsWithDot = input.endsWith(".")
     val lastDot = input.lastIndexOf('.')
     val prefix = if (lastDot >= 0) input.substring(0, lastDot + 1) else ""
     val typed = if (endsWithDot || lastDot < 0) input.substring(prefix.length) else input.substring(lastDot + 1)
-    return prefix to typed
+    return KeyPrefixParts(prefix, typed)
 }
 
 private fun countSegments(prefix: String): Int {

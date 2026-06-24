@@ -39,6 +39,8 @@ import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.math.toVec3f
@@ -56,7 +58,7 @@ import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.EyeOfEnder
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ChunkPos
@@ -279,7 +281,7 @@ object ModuleStrongholdFinder : ClientModule(
                 }
 
                 if ((index == 0 && renderBestChunk) || (index > 0 && renderTopChunks)) {
-                    withPositionRelativeToCamera(Vec3(minX.toDouble(), drawY, minZ.toDouble())) {
+                    withPositionRelativeToCamera(minX.toDouble(), drawY, minZ.toDouble()) {
                         drawPlane(16f, 16f, color, color.darker())
                     }
                 }
@@ -366,7 +368,7 @@ object ModuleStrongholdFinder : ClientModule(
     }
 
     private fun handleEyeSpawnPacket(packet: ClientboundAddEntityPacket) {
-        if (packet.type != EntityType.EYE_OF_ENDER) {
+        if (packet.type != EntityTypes.EYE_OF_ENDER) {
             return
         }
 
@@ -377,10 +379,8 @@ object ModuleStrongholdFinder : ClientModule(
             .filter { it.dimension == world.dimension() && nowTick - it.tick in 0..maxSampleAgeTicks }
             .minWithOrNull(
                 compareBy<PendingThrow> { nowTick - it.tick }
-                    .thenBy {
-                        val dx = it.throwPosition.x - packet.x
-                        val dz = it.throwPosition.z - packet.z
-                        dx * dx + dz * dz
+                    .thenComparingDouble {
+                        it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z)
                     }
             ) ?: return
 
@@ -416,9 +416,7 @@ object ModuleStrongholdFinder : ClientModule(
     }
 
     private fun removePortalBlocksInChunk(chunkPos: ChunkPos) {
-        detectedPortalBlocks.entries.removeIf { (pos, _) ->
-            chunkPos.contains(pos)
-        }
+        detectedPortalBlocks.keys.removeIf(chunkPos::contains)
     }
 
     private fun WorldRenderEnvironment.renderDetectedPortalBlocks(event: WorldRenderEvent) {
