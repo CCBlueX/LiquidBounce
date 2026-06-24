@@ -51,9 +51,6 @@ mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket on
 mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket hasPos Z
 mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket hasRot Z
 
-accessible field net/minecraft/client/gui/Gui title Lnet/minecraft/network/chat/Component;
-accessible field net/minecraft/client/gui/Gui subtitle Lnet/minecraft/network/chat/Component;
-
 accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode destroyProgress F
 accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode destroyDelay I
 accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode localPlayerMode Lnet/minecraft/world/level/GameType;
@@ -81,8 +78,6 @@ accessible method net/minecraft/world/phys/AABB getDirection (Lnet/minecraft/wor
 accessible field net/minecraft/client/multiplayer/ClientChunkCache storage Lnet/minecraft/client/multiplayer/ClientChunkCache$Storage;
 accessible field net/minecraft/world/level/chunk/LevelChunk loaded Z
 accessible field net/minecraft/client/multiplayer/ClientChunkCache$Storage chunks Ljava/util/concurrent/atomic/AtomicReferenceArray;
-
-accessible field net/minecraft/client/renderer/LevelRenderer destructionProgress Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;
 
 accessible method net/minecraft/world/entity/LivingEntity getJumpPower ()F
 accessible method net/minecraft/world/entity/LivingEntity calculateFallDamage (DF)I
@@ -153,9 +148,17 @@ accessible method com/mojang/blaze3d/platform/NativeImage writeToChannel (Ljava/
 accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder <init> ()V
 accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder withSnippet (Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;)V
 
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat POSITION_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat COLOR_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat UV0_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat UV1_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat UV2_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat NORMAL_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+accessible field com/mojang/blaze3d/vertex/DefaultVertexFormat LINE_WIDTH_FORMAT Lcom/mojang/blaze3d/GpuFormat;
+
 accessible class net/minecraft/client/renderer/state/gui/GuiRenderState$Node
 accessible class net/minecraft/client/gui/render/GuiRenderer$Draw
-accessible class net/minecraft/client/gui/Gui$ContextualInfo
+accessible class net/minecraft/client/gui/Hud$ContextualInfo
 
 accessible method net/minecraft/client/gui/screens/ConnectScreen connect (Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/multiplayer/resolver/ServerAddress;Lnet/minecraft/client/multiplayer/ServerData;Lnet/minecraft/client/multiplayer/TransferState;)V
 accessible method net/minecraft/client/gui/screens/ConnectScreen updateStatus (Lnet/minecraft/network/chat/Component;)V
@@ -164,12 +167,9 @@ accessible method net/minecraft/client/multiplayer/PlayerInfo createSkinLookup (
 accessible method net/minecraft/client/player/AbstractClientPlayer getPlayerInfo ()Lnet/minecraft/client/multiplayer/PlayerInfo;
 
 accessible field net/minecraft/client/renderer/GameRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
-
-accessible class net/minecraft/client/renderer/OutlineBufferSource$EntityOutlineGenerator
-accessible method net/minecraft/client/renderer/OutlineBufferSource$EntityOutlineGenerator <init> (Lcom/mojang/blaze3d/vertex/VertexConsumer;I)V
+accessible field net/minecraft/client/renderer/LevelRenderer submitNodeStorage Lnet/minecraft/client/renderer/SubmitNodeStorage;
 
 accessible field net/minecraft/client/renderer/RenderPipelines ENTITY_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
-accessible field net/minecraft/client/renderer/RenderPipelines MATRICES_PROJECTION_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
 accessible field net/minecraft/client/renderer/RenderPipelines DEBUG_FILLED_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
 accessible field net/minecraft/client/renderer/RenderPipelines GUI_TEXTURED_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
 accessible field net/minecraft/client/renderer/RenderPipelines GUI_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;

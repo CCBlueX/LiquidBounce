@@ -87,7 +87,7 @@ private fun Routing.postJoinWorld() = post("/join") {
     mc.execute {
         runCatching {
             mc.createWorldOpenFlows().openWorld(request.name) {
-                mc.setScreen(SelectWorldScreen(TitleScreen()))
+                mc.gui.setScreen(SelectWorldScreen(TitleScreen()))
             }
         }.onFailure {
             logger.error("Failed to join world ${request.name}", it)
@@ -113,7 +113,7 @@ private fun Routing.postEditWorld() = post("/edit") {
 
                 is ContentValidationException -> {
                     logger.warn(exception.message)
-                    mc.setScreen(NoticeWithLinkScreen.createWorldSymlinkWarningScreen { mc.setScreen(
+                    mc.gui.setScreen(NoticeWithLinkScreen.createWorldSymlinkWarningScreen { mc.gui.setScreen(
                         SelectWorldScreen(
                             TitleScreen())) })
                 }
@@ -127,14 +127,14 @@ private fun Routing.postEditWorld() = post("/edit") {
         runCatching {
             EditWorldScreen.create(mc, session) { _ ->
                 session.safeClose()
-                mc.setScreen(SelectWorldScreen(TitleScreen()))
+                mc.gui.setScreen(SelectWorldScreen(TitleScreen()))
             }
         }.onFailure { exception ->
             session.safeClose()
             SystemToast.onWorldAccessFailure(mc, request.name)
             logger.error("Failed to load world data ${request.name}", exception)
         }.onSuccess { screen ->
-            mc.setScreen(screen)
+            mc.gui.setScreen(screen)
         }
     }
 

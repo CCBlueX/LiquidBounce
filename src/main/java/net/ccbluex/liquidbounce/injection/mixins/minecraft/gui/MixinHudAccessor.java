@@ -17,26 +17,27 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.ccbluex.liquidbounce.utils.collection.GenericPools;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
-import org.jspecify.annotations.NullMarked;
+import net.minecraft.client.gui.Hud;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.scores.PlayerScoreEntry;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-import java.util.HashMap;
+import java.util.Comparator;
 
-@NullMarked
-@Mixin(RenderSetup.class)
-public abstract class MixinRenderSetup {
+@Mixin(Hud.class)
+public interface MixinHudAccessor {
 
-    @SuppressWarnings("rawtypes")
-    @WrapOperation(method = "getTextures", at = @At(value = "NEW", target = "()Ljava/util/HashMap;"))
-    private HashMap getCachedHashMap(Operation<HashMap> original) {
-        return GenericPools.HASH_MAP.borrow();
+    @Accessor("HOTBAR_SELECTION_SPRITE")
+    static Identifier getHotbarSelectionTexture() {
+        throw new AssertionError();
+    }
+
+    @Accessor("SCORE_DISPLAY_ORDER")
+    static Comparator<PlayerScoreEntry> getScoreboardEntryComparator() {
+        throw new AssertionError();
     }
 
 }

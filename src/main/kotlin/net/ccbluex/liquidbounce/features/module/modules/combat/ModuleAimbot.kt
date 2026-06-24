@@ -68,7 +68,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
     private val requirementsMet
-        get() = mc.screen == null && requires.all { it.asBoolean }
+        get() = mc.gui.screen() == null && requires.all { it.asBoolean }
 
     private var angleSmooth = modes(this, "AngleSmooth") {
         arrayOf(
@@ -125,12 +125,12 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         val partialTicks = event.partialTicks
         val target = targetTracker.target ?: return@handler
 
-        if (IgnoreOpened.SCREEN !in ignores && mc.screen != null) {
+        if (IgnoreOpened.SCREEN !in ignores && mc.gui.screen() != null) {
             return@handler
         }
 
         if (IgnoreOpened.CONTAINER !in ignores && (InventoryManager.isInventoryOpen ||
-                mc.screen is AbstractContainerScreen<*>)) {
+                mc.gui.screen() is AbstractContainerScreen<*>)) {
             return@handler
         }
 

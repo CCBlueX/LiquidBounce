@@ -23,8 +23,7 @@ import net.ccbluex.liquidbounce.interfaces.ItemCooldownsAddition;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,7 +44,7 @@ public abstract class MixinItemCooldowns implements ItemCooldownsAddition {
     public abstract Identifier getCooldownGroup(ItemStack stack);
 
     @Override
-    public @Nullable Entry liquidBounce$getCooldown(@NotNull ItemStack stack) {
+    public @Nullable Entry liquidBounce$getCooldown(ItemStack stack) {
         var entry = this.cooldowns.get(this.getCooldownGroup(stack));
         if (entry != null) {
             return new Entry(this.tickCount, entry.startTime(), entry.endTime());
