@@ -19,7 +19,9 @@
 package net.ccbluex.liquidbounce.utils.aiming.utils
 
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.RotationDelta
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_12_2
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.client.player.LocalPlayer
@@ -42,11 +44,45 @@ fun LocalPlayer.withFixedYaw(rotation: Rotation) = rotation.yaw + angleDifferenc
 
 object RotationUtil {
 
+    private const val MOUSE_TURN_SCALE_FLOAT = 0.15f
+    private const val MOUSE_TURN_SCALE_DOUBLE = 0.15
+
     val gcd: Double
         get() {
             val f = mc.options.sensitivity().get() * 0.6F.toDouble() + 0.2F.toDouble()
-            return f * f * f * 8.0 * 0.15F
+            return f * f * f * 8.0 * MOUSE_TURN_SCALE_DOUBLE
         }
+
+    /**
+     * Converts the values passed from `MouseHandler.turnPlayer` to the yaw/pitch delta applied by vanilla.
+     *
+     * [1.12.2 reference](https://github.com/WangTingZheng/mcp940/blob/d0c030a4139ce7cf3f284b180f0d9ea87bdf8141/src/minecraft/net/minecraft/entity/Entity.java#L479-L497)
+     *
+     * @see net.minecraft.world.entity.Entity.turn
+     */
+    fun mouseTurnDelta(cursorDeltaX: Double, cursorDeltaY: Double): RotationDelta {
+        val deltaPitch: Float
+        val deltaYaw: Float
+
+        if (isOlderThanOrEqual1_12_2) {
+            deltaPitch = (cursorDeltaY * MOUSE_TURN_SCALE_DOUBLE).toFloat()
+            deltaYaw = (cursorDeltaX * MOUSE_TURN_SCALE_DOUBLE).toFloat()
+        } else {
+            deltaPitch = cursorDeltaY.toFloat() * MOUSE_TURN_SCALE_FLOAT
+            deltaYaw = cursorDeltaX.toFloat() * MOUSE_TURN_SCALE_FLOAT
+        }
+
+        return RotationDelta(deltaYaw, deltaPitch)
+    }
+
+    fun applyMouseTurnDelta(rotation: Rotation, cursorDeltaX: Double, cursorDeltaY: Double): Rotation {
+        val delta = mouseTurnDelta(cursorDeltaX, cursorDeltaY)
+
+        return Rotation(
+            yaw = rotation.yaw + delta.deltaYaw,
+            pitch = (rotation.pitch + delta.deltaPitch).coerceIn(-90f, 90f)
+        )
+    }
 
     /**
      * Calculates the angle between the cross-hair and the entity.
