@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.client.CameraType
 import net.minecraft.client.CameraType.THIRD_PERSON_BACK
@@ -56,8 +57,10 @@ object ModuleFreeLook : ClientModule(
 
     @Suppress("unused")
     private val mouseRotationInputHandler = handler<MouseRotationEvent> { event ->
-        cameraYaw += event.cursorDeltaX.toFloat() * 0.15f * senseBoost
-        cameraPitch += event.cursorDeltaY.toFloat() * 0.15f * senseBoost
+        val delta = RotationUtil.mouseTurnDelta(event.cursorDeltaX, event.cursorDeltaY)
+
+        cameraYaw += delta.deltaYaw * senseBoost
+        cameraPitch += delta.deltaPitch * senseBoost
 
         if (!noPitchLimit) {
             cameraPitch = cameraPitch.coerceIn(-90f, 90f)

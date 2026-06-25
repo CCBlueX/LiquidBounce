@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleB
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
@@ -214,7 +215,7 @@ object RotationManager : EventListener {
         }
     }
 
-    @Suppress("unused", "MagicNumber")
+    @Suppress("unused")
     private val mouseMovement = handler<MouseRotationEvent> { event ->
         val activeRotationTarget = this.activeRotationTarget ?: return@handler
         if (!isRotatingAllowed(activeRotationTarget) ||
@@ -222,11 +223,8 @@ object RotationManager : EventListener {
             return@handler
         }
 
-        val f = event.cursorDeltaY.toFloat() * 0.15f
-        val g = event.cursorDeltaX.toFloat() * 0.15f
-
         fun adjustRotation(rotation: Rotation): Rotation =
-            Rotation(yaw = rotation.yaw + g, pitch = (rotation.pitch + f).coerceIn(-90f, 90f))
+            RotationUtil.applyMouseTurnDelta(rotation, event.cursorDeltaX, event.cursorDeltaY)
 
         playerRotation?.let { rotation ->
             playerRotation = adjustRotation(rotation)
