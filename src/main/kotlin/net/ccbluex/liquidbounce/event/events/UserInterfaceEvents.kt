@@ -65,3 +65,14 @@ sealed class TitleEvent : CancellableEvent(), WebSocketEvent {
     @Tag("clearTitle")
     class Clear(var reset: Boolean) : TitleEvent()
 }
+
+@Tag("soundSubtitles")
+class SoundSubtitlesEvent(val subtitles: List<SoundSubtitleEntry>) : Event(), WebSocketEvent
+
+enum class SubtitleDirection { LEFT, RIGHT, CENTER }
+
+data class SoundSubtitleEntry(
+    val text: Component,
+    val direction: SubtitleDirection,
+    val opacity: Float
+)

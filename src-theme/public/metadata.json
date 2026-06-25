@@ -42,7 +42,8 @@
     "Taco",
     "Image",
     "Text",
-    "KeyBinds"
+    "KeyBinds",
+    "Subtitles"
   ],
   "fonts": [
     "Inter-Black.ttf",
