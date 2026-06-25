@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker.AttackButton.ClickFilter
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -71,9 +72,24 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
         private val weapon by multiEnumChoice("Weapon", enumSetOf(WeaponType.ANY), canBeNone = false)
         private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
-        private object ClickFilter : ToggleableValueGroup(this, "ClickFilter", false) {
+        object ClickFilter : ToggleableValueGroup(this, "ClickFilter", false) {
+            // Settings
             val combatAccuracy by int("CombatAccuracy", 80, 0..100, "%")
             val airSwingChance by int("AirSwingChance ", 70, 0..100, "%")
+
+            // Funcs
+            fun attackFilter(entity: Entity): Boolean {
+                if (!enabled) return true
+                if (entity is LivingEntity && entity.hurtTime == 0) return true
+                if (entity !is LivingEntity) return true
+
+                return combatAccuracy < Random.nextInt(1, 101)
+            }
+
+            fun missChance(): Boolean {
+                if (!enabled) return true
+                return airSwingChance >= Random.nextInt(1, 101)
+            }
         }
 
         init {
@@ -108,19 +124,6 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
 
         fun isCriticalHit(entity: Entity): Boolean {
             return criticalsSelectionMode.isCriticalHit(entity)
-        }
-
-        fun attackFilter(entity: Entity): Boolean {
-            if (!ClickFilter.enabled) return true
-            if (entity is LivingEntity && entity.hurtTime == 0) return true
-            if (entity !is LivingEntity) return true
-
-            return ClickFilter.combatAccuracy < Random.nextInt(1, 101)
-        }
-
-        fun missChance(): Boolean {
-            if (!ClickFilter.enabled) return true
-            return ClickFilter.airSwingChance >= Random.nextInt(1, 101)
         }
 
         suspend fun encounterItemUse(): Boolean {
@@ -232,12 +235,12 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
                     ModuleAutoWeapon.onTarget(crosshairTarget.entity)
 
                     // Check if the target is currently immune to damage (in hurt time)
-                    if (!attackFilter(crosshairTarget.entity)) return@run
+                    if (!ClickFilter.attackFilter(crosshairTarget.entity)) return@run
 
                     if (!isCriticalHit(crosshairTarget.entity)) return@run
                 }
                 // Check if the player attacking air
-                else -> if (!missChance()) return@run
+                else -> if (!ClickFilter.missChance()) return@run
             }
 
             if (player.isUsingItem) {
