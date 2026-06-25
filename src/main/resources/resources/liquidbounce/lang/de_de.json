@@ -197,8 +197,6 @@
   "liquidbounce.command.value.result.success": "Wert erfolgreich geändert.",
   "liquidbounce.command.value.result.valueError": "Der Wert %s konnte aufgrund eines Fehlers nicht geändert werden: '%s'!",
   "liquidbounce.command.value.result.valueNotFound": "Wert %s konnte nicht gefunden werden!",
-  "liquidbounce.command.vclip.result.invalidDistance": "Ungültige Entfernung. Bitte geb eine gültige Nummer ein.",
-  "liquidbounce.command.teleport.result.invalidCoordinates": "Ungültige Koordinaten. Bitte geb gültige Nummern ein.",
   "liquidbounce.command.xray.description": "Ermöglicht dir, Erze durch Wände zu sehen.",
   "liquidbounce.command.xray.subcommand.add.description": "Fügt einen zu rendernden Block aus der Liste hinzu.",
   "liquidbounce.command.xray.subcommand.add.parameter.block.description": "Blockname (zum Beispiel: \"minecraft:stone\")",

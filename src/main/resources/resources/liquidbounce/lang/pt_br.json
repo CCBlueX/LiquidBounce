@@ -330,7 +330,6 @@
   "liquidbounce.command.stack.result.amountChanged": "A quantidade de item foi alterada.",
   "liquidbounce.command.stack.result.hasAlreadyAmount": "A quantidade de item já é %s",
   "liquidbounce.command.value.result.valueError": "Não é possível alterar o valor %s devido a um erro: '%s'!",
-  "liquidbounce.command.vclip.result.invalidDistance": "Distância inválida. Por favor, insira um número válido.",
   "liquidbounce.command.vclip.result.notInGame": "Você não está em um jogo.",
   "liquidbounce.command.vclip.result.positionUpdated": "Sua posição foi atualizada para X: %s, Y: %s, Z: %s",
   "liquidbounce.command.targets.subcommand.combat.subcommand.hostile.description": "Permite alternar se entidades hostis são consideradas seus inimigos",

@@ -329,7 +329,6 @@
   "liquidbounce.command.stack.result.amountChanged": "The item amount has been changed.",
   "liquidbounce.command.stack.result.hasAlreadyAmount": "The item amount is already %s",
   "liquidbounce.command.value.result.valueError": "Unable to change value %s because of an error: '%s'!",
-  "liquidbounce.command.vclip.result.invalidDistance": "Invalid distance. Please enter a valid number.",
   "liquidbounce.command.vclip.result.notInGame": "You are not in a game.",
   "liquidbounce.command.vclip.result.positionUpdated": "Your position has been updated to X: %s, Y: %s, Z: %s",
   "liquidbounce.command.targets.subcommand.combat.subcommand.hostile.description": "Allows you to toggle if hostile entities are considered to be your enemy",
