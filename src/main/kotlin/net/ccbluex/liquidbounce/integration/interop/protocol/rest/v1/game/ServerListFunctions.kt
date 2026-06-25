@@ -234,28 +234,23 @@ object ActiveServerList : EventListener {
             }
         }
 
-        return lanServerData.entries.mapIndexed { index, (address, sd) ->
-            JsonObject().apply {
+        return lanServerData.entries.mapIndexed { index, (_, serverData) ->
+            val json = interopGson.toJsonTree(serverData)
+
+            if (!json.isJsonObject) {
+                logger.warn("Failed to convert LAN serverData to json")
+                return@mapIndexed null
+            }
+
+            json.asJsonObject.apply {
                 // Use negative IDs to distinguish from regular servers (e.g., -1, -2, ...)
                 addProperty("id", -(index + 1))
-                addProperty("address", address)
-                addProperty("name", sd.name)
                 addProperty("lan", true)
-                // Use pinged data from ServerData
-                addProperty("ping", sd.ping)
-                addProperty("icon", sd.iconBytes?.let { java.util.Base64.getEncoder().encodeToString(it) } ?: "")
-                addProperty("label", sd.motd?.string ?: sd.name)
-                add("players", JsonObject().apply {
-                    addProperty("max", sd.players?.max() ?: 0)
-                    addProperty("online", sd.players?.online() ?: 0)
-                })
-                addProperty("online", sd.ping > 0)
-                addProperty("playerCountLabel", sd.status?.string ?: "")
-                addProperty("protocolVersion", sd.protocol)
-                addProperty("version", sd.version?.string ?: "LAN")
-                addProperty("resourcePackPolicy", sd.resourcePackStatus?.name ?: "PROMPT")
+                // Add online status (ServerInfoSerializer uses status enum, frontend expects boolean)
+                addProperty("online", serverData.state() == ServerData.State.SUCCESSFUL ||
+                    serverData.state() == ServerData.State.INCOMPATIBLE)
             }
-        }
+        }.filterNotNull()
     }
 
     private fun cancelTasks() {
