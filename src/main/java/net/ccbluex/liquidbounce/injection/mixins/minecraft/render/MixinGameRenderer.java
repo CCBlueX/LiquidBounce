@@ -22,12 +22,12 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
-import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
@@ -38,12 +38,8 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.Lightmap;
-import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
@@ -67,9 +63,6 @@ public abstract class MixinGameRenderer {
     private Minecraft minecraft;
 
     @Shadow
-    public abstract Minecraft getMinecraft();
-
-    @Shadow
     @Final
     private Camera mainCamera;
 
@@ -79,6 +72,10 @@ public abstract class MixinGameRenderer {
     @Shadow
     @Final
     private Lightmap lightmap;
+
+    @Shadow
+    @Final
+    private RenderTarget mainRenderTarget;
 
     /**
      * Hook game render event
@@ -112,7 +109,7 @@ public abstract class MixinGameRenderer {
         var newMatStack = Pools.MatStack.borrow();
         try {
             newMatStack.mulPose(modelViewMatrix);
-            WorldRenderEnvironment.beginWorldFrame(minecraft.getMainRenderTarget(), newMatStack, this.mainCamera);
+            WorldRenderEnvironment.beginWorldFrame(this.mainRenderTarget, newMatStack, this.mainCamera);
             EventManager.INSTANCE.callEvent(
                 new WorldRenderEvent(newMatStack, this.mainCamera, deltaTracker.getGameTimeDeltaPartialTick(false))
             );
@@ -134,24 +131,24 @@ public abstract class MixinGameRenderer {
         return fogMode;
     }
 
-    @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/player/LocalPlayer;I)V"))
-    public void drawItemCharms(ItemInHandRenderer instance, float frameInterp, PoseStack poseStack,
-                               SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords,
-                               Operation<Void> original) {
+    @WrapOperation(
+        method = "renderItemInHand",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher;renderAllFeatures(Lnet/minecraft/client/renderer/SubmitNodeStorage;)V"
+        )
+    )
+    private void drawItemCharmsOnHandFeatureExecution(
+        net.minecraft.client.renderer.feature.FeatureRenderDispatcher instance,
+        net.minecraft.client.renderer.SubmitNodeStorage submitNodeStorage,
+        Operation<Void> original
+    ) {
         ModuleItemChams.Lightmap.INSTANCE.applyToTexture(this.lightmap.getTextureView());
-        original.call(instance, frameInterp, poseStack, submitNodeCollector, player, lightCoords);
-        ModuleItemChams.Lightmap.INSTANCE.resetTexture(this.lightmap.getTextureView());
-    }
-
-    /**
-     * Hook screen render event
-     */
-    @Inject(method = "extractGui", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V",
-            shift = At.Shift.AFTER))
-    public void hookScreenRender(DeltaTracker deltaTracker, boolean shouldRenderLevel, boolean resourcesLoaded,
-        CallbackInfo ci, @Local(name = "graphics") GuiGraphicsExtractor graphics) {
-        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)));
+        try {
+            original.call(instance, submitNodeStorage);
+        } finally {
+            ModuleItemChams.Lightmap.INSTANCE.resetTexture(this.lightmap.getTextureView());
+        }
     }
 
     @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true)
@@ -197,10 +194,6 @@ public abstract class MixinGameRenderer {
         poseStack.mulPose(Axis.XP.rotationDegrees(Math.abs(Mth.cos(h * Mth.PI - (0.2F + additionalBobbing)) * h) * 5.0F));
 
         ci.cancel();
-    }
-
-    @Inject(method = "resize", at = @At("HEAD"))
-    private void hookBlurEffectResize(int width, int height, CallbackInfo ci) {
     }
 
     @Inject(method = "displayItemActivation", at = @At("HEAD"), cancellable = true)

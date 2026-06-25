@@ -40,8 +40,8 @@ import net.ccbluex.liquidbounce.integration.theme.component.HudComponentTweak;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -51,7 +51,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.AttackRange;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -60,8 +60,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Gui.class)
-public abstract class MixinGui {
+@Mixin(Hud.class)
+public abstract class MixinHud {
 
     @Final
     @Shadow
@@ -157,9 +157,9 @@ public abstract class MixinGui {
     }
 
     @ModifyReturnValue(method = "nextContextualInfoState", at = @At("RETURN"))
-    private Gui.ContextualInfo tweakExpBar(Gui.ContextualInfo original) {
-        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_EXP_BAR) && original == Gui.ContextualInfo.EXPERIENCE) {
-            return Gui.ContextualInfo.EMPTY;
+    private Hud.ContextualInfo tweakExpBar(Hud.ContextualInfo original) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_EXP_BAR) && original == Hud.ContextualInfo.EXPERIENCE) {
+            return Hud.ContextualInfo.EMPTY;
         }
         return original;
     }

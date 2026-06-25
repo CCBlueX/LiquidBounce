@@ -66,7 +66,7 @@ public enum VfpCompatibility {
 
     public void unsafeOpenVfpProtocolSelection() {
         try {
-            var currentScreen = Minecraft.getInstance().screen;
+            var currentScreen = Minecraft.getInstance().gui.screen();
             if (currentScreen == null) {
                 currentScreen = new TitleScreen();
             }
@@ -144,6 +144,17 @@ public enum VfpCompatibility {
             return version.olderThanOrEqualTo(ProtocolVersion.v1_15_2);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.15.2", throwable);
+            return false;
+        }
+    }
+
+    public boolean isOlderThanOrEqual1_12_2() {
+        try {
+            var version = ViaFabricPlus.getImpl().getTargetVersion();
+
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_12_2);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.12.2", throwable);
             return false;
         }
     }

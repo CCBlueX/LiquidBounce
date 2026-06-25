@@ -715,7 +715,11 @@ export async function randomUsername(): Promise<string> {
     return data.name;
 }
 
+let lastTypingState: boolean | null = null;
+
 export async function setTyping(typing: boolean) {
+    if (typing === lastTypingState) return;
+    lastTypingState = typing;
     await fetch(`${API_BASE}/client/typing`, {
         method: "POST",
         headers: {

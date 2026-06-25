@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.minecraft.client.renderer.fog.FogData
 import net.minecraft.client.renderer.state.LightmapRenderState
+import org.joml.Vector4fc
 
 /**
  * CustomAmbience module
@@ -79,12 +80,12 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
             fogData.cloudEnd = this.cloudEnd
         }
 
-        fun modifyClearColor(original: Int): Int {
+        fun modifyClearColor(original: Vector4fc): Vector4fc {
             if (!this.running || backgroundColor.a == 0) {
                 return original
             }
 
-            return backgroundColor.argb
+            return backgroundColor.toVector4f()
         }
     }
 
@@ -106,7 +107,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
                 private val color by color("Color", Color4b.BLUE)
 
                 override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
-                    texture.clearColor(color.argb)
+                    texture.clearColor(color)
                     return true
                 }
             }

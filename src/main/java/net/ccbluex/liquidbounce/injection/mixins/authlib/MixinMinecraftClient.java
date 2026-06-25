@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.authlib;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,7 +41,8 @@ public abstract class MixinMinecraftClient {
         opcode = Opcodes.GETFIELD))
     private Proxy hookClientProxy(Proxy proxy) {
         // We only want to use the proxy when connecting to a server
-        if (!(net.minecraft.client.Minecraft.getInstance().screen instanceof ConnectScreen)) {
+        // Can be null on init stage
+        if (!(Minecraft.getInstance().gui != null && Minecraft.getInstance().gui.screen() instanceof ConnectScreen)) {
             return Proxy.NO_PROXY;
         }
 

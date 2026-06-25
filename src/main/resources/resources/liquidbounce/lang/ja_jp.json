@@ -199,7 +199,6 @@
 	"liquidbounce.command.value.result.success": "値が正常に変更されました。",
 	"liquidbounce.command.value.result.valueError": "要素「%s」を変更できませんでした: 「%s」",
 	"liquidbounce.command.value.result.valueNotFound": "値 %s が見つかりません!",
-	"liquidbounce.command.vclip.result.invalidDistance": "無効な距離です。 有効な距離を入力してください。",
 	"liquidbounce.command.vclip.result.notInGame": "ゲームに接続されていません。",
 	"liquidbounce.command.vclip.result.positionUpdated": "あなたの座標を変更しました。 (X: %s, Y: %s, Z: %s)",
 	"liquidbounce.command.xray.description": "壁越しに鉱石が見えるようになります。",

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
+import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.pipeline.ColorTargetState
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.NativeImage
@@ -25,7 +26,6 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
-import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuadSnippet
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.withUniformBuffer
@@ -146,7 +146,7 @@ sealed interface ThemeBackground : Closeable {
             ).use { pass ->
                 pass.setPipeline(pipeline)
                 pass.setUniform(ClientUniformDefine.THEME_BACKGROUND.uboName, uboSlice)
-                pass.draw(0, 3)
+                pass.draw(3, 1, 0, 0)
             }
 
             context.drawBlitOnCurrentLayer(
@@ -188,7 +188,7 @@ sealed interface ThemeBackground : Closeable {
                 background = gpuDevice.createTexture(
                     "ThemeBackground/Shader - ${metadata.name} ($framebufferWidth x $framebufferHeight)",
                     GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_TEXTURE_BINDING,
-                    TextureFormat.RGBA8, framebufferWidth, framebufferHeight,
+                    GpuFormat.RGBA8_UNORM, framebufferWidth, framebufferHeight,
                     1, 1,
                 )
                 backgroundView?.close()

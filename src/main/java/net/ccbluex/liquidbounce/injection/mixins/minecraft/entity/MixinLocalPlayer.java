@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
 import net.ccbluex.liquidbounce.utils.raytracing.EntityRaytracingKt;
 import net.ccbluex.liquidbounce.utils.raytracing.RaytracingKt;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.ClientInput;
@@ -60,7 +61,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -458,7 +459,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
             true,
             SprintEvent.Source.MOVEMENT_TICK
         );
-    
+
         EventManager.INSTANCE.callEvent(event);
         return !event.getSprint();
     }
@@ -488,8 +489,8 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return event.getSprint();
     }
 
-    @WrapWithCondition(method = "clientSideCloseContainer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
-    private boolean preventCloseScreen(Minecraft instance, Screen screen) {
+    @WrapWithCondition(method = "clientSideCloseContainer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
+    private boolean preventCloseScreen(Gui instance, Screen screen) {
         // Prevent closing screen if the current screen is a client screen
         return !ScreenManager.isClientScreen(screen);
     }

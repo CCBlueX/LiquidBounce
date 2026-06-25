@@ -98,6 +98,12 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
             }
         }
         @JvmField
+        val FLOAT_VALIDATOR: Parameter.Verificator<Float> = Parameter.Verificator { sourceText ->
+            Result.ofNullable(
+                sourceText.toFloatOrNull()
+            ) { "'$sourceText' is not a valid float" }
+        }
+        @JvmField
         val BOOLEAN_VALIDATOR: Parameter.Verificator<Boolean> = Parameter.Verificator { sourceText ->
             when (sourceText.lowercase()) {
                 "yes", "on", "true" -> Result.Ok(true)

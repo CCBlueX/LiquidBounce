@@ -66,8 +66,8 @@ public abstract class MixinDisconnectedScreen extends MixinScreen {
         int x = this.width - 140;
         int y = this.height - 30;
         disconnectButton = (this.minecraft.allowsMultiplayer() ?
-                Button.builder(this.buttonText, button -> this.minecraft.setScreen(this.parent)) :
-                Button.builder(TO_TITLE, button -> this.minecraft.setScreen(new TitleScreen()))
+                Button.builder(this.buttonText, button -> this.minecraft.gui.setScreen(this.parent)) :
+                Button.builder(TO_TITLE, button -> this.minecraft.gui.setScreen(new TitleScreen()))
         ).bounds(x, y, 120, 20).build();
         addRenderableWidget(disconnectButton);
     }
