@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializ
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ItemConditionNode
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
+import java.io.Reader
 
 object AutoShopConfig {
 
@@ -43,7 +44,7 @@ object AutoShopConfig {
      * Loads [shopConfigPreset] and displays a notification depending on the result
      */
     fun loadAutoShopConfig(shopConfigPreset: ShopConfigPreset) : Boolean {
-        val result = load(shopConfigPreset)
+        val result = load(shopConfigPreset.reader())
         val message = ModuleAutoShop.message(if (result) "reloadSuccess" else "loadError")
 
         notification(message, ModuleAutoShop.name,
@@ -52,12 +53,10 @@ object AutoShopConfig {
         return result
     }
 
-    fun load(shopConfigPreset: ShopConfigPreset): Boolean {
+    private fun load(reader: Reader): Boolean {
         runCatching {
-            javaClass.getResourceAsStream(shopConfigPreset.internalPath).use { inputStream ->
-                check(inputStream != null) { "Failed to load resource: ${shopConfigPreset.internalPath}" }
-
-                val shopConfig = autoShopGson.fromJson(inputStream.reader(), ShopConfig::class.java)
+            reader.use { reader ->
+                val shopConfig = autoShopGson.fromJson(reader, ShopConfig::class.java)
 
                 // add items to AutoShop
                 ModuleAutoShop.onDisabled()
@@ -79,7 +78,7 @@ object AutoShopConfig {
  * Represents the locally available shop configurations
  */
 @Suppress("unused")
-enum class ShopConfigPreset(override val tag: String, localFileName: String) : Tagged {
+enum class ShopConfigPreset(override val tag: String, private val localFileName: String) : Tagged {
 
     PIKA_NETWORK("PikaNetwork", "pika-network"),
     BLOCKSMC("BlocksMC", "blocksmc"),
@@ -88,6 +87,11 @@ enum class ShopConfigPreset(override val tag: String, localFileName: String) : T
     FUNNYMC("FunnyMC", "funnymc"),
     DEXLAND("Dexland", "dexland");
 
-    val internalPath = "/resources/liquidbounce/data/shops/${localFileName}.json"
+    fun reader(): Reader {
+        val internalPath = "/resources/liquidbounce/data/shops/${localFileName}.json"
+        val inputStream = javaClass.getResourceAsStream(internalPath)
+        check(inputStream != null) { "Failed to load resource: $internalPath" }
+        return inputStream.bufferedReader()
+    }
 
 }

@@ -94,7 +94,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
      */
     object CustomLightmap : ToggleableValueGroup(this, "CustomLightmap", false) {
         val mode = choices("Mode", 0) {
-            arrayOf(EditorMode.SingleColor, )
+            arrayOf(EditorMode.SingleColor, EditorMode.Custom)
         }
 
         sealed class EditorMode(name: String) : Mode(name) {

@@ -137,7 +137,6 @@
 
   .module {
     position: relative;
-    contain: layout;
 
     .name {
       cursor: pointer;

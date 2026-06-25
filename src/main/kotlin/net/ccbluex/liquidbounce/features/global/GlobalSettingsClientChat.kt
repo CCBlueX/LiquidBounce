@@ -175,7 +175,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     @Suppress("unused")
     private val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
         val resolvableProfile = ResolvableProfile.createUnresolved(event.user.uuid)
-        withTimeoutOrNull(5000L) {
+        withTimeoutOrNull(5.seconds) {
             resolvableProfile.resolveProfile(mc.services().profileResolver).await()
         }
 

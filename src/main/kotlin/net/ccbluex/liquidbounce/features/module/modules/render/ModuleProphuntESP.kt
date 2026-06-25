@@ -68,8 +68,7 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
 
     @Suppress("unused")
     private val networkHandler = handler<PacketEvent> { event ->
-        val packet = event.packet
-        when (packet) {
+        when (val packet = event.packet) {
             is ClientboundBlockUpdatePacket if Tracking.BLOCK_UPDATES in tracking -> mc.execute {
                 renderer.addBlock(packet.pos, update = false)
             }
