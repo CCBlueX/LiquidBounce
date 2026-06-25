@@ -204,8 +204,7 @@ object RotationManager : EventListener {
         val partialTicks = event.partialTicks
 
         if (isRotatingAllowed(activeRotationTarget)
-            && activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK
-            && mc.options.cameraType.isFirstPerson()) {
+            && activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
             val playerRotation = playerRotation ?: return@handler
             val currentRotation = currentRotation ?: return@handler
             val timerSpeed = Timer.timerSpeed
@@ -219,8 +218,7 @@ object RotationManager : EventListener {
     private val mouseMovement = handler<MouseRotationEvent> { event ->
         val activeRotationTarget = this.activeRotationTarget ?: return@handler
         if (!isRotatingAllowed(activeRotationTarget) ||
-            activeRotationTarget.movementCorrection != MovementCorrection.CHANGE_LOOK ||
-            !mc.options.cameraType.isFirstPerson()) {
+            activeRotationTarget.movementCorrection != MovementCorrection.CHANGE_LOOK) {
             return@handler
         }
 
