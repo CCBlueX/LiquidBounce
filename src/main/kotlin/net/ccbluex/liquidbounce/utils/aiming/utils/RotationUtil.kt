@@ -49,9 +49,33 @@ object RotationUtil {
 
     val gcd: Double
         get() {
-            val f = mc.options.sensitivity().get() * 0.6F.toDouble() + 0.2F.toDouble()
-            return f * f * f * 8.0 * MOUSE_TURN_SCALE_DOUBLE
+            val sensitivityFactor = mouseSensitivityFactor()
+
+            return if (isOlderThanOrEqual1_12_2) {
+                (sensitivityFactor * MOUSE_TURN_SCALE_DOUBLE).toFloat().toDouble()
+            } else {
+                (sensitivityFactor.toFloat() * MOUSE_TURN_SCALE_FLOAT).toDouble()
+            }
         }
+
+    /**
+     * Calculates the sensitivity part from the vanilla mouse input path.
+     *
+     * [1.12.2 reference](https://github.com/WangTingZheng/mcp940/blob/d0c030a4139ce7cf3f284b180f0d9ea87bdf8141/src/minecraft/net/minecraft/client/renderer/EntityRenderer.java#L1268-L1299)
+     *
+     * @see net.minecraft.client.MouseHandler.turnPlayer
+     */
+    private fun mouseSensitivityFactor(): Double {
+        val sensitivity = mc.options.sensitivity().get()
+
+        return if (isOlderThanOrEqual1_12_2) {
+            val f = sensitivity.toFloat() * 0.6f + 0.2f
+            (f * f * f * 8.0f).toDouble()
+        } else {
+            val f = sensitivity * 0.6f + 0.2f
+            f * f * f * 8.0
+        }
+    }
 
     /**
      * Converts the values passed from `MouseHandler.turnPlayer` to the yaw/pitch delta applied by vanilla.
