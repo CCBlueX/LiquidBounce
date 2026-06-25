@@ -93,7 +93,7 @@ object SilentHotbar : EventListener {
 
 private class SilentHotbarState(
     val enforcedHotbarSlot: Int,
-    var requester: Any?,
-    var ticksUntilReset: Int,
-    var clientsideSlot: Int
+    val requester: Any?,
+    val ticksUntilReset: Int,
+    val clientsideSlot: Int
 )

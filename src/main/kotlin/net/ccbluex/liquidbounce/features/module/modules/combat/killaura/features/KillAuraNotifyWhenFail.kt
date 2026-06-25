@@ -90,7 +90,7 @@ internal object KillAuraNotifyWhenFail {
     }
 
     internal fun renderFailedHits(matrixStack: PoseStack) {
-        if (failedHits.isEmpty() || (!enabled || !Box.isSelected)) {
+        if (failedHits.isEmpty || (!enabled || !Box.isSelected)) {
             failedHits.clear()
             return
         }

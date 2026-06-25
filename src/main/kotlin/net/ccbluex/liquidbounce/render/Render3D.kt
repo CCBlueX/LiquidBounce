@@ -152,7 +152,7 @@ internal class BatchCollector {
             }
             bufferBuilders.clear()
 
-            if (builtBuffers.isEmpty()) {
+            if (builtBuffers.isEmpty) {
                 return
             }
 

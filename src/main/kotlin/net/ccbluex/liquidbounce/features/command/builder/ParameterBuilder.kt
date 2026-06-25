@@ -72,10 +72,9 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         }
         @JvmStatic
         fun intRange(min: Int, max: Int): Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
-            val integer = sourceText.toIntOrNull()
-            when {
-                integer == null -> Result.Error("'$sourceText' is not a valid integer")
-                integer in min..max -> Result.Ok(integer)
+            when (val integer = sourceText.toIntOrNull()) {
+                null -> Result.Error("'$sourceText' is not a valid integer")
+                in min..max -> Result.Ok(integer)
                 else -> Result.Error("The integer must be between $min and $max")
             }
         }
@@ -90,10 +89,9 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         }
         @JvmStatic
         fun floatRange(min: Float, max: Float): Parameter.Verificator<Float> = Parameter.Verificator { sourceText ->
-            val float = sourceText.toFloatOrNull()
-            when {
-                float == null -> Result.Error("'$sourceText' is not a valid float")
-                float in min..max -> Result.Ok(float)
+            when (val float = sourceText.toFloatOrNull()) {
+                null -> Result.Error("'$sourceText' is not a valid float")
+                in min..max -> Result.Ok(float)
                 else -> Result.Error("The float must be between $min and $max")
             }
         }
