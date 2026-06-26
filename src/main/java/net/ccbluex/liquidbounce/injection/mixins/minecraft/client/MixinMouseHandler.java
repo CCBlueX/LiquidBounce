@@ -20,7 +20,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.ccbluex.liquidbounce.additions.MouseHandlerAddition;
@@ -108,16 +109,14 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
         return original || ModuleZoom.INSTANCE.getRunning();
     }
 
-    @WrapWithCondition(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"), require = 1, allow = 1)
-    private boolean modifyMouseRotationInput(LocalPlayer instance, double cursorDeltaX, double cursorDeltaY) {
+    @WrapOperation(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"), require = 1, allow = 1)
+    private void modifyMouseRotationInput(LocalPlayer instance, double cursorDeltaX, double cursorDeltaY, Operation<Void> original) {
         final MouseRotationEvent event = new MouseRotationEvent(cursorDeltaX, cursorDeltaY);
         EventManager.INSTANCE.callEvent(event);
 
         if (!event.isCancelled()) {
-            instance.turn(event.getCursorDeltaX(), event.getCursorDeltaY());
+            original.call(instance, event.getCursorDeltaX(), event.getCursorDeltaY());
         }
-
-        return false;
     }
 
 }
