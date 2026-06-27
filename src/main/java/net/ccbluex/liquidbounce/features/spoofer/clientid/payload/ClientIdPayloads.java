@@ -19,18 +19,33 @@
 package net.ccbluex.liquidbounce.features.spoofer.clientid.payload;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 
-public record ClientIdPackListPayload(String list) implements CustomPacketPayload {
+import java.util.function.Function;
 
-    public static final CustomPacketPayload.Type<ClientIdPackListPayload> ID = ClientIdPayloads.type("packlist");
-    public static final StreamCodec<RegistryFriendlyByteBuf, ClientIdPackListPayload> CODEC =
-        ClientIdPayloads.stringCodec(ClientIdPackListPayload::list, ClientIdPackListPayload::new);
+final class ClientIdPayloads {
 
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return ID;
+    private static final String NAMESPACE = "clientid";
+
+    private ClientIdPayloads() {
+    }
+
+    static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(NAMESPACE, path);
+    }
+
+    static <T extends CustomPacketPayload> CustomPacketPayload.Type<T> type(String path) {
+        return new CustomPacketPayload.Type<>(id(path));
+    }
+
+    static <T extends CustomPacketPayload> StreamCodec<RegistryFriendlyByteBuf, T> stringCodec(
+        Function<T, String> valueGetter,
+        Function<String, T> factory
+    ) {
+        return StreamCodec.composite(ByteBufCodecs.STRING_UTF8, valueGetter, factory);
     }
 
 }

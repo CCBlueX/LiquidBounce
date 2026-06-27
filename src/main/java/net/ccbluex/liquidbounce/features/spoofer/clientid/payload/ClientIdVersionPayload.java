@@ -19,18 +19,14 @@
 package net.ccbluex.liquidbounce.features.spoofer.clientid.payload;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
 
 public record ClientIdVersionPayload(String version) implements CustomPacketPayload {
 
-    public static final Identifier PAYLOAD_ID = Identifier.fromNamespaceAndPath("clientid", "clientversion");
-    public static final CustomPacketPayload.Type<ClientIdVersionPayload> ID =
-        new CustomPacketPayload.Type<>(PAYLOAD_ID);
+    public static final CustomPacketPayload.Type<ClientIdVersionPayload> ID = ClientIdPayloads.type("clientversion");
     public static final StreamCodec<RegistryFriendlyByteBuf, ClientIdVersionPayload> CODEC =
-        StreamCodec.composite(ByteBufCodecs.STRING_UTF8, ClientIdVersionPayload::version, ClientIdVersionPayload::new);
+        ClientIdPayloads.stringCodec(ClientIdVersionPayload::version, ClientIdVersionPayload::new);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

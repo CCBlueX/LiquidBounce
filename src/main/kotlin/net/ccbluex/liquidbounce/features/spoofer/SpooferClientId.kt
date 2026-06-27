@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.spoofer.clientid.payload.ClientIdModChe
 import net.ccbluex.liquidbounce.features.spoofer.clientid.payload.ClientIdModListPayload
 import net.ccbluex.liquidbounce.features.spoofer.clientid.payload.ClientIdPackListPayload
 import net.ccbluex.liquidbounce.features.spoofer.clientid.payload.ClientIdVersionPayload
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
@@ -47,6 +48,7 @@ import net.minecraft.network.protocol.game.ClientboundLoginPacket
 object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled = false) {
 
     private const val DEFAULT_VERSION = "1.1.3"
+    private const val CLIENT_ID_MOD_ID = "clientid"
     private const val MINIMUM_MOD_COUNT = 5
 
     private val defaultSpoofedMods = listOf(
@@ -54,7 +56,7 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
         "java",
         "fabricloader",
         "fabric-api",
-        "clientid"
+        CLIENT_ID_MOD_ID
     )
 
     private val modListMode by enumChoice("ModList", ModListMode.SPOOFED)
@@ -65,12 +67,19 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
     private val sendPackUpdates by boolean("SendPackUpdates", true)
 
     private var sentInitialPayloads = false
-
-    init {
-        registerPayloadTypes()
-    }
+    private var payloadTypesRegistered = false
 
     override fun onToggled(state: Boolean): Boolean {
+        if (state && FabricLoader.getInstance().isModLoaded(CLIENT_ID_MOD_ID)) {
+            chat("ClientIDSpoofer is disabled because the ClientID mod is already installed.")
+            return false
+        }
+
+        if (state && !ensurePayloadTypesRegistered()) {
+            chat("ClientIDSpoofer cannot register ClientID payload channels.")
+            return false
+        }
+
         val acceptedState = super.onToggled(state)
 
         if (acceptedState) {
@@ -112,6 +121,10 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
             return
         }
 
+        if (!ensurePayloadTypesRegistered()) {
+            return
+        }
+
         sentInitialPayloads = true
         ClientPlayNetworking.send(ClientIdModCheckPayload(mc.user.profileId.toString()))
         ClientPlayNetworking.send(ClientIdModListPayload(modList()))
@@ -124,7 +137,7 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
             return
         }
 
-        if (mc.connection != null) {
+        if (mc.connection != null && ensurePayloadTypesRegistered()) {
             ClientPlayNetworking.send(ClientIdPackListPayload(packList()))
         }
     }
@@ -137,8 +150,8 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
             }
         }.normalizedEntries().toMutableList()
 
-        if ("clientid" !in mods) {
-            mods += "clientid"
+        if (CLIENT_ID_MOD_ID !in mods) {
+            mods += CLIENT_ID_MOD_ID
         }
 
         defaultSpoofedMods.forEach { mod ->
@@ -163,15 +176,21 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
             .filter { entry -> entry.isNotEmpty() }
             .distinct()
 
-    private fun registerPayloadTypes() {
-        runCatching {
+    private fun ensurePayloadTypesRegistered(): Boolean {
+        if (payloadTypesRegistered) {
+            return true
+        }
+
+        // Register lazily so the ClientID channels are not exposed while the spoofer is disabled.
+        return runCatching {
             PayloadTypeRegistry.serverboundPlay().register(ClientIdModCheckPayload.ID, ClientIdModCheckPayload.CODEC)
             PayloadTypeRegistry.serverboundPlay().register(ClientIdModListPayload.ID, ClientIdModListPayload.CODEC)
             PayloadTypeRegistry.serverboundPlay().register(ClientIdPackListPayload.ID, ClientIdPackListPayload.CODEC)
             PayloadTypeRegistry.serverboundPlay().register(ClientIdVersionPayload.ID, ClientIdVersionPayload.CODEC)
+            payloadTypesRegistered = true
         }.onFailure { error ->
-            logger.debug("ClientID payload types were already registered or unavailable.", error)
-        }
+            logger.debug("ClientID payload types could not be registered.", error)
+        }.isSuccess
     }
 
     private enum class ModListMode(override val tag: String) : Tagged {
