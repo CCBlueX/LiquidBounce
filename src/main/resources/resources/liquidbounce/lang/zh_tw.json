@@ -412,7 +412,6 @@
   "liquidbounce.module.capeTransfer.description": "自動將你的捐贈者披風轉移到當前帳號。在 https://liquidbounce.net/donate 捐贈",
   "liquidbounce.module.chestStealer.description": "自動拿走箱子里的物品。",
   "liquidbounce.module.clickGUI.description": "顯示一個易於使用的選單，用於開關或設定模組。",
-  "liquidbounce.module.clientIdSpoofer.description": "透過向伺服器傳送可設定的模組與資源包清單來模擬 ClientID 模組。",
   "liquidbounce.module.clientSpoofer.description": "將你的遊戲客戶端標識偽裝為另一個。",
   "liquidbounce.module.clip.description": "允許你穿過方塊。",
   "liquidbounce.module.clip.messages.whoosh": "嗖嗖！",

@@ -344,7 +344,6 @@
     "liquidbounce.module.capeTransfer.description": "Draagt je donatorcape automatisch over naar je huidige account. Doneer via liquidbounce.net/donate.",
     "liquidbounce.module.chestStealer.description": "Steelt automatisch alle items uit een kist.",
     "liquidbounce.module.clickGUI.description": "Toont een GUI-menu waarin je modules kunt beheren en configureren.",
-    "liquidbounce.module.clientIdSpoofer.description": "Emuleert de ClientID-mod door een configureerbare lijst met mods en resourcepacks naar servers te sturen.",
     "liquidbounce.module.clientSpoofer.description": "Spooft de naam van je gameclient.",
     "liquidbounce.module.clip.description": "Laat je door blokken heen clippen.",
     "liquidbounce.module.clip.messages.whoosh": "Zoef!",

@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.spoofer
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
@@ -49,22 +48,14 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
 
     private const val DEFAULT_VERSION = "1.1.3"
     private const val CLIENT_ID_MOD_ID = "clientid"
-    private const val MINIMUM_MOD_COUNT = 5
 
-    private val defaultSpoofedMods = listOf(
+    private val spoofedMods = listOf(
         "minecraft",
         "java",
         "fabricloader",
         "fabric-api",
         CLIENT_ID_MOD_ID
     )
-
-    private val modListMode by enumChoice("ModList", ModListMode.SPOOFED)
-    private val spoofedMods by textList("SpoofedMods", defaultSpoofedMods.toMutableList())
-    private val resourcePackMode by enumChoice("PackList", ResourcePackMode.CURRENT)
-    private val spoofedPacks by textList("SpoofedPacks", mutableListOf("Default"))
-    private val clientIdVersion by text("Version", DEFAULT_VERSION)
-    private val sendPackUpdates by boolean("SendPackUpdates", true)
 
     private var sentInitialPayloads = false
     private var payloadTypesRegistered = false
@@ -102,7 +93,7 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
 
     @Suppress("unused")
     private val resourcePackReloadHandler = handler<ResourceReloadEvent> {
-        if (sentInitialPayloads && sendPackUpdates) {
+        if (sentInitialPayloads) {
             sendPackList()
         }
     }
@@ -129,7 +120,7 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
         ClientPlayNetworking.send(ClientIdModCheckPayload(mc.user.profileId.toString()))
         ClientPlayNetworking.send(ClientIdModListPayload(modList()))
         ClientPlayNetworking.send(ClientIdPackListPayload(packList()))
-        ClientPlayNetworking.send(ClientIdVersionPayload(clientIdVersion.trim().ifEmpty { DEFAULT_VERSION }))
+        ClientPlayNetworking.send(ClientIdVersionPayload(DEFAULT_VERSION))
     }
 
     private fun sendPackList() {
@@ -142,32 +133,10 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
         }
     }
 
-    private fun modList(): String {
-        val mods = when (modListMode) {
-            ModListMode.SPOOFED -> spoofedMods
-            ModListMode.INSTALLED -> FabricLoader.getInstance().allMods.mapTo(mutableListOf()) { mod ->
-                mod.metadata.id
-            }
-        }.normalizedEntries().toMutableList()
+    private fun modList() = spoofedMods.normalizedEntries().joinToString(",")
 
-        if (CLIENT_ID_MOD_ID !in mods) {
-            mods += CLIENT_ID_MOD_ID
-        }
-
-        defaultSpoofedMods.forEach { mod ->
-            if (mods.size < MINIMUM_MOD_COUNT && mod !in mods) {
-                mods += mod
-            }
-        }
-
-        return mods.joinToString(",")
-    }
-
-    private fun packList() = when (resourcePackMode) {
-        ResourcePackMode.CURRENT -> mc.resourcePackRepository.selectedPacks.mapTo(mutableListOf()) { pack ->
-            pack.title.string
-        }
-        ResourcePackMode.SPOOFED -> spoofedPacks
+    private fun packList() = mc.resourcePackRepository.selectedPacks.mapTo(mutableListOf()) { pack ->
+        pack.title.string
     }.normalizedEntries().ifEmpty { listOf("Default") }.joinToString(",")
 
     private fun Iterable<String>.normalizedEntries() =
@@ -191,16 +160,6 @@ object SpooferClientId : ToggleableValueGroup(name = "ClientIDSpoofer", enabled 
         }.onFailure { error ->
             logger.debug("ClientID payload types could not be registered.", error)
         }.isSuccess
-    }
-
-    private enum class ModListMode(override val tag: String) : Tagged {
-        SPOOFED("Spoofed"),
-        INSTALLED("Installed")
-    }
-
-    private enum class ResourcePackMode(override val tag: String) : Tagged {
-        CURRENT("Current"),
-        SPOOFED("Spoofed")
     }
 
 }

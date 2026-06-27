@@ -311,7 +311,6 @@
   "liquidbounce.module.capeTransfer.description": "Überträgt dir den Spenderumhang automatisch auf deinen aktuellen Account. Spende unter liquidbounce.net/donate.",
   "liquidbounce.module.chestStealer.description": "Stiehlt automatisch alle Gegenstände aus einer Kiste.",
   "liquidbounce.module.clickGUI.description": "Zeigt dir ein benutzerfreundliches Menü zum Umschalten und Konfigurieren von Modulen.",
-  "liquidbounce.module.clientIdSpoofer.description": "Emuliert den ClientID-Mod, indem eine konfigurierbare Mod- und Ressourcenpaketliste an Server gesendet wird.",
   "liquidbounce.module.clientSpoofer.description": "Verfälscht die Client deines Spiel-Clients mit einer anderen.",
   "liquidbounce.module.clip.description": "Ermöglicht das umgehen von Blöcken.",
   "liquidbounce.module.clip.messages.whoosh": "Zack!",
