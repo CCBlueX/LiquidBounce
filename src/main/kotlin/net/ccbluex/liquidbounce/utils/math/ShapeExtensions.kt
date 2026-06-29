@@ -22,10 +22,6 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
-import it.unimi.dsi.fastutil.longs.LongArrayList
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet
-import net.ccbluex.fastutil.forEachLong
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
@@ -452,6 +448,24 @@ private class ShapeSurfaceMesh(
     private fun index(x: Int, y: Int, z: Int): Int = (x * ySize + y) * zSize + z
 
     companion object {
+        /**
+         * @see VoxelShape.findIndex
+         */
+        private fun DoubleArray.findIndex(value: Double): Int {
+            var low = 0
+            var high = size
+            while (low < high) {
+                val mid = (low + high) ushr 1
+                if (value < this[mid]) high = mid else low = mid + 1
+            }
+            val index = low - 1
+            if (index !in indices || this[index] != value) {
+                throw IllegalArgumentException("Could not resolve coordinate index for $value")
+            }
+
+            return index
+        }
+
         fun of(shape: VoxelShape): ShapeSurfaceMesh {
             val xs = shape.getCoords(Direction.Axis.X).toDoubleArray()
             val ys = shape.getCoords(Direction.Axis.Y).toDoubleArray()
@@ -464,12 +478,12 @@ private class ShapeSurfaceMesh(
             val mesh = ShapeSurfaceMesh(xs, ys, zs, occupancy)
 
             shape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-                val startX = xs.indexOfCoordinate(minX)
-                val startY = ys.indexOfCoordinate(minY)
-                val startZ = zs.indexOfCoordinate(minZ)
-                val endX = xs.indexOfCoordinate(maxX)
-                val endY = ys.indexOfCoordinate(maxY)
-                val endZ = zs.indexOfCoordinate(maxZ)
+                val startX = xs.findIndex(minX)
+                val startY = ys.findIndex(minY)
+                val startZ = zs.findIndex(minZ)
+                val endX = xs.findIndex(maxX)
+                val endY = ys.findIndex(maxY)
+                val endZ = zs.findIndex(maxZ)
 
                 for (x in startX until endX) {
                     for (y in startY until endY) {
@@ -616,15 +630,5 @@ private data class FaceComponent(
     val planeIndex: Int,
     val mask: PlaneMask,
 )
-
-private fun DoubleArray.indexOfCoordinate(value: Double): Int {
-    for (index in indices) {
-        if (approximatelyEquals(this[index], value)) {
-            return index
-        }
-    }
-
-    throw IllegalArgumentException("Could not resolve coordinate index for $value")
-}
 
 private fun approximatelyEquals(a: Double, b: Double): Boolean = kotlin.math.abs(a - b) <= SHAPE_EPSILON
