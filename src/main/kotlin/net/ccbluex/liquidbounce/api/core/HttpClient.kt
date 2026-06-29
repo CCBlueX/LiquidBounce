@@ -24,6 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
 import net.ccbluex.liquidbounce.authlib.Authlib
@@ -202,7 +203,9 @@ object HttpClient {
         file: File,
         agent: String = DEFAULT_AGENT,
         progressListener: OkHttpProgressInterceptor.ProgressListener? = null
-    ) = request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
+    ) = withContext(Dispatchers.IO) {
+        request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
+    }
 
     // For Java and JS
     @JvmStatic

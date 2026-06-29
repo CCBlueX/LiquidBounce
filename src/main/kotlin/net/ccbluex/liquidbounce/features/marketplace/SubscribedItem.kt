@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.marketplace
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.api.core.HttpClient.download
@@ -138,9 +139,11 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
                 }
             }
 
-            download(revisionUrl, revisionArchiveFile, progressListener = taskProgressUpdater)
-            // TODO: Check checksum
-            extractZip(revisionArchiveFile, revisionDir)
+            withContext(Dispatchers.IO) {
+                download(revisionUrl, revisionArchiveFile, progressListener = taskProgressUpdater)
+                // TODO: Check checksum
+                extractZip(revisionArchiveFile, revisionDir)
+            }
 
             installedRevisionId = revisionId
             ConfigSystem.store(MarketplaceManager)
