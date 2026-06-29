@@ -205,98 +205,6 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
     }
 }
 
-data class PositionedVoxelShape<K>(
-    val blockPos: Long,
-    val key: K,
-    val shape: VoxelShape,
-)
-
-@Suppress("CognitiveComplexMethod", "LongMethod")
-fun <K> Collection<PositionedVoxelShape<K>>.mergeAdjacentVoxelShapes(): List<PositionedVoxelShape<K>> {
-    if (this.isEmpty()) return emptyList()
-
-    val groupedShapes = HashMap<K, Long2ObjectOpenHashMap<VoxelShape>>()
-
-    for ((blockPos, key, shape) in this) {
-        val shapesByPos = groupedShapes.getOrPut(key, ::Long2ObjectOpenHashMap)
-        shapesByPos.put(blockPos, shape)
-    }
-
-    if (groupedShapes.isEmpty()) {
-        return emptyList()
-    }
-
-    val visited = LongOpenHashSet()
-    val queue = LongArrayList()
-    val componentEntries = LongArrayList()
-
-    val result = ArrayList<PositionedVoxelShape<K>>()
-    for ((key, shapesByPos) in groupedShapes) {
-        visited.clear()
-        queue.clear()
-        componentEntries.clear()
-
-        shapesByPos.keys.forEachLong { startPos ->
-            if (!visited.add(startPos)) {
-                return@forEachLong
-            }
-
-            componentEntries.clear()
-            queue.clear()
-            queue.add(startPos)
-            var queueIndex = 0
-
-            var originLong = startPos
-
-            while (queueIndex < queue.size) {
-                val currentPos = queue.getLong(queueIndex++)
-                if (!shapesByPos.containsKey(currentPos)) continue
-
-                componentEntries.add(currentPos)
-
-                if (BlockPosAsLongComparator.compare(currentPos, originLong) < 0) {
-                    originLong = currentPos
-                }
-
-                for (direction in Direction.entries) {
-                    val neighborPos = BlockPos.offset(currentPos, direction)
-                    if (shapesByPos.containsKey(neighborPos) && visited.add(neighborPos)) {
-                        queue.add(neighborPos)
-                    }
-                }
-            }
-
-            val originX = BlockPos.getX(originLong)
-            val originY = BlockPos.getY(originLong)
-            val originZ = BlockPos.getZ(originLong)
-
-            var mergedShape = Shapes.empty()
-            for (i in componentEntries.indices) {
-                val componentPos = componentEntries.getLong(i)
-                val componentShape = shapesByPos.get(componentPos) ?: continue
-
-                mergedShape = Shapes.joinUnoptimized(
-                    mergedShape,
-                    componentShape.move(
-                        (BlockPos.getX(componentPos) - originX).toDouble(),
-                        (BlockPos.getY(componentPos) - originY).toDouble(),
-                        (BlockPos.getZ(componentPos) - originZ).toDouble(),
-                    ),
-                    BooleanOp.OR,
-                )
-            }
-
-            result += PositionedVoxelShape(
-                blockPos = originLong,
-                key = key,
-                shape = mergedShape.optimize(),
-            )
-        }
-    }
-
-    return result
-}
-
 private class ShapeSurfaceMesh(
     private val xs: DoubleArray,
     private val ys: DoubleArray,
@@ -703,6 +611,7 @@ private class PlaneMask(
     }
 }
 
+@JvmRecord
 private data class FaceComponent(
     val planeIndex: Int,
     val mask: PlaneMask,
