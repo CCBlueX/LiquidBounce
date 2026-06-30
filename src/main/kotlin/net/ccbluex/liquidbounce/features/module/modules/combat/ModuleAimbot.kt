@@ -86,6 +86,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     private val ignores by multiEnumChoice<IgnoreOpened>("Ignore")
 
     private var targetRotation: Rotation? = null
+    private var rawTargetPitch: Float? = null
     private var playerRotation: Rotation? = null
 
     @Suppress("unused", "ComplexCondition")
@@ -95,10 +96,14 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         if (!requirementsMet) {
             targetTracker.reset()
             targetRotation = null
+            rawTargetPitch = null
             return@handler
         }
 
-        targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
+        val nextTargetRotation = findNextTargetRotation()
+        rawTargetPitch = nextTargetRotation?.second?.rotation?.pitch
+
+        targetRotation = nextTargetRotation?.let { (target, rotation) ->
             angleSmooth.activeMode.process(
                 RotationTarget(
                     rotation = rotation.rotation,
@@ -160,9 +165,10 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     private fun lookAt(partialTicks: Float) {
         val playerRotation = playerRotation ?: return
         val targetRotation = targetRotation ?: return
+        val rawTargetPitch = rawTargetPitch ?: return
         val timerSpeed = Timer.timerSpeed
         val interpolatedRotation = playerRotation.interpolateTo(targetRotation, timerSpeed * partialTicks)
-        val inVerticalDeadzone = verticalDeadzone > 0f && abs(targetRotation.pitch) >= 90f - verticalDeadzone
+        val inVerticalDeadzone = verticalDeadzone > 0f && abs(rawTargetPitch) >= 90f - verticalDeadzone
 
         player.setRotation(
             Rotation(
