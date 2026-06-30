@@ -36,12 +36,25 @@ data class PositionedVoxelShape<K>(
     val shape: VoxelShape,
 )
 
+/**
+ * Replacement of `ObjectRef<VoxelShape>`
+ */
+internal class ShapeJoiner {
+    var value = Shapes.empty()
+        private set
+
+    fun add(shape: VoxelShape) {
+        value = Shapes.joinUnoptimized(shape, value, BooleanOp.OR)
+    }
+}
+
 @Suppress("CognitiveComplexMethod", "LongMethod")
 fun <K> Collection<PositionedVoxelShape<K>>.mergeAdjacentVoxelShapes(): List<PositionedVoxelShape<K>> {
     if (this.isEmpty()) return emptyList()
 
     val groupedShapes = buildMap {
         for ((blockPos, key, shape) in this@mergeAdjacentVoxelShapes) {
+            if (shape.isEmpty) continue
             val shapesByPos = this.getOrPut(key, ::Long2ObjectOpenHashMap)
             shapesByPos.put(blockPos, shape)
         }

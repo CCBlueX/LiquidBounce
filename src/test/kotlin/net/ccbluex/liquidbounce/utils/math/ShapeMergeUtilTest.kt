@@ -200,6 +200,55 @@ class ShapeMergeUtilTest {
     }
 
     @Test
+    fun `mergeAdjacentVoxelShapes ignores empty shapes in input`() {
+        val merged = listOf(
+            positionedShape(0, 0, 0, 1),
+            PositionedVoxelShape(BlockPos.asLong(1, 0, 0), 1, Shapes.empty()),
+            positionedShape(2, 0, 0, 1),
+        ).mergeAdjacentVoxelShapes()
+
+        assertSamePositionedShapes(
+            expected = listOf(
+                PositionedShapeSpec(
+                    blockPos = BlockPos.asLong(0, 0, 0),
+                    key = 1,
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
+                ),
+                PositionedShapeSpec(
+                    blockPos = BlockPos.asLong(2, 0, 0),
+                    key = 1,
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
+                ),
+            ),
+            actual = merged.toShapeSpecs(),
+        )
+    }
+
+    @Test
+    fun `mergeAdjacentVoxelShapes does not merge shapes that only touch at a corner`() {
+        val merged = listOf(
+            positionedShape(0, 0, 0, 1),
+            positionedShape(1, 0, 1, 1),
+        ).mergeAdjacentVoxelShapes()
+
+        assertSamePositionedShapes(
+            expected = listOf(
+                PositionedShapeSpec(
+                    blockPos = BlockPos.asLong(0, 0, 0),
+                    key = 1,
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
+                ),
+                PositionedShapeSpec(
+                    blockPos = BlockPos.asLong(1, 0, 1),
+                    key = 1,
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
+                ),
+            ),
+            actual = merged.toShapeSpecs(),
+        )
+    }
+
+    @Test
     fun `mergeAdjacentVoxelShapes matches naive merge on random data`() {
         val seeds = intArrayOf(1001, 2002, 3003)
 
@@ -265,7 +314,7 @@ class ShapeMergeUtilTest {
         val visited = BitSet(items.size)
 
         for (startIndex in items.indices) {
-            if (visited[startIndex]) {
+            if (visited[startIndex] || items[startIndex].shape.isEmpty) {
                 continue
             }
 
@@ -280,7 +329,7 @@ class ShapeMergeUtilTest {
                 val current = items[currentIndex]
 
                 for (candidateIndex in items.indices) {
-                    if (visited[candidateIndex]) {
+                    if (visited[candidateIndex] || items[candidateIndex].shape.isEmpty) {
                         continue
                     }
 

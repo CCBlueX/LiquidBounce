@@ -26,7 +26,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.BooleanOp
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.ToDoubleFunction
@@ -159,7 +158,7 @@ fun VoxelShape.forAllSideOutlineEdges(
 }
 
 /**
- * Shrinks a VoxelShape by the specified amounts on selected axes.
+ * Shrinks a [VoxelShape] by the specified amounts on selected axes.
  */
 @Suppress("CognitiveComplexMethod")
 fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelShape {
@@ -171,7 +170,7 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
         )
 
         else -> {
-            var shape = Shapes.empty()
+            val shape = ShapeJoiner()
 
             this.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
                 val width = maxX - minX
@@ -192,11 +191,11 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
                         maxZ - (if (z > 0) z else 0.0)
                     )
 
-                    shape = Shapes.joinUnoptimized(shape, shrunkBox, BooleanOp.OR)
+                    shape.add(shrunkBox)
                 }
             }
 
-            shape
+            shape.value
         }
     }
 }

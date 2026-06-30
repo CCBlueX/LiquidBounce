@@ -139,6 +139,23 @@ class ShapeExtensionsTest {
     }
 
     @Test
+    fun `forAllFaces handles sub-block thin shape like fence post`() {
+        val fencePost = Shapes.box(0.375, 0.0, 0.375, 0.625, 1.0, 0.625)
+
+        assertSameFaces(
+            expected = listOf(
+                face(Direction.DOWN, 0.375, 0.0, 0.375, 0.625, 0.0, 0.625),
+                face(Direction.UP, 0.375, 1.0, 0.375, 0.625, 1.0, 0.625),
+                face(Direction.NORTH, 0.375, 0.0, 0.375, 0.625, 1.0, 0.375),
+                face(Direction.SOUTH, 0.375, 0.0, 0.625, 0.625, 1.0, 0.625),
+                face(Direction.WEST, 0.375, 0.0, 0.375, 0.375, 1.0, 0.625),
+                face(Direction.EAST, 0.625, 0.0, 0.375, 0.625, 1.0, 0.625),
+            ),
+            actual = fencePost.collectFacesForTest(),
+        )
+    }
+
+    @Test
     fun `forAllSideFaces returns only the hit connected component`() {
         val shape = Shapes.or(
             Shapes.box(0.0, 0.0, 0.0, 0.5, 1.0, 0.4),
@@ -161,6 +178,29 @@ class ShapeExtensionsTest {
         assertSameFaces(
             expected = emptyList(),
             actual = shape.collectSideFacesForTest(Direction.WEST, Vec3(0.0, 0.5, 0.5)),
+        )
+    }
+
+    @Test
+    fun `forAllSideFaces resolves correct component when hit is exactly on face boundary`() {
+        val shape = Shapes.or(
+            Shapes.box(0.0, 0.0, 0.0, 0.5, 1.0, 0.4),
+            Shapes.box(0.0, 0.0, 0.6, 0.5, 1.0, 1.0),
+        )
+
+        assertSameFaces(
+            expected = listOf(face(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 0.4)),
+            actual = shape.collectSideFacesForTest(Direction.WEST, Vec3(0.0, 0.5, 0.4)),
+        )
+    }
+
+    @Test
+    fun `forAllSideFaces returns empty when hit is on correct side but behind the face`() {
+        val shape = Shapes.box(0.0, 0.0, 0.0, 0.5, 1.0, 1.0)
+
+        assertSameFaces(
+            expected = emptyList(),
+            actual = shape.collectSideFacesForTest(Direction.WEST, Vec3(0.25, 0.5, 0.5)),
         )
     }
 
@@ -213,6 +253,26 @@ class ShapeExtensionsTest {
                 actual = Shapes.block().collectSideOutlineEdgesForTest(side, centerOfCubeFace(side)),
             )
         }
+    }
+
+    @Test
+    fun `forAllSideOutlineEdges returns L-shaped perimeter for notch face`() {
+        val shape = Shapes.or(
+            Shapes.box(0.0, 0.0, 0.0, 1.0, 0.5, 0.5),
+            Shapes.box(0.0, 0.0, 0.5, 0.5, 1.0, 1.0),
+        )
+
+        assertSameLines(
+            expected = listOf(
+                line(0.0, 0.0, 0.0, 0.0, 0.0, 1.0),
+                line(0.0, 0.5, 0.0, 0.0, 0.5, 0.5),
+                line(0.0, 1.0, 0.5, 0.0, 1.0, 1.0),
+                line(0.0, 0.0, 0.0, 0.0, 0.5, 0.0),
+                line(0.0, 0.5, 0.5, 0.0, 1.0, 0.5),
+                line(0.0, 0.0, 1.0, 0.0, 1.0, 1.0),
+            ),
+            actual = shape.collectSideOutlineEdgesForTest(Direction.WEST, Vec3(0.0, 0.25, 0.25)),
+        )
     }
 
     private fun expectedCubeFace(side: Direction): FaceSpec = when (side) {
