@@ -20,19 +20,22 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.shapes.BooleanOp
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.util.BitSet
+import kotlin.random.Random
 
 class ShapeMergeUtilTest {
 
     @Test
     fun `mergeAdjacentVoxelShapes returns empty list for empty input`() {
-        assertEquals(
-            emptyList<PositionedShapeSpec>(),
-            emptyList<PositionedVoxelShape<Int>>().mergeAdjacentVoxelShapes().toSpecs(),
+        assertSamePositionedShapes(
+            expected = emptyList(),
+            actual = emptyList<PositionedVoxelShape<Int>>().mergeAdjacentVoxelShapes().toShapeSpecs(),
         )
     }
 
@@ -43,15 +46,15 @@ class ShapeMergeUtilTest {
             positionedShape(0, 0, 0, 1),
         ).mergeAdjacentVoxelShapes()
 
-        assertEquals(
-            listOf(
+        assertSamePositionedShapes(
+            expected = listOf(
                 PositionedShapeSpec(
                     blockPos = BlockPos.asLong(0, 0, 0),
                     key = 1,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 2.0, 1.0, 1.0)),
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 2.0, 1.0, 1.0)),
                 )
             ),
-            merged.toSpecs(),
+            actual = merged.toShapeSpecs(),
         )
     }
 
@@ -62,20 +65,20 @@ class ShapeMergeUtilTest {
             positionedShape(2, 0, 0, 1),
         ).mergeAdjacentVoxelShapes()
 
-        assertEquals(
-            listOf(
+        assertSamePositionedShapes(
+            expected = listOf(
                 PositionedShapeSpec(
                     blockPos = BlockPos.asLong(0, 0, 0),
                     key = 1,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
                 ),
                 PositionedShapeSpec(
                     blockPos = BlockPos.asLong(2, 0, 0),
                     key = 1,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
                 ),
             ),
-            merged.toSpecs(),
+            actual = merged.toShapeSpecs(),
         )
     }
 
@@ -86,20 +89,20 @@ class ShapeMergeUtilTest {
             positionedShape(1, 0, 0, 2),
         ).mergeAdjacentVoxelShapes()
 
-        assertEquals(
-            listOf(
+        assertSamePositionedShapes(
+            expected = listOf(
                 PositionedShapeSpec(
                     blockPos = BlockPos.asLong(0, 0, 0),
                     key = 1,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
                 ),
                 PositionedShapeSpec(
                     blockPos = BlockPos.asLong(1, 0, 0),
                     key = 2,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
                 ),
             ),
-            merged.toSpecs(),
+            actual = merged.toShapeSpecs(),
         )
     }
 
@@ -112,16 +115,100 @@ class ShapeMergeUtilTest {
             positionedShape(1, 0, 0, 1, slab),
         ).mergeAdjacentVoxelShapes()
 
-        assertEquals(
-            listOf(
+        assertSamePositionedShapes(
+            expected = listOf(
                 PositionedShapeSpec(
                     blockPos = BlockPos.asLong(0, 0, 0),
                     key = 1,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 2.0, 0.5, 1.0)),
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 2.0, 0.5, 1.0)),
                 )
             ),
-            merged.toSpecs(),
+            actual = merged.toShapeSpecs(),
         )
+    }
+
+    @Test
+    fun `mergeAdjacentVoxelShapes merges transitive chains across all axes`() {
+        val merged = listOf(
+            positionedShape(0, 2, 0, 1),
+            positionedShape(0, 1, 0, 1),
+            positionedShape(0, 1, 1, 1),
+            positionedShape(1, 1, 1, 1),
+        ).mergeAdjacentVoxelShapes()
+
+        assertSamePositionedShapes(
+            expected = listOf(
+                PositionedShapeSpec(
+                    blockPos = BlockPos.asLong(0, 1, 0),
+                    key = 1,
+                    boxes = listOf(
+                        AABB(0.0, 0.0, 0.0, 1.0, 1.0, 2.0),
+                        AABB(0.0, 1.0, 0.0, 1.0, 2.0, 1.0),
+                        AABB(1.0, 0.0, 1.0, 2.0, 1.0, 2.0),
+                    ),
+                )
+            ),
+            actual = merged.toShapeSpecs(),
+        )
+    }
+
+    @Test
+    fun `mergeAdjacentVoxelShapes does not merge diagonally touching shapes`() {
+        val merged = listOf(
+            positionedShape(0, 0, 0, 1),
+            positionedShape(1, 1, 0, 1),
+        ).mergeAdjacentVoxelShapes()
+
+        assertSamePositionedShapes(
+            expected = listOf(
+                PositionedShapeSpec(
+                    blockPos = BlockPos.asLong(0, 0, 0),
+                    key = 1,
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
+                ),
+                PositionedShapeSpec(
+                    blockPos = BlockPos.asLong(1, 1, 0),
+                    key = 1,
+                    boxes = listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
+                ),
+            ),
+            actual = merged.toShapeSpecs(),
+        )
+    }
+
+    @Test
+    fun `mergeAdjacentVoxelShapes keeps smallest block position as component origin`() {
+        val merged = listOf(
+            positionedShape(4, 0, 2, 1),
+            positionedShape(4, 0, 1, 1),
+            positionedShape(4, 1, 1, 1),
+        ).mergeAdjacentVoxelShapes()
+
+        assertSamePositionedShapes(
+            expected = listOf(
+                PositionedShapeSpec(
+                    blockPos = BlockPos.asLong(4, 0, 1),
+                    key = 1,
+                    boxes = listOf(
+                        AABB(0.0, 0.0, 0.0, 1.0, 1.0, 2.0),
+                        AABB(0.0, 1.0, 0.0, 1.0, 2.0, 1.0),
+                    ),
+                )
+            ),
+            actual = merged.toShapeSpecs(),
+        )
+    }
+
+    @Test
+    fun `mergeAdjacentVoxelShapes matches naive merge on random data`() {
+        val seeds = intArrayOf(1001, 2002, 3003)
+
+        for (seed in seeds) {
+            val input = randomDataset(size = 48, random = Random(seed))
+            val fast = input.mergeAdjacentVoxelShapes().toShapeSpecs()
+            val naive = naiveMergeAdjacentVoxelShapes(input).toShapeSpecs()
+            assertSamePositionedShapes(expected = naive, actual = fast)
+        }
     }
 
     private fun positionedShape(
@@ -136,50 +223,115 @@ class ShapeMergeUtilTest {
         shape = shape,
     )
 
-    private fun List<PositionedVoxelShape<Int>>.toSpecs(): List<PositionedShapeSpec> =
-        map { shape ->
-            PositionedShapeSpec(
-                blockPos = shape.blockPos,
-                key = shape.key,
-                boxes = shape.shape.toAabbs().map(::BoxSpec).sortedBy(BoxSpec::sortKey),
-            )
-        }.sortedBy(PositionedShapeSpec::sortKey)
+    private fun randomDataset(size: Int, random: Random): List<PositionedVoxelShape<Int>> {
+        val templates = listOf(
+            Shapes.block(),
+            Shapes.box(0.0, 0.0, 0.0, 1.0, 0.5, 1.0),
+            Shapes.box(0.25, 0.0, 0.25, 0.75, 1.0, 0.75),
+            Shapes.or(
+                Shapes.box(0.0, 0.0, 0.0, 1.0, 0.5, 1.0),
+                Shapes.box(0.0, 0.5, 0.0, 0.5, 1.0, 1.0),
+            ),
+        )
 
-    private data class PositionedShapeSpec(
-        val blockPos: Long,
-        val key: Int,
-        val boxes: List<BoxSpec>,
-    ) {
-        fun sortKey(): String = "$key|$blockPos|$boxes"
+        val entries = ArrayList<PositionedVoxelShape<Int>>(size)
+        val occupiedKeys = HashSet<String>(size)
+        while (entries.size < size) {
+            val x = random.nextInt(-2, 4)
+            val y = random.nextInt(0, 3)
+            val z = random.nextInt(-2, 4)
+            val key = random.nextInt(0, 4)
+            val occupancyKey = "$x|$y|$z|$key"
+            if (!occupiedKeys.add(occupancyKey)) {
+                continue
+            }
+
+            entries += PositionedVoxelShape(
+                blockPos = BlockPos.asLong(x, y, z),
+                key = key,
+                shape = templates[random.nextInt(templates.size)],
+            )
+        }
+        return entries
     }
 
-    private data class BoxSpec(
-        val minX: Double,
-        val minY: Double,
-        val minZ: Double,
-        val maxX: Double,
-        val maxY: Double,
-        val maxZ: Double,
-    ) {
-        constructor(box: AABB) : this(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ)
-
-        fun sortKey(): String = "$minX|$minY|$minZ|$maxX|$maxY|$maxZ"
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is BoxSpec) return false
-
-            return minX.closeTo(other.minX) &&
-                minY.closeTo(other.minY) &&
-                minZ.closeTo(other.minZ) &&
-                maxX.closeTo(other.maxX) &&
-                maxY.closeTo(other.maxY) &&
-                maxZ.closeTo(other.maxZ)
+    @Suppress("CognitiveComplexMethod")
+    private fun naiveMergeAdjacentVoxelShapes(items: List<PositionedVoxelShape<Int>>): List<PositionedVoxelShape<Int>> {
+        if (items.isEmpty()) {
+            return emptyList()
         }
 
-        override fun hashCode(): Int = sortKey().hashCode()
+        val result = ArrayList<PositionedVoxelShape<Int>>()
+        val visited = BitSet(items.size)
+
+        for (startIndex in items.indices) {
+            if (visited[startIndex]) {
+                continue
+            }
+
+            visited[startIndex] = true
+            val key = items[startIndex].key
+            val componentIndices = mutableListOf(startIndex)
+            val queue = ArrayDeque<Int>()
+            queue += startIndex
+
+            while (queue.isNotEmpty()) {
+                val currentIndex = queue.removeFirst()
+                val current = items[currentIndex]
+
+                for (candidateIndex in items.indices) {
+                    if (visited[candidateIndex]) {
+                        continue
+                    }
+
+                    val candidate = items[candidateIndex]
+                    if (candidate.key != key || !areAdjacent(current.blockPos, candidate.blockPos)) {
+                        continue
+                    }
+
+                    visited[candidateIndex] = true
+                    componentIndices += candidateIndex
+                    queue += candidateIndex
+                }
+            }
+
+            val component = componentIndices.map(items::get)
+            val originLong = component.minWithOrNull(compareBy(::blockPosY, ::blockPosZ, ::blockPosX))!!.blockPos
+            val originX = BlockPos.getX(originLong)
+            val originY = BlockPos.getY(originLong)
+            val originZ = BlockPos.getZ(originLong)
+
+            var mergedShape = Shapes.empty()
+            for (entry in component) {
+                mergedShape = Shapes.joinUnoptimized(
+                    mergedShape,
+                    entry.shape.move(
+                        (BlockPos.getX(entry.blockPos) - originX).toDouble(),
+                        (BlockPos.getY(entry.blockPos) - originY).toDouble(),
+                        (BlockPos.getZ(entry.blockPos) - originZ).toDouble(),
+                    ),
+                    BooleanOp.OR,
+                )
+            }
+
+            result += PositionedVoxelShape(originLong, key, mergedShape.optimize())
+        }
+
+        return result
     }
 
-}
+    private fun areAdjacent(first: Long, second: Long): Boolean {
+        for (direction in Direction.entries) {
+            if (BlockPos.offset(first, direction) == second) {
+                return true
+            }
+        }
+        return false
+    }
 
-private fun Double.closeTo(other: Double): Boolean = kotlin.math.abs(this - other) <= 1.0E-7
+    private fun blockPosX(positionedShape: PositionedVoxelShape<Int>) = BlockPos.getX(positionedShape.blockPos)
+
+    private fun blockPosY(positionedShape: PositionedVoxelShape<Int>) = BlockPos.getY(positionedShape.blockPos)
+
+    private fun blockPosZ(positionedShape: PositionedVoxelShape<Int>) = BlockPos.getZ(positionedShape.blockPos)
+}
