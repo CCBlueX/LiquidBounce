@@ -89,7 +89,7 @@ class FallingPlayer(
         val speed = player.speed * 0.1f
         if (speed > 0f) {
             val inputVec = Entity.getInputVector(
-                Vec3(player.input.movementSideways.toDouble() * 0.98, 0.0, player.input.movementForward.toDouble() * 0.98),
+                playerMovementInput(),
                 speed, yRot
             )
             motionX += inputVec.x
@@ -123,7 +123,7 @@ class FallingPlayer(
 
         n = (n.toDouble() * n.toDouble() * 1.0.coerceAtMost(m / 0.4)).toFloat()
 
-        var vec3d5 = Vec3(this.motionX, this.motionY, this.motionZ).add(0.0, gravity * (-1.0 + n.toDouble() * 0.75), 0.0)
+        var vec3d5 = Vec3(this.motionX, this.motionY + gravity * (-1.0 + n.toDouble() * 0.75), this.motionZ)
 
         var q: Double
         if (vec3d5.y < 0.0 && k > 0.0) {
@@ -142,11 +142,7 @@ class FallingPlayer(
 
         vec3d5.add(
             Entity.getInputVector(
-                Vec3(
-                    this.player.input.movementSideways.toDouble() * 0.98,
-                    0.0,
-                    this.player.input.movementForward.toDouble() * 0.98
-                ),
+                playerMovementInput(),
                 0.02F,
                 yRot
             )
@@ -164,6 +160,16 @@ class FallingPlayer(
 
         return instance.duration >= this.simulatedTicks
     }
+
+    /**
+     * @see LivingEntity.INPUT_FRICTION
+     */
+    private fun playerMovementInput() =
+        Vec3(
+            player.input.movementSideways.toDouble() * 0.98,
+            0.0,
+            player.input.movementForward.toDouble() * 0.98,
+        )
 
     fun findCollision(ticks: Int): CollisionResult? {
         val rotationVec = player.lookAngle
