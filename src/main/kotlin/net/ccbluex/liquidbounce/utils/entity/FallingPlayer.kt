@@ -26,7 +26,7 @@ import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.Pose
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.sqrt
@@ -61,24 +61,69 @@ class FallingPlayer(
     private var simulatedTicks: Int = 0
 
     private fun calculateForTick(rotationVec: Vec3) {
-        var d = 0.08
-        val bl: Boolean = motionY <= 0.0
-
-        if (bl && hasStatusEffect(MobEffects.SLOW_FALLING)) {
-            d = 0.01
+        if (player.isFallFlying) {
+            calculateElytraTick(rotationVec)
+        } else {
+            calculateFreeFallTick()
         }
 
-        val j: Double = this.player.xRot.toDouble() * Mth.DEG_TO_RAD
+        this.x += this.motionX
+        this.y += this.motionY
+        this.z += this.motionZ
+
+        this.simulatedTicks++
+    }
+
+    /**
+     * Simulates one tick of non-elytra free-fall physics,
+     * matching vanilla {@code LivingEntity.travel()} air movement.
+     */
+    private fun calculateFreeFallTick() {
+        val rawGravity = player.gravity
+        if (motionY <= 0.0 && hasStatusEffect(MobEffects.SLOW_FALLING)) {
+            motionY -= minOf(rawGravity, 0.01)
+        } else {
+            motionY -= rawGravity
+        }
+
+        val speed = player.speed * 0.1f
+        if (speed > 0f) {
+            val inputVec = Entity.getInputVector(
+                playerMovementInput(),
+                speed, yRot
+            )
+            motionX += inputVec.x
+            motionZ += inputVec.z
+        }
+
+        motionX *= LivingEntity.BASE_HORIZONTAL_AIR_DRAG.toDouble()
+        motionY *= LivingEntity.BASE_VERTICAL_AIR_DRAG.toDouble()
+        motionZ *= LivingEntity.BASE_HORIZONTAL_AIR_DRAG.toDouble()
+    }
+
+    /**
+     * Simulates one tick of elytra flight physics,
+     * matching vanilla {@code LivingEntity.travel()} elytra branch.
+     */
+    private fun calculateElytraTick(rotationVec: Vec3) {
+        var gravity = 0.08
+        val falling: Boolean = motionY <= 0.0
+
+        if (falling && hasStatusEffect(MobEffects.SLOW_FALLING)) {
+            gravity = 0.01
+        }
+
+        val pitchRad: Double = this.player.xRot.toDouble() * Mth.DEG_TO_RAD
 
         val k = sqrt(rotationVec.x * rotationVec.x + rotationVec.z * rotationVec.z)
         val l = sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ)
 
         val m = rotationVec.length()
-        var n = Mth.cos(j)
+        var n = Mth.cos(pitchRad)
 
         n = (n.toDouble() * n.toDouble() * 1.0.coerceAtMost(m / 0.4)).toFloat()
 
-        var vec3d5 = Vec3(this.motionX, this.motionY, this.motionZ).add(0.0, d * (-1.0 + n.toDouble() * 0.75), 0.0)
+        var vec3d5 = Vec3(this.motionX, this.motionY + gravity * (-1.0 + n.toDouble() * 0.75), this.motionZ)
 
         var q: Double
         if (vec3d5.y < 0.0 && k > 0.0) {
@@ -86,8 +131,8 @@ class FallingPlayer(
             vec3d5 = vec3d5.add(rotationVec.x * q / k, q, rotationVec.z * q / k)
         }
 
-        if (j < 0.0 && k > 0.0) {
-            q = l * (-Mth.sin(j)).toDouble() * 0.04
+        if (pitchRad < 0.0 && k > 0.0) {
+            q = l * (-Mth.sin(pitchRad)).toDouble() * 0.04
             vec3d5 = vec3d5.add(-rotationVec.x * q / k, q * 3.2, -rotationVec.z * q / k)
         }
 
@@ -97,11 +142,7 @@ class FallingPlayer(
 
         vec3d5.add(
             Entity.getInputVector(
-                Vec3(
-                    this.player.input.movementSideways.toDouble() * 0.98,
-                    0.0,
-                    this.player.input.movementForward.toDouble() * 0.98
-                ),
+                playerMovementInput(),
                 0.02F,
                 yRot
             )
@@ -109,15 +150,9 @@ class FallingPlayer(
 
         val velocityCoFactor: Float = this.player.blockSpeedFactor
 
-        this.motionX = vec3d5.x * 0.9900000095367432 * velocityCoFactor
-        this.motionY = vec3d5.y * 0.9800000190734863
-        this.motionZ = vec3d5.z * 0.9900000095367432 * velocityCoFactor
-
-        this.x += this.motionX
-        this.y += this.motionY
-        this.z += this.motionZ
-
-        this.simulatedTicks++
+        this.motionX = vec3d5.x * LivingEntity.ELYTRA_HORIZONTAL_AIR_DRAG.toDouble() * velocityCoFactor
+        this.motionY = vec3d5.y * LivingEntity.ELYTRA_VERTICAL_AIR_DRAG.toDouble()
+        this.motionZ = vec3d5.z * LivingEntity.ELYTRA_HORIZONTAL_AIR_DRAG.toDouble() * velocityCoFactor
     }
 
     private fun hasStatusEffect(effect: Holder<MobEffect>): Boolean {
@@ -125,6 +160,16 @@ class FallingPlayer(
 
         return instance.duration >= this.simulatedTicks
     }
+
+    /**
+     * @see LivingEntity.INPUT_FRICTION
+     */
+    private fun playerMovementInput() =
+        Vec3(
+            player.input.movementSideways.toDouble() * 0.98,
+            0.0,
+            player.input.movementForward.toDouble() * 0.98,
+        )
 
     fun findCollision(ticks: Int): CollisionResult? {
         val rotationVec = player.lookAngle
@@ -136,7 +181,7 @@ class FallingPlayer(
 
             val end = Vec3(x, y, z)
 
-            val box = player.getDimensions(Pose.STANDING).makeBoundingBox(start).expandTowards(end.subtract(start))
+            val box = player.getDimensions(player.pose).makeBoundingBox(start).expandTowards(end.subtract(start))
 
             world.findSupportingBlock(player, box).getOrNull()?.let {
                 return CollisionResult(it, i)

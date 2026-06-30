@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFa
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.isFallDamageBlocking
+import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
@@ -167,6 +167,10 @@ internal object NoFallMLG : NoFallMode("MLG") {
      * Finds a position to pickup placed water from
      */
     private fun getCurrentPickupTarget(): PlacementPlan? {
+        if (!canPickUpWaterSafely()) {
+            return null
+        }
+
         val bestPickupItem = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
 
         // Remove all time outed/invalid pickup targets from the list
@@ -174,6 +178,10 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
         val pickupPos = pickupTracker.firstEligible(PickupWater.pickupSpan.first.toLong()) ?: return null
         return planPlacementAtPos(pickupPos, bestPickupItem)
+    }
+
+    private fun canPickUpWaterSafely(): Boolean {
+        return player.isInWater || player.onGround() || player.fallDistance <= minFallDist
     }
 
     /**
@@ -188,7 +196,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
         val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos ?: return null
 
-        if (collision.isFallDamageBlocking()) {
+        if (collision.fallDamageMultiplier(player) <= 0f) {
             return null
         }
 

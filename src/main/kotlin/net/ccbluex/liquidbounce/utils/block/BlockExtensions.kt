@@ -620,16 +620,19 @@ fun BlockState.isBreakable(pos: BlockPos): Boolean {
     return !isAir && (player.isCreative || getDestroySpeed(world, pos) >= 0f)
 }
 
-private val FALL_DAMAGE_BLOCKING_BLOCKS = arrayOf(
-    Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
-)
-
-fun BlockPos?.isFallDamageBlocking(): Boolean {
+fun BlockPos?.fallDamageMultiplier(entity: Entity = player): Float {
     if (this == null) {
-        return false
+        return 1f
     }
 
-    return getBlock() in FALL_DAMAGE_BLOCKING_BLOCKS
+    val block = getBlock()
+    return when (block) {
+        Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW -> 0f
+        Blocks.HAY_BLOCK, Blocks.HONEY_BLOCK -> 0.2f
+        Blocks.SLIME_BLOCK -> if (!entity.isSuppressingBounce) 0f else 1f
+        is BedBlock -> 0.5f
+        else -> 1f
+    }
 }
 
 fun BlockPos.isBlastResistant(): Boolean {

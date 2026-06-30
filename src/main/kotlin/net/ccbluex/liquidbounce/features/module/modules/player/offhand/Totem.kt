@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.utils.block.getPotentialSecondBedBlock
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isCharged
-import net.ccbluex.liquidbounce.utils.block.isFallDamageBlocking
+import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
@@ -119,10 +119,11 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
                 }
 
                 val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
-                if (collision != null && !collision.isFallDamageBlocking()) {
+                val fallDamageMultiplier = collision.fallDamageMultiplier(player)
+                if (fallDamageMultiplier > 0f) {
                     return player.getEffectiveDamage(
                         player.damageSources().fall(),
-                        player.calculateFallDamage(player.fallDistance, 1f).toFloat()
+                        player.calculateFallDamage(player.fallDistance, fallDamageMultiplier).toFloat()
                     )
                 }
 
