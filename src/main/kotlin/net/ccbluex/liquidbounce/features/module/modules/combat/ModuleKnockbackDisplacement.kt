@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.PostAttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -38,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.math.allEmpty
 import net.ccbluex.liquidbounce.utils.network.sendStartSprinting
 import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -123,9 +122,6 @@ object ModuleKnockbackDisplacement : ClientModule(
 
     private var ticksSinceLastUse = 0
     
-    // Flag to track if we need to send return rotation after attack
-    private var shouldSendReturnRotation = false
-
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         if (ticksSinceLastUse > 0) {
@@ -148,10 +144,14 @@ object ModuleKnockbackDisplacement : ClientModule(
 
         val displacementRotation = getDisplacementRotation(target) ?: return@handler
 
-        // Send the displacement rotation packet BEFORE the attack
+        // Send the displacement rotation as PosRot with current position
+        // (avoids timer flag vs. Rot-only packet; abuses 1.17+ desync duplicate acceptance)
         val fixedRotation = displacementRotation.normalize()
         network.send(
-            ServerboundMovePlayerPacket.Rot(
+            PosRot(
+                player.x,
+                player.y,
+                player.z,
                 fixedRotation.yaw,
                 fixedRotation.pitch,
                 player.onGround(),
@@ -159,32 +159,12 @@ object ModuleKnockbackDisplacement : ClientModule(
             )
         )
 
-        // Mark that we need to send return rotation after attack
-        shouldSendReturnRotation = true
-
         // Start cooldown
         ticksSinceLastUse = cooldownTicks
     }
 
-    /**
-     * Handle post-attack event - send return rotation AFTER the attack packet was sent.
-     * Fired from CombatExtensions.attackEntity() after ServerboundAttackPacket.
-     */
-    @Suppress("unused")
-    private val postAttackHandler = handler<PostAttackEntityEvent> {
-        if (!shouldSendReturnRotation) return@handler
-        
-        shouldSendReturnRotation = false
-        
-        // Send player's actual rotation back to avoid detection
-        network.send(
-            ServerboundMovePlayerPacket.Rot(
-                player.yRot,
-                player.xRot,
-                player.onGround(),
-                player.horizontalCollision
-            )
-        )
+    override fun onEnabled() {
+        ticksSinceLastUse = 0
     }
 
     /**
@@ -280,15 +260,6 @@ object ModuleKnockbackDisplacement : ClientModule(
         }
 
         return true
-    }
-
-    override fun onEnabled() {
-        ticksSinceLastUse = 0
-        shouldSendReturnRotation = false
-    }
-
-    override fun onDisabled() {
-        shouldSendReturnRotation = false
     }
 
     private sealed class DisplacementMode(name: String, override val parent: ModeValueGroup<*>) : Mode(name) {
