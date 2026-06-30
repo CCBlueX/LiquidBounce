@@ -49,6 +49,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.Entity
+import kotlin.math.abs
 
 /**
  * Aimbot module
@@ -80,6 +81,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     }
 
     private val axis by multiEnumChoice<Axis>("Axis", Axis.HORIZONTAL, Axis.VERTICAL)
+    private val verticalDeadzone by float("VerticalDeadzone", 0f, 0f..90f)
 
     private val ignores by multiEnumChoice<IgnoreOpened>("Ignore")
 
@@ -160,10 +162,11 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         val targetRotation = targetRotation ?: return
         val timerSpeed = Timer.timerSpeed
         val interpolatedRotation = playerRotation.interpolateTo(targetRotation, timerSpeed * partialTicks)
+        val inVerticalDeadzone = verticalDeadzone > 0f && abs(targetRotation.pitch) >= 90f - verticalDeadzone
 
         player.setRotation(
             Rotation(
-                yaw = if (Axis.HORIZONTAL in axis) interpolatedRotation.yaw else playerRotation.yaw,
+                yaw = if (Axis.HORIZONTAL in axis && !inVerticalDeadzone) interpolatedRotation.yaw else playerRotation.yaw,
                 pitch = if (Axis.VERTICAL in axis) interpolatedRotation.pitch else playerRotation.pitch,
             )
         )
