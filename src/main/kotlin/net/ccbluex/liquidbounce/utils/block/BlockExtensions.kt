@@ -26,7 +26,6 @@ import net.ccbluex.fastutil.weightedFilterSortedByAtMost
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
@@ -621,16 +620,19 @@ fun BlockState.isBreakable(pos: BlockPos): Boolean {
     return !isAir && (player.isCreative || getDestroySpeed(world, pos) >= 0f)
 }
 
-private val FALL_DAMAGE_BLOCKING_BLOCKS = ReferenceOpenHashSet.of(
-    Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK, Blocks.HONEY_BLOCK
-)
-
-fun BlockPos?.isFallDamageBlocking(): Boolean {
+fun BlockPos?.fallDamageMultiplier(entity: Entity = player): Float {
     if (this == null) {
-        return false
+        return 1f
     }
 
-    return getBlock() in FALL_DAMAGE_BLOCKING_BLOCKS
+    val block = getBlock()
+    return when (block) {
+        Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW -> 0f
+        Blocks.HAY_BLOCK, Blocks.HONEY_BLOCK -> 0.2f
+        Blocks.SLIME_BLOCK -> if (!entity.isSuppressingBounce) 0f else 1f
+        is BedBlock -> 0.5f
+        else -> 1f
+    }
 }
 
 fun BlockPos.isBlastResistant(): Boolean {

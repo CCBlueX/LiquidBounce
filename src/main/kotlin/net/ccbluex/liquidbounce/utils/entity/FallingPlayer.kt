@@ -86,7 +86,7 @@ class FallingPlayer(
             motionY -= rawGravity
         }
 
-        val speed = player.speed
+        val speed = player.speed * 0.1f
         if (speed > 0f) {
             val inputVec = Entity.getInputVector(
                 Vec3(player.input.movementSideways.toDouble() * 0.98, 0.0, player.input.movementForward.toDouble() * 0.98),
