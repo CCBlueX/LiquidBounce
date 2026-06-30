@@ -177,6 +177,13 @@ private fun Routing.postOrderServers() = post("/order") {
     call.respondNoContent()
 }
 
+// GET /api/v1/client/servers/lan
+private fun Routing.getLanServers() = get("/lan") {
+    runCatching {
+        call.respond(ActiveServerList.getLanServers())
+    }.getOrElse { call.internalServerError("Failed to get LAN servers due to ${it.message}") }
+}
+
 object ActiveServerList : EventListener {
 
     internal val serverList = ServerList(mc).apply { load() }
@@ -316,15 +323,6 @@ val ServerList.servers: List<ServerData>
     get() = (this as MixinServerListAccessor).`liquid_bounce$getServerList`()
 
 fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.ip == address }
-
-// GET /api/v1/client/servers/lan
-private fun Routing.getLanServers() = get("/lan") {
-    runCatching {
-        val servers = JsonArray()
-        ActiveServerList.getLanServers().forEach { servers.add(it) }
-        call.respond(servers)
-    }.getOrElse { call.internalServerError("Failed to get LAN servers due to ${it.message}") }
-}
 
 internal fun Routing.serverListRoutes() = route("/servers") {
     getServers()
