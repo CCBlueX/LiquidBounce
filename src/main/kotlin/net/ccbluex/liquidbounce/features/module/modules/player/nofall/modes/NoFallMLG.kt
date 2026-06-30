@@ -167,6 +167,10 @@ internal object NoFallMLG : NoFallMode("MLG") {
      * Finds a position to pickup placed water from
      */
     private fun getCurrentPickupTarget(): PlacementPlan? {
+        if (!canPickUpWaterSafely()) {
+            return null
+        }
+
         val bestPickupItem = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
 
         // Remove all time outed/invalid pickup targets from the list
@@ -174,6 +178,10 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
         val pickupPos = pickupTracker.firstEligible(PickupWater.pickupSpan.first.toLong()) ?: return null
         return planPlacementAtPos(pickupPos, bestPickupItem)
+    }
+
+    private fun canPickUpWaterSafely(): Boolean {
+        return player.isInWater || player.onGround() || player.fallDistance <= minFallDist
     }
 
     /**
