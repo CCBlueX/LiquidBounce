@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.render.TimeUnit
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -33,20 +34,18 @@ import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.minecraft.world.phys.Vec3
-import java.text.DecimalFormat
-import java.util.function.BiFunction
 
 object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories, "ShowDetailedInfo", false) {
     private val showAt by enumChoice("ShowAt", ShowAt.ENTITY)
 
     private enum class ShowAt(
         override val tag: String,
-    ) : Tagged, BiFunction<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult, Vec3> {
+    ) : Tagged {
         OWNER("Owner"),
         ENTITY("Entity"),
         LANDING("Landing");
 
-        override fun apply(
+        fun apply(
             renderer: TrajectoryInfoRenderer,
             result: TrajectoryInfoRenderer.SimulationResult,
         ): Vec3 = when (this) {
@@ -59,22 +58,8 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
     private val item by boolean("Item", true)
     private val ownerName by boolean("OwnerName", true)
     private val distance by boolean("Distance", true)
-    private val durationUnit by enumChoice("DurationUnit", DurationUnit.TICKS)
+    private val timeUnit by enumChoice("TimeUnit", TimeUnit.TICKS, aliases = listOf("DurationUnit"))
     private val color by color("Color", Color4b.WHITE)
-
-    private enum class DurationUnit(
-        override val tag: String,
-    ) : Tagged {
-        TICKS("Ticks") {
-            override fun format(ticks: Int): String = ticks.toString()
-        },
-        SECONDS("Seconds") {
-            private val formatter = DecimalFormat("0.#s")
-            override fun format(ticks: Int): String = formatter.format(ticks * 0.05)
-        };
-
-        abstract fun format(ticks: Int): String
-    }
 
     private val scale by float("Scale", 1F, 0.25F..4F)
     private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
@@ -110,7 +95,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
                 pose().scale(scale)
 
                 val texts = buildList {
-                    add(durationUnit.format(result.positions.size).asPlainText())
+                    add(timeUnit.format(result.positions.size).asPlainText())
                     if (distance && result.positions.isNotEmpty()) {
                         add("Dist: ${player.position().distanceTo(result.positions.last()).toFixed(1)}m".asPlainText())
                     }

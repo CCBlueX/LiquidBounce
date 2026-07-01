@@ -566,11 +566,20 @@ open class ValueGroup(
         this@ValueGroup.inner.add(this)
     }
 
-    inline fun <reified T> enumChoice(name: String, default: T): ChoiceListValue<T>
-        where T : Enum<T>, T : Tagged = enumChoice(name, default, enumSetAllOf())
+    inline fun <reified T> enumChoice(
+        name: String,
+        default: T,
+        aliases: List<String> = emptyList(),
+    ): ChoiceListValue<T> where T : Enum<T>, T : Tagged = enumChoice(name, default, enumSetAllOf(), aliases)
 
-    fun <T : Tagged> enumChoice(name: String, default: T, choices: Set<T>): ChoiceListValue<T> =
-        ChoiceListValue(name, defaultValue = default, choices = choices).apply { this@ValueGroup.inner.add(this) }
+    fun <T : Tagged> enumChoice(
+        name: String,
+        default: T,
+        choices: Set<T>,
+        aliases: List<String> = emptyList(),
+    ): ChoiceListValue<T> = ChoiceListValue(name, defaultValue = default, choices = choices, aliases = aliases).apply {
+        this@ValueGroup.inner.add(this)
+    }
 
     protected fun <T : Mode> modes(
         eventListener: EventListener,
