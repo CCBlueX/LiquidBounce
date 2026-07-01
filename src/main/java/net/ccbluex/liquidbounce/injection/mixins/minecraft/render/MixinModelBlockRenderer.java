@@ -32,7 +32,6 @@ import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.NullMarked;
 import org.objectweb.asm.Opcodes;
@@ -98,17 +97,6 @@ public abstract class MixinModelBlockRenderer {
         }
 
         return false;
-    }
-
-    @ModifyReturnValue(method = "shouldRenderFace", at = @At("RETURN"))
-    private boolean injectXRayDrawSide(boolean original, BlockAndTintGetter level, BlockState state, Direction direction,
-            BlockPos neighborPos) {
-        ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning()) {
-            return original;
-        }
-
-        return module.modifyDrawSide(state, level, neighborPos.relative(direction.getOpposite()), direction, original);
     }
 
     @Inject(
