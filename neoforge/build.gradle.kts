@@ -91,6 +91,31 @@ val convertAccessWidener = tasks.register<ConvertAccessWidenerTask>("convertAcce
     output = layout.buildDirectory.file("generated/accessTransformer/accesstransformer.cfg")
 }
 
+/**
+ * Statically checks the shared mixins against the NeoForge-patched Minecraft jar so
+ * that divergences that would only crash in-world (an injector silently failing to
+ * bind because NeoForge reshaped a vanilla method) are caught at build time.
+ */
+val checkMixinDivergence = tasks.register<MixinDivergenceCheckTask>("checkMixinDivergence") {
+    description = "Checks shared mixins against the NeoForge-patched Minecraft jar for injector divergence."
+
+    // The whole compile output is fine; the task filters to the shared mixin package.
+    mixinClasses.from(sourceSets.main.map { it.output.classesDirs })
+
+    // The patched jar is produced by ModDevGradle's setup; :compileJava depends on it.
+    targetClasses.from(
+        layout.buildDirectory.file("moddev/artifacts/minecraft-patched-${libs.versions.neoforge.get()}.jar")
+    )
+
+    // compileJava produces the mixin classes and transitively drives the moddev
+    // artifact creation that yields the patched jar.
+    dependsOn(tasks.named("compileJava"))
+}
+
+tasks.named("check") {
+    dependsOn(checkMixinDivergence)
+}
+
 neoForge {
     version = libs.versions.neoforge.get()
 
