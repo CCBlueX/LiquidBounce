@@ -68,10 +68,9 @@ object ModuleKnockbackDisplacement : ClientModule(
 
     private val modes = choices<DisplacementMode>("Mode", 0) {
         arrayOf(
-            DisplacementMode.Push(it),
+            DisplacementMode.Left(it),
+            DisplacementMode.Right(it),
             DisplacementMode.Pull(it),
-            DisplacementMode.Upward(it),
-            DisplacementMode.Horizontal(it),
             DisplacementMode.Custom(it)
         )
     }.apply(::tagBy)
@@ -271,24 +270,19 @@ object ModuleKnockbackDisplacement : ClientModule(
          */
         abstract fun computeRawRotation(yawToTarget: Float): Vec2
 
-        /** Push target away from player (normal direction, useful as baseline). */
-        class Push(parent: ModeValueGroup<*>) : DisplacementMode("Push", parent) {
-            override fun computeRawRotation(yawToTarget: Float) = Vec2(yawToTarget, player.xRot)
+        /** Push target to the left (perpendicular, counterclockwise). */
+        class Left(parent: ModeValueGroup<*>) : DisplacementMode("Left", parent) {
+            override fun computeRawRotation(yawToTarget: Float) = Vec2(yawToTarget + 90f, player.xRot)
+        }
+
+        /** Push target to the right (perpendicular, clockwise). */
+        class Right(parent: ModeValueGroup<*>) : DisplacementMode("Right", parent) {
+            override fun computeRawRotation(yawToTarget: Float) = Vec2(yawToTarget - 90f, player.xRot)
         }
 
         /** Pull target toward player (vacuum effect). */
         class Pull(parent: ModeValueGroup<*>) : DisplacementMode("Pull", parent) {
             override fun computeRawRotation(yawToTarget: Float) = Vec2(yawToTarget + 180f, player.xRot)
-        }
-
-        /** Launch target upward. */
-        class Upward(parent: ModeValueGroup<*>) : DisplacementMode("Upward", parent) {
-            override fun computeRawRotation(yawToTarget: Float) = Vec2(yawToTarget, -70f)
-        }
-
-        /** Push target sideways (perpendicular to player-target line). */
-        class Horizontal(parent: ModeValueGroup<*>) : DisplacementMode("Horizontal", parent) {
-            override fun computeRawRotation(yawToTarget: Float) = Vec2(yawToTarget + 90f, player.xRot)
         }
 
         /** Custom yaw/pitch offset from player-to-target direction. */
