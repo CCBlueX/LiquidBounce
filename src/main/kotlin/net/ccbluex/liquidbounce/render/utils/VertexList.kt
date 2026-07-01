@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.minecraft.client.Camera
 import net.minecraft.world.phys.Vec3
+import org.joml.Vector3f
 
 interface VertexList {
 
@@ -33,6 +34,9 @@ interface VertexList {
     fun y(index: Int): Float
 
     fun z(index: Int): Float
+
+    fun vec(index: Int, dest: Vector3f = Vector3f()): Vector3f =
+        dest.set(x(index), y(index), z(index))
 }
 
 inline fun VertexList.forEachVertex(action: (x: Float, y: Float, z: Float) -> Unit) {
@@ -43,6 +47,7 @@ inline fun VertexList.forEachVertex(action: (x: Float, y: Float, z: Float) -> Un
 
 fun VertexList.lineStripAsLines(): VertexList = LineStripAsLinesVertexView(this)
 
+@Suppress("TooManyFunctions")
 class MutableVertexList(initialVertexCapacity: Int = 0) : VertexList {
 
     private val values = FloatArrayList(initialVertexCapacity * ELEMENTS_PER_VERTEX)

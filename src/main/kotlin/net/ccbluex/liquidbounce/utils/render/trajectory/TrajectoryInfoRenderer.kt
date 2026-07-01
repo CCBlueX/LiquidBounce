@@ -24,8 +24,9 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawLines
-import net.ccbluex.liquidbounce.render.utils.MutableVertexList
+import net.ccbluex.liquidbounce.render.drawLinesWithWidth
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.render.utils.lineStripAsLines
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -281,12 +282,13 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         trajectoryColor: Color4b,
         blockHitColor: Color4b?,
         entityHitColor: Color4b?,
+        lineWidth: Float = 1f,
     ): SimulationResult {
         val simulationResult = runSimulation(maxTicks)
 
         val (landingPosition, positions) = simulationResult
 
-        env.drawTrajectoryForProjectile(positions, trajectoryColor.argb)
+        env.drawTrajectoryForProjectile(positions, trajectoryColor.argb, lineWidth)
 
         when (landingPosition) {
             null -> return simulationResult
@@ -308,17 +310,23 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         return simulationResult
     }
 
-    private fun WorldRenderEnvironment.drawTrajectoryForProjectile(positions: List<Vec3>, argb: Int) {
+    private fun WorldRenderEnvironment.drawTrajectoryForProjectile(
+        positions: List<Vec3>,
+        argb: Int,
+        lineWidth: Float,
+    ) {
         val origin = positions.firstOrNull() ?: return
+        val lineVertices = MutableVertexList(positions.size).addAllRelative(positions, origin)
+            .lineStripAsLines()
 
         // Don't use LineStrip because in batch mode
         poseStack.pushPose()
         poseStack.translate(origin.add(renderOffset).subtract(camera.position()))
-        drawLines(
-            argb,
-            MutableVertexList(positions.size).addAllRelative(positions, origin)
-                .lineStripAsLines()
-        )
+        if (lineWidth == 1f) {
+            drawLines(argb, lineVertices)
+        } else {
+            drawLinesWithWidth(argb, lineWidth, lineVertices)
+        }
         poseStack.popPose()
     }
 

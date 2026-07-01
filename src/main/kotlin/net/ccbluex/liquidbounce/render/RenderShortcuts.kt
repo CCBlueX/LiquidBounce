@@ -224,6 +224,31 @@ fun WorldRenderEnvironment.drawLinesWithWidth(argb: Int, width: Float, vararg po
     }
 }
 
+fun WorldRenderEnvironment.drawLinesWithWidth(argb: Int, width: Float, positions: VertexList) {
+    if (positions.size == 0) return
+    require(positions.size and 1 == 0)
+
+    val p1 = Vector3f()
+    val p2 = Vector3f()
+    val norm1 = Vector3f()
+    drawCustomMesh(pipeline = ClientRenderPipelines.LinesWithWidth) { pose ->
+        for (i in 0 until positions.size step 2) {
+            positions.vec(i, p1)
+            positions.vec(i + 1, p2)
+            val norm1 = p1.sub(p2, norm1).normalize()
+
+            addVertex(pose, p1)
+                .setColor(argb)
+                .setNormal(pose, norm1)
+                .setLineWidth(width)
+            addVertex(pose, p2)
+                .setColor(argb)
+                .setNormal(pose, norm1.negate())
+                .setLineWidth(width)
+        }
+    }
+}
+
 /**
  * Function to draw lines using the specified [positions] vectors.
  *

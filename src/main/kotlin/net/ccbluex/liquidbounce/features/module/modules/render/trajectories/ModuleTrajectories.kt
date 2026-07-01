@@ -53,6 +53,8 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     private val maxRenderDistance by int("MaxRenderDistance", 96, 16..512, "m")
     private val cullBehindPlayer by boolean("CullBehindPlayer", false)
     private val showMultiShot by boolean("ShowMultiShot", true)
+    private val lineWidth by float("LineWidth", 1f, 1f..16f)
+    private val activeLineWidth by float("ActiveLineWidth", 2f, 1f..16f)
 
     private val trajectoryTypes by multiEnumChoice("TrajectoryTypes", TrajectoryType.entries, canBeNone = false)
 
@@ -128,6 +130,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     trajectoryColor = color,
                     blockHitColor = color,
                     entityHitColor = color,
+                    lineWidth = activeLineWidth,
                 )
             }
 
@@ -220,6 +223,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                 ),
                 blockHitColor = Color4b(0, 160, 255, 150),
                 entityHitColor = Color4b.RED.alpha(100),
+                lineWidth = lineWidth,
             )
         }
     }
