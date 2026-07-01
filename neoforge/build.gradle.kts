@@ -129,7 +129,8 @@ dependencies {
 
     // Mods for compatibility test (runtime only)
     runtimeOnly(libs.immediatelyFast.neoforge)
-    runtimeOnly(libs.iris.neoforge)
+    // Iris has no NeoForge build for Minecraft 26.2 yet; re-add once it is published.
+    // runtimeOnly(libs.iris.neoforge)
 
     constraints {
         // DiscordIPC pulls Reflect 1.6.1, which breaks on Java 25. ImmediatelyFast

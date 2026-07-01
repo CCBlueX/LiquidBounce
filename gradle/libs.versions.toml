@@ -14,7 +14,7 @@ fabric-api = "0.153.0+26.2"
 
 # NeoForge Properties
 # https://projects.neoforged.net/neoforged/neoforge
-neoforge = "26.1.2.75"
+neoforge = "26.2.0.7-beta"
 # https://projects.neoforged.net/neoforged/moddevgradle
 moddev = "2.0.141"
 
@@ -42,14 +42,15 @@ modmenu = "20.0.0-beta.4"
 exploit_preventer_api = "1.0.0"
 exploit_preventer_mod = "1.1.0+26.2"
 sodium = "mc26.2-0.9.0-fabric"
-sodium-neoforge = "mc26.1.2-0.8.12-neoforge"
+sodium-neoforge = "mc26.2-0.9.0-neoforge"
 lithium = "mc26.2-0.25.0-fabric"
-lithium-neoforge = "mc26.1.2-0.24.2-neoforge"
+lithium-neoforge = "mc26.2-0.25.0-neoforge"
 viafabricplus = "4.6.1"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.16.0+26.2-fabric"
-immediatelyFast-neoforge = "1.15.2+26.1.2-neoforge"
+immediatelyFast-neoforge = "1.16.0+26.2-neoforge"
 iris = "1.11.1+26.2-fabric"
+# Iris has no NeoForge build for 26.2 yet; the NeoForge runtime skips it (see neoforge/build.gradle.kts).
 iris-neoforge = "1.10.9+26.1-neoforge"
 
 # Kotlin
