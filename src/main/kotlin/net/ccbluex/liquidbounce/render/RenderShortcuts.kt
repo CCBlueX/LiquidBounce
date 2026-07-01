@@ -30,6 +30,8 @@ import net.ccbluex.fastutil.objectObjectMapOf
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
+import net.ccbluex.liquidbounce.render.utils.VertexList
+import net.ccbluex.liquidbounce.render.utils.forEachVertex
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -222,6 +224,31 @@ fun WorldRenderEnvironment.drawLinesWithWidth(argb: Int, width: Float, vararg po
     }
 }
 
+fun WorldRenderEnvironment.drawLinesWithWidth(argb: Int, width: Float, positions: VertexList) {
+    if (positions.size == 0) return
+    require(positions.size and 1 == 0)
+
+    val p1 = Vector3f()
+    val p2 = Vector3f()
+    val norm1 = Vector3f()
+    drawCustomMesh(pipeline = ClientRenderPipelines.LinesWithWidth) { pose ->
+        for (i in 0 until positions.size step 2) {
+            positions.vec(i, p1)
+            positions.vec(i + 1, p2)
+            val norm1 = p1.sub(p2, norm1).normalize()
+
+            addVertex(pose, p1)
+                .setColor(argb)
+                .setNormal(pose, norm1)
+                .setLineWidth(width)
+            addVertex(pose, p2)
+                .setColor(argb)
+                .setNormal(pose, norm1.negate())
+                .setLineWidth(width)
+        }
+    }
+}
+
 /**
  * Function to draw lines using the specified [positions] vectors.
  *
@@ -234,6 +261,17 @@ fun WorldRenderEnvironment.drawLines(argb: Int, vararg positions: Vec3f) {
     drawCustomMesh(pipeline = ClientRenderPipelines.Lines) { pose ->
         for (pos in positions) {
             addVertex(pose, pos).setColor(argb)
+        }
+    }
+}
+
+fun WorldRenderEnvironment.drawLines(argb: Int, positions: VertexList) {
+    if (positions.size == 0) return
+    require(positions.size and 1 == 0)
+
+    drawCustomMesh(pipeline = ClientRenderPipelines.Lines) { pose ->
+        positions.forEachVertex { x, y, z ->
+            addVertex(pose, x, y, z).setColor(argb)
         }
     }
 }
@@ -253,22 +291,12 @@ fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3f) {
     }
 }
 
-/**
- * Function to draw a 'line strip' using the specified [positions] vectors,
- * actual pipeline is [ClientRenderPipelines.Lines].
- *
- * @param positions The vectors representing the line strip, the size should be even.
- */
-fun WorldRenderEnvironment.drawLineStripAsLines(argb: Int, positions: Collection<Vec3>) {
-    if (positions.isEmpty()) return
-    require(positions.size and 1 == 0)
+fun WorldRenderEnvironment.drawLineStrip(argb: Int, positions: VertexList) {
+    if (positions.size == 0) return
 
-    drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
-        positions.forEachIndexed { index, pos ->
-            if (index != 0 && index != positions.size - 1) {
-                addVertex(pose, pos).setColor(argb)
-            }
-            addVertex(pose, pos).setColor(argb)
+    drawCustomMesh(pipeline = ClientRenderPipelines.LineStrip) { pose ->
+        positions.forEachVertex { x, y, z ->
+            addVertex(pose, x, y, z).setColor(argb)
         }
     }
 }

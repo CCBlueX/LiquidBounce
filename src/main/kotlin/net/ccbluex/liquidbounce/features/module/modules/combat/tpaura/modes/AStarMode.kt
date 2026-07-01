@@ -23,7 +23,6 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.WeightedSortedList
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -39,6 +38,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraMode
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.block.AStarPathBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -47,7 +47,6 @@ import net.ccbluex.liquidbounce.utils.math.bottomCenter
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -132,9 +131,8 @@ object AStarMode : TpAuraMode("AStar"), AStarPathBuilder {
         renderEnvironmentForWorld(matrixStack) {
             drawLineStrip(
                 argb = Color4b.WHITE.argb,
-                positions = path.mapToArray {
-                    relativeToCamera(it.center).toVec3f()
-                }
+                positions = MutableVertexList(path.size)
+                    .addAllRelativeToCamera(path, camera) { it.center }
             )
         }
     }

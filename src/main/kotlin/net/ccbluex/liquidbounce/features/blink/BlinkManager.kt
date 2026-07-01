@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.blink
 import com.google.common.collect.Queues
 import net.ccbluex.fastutil.filterIsInstance
 import net.ccbluex.fastutil.forEachIsInstance
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -41,8 +40,8 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.network.handlePacket
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -211,7 +210,7 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
             renderEnvironmentForWorld(matrixStack) {
                 drawLineStrip(
                     argb = lineColor.argb,
-                    positions = positions.mapToArray { vec3d -> Vec3f(relativeToCamera(vec3d)) },
+                    positions = MutableVertexList(positions.size).addAllRelativeToCamera(positions, camera),
                 )
             }
         }

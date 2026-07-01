@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
+import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.world.item.ItemStack
 
 @JvmRecord
@@ -29,12 +30,14 @@ data class TrajectoryDescriptor(
     fun toShotDescriptor(
         yawOffsetDegrees: Float = 0f,
         icon: ItemStack = ItemStack.EMPTY,
+        colorSource: DataComponentGetter = icon,
     ): TrajectoryShotDescriptor {
         return TrajectoryShotDescriptor(
             trajectoryInfo = trajectoryInfo,
             trajectoryType = trajectoryType,
             yawOffsetDegrees = yawOffsetDegrees,
-            icon = icon
+            icon = icon,
+            colorSource = colorSource,
         )
     }
 
@@ -86,4 +89,5 @@ data class TrajectoryShotDescriptor(
     val trajectoryType: TrajectoryType,
     val yawOffsetDegrees: Float = 0f,
     val icon: ItemStack = ItemStack.EMPTY,
+    val colorSource: DataComponentGetter = icon,
 )

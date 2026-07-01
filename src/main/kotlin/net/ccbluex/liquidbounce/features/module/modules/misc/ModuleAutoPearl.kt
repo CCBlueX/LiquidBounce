@@ -209,7 +209,7 @@ object ModuleAutoPearl : ClientModule(
         destination: Vec3
     ): Boolean {
         val simulatedDestination = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            owner = player,
+            simulationOwner = player,
             trajectoryInfo = TrajectoryInfo.GENERIC,
             trajectoryType = TrajectoryType.EnderPearl,
             rotation = angles
@@ -226,7 +226,8 @@ object ModuleAutoPearl : ClientModule(
         renderOffset: Vec3 = Vec3.ZERO
     ): HitResult? =
         TrajectoryInfoRenderer(
-            owner = owner,
+            simulationOwner = owner,
+            displayOwner = owner,
             icon = Items.ENDER_PEARL.defaultInstance,
             velocity = velocity,
             pos = pos,

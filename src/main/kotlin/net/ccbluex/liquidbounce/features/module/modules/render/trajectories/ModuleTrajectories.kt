@@ -32,6 +32,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.math.dot
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.trajectory.EntityTrajectoryResolver
 import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
@@ -53,6 +55,8 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     private val maxRenderDistance by int("MaxRenderDistance", 96, 16..512, "m")
     private val cullBehindPlayer by boolean("CullBehindPlayer", false)
     private val showMultiShot by boolean("ShowMultiShot", true)
+    private val lineWidth by float("LineWidth", 1f, 1f..16f)
+    private val activeLineWidth by float("ActiveLineWidth", 2f, 1f..16f)
 
     private val trajectoryTypes by multiEnumChoice("TrajectoryTypes", TrajectoryType.entries, canBeNone = false)
 
@@ -81,14 +85,15 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
         renderEnvironmentForWorld(event.matrixStack) {
-            val viewPos = player.eyePosition
-            val viewDirection = player.rotation.directionVector
-            val maxRenderDistanceSq = maxRenderDistance * maxRenderDistance.toDouble()
+            val viewPos = camera.position()
+            val viewDirection = camera.forwardVector()
+            val maxRenderDistanceSq = maxRenderDistance.sq().toDouble()
 
             for (entity in world.entitiesForRendering()) {
                 val delta = entity.position().subtract(viewPos)
-                if (delta.lengthSqr() > maxRenderDistanceSq ||
-                    cullBehindPlayer && delta.dot(viewDirection) < 0.0 && delta.lengthSqr() > 9.0) {
+                val deltaLengthSq = delta.lengthSqr()
+                if (deltaLengthSq > maxRenderDistanceSq ||
+                    cullBehindPlayer && delta.dot(viewDirection) < 0.0 && deltaLengthSq > 9.0) {
                     continue
                 }
 
@@ -100,11 +105,14 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
 
                 if (trajectoryType !in trajectoryTypes) continue
 
+                val displayOwner = (entity as? TraceableEntity)?.owner
+                val icon = TrajectoryDisplayResolver.resolveEntityIcon(
+                    entity, activeTrajectoryArrow, activeTrajectoryOther
+                )
                 val trajectoryRenderer = TrajectoryInfoRenderer(
-                    owner = (entity as? TraceableEntity)?.owner ?: entity,
-                    icon = TrajectoryDisplayResolver.resolveEntityIcon(
-                        entity, activeTrajectoryArrow, activeTrajectoryOther
-                    ),
+                    simulationOwner = displayOwner ?: entity,
+                    displayOwner = displayOwner,
+                    icon = icon,
                     velocity = entity.deltaMovement,
                     pos = entity.position(),
                     trajectoryInfo = trajectoryInfo,
@@ -113,7 +121,11 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     renderOffset = Vec3.ZERO,
                 )
 
-                val color = TrajectoryDisplayResolver.resolveEntityColor(entity)
+                val color = TrajectoryDisplayResolver.resolveTrajectoryColor(
+                    trajectoryType = trajectoryType,
+                    colorSource = icon,
+                    entity = entity,
+                )
 
                 simulationResults += trajectoryRenderer to trajectoryRenderer.drawTrajectoryForProjectile(
                     maxSimulatedTicks,
@@ -121,6 +133,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     trajectoryColor = color,
                     blockHitColor = color,
                     entityHitColor = color,
+                    lineWidth = activeLineWidth,
                 )
             }
 
@@ -128,10 +141,11 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                 for (otherPlayer in world.players()) {
                     if (otherPlayer !== player) {
                         val delta = otherPlayer.eyePosition.subtract(viewPos)
-                        if (delta.lengthSqr() > maxRenderDistanceSq) {
+                        val deltaLengthSq = delta.lengthSqr()
+                        if (deltaLengthSq > maxRenderDistanceSq) {
                             continue
                         }
-                        if (cullBehindPlayer && delta.dot(viewDirection) < 0.0 && delta.lengthSqr() > 9.0) {
+                        if (cullBehindPlayer && delta.dot(viewDirection) < 0.0 && deltaLengthSq > 9.0) {
                             continue
                         }
                     }
@@ -196,7 +210,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             )
 
             val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-                owner = otherPlayer,
+                simulationOwner = otherPlayer,
                 icon = if (shotDescriptor.icon.isEmpty) stack else shotDescriptor.icon,
                 trajectoryInfo = shotDescriptor.trajectoryInfo,
                 trajectoryType = shotDescriptor.trajectoryType,
@@ -207,9 +221,13 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             simulationResults += renderer to renderer.drawTrajectoryForProjectile(
                 maxSimulatedTicks,
                 partialTicks,
-                trajectoryColor = Color4b.WHITE,
+                trajectoryColor = TrajectoryDisplayResolver.resolveTrajectoryColor(
+                    trajectoryType = shotDescriptor.trajectoryType,
+                    colorSource = shotDescriptor.colorSource,
+                ),
                 blockHitColor = Color4b(0, 160, 255, 150),
                 entityHitColor = Color4b.RED.alpha(100),
+                lineWidth = lineWidth,
             )
         }
     }
