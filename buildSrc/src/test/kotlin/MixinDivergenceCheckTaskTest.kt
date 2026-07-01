@@ -134,6 +134,34 @@ class MixinDivergenceCheckTaskTest {
     }
 
     @Test
+    fun `passes when an interior @Coerce widens a captured target arg`() {
+        // Target: foo(Level, Sub, Direction). Handler is a @ModifyReturnValue whose
+        // captured suffix is (Level, @Coerce Base, Direction). The @Coerce param sits in
+        // the MIDDLE of the captured sequence and declares a supertype (mc/Base) of the
+        // target's mc/Sub. It must be treated as a positional wildcard, so this PASSES.
+        val target = classWriter("mc/Target") {
+            visitMethod(
+                Opcodes.ACC_PUBLIC, "foo",
+                "(L${"mc/Level"};L${"mc/Sub"};L${"mc/Direction"};)Z", null, null,
+            ).visitEnd()
+        }
+
+        // Handler: (Z, Level, Base, Direction)Z with @Coerce on the Base param (index 2).
+        val mixin = mixinClass(
+            name = "mixins/MixinTarget",
+            target = "mc/Target",
+            handlerName = "onFoo",
+            handlerDesc = "(ZL${"mc/Level"};L${"mc/Base"};L${"mc/Direction"};)Z",
+            injectorDesc = "Lcom/llamalad7/mixinextras/injector/ModifyReturnValue;",
+            method = "foo",
+            coerceParamIndices = setOf(2),
+        )
+
+        // Should not throw: the interior @Coerce must not collapse the captured sequence.
+        runTask(targets = mapOf("mc/Target" to target), mixins = mapOf("mixins/MixinTarget" to mixin))
+    }
+
+    @Test
     fun `blocks when the selector resolves to zero methods`() {
         val target = classWriter("mc/Target") {
             visitMethod(Opcodes.ACC_PUBLIC, "somethingElse", "()V", null, null).visitEnd()
@@ -193,6 +221,7 @@ class MixinDivergenceCheckTaskTest {
         handlerDesc: String,
         injectorDesc: String,
         method: String,
+        coerceParamIndices: Set<Int> = emptySet(),
     ): ByteArray {
         val writer = ClassWriter(0)
         writer.visit(Opcodes.V21, Opcodes.ACC_PUBLIC or Opcodes.ACC_ABSTRACT, name, null, "java/lang/Object", null)
@@ -212,6 +241,14 @@ class MixinDivergenceCheckTaskTest {
                 visitEnd()
             }
             visitEnd()
+        }
+
+        // @Coerce params, emitted as invisible (class-retention) parameter annotations
+        // matching real compiled mixins.
+        for (index in coerceParamIndices) {
+            handler.visitParameterAnnotation(
+                index, "Lorg/spongepowered/asm/mixin/injection/Coerce;", false,
+            ).visitEnd()
         }
 
         emitBody(handler, handlerDesc)

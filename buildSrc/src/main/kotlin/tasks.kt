@@ -38,6 +38,7 @@ import org.objectweb.asm.Type
 import org.objectweb.asm.tree.AnnotationNode
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.FieldInsnNode
+import org.objectweb.asm.tree.LocalVariableNode
 import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.tree.TypeInsnNode
@@ -512,6 +513,14 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
     @get:Input
     abstract val strict: Property<Boolean>
 
+    /**
+     * Summary report of the check (counts + findings). Declaring it as an output
+     * lets Gradle treat the task as UP-TO-DATE when nothing it depends on changed,
+     * instead of re-running every build.
+     */
+    @get:OutputFile
+    abstract val report: RegularFileProperty
+
     init {
         strict.convention(false)
     }
@@ -579,8 +588,17 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
         val atTargets: List<String>,
         /** Handler parameter types (ASM). */
         val paramTypes: List<Type>,
-        /** Indices of params carrying a MixinExtras sugar / @Coerce annotation. */
+        /**
+         * Indices of params that are NOT captured target args (`@Local`/`@Share`/
+         * `@Cancellable`): they are removed from the prefix/suffix sequence.
+         */
         val sugarParams: Set<Int>,
+        /**
+         * Indices of `@Coerce` params. Unlike sugar params, these DO occupy a captured
+         * target-arg position (they only widen the declared type), so they are kept in
+         * the sequence as positional wildcards that match any target type.
+         */
+        val coerceParams: Set<Int>,
         /** Name-only `@Local` params (no ordinal/index): index -> declared name. */
         val nameOnlyLocals: Map<Int, String>,
     )
@@ -620,15 +638,17 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
         // to model reliably, and it is not the failure mode this check targets.
         private val SUFFIX_CAPTURE = setOf("ModifyReturnValue", "ModifyExpressionValue")
 
-        // Sugar / coercion annotations: an annotated param is a captured local, not a
-        // target arg, so it is excluded from the prefix/suffix compatibility check.
+        // Sugar annotations: an annotated param is a captured local (or callback), not a
+        // target arg, so it is REMOVED from the prefix/suffix compatibility check.
+        // @Coerce is deliberately NOT here: it occupies a captured target-arg position
+        // and is handled as a positional wildcard (see COERCE_DESC / coerceParams).
         private val SUGAR_ANNOTATIONS = setOf(
             "Lcom/llamalad7/mixinextras/sugar/Local;",
             "Lcom/llamalad7/mixinextras/sugar/Share;",
             "Lcom/llamalad7/mixinextras/sugar/Cancellable;",
-            "Lorg/spongepowered/asm/mixin/injection/Coerce;",
         )
         private const val LOCAL_DESC = "Lcom/llamalad7/mixinextras/sugar/Local;"
+        private const val COERCE_DESC = "Lorg/spongepowered/asm/mixin/injection/Coerce;"
 
         // Callback types that Mixin appends/allows outside the captured target args
         // (trailing for @Inject, and a @Cancellable CallbackInfo tail for MixinExtras).
@@ -695,6 +715,7 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
 
         val paramTypes = Type.getArgumentTypes(method.desc).toList()
         val sugarParams = HashSet<Int>()
+        val coerceParams = HashSet<Int>()
         val nameOnlyLocals = HashMap<Int, String>()
         // @Local is CLASS-retention (invisible), but merge both lists defensively.
         val paramCount = paramTypes.size
@@ -704,6 +725,9 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
             for (paramAnnotation in paramAnnotations) {
                 if (paramAnnotation.desc in SUGAR_ANNOTATIONS) {
                     sugarParams += index
+                }
+                if (paramAnnotation.desc == COERCE_DESC) {
+                    coerceParams += index
                 }
                 if (paramAnnotation.desc == LOCAL_DESC && isNameOnlyLocal(paramAnnotation)) {
                     readLocalName(paramAnnotation)?.let { nameOnlyLocals[index] = it }
@@ -719,6 +743,7 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
             atTargets = atTargets,
             paramTypes = paramTypes,
             sugarParams = sugarParams,
+            coerceParams = coerceParams,
             nameOnlyLocals = nameOnlyLocals,
         )
     }
@@ -802,8 +827,10 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
                     }
                     jarFile.getInputStream(entry).use { stream ->
                         classes[internal] = ClassNode().also {
-                            // Method bodies are needed for the @At reference scan.
-                            ClassReader(stream).accept(it, ClassReader.SKIP_FRAMES or ClassReader.SKIP_DEBUG)
+                            // Method bodies are needed for the @At reference scan, and the
+                            // LocalVariableTable (kept by NOT passing SKIP_DEBUG) is needed to
+                            // resolve name-only @Local params against the target's actual locals.
+                            ClassReader(stream).accept(it, ClassReader.SKIP_FRAMES)
                         }
                     }
                 }
@@ -818,28 +845,98 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
 
     private fun checkMixin(mixin: MixinInfo, targets: Map<String, ClassNode>, findings: MutableList<Finding>) {
         for (injector in mixin.injectors) {
-            // Advisory: name-only @Local resolves against stripped local names on the
-            // patched jar and only binds when its type is unique in scope.
-            for ((index, localName) in injector.nameOnlyLocals) {
-                val type = injector.paramTypes.getOrNull(index)?.className ?: "?"
-                findings += Finding(
-                    Severity.SUSPECT, mixin.name, injector.handlerName,
-                    injector.selectors.joinToString(","),
-                    "@Local(name=\"$localName\") param (type $type) has no ordinal/index; local " +
-                        "variable names are stripped on the patched jar, so it only binds if that " +
-                        "type is unique in scope. Prefer ordinal/index or confirm uniqueness.",
-                )
-            }
-
+            // Resolve every selector against each target class, collecting the matched
+            // target methods so the name-only @Local check can consult their actual
+            // LocalVariableTables (see checkNameOnlyLocals).
+            val resolvedTargetMethods = ArrayList<MethodNode>()
             for (selector in injector.selectors) {
                 for (targetInternal in mixin.targets) {
                     val targetClass = targets[targetInternal] ?: continue
-                    checkSelector(mixin, injector, selector, targetInternal, targetClass, findings)
+                    resolvedTargetMethods += checkSelector(
+                        mixin, injector, selector, targetInternal, targetClass, findings,
+                    )
                 }
+            }
+
+            checkNameOnlyLocals(mixin, injector, resolvedTargetMethods, findings)
+        }
+    }
+
+    /**
+     * Verifies name-only `@Local(name=X)` params (no ordinal/index) against the actual
+     * LocalVariableTable of the resolved target method(s). The NeoForge-patched jar
+     * RETAINS local names, so Mixin binds by name first; a finding is only warranted
+     * when that name is genuinely absent from the target's LVT.
+     */
+    private fun checkNameOnlyLocals(
+        mixin: MixinInfo,
+        injector: InjectorInfo,
+        resolvedTargetMethods: List<MethodNode>,
+        findings: MutableList<Finding>,
+    ) {
+        if (injector.nameOnlyLocals.isEmpty() || resolvedTargetMethods.isEmpty()) {
+            return
+        }
+
+        val where = injector.selectors.joinToString(",")
+
+        for ((index, localName) in injector.nameOnlyLocals) {
+            val paramType = injector.paramTypes.getOrNull(index)
+            val typeName = paramType?.className ?: "?"
+
+            // Aggregate the outcome across every matched target method. If the name
+            // binds in any of them we treat it as OK; findings describe the worst case.
+            var boundByName = false
+            var anyLvtPresent = false
+            var ambiguousByType = false
+
+            for (method in resolvedTargetMethods) {
+                val locals: List<LocalVariableNode> = method.localVariables.orEmpty()
+                if (locals.isNotEmpty()) {
+                    anyLvtPresent = true
+                }
+
+                val named = locals.filter { it.name == localName }
+                if (named.isNotEmpty()) {
+                    // Mixin binds by name first; a name hit is OK regardless of type.
+                    boundByName = true
+                    break
+                }
+
+                // The name is absent here; Mixin would fall back to type. Note whether
+                // that fallback is itself ambiguous (>1 local of the requested type).
+                if (paramType != null && locals.count { it.desc == paramType.descriptor } > 1) {
+                    ambiguousByType = true
+                }
+            }
+
+            if (boundByName) {
+                continue
+            }
+
+            findings += when {
+                !anyLvtPresent -> Finding(
+                    Severity.SUSPECT, mixin.name, injector.handlerName, where,
+                    "@Local(name=\"$localName\") param (type $typeName) has no ordinal/index and the " +
+                        "patched target method has no LocalVariableTable; the name cannot bind.",
+                )
+                ambiguousByType -> Finding(
+                    Severity.BLOCKER, mixin.name, injector.handlerName, where,
+                    "@Local(name=\"$localName\") param (type $typeName) has no ordinal/index and the " +
+                        "name is absent from the patched target's LVT; the type fallback is ambiguous " +
+                        "(>1 local of that type). Add an ordinal/index or fix the name.",
+                )
+                else -> Finding(
+                    Severity.SUSPECT, mixin.name, injector.handlerName, where,
+                    "@Local(name=\"$localName\") param (type $typeName) has no ordinal/index and the " +
+                        "name is absent from the patched target's LVT; it can only bind via the type " +
+                        "fallback. Add an ordinal/index or fix the name.",
+                )
             }
         }
     }
 
+    /** Returns the target methods this selector matched (empty on a zero-match BLOCKER). */
     private fun checkSelector(
         mixin: MixinInfo,
         injector: InjectorInfo,
@@ -847,7 +944,7 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
         targetInternal: String,
         targetClass: ClassNode,
         findings: MutableList<Finding>,
-    ) {
+    ): List<MethodNode> {
         val (name, desc) = splitSelector(selector)
         // Mixin selectors may use `*`/`?` wildcards on the name; match with a glob.
         val isGlob = '*' in name || '?' in name
@@ -865,7 +962,7 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
                 "selector resolves to zero methods in the patched target class. " +
                     "The vanilla method was renamed/reshaped or removed by NeoForge.",
             )
-            return
+            return emptyList()
         }
 
         // SUSPECT: a bare-name selector hitting more than one overload may double-inject
@@ -910,48 +1007,59 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
                     val relation = if (injector.kind in PREFIX_CAPTURE) "prefix" else "suffix"
                     findings += Finding(
                         Severity.BLOCKER, mixin.name, injector.handlerName, where,
-                        "@${injector.kind} captured args ${captured.map { it.className }} are not a " +
-                            "$relation of matched overload ${match.name}${match.desc} " +
+                        "@${injector.kind} captured args ${captured.map { it?.className ?: "@Coerce *" }} " +
+                            "are not a $relation of matched overload ${match.name}${match.desc} " +
                             "(target args ${targetArgs.map { it.className }}). This is what triggers " +
                             "InvalidInjectionException at load time.",
                     )
                 }
             }
         }
+
+        return matches
     }
 
     /**
-     * The target arguments the handler captures, with sugar/callback params removed.
+     * The target arguments the handler captures, as an ordered sequence. Sugar/callback
+     * params are removed; `@Coerce` params are KEPT but represented as `null` (a
+     * positional wildcard that matches any target type, since @Coerce only widens the
+     * declared type without changing the captured position).
      *
      * - `@Inject`: strip the trailing CallbackInfo/CIR and any sugar params; the rest is
      *   the captured PREFIX of the target args.
-     * - `@ModifyReturnValue`/`@ModifyExpressionValue`/`@ModifyVariable`: the first param is
-     *   the modified value; the remaining non-sugar params are the captured SUFFIX.
+     * - `@ModifyReturnValue`/`@ModifyExpressionValue`: the first param is the modified
+     *   value; the remaining non-sugar params are the captured SUFFIX.
      */
-    private fun capturedParams(injector: InjectorInfo): List<Type> {
-        val params = injector.paramTypes
-        return if (injector.kind in PREFIX_CAPTURE) {
-            params.filterIndexed { index, type ->
-                index !in injector.sugarParams && type.descriptor !in CALLBACK_TYPES
+    private fun capturedParams(injector: InjectorInfo): List<Type?> {
+        val result = ArrayList<Type?>()
+        injector.paramTypes.forEachIndexed { index, type ->
+            // Drop the leading modified value (@Modify*), sugar/callback params, and any
+            // CallbackInfo/CIR - none of these are captured target args.
+            val dropped = (injector.kind in SUFFIX_CAPTURE && index == 0) ||
+                index in injector.sugarParams ||
+                type.descriptor in CALLBACK_TYPES
+            if (dropped) {
+                return@forEachIndexed
             }
-        } else {
-            // Drop the leading modified value; then drop sugar params and any trailing
-            // CallbackInfo/CIR (@Cancellable) - none of these are captured target args.
-            params.filterIndexed { index, type ->
-                index != 0 && index !in injector.sugarParams && type.descriptor !in CALLBACK_TYPES
-            }
+            // @Coerce stays in the sequence but as a wildcard (null) that matches any type.
+            result += if (index in injector.coerceParams) null else type
         }
+        return result
     }
 
-    private fun isPrefix(captured: List<Type>, target: List<Type>): Boolean =
-        captured.size <= target.size && captured.indices.all { captured[it] == target[it] }
+    /** A captured position matches if either side is a `@Coerce` wildcard (null). */
+    private fun capturedMatches(captured: Type?, target: Type): Boolean =
+        captured == null || captured == target
 
-    private fun isSuffix(captured: List<Type>, target: List<Type>): Boolean {
+    private fun isPrefix(captured: List<Type?>, target: List<Type>): Boolean =
+        captured.size <= target.size && captured.indices.all { capturedMatches(captured[it], target[it]) }
+
+    private fun isSuffix(captured: List<Type?>, target: List<Type>): Boolean {
         if (captured.size > target.size) {
             return false
         }
         val offset = target.size - captured.size
-        return captured.indices.all { captured[it] == target[offset + it] }
+        return captured.indices.all { capturedMatches(captured[it], target[offset + it]) }
     }
 
     private fun report(findings: List<Finding>) {
@@ -969,6 +1077,23 @@ abstract class MixinDivergenceCheckTask : DefaultTask() {
         }
 
         val summary = "Mixin divergence check: ${blockers.size} blocker(s), ${suspects.size} suspect(s)."
+
+        // Write the summary report (declared @OutputFile) so Gradle can mark the task
+        // UP-TO-DATE when nothing changed. Written before any failure is thrown so the
+        // report reflects the run either way.
+        report.orNull?.asFile?.let { reportFile ->
+            reportFile.parentFile?.mkdirs()
+            reportFile.writeText(buildString {
+                appendLine(summary)
+                for (finding in findings) {
+                    appendLine(
+                        "[${finding.severity}] ${finding.mixinClass}#${finding.handler} -> " +
+                            "${finding.target}: ${finding.explanation}",
+                    )
+                }
+            })
+        }
+
         if (blockers.isNotEmpty() || (strict.get() && suspects.isNotEmpty())) {
             throw GradleException(
                 "$summary\n" +

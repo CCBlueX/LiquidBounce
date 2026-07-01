@@ -107,6 +107,9 @@ val checkMixinDivergence = tasks.register<MixinDivergenceCheckTask>("checkMixinD
         layout.buildDirectory.file("moddev/artifacts/minecraft-patched-${libs.versions.neoforge.get()}.jar")
     )
 
+    // Summary report; declaring it as an output lets Gradle cache the task result.
+    report = layout.buildDirectory.file("reports/mixinDivergence.txt")
+
     // compileJava produces the mixin classes and transitively drives the moddev
     // artifact creation that yields the patched jar.
     dependsOn(tasks.named("compileJava"))
