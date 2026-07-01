@@ -60,7 +60,20 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
-    val owner: Entity,
+    /**
+     * Entity used by the simulation as the projectile source.
+     *
+     * This affects spawn position, inherited momentum, clip context, collision filtering,
+     * and projectile-specific hit margin handling.
+     */
+    val simulationOwner: Entity,
+    /**
+     * Entity displayed as the projectile owner in UI.
+     *
+     * This is separate from [simulationOwner] because some real projectiles have no traceable owner and
+     * still need a non-null simulation source entity.
+     */
+    val displayOwner: Entity?,
     val icon: ItemStack,
     velocity: Vec3,
     pos: Vec3,
@@ -94,7 +107,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         @JvmStatic
         @JvmOverloads
         fun getHypotheticalTrajectory(
-            owner: Entity,
+            simulationOwner: Entity,
             trajectoryInfo: TrajectoryInfo,
             trajectoryType: TrajectoryType,
             rotation: Rotation,
@@ -104,31 +117,33 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
             val yawRadians = rotation.yaw.toRadians()
             val pitchRadians = rotation.pitch.toRadians()
 
-            val interpolatedOffset = owner.interpolateCurrentPosition(partialTicks) - owner.position()
+            val interpolatedOffset =
+                simulationOwner.interpolateCurrentPosition(partialTicks) - simulationOwner.position()
 
             val pos = Vec3(
-                owner.x,
-                owner.eyeY - 0.10000000149011612,
-                owner.z
+                simulationOwner.x,
+                simulationOwner.eyeY - 0.10000000149011612,
+                simulationOwner.z
             )
 
-            var velocity = Vec3(
-                -sin(yawRadians) * cos(pitchRadians).toDouble(),
-                -sin((rotation.pitch + trajectoryInfo.roll).toRadians()).toDouble(),
-                cos(yawRadians) * cos(pitchRadians).toDouble()
+            var velocity = projectileDirectionFromRotation(
+                yawRadians = yawRadians,
+                pitchRadians = pitchRadians,
+                pitchWithRollRadians = (rotation.pitch + trajectoryInfo.roll).toRadians()
             ).withLength(trajectoryInfo.initialVelocity)
 
             //In Freeze, this momentum is the residual value before freezing.
             if (trajectoryInfo.copiesPlayerVelocity && !ModuleFreeze.running) {
                 velocity = velocity.add(
-                    owner.deltaMovement.x,
-                    if (owner.onGround()) 0.0 else owner.deltaMovement.y,
-                    owner.deltaMovement.z
+                    simulationOwner.deltaMovement.x,
+                    if (simulationOwner.onGround()) 0.0 else simulationOwner.deltaMovement.y,
+                    simulationOwner.deltaMovement.z
                 )
             }
 
             return TrajectoryInfoRenderer(
-                owner = owner,
+                simulationOwner = simulationOwner,
+                displayOwner = simulationOwner,
                 icon = icon,
                 velocity = velocity,
                 pos = pos,
@@ -138,6 +153,19 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
                 renderOffset = interpolatedOffset.add(-cos(yawRadians) * 0.16, 0.0, -sin(yawRadians) * 0.16)
             )
         }
+
+        /**
+         * @see Projectile.shootFromRotation
+         */
+        private fun projectileDirectionFromRotation(
+            yawRadians: Float,
+            pitchRadians: Float,
+            pitchWithRollRadians: Float,
+        ): Vec3 = Vec3(
+            -sin(yawRadians) * cos(pitchRadians).toDouble(),
+            -sin(pitchWithRollRadians).toDouble(),
+            cos(yawRadians) * cos(pitchRadians).toDouble()
+        )
     }
 
     private val velocity = velocity.copy() // Used as mutable
@@ -213,7 +241,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
                 posAfter,
                 ClipContext.Block.COLLIDER,
                 ClipContext.Fluid.NONE,
-                owner
+                simulationOwner
             )
         )
         if (blockHitResult.type != HitResult.Type.MISS) {
@@ -222,17 +250,18 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
 
         val entityHitResult = ProjectileUtil.getEntityHitResult(
             world,
-            owner,
+            simulationOwner,
             posBefore,
             posAfter,
             hitbox.move(posBefore).expandTowards(posAfter - posBefore).inflate(1.0),
             {
                 val canCollide = !it.isSpectator && it.isAlive
-                val shouldCollide = it.isPickable || owner !== player && it === player
+                val shouldCollide = it.isPickable || simulationOwner !== player && it === player
 
-                return@getEntityHitResult canCollide && shouldCollide && !owner.isPassengerOfSameVehicle(it)
+                return@getEntityHitResult canCollide && shouldCollide &&
+                    !simulationOwner.isPassengerOfSameVehicle(it)
             },
-            if (owner is Projectile) ProjectileUtil.computeMargin(owner) else 0f,
+            if (simulationOwner is Projectile) ProjectileUtil.computeMargin(simulationOwner) else 0f,
         )
 
         return if (entityHitResult != null && entityHitResult.type != HitResult.Type.MISS) {

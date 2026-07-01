@@ -100,8 +100,10 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
 
                 if (trajectoryType !in trajectoryTypes) continue
 
+                val displayOwner = (entity as? TraceableEntity)?.owner
                 val trajectoryRenderer = TrajectoryInfoRenderer(
-                    owner = (entity as? TraceableEntity)?.owner ?: entity,
+                    simulationOwner = displayOwner ?: entity,
+                    displayOwner = displayOwner,
                     icon = TrajectoryDisplayResolver.resolveEntityIcon(
                         entity, activeTrajectoryArrow, activeTrajectoryOther
                     ),
@@ -196,7 +198,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             )
 
             val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-                owner = otherPlayer,
+                simulationOwner = otherPlayer,
                 icon = if (shotDescriptor.icon.isEmpty) stack else shotDescriptor.icon,
                 trajectoryInfo = shotDescriptor.trajectoryInfo,
                 trajectoryType = shotDescriptor.trajectoryType,

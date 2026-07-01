@@ -49,10 +49,10 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
             renderer: TrajectoryInfoRenderer,
             result: TrajectoryInfoRenderer.SimulationResult,
         ): Vec3 = when (this) {
-            OWNER -> renderer.owner.position()
+            OWNER -> renderer.simulationOwner.position()
             ENTITY -> result.positions.firstOrNull()
             LANDING -> result.positions.lastOrNull()
-        } ?: renderer.owner.position()
+        } ?: renderer.simulationOwner.position()
     }
 
     private val item by boolean("Item", true)
@@ -74,7 +74,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
             ModuleTrajectories.simulationResults.forEachIndexed { index, (renderer, result) ->
                 val screenPos =
                     when {
-                        showAt === ShowAt.OWNER && renderer.owner === player -> when (renderer.type) {
+                        showAt === ShowAt.OWNER && renderer.simulationOwner === player -> when (renderer.type) {
                             // If this renderer is created by player holding items and showAt is OWNER,
                             // then show at the landing position
                             TrajectoryInfoRenderer.Type.HYPOTHETICAL ->
@@ -99,8 +99,9 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
                     if (distance && result.positions.isNotEmpty()) {
                         add("Dist: ${player.position().distanceTo(result.positions.last()).toFixed(1)}m".asPlainText())
                     }
-                    if (ownerName && renderer.owner !== player) {
-                        add(textOf("Owner: ".asPlainText(), renderer.owner.displayName))
+                    val displayOwner = renderer.displayOwner
+                    if (ownerName && displayOwner != null && displayOwner !== player) {
+                        add(textOf("Owner: ".asPlainText(), displayOwner.displayName))
                     }
                 }
 
