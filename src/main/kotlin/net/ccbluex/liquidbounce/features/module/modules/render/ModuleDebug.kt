@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.forEachFloat
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
@@ -41,6 +40,7 @@ import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.math.vector2f
@@ -91,7 +91,8 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
             renderEnvironmentForWorld(event.matrixStack) {
                 drawLineStrip(
                     Color4b.BLUE.argb,
-                    positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3f() },
+                    positions = MutableVertexList(cachedPositions.size)
+                        .addAllRelativeToCamera(cachedPositions, camera) { it.pos },
                 )
             }
         }
