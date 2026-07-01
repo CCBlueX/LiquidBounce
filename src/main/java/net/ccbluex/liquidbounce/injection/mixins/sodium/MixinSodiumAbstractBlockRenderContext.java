@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.sodium;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
@@ -48,6 +50,9 @@ public abstract class MixinSodiumAbstractBlockRenderContext {
     protected BlockPos pos;
 
     @Shadow
+    protected BlockAndTintGetter level;
+
+    @Shadow
     @Final
     protected QuadLightData quadLightData;
 
@@ -55,13 +60,25 @@ public abstract class MixinSodiumAbstractBlockRenderContext {
     private static final int FULL_BRIGHT_LIGHTMAP = 0x00F000F0;
 
     @Inject(method = "shouldDrawSide", at = @At("HEAD"), cancellable = true)
-    private void injectXRay(Direction facing, CallbackInfoReturnable<Boolean> cir) {
+    private void injectXRayForceWhitelistedFace(Direction facing, CallbackInfoReturnable<Boolean> cir) {
         ModuleXRay module = ModuleXRay.INSTANCE;
         if (!module.getRunning() || this.state == null || this.pos == null) {
             return;
         }
 
-        cir.setReturnValue(module.shouldRender(this.state, this.pos));
+        if (module.shouldRender(this.state, this.pos)) {
+            cir.setReturnValue(true);
+        }
+    }
+
+    @ModifyReturnValue(method = "shouldDrawSide", at = @At("RETURN"))
+    private boolean injectXRayDrawSide(boolean original, Direction facing) {
+        ModuleXRay module = ModuleXRay.INSTANCE;
+        if (!module.getRunning() || this.state == null || this.pos == null || this.level == null) {
+            return original;
+        }
+
+        return module.modifyDrawSide(this.state, this.level, this.pos, facing, original);
     }
 
     @Inject(method = "shadeQuad", at = @At("RETURN"))
