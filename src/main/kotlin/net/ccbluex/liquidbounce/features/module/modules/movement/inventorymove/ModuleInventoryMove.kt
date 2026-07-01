@@ -62,6 +62,13 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
 
     private val behavior by enumChoice("Behavior", Behaviour.NORMAL).also(::tagBy)
 
+    /**
+     * Whether SnapTap (and similar movement modules) should allow their input
+     * overrides when a screen is open. True only when InventoryMove is enabled
+     * and in NORMAL mode (free movement in inventory).
+     */
+    fun allowsMovementOverride() = enabled && behavior == Behaviour.NORMAL
+
     @Suppress("unused")
     enum class Behaviour(override val tag: String) : Tagged {
         NORMAL("Normal"),
