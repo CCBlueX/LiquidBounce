@@ -101,12 +101,13 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                 if (trajectoryType !in trajectoryTypes) continue
 
                 val displayOwner = (entity as? TraceableEntity)?.owner
+                val icon = TrajectoryDisplayResolver.resolveEntityIcon(
+                    entity, activeTrajectoryArrow, activeTrajectoryOther
+                )
                 val trajectoryRenderer = TrajectoryInfoRenderer(
                     simulationOwner = displayOwner ?: entity,
                     displayOwner = displayOwner,
-                    icon = TrajectoryDisplayResolver.resolveEntityIcon(
-                        entity, activeTrajectoryArrow, activeTrajectoryOther
-                    ),
+                    icon = icon,
                     velocity = entity.deltaMovement,
                     pos = entity.position(),
                     trajectoryInfo = trajectoryInfo,
@@ -115,7 +116,11 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     renderOffset = Vec3.ZERO,
                 )
 
-                val color = TrajectoryDisplayResolver.resolveEntityColor(entity)
+                val color = TrajectoryDisplayResolver.resolveTrajectoryColor(
+                    trajectoryType = trajectoryType,
+                    colorSource = icon,
+                    entity = entity,
+                )
 
                 simulationResults += trajectoryRenderer to trajectoryRenderer.drawTrajectoryForProjectile(
                     maxSimulatedTicks,
@@ -209,7 +214,10 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             simulationResults += renderer to renderer.drawTrajectoryForProjectile(
                 maxSimulatedTicks,
                 partialTicks,
-                trajectoryColor = Color4b.WHITE,
+                trajectoryColor = TrajectoryDisplayResolver.resolveTrajectoryColor(
+                    trajectoryType = shotDescriptor.trajectoryType,
+                    colorSource = shotDescriptor.colorSource,
+                ),
                 blockHitColor = Color4b(0, 160, 255, 150),
                 entityHitColor = Color4b.RED.alpha(100),
             )
