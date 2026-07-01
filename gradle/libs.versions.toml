@@ -44,7 +44,7 @@ iris = "1.11.1+26.2-fabric"
 # https://kotlinlang.org/releases.html
 kotlin = "2.4.0"
 # JUnit
-junit = "6.1.0"
+junit = "6.1.1"
 # https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test/overview
 kotlinx-coroutines = "1.11.0"
 # https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
