@@ -32,6 +32,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.math.dot
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.trajectory.EntityTrajectoryResolver
 import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
@@ -83,14 +85,15 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
         renderEnvironmentForWorld(event.matrixStack) {
-            val viewPos = player.eyePosition
-            val viewDirection = player.rotation.directionVector
-            val maxRenderDistanceSq = maxRenderDistance * maxRenderDistance.toDouble()
+            val viewPos = camera.position()
+            val viewDirection = camera.forwardVector()
+            val maxRenderDistanceSq = maxRenderDistance.sq().toDouble()
 
             for (entity in world.entitiesForRendering()) {
                 val delta = entity.position().subtract(viewPos)
-                if (delta.lengthSqr() > maxRenderDistanceSq ||
-                    cullBehindPlayer && delta.dot(viewDirection) < 0.0 && delta.lengthSqr() > 9.0) {
+                val deltaLengthSq = delta.lengthSqr()
+                if (deltaLengthSq > maxRenderDistanceSq ||
+                    cullBehindPlayer && delta.dot(viewDirection) < 0.0 && deltaLengthSq > 9.0) {
                     continue
                 }
 
@@ -138,10 +141,11 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                 for (otherPlayer in world.players()) {
                     if (otherPlayer !== player) {
                         val delta = otherPlayer.eyePosition.subtract(viewPos)
-                        if (delta.lengthSqr() > maxRenderDistanceSq) {
+                        val deltaLengthSq = delta.lengthSqr()
+                        if (deltaLengthSq > maxRenderDistanceSq) {
                             continue
                         }
-                        if (cullBehindPlayer && delta.dot(viewDirection) < 0.0 && delta.lengthSqr() > 9.0) {
+                        if (cullBehindPlayer && delta.dot(viewDirection) < 0.0 && deltaLengthSq > 9.0) {
                             continue
                         }
                     }
