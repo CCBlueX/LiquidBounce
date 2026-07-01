@@ -6,8 +6,9 @@
   "priority": 1337,
   "mixinPriority": 1337,
   "client": [
-    "MixinGameRenderer",
+    "MixinEntity",
     "MixinGui",
+    "MixinHud",
     "MixinLocalPlayer",
     "MixinPlayer",
     "MixinWeatherEffectRenderer"

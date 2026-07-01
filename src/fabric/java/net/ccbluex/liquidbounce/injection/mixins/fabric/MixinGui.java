@@ -18,47 +18,36 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.fabric;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager;
-import net.ccbluex.liquidbounce.integration.theme.component.HudComponentTweak;
-import net.ccbluex.liquidbounce.interfaces.GuiAddition;
+import com.llamalad7.mixinextras.sugar.Local;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Loader-specific companion of {@code minecraft.gui.MixinGui}.
+ * Loader-specific companion of {@code minecraft.client.MixinGui}.
  * <p>
- * NeoForge splits {@code extractHotbarAndDecorations} into individual GUI
- * layer methods, so each loader anchors these hooks in its own shape of the
- * hotbar and experience extraction.
+ * NeoForge patches the screen extraction in {@code extractRenderState} through a
+ * {@code ClientHooks.extractScreen} call, so each loader anchors the screen
+ * render event after its own shape of the call.
  */
 @Mixin(Gui.class)
 public abstract class MixinGui {
 
     /**
-     * Hook render hud event at the top layer
+     * Hook screen render event
      */
-    @Inject(method = "extractHotbarAndDecorations", at = @At("HEAD"))
-    private void hookRenderEventStart(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
-        ((GuiAddition) this).liquid_bounce$extractOverlay(context, tickCounter);
-    }
-
-    @WrapOperation(
-        method = "extractHotbarAndDecorations",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;hasExperience()Z")
-    )
-    private boolean tweakExpLevelText(MultiPlayerGameMode instance, Operation<Boolean> original) {
-        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_EXP_BAR)) {
-            return false;
-        }
-        return original.call(instance);
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V",
+        shift = At.Shift.AFTER))
+    public void hookScreenRender(DeltaTracker deltaTracker, boolean shouldRenderLevel, boolean resourcesLoaded,
+        CallbackInfo ci, @Local(name = "graphics") GuiGraphicsExtractor graphics) {
+        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)));
     }
 
 }
