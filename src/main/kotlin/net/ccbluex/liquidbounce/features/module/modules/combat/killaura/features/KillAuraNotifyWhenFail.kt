@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectLongMutablePair
 import net.ccbluex.fastutil.component1
@@ -27,9 +26,9 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.enabled
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.mode
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -89,7 +88,8 @@ internal object KillAuraNotifyWhenFail {
         }
     }
 
-    internal fun renderFailedHits(matrixStack: PoseStack) {
+    context(env: WorldRenderEnvironment)
+    internal fun renderFailedHits() {
         if (failedHits.isEmpty || (!enabled || !Box.isSelected)) {
             failedHits.clear()
             return
@@ -109,20 +109,18 @@ internal object KillAuraNotifyWhenFail {
 
         val base = if (Box.colorRainbow) rainbow() else Box.color
 
-        renderEnvironmentForWorld(matrixStack) {
-            for ((pos, opacity) in markedBlocks) {
-                val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
+        for ((pos, opacity) in markedBlocks) {
+            val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
 
-                val baseColor = base.with(a = fade)
-                val outlineColor = base.with(a = fade)
+            val baseColor = base.with(a = fade)
+            val outlineColor = base.with(a = fade)
 
-                withPositionRelativeToCamera(pos) {
-                    drawBox(
-                        POINT_BOX,
-                        baseColor,
-                        outlineColor,
-                    )
-                }
+            env.withPositionRelativeToCamera(pos) {
+                drawBox(
+                    POINT_BOX,
+                    baseColor,
+                    outlineColor,
+                )
             }
         }
     }

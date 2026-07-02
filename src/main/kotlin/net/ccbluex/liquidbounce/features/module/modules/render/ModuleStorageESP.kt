@@ -42,7 +42,7 @@ import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.translate
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -211,7 +211,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
             val matrixStack = event.matrixStack
 
-            renderEnvironmentForWorld(matrixStack) {
+            event.renderEnvironment {
                 for ((entity, box, color) in entityBoxes) {
                     val baseColor = color.with(a = 50)
                     val outlineColor = if (outline) color.with(a = 100) else null
@@ -357,7 +357,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         val types = allTypes.filter { it.tracers && !it.color.isTransparent }
         if (types.isEmpty()) return@handler
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             val eyeVector = Vec3f.eyeVector(camera)
 
             if (!StorageScanner.isEmpty()) {

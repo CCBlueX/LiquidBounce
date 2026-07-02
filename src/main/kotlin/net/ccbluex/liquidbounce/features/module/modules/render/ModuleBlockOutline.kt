@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawShape
 import net.ccbluex.liquidbounce.render.drawShapeSide
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -97,7 +97,7 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
 
             val localHitPos = target.location - blockPos
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 withPositionRelativeToCamera(blockPos) {
                     if (sideOnly) {
                         drawShapeSide(shape, side, localHitPos, color, outlineColor)
@@ -134,7 +134,7 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
 
         val translatedPosition = renderPosition - event.camera.position()
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             if (sideOnly) {
                 drawBoxSide(
                     translatedPosition,

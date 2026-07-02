@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -244,10 +244,10 @@ object ModuleStrongholdFinder : ClientModule(
             return@handler
         }
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             if (detectedPortalBlocks.isNotEmpty()) {
                 renderDetectedPortalBlocks(event)
-                return@renderEnvironmentForWorld
+                return@renderEnvironment
             }
 
             if (renderRays) {
@@ -265,7 +265,7 @@ object ModuleStrongholdFinder : ClientModule(
                 }
             }
 
-            val snapshot = posterior ?: return@renderEnvironmentForWorld
+            val snapshot = posterior ?: return@renderEnvironment
             val drawY = player.interpolateCurrentPosition(event.partialTicks).y
             val candidates = snapshot.candidates.take(showTopCandidates)
             candidates.forEachIndexed { index, candidate ->

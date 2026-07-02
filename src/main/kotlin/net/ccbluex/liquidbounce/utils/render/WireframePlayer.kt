@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.math.toRadians
@@ -75,7 +75,7 @@ class WireframePlayer {
     private val quaternion = Quaternionf()
 
     fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b) {
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             withPositionRelativeToCamera(pos) {
                 poseStack.withPush {
                     val bodyYaw = -Mth.wrapDegrees(yRot)

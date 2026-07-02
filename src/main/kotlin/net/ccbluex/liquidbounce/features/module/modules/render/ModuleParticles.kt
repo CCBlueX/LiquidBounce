@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.collisionShape
@@ -126,7 +126,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
 
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             for (particle in particles) {
                 if (!particle.visible) continue
 

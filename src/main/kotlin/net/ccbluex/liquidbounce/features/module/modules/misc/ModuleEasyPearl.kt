@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawGradientSides
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -153,7 +153,7 @@ object ModuleEasyPearl :
         val blockPos = pos.toBlockPos()
         val state = blockPos.state ?: return@handler
 
-        renderEnvironmentForWorld(matrixStack) {
+        event.renderEnvironment {
             val color =
                 if (getTargetRotation(pos) != null) {
                     Color4b(0x20, 0xC2, 0x06)

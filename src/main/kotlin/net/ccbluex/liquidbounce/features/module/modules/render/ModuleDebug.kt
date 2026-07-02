@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.textOf
@@ -88,7 +88,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
                 .getSimulationForLocalPlayer()
                 .getSnapshotsBetween(0 until this.ticksToPredict)
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 drawLineStrip(
                     Color4b.BLUE.argb,
                     positions = MutableVertexList(cachedPositions.size)
@@ -177,7 +177,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
             return@handler
         }
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             debuggedGeometry.values.forEach { geometry ->
                 geometry.render()
             }

@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.handItems
@@ -84,7 +84,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             val viewPos = camera.position()
             val viewDirection = camera.forwardVector()
             val maxRenderDistanceSq = maxRenderDistance.sq().toDouble()
