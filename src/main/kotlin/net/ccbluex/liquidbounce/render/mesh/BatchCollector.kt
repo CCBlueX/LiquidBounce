@@ -100,7 +100,6 @@ internal class BatchCollector {
                     }
                 }
             }
-            clearBuilders()
 
             if (builtBuffers.isEmpty) {
                 return
