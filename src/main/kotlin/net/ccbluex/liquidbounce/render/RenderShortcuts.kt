@@ -80,22 +80,17 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
  * Helper function to render an environment with the specified [poseStack] and [draw] block.
  *
  * @param poseStack The matrix stack for rendering.
- * @param mode The default draw mode for [draw].
  * @param draw The block of code to be executed in the rendering environment.
  */
 inline fun renderEnvironmentForWorld(
     poseStack: PoseStack,
     renderTarget: RenderTarget = mc.gameRenderer.mainRenderTarget(),
-    mode: DrawMode = DrawMode.BATCH,
     camera: Camera = mc.gameRenderer.mainCamera(),
     draw: WorldRenderEnvironment.() -> Unit,
 ) {
     val environment = WorldRenderEnvironment.create(renderTarget, poseStack, camera)
     try {
-        when (mode) {
-            DrawMode.BATCH -> environment.batch(draw)
-            DrawMode.IMMEDIATE -> environment.immediate(draw)
-        }
+        environment.draw()
     } finally {
         environment.flushBatchIfLocalEnvironment()
     }
