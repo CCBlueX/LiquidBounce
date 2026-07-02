@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
@@ -56,7 +56,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        renderEnvironmentForWorld(matrixStack) {
+        event.renderEnvironment {
             circles.forEach {
                 val progress = animCurve
                     .transform((lifetime - circles.timeToDie(it) + event.partialTicks) / lifetime)

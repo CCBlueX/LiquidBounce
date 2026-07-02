@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -226,7 +226,7 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
             return@handler
         }
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             drawLineStrip(
                 argb = lineColor.argb,
                 positions = MutableVertexList(tickBuffer.size)

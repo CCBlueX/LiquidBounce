@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleEasyPearl
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -135,7 +135,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         val cachedPositions = simulatedPlayerCache
             .getSnapshotsBetween(0 until this.missedOutTick)
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             drawLineStrip(
                 argb = Color4b(0x00, 0x80, 0xFF, 0xFF).argb,
                 positions = MutableVertexList(cachedPositions.size)

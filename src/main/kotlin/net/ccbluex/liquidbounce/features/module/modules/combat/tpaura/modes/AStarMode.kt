@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAu
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraMode
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.block.AStarPathBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -128,7 +128,7 @@ object AStarMode : TpAuraMode("AStar"), AStarPathBuilder {
         val matrixStack = event.matrixStack
         val (_, path) = pathCache ?: return@handler
 
-        renderEnvironmentForWorld(matrixStack) {
+        event.renderEnvironment {
             drawLineStrip(
                 argb = Color4b.WHITE.argb,
                 positions = MutableVertexList(path.size)

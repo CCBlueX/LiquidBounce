@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.ccbluex.liquidbounce.render.mesh.MeshBuildScope
 import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.ccbluex.liquidbounce.utils.render.reset
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.BlockPos
@@ -85,22 +84,42 @@ class WorldRenderEnvironment internal constructor(
     val poseStack: PoseStack,
     val camera: Camera,
     private val batchCollector: BatchCollector,
-    private val frameBoundCollector: Boolean,
 ) {
     /**
      * Converts a world-space position to the camera-relative coordinate system.
      */
-    fun relativeToCamera(pos: Vec3f): Vec3 = pos.relativeTo(camera)
+    fun relativeToCamera(pos: Vec3f): Vec3 = Vec3(
+        pos.x - camera.position().x,
+        pos.y - camera.position().y,
+        pos.z - camera.position().z,
+    )
 
     /**
      * Converts a world-space position to the camera-relative coordinate system.
      */
-    fun relativeToCamera(pos: Position): Vec3 = pos.relativeTo(camera)
+    fun relativeToCamera(pos: Position): Vec3 = Vec3(
+        pos.x() - camera.position().x,
+        pos.y() - camera.position().y,
+        pos.z() - camera.position().z,
+    )
 
     /**
      * Converts a world-space position to the camera-relative coordinate system.
      */
-    fun relativeToCamera(pos: Vec3i): Vec3 = pos.relativeTo(camera)
+    fun relativeToCamera(pos: Vec3i): Vec3 = Vec3(
+        pos.x.toDouble() - camera.position().x,
+        pos.y.toDouble() - camera.position().y,
+        pos.z.toDouble() - camera.position().z,
+    )
+
+    /**
+     * Converts a world-space position to the camera-relative coordinate system.
+     */
+    fun relativeToCamera(pos: Vector3fc): Vec3 = Vec3(
+        pos.x() - camera.position().x,
+        pos.y() - camera.position().y,
+        pos.z() - camera.position().z,
+    )
 
     /**
      * Low-level draw entrypoint.
@@ -121,106 +140,4 @@ class WorldRenderEnvironment internal constructor(
         )
         return batchCollector.start(key)
     }
-
-    @PublishedApi
-    internal fun flushBatchIfLocalEnvironment() {
-        if (!frameBoundCollector) {
-            batchCollector.flush(renderTarget, getDynamicTransformsUniform())
-        }
-    }
-
-    companion object {
-
-        @JvmRecord
-        private data class ActiveWorldFrame(
-            val renderTarget: RenderTarget,
-            val poseStack: PoseStack,
-            val camera: Camera,
-            val collector: BatchCollector,
-        )
-
-        private val globalPoseStack = PoseStack()
-        private val globalBatchCollector = BatchCollector()
-
-        private var activeWorldFrame: ActiveWorldFrame? = null
-
-        /**
-         * Starts world-frame scoped rendering context.
-         */
-        @JvmStatic
-        fun beginWorldFrame(renderTarget: RenderTarget, eventPoseStack: PoseStack, camera: Camera) {
-            endWorldFrame()
-
-            globalPoseStack.copyFrom(eventPoseStack)
-
-            activeWorldFrame = ActiveWorldFrame(
-                renderTarget = renderTarget,
-                poseStack = globalPoseStack,
-                camera = camera,
-                collector = globalBatchCollector,
-            )
-        }
-
-        /**
-         * Flushes and clears world-frame scoped rendering context.
-         */
-        @JvmStatic
-        fun endWorldFrame() {
-            val frame = activeWorldFrame ?: return
-            activeWorldFrame = null
-            frame.collector.flush(frame.renderTarget, getDynamicTransformsUniform())
-        }
-
-        @PublishedApi
-        @JvmStatic
-        internal fun create(renderTarget: RenderTarget, poseStack: PoseStack, camera: Camera): WorldRenderEnvironment {
-            val frame = activeWorldFrame
-            if (frame != null && frame.renderTarget === renderTarget) {
-                return WorldRenderEnvironment(
-                    renderTarget = renderTarget,
-                    poseStack = frame.poseStack,
-                    camera = frame.camera,
-                    batchCollector = frame.collector,
-                    frameBoundCollector = true,
-                )
-            }
-
-            return WorldRenderEnvironment(
-                renderTarget = renderTarget,
-                poseStack = poseStack,
-                camera = camera,
-                batchCollector = BatchCollector(),
-                frameBoundCollector = false,
-            )
-        }
-    }
 }
-
-private fun PoseStack.copyFrom(source: PoseStack) {
-    reset()
-    mulPose(source.last().pose())
-}
-
-private fun Vec3f.relativeTo(camera: Camera): Vec3 = Vec3(
-    x - camera.position().x,
-    y - camera.position().y,
-    z - camera.position().z,
-)
-
-private fun Position.relativeTo(camera: Camera): Vec3 = Vec3(
-    x() - camera.position().x,
-    y() - camera.position().y,
-    z() - camera.position().z,
-)
-
-private fun Vec3i.relativeTo(camera: Camera): Vec3 = Vec3(
-    x.toDouble() - camera.position().x,
-    y.toDouble() - camera.position().y,
-    z.toDouble() - camera.position().z,
-)
-
-private fun Vector3fc.relativeTo(camera: Camera): Vec3 = Vec3(
-    x() - camera.position().x,
-    y() - camera.position().y,
-    z() - camera.position().z,
-)

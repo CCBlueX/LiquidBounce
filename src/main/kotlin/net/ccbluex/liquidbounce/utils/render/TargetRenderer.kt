@@ -44,7 +44,7 @@ import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.AnimatedValueGroup
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -110,7 +110,7 @@ class TargetRenderer(
         val target = target() ?: return@handler
 
         with(mode) {
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 render(target, event.partialTicks)
             }
         }

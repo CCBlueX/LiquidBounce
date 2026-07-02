@@ -40,7 +40,7 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.network.handlePacket
@@ -207,7 +207,7 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
         if (lineColor.a > 0) {
-            renderEnvironmentForWorld(matrixStack) {
+            event.renderEnvironment {
                 drawLineStrip(
                     argb = lineColor.argb,
                     positions = MutableVertexList(positions.size).addAllRelativeToCamera(positions, camera),

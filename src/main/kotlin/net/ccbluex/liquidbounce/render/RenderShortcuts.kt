@@ -27,6 +27,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.fastutil.objectObjectMapOf
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
@@ -34,9 +35,7 @@ import net.ccbluex.liquidbounce.render.utils.VertexList
 import net.ccbluex.liquidbounce.render.utils.forEachVertex
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.writeStd140
-import net.minecraft.client.Camera
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
@@ -76,24 +75,8 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
     slice
 }
 
-/**
- * Helper function to render an environment with the specified [poseStack] and [draw] block.
- *
- * @param poseStack The matrix stack for rendering.
- * @param draw The block of code to be executed in the rendering environment.
- */
-inline fun renderEnvironmentForWorld(
-    poseStack: PoseStack,
-    renderTarget: RenderTarget = mc.gameRenderer.mainRenderTarget(),
-    camera: Camera = mc.gameRenderer.mainCamera(),
-    draw: WorldRenderEnvironment.() -> Unit,
-) {
-    val environment = WorldRenderEnvironment.create(renderTarget, poseStack, camera)
-    try {
-        environment.draw()
-    } finally {
-        environment.flushBatchIfLocalEnvironment()
-    }
+inline fun WorldRenderEvent.renderEnvironment(draw: WorldRenderEnvironment.() -> Unit) {
+    environment.draw()
 }
 
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRenderEnvironment.() -> Unit) {

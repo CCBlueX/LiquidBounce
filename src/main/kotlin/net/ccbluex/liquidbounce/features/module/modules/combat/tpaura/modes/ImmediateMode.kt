@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAu
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraMode
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -63,9 +63,7 @@ object ImmediateMode : TpAuraMode("Immediate") {
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
-        renderEnvironmentForWorld(matrixStack) {
+        event.renderEnvironment {
             desyncPlayerPosition?.let { playerPosition ->
                 drawLine(
                     relativeToCamera(player.position().add(0.0, 1.0, 0.0)).toVec3f(),

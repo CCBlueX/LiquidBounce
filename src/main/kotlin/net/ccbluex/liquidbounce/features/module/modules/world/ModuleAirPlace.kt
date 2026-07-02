@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.Scroll
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
@@ -136,7 +136,7 @@ object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
         if (!Preview.running) return@handler
         val hitResult = getValidHitResult() ?: return@handler
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             withPositionRelativeToCamera(hitResult.blockPos) {
                 drawBox(
                     FULL_BOX,

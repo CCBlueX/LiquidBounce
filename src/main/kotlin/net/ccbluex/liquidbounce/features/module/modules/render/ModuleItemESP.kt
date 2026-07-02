@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.render.drawLegacy2DMarker
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -104,7 +104,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         // Check if the tracer option is enabled
         if (!showTracers) return@handler
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             val eyeVector = Vec3f.eyeVector(camera)
 
             val entities = world.entitiesForRendering()
@@ -156,7 +156,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
             val faceColor = color.with(a = 50)
             val outlineColor = color.with(a = 100)
 
-            renderEnvironmentForWorld(matrixStack) {
+            event.renderEnvironment {
                 if (!mergeIntersecting) {
                     for (entity in entities) {
                         val pos = entity.interpolateCurrentPosition(event.partialTicks)
@@ -165,7 +165,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                             drawBox(box, faceColor, outlineColor)
                         }
                     }
-                    return@renderEnvironmentForWorld
+                    return@renderEnvironment
                 }
 
                 val mergedBoxes = mergeIntersectingAabbsSweep(
@@ -213,7 +213,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
             val color = getColor().argb
             val backgroundColor = Color4b.BLACK.with(a = backgroundAlpha).argb
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 for (entity in entities) {
                     val pos = entity.interpolateCurrentPosition(event.partialTicks).add(0.0, yOffset.toDouble(), 0.0)
 
