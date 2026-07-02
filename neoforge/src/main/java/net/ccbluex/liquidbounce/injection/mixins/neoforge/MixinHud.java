@@ -37,7 +37,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * <p>
  * NeoForge splits {@code extractHotbarAndDecorations} into individual HUD
  * layer methods, so each loader anchors these hooks in its own shape of the
- * hotbar and experience extraction.
+ * hotbar and experience extraction. It also registers the status bars as
+ * separate GUI layers, calling {@code extract{Health,Armor,Food,Air}Level}
+ * directly instead of the vanilla {@code extractPlayerHealth} aggregator that
+ * the shared mixin cancels, so the status-bar suppression is anchored here too.
  */
 @Mixin(Hud.class)
 public abstract class MixinHud {
@@ -62,6 +65,24 @@ public abstract class MixinHud {
             return false;
         }
         return original.call(instance);
+    }
+
+    /**
+     * Cancels the vanilla status bars. On NeoForge these are separate GUI layers
+     * ({@code extractHealthLevel}, {@code extractArmorLevel}, {@code extractFoodLevel},
+     * {@code extractAirLevel}) rather than the vanilla {@code extractPlayerHealth}
+     * aggregator the shared mixin cancels, so the same tweak is honored here.
+     * <p>
+     * Mount health ({@code extractVehicleHealth} / the {@code VEHICLE_HEALTH} layer) is
+     * intentionally left alone: the vanilla {@code extractPlayerHealth} the shared hook
+     * cancels never covered it either, so matching these four keeps parity with Fabric.
+     */
+    @Inject(method = {"extractHealthLevel", "extractArmorLevel", "extractFoodLevel", "extractAirLevel"},
+        at = @At("HEAD"), cancellable = true, require = 4)
+    private void hookRenderStatusBars(GuiGraphicsExtractor context, CallbackInfo ci) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_STATUS_BAR)) {
+            ci.cancel();
+        }
     }
 
 }
