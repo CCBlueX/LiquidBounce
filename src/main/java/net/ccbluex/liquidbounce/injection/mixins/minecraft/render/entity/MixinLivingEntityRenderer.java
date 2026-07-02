@@ -29,7 +29,6 @@ import kotlin.Pair;
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory;
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderSetupAccessor;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
@@ -44,7 +43,6 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -189,26 +187,17 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     )
     private @Nullable RenderType render_Chams(
         @Nullable RenderType original,
-        @Local(argsOnly = true, name = "state") S state,
-        @Local(name = "texture") Identifier texture
+        @Local(argsOnly = true, name = "state") S state
     ) {
         if (original == null) return null;
 
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
 
         if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity)) {
-            RenderSetup renderSetup = ((MixinRenderTypeAccessor) original).getState();
-            boolean affectsOutline = ((MixinRenderSetupAccessor) (Object) renderSetup).getOutlineProperty() == RenderSetup.OutlineProperty.AFFECTS_OUTLINE;
-
+            ModuleChams.INSTANCE.markDirty();
             switch (((MixinRenderTypeAccessor) original).getName()) {
-                case "entity_translucent" -> {
-                    return ModuleChams.ENTITY_TRANSLUCENT.apply(texture, affectsOutline);
-                }
-                case "entity_cutout" -> {
-                    return ModuleChams.ENTITY_CUTOUT.apply(texture);
-                }
-                case "entity_cutout_no_cull" -> {
-                    return ModuleChams.ENTITY_CUTOUT_NO_CULL.apply(texture, affectsOutline);
+                case "entity_translucent", "entity_cutout", "entity_cutout_no_cull" -> {
+                    return ModuleChams.INSTANCE.remap(original);
                 }
                 default -> {
                     return original;

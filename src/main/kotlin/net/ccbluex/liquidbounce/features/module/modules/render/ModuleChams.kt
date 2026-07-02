@@ -20,100 +20,106 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.ColorTargetState
-import com.mojang.blaze3d.pipeline.DepthStencilState
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.CompareOp
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.FilterMode
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderSetupAccessor
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuadSnippet
+import net.ccbluex.liquidbounce.render.createRenderPass
+import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
+import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.minecraft.client.renderer.BindGroupLayouts
-import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.renderer.rendertype.OutputTarget
 import net.minecraft.client.renderer.rendertype.RenderSetup
-import net.minecraft.client.renderer.rendertype.RenderSetup.OutlineProperty
 import net.minecraft.client.renderer.rendertype.RenderType
-import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
-import java.util.function.BiFunction
 import java.util.function.Function
 
 /**
  * TODO: Known issue: player armor + hand items
  */
-object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER) {
+object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
-    private val depthStencilState = DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, 1F, -10000000F)
+    private val renderTargetHolder = LazyRenderTargetHolder("Chams", useDepth = true)
+    private val blitSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
+    private val outputTarget = OutputTarget("liquidbounce_chams") { renderTargetHolder.raw }
 
-    private inline fun RenderPipeline.Builder.forChams() {
-        withDepthStencilState(depthStencilState)
+    private val pipelineBlit: RenderPipeline =
+        ClientRenderPipelines.newPipeline("chams/blit") {
+            screenQuadSnippet()
+            withFragmentShader("core/blit_screen")
+            withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
+            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+            withDepthStencilState(optional())
+        }
+
+    private val remapRenderType: Function<RenderType, RenderType> =
+        Util.memoize(Function<RenderType, RenderType> { original ->
+            val renderTypeAccessor = original as MixinRenderTypeAccessor
+
+            RenderType.create(
+                "liquidbounce_chams/${renderTypeAccessor.name}",
+                renderTypeAccessor.state.withOutputTarget(outputTarget),
+            )
+        })
+
+    private fun RenderSetup.withOutputTarget(outputTarget: OutputTarget): RenderSetup {
+        this as MixinRenderSetupAccessor
+        return MixinRenderSetupAccessor.`liquid_bounce$invokeInit`(
+            this.getPipeline(),
+            this.getTextures(),
+            this.getUseLightmap(),
+            this.getUseOverlay(),
+            this.getLayeringTransform(),
+            outputTarget,
+            this.getTextureTransform(),
+            this.getOutlineProperty(),
+            this.getAffectsCrumbling(),
+            this.getSortOnUpload()
+        )
     }
 
-    private val PIPELINE_ENTITY_TRANSLUCENT: RenderPipeline =
-        ClientRenderPipelines.newPipeline("chams/entity_translucent") {
-            withSnippet(RenderPipelines.ENTITY_SNIPPET)
-            withShaderDefine("ALPHA_CUTOUT", 0.1F)
-            withShaderDefine("PER_FACE_LIGHTING")
-            withBindGroupLayout(BindGroupLayouts.SAMPLER1)
-            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
-            withCull(false)
-            forChams()
+    private var dirty = false
+
+    fun markDirty() {
+        dirty = true
+    }
+
+    fun remap(renderType: RenderType): RenderType =
+        remapRenderType.apply(renderType)
+
+    fun prepareRenderTargetIfDirty() {
+        if (!running || !dirty) {
+            return
         }
 
-    private val PIPELINE_ENTITY_CUTOUT: RenderPipeline =
-        ClientRenderPipelines.newPipeline("chams/entity_cutout") {
-            withSnippet(RenderPipelines.ENTITY_SNIPPET)
-            withShaderDefine("ALPHA_CUTOUT", 0.1f)
-            withBindGroupLayout(BindGroupLayouts.SAMPLER1)
-            forChams()
+        renderTargetHolder.initAndGet()
+    }
+
+    fun blitIfDirty(target: RenderTarget) {
+        if (!dirty) {
+            return
         }
 
-    private val PIPELINE_ENTITY_CUTOUT_NO_CULL: RenderPipeline =
-        ClientRenderPipelines.newPipeline("chams/entity_cutout_no_cull") {
-            withSnippet(RenderPipelines.ENTITY_SNIPPET)
-            withShaderDefine("ALPHA_CUTOUT", 0.1f)
-            withShaderDefine("PER_FACE_LIGHTING")
-            withBindGroupLayout(BindGroupLayouts.SAMPLER1)
-            withCull(false)
-            forChams()
-        }
+        dirty = false
 
-    @JvmField
-    val ENTITY_TRANSLUCENT: BiFunction<Identifier, Boolean, RenderType> =
-        Util.memoize { identifier, affectsOutline ->
-            val renderSetup: RenderSetup = RenderSetup.builder(PIPELINE_ENTITY_TRANSLUCENT)
-                .withTexture("Sampler0", identifier)
-                .useLightmap()
-                .useOverlay()
-                .affectsCrumbling()
-                .sortOnUpload()
-                .setOutline(if (affectsOutline) OutlineProperty.AFFECTS_OUTLINE else OutlineProperty.NONE)
-                .createRenderSetup()
-            RenderType.create("entity_translucent", renderSetup)
-        }
+        val colorTexture = renderTargetHolder.raw?.colorTextureView ?: return
 
-    @JvmField
-    val ENTITY_CUTOUT: Function<Identifier, RenderType> =
-        Util.memoize { identifier ->
-            val renderSetup = RenderSetup.builder(PIPELINE_ENTITY_CUTOUT)
-                .withTexture("Sampler0", identifier)
-                .useLightmap()
-                .useOverlay()
-                .affectsCrumbling()
-                .setOutline(OutlineProperty.AFFECTS_OUTLINE)
-                .createRenderSetup()
-            RenderType.create("entity_cutout", renderSetup)
+        target.createRenderPass({ "Chams blit pass" }).use { pass ->
+            pass.setPipeline(pipelineBlit)
+            pass.bindTexture("InSampler", colorTexture, blitSampler)
+            pass.draw(3, 1, 0, 0)
         }
+    }
 
-    @JvmField
-    val ENTITY_CUTOUT_NO_CULL: BiFunction<Identifier, Boolean, RenderType> =
-        Util.memoize { identifier, affectsOutline ->
-            val renderSetup = RenderSetup.builder(PIPELINE_ENTITY_CUTOUT_NO_CULL)
-                .withTexture("Sampler0", identifier)
-                .useLightmap()
-                .useOverlay()
-                .affectsCrumbling()
-                .setOutline(if (affectsOutline) OutlineProperty.AFFECTS_OUTLINE else OutlineProperty.NONE)
-                .createRenderSetup()
-            RenderType.create("entity_cutout_no_cull", renderSetup)
-        }
+    override fun onDisabled() {
+        dirty = false
+        renderTargetHolder.close()
+    }
 
 }

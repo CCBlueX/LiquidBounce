@@ -95,10 +95,10 @@ inline fun withOutputTextureOverride(
 inline fun GpuTexture.clearColor(color: Color4b = Color4b.TRANSPARENT) =
     gpuDevice.createCommandEncoder().clearColorTexture(this, color.toVector4f())
 
-inline fun GpuTexture.clearDepth(depth: Double = 1.0) =
+inline fun GpuTexture.clearDepth(depth: Double = 0.0) =
     gpuDevice.createCommandEncoder().clearDepthTexture(this, depth)
 
-fun RenderTarget.clearColorAndDepth(color: Color4b = Color4b.TRANSPARENT, depth: Double = 1.0) {
+fun RenderTarget.clearColorAndDepth(color: Color4b = Color4b.TRANSPARENT, depth: Double = 0.0) {
     val colorAttachment = colorTexture
     val depthAttachment = depthTexture.takeIf { useDepth }
 
