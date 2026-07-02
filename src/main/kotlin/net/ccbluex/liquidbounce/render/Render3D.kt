@@ -113,10 +113,6 @@ internal class BatchCollector {
     private val bufferBuilders = Object2ObjectOpenHashMap<RenderBufferKey, BufferBuilder>()
     private val builtBuffers = ObjectArrayList<Pair<RenderBufferKey, MeshDraw>>()
 
-    private val keyCache = memorizingFunction(Object2ObjectOpenHashMap<RenderPipeline, RenderBufferKey>()) {
-        RenderBufferKey(it)
-    }
-
     fun key(
         pipeline: RenderPipeline,
         textures: Map<String, AbstractTexture>,
@@ -188,6 +184,10 @@ internal class BatchCollector {
             .thenComparingInt { it.hashCode() }
 
         private val PAIR_COMPARATOR = Comparator.comparing(Function(Pair<RenderBufferKey, *>::first), KEY_COMPARATOR)
+
+        private val keyCache = memorizingFunction(Object2ObjectOpenHashMap<RenderPipeline, RenderBufferKey>()) {
+            RenderBufferKey(it)
+        }
     }
 }
 
