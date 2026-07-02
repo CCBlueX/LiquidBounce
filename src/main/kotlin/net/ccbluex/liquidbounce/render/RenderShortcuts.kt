@@ -172,16 +172,12 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
     uniforms: Map<String, GpuBufferSlice> = emptyMap(),
     drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) {
-    val buffer = start(
+    start(
         pipeline = pipeline,
         textures = textures,
         uniforms = uniforms,
-    )
-
-    try {
-        drawer(buffer, poseStack.last())
-    } finally {
-        finish(buffer)
+    ).use { scope ->
+        drawer(scope.consumer, poseStack.last())
     }
 }
 

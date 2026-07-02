@@ -25,10 +25,10 @@ import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.liquidbounce.render.engine.RenderDrawKey
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
+import net.ccbluex.liquidbounce.render.mesh.MeshBuildScope
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.reset
 import net.minecraft.client.Camera
@@ -105,13 +105,15 @@ class WorldRenderEnvironment internal constructor(
     /**
      * Low-level draw entrypoint.
      *
+     * The returned scope must be closed after writing vertices.
+     *
      * Prefer [net.ccbluex.liquidbounce.render.drawCustomMesh] for regular use.
      */
     fun start(
         pipeline: RenderPipeline,
         textures: Map<String, AbstractTexture> = emptyMap(),
         uniforms: Map<String, GpuBufferSlice> = emptyMap(),
-    ): VertexConsumer {
+    ): MeshBuildScope {
         val key = RenderDrawKey.of(
             pipeline,
             textures,
@@ -120,19 +122,10 @@ class WorldRenderEnvironment internal constructor(
         return batchCollector.start(key)
     }
 
-    /**
-     * Low-level completion for a [VertexConsumer] obtained from [start].
-     *
-     * Prefer [net.ccbluex.liquidbounce.render.drawCustomMesh] for regular use.
-     */
-    fun finish(consumer: VertexConsumer, submit: Boolean = true) {
-        batchCollector.finish(consumer, submit)
-    }
-
     @PublishedApi
     internal fun flushBatchIfLocalEnvironment() {
         if (!frameBoundCollector) {
-            batchCollector.flush(renderTarget)
+            batchCollector.flush(renderTarget, getDynamicTransformsUniform())
         }
     }
 
@@ -175,7 +168,7 @@ class WorldRenderEnvironment internal constructor(
         fun endWorldFrame() {
             val frame = activeWorldFrame ?: return
             activeWorldFrame = null
-            frame.collector.flush(frame.renderTarget)
+            frame.collector.flush(frame.renderTarget, getDynamicTransformsUniform())
         }
 
         @PublishedApi

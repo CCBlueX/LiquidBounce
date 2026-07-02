@@ -24,7 +24,7 @@ import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
-import com.mojang.blaze3d.vertex.VertexConsumer
+import it.unimi.dsi.fastutil.objects.Object2ObjectFunction
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.render.ClientTesselator
@@ -33,13 +33,10 @@ import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.bindTextures
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.RenderDrawKey
-import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw.DefaultUploader.bindAndDraw
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw.DefaultUploader.toMeshDraw
 import net.ccbluex.liquidbounce.render.setUniforms
 import net.ccbluex.liquidbounce.render.setupRenderTypeScissor
-import java.util.IdentityHashMap
-import java.util.function.Function
 
 internal class BatchCollector {
 
@@ -47,7 +44,7 @@ internal class BatchCollector {
         val key: RenderDrawKey,
         val builder: BufferBuilder,
         val order: Int,
-        var submitted: Boolean,
+        var readyToBuild: Boolean,
     )
 
     private data class BuiltDraw(
@@ -64,44 +61,36 @@ internal class BatchCollector {
 
     private val bufferAllocatorInUse = ObjectArrayList<ByteBufferBuilder>()
     private val consolidatedDraws = Object2ObjectOpenHashMap<RenderDrawKey, PendingDraw>()
-    private val pendingSeparateDraws = IdentityHashMap<BufferBuilder, PendingDraw>()
     private val drawOrder = ObjectArrayList<PendingDraw>()
     private val builtBuffers = ObjectArrayList<BuiltDraw>()
 
-    fun start(key: RenderDrawKey): VertexConsumer {
+    private val appendNewBuilder = Object2ObjectFunction<RenderDrawKey, PendingDraw> {
+        val key = it as RenderDrawKey
+        val builder = ClientTesselator.begin(key.pipeline, bufferAllocatorInUse)
+        val draw = PendingDraw(key, builder, order = drawOrder.size, readyToBuild = false)
+        drawOrder += draw
+        draw
+    }
+
+    fun start(key: RenderDrawKey): MeshBuildScope {
         if (!key.pipeline.canConsolidateConsecutiveGeometry()) {
-            val builder = ClientTesselator.begin(key.pipeline, bufferAllocatorInUse)
-            val draw = PendingDraw(key, builder, order = drawOrder.size, submitted = false)
-            pendingSeparateDraws[builder] = draw
-            drawOrder += draw
-            return builder
+            val draw = appendNewBuilder.apply(key)
+            return SeparateMeshBuildScope(draw)
         }
 
-        return consolidatedDraws.computeIfAbsent(key, Function {
-            PendingDraw(
-                it,
-                ClientTesselator.begin(it.pipeline, bufferAllocatorInUse),
-                order = drawOrder.size,
-                submitted = true,
-            ).also(drawOrder::add)
-        }).builder
+        val draw = consolidatedDraws.computeIfAbsent(key, appendNewBuilder)
+        draw.readyToBuild = true
+        return ConsolidatedMeshBuildScope(draw.builder)
     }
 
-    fun finish(consumer: VertexConsumer, submit: Boolean) {
-        val builder = consumer as? BufferBuilder ?: return
-        val draw = pendingSeparateDraws.remove(builder) ?: return
-        draw.submitted = submit
-    }
-
-    @JvmOverloads
-    fun flush(renderTarget: RenderTarget, dynamicTransforms: GpuBufferSlice = getDynamicTransformsUniform()) {
+    fun flush(renderTarget: RenderTarget, dynamicTransforms: GpuBufferSlice) {
         try {
             if (drawOrder.isEmpty) {
                 return
             }
 
             for (draw in drawOrder) {
-                if (draw.submitted) {
+                if (draw.readyToBuild) {
                     draw.builder.build()?.use { meshData ->
                         builtBuffers += BuiltDraw(
                             draw.key,
@@ -120,7 +109,7 @@ internal class BatchCollector {
             builtBuffers.sort()
 
             renderTarget.createRenderPass(
-                { "WorldRenderEnvironment draw" },
+                { "BatchCollector draw" },
                 allowOverride = true,
             ).use { pass ->
                 pass.setupRenderTypeScissor()
@@ -144,8 +133,36 @@ internal class BatchCollector {
 
     private fun clearBuilders() {
         consolidatedDraws.clear()
-        pendingSeparateDraws.clear()
         drawOrder.clear()
+    }
+
+    private class ConsolidatedMeshBuildScope(
+        override val consumer: BufferBuilder,
+    ) : MeshBuildScope {
+
+        override fun close() {
+            // Noop because the flag is already set
+        }
+
+    }
+
+    private class SeparateMeshBuildScope(
+        private val draw: PendingDraw,
+    ) : MeshBuildScope {
+
+        private var closed = false
+
+        override val consumer get() = draw.builder
+
+        override fun close() {
+            if (closed) {
+                return
+            }
+
+            closed = true
+            draw.readyToBuild = true
+        }
+
     }
 }
 
