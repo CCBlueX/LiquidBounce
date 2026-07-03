@@ -69,21 +69,21 @@
         }
     }
 
-    function getHorizontalZone(center: number): HorizontalAnchorZone {
-        if (center < window.innerWidth / 3) {
+    function getHorizontalZone(cursorX: number): HorizontalAnchorZone {
+        if (cursorX < window.innerWidth / 3) {
             return "left";
         }
-        if (center > window.innerWidth * 2 / 3) {
+        if (cursorX > window.innerWidth * 2 / 3) {
             return "right";
         }
         return "center";
     }
 
-    function getVerticalZone(center: number): VerticalAnchorZone {
-        if (center < window.innerHeight / 3) {
+    function getVerticalZone(cursorY: number): VerticalAnchorZone {
+        if (cursorY < window.innerHeight / 3) {
             return "upper";
         }
-        if (center > window.innerHeight * 2 / 3) {
+        if (cursorY > window.innerHeight * 2 / 3) {
             return "lower";
         }
         return "center";
@@ -156,8 +156,8 @@
 
         pointerCenterOffsetX = horizontalCenter - toHudCoordinate(event.clientX);
         pointerCenterOffsetY = verticalCenter - toHudCoordinate(event.clientY);
-        horizontalZone = getHorizontalZone(horizontalCenter);
-        verticalZone = getVerticalZone(verticalCenter);
+        horizontalZone = getHorizontalZone(event.clientX);
+        verticalZone = getVerticalZone(event.clientY);
         emitDragState(true);
     }
 
@@ -168,8 +168,8 @@
 
         const horizontalCenter = toHudCoordinate(event.clientX) + pointerCenterOffsetX;
         const verticalCenter = toHudCoordinate(event.clientY) + pointerCenterOffsetY;
-        const nextHorizontalZone = getHorizontalZone(horizontalCenter);
-        const nextVerticalZone = getVerticalZone(verticalCenter);
+        const nextHorizontalZone = getHorizontalZone(event.clientX);
+        const nextVerticalZone = getVerticalZone(event.clientY);
 
         alignment.horizontalAlignment = getHorizontalAlignment(nextHorizontalZone);
         alignment.verticalAlignment = getVerticalAlignment(nextVerticalZone);
