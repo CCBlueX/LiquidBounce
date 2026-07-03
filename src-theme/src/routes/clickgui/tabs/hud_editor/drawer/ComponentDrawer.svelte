@@ -86,7 +86,7 @@
 
   .drawer {
     border-radius: 5px;
-    width: 500px;
+    width: 600px;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -116,7 +116,7 @@
     row-gap: 10px;
     max-height: 400px;
     overflow: auto;
-    padding: 10px;
+    padding: 15px;
   }
 
   .button-toggle-drawer {
@@ -139,6 +139,7 @@
 
   .no-results {
     color: var(--clickgui-text-dimmed-color);
+    padding: 0 10px;
     font-size: 14px;
   }
 </style>
