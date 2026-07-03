@@ -9,6 +9,7 @@
         type HudEditorDragState,
         VERTICAL_ANCHOR_ZONES
     } from "./constants";
+    import ComponentDrawer from "./drawer/ComponentDrawer.svelte";
 
     let dragState: HudEditorDragState | undefined;
 
@@ -46,6 +47,7 @@
         </div>
     {/if}
 
+    <ComponentDrawer/>
     <Hud inEditor onDragStateChange={handleDragStateChange}/>
 </div>
 
