@@ -1,28 +1,43 @@
 <script lang="ts">
 
-    import type {HudComponent} from "../../../../../integration/types";
+    import type {HudComponentCatalogEntry} from "../../../../../integration/types";
 
     interface Props {
-        component: HudComponent
+        component: HudComponentCatalogEntry,
+        onselect: (component: HudComponentCatalogEntry) => void
     }
 
-    const {component}: Props = $props();
+    const {component, onselect}: Props = $props();
 </script>
 
-<div class="drawer-hud-component">
+<button
+        type="button"
+        class="drawer-hud-component"
+        disabled={!component.canAdd}
+        onclick={() => onselect(component)}
+>
     <div class="name">{component.name}</div>
     <div class="description">{component.description}</div>
-</div>
+</button>
 
 <style lang="scss">
     .drawer-hud-component {
+      all: unset;
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
       background-color: var(--clickgui-module-hover-background-color);
       border: solid 2px var(--clickgui-module-hover-background-color);
       padding: 10px;
       border-radius: 5px;
       cursor: pointer;
 
-      &:hover {
+      &:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      &:not(:disabled):hover {
         background-color: var(--accent-subtle-background-color);
         border: solid 2px var(--accent-color);
       }

@@ -1,23 +1,27 @@
 <script lang="ts">
-    import type {HudComponent} from "../../../../../integration/types";
+    import type {HudComponentCatalogEntry} from "../../../../../integration/types";
     import {onMount, tick} from "svelte";
-    import {getComponents} from "../../../../../integration/rest";
+    import {addComponent, getComponentCatalog} from "../../../../../integration/rest";
     import DrawerHudComponent from "./DrawerHudComponent.svelte";
     import {fly} from "svelte/transition";
 
     let drawerShown = $state(false);
 
-    let components: HudComponent[] = $state([]);
-    let filteredComponents: HudComponent[] = $state([]);
+    let components: HudComponentCatalogEntry[] = $state([]);
+    let filteredComponents: HudComponentCatalogEntry[] = $state([]);
     let drawerElement: HTMLElement | null = $state(null);
     let searchInput: HTMLInputElement | null = $state(null);
 
     let query = $state("");
 
     onMount(async () => {
-        components = await getComponents("liquidbounce");
-        filteredComponents = components;
+        await refreshComponents();
     });
+
+    async function refreshComponents() {
+        components = await getComponentCatalog("liquidbounce");
+        filteredComponents = components.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
+    }
 
     function handleWindowClick(e: MouseEvent) {
         if (!e.target || !drawerElement) return;
@@ -35,9 +39,18 @@
         drawerShown = !drawerShown;
 
         if (drawerShown) {
+            await refreshComponents();
             await tick();
             searchInput?.focus();
         }
+    }
+
+    async function handleAddComponent(component: HudComponentCatalogEntry) {
+        await addComponent(component.id);
+        if (component.singleton) {
+            component.canAdd = false;
+        }
+        drawerShown = false;
     }
 </script>
 
@@ -53,7 +66,7 @@
             <div class="component-list">
                 {#if filteredComponents.length !== 0}
                     {#each filteredComponents as c}
-                        <DrawerHudComponent component={c}/>
+                        <DrawerHudComponent component={c} onselect={handleAddComponent}/>
                     {/each}
                 {:else}
                     <span class="no-results">No components found</span>

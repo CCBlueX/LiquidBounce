@@ -13,6 +13,7 @@ import type {
     GeneratorResult,
     HitResult,
     HudComponent,
+    HudComponentCatalogEntry,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -632,6 +633,21 @@ export async function getTheme(id: string): Promise<Theme> {
 export async function getComponents(id: string): Promise<HudComponent[]> {
     const response = await fetch(`${API_BASE}/client/components/${id}`);
     return await response.json();
+}
+
+export async function getComponentCatalog(id: string): Promise<HudComponentCatalogEntry[]> {
+    const response = await fetch(`${API_BASE}/client/components/${id}/catalog`);
+    return await response.json();
+}
+
+export async function addComponent(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE}/client/components/${id}`, {
+        method: "POST"
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to add HUD component");
+    }
 }
 
 export async function setComponentAlignment(id: string, alignment: Alignment): Promise<void> {

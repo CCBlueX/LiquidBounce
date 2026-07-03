@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ComponentsUpdateEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
 
@@ -59,11 +60,20 @@ object HudComponentManager {
         return theme.components
     }
 
+    fun getComponentCatalog(id: String): List<Theme.ComponentCatalogEntry> {
+        val theme = ThemeManager.themes.find { it.metadata.id == id } ?: return emptyList()
+        return theme.componentCatalog()
+    }
+
     fun getComponent(id: String): HudComponent? =
         components.find { it.id.toString() == id }
             ?: ThemeManager.themes.asSequence()
                 .flatMap { it.components.asSequence() }
                 .find { it.id.toString() == id }
+
+    fun addComponent(id: String): HudComponent? = ThemeManager.themes
+        .find { theme -> theme.components.any { it.id.toString() == id } }
+        ?.addComponent(id)
 
     fun updateComponents() {
         // Might be necessary later on.

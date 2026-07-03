@@ -266,20 +266,27 @@ object ConfigSystem {
             "config name does not match the name in the json object"
         }
 
-        val values = jsonObject.getAsJsonArray("value")
+        valueGroup.prepareDeserialize(jsonObject)
+
+        val storedValues = jsonObject.getAsJsonArray("value")
             .map { valueElement -> valueElement.asJsonObject }
-            .associateBy { valueObj -> valueObj["name"].asString!! }
+        val valuesByName = storedValues.groupBy { valueObj -> valueObj["name"].asString!! }
+        val consumedValues = mutableMapOf<String, Int>()
 
         // Migration Code for KillAura's Range Values
         if (valueGroup is ModuleKillAura) {
-            valueGroup.range.migrateFromValues(values)
+            valueGroup.range.migrateFromValues(storedValues.associateBy { it["name"].asString!! })
         }
 
         for (value in valueGroup.inner) {
-            val currentElement = values[value.name]
-            // Alias support
-                ?: values.entries.firstOrNull { entry -> entry.key in value.aliases }?.value
+            val storedName = sequenceOf(value.name).plus(value.aliases)
+                .firstOrNull { name ->
+                    consumedValues.getOrDefault(name, 0) < valuesByName[name].orEmpty().size
+                }
                 ?: continue
+            val valueIndex = consumedValues.getOrDefault(storedName, 0)
+            val currentElement = valuesByName.getValue(storedName)[valueIndex]
+            consumedValues[storedName] = valueIndex + 1
 
             deserializeValue(value, currentElement)
         }

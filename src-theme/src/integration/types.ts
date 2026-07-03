@@ -395,6 +395,14 @@ export interface HudComponent {
     settings: { [name: string]: any };
 }
 
+export interface HudComponentCatalogEntry {
+    name: string;
+    description: string;
+    id: string;
+    singleton: boolean;
+    canAdd: boolean;
+}
+
 export interface Alignment {
     horizontalAlignment: HorizontalAlignment;
     verticalAlignment: VerticalAlignment;

@@ -47,6 +47,28 @@ private fun Routing.getComponents() = get("/:id") {
     )
 }
 
+// GET /api/v1/client/components/:id/catalog
+private fun Routing.getComponentCatalog() = get("/:id/catalog") {
+    call.respond(
+        HudComponentManager.getComponentCatalog(call.parameters["id"].orEmpty()),
+        accessibleInteropGson,
+    )
+}
+
+// POST /api/v1/client/components/:id
+private fun Routing.postComponent() = post("/:id") {
+    val id = call.parameters["id"] ?: call.badRequest("Missing component id")
+    HudComponentManager.getComponent(id)
+        ?: call.notFound(id, "HUD component not found")
+
+    withContext(Dispatchers.Minecraft) {
+        HudComponentManager.addComponent(id)
+            ?: call.badRequest("HUD component cannot be added again")
+        ConfigSystem.store(modulesConfig)
+        call.respondNoContent()
+    }
+}
+
 // POST /api/v1/client/components/:id/alignment
 private fun Routing.postComponentAlignment() = post("/:id/alignment") {
     val id = call.parameters["id"] ?: call.badRequest("Missing component id")
@@ -89,7 +111,9 @@ private fun Routing.putComponentSettings() = put("/:id/settings") {
 
 internal fun Routing.componentRoutes() = route("/components") {
     getCurrentComponents()
+    getComponentCatalog()
     getComponents()
+    postComponent()
     postComponentAlignment()
     getComponentSettings()
     putComponentSettings()
