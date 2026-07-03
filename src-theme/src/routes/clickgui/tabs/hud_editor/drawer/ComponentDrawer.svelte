@@ -3,6 +3,7 @@
     import {onMount} from "svelte";
     import {getComponents} from "../../../../../integration/rest";
     import DrawerHudComponent from "./DrawerHudComponent.svelte";
+    import {fly} from "svelte/transition";
 
     let drawerShown = $state(false);
 
@@ -17,7 +18,7 @@
     <button class="button-toggle-drawer" onclick={() => drawerShown = !drawerShown}>Add Component</button>
 
     {#if drawerShown}
-        <div class="drawer">
+        <div class="drawer" transition:fly={{ y: -10, duration: 200 }}>
             <input type="text" class="input-search" placeholder="Search">
 
             <div class="component-list">

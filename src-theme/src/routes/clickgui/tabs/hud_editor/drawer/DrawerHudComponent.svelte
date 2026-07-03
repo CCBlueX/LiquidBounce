@@ -21,7 +21,6 @@
       padding: 10px;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 12px;
 
       &:hover {
         background-color: var(--accent-subtle-background-color);
@@ -31,11 +30,14 @@
 
     .name {
       color: var(--text-color);
-      font-weight: 500;
+      font-weight: 600;
       margin-bottom: 5px;
+      font-size: 14px;
     }
 
     .description {
       color: var(--clickgui-text-dimmed-color);
+      font-size: 14px;
+      font-weight: 500;
     }
 </style>
