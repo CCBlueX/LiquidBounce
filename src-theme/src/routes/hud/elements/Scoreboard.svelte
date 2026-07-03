@@ -6,7 +6,9 @@
 
     export let settings: { [name: string]: any };
 
-    const cSettings = settings as HudScoreboardSettings;
+    let cSettings: HudScoreboardSettings;
+
+    $: cSettings = settings as HudScoreboardSettings;
 
     let scoreboard: Scoreboard | null = null;
 

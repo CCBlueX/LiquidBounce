@@ -10,20 +10,18 @@
 
     export let settings: { [name: string]: any };
 
-    const cSettings = settings as HudTextSettings;
+    let cSettings: HudTextSettings;
 
     listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
         playerData = event.playerData;
-        processText();
     });
 
-    function processText() {
-        if (!cSettings.text || !playerData) {
-            processedText = cSettings.text || '';
-            return;
+    function processText(text: string, playerData: PlayerData | null): string {
+        if (!text || !playerData) {
+            return text || '';
         }
 
-        processedText = cSettings.text.replace(/{(\w+(\.\w+)*)}/g, (match: string, p1: string) => {
+        return text.replace(/{(\w+(\.\w+)*)}/g, (match: string, p1: string) => {
             const keys = p1.split(".");
             let value: any = playerData;
 
@@ -50,8 +48,8 @@
         });
     }
 
-    // Process text on mount
-    $: processText();
+    $: cSettings = settings as HudTextSettings;
+    $: processedText = processText(cSettings.text, playerData);
 </script>
 
 <div class="text" style="

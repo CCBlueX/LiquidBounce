@@ -50,17 +50,11 @@
         }
     });
 
-    function componentRenderKey(component: HudComponent): string {
-        const settings = {...component.settings};
-        delete settings.alignment;
-
-        return `${component.id}:${JSON.stringify(settings)}`;
-    }
 </script>
 
 {#if inEditor || !$hudEditorOpen}
     <div class="hud" style="zoom: {zoom}%">
-        {#each components as c (componentRenderKey(c))}
+        {#each components as c (c.id)}
             {#if c.settings.enabled}
                 <DraggableComponent
                         {inEditor}

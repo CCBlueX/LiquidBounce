@@ -49,7 +49,6 @@
         }
 
         await setComponentSettings(id, configurable);
-        await loadSettings();
     }
 
     async function loadSettings() {
