@@ -1,3 +1,7 @@
+<script lang="ts" context="module">
+    let highestEditorZIndex = 0;
+</script>
+
 <script lang="ts">
     import {onMount} from "svelte";
 
@@ -28,6 +32,7 @@
     let pointerCenterOffsetY = 0;
     let horizontalZone: HorizontalAnchorZone = "left";
     let verticalZone: VerticalAnchorZone = "upper";
+    let editorZIndex = 0;
 
     $: styleString = generateStyleString(alignment);
 
@@ -146,6 +151,10 @@
     }
 
     function onMouseDown(event: MouseEvent): void {
+        if (inEditor) {
+            editorZIndex = ++highestEditorZIndex;
+        }
+
         if (event.button !== 0 && event.button !== 1) {
             return;
         }
@@ -310,7 +319,7 @@
         on:keyup={handleKeyup}
 />
 
-<div class="draggable-element" style={styleString} bind:this={element}>
+<div class="draggable-element" style="{styleString} z-index: {editorZIndex};" bind:this={element}>
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="contained-element" on:mousedown={onMouseDown} class:editor-mode={inEditor}>
         <slot/>
