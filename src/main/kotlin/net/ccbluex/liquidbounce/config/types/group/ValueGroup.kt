@@ -28,6 +28,7 @@ import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.types.BindValue
 import net.ccbluex.liquidbounce.config.types.Config
@@ -288,6 +289,14 @@ open class ValueGroup(
         inner.forEach(Value<*>::restore)
     }
 
+    override fun inclusionGroup(group: OptionalInclusion) = apply {
+        super.inclusionGroup(group)
+
+        for (v in inner) {
+            v.inclusionGroup(group)
+        }
+    }
+
     // Common value types
 
     fun <T : ValueGroup> tree(valueGroup: T): T {
@@ -299,7 +308,7 @@ open class ValueGroup(
             logger.warn("ValueGroup '${valueGroup.name}' is already added to a parent '${valueGroup.base?.name}'")
         }
 
-        inner.add(valueGroup)
+        value(valueGroup)
         valueGroup.base = this
         return valueGroup
     }
@@ -323,50 +332,38 @@ open class ValueGroup(
         defaultValue: T,
         valueType: ValueType = ValueType.INVALID,
         aliases: List<String> = emptyList(),
-    ) = Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType))
 
     internal inline fun <T : MutableCollection<E>, reified E> list(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java))
 
     internal inline fun <T : MutableCollection<E>, reified E> mutableList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = MutableListValue(name, defaultValue, valueType, E::class.java).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(MutableListValue(name, defaultValue, valueType, E::class.java))
 
     internal inline fun <T : MutableSet<E>, reified E> itemList(
         name: String,
         defaultValue: T,
         items: Set<ItemListValue.NamedItem<E>>,
         valueType: ValueType,
-    ) = ItemListValue(name, defaultValue, items, valueType, E::class.java).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(ItemListValue(name, defaultValue, items, valueType, E::class.java))
 
     internal inline fun <T : SequencedSet<E>, reified E> registryList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = RegistryListValue(name, defaultValue, valueType, E::class.java).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(RegistryListValue(name, defaultValue, valueType, E::class.java))
 
     internal inline fun <T : MutableList<E>, reified E> registryMutableList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = RegistryMutableListValue(name, defaultValue, valueType, E::class.java).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(RegistryMutableListValue(name, defaultValue, valueType, E::class.java))
 
     private fun <T : Any> rangedValue(
         name: String,
@@ -375,16 +372,16 @@ open class ValueGroup(
         suffix: String,
         valueType: ValueType,
         aliases: List<String> = emptyList(),
-    ) = RangedValue(
-        name,
-        aliases = aliases,
-        defaultValue = defaultValue,
-        range = range,
-        suffix = suffix,
-        valueType = valueType,
-    ).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(
+        RangedValue(
+            name,
+            aliases = aliases,
+            defaultValue = defaultValue,
+            range = range,
+            suffix = suffix,
+            valueType = valueType,
+        )
+    )
 
     // Fixed data types
 
@@ -431,9 +428,7 @@ open class ValueGroup(
         InputBind(InputConstants.Type.KEYSYM, default, InputBind.BindAction.TOGGLE)
     )
 
-    fun bind(name: String, default: InputBind) = BindValue(name, defaultValue = default).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    fun bind(name: String, default: InputBind) = value(BindValue(name, defaultValue = default))
 
     fun key(name: String, default: Int) = key(name, InputConstants.Type.KEYSYM.getOrCreate(default))
 
@@ -464,7 +459,7 @@ open class ValueGroup(
         default: Vec3i = Vec3i.ZERO,
         useLocateButton: Boolean = true,
         aliases: List<String> = emptyList(),
-    ): Value<Vec3i> = Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_I).also(inner::add)
+    ): Value<Vec3i> = value(Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_I))
 
     @JvmOverloads
     fun vec3d(
@@ -472,7 +467,7 @@ open class ValueGroup(
         default: Vec3 = Vec3.ZERO,
         useLocateButton: Boolean = true,
         aliases: List<String> = emptyList(),
-    ): Value<Vec3> = Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_D).also(inner::add)
+    ): Value<Vec3> = value(Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_D))
 
     fun <C : SequencedSet<Block>> blocks(name: String, default: C) =
         registryList(name, default, ValueType.BLOCK)
@@ -507,14 +502,12 @@ open class ValueGroup(
         xAxis: Axis,
         yAxis: Axis,
         tension: Float = CurveValue.DEFAULT_TENSION,
-    ) = CurveValue(name, default, xAxis, yAxis, tension).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(CurveValue(name, default, xAxis, yAxis, tension))
 
     inline fun curve(name: String, block: CurveValue.Builder.() -> Unit): CurveValue {
         val builder = CurveValue.Builder()
         builder.name = name
-        return builder.apply(block).build().also(::value)
+        return value(builder.apply(block).build())
     }
 
     fun file(
@@ -522,9 +515,7 @@ open class ValueGroup(
         default: File? = null,
         dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
         supportedExtensions: Set<String>? = null,
-    ) = FileValue(name, default, dialogMode, supportedExtensions).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(FileValue(name, default, dialogMode, supportedExtensions))
 
     inline fun <reified T> multiEnumChoice(
         name: String,
@@ -562,9 +553,7 @@ open class ValueGroup(
         choices: Set<T>,
         canBeNone: Boolean,
         isOrderSensitive: Boolean,
-    ) = MultiChoiceListValue(name, default, choices, canBeNone, isOrderSensitive).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(MultiChoiceListValue(name, default, choices, canBeNone, isOrderSensitive))
 
     inline fun <reified T> enumChoice(
         name: String,
@@ -577,9 +566,7 @@ open class ValueGroup(
         default: T,
         choices: Set<T>,
         aliases: List<String> = emptyList(),
-    ): ChoiceListValue<T> = ChoiceListValue(name, defaultValue = default, choices = choices, aliases = aliases).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ): ChoiceListValue<T> = value(ChoiceListValue(name, defaultValue = default, choices = choices, aliases = aliases))
 
     protected fun <T : Mode> modes(
         eventListener: EventListener,
@@ -602,10 +589,9 @@ open class ValueGroup(
         activeCallback: ToIntFunction<List<T>>,
         modesCallback: (ModeValueGroup<T>) -> Array<T>,
     ): ModeValueGroup<T> {
-        return ModeValueGroup(eventListener, name, activeCallback, modesCallback).apply {
-            this@ValueGroup.inner.add(this)
+        return value(ModeValueGroup(eventListener, name, activeCallback, modesCallback).apply {
             this.base = this@ValueGroup
-        }
+        })
     }
 
     protected fun <T : Mode> modes(
@@ -615,7 +601,10 @@ open class ValueGroup(
         choicesCallback: (ModeValueGroup<T>) -> Array<T>,
     ) = modes(eventListener, name, { activeIndex }, choicesCallback)
 
-    fun <V : Value<*>> value(value: V) = value.apply { this@ValueGroup.inner.add(this) }
+    fun <V : Value<*>> value(value: V) = value.apply {
+        this@ValueGroup.inner.add(this)
+        this@ValueGroup.inclusionGroup?.let { this.inclusionGroup(it) }
+    }
 
     /**
      * Assigns the value of the settings to the component

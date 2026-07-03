@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.OptionalInclusion
 import java.util.TreeMap
 
 object ModuleCategories {
@@ -34,7 +35,7 @@ object ModuleCategories {
     val MOVEMENT = register(ModuleCategory("Movement"))
 
     @JvmField
-    val RENDER = register(ModuleCategory("Render"))
+    val RENDER = register(ModuleCategory("Render", inclusionGroup = OptionalInclusion.RENDER))
 
     @JvmField
     val WORLD = register(ModuleCategory("World"))
@@ -46,7 +47,7 @@ object ModuleCategories {
     val EXPLOIT = register(ModuleCategory("Exploit"))
 
     @JvmField
-    val FUN = register(ModuleCategory("Fun"))
+    val FUN = register(ModuleCategory("Fun", inclusionGroup = OptionalInclusion.FUN))
 
     @JvmStatic
     val entries: Collection<ModuleCategory> get() = registry.sequencedValues()
