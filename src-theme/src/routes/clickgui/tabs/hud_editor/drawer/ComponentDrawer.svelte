@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {HudComponent} from "../../../../../integration/types";
-    import {onMount} from "svelte";
+    import {onMount, tick} from "svelte";
     import {getComponents} from "../../../../../integration/rest";
     import DrawerHudComponent from "./DrawerHudComponent.svelte";
     import {fly} from "svelte/transition";
@@ -10,6 +10,7 @@
     let components: HudComponent[] = $state([]);
     let filteredComponents: HudComponent[] = $state([]);
     let drawerElement: HTMLElement | null = $state(null);
+    let searchInput: HTMLInputElement | null = $state(null);
 
     let query = $state("");
 
@@ -29,16 +30,25 @@
     function handleSearch(e: Event & { currentTarget: EventTarget & HTMLInputElement }) {
         filteredComponents = components.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
     }
+
+    async function toggleDrawer() {
+        drawerShown = !drawerShown;
+
+        if (drawerShown) {
+            await tick();
+            searchInput?.focus();
+        }
+    }
 </script>
 
 <svelte:window onclick={handleWindowClick}/>
 
 <div class="component-drawer" bind:this={drawerElement}>
-    <button class="button-toggle-drawer" onclick={() => drawerShown = !drawerShown}>Add Component</button>
+    <button class="button-toggle-drawer" onclick={toggleDrawer}>Add Component</button>
 
     {#if drawerShown}
         <div class="drawer" transition:fly={{ y: -10, duration: 200 }}>
-            <input type="text" class="input-search" placeholder="Search" bind:value={query} oninput={handleSearch}>
+            <input bind:this={searchInput} type="text" class="input-search" placeholder="Search" bind:value={query} oninput={handleSearch}>
 
             <div class="component-list">
                 {#if filteredComponents.length !== 0}
