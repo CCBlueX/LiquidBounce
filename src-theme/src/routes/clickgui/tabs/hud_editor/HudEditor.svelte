@@ -79,22 +79,48 @@
       background-color: var(--clickgui-hud-editor-anchor-zone-active-background-color);
 
       .anchor-point {
+        width: 14px;
+        height: 14px;
+        opacity: 1;
         background-color: var(--clickgui-hud-editor-anchor-point-active-color);
-        box-shadow: 0 0 8px var(--clickgui-hud-editor-anchor-point-active-color);
+        box-shadow: 0 0 10px var(--clickgui-hud-editor-anchor-point-active-shadow-color);
+        z-index: 1000;
+
+        &::after {
+          opacity: 1;
+          transform: scale(1);
+        }
       }
     }
   }
 
   .anchor-point {
+    --translate-x: -50%;
+    --translate-y: -50%;
+
     position: absolute;
     width: 8px;
     height: 8px;
     border-radius: 50%;
+    opacity: 0.55;
     background-color: var(--clickgui-hud-editor-anchor-point-color);
-    transform: translate(-50%, -50%);
+    transform: translate(var(--translate-x), var(--translate-y));
+    transition: width 100ms ease, height 100ms ease, opacity 100ms ease, box-shadow 100ms ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -6px;
+      border: solid 2px var(--clickgui-hud-editor-anchor-point-active-ring-color);
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 100ms ease, transform 100ms ease;
+    }
 
     &.horizontal-left {
       left: 0;
+      --translate-x: 0;
     }
 
     &.horizontal-center {
@@ -103,10 +129,12 @@
 
     &.horizontal-right {
       left: 100%;
+      --translate-x: -100%;
     }
 
     &.vertical-upper {
       top: 0;
+      --translate-y: 0;
     }
 
     &.vertical-center {
@@ -115,6 +143,7 @@
 
     &.vertical-lower {
       top: 100%;
+      --translate-y: -100%;
     }
   }
 </style>
