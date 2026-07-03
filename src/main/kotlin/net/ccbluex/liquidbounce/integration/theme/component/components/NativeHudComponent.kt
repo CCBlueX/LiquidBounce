@@ -27,5 +27,6 @@ abstract class NativeHudComponent(
     name: String,
     enabled: Boolean,
     alignment: Alignment,
-    tweaks: Array<HudComponentTweak> = emptyArray()
-) : HudComponent(name, enabled, alignment, tweaks)
+    tweaks: Array<HudComponentTweak> = emptyArray(),
+    description: String = "",
+) : HudComponent(name, enabled, alignment, tweaks, description)

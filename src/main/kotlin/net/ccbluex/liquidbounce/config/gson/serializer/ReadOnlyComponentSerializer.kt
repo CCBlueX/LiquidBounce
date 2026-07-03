@@ -34,6 +34,7 @@ object ReadOnlyComponentSerializer : JsonSerializer<HudComponent> {
         context: JsonSerializationContext
     ) = JsonObject().apply {
         addProperty("name", src.name)
+        addProperty("description", src.componentDescription)
         addProperty("id", src.id.toString())
         add("settings", serializeReadOnly(src, context))
     }

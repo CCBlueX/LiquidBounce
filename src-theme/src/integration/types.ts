@@ -390,6 +390,7 @@ export interface Theme {
 
 export interface HudComponent {
     name: string;
+    description: string;
     id: string;
     settings: { [name: string]: any };
 }

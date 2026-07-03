@@ -64,7 +64,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     horizontalOffset = 7,
     verticalAlignment = Alignment.ScreenAxisY.TOP,
     verticalOffset = 180,
-)) {
+), description = "Shows nearby terrain and entities.") {
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)

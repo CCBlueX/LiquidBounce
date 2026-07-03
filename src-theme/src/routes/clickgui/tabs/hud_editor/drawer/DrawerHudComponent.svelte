@@ -11,7 +11,7 @@
 
 <div class="drawer-hud-component">
     <div class="name">{component.name}</div>
-    <div class="description">Axolotl says henlo</div>
+    <div class="description">{component.description}</div>
 </div>
 
 <style lang="scss">

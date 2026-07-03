@@ -32,7 +32,8 @@ abstract class HudComponent(
     name: String,
     enabled: Boolean,
     alignment: Alignment = Alignment.center(),
-    val tweaks: Array<HudComponentTweak> = emptyArray()
+    val tweaks: Array<HudComponentTweak> = emptyArray(),
+    val componentDescription: String = "",
 ) : ToggleableValueGroup(parent = ModuleHud, name = name, enabled = enabled) {
 
     val id: UUID = UUID.randomUUID()
