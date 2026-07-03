@@ -619,6 +619,16 @@ export async function getGameWindow(): Promise<GameWindow> {
     return data;
 }
 
+export async function setHudEditorSelected(selected: boolean): Promise<void> {
+    await fetch(`${API_BASE}/client/hud-editor`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({selected})
+    });
+}
+
 /**
  * @param id Use the ID from [getMetadata].
  */

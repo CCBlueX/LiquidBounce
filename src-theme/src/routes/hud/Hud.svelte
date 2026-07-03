@@ -19,7 +19,7 @@
     import DraggableComponent from "./elements/DraggableComponent.svelte";
     import KeyBinds from "./elements/KeyBinds.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
-    import {hudEditorOpen, os} from "../clickgui/clickgui_store";
+    import {os} from "../clickgui/clickgui_store";
     import InventoryStatistics from "./elements/inventory/InventoryStatistics.svelte";
     import type {HudEditorDragState} from "../clickgui/tabs/hud_editor/constants";
 
@@ -49,69 +49,66 @@
             components = event.components;
         }
     });
-
 </script>
 
-{#if inEditor || !$hudEditorOpen}
-    <div class="hud" style="zoom: {zoom}%">
-        {#each components as c (c.id)}
-            {#if c.settings.enabled}
-                <DraggableComponent
-                        {inEditor}
-                        {onDragStateChange}
-                        componentId={c.id}
-                        componentName={c.name}
-                        alignment={c.settings.alignment}
-                >
-                    {#if c.name === "Watermark"}
-                        <Watermark/>
-                    {:else if c.name === "ArrayList"}
-                        <ArrayList settings={c.settings}/>
-                    {:else if c.name === "TabGui"}
-                        <TabGui/>
-                    {:else if c.name === "Notifications"}
-                        <Notifications/>
-                    {:else if c.name === "TargetHud"}
-                        <TargetHud/>
-                    {:else if c.name === "BlockCounter"}
-                        <BlockCounter settings={c.settings}/>
-                    {:else if c.name === "Hotbar"}
-                        <HotBar/>
-                    {:else if c.name === "Scoreboard"}
-                        <Scoreboard settings={c.settings}/>
-                    {:else if c.name === "ArmorItems"}
-                        <GenericPlayerInventory
-                                rowLength={1}
-                                backgroundColor="transparent"
-                                gap="2px"
-                                getRenderedStacks={it => Array.from(it.armor).reverse()}
-                        />
-                    {:else if c.name === "InventoryStatistics"}
-                        <InventoryStatistics settings={c.settings}/>
-                    {:else if c.name === "Inventory"}
-                        <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.main.slice(9)}/>
-                    {:else if c.name === "CraftingInventory"}
-                        <GenericPlayerInventory rowLength={2} getRenderedStacks={it => it.crafting}/>
-                    {:else if c.name === "EnderChestInventory"}
-                        <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.enderChest}/>
-                    {:else if c.name === "Taco"}
-                        <Taco/>
-                    {:else if c.name === "Keystrokes"}
-                        <Keystrokes/>
-                    {:else if c.name === "Effects"}
-                        <Effects/>
-                    {:else if c.name === "Text"}
-                        <Text settings={c.settings}/>
-                    {:else if c.name === "Image"}
-                        <img alt="" src="{c.settings.uRL}" style="scale: {c.settings.scale};">
-                    {:else if c.name === "KeyBinds"}
-                        <KeyBinds/>
-                    {/if}
-                </DraggableComponent>
-            {/if}
-        {/each}
-    </div>
-{/if}
+<div class="hud" style="zoom: {zoom}%">
+    {#each components as c (c.id)}
+        {#if c.settings.enabled}
+            <DraggableComponent
+                    {inEditor}
+                    {onDragStateChange}
+                    componentId={c.id}
+                    componentName={c.name}
+                    alignment={c.settings.alignment}
+            >
+                {#if c.name === "Watermark"}
+                    <Watermark/>
+                {:else if c.name === "ArrayList"}
+                    <ArrayList settings={c.settings}/>
+                {:else if c.name === "TabGui"}
+                    <TabGui/>
+                {:else if c.name === "Notifications"}
+                    <Notifications/>
+                {:else if c.name === "TargetHud"}
+                    <TargetHud/>
+                {:else if c.name === "BlockCounter"}
+                    <BlockCounter settings={c.settings}/>
+                {:else if c.name === "Hotbar"}
+                    <HotBar/>
+                {:else if c.name === "Scoreboard"}
+                    <Scoreboard settings={c.settings}/>
+                {:else if c.name === "ArmorItems"}
+                    <GenericPlayerInventory
+                            rowLength={1}
+                            backgroundColor="transparent"
+                            gap="2px"
+                            getRenderedStacks={it => Array.from(it.armor).reverse()}
+                    />
+                {:else if c.name === "InventoryStatistics"}
+                    <InventoryStatistics settings={c.settings}/>
+                {:else if c.name === "Inventory"}
+                    <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.main.slice(9)}/>
+                {:else if c.name === "CraftingInventory"}
+                    <GenericPlayerInventory rowLength={2} getRenderedStacks={it => it.crafting}/>
+                {:else if c.name === "EnderChestInventory"}
+                    <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.enderChest}/>
+                {:else if c.name === "Taco"}
+                    <Taco/>
+                {:else if c.name === "Keystrokes"}
+                    <Keystrokes/>
+                {:else if c.name === "Effects"}
+                    <Effects/>
+                {:else if c.name === "Text"}
+                    <Text settings={c.settings}/>
+                {:else if c.name === "Image"}
+                    <img alt="" src="{c.settings.uRL}" style="scale: {c.settings.scale};">
+                {:else if c.name === "KeyBinds"}
+                    <KeyBinds/>
+                {/if}
+            </DraggableComponent>
+        {/if}
+    {/each}
+</div>
 
 <style lang="scss">
   .hud {

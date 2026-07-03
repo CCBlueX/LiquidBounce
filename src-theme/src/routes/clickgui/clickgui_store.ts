@@ -22,16 +22,3 @@ export const showGrid: Writable<boolean> = writable(false);
 export const snappingEnabled: Writable<boolean> = writable(true);
 
 export const gridSize: Writable<number> = writable(10);
-
-export const hudEditorOpen: Writable<boolean> = writable(false);
-
-const hudEditorChannel = new BroadcastChannel("liquidbounce-hud-editor");
-
-hudEditorChannel.addEventListener("message", (event: MessageEvent<boolean>) => {
-    hudEditorOpen.set(event.data);
-});
-
-export function setHudEditorOpen(open: boolean): void {
-    hudEditorOpen.set(open);
-    hudEditorChannel.postMessage(open);
-}

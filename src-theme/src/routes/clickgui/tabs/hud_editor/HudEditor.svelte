@@ -2,7 +2,7 @@
     import {onMount} from "svelte";
 
     import Hud from "../../../hud/Hud.svelte";
-    import {setHudEditorOpen} from "../../clickgui_store";
+    import {setHudEditorSelected} from "../../../../integration/rest";
     import {
         HORIZONTAL_ANCHOR_ZONES,
         HUD_EDITOR_GRID_SIZE,
@@ -18,10 +18,10 @@
     }
 
     onMount(() => {
-        setHudEditorOpen(true);
+        void setHudEditorSelected(true);
 
         return () => {
-            setHudEditorOpen(false);
+            void setHudEditorSelected(false);
         };
     });
 </script>
