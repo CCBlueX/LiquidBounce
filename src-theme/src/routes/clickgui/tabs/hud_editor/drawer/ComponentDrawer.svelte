@@ -19,7 +19,7 @@
     });
 
     async function refreshComponents() {
-        components = await getComponentCatalog("liquidbounce");
+        components = (await getComponentCatalog("liquidbounce")).sort((a, b) => a.name.localeCompare(b.name));
         filteredComponents = components.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
     }
 
@@ -31,12 +31,13 @@
         }
     }
 
-    function handleSearch(e: Event & { currentTarget: EventTarget & HTMLInputElement }) {
+    function handleSearch() {
         filteredComponents = components.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
     }
 
     async function toggleDrawer() {
         drawerShown = !drawerShown;
+        query = "";
 
         if (drawerShown) {
             await refreshComponents();
@@ -51,6 +52,7 @@
             component.canAdd = false;
         }
         drawerShown = false;
+        query = "";
     }
 </script>
 
@@ -83,6 +85,7 @@
     left: 50%;
     transform: translateX(-50%);
     top: 70px;
+    z-index: 9999;
   }
 
   .input-search {
