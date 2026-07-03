@@ -59,6 +59,12 @@ object HudComponentManager {
         return theme.components
     }
 
+    fun getComponent(id: String): HudComponent? =
+        components.find { it.id.toString() == id }
+            ?: ThemeManager.themes.asSequence()
+                .flatMap { it.components.asSequence() }
+                .find { it.id.toString() == id }
+
     fun updateComponents() {
         // Might be necessary later on.
         // EventManager.callEvent(ComponentsUpdate(null, components))

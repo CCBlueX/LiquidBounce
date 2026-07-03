@@ -1,0 +1,128 @@
+<script lang="ts">
+    import {onMount, tick} from "svelte";
+    import {getComponentSettings, setComponentSettings} from "../../../../integration/rest";
+    import type {Alignment, ConfigurableSetting} from "../../../../integration/types";
+    import GenericSetting from "../../setting/common/GenericSetting.svelte";
+
+    export let name: string;
+    export let id: string;
+    export let alignment: Alignment;
+
+    let element: HTMLElement | undefined;
+    let configurable: ConfigurableSetting | undefined;
+
+    let bottom = false;
+    let marginLeft = 0;
+
+    $: alignment.horizontalAlignment,
+        alignment.horizontalOffset,
+        alignment.verticalAlignment,
+        alignment.verticalOffset,
+        updatePosition();
+
+    async function updatePosition() {
+        await tick();
+
+        if (!element) {
+            return;
+        }
+
+        const componentBounds = element.parentElement?.getBoundingClientRect();
+        if (componentBounds) {
+            bottom = componentBounds.top + componentBounds.height / 2 < window.innerHeight / 2;
+        }
+
+        const bounding = element.getBoundingClientRect();
+
+        if (bounding.right > window.innerWidth) {
+            marginLeft = window.innerWidth - bounding.right;
+        } else if (bounding.left < 0) {
+            marginLeft = -bounding.left;
+        } else {
+            marginLeft = 0;
+        }
+    }
+
+    async function handleSettingChange() {
+        if (!configurable) {
+            return;
+        }
+
+        await setComponentSettings(id, configurable);
+        await loadSettings();
+    }
+
+    async function loadSettings() {
+        const settings = await getComponentSettings(id);
+        settings.value = settings.value.filter(setting => setting.name !== "Alignment");
+        configurable = settings;
+    }
+
+    onMount(() => {
+        const resizeObserver = new ResizeObserver(updatePosition);
+
+        resizeObserver.observe(element!);
+        if (element?.parentElement) {
+            resizeObserver.observe(element.parentElement);
+        }
+
+        window.addEventListener("resize", updatePosition);
+        loadSettings();
+
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener("resize", updatePosition);
+        };
+    });
+</script>
+
+<div class="settings-wrapper" class:bottom={bottom} bind:this={element}>
+    <div class="settings" style="transform: translateX({marginLeft}px)">
+        {#if configurable !== undefined}
+            <GenericSetting path={name} bind:setting={configurable} on:change={handleSettingChange}/>
+        {/if}
+    </div>
+</div>
+
+<style lang="scss">
+  .settings-wrapper {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateY(-100%) translateX(-50%);
+
+    .settings {
+      background-color: var(--clickgui-hud-editor-component-settings-background-color);
+      padding: 5px 10px;
+      border-radius: 5px;
+      width: 200px;
+      box-shadow: 0 0 10px var(--clickgui-hud-editor-component-settings-shadow-color);
+    }
+
+    &::after {
+      content: "";
+      display: block;
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-right: 8px solid var(--clickgui-hud-editor-component-settings-background-color);
+      left: 50%;
+      bottom: -12px;
+      transform: translateX(-50%) rotate(-90deg);
+      z-index: -1;
+    }
+
+    &.bottom {
+      top: unset;
+      bottom: -15px;
+      transform: translateY(100%) translateX(-50%);;
+
+      &::after {
+        top: -12px;
+        transform: translateX(-50%) rotate(90deg);
+      }
+    }
+  }
+</style>

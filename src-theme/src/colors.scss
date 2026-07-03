@@ -94,6 +94,18 @@
     --clickgui-curve-grid-color: var(--clickgui-grid-color);
     --clickgui-curve-axis-color: var(--clickgui-text-dimmed-color);
 
+    --clickgui-hud-editor-grid-color: var(--clickgui-grid-color);
+    --clickgui-hud-editor-anchor-zone-border-color: color-mix(in srgb, var(--clickgui-text-color) 15%, transparent);
+    --clickgui-hud-editor-anchor-zone-background-color: color-mix(in srgb, var(--clickgui-text-color) 3%, transparent);
+    --clickgui-hud-editor-anchor-zone-active-border-color: var(--accent-color);
+    --clickgui-hud-editor-anchor-zone-active-background-color: color-mix(in srgb, var(--accent-color) 18%, transparent);
+    --clickgui-hud-editor-anchor-point-color: var(--clickgui-text-dimmed-color);
+    --clickgui-hud-editor-anchor-point-active-color: var(--accent-color);
+    --clickgui-hud-editor-draggable-element-outline-color: var(--accent-color);
+    --clickgui-hud-editor-draggable-element-background-color: color-mix(in srgb, var(--accent-color) 30%, transparent);
+    --clickgui-hud-editor-component-settings-background-color: var(--clickgui-base-80-color);
+    --clickgui-hud-editor-component-settings-shadow-color: var(--clickgui-base-50-color);
+
     /* Menu */
     --menu-base-color: var(--surface-color);
     --menu-text-color: var(--text-color);

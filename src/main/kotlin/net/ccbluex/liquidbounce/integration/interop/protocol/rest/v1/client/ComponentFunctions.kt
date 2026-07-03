@@ -19,9 +19,17 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.ccbluex.netty.http.routing.Routing
+import org.apache.commons.io.input.CharSequenceReader
 
 // GET /api/v1/client/components
 private fun Routing.getCurrentComponents() = get {
@@ -39,7 +47,50 @@ private fun Routing.getComponents() = get("/:id") {
     )
 }
 
+// POST /api/v1/client/components/:id/alignment
+private fun Routing.postComponentAlignment() = post("/:id/alignment") {
+    val id = call.parameters["id"] ?: call.badRequest("Missing component id")
+    val component = HudComponentManager.getComponent(id)
+        ?: call.notFound(id, "HUD component not found")
+    val alignment = runCatching {
+        requireNotNull(accessibleInteropGson.fromJson(call.body.toString(), Alignment::class.java))
+    }.getOrElse {
+        call.badRequest("Invalid alignment")
+    }
+
+    withContext(Dispatchers.Minecraft) {
+        component.alignment.update(alignment)
+        ConfigSystem.store(modulesConfig)
+        call.respondNoContent()
+    }
+}
+
+// GET /api/v1/client/components/:id/settings
+private fun Routing.getComponentSettings() = get("/:id/settings") {
+    val id = call.parameters["id"] ?: call.badRequest("Missing component id")
+    val component = HudComponentManager.getComponent(id)
+        ?: call.notFound(id, "HUD component not found")
+
+    call.respond(ConfigSystem.serializeValueGroup(component, gson = interopGson))
+}
+
+// PUT /api/v1/client/components/:id/settings
+private fun Routing.putComponentSettings() = put("/:id/settings") {
+    val id = call.parameters["id"] ?: call.badRequest("Missing component id")
+    val component = HudComponentManager.getComponent(id)
+        ?: call.notFound(id, "HUD component not found")
+
+    withContext(Dispatchers.Minecraft) {
+        ConfigSystem.deserializeValueGroup(component, CharSequenceReader(call.body))
+        ConfigSystem.store(modulesConfig)
+        call.respondNoContent()
+    }
+}
+
 internal fun Routing.componentRoutes() = route("/components") {
     getCurrentComponents()
     getComponents()
+    postComponentAlignment()
+    getComponentSettings()
+    putComponentSettings()
 }
