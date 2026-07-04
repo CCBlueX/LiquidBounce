@@ -54,8 +54,6 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
         event.renderEnvironment {
             circles.forEach {
                 val progress = animCurve

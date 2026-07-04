@@ -201,7 +201,6 @@ object RotationManager : EventListener {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val activeRotationTarget = this.activeRotationTarget ?: return@handler
 
-        val matrixStack = event.matrixStack
         val partialTicks = event.partialTicks
 
         if (isRotatingAllowed(activeRotationTarget)

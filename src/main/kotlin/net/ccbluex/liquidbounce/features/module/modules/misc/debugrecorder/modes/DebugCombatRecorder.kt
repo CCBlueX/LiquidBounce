@@ -184,8 +184,6 @@ object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
         event.renderEnvironment {
             targetTracker.targets().forEach { entity ->
                 val pos = entity.interpolateCurrentPosition(event.partialTicks)

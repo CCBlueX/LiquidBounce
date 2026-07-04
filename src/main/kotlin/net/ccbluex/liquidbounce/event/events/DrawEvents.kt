@@ -37,17 +37,20 @@ class ScreenRenderEvent(val context: GuiGraphicsExtractor, val partialTicks: Flo
 
 @Tag("worldRender")
 class WorldRenderEvent(
-    val matrixStack: PoseStack,
+    val poseStack: PoseStack,
     val camera: Camera,
     val partialTicks: Float,
     val renderTarget: RenderTarget,
 ) : Event(), AutoCloseable {
 
+    @Deprecated("For scripts only")
+    val matrixStack get() = poseStack
+
     private val batchCollector = BatchCollector()
 
     val environment = WorldRenderEnvironment(
         renderTarget = renderTarget,
-        poseStack = matrixStack,
+        poseStack = poseStack,
         camera = camera,
         batchCollector = batchCollector,
     )
