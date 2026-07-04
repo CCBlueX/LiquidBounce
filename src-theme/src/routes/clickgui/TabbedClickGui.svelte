@@ -5,7 +5,13 @@
     import {gridSize, os, scaleFactor, snappingEnabled, darken} from "./clickgui_store";
     import type {ConfigurableSetting, TogglableSetting} from "../../integration/types";
     import {onMount} from "svelte";
-    import {getClientInfo, getGameWindow, getModuleSettings, setTyping} from "../../integration/rest";
+    import {
+        getClientInfo,
+        getGameWindow,
+        getModuleSettings,
+        setHudEditorSelected,
+        setTyping
+    } from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import HudEditor from "./tabs/hud_editor/HudEditor.svelte";
@@ -39,6 +45,8 @@
     }
 
     onMount(async () => {
+        await setHudEditorSelected(false);
+
         $os = (await getClientInfo()).os;
 
         const gameWindow = await getGameWindow();
