@@ -170,8 +170,6 @@
     });
 
     listen("keyboardKey", (e: KeyboardKeyEvent) => {
-        console.log(e);
-
         if (e.key === "key.keyboard.left.shift") {
             ignoreGrid = e.action === 1;
         }

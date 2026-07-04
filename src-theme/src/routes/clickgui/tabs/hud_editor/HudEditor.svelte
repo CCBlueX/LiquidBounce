@@ -48,10 +48,21 @@
                 {/each}
             {/each}
         </div>
+
+        {#if dragState.verticalGuide !== undefined}
+            <div class="magnetic-guide vertical" style="left: {dragState.verticalGuide}px"></div>
+        {/if}
+        {#if dragState.horizontalGuide !== undefined}
+            <div class="magnetic-guide horizontal" style="top: {dragState.horizontalGuide}px"></div>
+        {/if}
     {/if}
 
     <ComponentDrawer/>
-    <Hud inEditor onDragStateChange={handleDragStateChange}/>
+    <Hud
+            inEditor
+            onDragStateChange={handleDragStateChange}
+            magneticTargetIds={dragState?.magneticTargetIds ?? []}
+    />
 </div>
 
 <style lang="scss">
@@ -149,6 +160,28 @@
     &.vertical-lower {
       top: 100%;
       --translate-y: -100%;
+    }
+  }
+
+  .magnetic-guide {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    background-color: var(--clickgui-hud-editor-magnetic-guide-color);
+    box-shadow: 0 0 6px var(--clickgui-hud-editor-magnetic-guide-shadow-color);
+
+    &.vertical {
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      transform: translateX(-50%);
+    }
+
+    &.horizontal {
+      right: 0;
+      left: 0;
+      height: 1px;
+      transform: translateY(-50%);
     }
   }
 </style>

@@ -3,16 +3,18 @@
 </script>
 
 <script lang="ts">
-    import {onMount} from "svelte";
+    import {getContext, onMount} from "svelte";
 
-    import type {KeyboardKeyEvent, KeyEvent, ScaleFactorChangeEvent} from "../../../integration/events";
+    import type {KeyboardKeyEvent, ScaleFactorChangeEvent} from "../../../integration/events";
     import {getGameWindow, setComponentAlignment} from "../../../integration/rest";
     import {type Alignment, HorizontalAlignment, VerticalAlignment} from "../../../integration/types.js";
     import {listen} from "../../../integration/ws";
     import ComponentSettings from "../../clickgui/tabs/hud_editor/ComponentSettings.svelte";
     import {
         type HorizontalAnchorZone,
+        HUD_EDITOR_ELEMENTS_CONTEXT,
         HUD_EDITOR_GRID_SIZE,
+        HUD_EDITOR_MAGNET_THRESHOLD,
         type HudEditorDragState,
         type VerticalAnchorZone
     } from "../../clickgui/tabs/hud_editor/constants";
@@ -23,6 +25,7 @@
     export let componentName: string;
     export let inEditor: boolean;
     export let onDragStateChange: ((state: HudEditorDragState) => void) | undefined = undefined;
+    export let magneticallyReferenced = false;
 
     let scaleFactor = 2;
     let element: HTMLElement | undefined;
@@ -32,7 +35,13 @@
     let pointerCenterOffsetY = 0;
     let horizontalZone: HorizontalAnchorZone = "left";
     let verticalZone: VerticalAnchorZone = "upper";
+    let verticalGuide: number | undefined;
+    let horizontalGuide: number | undefined;
+    let horizontalTargetId: string | undefined;
+    let verticalTargetId: string | undefined;
     let editorZIndex = 0;
+
+    const editorElements = getContext<Map<string, HTMLElement>>(HUD_EDITOR_ELEMENTS_CONTEXT);
 
     $: styleString = generateStyleString(alignment);
 
@@ -146,8 +155,97 @@
         }
     }
 
+    interface MagneticSnap {
+        center: number;
+        guide: number;
+        targetId?: string;
+    }
+
     function emitDragState(dragging: boolean): void {
-        onDragStateChange?.({dragging, horizontalZone, verticalZone});
+        onDragStateChange?.({
+            dragging,
+            horizontalZone,
+            verticalZone,
+            verticalGuide,
+            horizontalGuide,
+            magneticTargetIds: [...new Set([horizontalTargetId, verticalTargetId].filter(id => id !== undefined))],
+        });
+    }
+
+    function updateDragState(
+        nextHorizontalZone: HorizontalAnchorZone,
+        nextVerticalZone: VerticalAnchorZone,
+        nextVerticalGuide?: number,
+        nextHorizontalGuide?: number,
+        nextHorizontalTargetId?: string,
+        nextVerticalTargetId?: string,
+    ): void {
+        if (horizontalZone === nextHorizontalZone &&
+            verticalZone === nextVerticalZone &&
+            verticalGuide === nextVerticalGuide &&
+            horizontalGuide === nextHorizontalGuide &&
+            horizontalTargetId === nextHorizontalTargetId &&
+            verticalTargetId === nextVerticalTargetId) {
+            return;
+        }
+
+        horizontalZone = nextHorizontalZone;
+        verticalZone = nextVerticalZone;
+        verticalGuide = nextVerticalGuide;
+        horizontalGuide = nextHorizontalGuide;
+        horizontalTargetId = nextHorizontalTargetId;
+        verticalTargetId = nextVerticalTargetId;
+        emitDragState(true);
+    }
+
+    function getElementPoints(target: HTMLElement, horizontal: boolean): number[] {
+        const bounds = target.getBoundingClientRect();
+        const start = toHudCoordinate(horizontal ? bounds.left : bounds.top);
+        const size = toHudCoordinate(horizontal ? bounds.width : bounds.height);
+
+        return [start, start + size / 2, start + size];
+    }
+
+    function findMagneticSnap(center: number, size: number, horizontal: boolean): MagneticSnap | undefined {
+        if (isGridIgnored) {
+            return undefined;
+        }
+
+        const draggedPoints = [center - size / 2, center, center + size / 2];
+        const viewportSize = horizontal ? window.innerWidth : window.innerHeight;
+        const viewportCenter = viewportSize / 2;
+        const viewportCenterDistance = viewportCenter - center;
+        let closestSnap: MagneticSnap | undefined = Math.abs(viewportCenterDistance) <= HUD_EDITOR_MAGNET_THRESHOLD
+            ? {center: viewportCenter, guide: viewportCenter}
+            : undefined;
+        let closestDistance = closestSnap
+            ? Math.abs(viewportCenterDistance)
+            : HUD_EDITOR_MAGNET_THRESHOLD + 1;
+
+        for (const [id, target] of editorElements) {
+            if (id === componentId) {
+                continue;
+            }
+
+            for (const targetPoint of getElementPoints(target, horizontal)) {
+                for (const draggedPoint of draggedPoints) {
+                    const distance = targetPoint - draggedPoint;
+                    const snappedCenter = center + distance;
+
+                    if (Math.abs(distance) > HUD_EDITOR_MAGNET_THRESHOLD ||
+                        Math.abs(distance) >= closestDistance ||
+                        snappedCenter - size / 2 < 0 ||
+                        snappedCenter + size / 2 > viewportSize) {
+                        continue;
+                    }
+
+                    closestDistance = Math.abs(distance);
+                    closestSnap = {center: snappedCenter, guide: targetPoint, targetId: id};
+                }
+            }
+        }
+
+        return closestSnap;
     }
 
     function onMouseDown(event: MouseEvent): void {
@@ -167,6 +265,10 @@
         pointerCenterOffsetY = verticalCenter - toHudCoordinate(event.clientY);
         horizontalZone = getHorizontalZone(event.clientX);
         verticalZone = getVerticalZone(event.clientY);
+        verticalGuide = undefined;
+        horizontalGuide = undefined;
+        horizontalTargetId = undefined;
+        verticalTargetId = undefined;
         emitDragState(true);
     }
 
@@ -179,21 +281,38 @@
         const verticalCenter = toHudCoordinate(event.clientY) + pointerCenterOffsetY;
         const nextHorizontalZone = getHorizontalZone(event.clientX);
         const nextVerticalZone = getVerticalZone(event.clientY);
+        const elementWidth = element?.offsetWidth ?? 0;
+        const elementHeight = element?.offsetHeight ?? 0;
+        const horizontalSnap = findMagneticSnap(horizontalCenter, elementWidth, true);
+        const verticalSnap = findMagneticSnap(verticalCenter, elementHeight, false);
 
         alignment.horizontalAlignment = getHorizontalAlignment(nextHorizontalZone);
         alignment.verticalAlignment = getVerticalAlignment(nextVerticalZone);
 
-        const horizontalOffset = snapToGrid(getHorizontalOffset(horizontalCenter, alignment.horizontalAlignment));
-        const verticalOffset = snapToGrid(getVerticalOffset(verticalCenter, alignment.verticalAlignment));
+        const horizontalOffset = getHorizontalOffset(
+            horizontalSnap?.center ?? horizontalCenter,
+            alignment.horizontalAlignment
+        );
+        const verticalOffset = getVerticalOffset(
+            verticalSnap?.center ?? verticalCenter,
+            alignment.verticalAlignment
+        );
 
-        alignment.horizontalOffset = clampHorizontalOffset(horizontalOffset);
-        alignment.verticalOffset = clampVerticalOffset(verticalOffset);
+        alignment.horizontalOffset = clampHorizontalOffset(
+            horizontalSnap ? horizontalOffset : snapToGrid(horizontalOffset)
+        );
+        alignment.verticalOffset = clampVerticalOffset(
+            verticalSnap ? verticalOffset : snapToGrid(verticalOffset)
+        );
 
-        if (horizontalZone !== nextHorizontalZone || verticalZone !== nextVerticalZone) {
-            horizontalZone = nextHorizontalZone;
-            verticalZone = nextVerticalZone;
-            emitDragState(true);
-        }
+        updateDragState(
+            nextHorizontalZone,
+            nextVerticalZone,
+            horizontalSnap?.guide,
+            verticalSnap?.guide,
+            horizontalSnap?.targetId,
+            verticalSnap?.targetId,
+        );
     }
 
     function clampHorizontalOffset(offset: number): number {
@@ -250,6 +369,10 @@
         }
 
         isDragging = false;
+        verticalGuide = undefined;
+        horizontalGuide = undefined;
+        horizontalTargetId = undefined;
+        verticalTargetId = undefined;
         emitDragState(false);
         setComponentAlignment(componentId, alignment);
     }
@@ -291,11 +414,18 @@
     }
 
     listen("keyboardKey", (e: KeyboardKeyEvent) => {
-        console.log(e);
-
         if (e.key === "key.keyboard.left.shift") {
             isGridIgnored = e.action === 1;
         }
+    });
+
+    onMount(() => {
+        if (!inEditor || !element) {
+            return;
+        }
+
+        editorElements.set(componentId, element);
+        return () => editorElements.delete(componentId);
     });
 
     onMount(async () => {
@@ -316,7 +446,12 @@
 <div class="draggable-element" style="{styleString} z-index: {editorZIndex};" bind:this={element}
      transition:fade|global={{duration: 200}}>
     <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="contained-element" on:mousedown={onMouseDown} class:editor-mode={inEditor}>
+    <div
+            class="contained-element"
+            class:editor-mode={inEditor}
+            class:magnetically-referenced={inEditor && magneticallyReferenced}
+            on:mousedown={onMouseDown}
+    >
         <slot/>
     </div>
     {#if inEditor}
@@ -337,5 +472,10 @@
     .editor-mode {
         outline: solid 1px var(--clickgui-hud-editor-draggable-element-outline-color);
         background-color: var(--clickgui-hud-editor-draggable-element-background-color);
+        transition: background-color 100ms ease;
+    }
+
+    .magnetically-referenced {
+        background-color: var(--clickgui-hud-editor-magnetic-reference-background-color);
     }
 </style>

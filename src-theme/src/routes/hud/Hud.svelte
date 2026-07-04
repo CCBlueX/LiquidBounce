@@ -6,7 +6,7 @@
     import TabGui from "./elements/tabgui/TabGui.svelte";
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Scoreboard from "./elements/Scoreboard.svelte";
-    import {onMount} from "svelte";
+    import {onMount, setContext} from "svelte";
     import {getClientInfo, getComponents, getGameWindow, getMetadata} from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {HudComponent, Metadata} from "../../integration/types";
@@ -21,14 +21,20 @@
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
     import {os} from "../clickgui/clickgui_store";
     import InventoryStatistics from "./elements/inventory/InventoryStatistics.svelte";
-    import type {HudEditorDragState} from "../clickgui/tabs/hud_editor/constants";
+    import {
+        HUD_EDITOR_ELEMENTS_CONTEXT,
+        type HudEditorDragState
+    } from "../clickgui/tabs/hud_editor/constants";
 
     export let inEditor = false;
     export let onDragStateChange: ((state: HudEditorDragState) => void) | undefined = undefined;
+    export let magneticTargetIds: string[] = [];
 
     let zoom = 100;
     let metadata: Metadata;
     let components: HudComponent[] = [];
+
+    setContext(HUD_EDITOR_ELEMENTS_CONTEXT, new Map<string, HTMLElement>());
 
     onMount(async () => {
         $os = (await getClientInfo()).os;
@@ -60,6 +66,7 @@
                     componentId={c.id}
                     componentName={c.name}
                     alignment={c.settings.alignment}
+                    magneticallyReferenced={magneticTargetIds.includes(c.id)}
             >
                 {#if c.name === "Watermark"}
                     <Watermark/>
