@@ -22,8 +22,7 @@
     export let componentName: string;
     export let inEditor: boolean;
     export let onDragStateChange: ((state: HudEditorDragState) => void) | undefined = undefined;
-
-    // TODO: Use correct scale factor
+    
     let scaleFactor = 2;
     let element: HTMLElement | undefined;
     let isDragging = false;
