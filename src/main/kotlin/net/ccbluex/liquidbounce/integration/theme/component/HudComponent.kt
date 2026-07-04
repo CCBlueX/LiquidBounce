@@ -46,7 +46,7 @@ abstract class HudComponent(
     val alignment = tree(alignment)
 
     fun resetAlignment() {
-        alignment.update(defaultAlignment)
+        alignment.setFrom(defaultAlignment)
     }
 
     protected fun registerComponentListen(valueGroup: ValueGroup) {

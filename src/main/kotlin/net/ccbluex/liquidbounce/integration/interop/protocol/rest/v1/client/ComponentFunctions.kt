@@ -75,13 +75,13 @@ private fun Routing.postComponentAlignment() = post("/:id/alignment") {
     val component = HudComponentManager.getComponent(id)
         ?: call.notFound(id, "HUD component not found")
     val alignment = runCatching {
-        requireNotNull(accessibleInteropGson.fromJson(call.body.toString(), Alignment::class.java))
+        requireNotNull(accessibleInteropGson.fromJson(call.body, Alignment::class.java))
     }.getOrElse {
         call.badRequest("Invalid alignment")
     }
 
     withContext(Dispatchers.Minecraft) {
-        component.alignment.update(alignment)
+        component.alignment.setFrom(alignment)
         ConfigSystem.store(modulesConfig)
         call.respondNoContent()
     }

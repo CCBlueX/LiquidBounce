@@ -35,23 +35,23 @@ class Alignment(
         fun center() = Alignment(ScreenAxisX.CENTER, 0, ScreenAxisY.CENTER, 0)
     }
 
-    private val horizontalAlignmentValue = enumChoice("Horizontal", horizontalAlignment)
-    val horizontalAlignment by horizontalAlignmentValue
+    var horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
+        private set
 
-    private val horizontalOffsetValue = int("HorizontalOffset", horizontalOffset, -1000..1000)
-    val horizontalOffset by horizontalOffsetValue
+    var horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000)
+        private set
 
-    private val verticalAlignmentValue = enumChoice("Vertical", verticalAlignment)
-    val verticalAlignment by verticalAlignmentValue
+    var verticalAlignment by enumChoice("Vertical", verticalAlignment)
+        private set
 
-    private val verticalOffsetValue = int("VerticalOffset", verticalOffset, -1000..1000)
-    val verticalOffset by verticalOffsetValue
+    var verticalOffset by int("VerticalOffset", verticalOffset, -1000..1000)
+        private set
 
-    fun update(other: Alignment) {
-        horizontalAlignmentValue.set(other.horizontalAlignment)
-        horizontalOffsetValue.set(other.horizontalOffset)
-        verticalAlignmentValue.set(other.verticalAlignment)
-        verticalOffsetValue.set(other.verticalOffset)
+    fun setFrom(other: Alignment) {
+        this.horizontalAlignment = other.horizontalAlignment
+        this.horizontalOffset = other.horizontalOffset
+        this.verticalAlignment = other.verticalAlignment
+        this.verticalOffset = other.verticalOffset
     }
 
     fun getBounds(
