@@ -13,7 +13,6 @@
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import OptionBar from "../common/optionbar/OptionBar.svelte";
     import MenuListItem from "../common/menulist/MenuListItem.svelte";
-    import Menu from "../common/Menu.svelte";
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
     import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
     import MenuList from "../common/menulist/MenuList.svelte";
@@ -184,7 +183,6 @@
                     password={currentEditProxy.credentials?.password ?? ""}
                     requiresAuthentication={currentEditProxy.credentials !== undefined}/>
 {/if}
-<Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
@@ -237,4 +235,3 @@
             <IconTextButton icon="icon-back.svg" title="Back" on:click={() => deleteScreen()}/>
         </ButtonContainer>
     </BottomButtonWrapper>
-</Menu>

@@ -125,7 +125,6 @@ object AStarMode : TpAuraMode("AStar"), AStarPathBuilder {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
         val (_, path) = pathCache ?: return@handler
 
         event.renderEnvironment {

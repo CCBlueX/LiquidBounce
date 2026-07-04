@@ -9,7 +9,6 @@
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import OptionBar from "../common/optionbar/OptionBar.svelte";
     import MenuListItem from "../common/menulist/MenuListItem.svelte";
-    import Menu from "../common/Menu.svelte";
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
     import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
     import MenuList from "../common/menulist/MenuList.svelte";
@@ -67,7 +66,6 @@
     }
 </script>
 
-<Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
         <MultiSelect title="Game Mode" options={["Survival", "Creative", "Adventure", "Spectator"]}
@@ -115,7 +113,6 @@
             <IconTextButton icon="icon-back.svg" title="Back" on:click={() => openScreen("title")}/>
         </ButtonContainer>
     </BottomButtonWrapper>
-</Menu>
 
 <style lang="scss">
   .world-name {

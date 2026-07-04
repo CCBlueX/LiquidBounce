@@ -147,7 +147,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                     distanceFade,
                 ) {
                     getDynamicTransformsUniform(
-                        modelView = event.matrixStack.last().pose(),
+                        modelView = event.poseStack.last().pose(),
                         colorModulatorAlpha = 150,
                     )
                 }
@@ -159,7 +159,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 distanceFade,
             ) {
                 getDynamicTransformsUniform(
-                    modelView = event.matrixStack.last().pose(),
+                    modelView = event.poseStack.last().pose(),
                 )
             }
         }
