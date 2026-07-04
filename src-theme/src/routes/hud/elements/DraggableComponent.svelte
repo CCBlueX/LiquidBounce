@@ -480,7 +480,7 @@
         <slot/>
     </div>
     {#if isDragging}
-        <div class="position" class:top={positionOnTop}>
+        <div class="position" class:top={positionOnTop} transition:fade={{duration: 100}}>
             {displayPosition.x} &#215; {displayPosition.y}
         </div>
     {/if}
