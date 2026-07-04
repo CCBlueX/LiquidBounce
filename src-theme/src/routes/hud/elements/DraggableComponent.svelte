@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-    import {getContext, onMount} from "svelte";
+    import {getContext, onMount, tick} from "svelte";
 
     import type {KeyboardKeyEvent, ScaleFactorChangeEvent} from "../../../integration/events";
     import {getGameWindow, setComponentAlignment} from "../../../integration/rest";
@@ -40,6 +40,14 @@
     let horizontalTargetId: string | undefined;
     let verticalTargetId: string | undefined;
     let editorZIndex = 0;
+
+    let displayPosition = {
+        x: 0,
+        y: 0
+    };
+    let positionOnTop = false;
+
+    const POSITION_OVERLAY_OFFSET = 19;
 
     const editorElements = getContext<Map<string, HTMLElement>>(HUD_EDITOR_ELEMENTS_CONTEXT);
 
@@ -269,7 +277,23 @@
         horizontalGuide = undefined;
         horizontalTargetId = undefined;
         verticalTargetId = undefined;
+        void updateDisplayedPosition();
         emitDragState(true);
+    }
+
+    async function updateDisplayedPosition(): Promise<void> {
+        await tick();
+
+        if (!element) {
+            return;
+        }
+
+        const bounds = element.getBoundingClientRect();
+        displayPosition = {
+            x: Math.round(bounds.x),
+            y: Math.round(bounds.y)
+        };
+        positionOnTop = bounds.top + bounds.height / 2 >= window.innerHeight / 2;
     }
 
     function onMouseMove(event: MouseEvent): void {
@@ -313,6 +337,7 @@
             horizontalSnap?.targetId,
             verticalSnap?.targetId,
         );
+        void updateDisplayedPosition();
     }
 
     function clampHorizontalOffset(offset: number): number {
@@ -454,11 +479,17 @@
     >
         <slot/>
     </div>
+    {#if isDragging}
+        <div class="position" class:top={positionOnTop}>
+            {displayPosition.x} &#215; {displayPosition.y}
+        </div>
+    {/if}
     {#if inEditor}
         <ComponentSettings
                 name={componentName}
                 id={componentId}
                 {alignment}
+                overlayOffset={isDragging ? POSITION_OVERLAY_OFFSET : 0}
         />
     {/if}
 </div>
@@ -477,5 +508,21 @@
 
     .magnetically-referenced {
         background-color: var(--clickgui-hud-editor-magnetic-reference-background-color);
+    }
+
+    .position {
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 0;
+        width: max-content;
+        height: 14px;
+        color: var(--clickgui-text-dimmed-color);
+        font-size: 12px;
+        text-wrap: nowrap;
+    }
+
+    .position.top {
+        top: auto;
+        bottom: calc(100% + 5px);
     }
 </style>

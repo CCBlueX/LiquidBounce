@@ -7,6 +7,7 @@
     export let name: string;
     export let id: string;
     export let alignment: Alignment;
+    export let overlayOffset = 0;
 
     let element: HTMLElement | undefined;
     let configurable: ConfigurableSetting | undefined;
@@ -83,7 +84,7 @@
 <div
         class="settings-wrapper"
         class:bottom
-        style="--component-height: {componentHeight}px"
+        style="--component-height: {componentHeight}px; --overlay-offset: {overlayOffset}px"
         bind:this={element}
 >
     <div class="settings" style="transform: translateX({marginLeft}px)">
@@ -111,7 +112,7 @@
     top: 0;
     left: 50%;
     transition: ease transform .2s;
-    transform: translateY(calc(-100% - 15px)) translateX(-50%);
+    transform: translateY(calc(-100% - 15px - var(--overlay-offset))) translateX(-50%);
 
     .settings {
       background-color: var(--clickgui-hud-editor-component-settings-background-color);
@@ -186,7 +187,7 @@
     }
 
     &.bottom {
-      transform: translateY(calc(var(--component-height) + 15px)) translateX(-50%);
+      transform: translateY(calc(var(--component-height) + 15px + var(--overlay-offset))) translateX(-50%);
 
       &::before {
         opacity: 1;
