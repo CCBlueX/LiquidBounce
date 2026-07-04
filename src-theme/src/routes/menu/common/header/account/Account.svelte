@@ -34,8 +34,8 @@
 
     $: renderedAccounts = accounts.filter(a => a.username.toLowerCase().includes(searchQuery.toLowerCase()) || searchQuery === "");
 
-    const inAccountManager = $location === "/altmanager";
-    const inTitle = $location === "/title";
+    $: inAccountManager = $location === "/altmanager";
+    $: inTitle = $location === "/title";
 
     async function refreshSession() {
         const session = await getSession();
@@ -258,6 +258,7 @@
       cursor: pointer;
       display: flex;
       align-items: center;
+      transition: ease opacity .2s;
 
       &:disabled {
         pointer-events: none;
