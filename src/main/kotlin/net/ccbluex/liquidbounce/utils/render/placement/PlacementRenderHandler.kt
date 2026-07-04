@@ -64,8 +64,6 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     private val blockPosCacheList = LongArrayList()
 
     fun render(event: WorldRenderEvent, time: Long) {
-        val matrixStack = event.matrixStack
-
         with(placementRenderer) {
             val color = getColor(id)
             val outlineColor = getOutlineColor(id)

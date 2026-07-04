@@ -83,7 +83,7 @@ internal class BatchCollector {
         return ConsolidatedMeshBuildScope(draw.builder)
     }
 
-    fun flush(renderTarget: RenderTarget, dynamicTransforms: GpuBufferSlice) {
+    fun flush(renderTarget: RenderTarget, dynamicTransforms: GpuBufferSlice?) {
         try {
             if (drawOrder.isEmpty) {
                 return
@@ -113,7 +113,7 @@ internal class BatchCollector {
             ).use { pass ->
                 pass.setupRenderTypeScissor()
                 pass.bindDefaultUniforms()
-                pass.bindDynamicTransformsUniform(dynamicTransforms)
+                dynamicTransforms?.let(pass::bindDynamicTransformsUniform)
 
                 builtBuffers.forEach { draw ->
                     pass.setPipeline(draw.key.pipeline)

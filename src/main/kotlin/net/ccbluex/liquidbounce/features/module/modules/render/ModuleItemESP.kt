@@ -150,8 +150,6 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         private val renderHandler = handler<WorldRenderEvent> { event ->
             if (entities.isEmpty()) return@handler
 
-            val matrixStack = event.matrixStack
-
             val color = getColor()
             val faceColor = color.with(a = 50)
             val outlineColor = color.with(a = 100)

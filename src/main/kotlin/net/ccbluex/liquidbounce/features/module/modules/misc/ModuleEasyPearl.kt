@@ -148,7 +148,6 @@ object ModuleEasyPearl :
             return@handler
         }
 
-        val matrixStack = event.matrixStack
         val pos = getPositionPlayerLookAt(event.partialTicks)?.location ?: return@handler
         val blockPos = pos.toBlockPos()
         val state = blockPos.state ?: return@handler

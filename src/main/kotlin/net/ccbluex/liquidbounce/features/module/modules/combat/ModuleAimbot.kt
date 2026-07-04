@@ -122,7 +122,6 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
         val partialTicks = event.partialTicks
         val target = targetTracker.target ?: return@handler
 

@@ -192,7 +192,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                     distanceFade = distanceFade,
                 ) {
                     getDynamicTransformsUniform(
-                        modelView = event.matrixStack.last().pose(),
+                        modelView = event.poseStack.last().pose(),
                     )
                 }
             }
@@ -203,13 +203,13 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 distanceFade = distanceFade,
             ) {
                 getDynamicTransformsUniform(
-                    modelView = event.matrixStack.last().pose(),
+                    modelView = event.poseStack.last().pose(),
                 )
             }
 
             if (entityBoxes.isEmpty()) return@handler
 
-            val matrixStack = event.matrixStack
+            val matrixStack = event.poseStack
 
             event.renderEnvironment {
                 for ((entity, box, color) in entityBoxes) {

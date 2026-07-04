@@ -31,7 +31,7 @@ import net.minecraft.client.renderer.feature.ItemFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -63,7 +63,7 @@ public abstract class MixinItemFeatureRenderer extends MixinRenderTypeFeatureRen
     private VertexConsumer remapHeldItemFoilRenderType(
         ItemFeatureRenderer instance,
         RenderType renderType,
-        @Nullable PoseStack.Pose foilDecalPose,
+        PoseStack.@Nullable Pose foilDecalPose,
         Operation<VertexConsumer> original,
         @Local(argsOnly = true, name = "submit") ItemFeatureRenderer.Submit submit
     ) {

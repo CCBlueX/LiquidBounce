@@ -84,7 +84,6 @@ object AutoFarmVisualizer : ToggleableValueGroup(ModuleAutoFarm, "Visualize", tr
 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
-            val matrixStack = event.matrixStack
             val baseColor = if (colorRainbow) rainbow() else readyColor
 
             val fillColor = baseColor.with(a = 50)

@@ -205,7 +205,6 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
         if (lineColor.a > 0) {
             event.renderEnvironment {
                 drawLineStrip(
