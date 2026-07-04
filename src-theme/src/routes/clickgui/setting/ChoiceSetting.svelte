@@ -6,7 +6,6 @@
     import {setItem} from "../../../integration/persistent_storage";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import Dropdown from "./common/Dropdown.svelte";
-    import {slide} from "svelte/transition";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -59,7 +58,7 @@
     {/if}
 
     {#if expanded && nestedSettings.length > 0}
-        <div class="nested-settings" transition:slide={{duration: 200, axis: "y"}}>
+        <div class="nested-settings">
             {#each nestedSettings as setting (setting.name)}
                 <GenericSetting path={thisPath} bind:setting={setting} on:change={handleChange} />
             {/each}

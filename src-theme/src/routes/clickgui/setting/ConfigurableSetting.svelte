@@ -5,7 +5,6 @@
     import ExpandArrow from "./common/ExpandArrow.svelte";
     import {setItem} from "../../../integration/persistent_storage";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import {slide} from "svelte/transition";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -43,7 +42,7 @@
     </div>
 
     {#if expanded}
-        <div class="nested-settings" transition:slide={{duration: 200, axis: "y"}}>
+        <div class="nested-settings">
             {#each cSetting.value as setting (setting.name)}
                 <GenericSetting path={thisPath} bind:setting on:change={handleChange}/>
             {/each}

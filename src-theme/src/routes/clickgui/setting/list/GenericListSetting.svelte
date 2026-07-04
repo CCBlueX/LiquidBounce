@@ -39,7 +39,7 @@
         <ExpandArrow bind:expanded/>
     </div>
     {#if expanded}
-        <div transition:slide={{duration: 200, axis: "y"}}>
+        <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
             <SearchableList {items} let:item>
                 <ListItem value={item.value} name={item.name} icon={item.icon}
                           enabled={cSetting.value.includes(item.value)} on:toggle={handleItemToggle} />
