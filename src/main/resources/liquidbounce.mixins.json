@@ -144,6 +144,7 @@
     "minecraft.render.entity.MixinEntityRenderState",
     "minecraft.render.entity.MixinLivingEntityRenderer",
     "minecraft.render.entity.feature.MixinDeadmau5EarsLayer",
+    "minecraft.render.entity.feature.MixinEquipmentLayerRenderer",
     "minecraft.render.entity.feature.MixinRenderLayer",
     "minecraft.render.fog.MixinBlindnessFogEnvironment",
     "minecraft.render.fog.MixinFogRenderer",

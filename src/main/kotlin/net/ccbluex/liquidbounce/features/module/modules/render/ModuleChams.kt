@@ -42,11 +42,14 @@ import net.minecraft.world.entity.Entity
 import java.util.function.Function
 
 /**
- * TODO: Known issue: player armor + hand items
+ * TODO: Known issue: world hand items
  */
 object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
     private val supportedRenderTypes = hashSetOf(
+        "armor_cutout_no_cull",
+        "armor_decal_cutout_no_cull",
+        "armor_entity_glint",
         "entity_translucent",
         "entity_cutout",
         "entity_cutout_no_cull"
@@ -80,7 +83,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
     private fun supports(renderType: RenderType): Boolean =
         supportedRenderTypes.contains((renderType as MixinRenderTypeAccessor).name)
 
-    fun remapIfNeeded(renderType: RenderType, entity: Entity): RenderType {
+    fun remapIfNeeded(renderType: RenderType, entity: Entity?): RenderType {
         if (!running || !entity.shouldBeShown() || !supports(renderType)) {
             return renderType
         }
