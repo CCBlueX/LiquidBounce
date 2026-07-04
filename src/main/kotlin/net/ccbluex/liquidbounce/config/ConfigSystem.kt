@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.fileGson
 import net.ccbluex.liquidbounce.config.gson.util.parseTree
@@ -271,7 +272,7 @@ object ConfigSystem {
         val storedValues = jsonObject.getAsJsonArray("value")
             .map { valueElement -> valueElement.asJsonObject }
         val valuesByName = storedValues.groupBy { valueObj -> valueObj["name"].asString!! }
-        val consumedValues = mutableMapOf<String, Int>()
+        val consumedValues = Object2IntOpenHashMap<String>()
 
         // Migration Code for KillAura's Range Values
         if (valueGroup is ModuleKillAura) {
@@ -284,9 +285,8 @@ object ConfigSystem {
                     consumedValues.getOrDefault(name, 0) < valuesByName[name].orEmpty().size
                 }
                 ?: continue
-            val valueIndex = consumedValues.getOrDefault(storedName, 0)
+            val valueIndex = consumedValues.addTo(storedName, 1)
             val currentElement = valuesByName.getValue(storedName)[valueIndex]
-            consumedValues[storedName] = valueIndex + 1
 
             deserializeValue(value, currentElement)
         }

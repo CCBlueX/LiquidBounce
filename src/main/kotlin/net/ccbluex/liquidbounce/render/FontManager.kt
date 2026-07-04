@@ -19,11 +19,13 @@
 package net.ccbluex.liquidbounce.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.createFont
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.util.Util
 import net.minecraft.util.Util.OS.LINUX
 import net.minecraft.util.Util.OS.OSX
@@ -82,7 +84,7 @@ object FontManager {
         put(COMMON_FONT.name, COMMON_FONT)
     }
 
-    private fun addFontFace(fontFace: FontFace) = mc.execute {
+    private suspend fun addFontFace(fontFace: FontFace) = withContext(Dispatchers.Minecraft) {
         fontFaces[fontFace.name] = fontFace
     }
 

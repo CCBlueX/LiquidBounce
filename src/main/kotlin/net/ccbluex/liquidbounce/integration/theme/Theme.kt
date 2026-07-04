@@ -22,7 +22,10 @@ package net.ccbluex.liquidbounce.integration.theme
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.NativeImage
 import io.netty.handler.codec.http.HttpHeaderNames
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -57,7 +60,7 @@ import java.util.Locale
 @Suppress("TooManyFunctions")
 class Theme private constructor(val origin: Origin, url: String) :
     BaseApi(
-        url.removeSuffix("/"),
+        url.trimEnd('/'),
         defaultHeaders = headersOf(
             HttpHeaderNames.COOKIE.toString(),
             "${AuthMiddleware.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
@@ -112,8 +115,9 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
 
         // Check for duplicated component names
-        initialComponents.groupingBy { component -> component.name }.eachCount().forEach { (name, count) ->
-            check(count == 1) { "Found duplicated component name '$name'" }
+        val names = hashSetOf<String>()
+        initialComponents.forEach {
+            check(names.add(it.name)) { "Found duplicated component name '${it.name}'" }
         }
 
         _settings = ValueGroup(metadata.id.capitalize()).apply {
@@ -185,13 +189,16 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     private inner class ComponentSettings : ValueGroup("Components") {
         override fun prepareDeserialize(jsonObject: JsonObject) {
-            val existingCounts = components.groupingBy(HudComponent::name).eachCount().toMutableMap()
+            val existingCounts = Object2IntOpenHashMap<String>()
+            components.forEach {
+                existingCounts.addTo(it.name, 1)
+            }
 
             for (storedComponent in jsonObject.getAsJsonArray("value")) {
                 val name = storedComponent.asJsonObject["name"].asString
                 val remaining = existingCounts.getOrDefault(name, 0)
                 if (remaining > 0) {
-                    existingCounts[name] = remaining - 1
+                    existingCounts.put(name, remaining - 1)
                     continue
                 }
 
@@ -212,16 +219,18 @@ class Theme private constructor(val origin: Origin, url: String) :
         val canAdd: Boolean,
     )
 
-    private suspend fun loadFonts() {
+    private suspend fun loadFonts() = coroutineScope {
         for (font in metadata.fonts) {
-            runCatching {
-                get<InputStream>("/fonts/$font").use { stream ->
-                    FontManager.queueFontFromStream(stream)
-                }
+            launch {
+                runCatching {
+                    get<InputStream>("/fonts/$font").use { stream ->
+                        FontManager.queueFontFromStream(stream)
+                    }
 
-                logger.info("Loaded font $font for theme ${metadata.name}")
-            }.onFailure {
-                logger.warn("Failed to load font $font for theme ${metadata.name}", it)
+                    logger.info("Loaded font $font for theme ${metadata.name}")
+                }.onFailure {
+                    logger.warn("Failed to load font $font for theme ${metadata.name}", it)
+                }
             }
         }
     }
