@@ -24,8 +24,6 @@ import com.mojang.blaze3d.platform.NativeImage
 import io.netty.handler.codec.http.HttpHeaderNames
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -102,22 +100,25 @@ class Theme private constructor(val origin: Origin, url: String) :
         get() = requireNotNull(_colors) { "colors not loaded" }
 
     private suspend fun loadComponents() {
-        componentFactories = metadata.components.mapNotNull { name ->
+        val componentFactoryList = metadata.components.mapNotNull { name ->
             runCatching {
                 get<JsonHudComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
             }.onFailure {
                 logger.warn("Failed to load component $name", it)
-            }.getOrNull()?.let { it.name to it }
-        }.toMap()
+            }.getOrNull()
+        }
+
+        componentFactories = buildMap {
+            for (factory in componentFactoryList) {
+                // Check for duplicated component names
+                check(this.put(factory.name, factory) == null) {
+                    "Found duplicated component name '${factory.name}'"
+                }
+            }
+        }
 
         val initialComponents = requireNotNull(componentFactories).values.mapNotNull { factory ->
             createComponent(factory)
-        }
-
-        // Check for duplicated component names
-        val names = hashSetOf<String>()
-        initialComponents.forEach {
-            check(names.add(it.name)) { "Found duplicated component name '${it.name}'" }
         }
 
         _settings = ValueGroup(metadata.id.capitalize()).apply {
@@ -219,18 +220,16 @@ class Theme private constructor(val origin: Origin, url: String) :
         val canAdd: Boolean,
     )
 
-    private suspend fun loadFonts() = coroutineScope {
+    private suspend fun loadFonts() {
         for (font in metadata.fonts) {
-            launch {
-                runCatching {
-                    get<InputStream>("/fonts/$font").use { stream ->
-                        FontManager.queueFontFromStream(stream)
-                    }
-
-                    logger.info("Loaded font $font for theme ${metadata.name}")
-                }.onFailure {
-                    logger.warn("Failed to load font $font for theme ${metadata.name}", it)
+            runCatching {
+                get<InputStream>("/fonts/$font").use { stream ->
+                    FontManager.queueFontFromStream(stream)
                 }
+
+                logger.info("Loaded font $font for theme ${metadata.name}")
+            }.onFailure {
+                logger.warn("Failed to load font $font for theme ${metadata.name}", it)
             }
         }
     }

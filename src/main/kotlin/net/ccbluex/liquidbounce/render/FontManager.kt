@@ -85,7 +85,9 @@ object FontManager {
     }
 
     private suspend fun addFontFace(fontFace: FontFace) = withContext(Dispatchers.Minecraft) {
-        fontFaces[fontFace.name] = fontFace
+        if (fontFaces.put(fontFace.name, fontFace) != null) {
+            logger.warn("FontFace ${fontFace.name} already exists, previous one has been replaced")
+        }
     }
 
     /**
