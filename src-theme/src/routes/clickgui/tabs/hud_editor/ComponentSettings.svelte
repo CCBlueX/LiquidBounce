@@ -31,8 +31,8 @@
         }
 
         const componentElement = element.parentElement;
-        const componentBounds = componentElement?.getBoundingClientRect();
-        if (componentBounds) {
+        if (componentElement) {
+            const componentBounds = componentElement.getBoundingClientRect();
             componentHeight = componentElement.offsetHeight;
             bottom = componentBounds.top + componentBounds.height / 2 < window.innerHeight / 2;
         }
