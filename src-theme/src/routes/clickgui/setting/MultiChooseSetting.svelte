@@ -59,7 +59,7 @@
     </div>
 
     {#if expanded}
-        <div class="choices" transition:slide|global={{duration: 200, axis: "y"}}>
+        <div class="choices" transition:slide={{duration: 200, axis: "y"}}>
             {#each cSetting.choices as choice (choice)}
                 <div
                         class="choice"

@@ -136,7 +136,7 @@
     </div>
 
     {#if expanded && configurable}
-        <div class="settings">
+        <div class="settings" transition:slide={{duration: 200, axis: "y"}}>
             {#each configurable.value as setting (setting.name)}
                 <GenericSetting {path} bind:setting on:change={updateModuleSettings}/>
             {/each}

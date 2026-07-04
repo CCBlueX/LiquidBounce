@@ -6,6 +6,7 @@
     import Switch from "./common/Switch.svelte";
     import {setItem} from "../../../integration/persistent_storage";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import {slide} from "svelte/transition";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -55,7 +56,7 @@
     {/if}
 
     {#if expanded}
-        <div class="nested-settings">
+        <div class="nested-settings" transition:slide={{duration: 200, axis: "y"}}>
             {#each nestedSettings as setting (setting.name)}
                 <GenericSetting  path={thisPath} bind:setting on:change={handleChange} />
             {/each}
