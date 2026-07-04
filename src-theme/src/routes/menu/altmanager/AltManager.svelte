@@ -12,7 +12,6 @@
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import OptionBar from "../common/optionbar/OptionBar.svelte";
     import MenuListItem from "../common/menulist/MenuListItem.svelte";
-    import Menu from "../common/Menu.svelte";
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
     import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
     import MenuList from "../common/menulist/MenuList.svelte";
@@ -118,7 +117,6 @@
 
 <DirectLoginModal bind:visible={directLoginModalVisible}/>
 <AddAccountModal bind:visible={addAccountModalVisible}/>
-<Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Premium Only" bind:value={premiumOnly}/>
@@ -170,7 +168,6 @@
             <IconTextButton icon="icon-back.svg" title="Back" on:click={() => deleteScreen()}/>
         </ButtonContainer>
     </BottomButtonWrapper>
-</Menu>
 
 <style lang="scss">
   .uuid {

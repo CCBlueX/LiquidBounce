@@ -12,7 +12,6 @@
         openScreen,
         toggleBackgroundShaderEnabled
     } from "../../../integration/rest";
-    import Menu from "../common/Menu.svelte";
     import {fly} from "svelte/transition";
     import {onMount} from "svelte";
     import {notification} from "../common/header/notification_store";
@@ -56,7 +55,6 @@
         <ConfettiBackground />
     {/if}
 
-    <Menu>
         <div class="content">
             <div class="main-buttons">
                 {#if regularButtonsShown}
@@ -99,13 +97,15 @@
                 </ButtonContainer>
             </div>
         </div>
-    </Menu>
 </div>
 
 <style>
     .title-screen {
         position: relative;
         isolation: isolate;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
     }
 
     .content {

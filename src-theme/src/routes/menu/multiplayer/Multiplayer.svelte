@@ -4,7 +4,6 @@
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
-    import Menu from "../common/Menu.svelte";
     import Search from "../common/Search.svelte";
     import MenuListItem from "../common/menulist/MenuListItem.svelte";
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
@@ -173,7 +172,6 @@
                      resourcePackPolicy={currentEditServer.resourcePackPolicy}/>
 {/if}
 <DirectConnectModal bind:visible={directConnectModalVisible}/>
-<Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
 
@@ -238,4 +236,3 @@
             <IconTextButton icon="icon-back.svg" title="Back" on:click={() => openScreen("title")}/>
         </ButtonContainer>
     </BottomButtonWrapper>
-</Menu>
