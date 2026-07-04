@@ -1,30 +1,30 @@
 <!-- Adapted from https://github.com/sveltejs/svelte-virtual-list -->
-<script lang="js">
+<script lang="ts">
     import {onMount, tick} from 'svelte';
     // props
-    export let items;
+    export let items: any[];
     export let height = '100%';
-    export let itemHeight = undefined;
+    export let itemHeight: number | undefined = undefined;
     // read-only, but visible to consumers via bind:start
     export let start = 0;
     export let end = 0;
     // local state
-    let height_map = [];
-    let rows;
-    let viewport;
-    let contents;
+    let height_map: number[] = [];
+    let rows: HTMLCollectionOf<HTMLElement>;
+    let viewport: HTMLElement;
+    let contents: HTMLElement;
     let viewport_height = 0;
-    let visible;
-    let mounted;
+    let visible: {index: number, data: any}[];
+    let mounted = false;
     let top = 0;
     let bottom = 0;
-    let average_height;
+    let average_height = 0;
     $: visible = items.slice(start, end).map((data, i) => {
         return { index: i + start, data };
     });
     // whenever `items` changes, invalidate the current heightmap
     $: if (mounted) refresh(items, viewport_height, itemHeight);
-    async function refresh(items, viewport_height, itemHeight) {
+    async function refresh(items: any[], viewport_height: number, itemHeight: number | undefined) {
         const { scrollTop } = viewport;
         await tick(); // wait until the DOM is up to date
         let content_height = top - scrollTop;
@@ -98,7 +98,7 @@
     }
     // trigger initial refresh
     onMount(() => {
-        rows = contents.getElementsByTagName('svelte-virtual-list-row');
+        rows = contents.getElementsByTagName('svelte-virtual-list-row') as HTMLCollectionOf<HTMLElement>;
         mounted = true;
     });
 </script>

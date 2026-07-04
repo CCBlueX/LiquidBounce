@@ -1,12 +1,12 @@
 <script lang="ts">
-    import {type ComponentType, createEventDispatcher} from "svelte";
+    import {type Component, createEventDispatcher} from "svelte";
 
     let availableTabsElement: HTMLElement | undefined;
 
     export let tabs: {
         title: string,
         icon: string,
-        component: ComponentType,
+        component: Component,
     }[];
     export let activeTab = 0;
 
