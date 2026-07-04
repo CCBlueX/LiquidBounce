@@ -103,7 +103,11 @@ private fun Routing.putComponentSettings() = put("/:id/settings") {
         ?: call.notFound(id, "HUD component not found")
 
     withContext(Dispatchers.Minecraft) {
+        val wasEnabled = component.enabled
         ConfigSystem.deserializeValueGroup(component, CharSequenceReader(call.body))
+        if (wasEnabled && !component.enabled) {
+            component.resetAlignment()
+        }
         ConfigSystem.store(modulesConfig)
         call.respondNoContent()
     }

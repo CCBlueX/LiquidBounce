@@ -37,7 +37,17 @@ abstract class HudComponent(
 ) : ToggleableValueGroup(parent = ModuleHud, name = name, enabled = enabled) {
 
     val id: UUID = UUID.randomUUID()
+    private val defaultAlignment = Alignment(
+        alignment.horizontalAlignment,
+        alignment.horizontalOffset,
+        alignment.verticalAlignment,
+        alignment.verticalOffset,
+    )
     val alignment = tree(alignment)
+
+    fun resetAlignment() {
+        alignment.update(defaultAlignment)
+    }
 
     protected fun registerComponentListen(valueGroup: ValueGroup) {
         for (v in valueGroup.inner) {
