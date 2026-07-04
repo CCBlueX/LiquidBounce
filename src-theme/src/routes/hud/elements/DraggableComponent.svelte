@@ -5,7 +5,7 @@
 <script lang="ts">
     import {onMount} from "svelte";
 
-    import type {ScaleFactorChangeEvent} from "../../../integration/events";
+    import type {KeyboardKeyEvent, KeyEvent, ScaleFactorChangeEvent} from "../../../integration/events";
     import {getGameWindow, setComponentAlignment} from "../../../integration/rest";
     import {type Alignment, HorizontalAlignment, VerticalAlignment} from "../../../integration/types.js";
     import {listen} from "../../../integration/ws";
@@ -290,17 +290,13 @@
         }
     }
 
-    function handleKeydown(event: KeyboardEvent): void {
-        if (event.key === "Shift") {
-            isGridIgnored = true;
-        }
-    }
+    listen("keyboardKey", (e: KeyboardKeyEvent) => {
+        console.log(e);
 
-    function handleKeyup(event: KeyboardEvent): void {
-        if (event.key === "Shift") {
-            isGridIgnored = false;
+        if (e.key === "key.keyboard.left.shift") {
+            isGridIgnored = e.action === 1;
         }
-    }
+    });
 
     onMount(async () => {
         const gameWindow = await getGameWindow();
@@ -315,8 +311,6 @@
 <svelte:window
         on:mouseup={onMouseUp}
         on:mousemove={onMouseMove}
-        on:keydown={handleKeydown}
-        on:keyup={handleKeyup}
 />
 
 <div class="draggable-element" style="{styleString} z-index: {editorZIndex};" bind:this={element}
