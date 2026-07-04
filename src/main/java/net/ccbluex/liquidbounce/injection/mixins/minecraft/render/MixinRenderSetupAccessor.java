@@ -45,9 +45,6 @@ public interface MixinRenderSetupAccessor {
     TextureTransform getTextureTransform();
 
     @Accessor
-    OutputTarget getOutputTarget();
-
-    @Accessor
     RenderSetup.OutlineProperty getOutlineProperty();
 
     @Accessor

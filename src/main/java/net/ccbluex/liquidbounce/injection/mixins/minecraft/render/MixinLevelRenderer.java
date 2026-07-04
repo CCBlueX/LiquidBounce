@@ -114,12 +114,12 @@ public abstract class MixinLevelRenderer {
 
     @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeSolid()V", shift = At.Shift.BEFORE))
     private void prepareChamsRenderTarget(CallbackInfo ci) {
-        ModuleChams.INSTANCE.prepareRenderTargetIfDirty();
+        ModuleChams.INSTANCE.beginFrameIfNeeded();
     }
 
     @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeTranslucentAfterTerrain()V", shift = At.Shift.AFTER))
     private void blitChams(CallbackInfo ci) {
-        ModuleChams.INSTANCE.blitIfDirty(Minecraft.getInstance().gameRenderer.mainRenderTarget());
+        ModuleChams.INSTANCE.compositeIfNeeded(Minecraft.getInstance().gameRenderer.mainRenderTarget());
     }
 
     @ModifyExpressionValue(

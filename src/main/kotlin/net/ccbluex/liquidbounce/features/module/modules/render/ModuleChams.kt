@@ -26,24 +26,31 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderSetupAccessor
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuadSnippet
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
+import net.ccbluex.liquidbounce.render.withOutputTarget
+import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.minecraft.client.renderer.BindGroupLayouts
 import net.minecraft.client.renderer.rendertype.OutputTarget
-import net.minecraft.client.renderer.rendertype.RenderSetup
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.util.Util
+import net.minecraft.world.entity.Entity
 import java.util.function.Function
 
 /**
  * TODO: Known issue: player armor + hand items
  */
 object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
+
+    private val supportedRenderTypes = hashSetOf(
+        "entity_translucent",
+        "entity_cutout",
+        "entity_cutout_no_cull"
+    )
 
     private val renderTargetHolder = LazyRenderTargetHolder("Chams", useDepth = true)
     private val blitSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
@@ -68,32 +75,21 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
             )
         })
 
-    private fun RenderSetup.withOutputTarget(outputTarget: OutputTarget): RenderSetup {
-        this as MixinRenderSetupAccessor
-        return MixinRenderSetupAccessor.`liquid_bounce$invokeInit`(
-            this.getPipeline(),
-            this.getTextures(),
-            this.getUseLightmap(),
-            this.getUseOverlay(),
-            this.getLayeringTransform(),
-            outputTarget,
-            this.getTextureTransform(),
-            this.getOutlineProperty(),
-            this.getAffectsCrumbling(),
-            this.getSortOnUpload()
-        )
-    }
-
     private var dirty = false
 
-    fun markDirty() {
+    private fun supports(renderType: RenderType): Boolean =
+        supportedRenderTypes.contains((renderType as MixinRenderTypeAccessor).name)
+
+    fun remapIfNeeded(renderType: RenderType, entity: Entity): RenderType {
+        if (!running || !entity.shouldBeShown() || !supports(renderType)) {
+            return renderType
+        }
+
         dirty = true
+        return remapRenderType.apply(renderType)
     }
 
-    fun remap(renderType: RenderType): RenderType =
-        remapRenderType.apply(renderType)
-
-    fun prepareRenderTargetIfDirty() {
+    fun beginFrameIfNeeded() {
         if (!running || !dirty) {
             return
         }
@@ -101,7 +97,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         renderTargetHolder.initAndGet()
     }
 
-    fun blitIfDirty(target: RenderTarget) {
+    fun compositeIfNeeded(target: RenderTarget) {
         if (!dirty) {
             return
         }

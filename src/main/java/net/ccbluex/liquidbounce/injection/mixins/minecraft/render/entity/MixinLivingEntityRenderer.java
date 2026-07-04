@@ -29,12 +29,10 @@ import kotlin.Pair;
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory;
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
-import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.Model;
@@ -192,20 +190,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         if (original == null) return null;
 
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
-
-        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity)) {
-            ModuleChams.INSTANCE.markDirty();
-            switch (((MixinRenderTypeAccessor) original).getName()) {
-                case "entity_translucent", "entity_cutout", "entity_cutout_no_cull" -> {
-                    return ModuleChams.INSTANCE.remap(original);
-                }
-                default -> {
-                    return original;
-                }
-            }
-        }
-
-        return original;
+        return ModuleChams.INSTANCE.remapIfNeeded(original, entity);
     }
 
     // FreeCam
