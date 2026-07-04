@@ -250,7 +250,7 @@
 
         isDragging = false;
         emitDragState(false);
-        void setComponentAlignment(componentId, alignment);
+        setComponentAlignment(componentId, alignment);
     }
 
     function generateStyleString(alignment: Alignment): string {

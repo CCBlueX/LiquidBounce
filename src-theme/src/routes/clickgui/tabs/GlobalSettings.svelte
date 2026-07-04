@@ -19,7 +19,7 @@
     }
 
     onMount(() => {
-        void fetchGlobalSettings();
+        fetchGlobalSettings();
     });
 </script>
 

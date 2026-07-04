@@ -38,7 +38,7 @@
 
     $: if (cSettings !== settings) {
         cSettings = settings as HudArrayListSettings;
-        void updateEnabledModules();
+        updateEnabledModules();
     }
 
     spaceSeperatedNames.subscribe(async () => {
