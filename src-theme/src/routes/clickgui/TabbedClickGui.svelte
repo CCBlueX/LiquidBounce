@@ -2,7 +2,7 @@
     import ClickGui from "./ClickGui.svelte";
     import GlobalSettings from "./tabs/GlobalSettings.svelte";
     import Tabs from "./tabs/Tabs.svelte";
-    import {gridSize, os, scaleFactor, snappingEnabled} from "./clickgui_store";
+    import {gridSize, os, scaleFactor, snappingEnabled, darken} from "./clickgui_store";
     import type {ConfigurableSetting, TogglableSetting} from "../../integration/types";
     import {onMount} from "svelte";
     import {getClientInfo, getGameWindow, getModuleSettings, setTyping} from "../../integration/rest";
@@ -61,6 +61,7 @@
 
 <div
         class="tabbed-clickgui"
+        class:darken={$darken}
         style="
     transform: scale({$scaleFactor * 50}%);
     width: {2 / $scaleFactor * 100}vw;
@@ -72,12 +73,16 @@
 
 <style lang="scss">
   .tabbed-clickgui {
-    background-color: var(--clickgui-overlay-background-color);
     overflow: hidden;
     position: absolute;
     will-change: opacity;
     transform-origin: top left;
     left: 0;
     top: 0;
+    transition: ease background-color .2s;
+
+    &.darken {
+      background-color: var(--clickgui-overlay-background-color);
+    }
   }
 </style>

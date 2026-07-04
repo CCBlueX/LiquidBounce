@@ -10,6 +10,7 @@
         VERTICAL_ANCHOR_ZONES
     } from "./constants";
     import ComponentDrawer from "./drawer/ComponentDrawer.svelte";
+    import {darken} from "../../clickgui_store";
 
     let dragState: HudEditorDragState | undefined;
 
@@ -18,10 +19,12 @@
     }
 
     onMount(() => {
-        void setHudEditorSelected(true);
+        $darken = false;
+        setHudEditorSelected(true);
 
         return () => {
-            void setHudEditorSelected(false);
+            $darken = true;
+            setHudEditorSelected(false);
         };
     });
 </script>
