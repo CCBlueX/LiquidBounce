@@ -26,8 +26,8 @@
       display: block;
       box-sizing: border-box;
       width: 100%;
-      background-color: var(--clickgui-module-hover-background-color);
-      border: solid 2px var(--clickgui-module-hover-background-color);
+      background-color: var(--clickgui-hud-editor-drawer-component-background-color);
+      border: solid 2px var(--clickgui-hud-editor-drawer-component-border-color);
       padding: 10px;
       border-radius: 5px;
       cursor: pointer;
@@ -38,20 +38,20 @@
       }
 
       &:not(:disabled):hover {
-        background-color: var(--accent-subtle-background-color);
-        border: solid 2px var(--accent-color);
+        background-color: var(--clickgui-hud-editor-drawer-component-hover-background-color);
+        border-color: var(--clickgui-hud-editor-drawer-component-hover-border-color);
       }
     }
 
     .name {
-      color: var(--text-color);
+      color: var(--clickgui-hud-editor-drawer-component-name-color);
       font-weight: 600;
       margin-bottom: 5px;
       font-size: 14px;
     }
 
     .description {
-      color: var(--clickgui-text-dimmed-color);
+      color: var(--clickgui-hud-editor-drawer-component-description-color);
       font-size: 14px;
       font-weight: 500;
     }

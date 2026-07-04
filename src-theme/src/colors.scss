@@ -111,6 +111,12 @@
     --clickgui-hud-editor-drawer-toggle-button-color: var(--text-color);
     --clickgui-hud-editor-drawer-background-color: var(--clickgui-base-80-color);
     --clickgui-hud-editor-drawer-shadow-color: var(--clickgui-base-50-color);
+    --clickgui-hud-editor-drawer-component-background-color: var(--clickgui-base-85-color);
+    --clickgui-hud-editor-drawer-component-border-color: var(--clickgui-base-85-color);
+    --clickgui-hud-editor-drawer-component-hover-background-color: var(--accent-subtle-background-color);
+    --clickgui-hud-editor-drawer-component-hover-border-color: var(--accent-color);
+    --clickgui-hud-editor-drawer-component-name-color: var(--clickgui-text-color);
+    --clickgui-hud-editor-drawer-component-description-color: var(--clickgui-text-dimmed-color);
 
     /* Menu */
     --menu-base-color: var(--surface-color);
