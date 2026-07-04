@@ -98,6 +98,17 @@
       border-radius: 5px;
       width: 200px;
       box-shadow: 0 0 10px var(--clickgui-hud-editor-component-settings-shadow-color);
+      max-height: 350px;
+      overflow: auto;
+
+      &::-webkit-scrollbar {
+        width: 2px;
+        height: 2px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        border-radius: 2px;
+      }
     }
 
     &::after {
@@ -125,5 +136,6 @@
         transform: translateX(-50%) rotate(90deg);
       }
     }
+
   }
 </style>
