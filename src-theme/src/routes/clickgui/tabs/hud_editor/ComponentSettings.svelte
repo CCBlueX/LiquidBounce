@@ -14,6 +14,8 @@
     let bottom = false;
     let marginLeft = 0;
 
+    const SCREEN_EDGE_MARGIN = 10;
+
     $: alignment.horizontalAlignment,
         alignment.horizontalOffset,
         alignment.verticalAlignment,
@@ -34,10 +36,10 @@
 
         const bounding = element.getBoundingClientRect();
 
-        if (bounding.right > window.innerWidth) {
-            marginLeft = window.innerWidth - bounding.right;
-        } else if (bounding.left < 0) {
-            marginLeft = -bounding.left;
+        if (bounding.right > window.innerWidth - SCREEN_EDGE_MARGIN) {
+            marginLeft = window.innerWidth - SCREEN_EDGE_MARGIN - bounding.right;
+        } else if (bounding.left < SCREEN_EDGE_MARGIN) {
+            marginLeft = SCREEN_EDGE_MARGIN - bounding.left;
         } else {
             marginLeft = 0;
         }
