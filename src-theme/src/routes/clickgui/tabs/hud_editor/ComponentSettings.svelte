@@ -13,6 +13,7 @@
 
     let bottom = false;
     let marginLeft = 0;
+    let componentHeight = 0;
 
     const SCREEN_EDGE_MARGIN = 10;
 
@@ -29,8 +30,10 @@
             return;
         }
 
-        const componentBounds = element.parentElement?.getBoundingClientRect();
+        const componentElement = element.parentElement;
+        const componentBounds = componentElement?.getBoundingClientRect();
         if (componentBounds) {
+            componentHeight = componentElement.offsetHeight;
             bottom = componentBounds.top + componentBounds.height / 2 < window.innerHeight / 2;
         }
 
@@ -77,7 +80,12 @@
     });
 </script>
 
-<div class="settings-wrapper" class:bottom={bottom} bind:this={element}>
+<div
+        class="settings-wrapper"
+        class:bottom
+        style="--component-height: {componentHeight}px"
+        bind:this={element}
+>
     <div class="settings" style="transform: translateX({marginLeft}px)">
         {#if configurable !== undefined}
             <TogglableSetting path={name} bind:setting={configurable} on:change={handleSettingChange}>
@@ -100,9 +108,10 @@
 <style lang="scss">
   .settings-wrapper {
     position: absolute;
-    top: -15px;
+    top: 0;
     left: 50%;
-    transform: translateY(-100%) translateX(-50%);
+    transition: ease transform .2s;
+    transform: translateY(calc(-100% - 15px)) translateX(-50%);
 
     .settings {
       background-color: var(--clickgui-hud-editor-component-settings-background-color);
@@ -149,6 +158,7 @@
       }
     }
 
+    &::before,
     &::after {
       content: "";
       display: block;
@@ -159,19 +169,33 @@
       border-bottom: 8px solid transparent;
       border-right: 8px solid var(--clickgui-hud-editor-component-settings-background-color);
       left: 50%;
-      bottom: -12px;
-      transform: translateX(-50%) rotate(-90deg);
+      opacity: 0;
+      transition: opacity .1s ease, transform .2s ease;
       z-index: -1;
     }
 
+    &::before {
+      top: -12px;
+      transform: translateX(-50%) rotate(90deg) scale(.8);
+    }
+
+    &::after {
+      bottom: -12px;
+      opacity: 1;
+      transform: translateX(-50%) rotate(-90deg);
+    }
+
     &.bottom {
-      top: unset;
-      bottom: -15px;
-      transform: translateY(100%) translateX(-50%);;
+      transform: translateY(calc(var(--component-height) + 15px)) translateX(-50%);
+
+      &::before {
+        opacity: 1;
+        transform: translateX(-50%) rotate(90deg);
+      }
 
       &::after {
-        top: -12px;
-        transform: translateX(-50%) rotate(90deg);
+        opacity: 0;
+        transform: translateX(-50%) rotate(-90deg) scale(.8);
       }
     }
 
