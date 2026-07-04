@@ -16,13 +16,14 @@
         type HudEditorDragState,
         type VerticalAnchorZone
     } from "../../clickgui/tabs/hud_editor/constants";
+    import {fade} from "svelte/transition";
 
     export let alignment: Alignment;
     export let componentId: string;
     export let componentName: string;
     export let inEditor: boolean;
     export let onDragStateChange: ((state: HudEditorDragState) => void) | undefined = undefined;
-    
+
     let scaleFactor = 2;
     let element: HTMLElement | undefined;
     let isDragging = false;
@@ -318,7 +319,8 @@
         on:keyup={handleKeyup}
 />
 
-<div class="draggable-element" style="{styleString} z-index: {editorZIndex};" bind:this={element}>
+<div class="draggable-element" style="{styleString} z-index: {editorZIndex};" bind:this={element}
+     transition:fade|global={{duration: 200}}>
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="contained-element" on:mousedown={onMouseDown} class:editor-mode={inEditor}>
         <slot/>
