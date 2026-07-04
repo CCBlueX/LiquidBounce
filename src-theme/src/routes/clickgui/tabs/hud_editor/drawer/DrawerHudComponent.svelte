@@ -17,8 +17,8 @@
         disabled={!component.canAdd}
         onclick={() => onselect(component)}
 >
-    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(component.name) : component.name}</div>
-    <div class="description">{component.description}</div>
+    <span class="name">{$spaceSeperatedNames ? convertToSpacedString(component.name) : component.name}</span>
+    <span class="description">{component.description}</span>
 </button>
 
 <style lang="scss">
@@ -49,11 +49,13 @@
     font-weight: 600;
     margin-bottom: 5px;
     font-size: 14px;
+    display: block;
   }
 
   .description {
     color: var(--clickgui-hud-editor-drawer-component-description-color);
     font-size: 14px;
     font-weight: 500;
+    display: block;
   }
 </style>
