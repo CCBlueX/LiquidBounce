@@ -2,7 +2,7 @@
     import {onMount, tick} from "svelte";
     import {getComponentSettings, setComponentSettings} from "../../../../integration/rest";
     import type {Alignment, ConfigurableSetting} from "../../../../integration/types";
-    import GenericSetting from "../../setting/common/GenericSetting.svelte";
+    import TogglableSetting from "../../setting/TogglableSetting.svelte";
 
     export let name: string;
     export let id: string;
@@ -80,7 +80,19 @@
 <div class="settings-wrapper" class:bottom={bottom} bind:this={element}>
     <div class="settings" style="transform: translateX({marginLeft}px)">
         {#if configurable !== undefined}
-            <GenericSetting path={name} bind:setting={configurable} on:change={handleSettingChange}/>
+            <TogglableSetting path={name} bind:setting={configurable} on:change={handleSettingChange}>
+                <button
+                        slot="control"
+                        let:disable
+                        let:label
+                        class="remove-component"
+                        title="Remove component"
+                        on:click={disable}
+                >
+                    <img src="img/clickgui/icon-cross.svg" alt="">
+                    <span>{label}</span>
+                </button>
+            </TogglableSetting>
         {/if}
     </div>
 </div>
@@ -108,6 +120,32 @@
 
       &::-webkit-scrollbar-thumb {
         border-radius: 2px;
+      }
+
+      .remove-component {
+        all: unset;
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        cursor: pointer;
+
+        img {
+          display: block;
+          width: 10px;
+          height: 10px;
+          flex: 0 0 10px;
+        }
+
+        span {
+          margin-left: 7px;
+          overflow: hidden;
+          color: var(--clickgui-text-color);
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 12px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
       }
     }
 
