@@ -24,6 +24,7 @@ import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor
@@ -35,15 +36,13 @@ import net.ccbluex.liquidbounce.render.withOutputTarget
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.minecraft.client.renderer.BindGroupLayouts
+import net.minecraft.client.renderer.feature.ItemFeatureRenderer
 import net.minecraft.client.renderer.rendertype.OutputTarget
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.util.Util
 import net.minecraft.world.entity.Entity
 import java.util.function.Function
 
-/**
- * TODO: Known issue: world hand items
- */
 object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
     private val supportedRenderTypes = hashSetOf(
@@ -52,7 +51,13 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         "armor_entity_glint",
         "entity_translucent",
         "entity_cutout",
-        "entity_cutout_no_cull"
+        "entity_cutout_no_cull",
+        "entity_solid",
+        "entity_glint",
+        "glint",
+        "glint_translucent",
+        "item_cutout",
+        "item_translucent"
     )
 
     private val renderTargetHolder = LazyRenderTargetHolder("Chams", useDepth = true)
@@ -78,11 +83,15 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
             )
         })
 
+    private val heldItemEntityContext = ScopedValue.newInstance<Entity>()
+    private val heldItemSubmits = ReferenceOpenHashSet<ItemFeatureRenderer.Submit>()
+
     private var dirty = false
 
     private fun supports(renderType: RenderType): Boolean =
         supportedRenderTypes.contains((renderType as MixinRenderTypeAccessor).name)
 
+    /** Remaps an entity render type to the chams target when applicable. */
     fun remapIfNeeded(renderType: RenderType, entity: Entity?): RenderType {
         if (!running || !entity.shouldBeShown() || !supports(renderType)) {
             return renderType
@@ -92,6 +101,45 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         return remapRenderType.apply(renderType)
     }
 
+    /** Runs a third-person held-item submission with the current entity bound. */
+    fun withHeldItemContext(entity: Entity?, block: Runnable) {
+        if (running && entity.shouldBeShown()) {
+            ScopedValue.where(heldItemEntityContext, entity).run(block)
+        } else {
+            block.run()
+        }
+    }
+
+    /** Marks an item submit as coming from the current held-item context. */
+    fun markHeldItemSubmitIfActive(submit: ItemFeatureRenderer.Submit) {
+        if (!heldItemEntityContext.isBound) {
+            return
+        }
+
+        heldItemSubmits.add(submit)
+    }
+
+    /** Returns whether the submit was created from a held-item context. */
+    fun isHeldItemSubmit(submit: ItemFeatureRenderer.Submit): Boolean =
+        heldItemSubmits.contains(submit)
+
+    /** Remaps a deferred held-item render type to the chams target when applicable. */
+    fun remapHeldItemRenderTypeIfNeeded(submit: ItemFeatureRenderer.Submit, renderType: RenderType): RenderType {
+        if (!isHeldItemSubmit(submit) || !supports(renderType)) {
+            return renderType
+        }
+
+        dirty = true
+        return remapRenderType.apply(renderType)
+    }
+
+    /** Remaps an immediate held-item render type using the current scoped entity. */
+    fun remapCurrentHeldItemRenderTypeIfNeeded(renderType: RenderType): RenderType {
+        val entity = if (heldItemEntityContext.isBound) heldItemEntityContext.get() else return renderType
+        return remapIfNeeded(renderType, entity)
+    }
+
+    /** Ensures the chams target exists before any remapped draws in this frame. */
     fun beginFrameIfNeeded() {
         if (!running || !dirty) {
             return
@@ -100,8 +148,10 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         renderTargetHolder.initAndGet()
     }
 
+    /** Blits the accumulated chams target into the main render target. */
     fun compositeIfNeeded(target: RenderTarget) {
         if (!dirty) {
+            heldItemSubmits.clear()
             return
         }
 
@@ -114,10 +164,13 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
             pass.bindTexture("InSampler", colorTexture, blitSampler)
             pass.draw(3, 1, 0, 0)
         }
+
+        heldItemSubmits.clear()
     }
 
     override fun onDisabled() {
         dirty = false
+        heldItemSubmits.clear()
         renderTargetHolder.close()
     }
 
