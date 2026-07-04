@@ -90,8 +90,8 @@ private fun Routing.putHudEditorState() = put("/hud-editor") {
 
     withContext(Dispatchers.Minecraft) {
         ModuleHud.setHudEditorSelected(selected)
-        call.respondNoContent()
     }
+    call.respondNoContent()
 }
 
 // GET /api/v1/client/window

@@ -65,8 +65,8 @@ private fun Routing.postComponent() = post("/:id") {
         HudComponentManager.addComponent(id)
             ?: call.badRequest("HUD component cannot be added again")
         ConfigSystem.store(modulesConfig)
-        call.respondNoContent()
     }
+    call.respondNoContent()
 }
 
 // POST /api/v1/client/components/:id/alignment
@@ -83,8 +83,8 @@ private fun Routing.postComponentAlignment() = post("/:id/alignment") {
     withContext(Dispatchers.Minecraft) {
         component.alignment.setFrom(alignment)
         ConfigSystem.store(modulesConfig)
-        call.respondNoContent()
     }
+    call.respondNoContent()
 }
 
 // GET /api/v1/client/components/:id/settings
@@ -109,8 +109,8 @@ private fun Routing.putComponentSettings() = put("/:id/settings") {
             component.resetAlignment()
         }
         ConfigSystem.store(modulesConfig)
-        call.respondNoContent()
     }
+    call.respondNoContent()
 }
 
 internal fun Routing.componentRoutes() = route("/components") {
