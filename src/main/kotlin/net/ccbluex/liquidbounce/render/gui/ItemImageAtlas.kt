@@ -155,7 +155,7 @@ private class ItemTextureRenderer(
      * From 1.21.5 DrawContext code
      */
     fun render(): CompletableFuture<Atlas> {
-        itemAtlasFramebuffer.clearColorAndDepth(depth = 0.0)
+        itemAtlasFramebuffer.clearColorAndDepth()
         RenderSystem.backupProjectionMatrix()
         this.projection.setupOrtho(-1000.0F, 1000.0F, this.textureSize.toFloat(), this.textureSize.toFloat(), true)
         RenderSystem.setProjectionMatrix(

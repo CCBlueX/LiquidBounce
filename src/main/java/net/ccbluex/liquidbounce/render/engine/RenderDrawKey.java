@@ -23,28 +23,25 @@ import static java.util.Collections.emptyMap;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 
 import java.util.Comparator;
-import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public record RenderDrawKey(
     RenderPipeline pipeline,
     Map<String, AbstractTexture> textures,
     Map<String, GpuBufferSlice> uniforms
 ) implements Comparable<RenderDrawKey> {
-    private static final Map<RenderPipeline, RenderDrawKey> CACHE_ONLY_PIPELINE = new IdentityHashMap<>();
+    private static final Reference2ObjectOpenHashMap<RenderPipeline, RenderDrawKey> CACHE_ONLY_PIPELINE = new Reference2ObjectOpenHashMap<>();
 
-    private static final Comparator<RenderDrawKey> COMPARATOR = Comparator.<RenderDrawKey>comparingInt(k -> k.pipeline.getSortKey())
-        .thenComparingInt(k -> k.textures.size())
-        .thenComparingInt(k -> k.uniforms.size())
-        .thenComparingInt(Objects::hashCode);
+    private static final Comparator<RenderDrawKey> COMPARATOR =
+        Comparator.<RenderDrawKey>comparingInt(k -> k.pipeline.getSortKey());
 
     public static RenderDrawKey of(RenderPipeline pipeline) {
         return CACHE_ONLY_PIPELINE.computeIfAbsent(pipeline,
-            p -> new RenderDrawKey(p, emptyMap(), emptyMap()));
+            p -> new RenderDrawKey((RenderPipeline) p, emptyMap(), emptyMap()));
     }
 
     public static RenderDrawKey of(

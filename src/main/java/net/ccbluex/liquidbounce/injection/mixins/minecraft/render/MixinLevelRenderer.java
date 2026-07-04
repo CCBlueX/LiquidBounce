@@ -112,6 +112,16 @@ public abstract class MixinLevelRenderer {
         Pools.MatStack.recycle(matrixStack);
     }
 
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeSolid()V", shift = At.Shift.BEFORE))
+    private void prepareChamsRenderTarget(CallbackInfo ci) {
+        ModuleChams.INSTANCE.beginFrameIfNeeded();
+    }
+
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeTranslucentAfterTerrain()V", shift = At.Shift.AFTER))
+    private void blitChams(CallbackInfo ci) {
+        ModuleChams.INSTANCE.compositeIfNeeded(Minecraft.getInstance().gameRenderer.mainRenderTarget());
+    }
+
     @ModifyExpressionValue(
         method = {"submitFeatures", "lambda$addMainPass$0"},
         at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/LevelRenderState;shouldShowEntityOutlines:Z", opcode = Opcodes.GETFIELD)
