@@ -232,6 +232,10 @@ public abstract class MixinCamera {
 
     @ModifyExpressionValue(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
     private float hookCameraDistance(float original, float partialTicks) {
+        if (!PerspectiveEvent.INSTANCE.getNoClip()) {
+            return original;
+        }
+
         final float lastDistance = PerspectiveEvent.INSTANCE.getLastDistance();
         final float distance = PerspectiveEvent.INSTANCE.getDistance();
         return distance != lastDistance ? Mth.lerp(partialTicks, lastDistance, distance) : distance;
