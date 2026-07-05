@@ -19,22 +19,27 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.global.GlobalManager
-import net.ccbluex.netty.http.routing.Routing
 
-private fun Routing.getGlobalConfig() = get {
+private fun Route.getGlobalConfig() = get {
     call.respond(ConfigSystem.serializeValueGroup(GlobalManager, gson = interopGson))
 }
 
-private fun Routing.putGlobalConfig() = put {
-    ConfigSystem.deserializeValueGroup(GlobalManager, call.body.reader())
+private fun Route.putGlobalConfig() = put {
+    ConfigSystem.deserializeValueGroup(GlobalManager, call.receiveText().reader())
     ConfigSystem.store(GlobalManager)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-internal fun Routing.globalRoutes() = route("/global") {
+internal fun Route.globalRoutes() = route("/global") {
     getGlobalConfig()
     putGlobalConfig()
 }

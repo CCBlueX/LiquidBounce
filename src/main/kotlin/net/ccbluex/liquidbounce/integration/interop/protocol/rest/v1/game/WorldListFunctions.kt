@@ -20,13 +20,19 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import net.ccbluex.liquidbounce.integration.interop.internalServerError
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.util.readAsBase64
-import net.ccbluex.netty.http.routing.Routing
+import net.ccbluex.liquidbounce.utils.io.readAsBase64
 import net.minecraft.client.gui.components.toasts.SystemToast
 import net.minecraft.client.gui.screens.NoticeWithLinkScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -38,7 +44,7 @@ import java.io.IOException
 private val mutex = Mutex()
 
 // GET /api/v1/client/worlds
-private fun Routing.getWorlds() = get {
+private fun Route.getWorlds() = get {
     val worlds = JsonArray()
 
     try {
@@ -81,7 +87,7 @@ private fun Routing.getWorlds() = get {
 }
 
 // POST /api/v1/client/worlds/join
-private fun Routing.postJoinWorld() = post("/join") {
+private fun Route.postJoinWorld() = post("/join") {
     val request = call.receive<LevelRequest>()
 
     mc.execute {
@@ -94,11 +100,11 @@ private fun Routing.postJoinWorld() = post("/join") {
         }
     }
 
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/worlds/edit
-private fun Routing.postEditWorld() = post("/edit") {
+private fun Route.postEditWorld() = post("/edit") {
     val request = call.receive<LevelRequest>()
 
     mc.execute {
@@ -138,11 +144,11 @@ private fun Routing.postEditWorld() = post("/edit") {
         }
     }
 
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/worlds/delete
-private fun Routing.postDeleteWorld() = post("/delete") {
+private fun Route.postDeleteWorld() = post("/delete") {
     val request = call.receive<LevelRequest>()
 
     runCatching {
@@ -153,12 +159,12 @@ private fun Routing.postDeleteWorld() = post("/delete") {
         logger.error("Failed to delete world ${request.name}", it)
     }
 
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 private data class LevelRequest(val name: String)
 
-internal fun Routing.worldListRoutes() = route("/worlds") {
+internal fun Route.worldListRoutes() = route("/worlds") {
     getWorlds()
     postJoinWorld()
     postEditWorld()

@@ -19,6 +19,12 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -26,18 +32,20 @@ import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.FileDialogMode
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.integration.interop.badRequest
+import net.ccbluex.liquidbounce.integration.interop.forbidden
+import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.netty.http.routing.Routing
 import net.minecraft.util.Util
 import java.io.File
 import java.net.URI
 import java.util.Properties
 
 // GET /api/v1/client/info
-private fun Routing.getClientInfo() = get("/info") {
+private fun Route.getClientInfo() = get("/info") {
     call.respond(JsonObject().apply {
         addProperty("os", Util.getPlatform().telemetryName())
         addProperty("gameVersion", mc.launchedVersion)
@@ -55,7 +63,7 @@ private fun Routing.getClientInfo() = get("/info") {
 
 // GET /api/v1/client/update
 @Suppress("ReturnCount")
-private fun Routing.getUpdateInfo() = get("/update") {
+private fun Route.getUpdateInfo() = get("/update") {
     call.respond(JsonObject().apply {
         addProperty("development", LiquidBounce.IN_DEVELOPMENT)
         addProperty("commit", LiquidBounce.clientCommit)
@@ -78,24 +86,24 @@ private fun Routing.getUpdateInfo() = get("/update") {
 }
 
 // POST /api/v1/client/exit
-private fun Routing.postExit() = post("/exit") {
+private fun Route.postExit() = post("/exit") {
     mc.stop()
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // PUT /api/v1/client/hud-editor
-private fun Routing.putHudEditorState() = put("/hud-editor") {
+private fun Route.putHudEditorState() = put("/hud-editor") {
     data class Request(val selected: Boolean)
     val selected = call.receive<Request>().selected
 
     withContext(Dispatchers.Minecraft) {
         ModuleHud.hudEditorSelected = selected
     }
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/window
-private fun Routing.getWindowInfo() = get("/window") {
+private fun Route.getWindowInfo() = get("/window") {
     call.respond(JsonObject().apply {
         addProperty("width", mc.window.screenWidth)
         addProperty("height", mc.window.screenHeight)
@@ -107,19 +115,19 @@ private fun Routing.getWindowInfo() = get("/window") {
 }
 
 // POST /api/v1/client/browse
-private fun Routing.postBrowse() = post("/browse") {
+private fun Route.postBrowse() = post("/browse") {
     val jsonObj = call.receive<JsonObject>()
     val target = jsonObj["target"]?.asString ?: call.forbidden("No target specified")
 
     val url = POSSIBLE_URL_TARGETS[target] ?: call.forbidden("Unknown target")
 
     Util.getPlatform().openUri(url)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browsePath
 @Suppress("ReturnCount")
-private fun Routing.postBrowsePath() = post("/browsePath") {
+private fun Route.postBrowsePath() = post("/browsePath") {
     val jsonObj = call.receive<JsonObject>()
     val path = jsonObj["path"]?.asString ?: call.badRequest("No file specified")
 
@@ -139,11 +147,11 @@ private fun Routing.postBrowsePath() = post("/browsePath") {
     }
 
     Util.getPlatform().openFile(directoryToOpen)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/fileDialog
-private fun Routing.postFileDialog() = post("/fileDialog") {
+private fun Route.postFileDialog() = post("/fileDialog") {
     data class RequestBody(val mode: FileDialogMode, val supportedExtensions: List<String>? = null)
     val (mode, supportedExtensions) = runCatching {
         call.receive<RequestBody>()
@@ -166,7 +174,7 @@ private val POSSIBLE_URL_TARGETS: Map<String, URI> = buildMap {
     }
 }
 
-internal fun Routing.clientRoutes() {
+internal fun Route.clientRoutes() {
     getClientInfo()
     getUpdateInfo()
     postExit()

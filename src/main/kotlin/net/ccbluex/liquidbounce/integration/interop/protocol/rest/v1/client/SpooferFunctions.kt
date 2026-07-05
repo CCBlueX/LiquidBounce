@@ -19,23 +19,28 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
-import net.ccbluex.netty.http.routing.Routing
 
-private fun Routing.getSpooferConfig() = get {
+private fun Route.getSpooferConfig() = get {
     // Serialize MultiplayerConfigurable to JSON
     call.respond(ConfigSystem.serializeValueGroup(SpooferManager, gson = interopGson))
 }
 
-private fun Routing.putSpooferConfig() = put {
-    ConfigSystem.deserializeValueGroup(SpooferManager, call.body.reader())
+private fun Route.putSpooferConfig() = put {
+    ConfigSystem.deserializeValueGroup(SpooferManager, call.receiveText().reader())
     ConfigSystem.store(SpooferManager)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-internal fun Routing.spooferRoutes() = route("/spoofer") {
+internal fun Route.spooferRoutes() = route("/spoofer") {
     getSpooferConfig()
     putSpooferConfig()
 }

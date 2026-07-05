@@ -38,8 +38,8 @@ import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.netty.http.coroutines.awaitSuspend
-import net.ccbluex.netty.http.util.setup
+import net.ccbluex.liquidbounce.utils.netty.awaitSuspend
+import net.ccbluex.liquidbounce.utils.netty.setup
 import java.net.InetSocketAddress
 import java.util.UUID
 import java.util.function.Consumer

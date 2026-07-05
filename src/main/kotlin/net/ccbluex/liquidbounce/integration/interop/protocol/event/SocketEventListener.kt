@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventName
 import net.ccbluex.liquidbounce.event.newEventHook
-import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.util.Util
 import org.apache.commons.io.output.StringBuilderWriter
@@ -99,7 +98,7 @@ internal object SocketEventListener : EventListener {
             return
         }
 
-        httpServer.webSocketController!!.broadcast(json) { _, t ->
+        WebSocketSessionManager.broadcast(json) { _, t ->
             logger.error("WebSocket event broadcast failed, event: ${event.javaClass.eventName}", t)
         }
     }

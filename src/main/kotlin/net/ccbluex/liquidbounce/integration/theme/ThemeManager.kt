@@ -114,7 +114,7 @@ object ThemeManager : Config("theme") {
 
     suspend fun init() {
         // Load default theme
-        includedTheme = Theme.load(Theme.Origin.RESOURCE, File("liquidbounce"))
+        includedTheme = Theme.load(Theme.Origin.RESOURCE, File(LiquidBounce.CLIENT_NAME.lowercase()))
     }
 
     suspend fun load() {
