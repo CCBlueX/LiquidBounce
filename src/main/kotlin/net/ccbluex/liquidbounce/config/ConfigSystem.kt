@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.fileGson
 import net.ccbluex.liquidbounce.config.gson.util.parseTree
@@ -270,25 +269,26 @@ object ConfigSystem {
         valueGroup.prepareDeserialize(jsonObject)
 
         val storedValues = jsonObject.getAsJsonArray("value")
-            .map { valueElement -> valueElement.asJsonObject }
-        val valuesByName = storedValues.groupBy { valueObj -> valueObj["name"].asString!! }
-        val consumedValues = Object2IntOpenHashMap<String>()
+        val valuesByName = buildMap {
+            for (valueElem in storedValues) {
+                val valueObj = valueElem.asJsonObject
+                val valueName = valueObj["name"].asString
+                this.getOrPut(valueName) { ArrayDeque(1) }.addLast(valueObj)
+            }
+        }
 
         // Migration Code for KillAura's Range Values
         if (valueGroup is ModuleKillAura) {
-            valueGroup.range.migrateFromValues(storedValues.associateBy { it["name"].asString!! })
+            valueGroup.range.migrateFromValues(valuesByName)
         }
 
         for (value in valueGroup.inner) {
-            val storedName = sequenceOf(value.name).plus(value.aliases)
-                .firstOrNull { name ->
-                    consumedValues.getOrDefault(name, 0) < valuesByName[name].orEmpty().size
-                }
+            val queue = valuesByName[value.name]
+                ?: value.aliases.firstNotNullOfOrNull { valuesByName[it] }
                 ?: continue
-            val valueIndex = consumedValues.addTo(storedName, 1)
-            val currentElement = valuesByName.getValue(storedName)[valueIndex]
+            if (queue.isEmpty()) continue
 
-            deserializeValue(value, currentElement)
+            deserializeValue(value, queue.removeFirst())
         }
     }
 
