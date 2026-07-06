@@ -174,7 +174,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     ) = coroutineScope {
         chunk.sections.forEachIndexed { sectionIndex, section ->
             if (!section.hasOnlyAir()) {
-                scope.launch {
+                launch {
                     val mutable = threadLocalBlockPos.get()
                     chunk.forEachSectionBlock(sectionIndex, mutable, action::accept)
                 }
