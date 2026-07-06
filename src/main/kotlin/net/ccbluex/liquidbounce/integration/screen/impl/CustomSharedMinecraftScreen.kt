@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.screen.impl
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.theme.Theme
@@ -46,6 +47,10 @@ class CustomSharedMinecraftScreen(
             mc.mouseHandler.grabMouse()
             super.onClose()
         }
+    }
+
+    override fun isInGameUi(): Boolean {
+        return screenType == CustomScreenType.CLICK_GUI && ModuleHud.hudEditorSelected
     }
 
     override fun isPauseScreen() = false

@@ -62,7 +62,13 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     private val isVisible: Boolean
         get() = !isHidingNow && inGame
 
-    private var hudEditorSelected = false
+    var hudEditorSelected = false
+        set(value) {
+            if (value != field) {
+                field = value
+                updateOverlayVisibility(mc.gui.screen())
+            }
+        }
 
     private fun shouldShowOverlay(screen: Screen?): Boolean =
         screen !is DisconnectedScreen &&
@@ -72,15 +78,6 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     private fun isClickGuiScreen(screen: Screen?): Boolean =
         screen is CustomSharedMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI ||
             screen is CustomStandaloneMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI
-
-    fun setHudEditorSelected(selected: Boolean) {
-        if (hudEditorSelected == selected) {
-            return
-        }
-
-        hudEditorSelected = selected
-        updateOverlayVisibility(mc.gui.screen())
-    }
 
     private fun updateOverlayVisibility(screen: Screen?) {
         if (!enabled || !isVisible) {

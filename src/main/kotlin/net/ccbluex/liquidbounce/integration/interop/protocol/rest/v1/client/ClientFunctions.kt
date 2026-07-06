@@ -85,11 +85,11 @@ private fun Routing.postExit() = post("/exit") {
 
 // PUT /api/v1/client/hud-editor
 private fun Routing.putHudEditorState() = put("/hud-editor") {
-    val selected = call.receive<JsonObject>()["selected"]?.asBoolean
-        ?: call.badRequest("Missing HUD editor state")
+    data class Request(val selected: Boolean)
+    val selected = call.receive<Request>().selected
 
     withContext(Dispatchers.Minecraft) {
-        ModuleHud.setHudEditorSelected(selected)
+        ModuleHud.hudEditorSelected = selected
     }
     call.respondNoContent()
 }
