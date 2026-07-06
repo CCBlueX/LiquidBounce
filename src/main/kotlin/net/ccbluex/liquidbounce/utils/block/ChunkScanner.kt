@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.EventListener
@@ -165,25 +166,26 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
 
     /**
      * @see LevelChunk.getBlockState
+     * @see net.minecraft.world.level.chunk.LevelChunkSection.hasOnlyAir
      */
     private suspend fun scanChunkSections(
         chunk: LevelChunk,
         action: BiConsumer<BlockPos, BlockState>
-    ) {
-        Array(chunk.highestFilledSectionIndex + 1) { sectionIndex ->
-            scope.launch {
-                val mutable = threadLocalBlockPos.get()
-                chunk.forEachSectionBlock(sectionIndex, mutable, action::accept)
+    ) = coroutineScope {
+        chunk.sections.forEachIndexed { sectionIndex, section ->
+            if (!section.hasOnlyAir()) {
+                scope.launch {
+                    val mutable = threadLocalBlockPos.get()
+                    chunk.forEachSectionBlock(sectionIndex, mutable, action::accept)
+                }
             }
-        }.joinAll()
+        }
     }
 
-    sealed interface UpdateRequest {
+    sealed interface UpdateRequest : suspend (CoroutineScope) -> Unit {
         fun runAsync() {
-            scope.launch { run() }
+            scope.launch(block = this)
         }
-
-        suspend fun run()
 
         /**
          * Scans loaded chunks for new subscriber
@@ -191,7 +193,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
          * @param chunks should be non-empty
          */
         class NewSubscriber(val subscriber: BlockChangeSubscriber, val chunks: List<LevelChunk>) : UpdateRequest {
-            override suspend fun run() {
+            override suspend fun invoke(scope: CoroutineScope) {
                 val duration = measureTime {
                     chunks.forEach {
                         subscriber.chunkUpdate(it)
@@ -219,7 +221,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
          * @param chunk should be non-empty
          */
         class ChunkLoad(val chunk: LevelChunk) : UpdateRequest {
-            override suspend fun run() {
+            override suspend fun invoke(scope: CoroutineScope) {
                 val duration = measureTime {
                     subscribers.mapToArray {
                         scope.launch {
@@ -249,7 +251,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         }
 
         class ChunkSectionUpdate(val packet: ClientboundSectionBlocksUpdatePacket) : UpdateRequest {
-            override suspend fun run() {
+            override suspend fun invoke(scope: CoroutineScope) {
                 packet.runUpdates { blockPos, state ->
                     subscribers.forEach {
                         it.recordBlock(blockPos, state, cleared = false)
@@ -259,7 +261,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         }
 
         class ChunkUnload(val pos: ChunkPos) : UpdateRequest {
-            override suspend fun run() {
+            override suspend fun invoke(scope: CoroutineScope) {
                 subscribers.forEach {
                     it.clearChunk(pos)
                 }
@@ -267,7 +269,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         }
 
         class BlockUpdate(val blockPos: BlockPos, val newState: BlockState) : UpdateRequest {
-            override suspend fun run() {
+            override suspend fun invoke(scope: CoroutineScope) {
                 subscribers.forEach {
                     it.recordBlock(blockPos, newState, cleared = false)
                 }
