@@ -47,6 +47,7 @@ import net.minecraft.core.Direction
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.Vec3
+import java.util.EnumSet
 import java.util.function.Supplier
 import kotlin.math.cos
 import kotlin.math.floor
@@ -112,10 +113,14 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             // If the crosshair target does not meet the requirements,
             // we need to prevent the player from falling off the ledge e.g. by jumping or sneaking.
             val currentMode = if (ModuleScaffold.blockCount < forceSneakBelowCount) Mode.SNEAK else modes.random()
-            val ledgeAction = (if (currentMode == Mode.JUMP && canJumpTwoBlocksHigh()) Mode.SNEAK else currentMode)
-                .creator.get()
+            val effectiveMode = if (currentMode == Mode.JUMP && canJumpTwoBlocksHigh()) {
+                val filtered = EnumSet.copyOf(modes).apply { remove(Mode.JUMP) }
+                filtered.randomOrNull() ?: Mode.SNEAK
+            } else {
+                currentMode
+            }
 
-            ledgeAction.also {
+            effectiveMode.creator.get().also {
                 debugParameter("LastLedgeAction") { it }
             }
         } else {
@@ -215,6 +220,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             verticalMotion = (verticalMotion - VANILLA_GRAVITY) * VANILLA_VERTICAL_DRAG
         }
 
+        // Player can only move up more than one block at a time
         return height >= 2.0
     }
 
