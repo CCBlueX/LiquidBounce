@@ -99,18 +99,27 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(READ_FINAL_STATE) { event ->
-        if (subscribers.isEmpty() || event.isCancelled) return@handler
+        if (event.isCancelled) return@handler
 
         when (val packet = event.packet) {
-            is ClientboundBlockUpdatePacket ->
+            is ClientboundBlockUpdatePacket -> {
+                if (subscribers.isEmpty()) return@handler
+
                 UpdateRequest.BlockUpdate(packet.pos, packet.blockState).runAsync()
+            }
 
             // All updates are in one section
-            is ClientboundSectionBlocksUpdatePacket ->
+            is ClientboundSectionBlocksUpdatePacket -> {
+                if (subscribers.isEmpty()) return@handler
+
                 UpdateRequest.ChunkSectionUpdate(packet).runAsync()
+            }
 
             is ClientboundForgetLevelChunkPacket -> mc.execute {
                 loadedChunks.remove(packet.pos.pack())
+
+                if (subscribers.isEmpty()) return@execute
+
                 UpdateRequest.ChunkUnload(packet.pos).runAsync()
             }
         }
