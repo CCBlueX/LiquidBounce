@@ -203,7 +203,9 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         }
 
         /**
-         * Scans single new chunk
+         * Scans single new chunk or replaced chunk.
+         *
+         * @see net.minecraft.client.multiplayer.ClientChunkCache.replaceWithPacketData
          *
          * @param chunk should be non-empty
          */
@@ -211,7 +213,10 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
             override suspend fun run() {
                 val duration = measureTime {
                     subscribers.mapToArray {
-                        scope.launch { it.chunkUpdate(chunk) }
+                        scope.launch {
+                            it.clearChunk(chunk.pos)
+                            it.chunkUpdate(chunk)
+                        }
                     }.joinAll()
 
                     // Contains all subscriber that want recordBlock called on a chunk update
