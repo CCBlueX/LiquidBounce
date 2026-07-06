@@ -47,6 +47,7 @@ import net.minecraft.core.Direction
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.Vec3
+import java.util.EnumSet
 import java.util.function.Supplier
 import kotlin.math.cos
 import kotlin.math.floor
@@ -54,6 +55,8 @@ import kotlin.math.round
 import kotlin.math.sin
 
 object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedgeExtension {
+    private const val VANILLA_GRAVITY = 0.08
+    private const val VANILLA_VERTICAL_DRAG = 0.98
 
     private enum class Mode(override val tag: String, val creator: Supplier<LedgeAction>) : Tagged {
         JUMP("Jump", LedgeAction(jump = true)),
@@ -110,7 +113,14 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             // If the crosshair target does not meet the requirements,
             // we need to prevent the player from falling off the ledge e.g. by jumping or sneaking.
             val currentMode = if (ModuleScaffold.blockCount < forceSneakBelowCount) Mode.SNEAK else modes.random()
-            currentMode.creator.get().also {
+            val effectiveMode = if (currentMode == Mode.JUMP && canJumpTwoBlocksHigh()) {
+                val filtered = EnumSet.copyOf(modes).apply { remove(Mode.JUMP) }
+                filtered.randomOrNull() ?: Mode.SNEAK
+            } else {
+                currentMode
+            }
+
+            effectiveMode.creator.get().also {
                 debugParameter("LastLedgeAction") { it }
             }
         } else {
@@ -192,6 +202,26 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
         val pitch = 75f
 
         return Rotation(yaw, pitch)
+    }
+
+    /**
+     * Uses vanilla jump power as the initial upward velocity and then integrates the
+     * vanilla per-tick gravity/drag until the upward motion is exhausted.
+     *
+     * @see net.minecraft.world.entity.LivingEntity.getJumpPower
+     * @see net.minecraft.world.entity.LivingEntity.jumpFromGround
+     */
+    private fun canJumpTwoBlocksHigh(): Boolean {
+        var verticalMotion = player.jumpPower.toDouble()
+        var height = 0.0
+
+        while (verticalMotion > 0.0) {
+            height += verticalMotion
+            verticalMotion = (verticalMotion - VANILLA_GRAVITY) * VANILLA_VERTICAL_DRAG
+        }
+
+        // Player can only move up more than one block at a time
+        return height >= 2.0
     }
 
 }
