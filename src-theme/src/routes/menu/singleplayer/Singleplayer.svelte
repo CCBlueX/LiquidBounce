@@ -66,53 +66,53 @@
     }
 </script>
 
-    <OptionBar>
-        <Search on:search={handleSearch}/>
-        <MultiSelect title="Game Mode" options={["Survival", "Creative", "Adventure", "Spectator"]}
-                     bind:values={gameModes}/>
-        <MultiSelect title="Difficulty" options={["Peaceful", "Easy", "Normal", "Hard"]} bind:values={difficulties}/>
-    </OptionBar>
+<OptionBar>
+    <Search on:search={handleSearch}/>
+    <MultiSelect title="Game Mode" options={["Survival", "Creative", "Adventure", "Spectator"]}
+                 bind:values={gameModes}/>
+    <MultiSelect title="Difficulty" options={["Peaceful", "Easy", "Normal", "Hard"]} bind:values={difficulties}/>
+</OptionBar>
 
-    <MenuList sortable={false} on:sort={handleWorldSort}>
-        {#each renderedWorlds as world}
-            <MenuListItem
-                    image={!world.icon ?
+<MenuList sortable={false} on:sort={handleWorldSort}>
+    {#each renderedWorlds as world}
+        <MenuListItem
+                image={!world.icon ?
                         `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png` :
                         `data:image/png;base64,${world.icon}`}
-                    title={world.displayName}
-                    on:dblclick={() => openWorld(world.name)}>
-                <svelte:fragment slot="subtitle">
-                    <span class="world-name">{world.name}</span>
-                    <span>({dateFormat(new Date(world.lastPlayed), "yyyy/mm/dd h:MM:ss TT")})</span>
-                </svelte:fragment>
+                title={world.displayName}
+                on:dblclick={() => openWorld(world.name)}>
+            <svelte:fragment slot="subtitle">
+                <span class="world-name">{world.name}</span>
+                <span>({dateFormat(new Date(world.lastPlayed), "yyyy/mm/dd h:MM:ss TT")})</span>
+            </svelte:fragment>
 
-                <svelte:fragment slot="tag">
-                    <MenuListItemTag text={capitalize(world.gameMode)}/>
-                    <MenuListItemTag text={capitalize(world.difficulty)}/>
-                    <MenuListItemTag text="Minecraft {world.version}"/>
-                </svelte:fragment>
+            <svelte:fragment slot="tag">
+                <MenuListItemTag text={capitalize(world.gameMode)}/>
+                <MenuListItemTag text={capitalize(world.difficulty)}/>
+                <MenuListItemTag text="Minecraft {world.version}"/>
+            </svelte:fragment>
 
-                <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeWorld(world.name)}/>
-                    <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editWorld(world.name)}/>
-                </svelte:fragment>
+            <svelte:fragment slot="active-visible">
+                <MenuListItemButton title="Delete" icon="trash" on:click={() => removeWorld(world.name)}/>
+                <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editWorld(world.name)}/>
+            </svelte:fragment>
 
-                <svelte:fragment slot="always-visible">
-                    <MenuListItemButton title="Open" icon="play" on:click={() => openWorld(world.name)}/>
-                </svelte:fragment>
-            </MenuListItem>
-        {/each}
-    </MenuList>
+            <svelte:fragment slot="always-visible">
+                <MenuListItemButton title="Open" icon="play" on:click={() => openWorld(world.name)}/>
+            </svelte:fragment>
+        </MenuListItem>
+    {/each}
+</MenuList>
 
-    <BottomButtonWrapper>
-        <ButtonContainer>
-            <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => openScreen("create_world")}/>
-        </ButtonContainer>
+<BottomButtonWrapper>
+    <ButtonContainer>
+        <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => openScreen("create_world")}/>
+    </ButtonContainer>
 
-        <ButtonContainer>
-            <IconTextButton icon="icon-back.svg" title="Back" on:click={() => openScreen("title")}/>
-        </ButtonContainer>
-    </BottomButtonWrapper>
+    <ButtonContainer>
+        <IconTextButton icon="icon-back.svg" title="Back" on:click={() => openScreen("title")}/>
+    </ButtonContainer>
+</BottomButtonWrapper>
 
 <style lang="scss">
   .world-name {

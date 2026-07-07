@@ -116,58 +116,60 @@
 </script>
 
 <DirectLoginModal bind:visible={directLoginModalVisible}/>
+
 <AddAccountModal bind:visible={addAccountModalVisible}/>
-    <OptionBar>
-        <Search on:search={handleSearch}/>
-        <SwitchSetting title="Premium Only" bind:value={premiumOnly}/>
-        <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
-        <MultiSelect title="Account Type" options={["Mojang", "TheAltening"]} bind:values={accountTypes}/>
-    </OptionBar>
 
-    <MenuList sortable={accounts.length === renderedAccounts.length} elementCount={accounts.length}
-              on:sort={handleAccountSort}>
-        {#key accounts}
-            {#each renderedAccounts as account}
-                <MenuListItem
-                        image={account.avatar}
-                        title={account.username}
-                        favorite={account.favorite}
-                        on:dblclick={() => loginToAccount(account.id)}>
-                    <svelte:fragment slot="subtitle">
-                        <pre class="uuid">{account.uuid}</pre>
-                    </svelte:fragment>
+<OptionBar>
+    <Search on:search={handleSearch}/>
+    <SwitchSetting title="Premium Only" bind:value={premiumOnly}/>
+    <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
+    <MultiSelect title="Account Type" options={["Mojang", "TheAltening"]} bind:values={accountTypes}/>
+</OptionBar>
 
-                    <svelte:fragment slot="tag">
-                        <MenuListItemTag text={account.type}/>
-                    </svelte:fragment>
+<MenuList sortable={accounts.length === renderedAccounts.length} elementCount={accounts.length}
+          on:sort={handleAccountSort}>
+    {#key accounts}
+        {#each renderedAccounts as account}
+            <MenuListItem
+                    image={account.avatar}
+                    title={account.username}
+                    favorite={account.favorite}
+                    on:dblclick={() => loginToAccount(account.id)}>
+                <svelte:fragment slot="subtitle">
+                    <pre class="uuid">{account.uuid}</pre>
+                </svelte:fragment>
 
-                    <svelte:fragment slot="active-visible">
-                        <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(account.id)}/>
-                        <MenuListItemButton title="Favorite" icon={account.favorite ? "favorite-filled" : "favorite" }
-                                            on:click={() => toggleFavorite(account.id, !account.favorite)}/>
-                    </svelte:fragment>
+                <svelte:fragment slot="tag">
+                    <MenuListItemTag text={account.type}/>
+                </svelte:fragment>
 
-                    <svelte:fragment slot="always-visible">
-                        <MenuListItemButton title="Login" icon="play" on:click={() => loginToAccount(account.id)}/>
-                    </svelte:fragment>
-                </MenuListItem>
-            {/each}
-        {/key}
-    </MenuList>
+                <svelte:fragment slot="active-visible">
+                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(account.id)}/>
+                    <MenuListItemButton title="Favorite" icon={account.favorite ? "favorite-filled" : "favorite" }
+                                        on:click={() => toggleFavorite(account.id, !account.favorite)}/>
+                </svelte:fragment>
 
-    <BottomButtonWrapper>
-        <ButtonContainer>
-            <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addAccountModalVisible = true}/>
-            <IconTextButton icon="icon-plane.svg" title="Direct" on:click={() => directLoginModalVisible = true}/>
-            <IconTextButton icon="icon-random.svg" disabled={renderedAccounts.length === 0} title="Random"
-                            on:click={loginToRandomAccount}/>
-            <IconTextButton icon="icon-refresh.svg" title="Restore" on:click={restoreSession}/>
-        </ButtonContainer>
+                <svelte:fragment slot="always-visible">
+                    <MenuListItemButton title="Login" icon="play" on:click={() => loginToAccount(account.id)}/>
+                </svelte:fragment>
+            </MenuListItem>
+        {/each}
+    {/key}
+</MenuList>
 
-        <ButtonContainer>
-            <IconTextButton icon="icon-back.svg" title="Back" on:click={() => deleteScreen()}/>
-        </ButtonContainer>
-    </BottomButtonWrapper>
+<BottomButtonWrapper>
+    <ButtonContainer>
+        <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addAccountModalVisible = true}/>
+        <IconTextButton icon="icon-plane.svg" title="Direct" on:click={() => directLoginModalVisible = true}/>
+        <IconTextButton icon="icon-random.svg" disabled={renderedAccounts.length === 0} title="Random"
+                        on:click={loginToRandomAccount}/>
+        <IconTextButton icon="icon-refresh.svg" title="Restore" on:click={restoreSession}/>
+    </ButtonContainer>
+
+    <ButtonContainer>
+        <IconTextButton icon="icon-back.svg" title="Back" on:click={() => deleteScreen()}/>
+    </ButtonContainer>
+</BottomButtonWrapper>
 
 <style lang="scss">
   .uuid {
