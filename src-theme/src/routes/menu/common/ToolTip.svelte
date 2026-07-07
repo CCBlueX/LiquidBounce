@@ -37,7 +37,6 @@
         if (!parent) return;
 
         parent.addEventListener("mouseenter", show);
-
         parent.addEventListener("mouseleave", hide);
 
         return () => {
