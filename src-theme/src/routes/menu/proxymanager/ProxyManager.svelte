@@ -173,6 +173,7 @@
 </script>
 
 <AddProxyModal bind:visible={addProxyModalVisible}/>
+
 {#if currentEditProxy}
     <EditProxyModal bind:visible={editProxyModalVisible} id={currentEditProxy.id}
                     host={currentEditProxy.host}
@@ -183,55 +184,56 @@
                     password={currentEditProxy.credentials?.password ?? ""}
                     requiresAuthentication={currentEditProxy.credentials !== undefined}/>
 {/if}
-    <OptionBar>
-        <Search on:search={handleSearch}/>
-        <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
-        <MultiSelect title="Country" options={allCountries} bind:values={countries}/>
-        <MultiSelect title="Type" options={["SOCKS5", "HTTP"]} bind:values={proxyTypes}/>
-    </OptionBar>
 
-    <MenuList sortable={false} on:sort={handleProxySort}>
-        {#each renderedProxies as proxy}
-            <MenuListItem
-                    image="img/flags/{(proxy.ipInfo?.country ?? 'unknown').toLowerCase()}.svg"
-                    title="{proxy.host}:{proxy.port}"
-                    favorite={proxy.favorite}
-                    on:dblclick={() => connectToProxy(proxy.id)}>
-                <svelte:fragment slot="subtitle">
-                    <span class="subtitle">{proxy.ipInfo?.org ?? "Unknown"}</span>
-                </svelte:fragment>
+<OptionBar>
+    <Search on:search={handleSearch}/>
+    <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
+    <MultiSelect title="Country" options={allCountries} bind:values={countries}/>
+    <MultiSelect title="Type" options={["SOCKS5", "HTTP"]} bind:values={proxyTypes}/>
+</OptionBar>
 
-                <svelte:fragment slot="tag">
-                    <MenuListItemTag text={convertCountryCode(proxy.ipInfo?.country)}/>
-                    <MenuListItemTag text={proxy.type}/>
-                </svelte:fragment>
+<MenuList sortable={false} on:sort={handleProxySort}>
+    {#each renderedProxies as proxy}
+        <MenuListItem
+                image="img/flags/{(proxy.ipInfo?.country ?? 'unknown').toLowerCase()}.svg"
+                title="{proxy.host}:{proxy.port}"
+                favorite={proxy.favorite}
+                on:dblclick={() => connectToProxy(proxy.id)}>
+            <svelte:fragment slot="subtitle">
+                <span class="subtitle">{proxy.ipInfo?.org ?? "Unknown"}</span>
+            </svelte:fragment>
 
-                <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeProxy(proxy.id)}/>
-                    <MenuListItemButton title="Check" icon="check" on:click={() => checkProxy(proxy.id)}/>
-                    <MenuListItemButton title="Favorite" icon={proxy.favorite ? "favorite-filled" : "favorite" }
-                                        on:click={() => toggleFavorite(proxy.id, !proxy.favorite)}/>
-                    <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editProxy(proxy)}/>
-                </svelte:fragment>
+            <svelte:fragment slot="tag">
+                <MenuListItemTag text={convertCountryCode(proxy.ipInfo?.country)}/>
+                <MenuListItemTag text={proxy.type}/>
+            </svelte:fragment>
 
-                <svelte:fragment slot="always-visible">
-                    <MenuListItemButton title="Connect" icon="play" on:click={() => connectToProxy(proxy.id)}/>
-                </svelte:fragment>
-            </MenuListItem>
-        {/each}
-    </MenuList>
+            <svelte:fragment slot="active-visible">
+                <MenuListItemButton title="Delete" icon="trash" on:click={() => removeProxy(proxy.id)}/>
+                <MenuListItemButton title="Check" icon="check" on:click={() => checkProxy(proxy.id)}/>
+                <MenuListItemButton title="Favorite" icon={proxy.favorite ? "favorite-filled" : "favorite" }
+                                    on:click={() => toggleFavorite(proxy.id, !proxy.favorite)}/>
+                <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editProxy(proxy)}/>
+            </svelte:fragment>
 
-    <BottomButtonWrapper>
-        <ButtonContainer>
-            <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addProxyModalVisible = true}/>
-            <IconTextButton icon="icon-clipboard.svg" title="Add Clipboard" on:click={() => fromClipboard() } />
-            <IconTextButton icon="icon-random.svg" disabled={renderedProxies.length === 0} title="Random"
-                            on:click={connectToRandomProxy}/>
-            <IconTextButton icon="icon-disconnect.svg" disabled={!isConnectedToProxy} title="Disconnect"
-                            on:click={disconnectFromProxy}/>
-        </ButtonContainer>
+            <svelte:fragment slot="always-visible">
+                <MenuListItemButton title="Connect" icon="play" on:click={() => connectToProxy(proxy.id)}/>
+            </svelte:fragment>
+        </MenuListItem>
+    {/each}
+</MenuList>
 
-        <ButtonContainer>
-            <IconTextButton icon="icon-back.svg" title="Back" on:click={() => deleteScreen()}/>
-        </ButtonContainer>
-    </BottomButtonWrapper>
+<BottomButtonWrapper>
+    <ButtonContainer>
+        <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addProxyModalVisible = true}/>
+        <IconTextButton icon="icon-clipboard.svg" title="Add Clipboard" on:click={() => fromClipboard() }/>
+        <IconTextButton icon="icon-random.svg" disabled={renderedProxies.length === 0} title="Random"
+                        on:click={connectToRandomProxy}/>
+        <IconTextButton icon="icon-disconnect.svg" disabled={!isConnectedToProxy} title="Disconnect"
+                        on:click={disconnectFromProxy}/>
+    </ButtonContainer>
+
+    <ButtonContainer>
+        <IconTextButton icon="icon-back.svg" title="Back" on:click={() => deleteScreen()}/>
+    </ButtonContainer>
+</BottomButtonWrapper>
