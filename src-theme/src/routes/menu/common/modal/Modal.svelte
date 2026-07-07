@@ -1,6 +1,7 @@
 <script lang="ts">
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
+    import {portal} from "../../../../integration/util";
 
     export let title: string;
     export let visible: boolean;
@@ -10,14 +11,6 @@
     function handleClick() {
         dispatch("close");
         visible = false;
-    }
-
-    function portal(node: HTMLElement) {
-        document.body.appendChild(node);
-
-        return {
-            destroy: () => node.remove()
-        };
     }
 </script>
 
@@ -46,7 +39,7 @@
     width: 100vw;
     height: 100vh;
     background-color: var(--menu-modal-backdrop-color);
-    z-index: 99999;
+    z-index: 999;
   }
 
   .modal {

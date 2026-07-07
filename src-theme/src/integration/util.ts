@@ -55,4 +55,12 @@ export const contentEquals = <T>(a: T[], b: T[]): boolean => {
 export const getHashParams = (): URLSearchParams => {
     const hash = window.location.hash.split('?')[1] || '';
     return new URLSearchParams(hash);
-};
+}
+
+export function portal(node: HTMLElement) {
+    document.body.appendChild(node);
+
+    return {
+        destroy: () => node.remove()
+    };
+}
