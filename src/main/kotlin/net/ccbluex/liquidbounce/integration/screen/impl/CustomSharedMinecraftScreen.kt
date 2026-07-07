@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 
 class CustomSharedMinecraftScreen(
@@ -49,8 +50,15 @@ class CustomSharedMinecraftScreen(
         }
     }
 
+    /**
+     * Disable [Screen.extractBlurredBackground]
+     */
     override fun isInGameUi(): Boolean {
         return screenType == CustomScreenType.CLICK_GUI && ModuleHud.hudEditorSelected
+    }
+
+    override fun extractTransparentBackground(graphics: GuiGraphicsExtractor) {
+        // NOOP because we want no background for HUD editor
     }
 
     override fun isPauseScreen() = false
