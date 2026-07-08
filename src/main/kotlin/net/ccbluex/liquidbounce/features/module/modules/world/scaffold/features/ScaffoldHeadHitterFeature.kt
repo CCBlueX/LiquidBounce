@@ -29,8 +29,17 @@ object ScaffoldHeadHitterFeature : ToggleableValueGroup(ScaffoldNormalTechnique,
     private fun canHeadHit() =
         !player.blockPosition().above(2).collisionShape.isEmpty && player.onGround()
 
+    private val jumpDelay by intRange("JumpDelay", 0..0, 0..20, "ticks")
+    private var jumpCooldown = 0
+
     val repeatable = handler<GameTickEvent> {
+        if (jumpCooldown > 0) {
+            jumpCooldown--
+            return@handler
+        }
+
         if (canHeadHit() && player.moving) {
+            jumpCooldown = jumpDelay.random()
             player.jumpFromGround()
         }
     }
