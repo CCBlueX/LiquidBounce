@@ -42,6 +42,7 @@
     let themeComponents: HudComponent[] = [];
 
     $: renderedComponents = inEditor ? [...nativeComponents, ...themeComponents] : themeComponents;
+    $: hudZoom = inEditor ? 100 : zoom;
 
     setContext(HUD_EDITOR_ELEMENTS_CONTEXT, new Map<string, HTMLElement>());
 
@@ -73,7 +74,7 @@
     });
 </script>
 
-<div class="hud" style="zoom: {zoom}%">
+<div class="hud" style="zoom: {hudZoom}%">
     {#each renderedComponents as c (c.id)}
         {#if c.settings.enabled}
             <DraggableComponent
