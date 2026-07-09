@@ -58,7 +58,7 @@ class Alignment(
             ScreenAxisY.TOP -> verticalOffset.toFloat()
             ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f + verticalOffset.toFloat()
             ScreenAxisY.BOTTOM -> screenHeight - height - verticalOffset.toFloat()
-            ScreenAxisY.CENTER -> screenWidth / 2f - height / 2f + verticalOffset.toFloat()
+            ScreenAxisY.CENTER -> screenHeight / 2f - height / 2f + verticalOffset.toFloat()
         }
 
         return BoundingBox2f(x, y, x + width, y + height)
