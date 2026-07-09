@@ -18,7 +18,7 @@
         type HudEditorDragState,
         type VerticalAnchorZone
     } from "../../clickgui/tabs/hud_editor/constants";
-    import {fade} from "svelte/transition";
+    import {fade, type TransitionConfig} from "svelte/transition";
 
     export let alignment: Alignment;
     export let componentId: string;
@@ -438,6 +438,12 @@
         }
     }
 
+    function editorFade(node: Element): TransitionConfig {
+        return fade(node, {
+            duration: inEditor ? 200 : 0
+        });
+    }
+
     listen("keyboardKey", (e: KeyboardKeyEvent) => {
         if (e.key === "key.keyboard.left.shift") {
             isGridIgnored = e.action === 1;
@@ -469,7 +475,7 @@
 />
 
 <div class="draggable-element" style="{styleString} z-index: {editorZIndex};" bind:this={element}
-     transition:fade|global={{duration: 200}}>
+     transition:editorFade|global>
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
             class="contained-element"
