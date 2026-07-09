@@ -2,7 +2,7 @@
     import {onMount} from "svelte";
 
     import Hud from "../../../hud/Hud.svelte";
-    import {setHudEditorSelected} from "../../../../integration/rest";
+    import {getGameWindow, setHudEditorSelected} from "../../../../integration/rest";
     import {
         HORIZONTAL_ANCHOR_ZONES,
         HUD_EDITOR_GRID_SIZE,
@@ -11,14 +11,25 @@
     } from "./constants";
     import ComponentDrawer from "./drawer/ComponentDrawer.svelte";
     import {darken} from "../../clickgui_store";
+    import {listen} from "../../../../integration/ws";
+    import type {ScaleFactorChangeEvent} from "../../../../integration/events";
 
     let dragState: HudEditorDragState | undefined;
+    let scaleFactor = 2;
 
     function handleDragStateChange(state: HudEditorDragState): void {
         dragState = state.dragging ? state : undefined;
     }
 
+    function toClientCoordinate(hudCoordinate: number): number {
+        return hudCoordinate * scaleFactor / 2;
+    }
+
     onMount(() => {
+        getGameWindow().then(gameWindow => {
+            scaleFactor = gameWindow.scaleFactor;
+        });
+
         $darken = false;
         setHudEditorSelected(true);
 
@@ -26,6 +37,10 @@
             $darken = true;
             setHudEditorSelected(false);
         };
+    });
+
+    listen("scaleFactorChange", (event: ScaleFactorChangeEvent) => {
+        scaleFactor = event.scaleFactor;
     });
 </script>
 
@@ -50,10 +65,10 @@
         </div>
 
         {#if dragState.verticalGuide !== undefined}
-            <div class="magnetic-guide vertical" style="left: {dragState.verticalGuide}px"></div>
+            <div class="magnetic-guide vertical" style="left: {toClientCoordinate(dragState.verticalGuide)}px"></div>
         {/if}
         {#if dragState.horizontalGuide !== undefined}
-            <div class="magnetic-guide horizontal" style="top: {dragState.horizontalGuide}px"></div>
+            <div class="magnetic-guide horizontal" style="top: {toClientCoordinate(dragState.horizontalGuide)}px"></div>
         {/if}
     {/if}
 

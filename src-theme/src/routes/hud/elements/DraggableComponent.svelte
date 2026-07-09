@@ -66,51 +66,73 @@
         return clientCoordinate * (2 / scaleFactor);
     }
 
+    function getHudWidth(): number {
+        return toHudCoordinate(window.innerWidth);
+    }
+
+    function getHudHeight(): number {
+        return toHudCoordinate(window.innerHeight);
+    }
+
+    function getElementWidth(): number {
+        return toHudCoordinate(element?.getBoundingClientRect().width ?? 0);
+    }
+
+    function getElementHeight(): number {
+        return toHudCoordinate(element?.getBoundingClientRect().height ?? 0);
+    }
+
     function getHorizontalCenter(): number {
-        const elementWidth = element?.offsetWidth ?? 0;
+        const elementWidth = getElementWidth();
+        const hudWidth = getHudWidth();
 
         switch (alignment.horizontalAlignment) {
             case HorizontalAlignment.LEFT:
                 return alignment.horizontalOffset + elementWidth / 2;
             case HorizontalAlignment.RIGHT:
-                return window.innerWidth - alignment.horizontalOffset - elementWidth / 2;
+                return hudWidth - alignment.horizontalOffset - elementWidth / 2;
             case HorizontalAlignment.CENTER:
-                return window.innerWidth / 2 + alignment.horizontalOffset + elementWidth / 2;
+                return hudWidth / 2 + alignment.horizontalOffset + elementWidth / 2;
             case HorizontalAlignment.CENTER_TRANSLATED:
-                return window.innerWidth / 2 + alignment.horizontalOffset;
+                return hudWidth / 2 + alignment.horizontalOffset;
         }
     }
 
     function getVerticalCenter(): number {
-        const elementHeight = element?.offsetHeight ?? 0;
+        const elementHeight = getElementHeight();
+        const hudHeight = getHudHeight();
 
         switch (alignment.verticalAlignment) {
             case VerticalAlignment.TOP:
                 return alignment.verticalOffset + elementHeight / 2;
             case VerticalAlignment.BOTTOM:
-                return window.innerHeight - alignment.verticalOffset - elementHeight / 2;
+                return hudHeight - alignment.verticalOffset - elementHeight / 2;
             case VerticalAlignment.CENTER:
-                return window.innerHeight / 2 + alignment.verticalOffset + elementHeight / 2;
+                return hudHeight / 2 + alignment.verticalOffset + elementHeight / 2;
             case VerticalAlignment.CENTER_TRANSLATED:
-                return window.innerHeight / 2 + alignment.verticalOffset;
+                return hudHeight / 2 + alignment.verticalOffset;
         }
     }
 
     function getHorizontalZone(cursorX: number): HorizontalAnchorZone {
-        if (cursorX < window.innerWidth / 3) {
+        const hudWidth = getHudWidth();
+
+        if (cursorX < hudWidth / 3) {
             return "left";
         }
-        if (cursorX > window.innerWidth * 2 / 3) {
+        if (cursorX > hudWidth * 2 / 3) {
             return "right";
         }
         return "center";
     }
 
     function getVerticalZone(cursorY: number): VerticalAnchorZone {
-        if (cursorY < window.innerHeight / 3) {
+        const hudHeight = getHudHeight();
+
+        if (cursorY < hudHeight / 3) {
             return "upper";
         }
-        if (cursorY > window.innerHeight * 2 / 3) {
+        if (cursorY > hudHeight * 2 / 3) {
             return "lower";
         }
         return "center";
@@ -139,32 +161,34 @@
     }
 
     function getHorizontalOffset(center: number, anchor: HorizontalAlignment): number {
-        const elementWidth = element?.offsetWidth ?? 0;
+        const elementWidth = getElementWidth();
+        const hudWidth = getHudWidth();
 
         switch (anchor) {
             case HorizontalAlignment.LEFT:
                 return center - elementWidth / 2;
             case HorizontalAlignment.RIGHT:
-                return window.innerWidth - center - elementWidth / 2;
+                return hudWidth - center - elementWidth / 2;
             case HorizontalAlignment.CENTER:
-                return center - window.innerWidth / 2 - elementWidth / 2;
+                return center - hudWidth / 2 - elementWidth / 2;
             case HorizontalAlignment.CENTER_TRANSLATED:
-                return center - window.innerWidth / 2;
+                return center - hudWidth / 2;
         }
     }
 
     function getVerticalOffset(center: number, anchor: VerticalAlignment): number {
-        const elementHeight = element?.offsetHeight ?? 0;
+        const elementHeight = getElementHeight();
+        const hudHeight = getHudHeight();
 
         switch (anchor) {
             case VerticalAlignment.TOP:
                 return center - elementHeight / 2;
             case VerticalAlignment.BOTTOM:
-                return window.innerHeight - center - elementHeight / 2;
+                return hudHeight - center - elementHeight / 2;
             case VerticalAlignment.CENTER:
-                return center - window.innerHeight / 2 - elementHeight / 2;
+                return center - hudHeight / 2 - elementHeight / 2;
             case VerticalAlignment.CENTER_TRANSLATED:
-                return center - window.innerHeight / 2;
+                return center - hudHeight / 2;
         }
     }
 
@@ -225,7 +249,7 @@
         }
 
         const draggedPoints = [center - size / 2, center, center + size / 2];
-        const viewportSize = horizontal ? window.innerWidth : window.innerHeight;
+        const viewportSize = horizontal ? getHudWidth() : getHudHeight();
         const viewportCenter = viewportSize / 2;
         const viewportCenterDistance = viewportCenter - center;
         let closestSnap: MagneticSnap | undefined = Math.abs(viewportCenterDistance) <= HUD_EDITOR_MAGNET_THRESHOLD
@@ -273,11 +297,13 @@
         isDragging = true;
         const horizontalCenter = getHorizontalCenter();
         const verticalCenter = getVerticalCenter();
+        const cursorX = toHudCoordinate(event.clientX);
+        const cursorY = toHudCoordinate(event.clientY);
 
-        pointerCenterOffsetX = horizontalCenter - toHudCoordinate(event.clientX);
-        pointerCenterOffsetY = verticalCenter - toHudCoordinate(event.clientY);
-        horizontalZone = getHorizontalZone(event.clientX);
-        verticalZone = getVerticalZone(event.clientY);
+        pointerCenterOffsetX = horizontalCenter - cursorX;
+        pointerCenterOffsetY = verticalCenter - cursorY;
+        horizontalZone = getHorizontalZone(cursorX);
+        verticalZone = getVerticalZone(cursorY);
         verticalGuide = undefined;
         horizontalGuide = undefined;
         horizontalTargetId = undefined;
@@ -306,12 +332,14 @@
             return;
         }
 
-        const horizontalCenter = toHudCoordinate(event.clientX) + pointerCenterOffsetX;
-        const verticalCenter = toHudCoordinate(event.clientY) + pointerCenterOffsetY;
-        const nextHorizontalZone = getHorizontalZone(event.clientX);
-        const nextVerticalZone = getVerticalZone(event.clientY);
-        const elementWidth = element?.offsetWidth ?? 0;
-        const elementHeight = element?.offsetHeight ?? 0;
+        const cursorX = toHudCoordinate(event.clientX);
+        const cursorY = toHudCoordinate(event.clientY);
+        const horizontalCenter = cursorX + pointerCenterOffsetX;
+        const verticalCenter = cursorY + pointerCenterOffsetY;
+        const nextHorizontalZone = getHorizontalZone(cursorX);
+        const nextVerticalZone = getVerticalZone(cursorY);
+        const elementWidth = getElementWidth();
+        const elementHeight = getElementHeight();
         const horizontalSnap = findMagneticSnap(horizontalCenter, elementWidth, true);
         const verticalSnap = findMagneticSnap(verticalCenter, elementHeight, false);
 
@@ -346,46 +374,48 @@
     }
 
     function clampHorizontalOffset(offset: number): number {
-        const elementWidth = element?.offsetWidth ?? 0;
+        const elementWidth = getElementWidth();
+        const hudWidth = getHudWidth();
 
         switch (alignment.horizontalAlignment) {
             case HorizontalAlignment.CENTER_TRANSLATED:
                 return clamp(
                     offset,
-                    -window.innerWidth / 2 + elementWidth / 2,
-                    window.innerWidth / 2 - elementWidth / 2
+                    -hudWidth / 2 + elementWidth / 2,
+                    hudWidth / 2 - elementWidth / 2
                 );
             case HorizontalAlignment.CENTER:
                 return clamp(
                     offset,
-                    -window.innerWidth / 2,
-                    window.innerWidth / 2 - elementWidth
+                    -hudWidth / 2,
+                    hudWidth / 2 - elementWidth
                 );
             case HorizontalAlignment.LEFT:
             case HorizontalAlignment.RIGHT:
-                return clamp(offset, 0, window.innerWidth - elementWidth);
+                return clamp(offset, 0, hudWidth - elementWidth);
         }
     }
 
     function clampVerticalOffset(offset: number): number {
-        const elementHeight = element?.offsetHeight ?? 0;
+        const elementHeight = getElementHeight();
+        const hudHeight = getHudHeight();
 
         switch (alignment.verticalAlignment) {
             case VerticalAlignment.CENTER_TRANSLATED:
                 return clamp(
                     offset,
-                    -window.innerHeight / 2 + elementHeight / 2,
-                    window.innerHeight / 2 - elementHeight / 2
+                    -hudHeight / 2 + elementHeight / 2,
+                    hudHeight / 2 - elementHeight / 2
                 );
             case VerticalAlignment.CENTER:
                 return clamp(
                     offset,
-                    -window.innerHeight / 2,
-                    window.innerHeight / 2 - elementHeight
+                    -hudHeight / 2,
+                    hudHeight / 2 - elementHeight
                 );
             case VerticalAlignment.TOP:
             case VerticalAlignment.BOTTOM:
-                return clamp(offset, 0, window.innerHeight - elementHeight);
+                return clamp(offset, 0, hudHeight - elementHeight);
         }
     }
 
