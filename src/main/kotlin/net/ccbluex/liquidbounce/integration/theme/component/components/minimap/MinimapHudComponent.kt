@@ -192,10 +192,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
         val boundingBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
 
-        val centerBB = Vec2(
-            boundingBox.xMin + (boundingBox.xMax - boundingBox.xMin) * 0.5F,
-            boundingBox.yMin + (boundingBox.yMax - boundingBox.yMin) * 0.5F
-        )
+        val centerBB = boundingBox.centerVec
 
         val baseX = (playerPos.x / 16.0).toInt()
         val baseZ = (playerPos.z / 16.0).toInt()
