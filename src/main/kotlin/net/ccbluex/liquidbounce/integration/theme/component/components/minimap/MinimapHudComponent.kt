@@ -190,7 +190,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
         val minimapSize = size
 
-        val boundingBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
+        val boundingBox = getGuiScaledBounds(minimapSize.toFloat(), minimapSize.toFloat())
 
         val centerBB = boundingBox.centerVec
 
