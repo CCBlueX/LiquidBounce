@@ -29,8 +29,9 @@ class WebHudComponent(
     enabled: Boolean,
     alignment: Alignment,
     tweaks: Array<HudComponentTweak> = emptyArray(),
-    val values: Array<JsonObject> = emptyArray()
-) : HudComponent(name, enabled, alignment, tweaks) {
+    val values: Array<JsonObject> = emptyArray(),
+    description: String = "",
+) : HudComponent(name, enabled, alignment, tweaks, description) {
 
     override fun walkInit() {
         for (value in values) {
@@ -41,4 +42,3 @@ class WebHudComponent(
     }
 
 }
-

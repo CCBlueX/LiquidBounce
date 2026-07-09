@@ -1,6 +1,7 @@
 import {REST_BASE} from "./host";
 import type {
     Account,
+    Alignment,
     Browser,
     ClientInfo,
     ClientUpdate,
@@ -12,6 +13,7 @@ import type {
     GeneratorResult,
     HitResult,
     HudComponent,
+    HudComponentCatalogEntry,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -617,6 +619,16 @@ export async function getGameWindow(): Promise<GameWindow> {
     return data;
 }
 
+export async function setHudEditorSelected(selected: boolean): Promise<void> {
+    await fetch(`${API_BASE}/client/hud-editor`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({selected})
+    });
+}
+
 /**
  * @param id Use the ID from [getMetadata].
  */
@@ -631,6 +643,51 @@ export async function getTheme(id: string): Promise<Theme> {
 export async function getComponents(id: string): Promise<HudComponent[]> {
     const response = await fetch(`${API_BASE}/client/components/${id}`);
     return await response.json();
+}
+
+export async function getNativeComponents(): Promise<HudComponent[]> {
+    const response = await fetch(`${API_BASE}/client/components/native`);
+    return await response.json();
+}
+
+export async function getComponentCatalog(id: string): Promise<HudComponentCatalogEntry[]> {
+    const response = await fetch(`${API_BASE}/client/components/${id}/catalog`);
+    return await response.json();
+}
+
+export async function addComponent(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE}/client/components/${id}`, {
+        method: "POST"
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to add HUD component");
+    }
+}
+
+export async function setComponentAlignment(id: string, alignment: Alignment): Promise<void> {
+    await fetch(`${API_BASE}/client/components/${id}/alignment`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(alignment)
+    });
+}
+
+export async function getComponentSettings(id: string): Promise<ConfigurableSetting> {
+    const response = await fetch(`${API_BASE}/client/components/${id}/settings`);
+    return await response.json();
+}
+
+export async function setComponentSettings(id: string, settings: ConfigurableSetting): Promise<void> {
+    await fetch(`${API_BASE}/client/components/${id}/settings`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
 }
 
 export async function getClientInfo(): Promise<ClientInfo> {

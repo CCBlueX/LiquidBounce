@@ -100,6 +100,11 @@ open class ValueGroup(
 ) {
 
     /**
+     * Allows dynamic groups to create their children before stored values are applied.
+     */
+    open fun prepareDeserialize(jsonObject: JsonObject) = Unit
+
+    /**
      * Stores the [ValueGroup] in which
      * the [ValueGroup] is included, can be null.
      */

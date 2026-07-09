@@ -186,7 +186,19 @@ class VirtualScreenEvent(
 class ServerPingedEvent(val server: ServerData) : Event(), WebSocketEvent
 
 @Tag("componentsUpdate")
-class ComponentsUpdateEvent(val id: String? = null, val components: List<HudComponent>) : Event(), WebSocketEvent {
+class ComponentsUpdateEvent(
+    val source: Source,
+    val components: List<HudComponent>,
+    val themeId: String? = null,
+) : Event(), WebSocketEvent {
+    enum class Source {
+        @SerializedName("native")
+        NATIVE,
+
+        @SerializedName("theme")
+        THEME,
+    }
+
     override val serializer get() = accessibleInteropGson
 }
 
@@ -238,4 +250,3 @@ object UserLoggedInEvent : Event(), WebSocketEvent
 
 @Tag("userLoggedOut")
 object UserLoggedOutEvent : Event(), WebSocketEvent
-

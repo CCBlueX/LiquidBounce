@@ -8,7 +8,8 @@
     import {get} from "svelte/store";
     import {getModules} from "../../integration/rest";
     import {groupByCategory} from "../../integration/util";
-    import {animatePanels, panelHandles, scaleFactor} from "./clickgui_store";
+    import {animatePanels, gridSize, panelHandles, scaleFactor, showGrid} from "./clickgui_store";
+    import ScaledClickGuiContent from "./ScaledClickGuiContent.svelte";
 
     let categories = $state<GroupedModules>({});
     let modules = $state<Module[]>([]);
@@ -100,24 +101,41 @@
     }
 </script>
 
-<div class="clickgui" transition:fade|global={{ duration: 200 }}>
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
+<ScaledClickGuiContent>
     <div
-            class="align-catcher"
-            ondblclick={handleBackgroundDblClick}
-    ></div>
+            class="clickgui"
+            class:grid={$showGrid}
+            style="background-size: {$gridSize}px {$gridSize}px;"
+            transition:fade|global={{duration: 200}}
+    >
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div
+                class="align-catcher"
+                ondblclick={handleBackgroundDblClick}
+        ></div>
 
-    <Description/>
-    <Search modules={structuredClone($state.snapshot(modules))}/>
+        <Description/>
+        <Search modules={structuredClone($state.snapshot(modules))}/>
 
-    {#each Object.entries(categories) as [category, modules], panelIndex (category)}
-        <Panel {category} {modules} {panelIndex}/>
-    {/each}
+        {#each Object.entries(categories) as [category, modules], panelIndex (category)}
+            <Panel {category} {modules} {panelIndex}/>
+        {/each}
 
-    <div class="align-hint">Double-click empty space to align panels</div>
-</div>
+        <div class="align-hint">Double-click empty space to align panels</div>
+    </div>
+</ScaledClickGuiContent>
 
 <style lang="scss">
+  .clickgui {
+    position: absolute;
+    inset: 0;
+
+    &.grid {
+      background-image: linear-gradient(to right, var(--clickgui-grid-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--clickgui-grid-color) 1px, transparent 1px);
+    }
+  }
+
   .align-catcher {
     position: fixed;
     inset: 0;

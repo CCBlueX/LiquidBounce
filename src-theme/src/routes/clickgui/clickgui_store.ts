@@ -33,3 +33,5 @@ export interface PanelHandle {
 export const panelHandles: Writable<PanelHandle[]> = writable([]);
 
 export const animatePanels: Writable<boolean> = writable(false);
+
+export const darken = writable(true);
