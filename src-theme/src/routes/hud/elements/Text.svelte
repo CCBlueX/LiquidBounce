@@ -1,81 +1,105 @@
 <script lang="ts">
-    import {listen} from "../../../integration/ws";
     import type {ClientPlayerDataEvent} from "../../../integration/events";
     import type {PlayerData} from "../../../integration/types";
-    import {rgbaToHex} from "../../../integration/util";
-    import {intToRgba} from "../../../integration/util.js";
+    import {intToRgba, rgbaToHex} from "../../../integration/util";
+    import {listen} from "../../../integration/ws";
 
     let playerData: PlayerData | null = null;
-    let processedText: string = '';
 
     export let settings: { [name: string]: any };
 
-    const cSettings = settings as HudTextSettings;
+    let cSettings: HudTextSettings;
+    let processedText = "";
+    let textStyle = "";
+
+    const PLACEHOLDER_PATTERN = /{(\w+(?:\.\w+)*)}/g;
 
     listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
         playerData = event.playerData;
-        processText();
     });
 
-    function processText() {
-        if (!cSettings.text || !playerData) {
-            processedText = cSettings.text || '';
-            return;
+    function processText(text: string, playerData: PlayerData | null): string {
+        if (!text || !playerData) {
+            return text || "";
         }
 
-        processedText = cSettings.text.replace(/{(\w+(\.\w+)*)}/g, (match: string, p1: string) => {
-            const keys = p1.split(".");
-            let value: any = playerData;
+        return text.replace(PLACEHOLDER_PATTERN, (match, path: string) => {
+            const value = resolvePath(playerData, path);
 
-            for (const key of keys) {
-                value = value ? value[key] : null;
-            }
-
-            if (value !== null && value !== undefined) {
-                switch (typeof value) {
-                    case 'number':
-                        if (value % 1 === 0) {
-                            return value.toString();
-                        }
-
-                        return value.toFixed(2);
-                    case 'object':
-                        return JSON.stringify(value);
-                    default:
-                        return value.toString();
-                }
-            }
-
-            return match;
+            return value === null || value === undefined
+                ? match
+                : formatValue(value);
         });
     }
 
-    // Process text on mount
-    $: processText();
+    function resolvePath(source: PlayerData, path: string): unknown {
+        let value: any = source;
+
+        for (const key of path.split(".")) {
+            value = value ? value[key] : null;
+        }
+
+        return value;
+    }
+
+    function formatValue(value: unknown): string {
+        switch (typeof value) {
+            case "number":
+                return Number.isInteger(value) ? value.toString() : value.toFixed(2);
+            case "object":
+                return JSON.stringify(value);
+            default:
+                return String(value);
+        }
+    }
+
+    function toColor(value: number): string {
+        return rgbaToHex(intToRgba(value));
+    }
+
+    function getTextDecoration(decorations: HudTextSettings["decorations"]): string {
+        return [
+            decorations.underline ? "underline" : undefined,
+            decorations.strikethrough ? "line-through" : undefined
+        ].filter(Boolean).join(" ") || "none";
+    }
+
+    function getTextShadow(shadow: HudTextSettings["shadow"]): string {
+        return shadow.enabled
+            ? `${shadow.offsetX}px ${shadow.offsetY}px ${shadow.blurRadius}px ${toColor(shadow.color)}`
+            : "none";
+    }
+
+    function getGlow(glow: HudTextSettings["glow"]): string {
+        return glow.enabled
+            ? `drop-shadow(0px 0px ${glow.radius}px ${toColor(glow.color)})`
+            : "none";
+    }
+
+    function createTextStyle(settings: HudTextSettings): string {
+        return [
+            `font-family: ${settings.font}`,
+            `font-size: ${settings.size}px`,
+            `color: ${toColor(settings.color)}`,
+            `font-weight: ${settings.decorations.bold ? "bold" : "normal"}`,
+            `font-style: ${settings.decorations.italic ? "italic" : "normal"}`,
+            `text-decoration: ${getTextDecoration(settings.decorations)}`,
+            `text-shadow: ${getTextShadow(settings.shadow)}`,
+            `filter: ${getGlow(settings.glow)}`
+        ].join("; ");
+    }
+
+    $: cSettings = settings as HudTextSettings;
+    $: processedText = processText(cSettings.text, playerData);
+    $: textStyle = createTextStyle(cSettings);
 </script>
 
-<div class="text" style="
-    font-family: {cSettings.font};
-    font-size: {cSettings.size}px;
-    color: {rgbaToHex(intToRgba(cSettings.color))};
-    font-weight: {cSettings.decorations.bold ? 'bold' : 'normal'};
-    font-style: {cSettings.decorations.italic ? 'italic' : 'normal'};
-    text-decoration:
-      {cSettings.decorations.underline ? 'underline ' : ''}
-      {cSettings.decorations.strikethrough ? 'line-through' : ''};
-    text-shadow:
-      {cSettings.shadow.enabled
-        ? `${cSettings.shadow.offsetX}px ${cSettings.shadow.offsetY}px ${cSettings.shadow.blurRadius}px ${rgbaToHex(intToRgba(cSettings.shadow.color))}`
-        : 'none'};
-    filter: {cSettings.glow.enabled ? `drop-shadow(0px 0px ${cSettings.glow.radius}px ${rgbaToHex(intToRgba(cSettings.glow.color))}` : 'none'};
-">
+<div class="text" style={textStyle}>
     {processedText}
 </div>
 
 <style lang="scss">
-
     .text {
-        position: absolute;
         white-space: nowrap;
         user-select: none;
         pointer-events: none;

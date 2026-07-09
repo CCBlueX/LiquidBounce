@@ -6,8 +6,14 @@
     import TabGui from "./elements/tabgui/TabGui.svelte";
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Scoreboard from "./elements/Scoreboard.svelte";
-    import {onMount} from "svelte";
-    import {getClientInfo, getComponents, getGameWindow, getMetadata} from "../../integration/rest";
+    import {onMount, setContext} from "svelte";
+    import {
+        getClientInfo,
+        getComponents,
+        getGameWindow,
+        getMetadata,
+        getNativeComponents
+    } from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {HudComponent, Metadata} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
@@ -21,10 +27,23 @@
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
     import {os} from "../clickgui/clickgui_store";
     import InventoryStatistics from "./elements/inventory/InventoryStatistics.svelte";
+    import {
+        HUD_EDITOR_ELEMENTS_CONTEXT,
+        type HudEditorDragState
+    } from "../clickgui/tabs/hud_editor/constants";
+
+    export let inEditor = false;
+    export let onDragStateChange: ((state: HudEditorDragState) => void) | undefined = undefined;
+    export let magneticTargetIds: string[] = [];
 
     let zoom = 100;
     let metadata: Metadata;
-    let components: HudComponent[] = [];
+    let nativeComponents: HudComponent[] = [];
+    let themeComponents: HudComponent[] = [];
+
+    $: renderedComponents = inEditor ? [...nativeComponents, ...themeComponents] : themeComponents;
+
+    setContext(HUD_EDITOR_ELEMENTS_CONTEXT, new Map<string, HTMLElement>());
 
     onMount(async () => {
         $os = (await getClientInfo()).os;
@@ -33,29 +52,40 @@
         zoom = gameWindow.scaleFactor * 50;
 
         metadata = await getMetadata();
-        components = await getComponents(metadata.id);
+        [nativeComponents, themeComponents] = await Promise.all([
+            inEditor ? getNativeComponents() : Promise.resolve([]),
+            getComponents(metadata.id)
+        ]);
     });
 
     listen("scaleFactorChange", (data: ScaleFactorChangeEvent) => {
         zoom = data.scaleFactor * 50;
     });
 
-    listen("componentsUpdate", (data: ComponentsUpdateEvent) => {
-        if (data.id != metadata.id) {
-            // reject
-            return;
+    listen("componentsUpdate", (event: ComponentsUpdateEvent) => {
+        if (inEditor && event.source === "native") {
+            nativeComponents = event.components;
         }
 
-        // force update to re-render
-        components = [];
-        components = data.components;
+        if (event.source === "theme" && event.themeId === metadata?.id) {
+            themeComponents = event.components;
+        }
     });
 </script>
 
 <div class="hud" style="zoom: {zoom}%">
-    {#each components as c}
+    {#each renderedComponents as c (c.id)}
         {#if c.settings.enabled}
-            <DraggableComponent alignment={c.settings.alignment} >
+            <DraggableComponent
+                    {inEditor}
+                    {onDragStateChange}
+                    componentId={c.id}
+                    componentName={c.name}
+                    alignment={c.settings.alignment}
+                    magneticallyReferenced={magneticTargetIds.includes(c.id)}
+                    width={c.width}
+                    height={c.height}
+            >
                 {#if c.name === "Watermark"}
                     <Watermark/>
                 {:else if c.name === "ArrayList"}
@@ -80,13 +110,13 @@
                             getRenderedStacks={it => Array.from(it.armor).reverse()}
                     />
                 {:else if c.name === "InventoryStatistics"}
-                    <InventoryStatistics settings={c.settings} />
+                    <InventoryStatistics settings={c.settings}/>
                 {:else if c.name === "Inventory"}
-                    <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.main.slice(9)} />
+                    <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.main.slice(9)}/>
                 {:else if c.name === "CraftingInventory"}
-                    <GenericPlayerInventory rowLength={2} getRenderedStacks={it => it.crafting} />
+                    <GenericPlayerInventory rowLength={2} getRenderedStacks={it => it.crafting}/>
                 {:else if c.name === "EnderChestInventory"}
-                    <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.enderChest} />
+                    <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.enderChest}/>
                 {:else if c.name === "Taco"}
                     <Taco/>
                 {:else if c.name === "Keystrokes"}
@@ -94,11 +124,13 @@
                 {:else if c.name === "Effects"}
                     <Effects/>
                 {:else if c.name === "Text"}
-                    <Text settings={c.settings} />
+                    <Text settings={c.settings}/>
                 {:else if c.name === "Image"}
                     <img alt="" src="{c.settings.uRL}" style="scale: {c.settings.scale};">
                 {:else if c.name === "KeyBinds"}
                     <KeyBinds/>
+                {:else if c.width !== undefined && c.height !== undefined}
+                    <div></div>
                 {/if}
             </DraggableComponent>
         {/if}
