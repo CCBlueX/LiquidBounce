@@ -46,6 +46,7 @@ import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.AttackRange;
@@ -59,6 +60,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.List;
 
 @Mixin(Hud.class)
 public abstract class MixinHud {
@@ -93,7 +96,7 @@ public abstract class MixinHud {
         var component = HudComponentManager.getComponentWithTweak(HudComponentTweak.TWEAK_HOTBAR);
         if (component != null && component.getRunning() &&
                 minecraft.gameMode.getPlayerMode() != GameType.SPECTATOR) {
-            drawHotbar(context, tickCounter, component);
+            extractHotbarForHud(context, tickCounter, component);
         }
     }
 
@@ -201,7 +204,7 @@ public abstract class MixinHud {
     }
 
     @Unique
-    private void drawHotbar(GuiGraphicsExtractor context, DeltaTracker tickCounter, HudComponent hudComponent) {
+    private void extractHotbarForHud(GuiGraphicsExtractor context, DeltaTracker tickCounter, HudComponent hudComponent) {
         var playerEntity = this.getCameraPlayer();
         if (playerEntity == null) {
             return;
@@ -215,10 +218,10 @@ public abstract class MixinHud {
         var y = bounds.yMin() - 12;
 
         int l = 1;
-        for (int m = 0; m < 9; ++m) {
+        List<ItemStack> items = playerEntity.getInventory().getNonEquipmentItems();
+        for (int m = 0; m < Inventory.SELECTION_SIZE; ++m) {
             var x = center - offset + m * itemWidth;
-            this.extractSlot(context, (int) x, (int) y, tickCounter, playerEntity,
-                    playerEntity.getInventory().getNonEquipmentItems().get(m), l++);
+            this.extractSlot(context, (int) x, (int) y, tickCounter, playerEntity, items.get(m), l++);
         }
 
         var offHandStack = playerEntity.getOffhandItem();
