@@ -1,25 +1,26 @@
 <script lang="ts">
-    import type {HudComponentCatalogEntry} from "../../../../../integration/types";
+    import type {HudComponentCatalogEntry, Metadata} from "../../../../../integration/types";
     import {onMount, tick} from "svelte";
-    import {addComponent, getComponentCatalog} from "../../../../../integration/rest";
+    import {addComponent, getComponentCatalog, getMetadata} from "../../../../../integration/rest";
     import DrawerHudComponent from "./DrawerHudComponent.svelte";
     import {fly} from "svelte/transition";
 
-    let drawerShown = $state(false);
+    let metadata: Metadata;
 
+    let drawerShown = $state(false);
     let components: HudComponentCatalogEntry[] = $state([]);
     let filteredComponents: HudComponentCatalogEntry[] = $state([]);
     let drawerElement: HTMLElement | null = $state(null);
     let searchInput: HTMLInputElement | null = $state(null);
-
     let query = $state("");
 
     onMount(async () => {
+        metadata = await getMetadata();
         await refreshComponents();
     });
 
     async function refreshComponents() {
-        components = (await getComponentCatalog("liquidbounce")).sort((a, b) => a.name.localeCompare(b.name));
+        components = (await getComponentCatalog(metadata.id)).sort((a, b) => a.name.localeCompare(b.name));
         filteredComponents = components.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
     }
 
@@ -63,7 +64,8 @@
 
     {#if drawerShown}
         <div class="drawer" transition:fly={{ y: -10, duration: 200 }}>
-            <input bind:this={searchInput} type="text" class="input-search" placeholder="Search" bind:value={query} oninput={handleSearch}>
+            <input bind:this={searchInput} type="text" class="input-search" placeholder="Search" bind:value={query}
+                   oninput={handleSearch}>
 
             <div class="component-list">
                 {#if filteredComponents.length !== 0}
