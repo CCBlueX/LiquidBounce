@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {onMount} from "svelte";
+    import {onDestroy, onMount} from "svelte";
     import type {Module as TModule} from "../../integration/types";
     import {listen} from "../../integration/ws";
     import Module from "./Module.svelte";
@@ -7,9 +7,12 @@
     import {fade} from "svelte/transition";
     import {quintOut} from "svelte/easing";
     import {
+        animatePanels,
         gridSize,
         highlightModuleName,
         maxPanelZIndex,
+        type PanelHandle,
+        panelHandles,
         scaleFactor,
         showGrid,
         snappingEnabled
@@ -90,6 +93,8 @@
     function onMouseDown(e: MouseEvent) {
         if (e.button !== 0 && e.button !== 1) return;
 
+        $animatePanels = false;
+
         moving = true;
         offsetX = e.clientX * (2 / $scaleFactor) - panelConfig.left;
         offsetY = e.clientY * (2 / $scaleFactor) - panelConfig.top;
@@ -158,7 +163,24 @@
         modules = modules;
     });
 
+    const panelHandle: PanelHandle = {
+        category,
+        index: panelIndex,
+        getSize: () => ({
+            width: panelElement.offsetWidth,
+            height: panelElement.offsetHeight,
+        }),
+        setPosition: (left: number, top: number) => {
+            panelConfig.left = left;
+            panelConfig.top = top;
+            fixPosition();
+            savePanelConfig();
+        },
+    };
+
     onMount(() => {
+        panelHandles.update((handles) => [...handles, panelHandle]);
+
         if (!modulesElement) {
             return;
         }
@@ -167,6 +189,10 @@
             top: panelConfig.scrollTop,
             behavior: "smooth"
         });
+    });
+
+    onDestroy(() => {
+        panelHandles.update((handles) => handles.filter((h) => h !== panelHandle));
     });
 
     function handleKeydown(e: KeyboardEvent) {
@@ -192,6 +218,7 @@
 
 <div
         class="panel"
+        class:animate={$animatePanels}
         style="left: {panelConfig.left}px; top: {panelConfig.top}px; z-index: {panelConfig.zIndex};"
         bind:this={panelElement}
         transition:fade|global={{duration: 200, easing: quintOut}}
@@ -238,6 +265,10 @@
     will-change: transform;
     transition: none;
     user-select: none;
+
+    &.animate {
+      transition: left 0.25s ease, top 0.25s ease;
+    }
   }
 
   .title {
