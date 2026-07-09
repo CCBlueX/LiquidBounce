@@ -115,7 +115,10 @@ inline fun GuiGraphicsExtractor.ScissorStack.withPush(
 ) {
     push(rect)
     try {
-        block()
+        val visible = peek()
+        if (visible != null && visible.width() > 0 && visible.height() > 0) {
+            block()
+        }
     } finally {
         pop()
     }
