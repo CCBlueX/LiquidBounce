@@ -210,23 +210,23 @@ public abstract class MixinHud {
             return;
         }
 
-        var itemWidth = 22.5;
-        var offset = 98;
+        float itemWidth = 22.5F;
+        int offset = 98;
         var bounds = hudComponent.getAlignment().getBounds(0, 0);
 
         int center = (int) bounds.xMin();
-        var y = bounds.yMin() - 12;
+        float y = bounds.yMin() - 12;
 
-        int l = 1;
+        int seed = 1;
         List<ItemStack> items = playerEntity.getInventory().getNonEquipmentItems();
         for (int m = 0; m < Inventory.SELECTION_SIZE; ++m) {
-            var x = center - offset + m * itemWidth;
-            this.extractSlot(context, (int) x, (int) y, tickCounter, playerEntity, items.get(m), l++);
+            float x = center - offset + m * itemWidth;
+            this.extractSlot(context, (int) x, (int) y, tickCounter, playerEntity, items.get(m), seed++);
         }
 
-        var offHandStack = playerEntity.getOffhandItem();
+        ItemStack offHandStack = playerEntity.getOffhandItem();
         if (!hookOffhandItem(offHandStack.isEmpty())) {
-            this.extractSlot(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l);
+            this.extractSlot(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, seed);
         }
     }
 
