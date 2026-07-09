@@ -205,7 +205,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                 }
 
                 val entityBox = entity.boundingBox
-                    .inflate(0.3)
+                    .inflate(projectileEntityHitMargin(i).toDouble())
                     .move(predictedPos.subtract(entity.position()))
 
                 if (entityBox.clip(lastPos, arrow.pos).isPresent) {
@@ -216,6 +216,12 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
         return null
     }
+
+    /**
+     * @see net.minecraft.world.entity.projectile.ProjectileUtil.computeMargin
+     */
+    private fun projectileEntityHitMargin(tickCount: Int) =
+        ((tickCount - 2) / 20.0F).coerceIn(0.0F, 0.3F)
 
     private fun findAndBuildSimulatedEntities(): List<Pair<Entity, SimulatedPlayerCache?>> {
         return world.entitiesForRendering().filter { entity ->
