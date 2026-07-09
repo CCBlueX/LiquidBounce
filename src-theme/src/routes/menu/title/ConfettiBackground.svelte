@@ -1,5 +1,6 @@
 <script lang="ts">
     import {fade} from "svelte/transition";
+    import {portal} from "../../../integration/util";
 
     type ConfettiPiece = {
         id: number;
@@ -83,7 +84,7 @@
     }
 </script>
 
-<div class="confetti-layer" aria-hidden="true" transition:fade|global={{duration: 500}}>
+<div class="confetti-layer" aria-hidden="true" transition:fade|global={{duration: 500}} use:portal>
     {#each pieces as piece (piece.id)}
         <span class={`confetti-piece ${piece.shapeClass}`} style={piece.style}>
             <span class="confetti-bit"></span>
