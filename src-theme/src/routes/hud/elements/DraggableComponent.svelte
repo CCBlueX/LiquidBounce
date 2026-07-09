@@ -26,6 +26,8 @@
     export let inEditor: boolean;
     export let onDragStateChange: ((state: HudEditorDragState) => void) | undefined = undefined;
     export let magneticallyReferenced = false;
+    export let width: number | undefined = undefined;
+    export let height: number | undefined = undefined;
 
     let scaleFactor = 2;
     let element: HTMLElement | undefined;
@@ -52,6 +54,9 @@
     const editorElements = getContext<Map<string, HTMLElement>>(HUD_EDITOR_ELEMENTS_CONTEXT);
 
     $: styleString = generateStyleString(alignment);
+    $: sizeStyleString = (width !== undefined && height !== undefined)
+        ? `width: ${width}px; height: ${height}px;`
+        : "";
 
     function clamp(value: number, min: number, max: number): number {
         return Math.max(min, Math.min(value, max));
@@ -479,6 +484,7 @@
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
             class="contained-element"
+            style={sizeStyleString}
             class:editor-mode={inEditor}
             class:magnetically-referenced={inEditor && magneticallyReferenced}
             on:mousedown={onMouseDown}

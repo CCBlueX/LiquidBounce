@@ -393,6 +393,8 @@ export interface HudComponent {
     description: string;
     id: string;
     settings: { [name: string]: any };
+    width?: number;
+    height?: number;
 }
 
 export interface HudComponentCatalogEntry {

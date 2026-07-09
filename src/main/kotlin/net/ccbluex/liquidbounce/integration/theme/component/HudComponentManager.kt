@@ -62,7 +62,15 @@ object HudComponentManager {
 
     fun getComponentCatalog(id: String): List<Theme.ComponentCatalogEntry> {
         val theme = ThemeManager.themes.find { it.metadata.id == id } ?: return emptyList()
-        return theme.componentCatalog()
+        return nativeComponents.map { component ->
+            Theme.ComponentCatalogEntry(
+                component.name,
+                component.componentDescription,
+                component.id.toString(),
+                singleton = true,
+                canAdd = !component.enabled,
+            )
+        } + theme.componentCatalog()
     }
 
     fun getComponent(id: String): HudComponent? =
@@ -71,15 +79,32 @@ object HudComponentManager {
                 .flatMap { it.components.asSequence() }
                 .find { it.id.toString() == id }
 
-    fun addComponent(id: String): HudComponent? = ThemeManager.themes
-        .find { theme -> theme.components.any { it.id.toString() == id } }
-        ?.addComponent(id)
+    fun addComponent(id: String): HudComponent? {
+        nativeComponents.find { it.id.toString() == id }?.let { component ->
+            if (component.enabled) {
+                return null
+            }
+
+            component.enabled = true
+            return component
+        }
+
+        return ThemeManager.themes
+            .find { theme -> theme.components.any { it.id.toString() == id } }
+            ?.addComponent(id)
+    }
 
     fun updateComponents() {
-        // Might be necessary later on.
-        // EventManager.callEvent(ComponentsUpdate(null, components))
+        EventManager.callEvent(ComponentsUpdateEvent(
+            source = ComponentsUpdateEvent.Source.NATIVE,
+            components = nativeComponents,
+        ))
         val theme = ThemeManager.theme ?: return
-        EventManager.callEvent(ComponentsUpdateEvent(theme.metadata.id, theme.components))
+        EventManager.callEvent(ComponentsUpdateEvent(
+            source = ComponentsUpdateEvent.Source.THEME,
+            components = theme.components,
+            themeId = theme.metadata.id,
+        ))
     }
 
 }

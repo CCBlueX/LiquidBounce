@@ -645,6 +645,11 @@ export async function getComponents(id: string): Promise<HudComponent[]> {
     return await response.json();
 }
 
+export async function getNativeComponents(): Promise<HudComponent[]> {
+    const response = await fetch(`${API_BASE}/client/components/native`);
+    return await response.json();
+}
+
 export async function getComponentCatalog(id: string): Promise<HudComponentCatalogEntry[]> {
     const response = await fetch(`${API_BASE}/client/components/${id}/catalog`);
     return await response.json();

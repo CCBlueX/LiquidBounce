@@ -29,4 +29,9 @@ abstract class NativeHudComponent(
     alignment: Alignment,
     tweaks: Array<HudComponentTweak> = emptyArray(),
     description: String = "",
-) : HudComponent(name, enabled, alignment, tweaks, description)
+) : HudComponent(name, enabled, alignment, tweaks, description) {
+
+    abstract val width: Float
+    abstract val height: Float
+
+}

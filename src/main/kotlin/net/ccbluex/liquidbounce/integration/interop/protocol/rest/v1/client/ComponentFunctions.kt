@@ -31,10 +31,10 @@ import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.ccbluex.netty.http.routing.Routing
 import org.apache.commons.io.input.CharSequenceReader
 
-// GET /api/v1/client/components
-private fun Routing.getCurrentComponents() = get {
+// GET /api/v1/client/components/native
+private fun Routing.getNativeComponents() = get("/native") {
     call.respond(
-        HudComponentManager.getComponents(null),
+        HudComponentManager.nativeComponents,
         accessibleInteropGson,
     )
 }
@@ -114,7 +114,7 @@ private fun Routing.putComponentSettings() = put("/:id/settings") {
 }
 
 internal fun Routing.componentRoutes() = route("/components") {
-    getCurrentComponents()
+    getNativeComponents()
     getComponentCatalog()
     getComponents()
     postComponent()

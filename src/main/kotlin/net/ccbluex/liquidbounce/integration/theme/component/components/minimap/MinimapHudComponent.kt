@@ -70,6 +70,12 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
     private val fixedDirection by boolean("FixedDirection", false)
 
+    override val width: Float
+        get() = size.toFloat()
+
+    override val height: Float
+        get() = size.toFloat()
+
     private object TextureValueGroup : ToggleableValueGroup(this, "Texture", true) {
         val vertexColor by color("VertexColor", Color4b.WHITE)
 

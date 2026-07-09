@@ -7,7 +7,13 @@
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Scoreboard from "./elements/Scoreboard.svelte";
     import {onMount, setContext} from "svelte";
-    import {getClientInfo, getComponents, getGameWindow, getMetadata} from "../../integration/rest";
+    import {
+        getClientInfo,
+        getComponents,
+        getGameWindow,
+        getMetadata,
+        getNativeComponents
+    } from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {HudComponent, Metadata} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
@@ -32,7 +38,10 @@
 
     let zoom = 100;
     let metadata: Metadata;
-    let components: HudComponent[] = [];
+    let nativeComponents: HudComponent[] = [];
+    let themeComponents: HudComponent[] = [];
+
+    $: renderedComponents = inEditor ? [...nativeComponents, ...themeComponents] : themeComponents;
 
     setContext(HUD_EDITOR_ELEMENTS_CONTEXT, new Map<string, HTMLElement>());
 
@@ -43,7 +52,10 @@
         zoom = gameWindow.scaleFactor * 50;
 
         metadata = await getMetadata();
-        components = await getComponents(metadata.id);
+        [nativeComponents, themeComponents] = await Promise.all([
+            inEditor ? getNativeComponents() : Promise.resolve([]),
+            getComponents(metadata.id)
+        ]);
     });
 
     listen("scaleFactorChange", (data: ScaleFactorChangeEvent) => {
@@ -51,14 +63,18 @@
     });
 
     listen("componentsUpdate", (event: ComponentsUpdateEvent) => {
-        if (event.id === metadata?.id) {
-            components = event.components;
+        if (inEditor && event.source === "native") {
+            nativeComponents = event.components;
+        }
+
+        if (event.source === "theme" && event.themeId === metadata?.id) {
+            themeComponents = event.components;
         }
     });
 </script>
 
 <div class="hud" style="zoom: {zoom}%">
-    {#each components as c (c.id)}
+    {#each renderedComponents as c (c.id)}
         {#if c.settings.enabled}
             <DraggableComponent
                     {inEditor}
@@ -67,6 +83,8 @@
                     componentName={c.name}
                     alignment={c.settings.alignment}
                     magneticallyReferenced={magneticTargetIds.includes(c.id)}
+                    width={c.width}
+                    height={c.height}
             >
                 {#if c.name === "Watermark"}
                     <Watermark/>
@@ -111,6 +129,8 @@
                     <img alt="" src="{c.settings.uRL}" style="scale: {c.settings.scale};">
                 {:else if c.name === "KeyBinds"}
                     <KeyBinds/>
+                {:else if c.width !== undefined && c.height !== undefined}
+                    <div></div>
                 {/if}
             </DraggableComponent>
         {/if}
