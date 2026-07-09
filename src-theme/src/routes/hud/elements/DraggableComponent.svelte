@@ -561,6 +561,8 @@
         color: var(--clickgui-text-dimmed-color);
         font-size: 12px;
         text-wrap: nowrap;
+        outline: solid 1px var(--clickgui-hud-editor-draggable-element-position-outline-color);
+        background-color: var(--clickgui-hud-editor-draggable-element-position-background-color);
     }
 
     .position.top {
