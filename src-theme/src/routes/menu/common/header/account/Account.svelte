@@ -12,7 +12,7 @@
     import {listen} from "../../../../../integration/ws";
     import {location} from "svelte-spa-router";
     import {quintOut} from "svelte/easing";
-    import {fade, slide} from "svelte/transition";
+    import {fade, slide, fly} from "svelte/transition";
     import type {Account} from "../../../../../integration/types";
     import Avatar from "./Avatar.svelte";
     import {notification} from "../notification_store";
@@ -119,7 +119,7 @@
                 </object>
 
                 {#if isAnniversary() && inTitle}
-                    <img class="party-hat" src="img/anniversary/party-hat.svg" alt="party-hat">
+                    <img transition:fly={{duration: 500, y: -10}} class="party-hat" src="img/anniversary/party-hat.svg" alt="party-hat">
                 {/if}
             </div>
         {/if}
