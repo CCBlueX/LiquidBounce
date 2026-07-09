@@ -70,11 +70,6 @@
 <div
         class="tabbed-clickgui"
         class:darken={$darken}
-        style="
-    transform: scale({$scaleFactor * 50}%);
-    width: {2 / $scaleFactor * 100}vw;
-    height: {2 / $scaleFactor * 100}vh;
-  "
 >
     <Tabs {tabs} bind:activeTab/>
 </div>
@@ -83,10 +78,7 @@
   .tabbed-clickgui {
     overflow: hidden;
     position: absolute;
-    will-change: opacity;
-    transform-origin: top left;
-    left: 0;
-    top: 0;
+    inset: 0;
     transition: ease background-color .2s;
 
     &.darken {
