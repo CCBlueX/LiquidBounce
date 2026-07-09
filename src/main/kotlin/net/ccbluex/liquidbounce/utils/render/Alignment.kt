@@ -35,10 +35,24 @@ class Alignment(
         fun center() = Alignment(ScreenAxisX.CENTER, 0, ScreenAxisY.CENTER, 0)
     }
 
-    val horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
-    val horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000)
-    val verticalAlignment by enumChoice("Vertical", verticalAlignment)
-    val verticalOffset by int("VerticalOffset", verticalOffset, -1000..1000)
+    var horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
+        private set
+
+    var horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000)
+        private set
+
+    var verticalAlignment by enumChoice("Vertical", verticalAlignment)
+        private set
+
+    var verticalOffset by int("VerticalOffset", verticalOffset, -1000..1000)
+        private set
+
+    fun setFrom(other: Alignment) {
+        this.horizontalAlignment = other.horizontalAlignment
+        this.horizontalOffset = other.horizontalOffset
+        this.verticalAlignment = other.verticalAlignment
+        this.verticalOffset = other.verticalOffset
+    }
 
     fun getBounds(
         width: Float,
@@ -51,14 +65,14 @@ class Alignment(
             ScreenAxisX.LEFT -> horizontalOffset.toFloat()
             ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
             ScreenAxisX.RIGHT -> screenWidth - width - horizontalOffset.toFloat()
-            ScreenAxisX.CENTER -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
+            ScreenAxisX.CENTER -> screenWidth / 2f + horizontalOffset.toFloat()
         }
 
         val y = when (verticalAlignment) {
             ScreenAxisY.TOP -> verticalOffset.toFloat()
             ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f + verticalOffset.toFloat()
             ScreenAxisY.BOTTOM -> screenHeight - height - verticalOffset.toFloat()
-            ScreenAxisY.CENTER -> screenWidth / 2f - height / 2f + verticalOffset.toFloat()
+            ScreenAxisY.CENTER -> screenHeight / 2f + verticalOffset.toFloat()
         }
 
         return BoundingBox2f(x, y, x + width, y + height)
