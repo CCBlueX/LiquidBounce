@@ -1,5 +1,6 @@
 {
   "name": "Effects",
+  "description": "Shows your active status effects.",
   "enabled": true,
   "singleton": true,
   "alignment": {

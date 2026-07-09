@@ -22,3 +22,5 @@ export const showGrid: Writable<boolean> = writable(false);
 export const snappingEnabled: Writable<boolean> = writable(true);
 
 export const gridSize: Writable<number> = writable(10);
+
+export const darken = writable(true);

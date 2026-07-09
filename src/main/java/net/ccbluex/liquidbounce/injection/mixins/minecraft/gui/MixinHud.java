@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud;
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager;
@@ -210,23 +211,27 @@ public abstract class MixinHud {
             return;
         }
 
-        var itemWidth = 22.5;
-        var offset = 98;
-        var bounds = hudComponent.getAlignment().getBounds(0, 0);
+        // All values are measured, not calculated (with scale 2)
+        // TODO: fix scaled positions
+        final float guiScale = this.minecraft.getWindow().getGuiScale();
 
-        int center = (int) bounds.xMin();
-        var y = bounds.yMin() - 12;
+        float slotWidth = 22.5F;
+        int offset = 98;
+        var bounds = hudComponent.getAlignment().getBounds(203f, 25f);
 
-        int l = 1;
+        int xCenter = (int) bounds.xCenter();
+        float y = bounds.yMin() + 5f;
+
+        int seed = 1;
         List<ItemStack> items = playerEntity.getInventory().getNonEquipmentItems();
         for (int m = 0; m < Inventory.SELECTION_SIZE; ++m) {
-            var x = center - offset + m * itemWidth;
-            this.extractSlot(context, (int) x, (int) y, tickCounter, playerEntity, items.get(m), l++);
+            float x = xCenter - offset + m * slotWidth;
+            this.extractSlot(context, (int) x, (int) y, tickCounter, playerEntity, items.get(m), seed++);
         }
 
-        var offHandStack = playerEntity.getOffhandItem();
+        ItemStack offHandStack = playerEntity.getOffhandItem();
         if (!hookOffhandItem(offHandStack.isEmpty())) {
-            this.extractSlot(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l);
+            this.extractSlot(context, xCenter - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, seed);
         }
     }
 

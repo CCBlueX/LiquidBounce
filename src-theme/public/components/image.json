@@ -1,5 +1,6 @@
 {
   "name": "Image",
+  "description": "Displays a custom image from a URL.",
   "enabled": false,
   "singleton": false,
   "alignment": {

@@ -1,5 +1,6 @@
 {
   "name": "ArmorItems",
+  "description": "Displays your equipped armor.",
   "enabled": false,
   "singleton": true,
   "alignment": {

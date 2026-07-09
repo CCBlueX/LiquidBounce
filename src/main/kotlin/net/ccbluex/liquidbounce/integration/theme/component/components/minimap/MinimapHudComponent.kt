@@ -64,11 +64,17 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     horizontalOffset = 7,
     verticalAlignment = Alignment.ScreenAxisY.TOP,
     verticalOffset = 180,
-)) {
+), description = "Shows nearby terrain and entities.") {
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
     private val fixedDirection by boolean("FixedDirection", false)
+
+    override val guiScaledWidth: Float
+        get() = size.toFloat()
+
+    override val guiScaledHeight: Float
+        get() = size.toFloat()
 
     private object TextureValueGroup : ToggleableValueGroup(this, "Texture", true) {
         val vertexColor by color("VertexColor", Color4b.WHITE)
@@ -184,12 +190,9 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
         val minimapSize = size
 
-        val boundingBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
+        val boundingBox = getGuiScaledBounds(minimapSize.toFloat(), minimapSize.toFloat())
 
-        val centerBB = Vec2(
-            boundingBox.xMin + (boundingBox.xMax - boundingBox.xMin) * 0.5F,
-            boundingBox.yMin + (boundingBox.yMax - boundingBox.yMin) * 0.5F
-        )
+        val centerBB = boundingBox.centerVec
 
         val baseX = (playerPos.x / 16.0).toInt()
         val baseZ = (playerPos.z / 16.0).toInt()

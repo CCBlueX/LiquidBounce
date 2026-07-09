@@ -34,6 +34,7 @@ abstract class HudComponentFactory {
      * Factory for creating components from JSON deserialization.
      *
      * @param name Component name
+     * @param description Short description of the component
      * @param enabled Whether the component is enabled
      * @param alignment JSON alignment data
      * @param tweaks Optional tweaks array
@@ -41,6 +42,7 @@ abstract class HudComponentFactory {
      */
     class JsonHudComponentFactory(
         override val name: String,
+        private val description: String?,
         override val enabled: Boolean,
         override val singleton: Boolean,
         private val alignment: JsonObject,
@@ -53,7 +55,8 @@ abstract class HudComponentFactory {
             enabled,
             accessibleInteropGson.fromJson(alignment, Alignment::class.java),
             tweaks ?: emptyArray(),
-            values ?: emptyArray()
+            values ?: emptyArray(),
+            description ?: "",
         )
 
     }

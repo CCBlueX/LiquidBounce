@@ -1,5 +1,6 @@
 {
   "name": "Watermark",
+  "description": "Displays LiquidBounce branding and client information.",
   "enabled": true,
   "singleton": true,
   "alignment": {

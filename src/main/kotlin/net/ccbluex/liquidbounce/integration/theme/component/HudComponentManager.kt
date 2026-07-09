@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ComponentsUpdateEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
 
@@ -59,11 +60,51 @@ object HudComponentManager {
         return theme.components
     }
 
+    fun getComponentCatalog(id: String): List<Theme.ComponentCatalogEntry> {
+        val theme = ThemeManager.themes.find { it.metadata.id == id } ?: return emptyList()
+        return nativeComponents.map { component ->
+            Theme.ComponentCatalogEntry(
+                component.name,
+                component.componentDescription,
+                component.id.toString(),
+                singleton = true,
+                canAdd = !component.enabled,
+            )
+        } + theme.componentCatalog()
+    }
+
+    fun getComponent(id: String): HudComponent? =
+        components.find { it.id.toString() == id }
+            ?: ThemeManager.themes.asSequence()
+                .flatMap { it.components.asSequence() }
+                .find { it.id.toString() == id }
+
+    fun addComponent(id: String): HudComponent? {
+        nativeComponents.find { it.id.toString() == id }?.let { component ->
+            if (component.enabled) {
+                return null
+            }
+
+            component.enabled = true
+            return component
+        }
+
+        return ThemeManager.themes
+            .find { theme -> theme.components.any { it.id.toString() == id } }
+            ?.addComponent(id)
+    }
+
     fun updateComponents() {
-        // Might be necessary later on.
-        // EventManager.callEvent(ComponentsUpdate(null, components))
+        EventManager.callEvent(ComponentsUpdateEvent(
+            source = ComponentsUpdateEvent.Source.NATIVE,
+            components = nativeComponents,
+        ))
         val theme = ThemeManager.theme ?: return
-        EventManager.callEvent(ComponentsUpdateEvent(theme.metadata.id, theme.components))
+        EventManager.callEvent(ComponentsUpdateEvent(
+            source = ComponentsUpdateEvent.Source.THEME,
+            components = theme.components,
+            themeId = theme.metadata.id,
+        ))
     }
 
 }

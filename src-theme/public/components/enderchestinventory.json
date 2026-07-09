@@ -1,5 +1,6 @@
 {
   "name": "EnderChestInventory",
+  "description": "Displays your Ender Chest contents.",
   "enabled": false,
   "singleton": true,
   "alignment": {

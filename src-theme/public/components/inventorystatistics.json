@@ -1,5 +1,6 @@
 ﻿{
   "name": "InventoryStatistics",
+  "description": "Tracks configured items in your inventory.",
   "enabled": false,
   "singleton": true,
   "alignment": {

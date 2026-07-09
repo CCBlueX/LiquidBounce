@@ -94,6 +94,35 @@
     --clickgui-curve-grid-color: var(--clickgui-grid-color);
     --clickgui-curve-axis-color: var(--clickgui-text-dimmed-color);
 
+    --clickgui-hud-editor-grid-color: var(--clickgui-grid-color);
+    --clickgui-hud-editor-anchor-zone-border-color: color-mix(in srgb, var(--clickgui-text-color) 15%, transparent);
+    --clickgui-hud-editor-anchor-zone-background-color: color-mix(in srgb, var(--clickgui-text-color) 3%, transparent);
+    --clickgui-hud-editor-anchor-zone-active-border-color: var(--accent-color);
+    --clickgui-hud-editor-anchor-zone-active-background-color: color-mix(in srgb, var(--accent-color) 18%, transparent);
+    --clickgui-hud-editor-anchor-point-color: var(--clickgui-text-dimmed-color);
+    --clickgui-hud-editor-anchor-point-active-color: var(--accent-color);
+    --clickgui-hud-editor-anchor-point-active-ring-color: var(--accent-color);
+    --clickgui-hud-editor-anchor-point-active-shadow-color: color-mix(in srgb, var(--accent-color) 75%, transparent);
+    --clickgui-hud-editor-magnetic-guide-color: var(--accent-color);
+    --clickgui-hud-editor-magnetic-guide-shadow-color: color-mix(in srgb, var(--accent-color) 70%, transparent);
+    --clickgui-hud-editor-magnetic-reference-background-color: color-mix(in srgb, var(--accent-color) 55%, transparent);
+    --clickgui-hud-editor-draggable-element-outline-color: var(--accent-color);
+    --clickgui-hud-editor-draggable-element-background-color: color-mix(in srgb, var(--accent-color) 30%, transparent);
+    --clickgui-hud-editor-draggable-element-position-outline-color: var(--accent-color);
+    --clickgui-hud-editor-draggable-element-position-background-color: color-mix(in srgb, var(--accent-color) 30%, transparent);
+    --clickgui-hud-editor-component-settings-background-color: var(--clickgui-base-80-color);
+    --clickgui-hud-editor-component-settings-shadow-color: var(--clickgui-base-50-color);
+    --clickgui-hud-editor-drawer-toggle-button-background-color: var(--accent-color);
+    --clickgui-hud-editor-drawer-toggle-button-color: var(--text-color);
+    --clickgui-hud-editor-drawer-background-color: var(--clickgui-base-80-color);
+    --clickgui-hud-editor-drawer-shadow-color: var(--clickgui-base-50-color);
+    --clickgui-hud-editor-drawer-component-background-color: var(--clickgui-base-85-color);
+    --clickgui-hud-editor-drawer-component-border-color: var(--clickgui-base-85-color);
+    --clickgui-hud-editor-drawer-component-hover-background-color: var(--accent-subtle-background-color);
+    --clickgui-hud-editor-drawer-component-hover-border-color: var(--accent-color);
+    --clickgui-hud-editor-drawer-component-name-color: var(--clickgui-text-color);
+    --clickgui-hud-editor-drawer-component-description-color: var(--clickgui-text-dimmed-color);
+
     /* Menu */
     --menu-base-color: var(--surface-color);
     --menu-text-color: var(--text-color);

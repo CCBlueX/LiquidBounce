@@ -1,12 +1,13 @@
 <script lang="ts">
-    import type { Component } from "svelte";
+    import type {Component} from "svelte";
+    import {fly} from "svelte/transition";
 
     type Tab = {
         title: string;
         content: Component;
     };
 
-    let { tabs, activeTab = $bindable(0) } = $props<{
+    let {tabs, activeTab = $bindable(0)} = $props<{
         tabs: Tab[];
         activeTab?: number;
     }>();
@@ -14,7 +15,7 @@
     const Active = $derived(tabs[activeTab]?.content);
 </script>
 
-<div class="tabs">
+<div class="tabs" transition:fly={{duration: 200, y: -20}}>
     <div class="available-tabs">
         {#each tabs as tab, index (tab.title)}
             <button

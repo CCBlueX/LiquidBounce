@@ -1,5 +1,6 @@
 {
   "name": "Scoreboard",
+  "description": "Displays the current server scoreboard.",
   "enabled": true,
   "singleton": true,
   "alignment": {

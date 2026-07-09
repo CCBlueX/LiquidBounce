@@ -38,14 +38,18 @@ class Alignment(
     var horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
         private set
 
-    var horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000)
+    var horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000, suffix = "px")
         private set
+
+    val guiScaledHorizontalOffset get() = horizontalOffset.toFloat() / mc.window.guiScale
 
     var verticalAlignment by enumChoice("Vertical", verticalAlignment)
         private set
 
-    var verticalOffset by int("VerticalOffset", verticalOffset, -1000..1000)
+    var verticalOffset by int("VerticalOffset", verticalOffset, -1000..1000, suffix = "px")
         private set
+
+    val guiScaledVerticalOffset get() = verticalOffset.toFloat() / mc.window.guiScale
 
     fun setFrom(other: Alignment) {
         this.horizontalAlignment = other.horizontalAlignment
@@ -54,6 +58,9 @@ class Alignment(
         this.verticalOffset = other.verticalOffset
     }
 
+    /**
+     * @return Scaled bounds follows [com.mojang.blaze3d.platform.Window.guiScale]
+     */
     fun getBounds(
         width: Float,
         height: Float,
@@ -61,18 +68,20 @@ class Alignment(
         val screenWidth = mc.window.guiScaledWidth.toFloat()
         val screenHeight = mc.window.guiScaledHeight.toFloat()
 
+        val guiScaledHorizontalOffset = this.guiScaledHorizontalOffset
         val x = when (horizontalAlignment) {
-            ScreenAxisX.LEFT -> horizontalOffset.toFloat()
-            ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
-            ScreenAxisX.RIGHT -> screenWidth - width - horizontalOffset.toFloat()
-            ScreenAxisX.CENTER -> screenWidth / 2f + horizontalOffset.toFloat()
+            ScreenAxisX.LEFT -> guiScaledHorizontalOffset
+            ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f + guiScaledHorizontalOffset
+            ScreenAxisX.RIGHT -> screenWidth - width - guiScaledHorizontalOffset
+            ScreenAxisX.CENTER -> screenWidth / 2f + guiScaledHorizontalOffset
         }
 
+        val guiScaledVerticalOffset = this.guiScaledVerticalOffset
         val y = when (verticalAlignment) {
-            ScreenAxisY.TOP -> verticalOffset.toFloat()
-            ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f + verticalOffset.toFloat()
-            ScreenAxisY.BOTTOM -> screenHeight - height - verticalOffset.toFloat()
-            ScreenAxisY.CENTER -> screenHeight / 2f + verticalOffset.toFloat()
+            ScreenAxisY.TOP -> guiScaledVerticalOffset
+            ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f + guiScaledVerticalOffset
+            ScreenAxisY.BOTTOM -> screenHeight - height - guiScaledVerticalOffset
+            ScreenAxisY.CENTER -> screenHeight / 2f + guiScaledVerticalOffset
         }
 
         return BoundingBox2f(x, y, x + width, y + height)

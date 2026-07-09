@@ -119,10 +119,16 @@ export interface ScaleFactorChangeEvent {
     scaleFactor: number;
 }
 
-export interface ComponentsUpdateEvent {
-    id: string | null;
-    components: HudComponent[];
-}
+export type ComponentsUpdateEvent =
+    | {
+        source: "native";
+        components: HudComponent[];
+    }
+    | {
+        source: "theme";
+        themeId: string;
+        components: HudComponent[];
+    };
 
 export interface ClientPlayerDataEvent {
     playerData: PlayerData;

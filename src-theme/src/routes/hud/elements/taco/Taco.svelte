@@ -18,6 +18,7 @@
   .taco {
     position: relative;
     height: 60px;
+    width: 100vw;
     background-color: transparent;
 
     img {
