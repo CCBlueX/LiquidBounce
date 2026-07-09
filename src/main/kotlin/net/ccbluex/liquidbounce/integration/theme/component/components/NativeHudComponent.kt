@@ -31,7 +31,18 @@ abstract class NativeHudComponent(
     description: String = "",
 ) : HudComponent(name, enabled, alignment, tweaks, description) {
 
-    abstract val width: Float
-    abstract val height: Float
+    /**
+     * @see com.mojang.blaze3d.platform.Window.guiScaledWidth
+     */
+    abstract val guiScaledWidth: Float
+
+    /**
+     * @see com.mojang.blaze3d.platform.Window.guiScaledHeight
+     */
+    abstract val guiScaledHeight: Float
+
+    val width: Float get() = guiScaledWidth * mc.window.guiScale
+
+    val height: Float get() = guiScaledHeight * mc.window.guiScale
 
 }
