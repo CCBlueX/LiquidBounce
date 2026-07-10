@@ -16,6 +16,16 @@
       "value": ["Header", "Name", "Score"],
       "choices": ["Header", "Name", "Score"],
       "canBeNone": false
+    },
+    {
+      "type": "TEXT",
+      "name": "ReplaceRegex",
+      "value": ""
+    },
+    {
+      "type": "TEXT",
+      "name": "ReplaceWith",
+      "value": ""
     }
   ],
   "tweaks": ["DISABLE_SCOREBOARD"]
