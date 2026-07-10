@@ -79,7 +79,7 @@ private fun Matrix3x2fc.transformMaxBounds(
 }
 
 /**
- * @see net.minecraft.client.gui.render.state.ColoredRectangleRenderState.getBounds
+ * @see net.minecraft.client.renderer.state.gui.ColoredRectangleRenderState.getBounds
  */
 fun GuiGraphicsExtractor.getBounds(left: Float, top: Float, right: Float, bottom: Float): ScreenRectangle {
     val rect = this.pose().transformMaxBounds(left, top, right, bottom)
@@ -87,7 +87,7 @@ fun GuiGraphicsExtractor.getBounds(left: Float, top: Float, right: Float, bottom
 }
 
 /**
- * @see net.minecraft.client.gui.render.state.ColoredRectangleRenderState.getBounds
+ * @see net.minecraft.client.renderer.state.gui.ColoredRectangleRenderState.getBounds
  */
 fun GuiGraphicsExtractor.getBoundsXYWH(x: Float, y: Float, w: Float, h: Float): ScreenRectangle {
     return getBounds(x, y, x + w, y + h)
@@ -113,6 +113,7 @@ inline fun GuiGraphicsExtractor.ScissorStack.withPush(
     rect: ScreenRectangle,
     block: GuiGraphicsExtractor.ScissorStack.() -> Unit,
 ) {
+    if (rect.width <= 0 || rect.height <= 0) return
     push(rect)
     try {
         block()
