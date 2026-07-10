@@ -30,10 +30,15 @@ import java.util.function.Supplier
 /**
  * A holder for a RenderTarget that initializes it lazily and handles resizing.
  */
-class LazyRenderTargetHolder(
+class LazyRenderTargetHolder private constructor(
     val name: String,
-    @JvmField val useDepth: Boolean
+    val colorFormat: GpuFormat = GpuFormat.RGBA8_UNORM,
+    val depthFormat: GpuFormat? = GpuFormat.D32_FLOAT,
 ) : Supplier<RenderTarget?>, AutoCloseable {
+
+    constructor(name: String, useDepth: Boolean) :
+        this(name, GpuFormat.RGBA8_UNORM, if (useDepth) GpuFormat.D32_FLOAT else null)
+
     private var raw: RenderTarget? = null
 
     override fun get(): RenderTarget? {
@@ -62,16 +67,14 @@ class LazyRenderTargetHolder(
         val current = this.raw
 
         if (current == null) {
-            val new = TextureTarget(name, width, height, useDepth, GpuFormat.RGBA8_UNORM)
+            val new = TextureTarget(name, width, height, depthFormat != null, colorFormat)
             this.raw = new
             return new
         } else {
             if (width != current.width || height != current.height) {
                 current.resize(width, height) // Resizing includes clearing the framebuffer
-            } else if (useDepth) {
-                current.clearColorAndDepth()
             } else {
-                current.colorTexture!!.clearColor()
+                current.clearColorAndDepth()
             }
             return current
         }
