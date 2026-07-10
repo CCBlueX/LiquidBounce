@@ -76,6 +76,8 @@ import net.minecraft.world.level.block.entity.EnderChestBlockEntity
 import net.minecraft.world.level.block.entity.HopperBlockEntity
 import net.minecraft.world.level.block.entity.ShelfBlockEntity
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity
+import net.minecraft.world.level.block.entity.TrialSpawnerBlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.shapes.VoxelShape
@@ -116,6 +118,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         object ShulkerBox : ChestType("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
         object Pot : ChestType("Pot", Color4b(209, 134, 0))
         object Shelf : ChestType("Shelf", Color4b(160, 82, 45))
+        object Spawner : ChestType("Spawner", Color4b(Color.RED))
     }
 
     private val allTypes = arrayOf(
@@ -129,6 +132,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         ChestType.ShulkerBox,
         ChestType.Pot,
         ChestType.Shelf,
+        ChestType.Spawner,
     )
 
     init {
@@ -410,6 +414,8 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             is ShulkerBoxBlockEntity -> ChestType.ShulkerBox
             is DecoratedPotBlockEntity -> ChestType.Pot
             is ShelfBlockEntity -> ChestType.Shelf
+            is SpawnerBlockEntity -> ChestType.Spawner
+            is TrialSpawnerBlockEntity -> ChestType.Spawner
             else -> null
         }
     }
