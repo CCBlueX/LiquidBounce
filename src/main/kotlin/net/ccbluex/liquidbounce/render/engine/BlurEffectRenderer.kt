@@ -78,7 +78,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             lastAlphaBlendRange = alphaBlendRange
         }
 
-        val overlayTexture = overlayRenderTargetHolder.raw!!.colorTextureView
+        val overlayTexture = overlayRenderTargetHolder.get()!!.colorTextureView
         mc.gameRenderer.mainRenderTarget()
             .createRenderPass({ "GUI blur pass" })
             .use { pass ->

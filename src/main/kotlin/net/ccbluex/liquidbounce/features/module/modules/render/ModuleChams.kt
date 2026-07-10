@@ -62,7 +62,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
     private val renderTargetHolder = LazyRenderTargetHolder("Chams", useDepth = true)
     private val blitSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
-    private val outputTarget = OutputTarget("liquidbounce_chams") { renderTargetHolder.raw }
+    private val outputTarget = OutputTarget("liquidbounce_chams", renderTargetHolder)
 
     private val pipelineBlit: RenderPipeline =
         ClientRenderPipelines.newPipeline("chams/blit") {
@@ -157,7 +157,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
         dirty = false
 
-        val colorTexture = renderTargetHolder.raw?.colorTextureView ?: return
+        val colorTexture = renderTargetHolder.get()?.colorTextureView ?: return
 
         target.createRenderPass({ "Chams blit pass" }).use { pass ->
             pass.setPipeline(pipelineBlit)
