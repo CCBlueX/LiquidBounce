@@ -402,6 +402,10 @@ value class KStd140SizeCalculator(val j: Std140SizeCalculator) {
         }
     inline val vec4: Unit
         get() {
+            j.putVec4()
+        }
+    inline val ivec4: Unit
+        get() {
             j.putIVec4()
         }
     inline val mat4f: Unit

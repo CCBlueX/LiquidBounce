@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
+import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -27,12 +28,14 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
+import net.ccbluex.liquidbounce.render.CachedUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gui.screens.ChatScreen
+import kotlin.math.ceil
+import kotlin.math.exp
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
@@ -43,15 +46,28 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         useDepth = true,
     )
 
+    private val intermediateTarget = LazyRenderTargetHolder(
+        "${LiquidBounce.CLIENT_NAME} BlurIntermediate",
+        useDepth = false,
+    )
+
     private val overlaySampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
 
     private val lastTimeScreenOpened = Chronometer()
     private var wasScreenOpen = false
 
-    private val GUI_BLUR_UNIFORM_BUFFER = ClientUniformDefine.GUI_BLUR.createSingleBuffer()
+    private data class BlurBlendUniform(val minAlpha: Float, val maxAlpha: Float)
 
-    private var lastBlurRadius = Float.MIN_VALUE
-    private var lastAlphaBlendRange = 0f..1f
+    private data class BlurKernelUniform(val sigma: Float, val radius: Int)
+
+    private val blurBlendUniform = CachedUniform<BlurBlendUniform>(ClientUniformDefine.GUI_BLUR) { value ->
+        putFloat(value.minAlpha)
+        putFloat(value.maxAlpha)
+    }
+
+    private val blurKernelUniform = CachedUniform<BlurKernelUniform>(ClientUniformDefine.GUI_BLUR_KERNEL) { value ->
+        writeKernel(value.sigma, value.radius)
+    }
 
     private fun hasNoFullScreen(): Boolean =
         mc.gui.screen() == null || mc.gui.screen() is ChatScreen || FeatureSilentScreen.shouldHide
@@ -65,36 +81,43 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
         isDrawingHudFramebuffer = false
 
-        // Write UBO
-        val blurRadius = getBlurRadius()
+        val sigma = getSigma()
         val alphaBlendRange = ModuleHud.Blur.alphaBlendRange
-        if (blurRadius != lastBlurRadius || alphaBlendRange != lastAlphaBlendRange) {
-            GUI_BLUR_UNIFORM_BUFFER.writeStd140 {
-                putFloat(blurRadius)
-                putFloat(ModuleHud.Blur.alphaBlendRange.start)
-                putFloat(ModuleHud.Blur.alphaBlendRange.endInclusive)
-            }
-            lastBlurRadius = blurRadius
-            lastAlphaBlendRange = alphaBlendRange
-        }
+        val kernelRadius = calculateKernelRadius(sigma)
+        val blendUniform = blurBlendUniform.get(
+            BlurBlendUniform(alphaBlendRange.start, alphaBlendRange.endInclusive)
+        )
+        val kernelUniform = blurKernelUniform.get(BlurKernelUniform(sigma, kernelRadius))
 
-        val overlayTexture = overlayRenderTargetHolder.raw!!.colorTextureView
-        mc.gameRenderer.mainRenderTarget()
-            .createRenderPass({ "GUI blur pass" })
+        val mainTarget = mc.gameRenderer.mainRenderTarget()
+        val mainTexture = mainTarget.colorTextureView
+        val overlayTexture = overlayRenderTargetHolder.get()!!.colorTextureView
+
+        // Pass 1: Horizontal Gaussian blur into intermediate target
+        val intermediate = intermediateTarget.initAndGet()
+        intermediate.createRenderPass({ "GUI blur H pass" })
             .use { pass ->
-                // Draw blur areas
-                pass.setPipeline(ClientRenderPipelines.GuiBlur)
-                pass.bindTexture("texture0", mc.gameRenderer.mainRenderTarget().colorTextureView, overlaySampler)
-                pass.bindTexture("overlay", overlayTexture, overlaySampler)
-                pass.setUniform(ClientUniformDefine.GUI_BLUR.uboName, GUI_BLUR_UNIFORM_BUFFER)
+                pass.setPipeline(ClientRenderPipelines.GuiBlurH)
+                pass.bindTexture("texture0", mainTexture, overlaySampler)
+                pass.setUniform(ClientUniformDefine.GUI_BLUR_KERNEL.uboName, kernelUniform)
                 pass.draw(3, 1, 0, 0)
             }
 
-        mc.gameRenderer.mainRenderTarget().colorTextureView!!
+        // Pass 2: Vertical Gaussian blur + overlay composite into main target
+        mainTarget.createRenderPass({ "GUI blur V pass" })
+            .use { pass ->
+                pass.setPipeline(ClientRenderPipelines.GuiBlurV)
+                pass.bindTexture("texture0", intermediate.colorTextureView, overlaySampler)
+                pass.bindTexture("overlay", overlayTexture, overlaySampler)
+                pass.setUniform(ClientUniformDefine.GUI_BLUR.uboName, blendUniform)
+                pass.setUniform(ClientUniformDefine.GUI_BLUR_KERNEL.uboName, kernelUniform)
+                pass.draw(3, 1, 0, 0)
+            }
+
+        // Blit overlay texture on top
+        mainTexture!!
             .createRenderPass({ "GUI blur overlay blit pass" })
             .use { pass ->
-                // Blit overlay texture
-                // @see RenderTarget.blitAndBlendToTexture
                 pass.setPipeline(ClientRenderPipelines.JCEF.Blit)
                 pass.bindTexture("InSampler", overlayTexture, overlaySampler)
                 pass.draw(3, 1, 0, 0)
@@ -117,8 +140,43 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
     }
 
-    private fun getBlurRadius(): Float {
-        return (this.getBlurRadiusFactor() * 20.0F).coerceIn(5.0F, 20.0F)
+    private fun getSigma(): Float {
+        return (ModuleHud.Blur.sigma * getBlurRadiusFactor()).coerceAtLeast(1.0F)
+    }
+
+    private fun calculateKernelRadius(sigma: Float): Int {
+        return ceil(sigma * 3.0).toInt()
+    }
+
+    /**
+     * Precomputes normalized Gaussian kernel weights packed as vec4[23] into the kernel UBO.
+     * Weights are already normalized so the shader just sums weighted samples — no exp(), no division.
+     */
+    private fun Std140Builder.writeKernel(sigma: Float, kernelRadius: Int) {
+        val count = kernelRadius * 2 + 1
+        val raw = FloatArray(count)
+        var total = 0.0f
+        for (i in -kernelRadius..kernelRadius) {
+            val w = exp(-0.5f * i * i / (sigma * sigma))
+            raw[i + kernelRadius] = w
+            total += w
+        }
+        // Normalize
+        for (i in raw.indices) {
+            raw[i] /= total
+        }
+
+        // Pack into vec4[23] = 92 slots, we have up to 91 weights
+        for (vecIdx in 0 until 23) {
+            val base = vecIdx * 4
+            putVec4(
+                raw.getOrElse(base) { 0.0f },
+                raw.getOrElse(base + 1) { 0.0f },
+                raw.getOrElse(base + 2) { 0.0f },
+                raw.getOrElse(base + 3) { 0.0f },
+            )
+        }
+        putInt(kernelRadius)
     }
 
 }
