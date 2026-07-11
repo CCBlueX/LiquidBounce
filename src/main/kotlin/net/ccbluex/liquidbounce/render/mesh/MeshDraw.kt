@@ -28,12 +28,9 @@ import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.VertexFormat
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
-import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.ClientTesselator
-import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer
-import net.ccbluex.liquidbounce.utils.kotlin.memorizingFunction
+import net.ccbluex.liquidbounce.render.buffers.DynamicGpuBufferWriter
 import java.nio.ByteBuffer
 
 /**
@@ -79,49 +76,73 @@ data class MeshDraw(
     }
 
     fun interface VertexUploader {
+        /**
+         * Uploads vertex data.
+         *
+         * The returned slice's byte offset must be aligned to [VertexFormat.vertexSize] for [format].
+         */
         fun upload(format: VertexFormat, data: ByteBuffer): GpuBufferSlice
     }
 
     fun interface IndexUploader {
+        /**
+         * Uploads index data.
+         *
+         * The returned slice's byte offset must be aligned to [IndexType.bytes] for [type].
+         */
         fun upload(type: IndexType, data: ByteBuffer): GpuBufferSlice
     }
 
     companion object DefaultUploader : VertexUploader, IndexUploader {
 
         /**
-         * Shared dynamic VBO pool (keyed by [VertexFormat] for auto-alignment).
+         * Shared dynamic VBO writer for per-frame meshes.
          *
-         * This is the default upload target for per-frame dynamic meshes.
+         * Vertex uploads are aligned to their respective [VertexFormat.vertexSize].
          */
-        private val sharedVboGetter =
-            memorizingFunction<VertexFormat, GrowableMappableRingBuffer>(Object2ObjectArrayMap()) {
-                GrowableMappableRingBuffer(
-                    "${LiquidBounce.CLIENT_NAME} Shared VBO for $it",
-                    GpuBuffer.USAGE_VERTEX,
-                    GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 13),
-                )
-            }
+        private val sharedVbo = DynamicGpuBufferWriter(
+            "${LiquidBounce.CLIENT_NAME} Shared VBO",
+            GpuBuffer.USAGE_VERTEX,
+            DynamicGpuBufferWriter.GrowPolicy.of(paddingScale = 8, min = 1 shl 13),
+        )
 
         /**
-         * Shared dynamic IBO pool (keyed by [IndexType] for auto-alignment).
+         * Shared dynamic IBO writer for per-frame meshes.
          *
-         * This is the default upload target for per-frame dynamic meshes.
+         * Index uploads are aligned to their respective [IndexType.bytes].
          */
-        private val sharedIboGetter =
-            memorizingFunction<IndexType, GrowableMappableRingBuffer>(enumMapOf()) {
-                GrowableMappableRingBuffer(
-                    "${LiquidBounce.CLIENT_NAME} Shared IBO for $it",
-                    GpuBuffer.USAGE_INDEX,
-                    GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 7, min = 1 shl 11),
-                )
-            }
+        private val sharedIbo = DynamicGpuBufferWriter(
+            "${LiquidBounce.CLIENT_NAME} Shared IBO",
+            GpuBuffer.USAGE_INDEX,
+            DynamicGpuBufferWriter.GrowPolicy.of(paddingScale = 7, min = 1 shl 11),
+        )
 
         override fun upload(format: VertexFormat, data: ByteBuffer): GpuBufferSlice {
-            return sharedVboGetter.apply(format).upload(data)
+            return sharedVbo.upload(data, format.vertexSize)
         }
 
         override fun upload(type: IndexType, data: ByteBuffer): GpuBufferSlice {
-            return sharedIboGetter.apply(type).upload(data)
+            return sharedIbo.upload(data, type.bytes)
+        }
+
+        /**
+         * End the current frame for all shared writers. After this call, all active buffers
+         * are fenced for recycling.
+         *
+         * Must be called once per frame after all draw calls that reference uploaded slices
+         * have been submitted.
+         */
+        fun endFrame() {
+            sharedVbo.endFrame()
+            sharedIbo.endFrame()
+        }
+
+        /**
+         * Release the shared per-frame upload buffers before the render device is shut down.
+         */
+        fun close() {
+            sharedVbo.close()
+            sharedIbo.close()
         }
 
         /**

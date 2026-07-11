@@ -17,20 +17,5 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("FunctionName", "PropertyName", "NOTHING_TO_INLINE")
-
-package net.ccbluex.liquidbounce.additions
-
-import net.minecraft.client.renderer.MappableRingBuffer
-
-interface MappableRingBufferAddition {
-    fun `liquidBounce$isSafeForClose`(): Boolean
-
-    fun `liquidBounce$awaitAndRotate`()
-}
-
-inline val MappableRingBuffer.isSafeForClose
-    get() = (this as MappableRingBufferAddition).`liquidBounce$isSafeForClose`()
-
-inline fun MappableRingBuffer.awaitAndRotate() =
-    (this as MappableRingBufferAddition).`liquidBounce$awaitAndRotate`()
+@org.jspecify.annotations.NullMarked
+package net.ccbluex.liquidbounce.render.buffers;

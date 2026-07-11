@@ -28,6 +28,7 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.ccbluex.liquidbounce.render.buffers.StaticGpuBufferPool;
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw;
 import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
