@@ -120,6 +120,7 @@ class DynamicGpuBufferWriter @JvmOverloads constructor(
         currentBuffer = null
         writeOffset = 0
         pool.endFrame(highWaterCapacity)
+        peakBytesThisFrame = 0
     }
 
     override fun close() {

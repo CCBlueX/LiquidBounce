@@ -431,11 +431,15 @@ public abstract class MixinMinecraft {
         }
     }
 
+    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;submit()V", shift = At.Shift.BEFORE))
+    private void endDynamicGpuBufferFrame(boolean advanceGameTime, CallbackInfo ci) {
+        MeshDraw.DefaultUploader.endFrame();
+    }
+
     @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;endFrame()V", shift = At.Shift.AFTER))
     private void onFlipFrame(boolean advanceGameTime, CallbackInfo ci) {
         RenderingDebug.flipFrame();
         ClientTesselator.Shared.clear();
-        MeshDraw.DefaultUploader.endFrame();
         StaticGpuBufferPool.cleanup();
     }
 
