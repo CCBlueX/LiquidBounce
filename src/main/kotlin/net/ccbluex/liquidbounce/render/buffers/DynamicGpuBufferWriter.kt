@@ -37,7 +37,8 @@ import kotlin.math.max
  * has finished consuming them.
  *
  * Unlike [net.minecraft.client.renderer.MappableRingBuffer],
- * this class does not use persistent mapping, avoiding the fence issue of wrapping within a single command encoder submit.
+ * this class does not use persistent mapping, avoiding the fence
+ * issue of wrapping within a single command encoder submit.
  *
  * ## Lifecycle
  * - [upload]: acquire/write data (auto-grows buffer as needed)
@@ -86,7 +87,9 @@ class DynamicGpuBufferWriter @JvmOverloads constructor(
 
             val previousHighWater = highWaterCapacity
             val newCapacity = growPolicy.getNewSize(requiredSize, highWaterCapacity)
-            require(newCapacity >= requiredSize) { "Grow policy returned $newCapacity bytes for a $requiredSize byte upload" }
+            require(newCapacity >= requiredSize) {
+                "Grow policy returned $newCapacity bytes for a $requiredSize byte upload"
+            }
             highWaterCapacity = newCapacity
 
             writeOffset = 0
@@ -95,7 +98,8 @@ class DynamicGpuBufferWriter @JvmOverloads constructor(
 
             if (previousHighWater != 0 && newCapacity > previousHighWater) {
                 logger.debug(
-                    "$label buffer grown: ${previousHighWater.toLong().formatAsCapacity()} → ${newCapacity.toLong().formatAsCapacity()}"
+                    "$label buffer grown: ${previousHighWater.toLong().formatAsCapacity()} " +
+                        "→ ${newCapacity.toLong().formatAsCapacity()}"
                 )
             }
         }
