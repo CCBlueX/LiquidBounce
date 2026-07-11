@@ -40,7 +40,11 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
         if (!isEqual1_8) {
             if (!notifiedWrongProtocol) {
                 notifiedWrongProtocol = true
-                chat(markAsError(translation("liquidbounce.module.scaffold.messages.hypixelTower.wrongProtocolVersion")))
+                chat(
+                    markAsError(
+                        translation("liquidbounce.module.scaffold.messages.hypixelTower.wrongProtocolVersion")
+                    )
+                )
             }
         } else {
             notifiedWrongProtocol = false
@@ -50,7 +54,11 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
         if (horizontalSpeed > 0.01) {
             if (!notifiedStationary) {
                 notifiedStationary = true
-                chat(warning(translation("liquidbounce.module.scaffold.messages.hypixelTower.stationaryWarning")))
+                chat(
+                    warning(
+                        translation("liquidbounce.module.scaffold.messages.hypixelTower.stationaryWarning")
+                    )
+                )
             }
             return@tickHandler
         }
