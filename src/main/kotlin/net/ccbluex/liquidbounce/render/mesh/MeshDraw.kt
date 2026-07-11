@@ -138,6 +138,14 @@ data class MeshDraw(
         }
 
         /**
+         * Release the shared per-frame upload buffers before the render device is shut down.
+         */
+        fun close() {
+            sharedVbo.close()
+            sharedIbo.close()
+        }
+
+        /**
          * Sort quads (if needed) and upload or describe the buffers needed by [MeshData].
          *
          * If [MeshData.indexBuffer] returns null, the resulting [MeshDraw] resolves

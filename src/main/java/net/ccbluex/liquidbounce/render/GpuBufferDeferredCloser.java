@@ -24,6 +24,8 @@ import com.mojang.blaze3d.buffers.GpuFence;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -35,7 +37,7 @@ import java.util.function.Consumer;
  *
  * <p>Both methods must be called on the render thread.
  */
-public final class GpuBufferDeferredCloser {
+public final class GpuBufferDeferredCloser implements AutoCloseable {
 
     private final Consumer<GpuBuffer> closeAction;
     private final ArrayList<PendingClose> pendingClose = new ArrayList<>();
@@ -65,7 +67,24 @@ public final class GpuBufferDeferredCloser {
      */
     public void add(GpuBuffer buffer) {
         var fence = RenderSystem.getDevice().createCommandEncoder().createFence();
-        this.pendingClose.add(new PendingClose(buffer, fence));
+        this.pendingClose.add(new PendingClose(List.of(buffer), fence));
+    }
+
+    /**
+     * Defers closing/recycling all given buffers behind a single fence.
+     *
+     * <p>The fence must be created after every command that references any buffer in {@code buffers}
+     * has been recorded and before the command encoder is submitted.</p>
+     *
+     * @param buffers buffers that must remain valid until the fence is signaled
+     */
+    public void add(Collection<GpuBuffer> buffers) {
+        if (buffers.isEmpty()) {
+            return;
+        }
+
+        var fence = RenderSystem.getDevice().createCommandEncoder().createFence();
+        this.pendingClose.add(new PendingClose(List.copyOf(buffers), fence));
     }
 
     /**
@@ -79,7 +98,7 @@ public final class GpuBufferDeferredCloser {
         this.pendingClose.removeIf(pending -> {
             if (pending.fence.awaitCompletion(0L)) {
                 pending.fence.close();
-                this.closeAction.accept(pending.buffer);
+                pending.buffers.forEach(this.closeAction);
                 return true;
             }
 
@@ -87,7 +106,18 @@ public final class GpuBufferDeferredCloser {
         });
     }
 
-    private record PendingClose(GpuBuffer buffer, GpuFence fence) {
+    @Override
+    public void close() {
+        this.pendingClose.forEach(PendingClose::close);
+        this.pendingClose.clear();
+    }
+
+    private record PendingClose(List<GpuBuffer> buffers, GpuFence fence) implements AutoCloseable {
+        @Override
+        public void close() {
+            this.buffers.forEach(GpuBuffer::close);
+            this.fence.close();
+        }
     }
 
 }

@@ -26,9 +26,6 @@ import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -45,7 +42,7 @@ import java.util.function.Supplier;
 public final class StaticGpuBufferPool {
 
     private static final int BUFFER_SIZE_INCREMENT = 16 * 1024;
-    private static final int MAX_REUSE_SIZE_FACTOR = 4;
+    private static final long MAX_REUSE_SIZE_FACTOR = 4L;
     private static final int MAX_AVAILABLE_BUFFERS_PER_USAGE = 16;
 
     private static final Pool VERTEX_POOL = new Pool(GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST);
@@ -91,10 +88,8 @@ public final class StaticGpuBufferPool {
     }
 
     private static final class Pool {
-        private static final Comparator<GpuBuffer> COMPARATOR = Comparator.comparingLong(GpuBuffer::size).reversed();
-
         private final @GpuBuffer.Usage int usage;
-        private final List<GpuBuffer> available = new ArrayList<>();
+        private final GpuBufferAvailableCache available = new GpuBufferAvailableCache();
         private final GpuBufferDeferredCloser closer = new GpuBufferDeferredCloser(this.available::add);
 
         private Pool(@GpuBuffer.Usage int usage) {
@@ -105,32 +100,12 @@ public final class StaticGpuBufferPool {
             this.cleanup();
 
             int roundedMinSize = Mth.roundToward(minSize, BUFFER_SIZE_INCREMENT);
-            GpuBuffer buffer = this.takeBestAvailable(roundedMinSize, roundedMinSize * MAX_REUSE_SIZE_FACTOR);
+            GpuBuffer buffer = this.available.takeBest(roundedMinSize, roundedMinSize * MAX_REUSE_SIZE_FACTOR);
             if (buffer == null) {
                 buffer = RenderSystem.getDevice().createBuffer(label, this.usage, roundedMinSize);
             }
 
             return buffer;
-        }
-
-        private @Nullable GpuBuffer takeBestAvailable(int minSize, int maxSize) {
-            int bestIndex = -1;
-            long bestSize = maxSize + 1L;
-
-            for (int i = 0; i < this.available.size(); i++) {
-                var buffer = this.available.get(i);
-                long size = buffer.size();
-                if (size == minSize) {
-                    return this.available.remove(i);
-                }
-
-                if (size > minSize && size < bestSize) {
-                    bestIndex = i;
-                    bestSize = size;
-                }
-            }
-
-            return bestIndex == -1 ? null : this.available.remove(bestIndex);
         }
 
         private void release(GpuBuffer buffer) {
@@ -145,14 +120,7 @@ public final class StaticGpuBufferPool {
         }
 
         private void trimAvailable() {
-            if (this.available.size() <= MAX_AVAILABLE_BUFFERS_PER_USAGE) {
-                return;
-            }
-
-            this.available.sort(COMPARATOR);
-            while (this.available.size() > MAX_AVAILABLE_BUFFERS_PER_USAGE) {
-                this.available.removeLast().close();
-            }
+            this.available.trimTo(MAX_AVAILABLE_BUFFERS_PER_USAGE);
         }
     }
 }

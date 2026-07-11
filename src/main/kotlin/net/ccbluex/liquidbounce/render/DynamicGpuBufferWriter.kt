@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.write
@@ -50,13 +49,15 @@ class DynamicGpuBufferWriter @JvmOverloads constructor(
     val label: String,
     val usage: @GpuBuffer.Usage Int,
     val growPolicy: GrowPolicy = GrowPolicy.DEFAULT,
-) {
+) : AutoCloseable {
 
     // --- State ---
     private var currentBuffer: GpuBuffer? = null
     private var writeOffset: Int = 0
     private var peakBytesThisFrame: Int = 0
-    private val closer = GpuBufferDeferredCloser(StaticGpuBufferPool::release)
+    private var highWaterCapacity: Int = 0
+    private val pool = FrameGpuBufferPool(label, usage)
+    private var closed = false
 
     /**
      * Upload [data] into the buffer and return a slice.
@@ -67,29 +68,34 @@ class DynamicGpuBufferWriter @JvmOverloads constructor(
      */
     @JvmOverloads
     fun upload(data: ByteBuffer, alignment: Int = 1): GpuBufferSlice {
+        check(!closed) { "$label writer is closed" }
+        require(alignment > 0) { "alignment must be positive" }
+
         val byteCount = data.remaining()
         require(byteCount >= 0) { "byteCount must be non-negative" }
 
-        val alignedOffset = if (alignment == 1) writeOffset else Mth.roundToward(writeOffset, alignment)
-        val requiredSize = alignedOffset + byteCount
+        var alignedOffset = if (alignment == 1) writeOffset else Mth.roundToward(writeOffset, alignment)
+        val requiredSize = Math.addExact(alignedOffset, byteCount)
 
         val buffer = currentBuffer
         if (buffer == null || requiredSize > buffer.size()) {
-            // Need bigger buffer: recycle the old one and allocate a new, larger one
-            val newSize = growPolicy.getNewSize(requiredSize, buffer?.size()?.toInt() ?: 0)
+            // The old buffer remains valid for this frame and is fenced with its replacement.
             if (buffer != null) {
-                closer.add(buffer)
+                pool.retireCurrentFrame(buffer)
             }
-            currentBuffer = RenderSystem.getDevice().createBuffer(
-                { "$label (${newSize.toLong().formatAsCapacity()})" },
-                usage or GpuBuffer.USAGE_COPY_DST,
-                newSize.toLong(),
-            )
-            writeOffset = 0
 
-            if (buffer != null) {
+            val previousHighWater = highWaterCapacity
+            val newCapacity = growPolicy.getNewSize(requiredSize, highWaterCapacity)
+            require(newCapacity >= requiredSize) { "Grow policy returned $newCapacity bytes for a $requiredSize byte upload" }
+            highWaterCapacity = newCapacity
+
+            writeOffset = 0
+            alignedOffset = 0
+            currentBuffer = pool.acquire(highWaterCapacity)
+
+            if (previousHighWater != 0 && newCapacity > previousHighWater) {
                 logger.debug(
-                    "$label buffer grown: ${buffer.size()} → ${newSize.toLong().formatAsCapacity()}"
+                    "$label buffer grown: ${previousHighWater.toLong().formatAsCapacity()} → ${newCapacity.toLong().formatAsCapacity()}"
                 )
             }
         }
@@ -98,7 +104,7 @@ class DynamicGpuBufferWriter @JvmOverloads constructor(
         val slice = buf.slice(alignedOffset.toLong(), byteCount.toLong())
         slice.write(data)
 
-        writeOffset = alignedOffset + byteCount
+        writeOffset = Math.addExact(alignedOffset, byteCount)
         if (writeOffset > peakBytesThisFrame) {
             peakBytesThisFrame = writeOffset
         }
@@ -106,15 +112,26 @@ class DynamicGpuBufferWriter @JvmOverloads constructor(
     }
 
     /**
-     * End the current frame: fence the active buffer for deferred recycling.
-     * After this call, the next [upload] will allocate a fresh buffer.
+     * End the current frame: fence all buffers used by this writer for deferred recycling.
      */
     fun endFrame() {
-        closer.tryClose()
-        val buffer = currentBuffer ?: return
-        closer.add(buffer)
+        check(!closed) { "$label writer is closed" }
+        currentBuffer?.let(pool::retireCurrentFrame)
         currentBuffer = null
         writeOffset = 0
+        pool.endFrame(highWaterCapacity)
+    }
+
+    override fun close() {
+        if (closed) {
+            return
+        }
+        closed = true
+
+        currentBuffer?.close()
+        currentBuffer = null
+        writeOffset = 0
+        pool.close()
     }
 
     /**

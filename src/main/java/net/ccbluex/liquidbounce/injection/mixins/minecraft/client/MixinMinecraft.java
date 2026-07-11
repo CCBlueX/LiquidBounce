@@ -138,6 +138,7 @@ public abstract class MixinMinecraft {
      */
     @Inject(method = "close", at = @At("HEAD"))
     private void stopClient(CallbackInfo callback) {
+        MeshDraw.DefaultUploader.close();
         EventManager.INSTANCE.callEvent(ClientShutdownEvent.INSTANCE);
     }
 
