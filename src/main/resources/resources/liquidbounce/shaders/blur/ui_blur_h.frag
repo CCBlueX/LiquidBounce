@@ -4,12 +4,6 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 uniform sampler2D texture0;
-layout(std140) uniform BlurData {
-    float sigma;
-    float alphaBlendMin;
-    float alphaBlendMax;
-};
-
 layout(std140) uniform BlurKernelData {
     vec4 weightVecs[23];
     int kernelRadius;

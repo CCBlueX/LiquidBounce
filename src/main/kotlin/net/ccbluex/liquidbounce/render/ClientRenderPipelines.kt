@@ -440,7 +440,6 @@ object ClientRenderPipelines {
         withFragmentShader(ClientShaders.Fragment.GuiBlurH)
         withBindGroupLayout {
             withSampler("texture0")
-            withUniformBuffer(ClientUniformDefine.GUI_BLUR)
             withUniformBuffer(ClientUniformDefine.GUI_BLUR_KERNEL)
         }
         withCull(false)

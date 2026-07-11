@@ -6,7 +6,6 @@ out vec4 fragColor;
 uniform sampler2D texture0;
 uniform sampler2D overlay;
 layout(std140) uniform BlurData {
-    float sigma;
     float alphaBlendMin;
     float alphaBlendMax;
 };

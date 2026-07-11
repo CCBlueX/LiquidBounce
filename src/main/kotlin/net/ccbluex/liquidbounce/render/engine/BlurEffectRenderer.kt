@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
+import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -27,11 +28,11 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
+import net.ccbluex.liquidbounce.render.CachedUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gui.screens.ChatScreen
 import kotlin.math.ceil
 import kotlin.math.exp
@@ -55,13 +56,18 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     private val lastTimeScreenOpened = Chronometer()
     private var wasScreenOpen = false
 
-    private val GUI_BLUR_UNIFORM_BUFFER = ClientUniformDefine.GUI_BLUR.createSingleBuffer()
+    private data class BlurBlendUniform(val minAlpha: Float, val maxAlpha: Float)
 
-    private val GUI_BLUR_KERNEL_BUFFER = ClientUniformDefine.GUI_BLUR_KERNEL.createSingleBuffer()
+    private data class BlurKernelUniform(val sigma: Float, val radius: Int)
 
-    private var lastSigma = Float.MIN_VALUE
-    private var lastAlphaBlendRange = 0f..1f
-    private var lastKernelRadius = -1
+    private val blurBlendUniform = CachedUniform<BlurBlendUniform>(ClientUniformDefine.GUI_BLUR) { value ->
+        putFloat(value.minAlpha)
+        putFloat(value.maxAlpha)
+    }
+
+    private val blurKernelUniform = CachedUniform<BlurKernelUniform>(ClientUniformDefine.GUI_BLUR_KERNEL) { value ->
+        writeKernel(value.sigma, value.radius)
+    }
 
     private fun hasNoFullScreen(): Boolean =
         mc.gui.screen() == null || mc.gui.screen() is ChatScreen || FeatureSilentScreen.shouldHide
@@ -75,21 +81,13 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
         isDrawingHudFramebuffer = false
 
-        // Write UBO
         val sigma = getSigma()
         val alphaBlendRange = ModuleHud.Blur.alphaBlendRange
         val kernelRadius = calculateKernelRadius(sigma)
-        if (sigma != lastSigma || alphaBlendRange != lastAlphaBlendRange || kernelRadius != lastKernelRadius) {
-            GUI_BLUR_UNIFORM_BUFFER.writeStd140 {
-                putFloat(sigma)
-                putFloat(ModuleHud.Blur.alphaBlendRange.start)
-                putFloat(ModuleHud.Blur.alphaBlendRange.endInclusive)
-            }
-            precomputeKernelWeights(sigma, kernelRadius)
-            lastSigma = sigma
-            lastAlphaBlendRange = alphaBlendRange
-            lastKernelRadius = kernelRadius
-        }
+        val blendUniform = blurBlendUniform.get(
+            BlurBlendUniform(alphaBlendRange.start, alphaBlendRange.endInclusive)
+        )
+        val kernelUniform = blurKernelUniform.get(BlurKernelUniform(sigma, kernelRadius))
 
         val mainTarget = mc.gameRenderer.mainRenderTarget()
         val mainTexture = mainTarget.colorTextureView
@@ -101,8 +99,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             .use { pass ->
                 pass.setPipeline(ClientRenderPipelines.GuiBlurH)
                 pass.bindTexture("texture0", mainTexture, overlaySampler)
-                pass.setUniform(ClientUniformDefine.GUI_BLUR.uboName, GUI_BLUR_UNIFORM_BUFFER)
-                pass.setUniform(ClientUniformDefine.GUI_BLUR_KERNEL.uboName, GUI_BLUR_KERNEL_BUFFER)
+                pass.setUniform(ClientUniformDefine.GUI_BLUR_KERNEL.uboName, kernelUniform)
                 pass.draw(3, 1, 0, 0)
             }
 
@@ -112,8 +109,8 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
                 pass.setPipeline(ClientRenderPipelines.GuiBlurV)
                 pass.bindTexture("texture0", intermediate.colorTextureView, overlaySampler)
                 pass.bindTexture("overlay", overlayTexture, overlaySampler)
-                pass.setUniform(ClientUniformDefine.GUI_BLUR.uboName, GUI_BLUR_UNIFORM_BUFFER)
-                pass.setUniform(ClientUniformDefine.GUI_BLUR_KERNEL.uboName, GUI_BLUR_KERNEL_BUFFER)
+                pass.setUniform(ClientUniformDefine.GUI_BLUR.uboName, blendUniform)
+                pass.setUniform(ClientUniformDefine.GUI_BLUR_KERNEL.uboName, kernelUniform)
                 pass.draw(3, 1, 0, 0)
             }
 
@@ -155,7 +152,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
      * Precomputes normalized Gaussian kernel weights packed as vec4[23] into the kernel UBO.
      * Weights are already normalized so the shader just sums weighted samples — no exp(), no division.
      */
-    private fun precomputeKernelWeights(sigma: Float, kernelRadius: Int) {
+    private fun Std140Builder.writeKernel(sigma: Float, kernelRadius: Int) {
         val count = kernelRadius * 2 + 1
         val raw = FloatArray(count)
         var total = 0.0f
@@ -169,19 +166,17 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             raw[i] /= total
         }
 
-        GUI_BLUR_KERNEL_BUFFER.writeStd140 {
-            // Pack into vec4[23] = 92 slots, we have up to 91 weights
-            for (vecIdx in 0 until 23) {
-                val base = vecIdx * 4
-                putVec4(
-                    raw.getOrElse(base) { 0.0f },
-                    raw.getOrElse(base + 1) { 0.0f },
-                    raw.getOrElse(base + 2) { 0.0f },
-                    raw.getOrElse(base + 3) { 0.0f },
-                )
-            }
-            putInt(kernelRadius)
+        // Pack into vec4[23] = 92 slots, we have up to 91 weights
+        for (vecIdx in 0 until 23) {
+            val base = vecIdx * 4
+            putVec4(
+                raw.getOrElse(base) { 0.0f },
+                raw.getOrElse(base + 1) { 0.0f },
+                raw.getOrElse(base + 2) { 0.0f },
+                raw.getOrElse(base + 3) { 0.0f },
+            )
         }
+        putInt(kernelRadius)
     }
 
 }
