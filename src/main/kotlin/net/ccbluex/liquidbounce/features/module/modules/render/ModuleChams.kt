@@ -45,12 +45,13 @@ import java.util.function.Function
 
 object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
-    private val supportedRenderTypes = hashSetOf(
+    private val supportedRenderTypes: Set<String> = hashSetOf(
         "armor_cutout_no_cull",
         "armor_decal_cutout_no_cull",
         "armor_entity_glint",
         "entity_translucent",
         "entity_cutout",
+        "entity_cutout_cull",
         "entity_cutout_no_cull",
         "entity_solid",
         "entity_glint",
