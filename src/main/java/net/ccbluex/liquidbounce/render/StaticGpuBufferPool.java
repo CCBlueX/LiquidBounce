@@ -95,7 +95,7 @@ public final class StaticGpuBufferPool {
 
         private final @GpuBuffer.Usage int usage;
         private final List<GpuBuffer> available = new ArrayList<>();
-        private final GpuBufferRecycler recycler = new GpuBufferRecycler(this.available::add);
+        private final GpuBufferDeferredCloser closer = new GpuBufferDeferredCloser(this.available::add);
 
         private Pool(@GpuBuffer.Usage int usage) {
             this.usage = usage;
@@ -135,12 +135,12 @@ public final class StaticGpuBufferPool {
 
         private void release(GpuBuffer buffer) {
             if (!buffer.isClosed()) {
-                this.recycler.add(buffer);
+                this.closer.add(buffer);
             }
         }
 
         private void cleanup() {
-            this.recycler.tryClose();
+            this.closer.tryClose();
             this.trimAvailable();
         }
 
