@@ -17,19 +17,19 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render
+package net.ccbluex.liquidbounce.render.buffers
 
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
-import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.write
+import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
 import net.minecraft.util.Mth
 import java.nio.ByteBuffer
 import kotlin.math.max
 
 /**
- * Per-frame dynamic [GpuBuffer] writer for streaming VBO/IBO uploads.
+ * Per-frame dynamic [com.mojang.blaze3d.buffers.GpuBuffer] writer for streaming VBO/IBO uploads.
  *
  * Follows vanilla's [net.minecraft.client.renderer.StagedVertexBuffer] pattern:
  * CPU data is written to a properly-flagged GPU buffer via [com.mojang.blaze3d.systems.CommandEncoder.writeToBuffer],
@@ -62,9 +62,9 @@ class DynamicGpuBufferWriter @JvmOverloads constructor(
     /**
      * Upload [data] into the buffer and return a slice.
      *
-     * @param data      Byte data to upload. Its [ByteBuffer.remaining] bytes are copied.
+     * @param data      Byte data to upload. Its [java.nio.Buffer.remaining] bytes are copied.
      * @param alignment Byte alignment for the slice offset.
-     * @return A [GpuBufferSlice] covering the uploaded region.
+     * @return A [com.mojang.blaze3d.buffers.GpuBufferSlice] covering the uploaded region.
      */
     @JvmOverloads
     fun upload(data: ByteBuffer, alignment: Int = 1): GpuBufferSlice {

@@ -30,7 +30,7 @@ import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.ClientTesselator
-import net.ccbluex.liquidbounce.render.DynamicGpuBufferWriter
+import net.ccbluex.liquidbounce.render.buffers.DynamicGpuBufferWriter
 import java.nio.ByteBuffer
 
 /**
