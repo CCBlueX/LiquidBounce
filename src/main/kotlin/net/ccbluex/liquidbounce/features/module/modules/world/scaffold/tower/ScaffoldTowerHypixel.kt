@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.isEqual1_8
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.warning
-import kotlin.math.hypot
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 
 object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
     private var notifiedWrongProtocol = false
@@ -50,8 +50,7 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
             notifiedWrongProtocol = false
         }
 
-        val horizontalSpeed = hypot(player.deltaMovement.x, player.deltaMovement.z)
-        if (horizontalSpeed > 0.01) {
+        if (player.horizontalSpeed > 0.01) {
             if (!notifiedStationary) {
                 notifiedStationary = true
                 chat(
