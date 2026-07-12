@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ResourcePolicy
 import net.ccbluex.liquidbounce.event.EventListener
@@ -33,6 +35,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Active
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.netty.http.routing.Routing
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.screens.ConnectScreen
@@ -43,7 +46,6 @@ import net.minecraft.client.multiplayer.ServerData.ServerPackStatus
 import net.minecraft.client.multiplayer.ServerList
 import net.minecraft.client.multiplayer.ServerStatusPinger
 import net.minecraft.client.multiplayer.resolver.ServerAddress
-import net.minecraft.client.server.LanServer
 import net.minecraft.client.server.LanServerDetection
 import net.minecraft.network.chat.CommonComponents
 import net.minecraft.network.chat.Component
@@ -52,7 +54,6 @@ import net.minecraft.util.CommonColors
 import net.minecraft.util.Util
 import java.net.UnknownHostException
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Future
 
 // GET /api/v1/client/servers
@@ -198,10 +199,14 @@ object ActiveServerList : EventListener {
 
     // LAN server detection using vanilla Minecraft's LanServerDetection
     private val lanServerList = LanServerDetection.LanServerList()
+    @Volatile
     private var lanDetector: LanServerDetection.LanServerDetector? = null
 
-    // Track ServerData for each LAN server (for ping info)
-    private val lanServerData = ConcurrentHashMap<String, ServerData>()
+    /**
+     * Tracks ServerData for each LAN server (for ping info), keyed by address
+     * Should be accessed from main thread
+     */
+    private val lanServers = hashMapOf<String, ServerData>()
 
     init {
         startLanDetection()
@@ -213,51 +218,53 @@ object ActiveServerList : EventListener {
     }
 
     private fun startLanDetection() {
-        try {
-            lanDetector = LanServerDetection.LanServerDetector(lanServerList).apply { start() }
-        } catch (e: Exception) {
-            logger.warn("Unable to start LAN server detection: {}", e.message)
-        }
+        lanDetector = LanServerDetection.LanServerDetector(lanServerList).apply { start() }
     }
 
     private fun stopLanDetection() {
         lanDetector?.interrupt()
         lanDetector = null
-        lanServerData.clear()
+        lanServerList.takeDirtyServers()
+        lanServers.clear()
     }
 
     /**
      * Returns the list of currently detected LAN servers with full Server-compatible JSON fields.
-     * Uses negative IDs to avoid collision with regular server IDs.
+     * Mirrors vanilla's updateNetworkServers pattern: takeDirtyServers returns full list → full replacement.
+     * Uses negative IDs (sorted by address) to avoid collision with regular server IDs.
      */
-    fun getLanServers(): List<JsonObject> {
-        // Check for new servers from vanilla detector
-        lanServerList.takeDirtyServers()?.forEach { lanServer ->
-            val address = lanServer.address
-            if (!lanServerData.containsKey(address)) {
-                val serverData = ServerData(lanServer.motd, address, ServerData.Type.LAN)
-                lanServerData[address] = serverData
-                ping(serverData)
+    suspend fun getLanServers(): List<JsonObject> {
+        // Check for new/updated servers from vanilla detector — returns full list when dirty
+        val serverDatas = withContext(Dispatchers.Minecraft) {
+            lanServerList.takeDirtyServers()?.let { allServers ->
+                // Full replacement: stale servers are naturally removed when takeDirtyServers drops them
+                lanServers.clear()
+                for (lan in allServers) {
+                    lanServers.computeIfAbsent(lan.address) {
+                        ServerData(lan.motd, it, ServerData.Type.LAN)
+                    }
+                }
+            }
+            lanServers.values.toTypedArray()
+        }
+
+        serverDatas.sortBy { it.ip }
+
+        // Ping newly added LAN servers
+        serverDatas.forEach {
+            if (it.state() == ServerData.State.INITIAL) {
+                this.ping(it)
             }
         }
 
-        return lanServerData.entries.mapIndexed { index, (_, serverData) ->
-            val json = interopGson.toJsonTree(serverData)
-
-            if (!json.isJsonObject) {
-                logger.warn("Failed to convert LAN serverData to json")
-                return@mapIndexed null
-            }
-
-            json.asJsonObject.apply {
-                // Use negative IDs to distinguish from regular servers (e.g., -1, -2, ...)
+        return serverDatas.mapIndexed { index, serverData ->
+            interopGson.toJsonTree(serverData).asJsonObject.apply {
                 addProperty("id", -(index + 1))
                 addProperty("lan", true)
-                // Add online status (ServerInfoSerializer uses status enum, frontend expects boolean)
                 addProperty("online", serverData.state() == ServerData.State.SUCCESSFUL ||
                     serverData.state() == ServerData.State.INCOMPATIBLE)
             }
-        }.filterNotNull()
+        }
     }
 
     private fun cancelTasks() {
@@ -313,6 +320,28 @@ object ActiveServerList : EventListener {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         serverListPinger.tick()
+        maybeRePingLanServers()
+    }
+
+    // Periodic re-ping interval for LAN servers
+    private var lastLanPingTime = 0L
+
+    private fun maybeRePingLanServers() {
+        val now = System.currentTimeMillis()
+        if (now - lastLanPingTime < 30_000L) return
+        lastLanPingTime = now
+
+        for (entry in lanServers.values) {
+            when (entry.state()) {
+                ServerData.State.SUCCESSFUL,
+                ServerData.State.INCOMPATIBLE,
+                ServerData.State.UNREACHABLE -> {
+                    entry.setState(ServerData.State.INITIAL)
+                    ping(entry)
+                }
+                else -> {}
+            }
+        }
     }
 
     override val running = true
