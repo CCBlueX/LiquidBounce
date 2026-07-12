@@ -22,6 +22,15 @@
       "range": {
         "min": 0.0,
         "max": 10.0
+      }
+    },
+    {
+      "type": "INT",
+      "name": "Opacity",
+      "value": 100,
+      "range": {
+        "min": 0,
+        "max": 100
       },
       "suffix": "%"
     }
