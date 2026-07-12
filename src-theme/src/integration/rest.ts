@@ -290,13 +290,13 @@ export async function removeServer(id: number) {
     });
 }
 
-export async function addServer(name: string, address: string, serverResourcePacks: string) {
+export async function addServer(name: string, address: string, resourcePackPolicy: string) {
     await fetch(`${API_BASE}/client/servers/add`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({name, address, serverResourcePacks})
+        body: JSON.stringify({name, address, resourcePackPolicy})
     });
 }
 
