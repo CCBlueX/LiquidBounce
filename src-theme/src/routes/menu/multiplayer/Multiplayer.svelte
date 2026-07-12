@@ -112,7 +112,7 @@
 
     async function refreshServers() {
         servers = await getServers();
-        refreshLanServers();
+        await refreshLanServers();
     }
 
     async function refreshLanServers() {
