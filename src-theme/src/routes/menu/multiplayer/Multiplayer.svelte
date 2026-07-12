@@ -4,7 +4,6 @@
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
-    import Menu from "../common/Menu.svelte";
     import Search from "../common/Search.svelte";
     import MenuListItem from "../common/menulist/MenuListItem.svelte";
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
@@ -116,15 +115,11 @@
     }
 
     async function refreshLanServers() {
-        try {
-            lanServers = await getLanServers();
-        } catch {
-            // Silently ignore LAN server fetch errors to avoid spamming console
-        }
+        lanServers = await getLanServers();
     }
 
     onDestroy(() => {
-        if (lanPollInterval) {
+        if (lanPollInterval !== null) {
             clearInterval(lanPollInterval);
         }
     });
@@ -189,80 +184,81 @@
 </script>
 
 <AddServerModal bind:visible={addServerModalVisible} on:serverAdd={refreshServers}/>
+
 {#if currentEditServer}
     <EditServerModal bind:visible={editServerModalVisible} address={currentEditServer.address}
                      name={currentEditServer.name} on:serverEdit={refreshServers} id={currentEditServer.id}
                      resourcePackPolicy={currentEditServer.resourcePackPolicy}/>
 {/if}
+
 <DirectConnectModal bind:visible={directConnectModalVisible}/>
-<Menu>
-    <OptionBar>
-        <Search on:search={handleSearch}/>
 
-        <SwitchSetting title="Online only" bind:value={onlineOnly}/>
-        <Divider/>
-        <SwitchSetting title="Auto Config" bind:value={autoConfig} on:change={updateAutoConfigState}/>
-        {#if spooferConfigurable}
-            <WrappedSetting bind:value={spooferConfigurable} on:change={updateSpooferSettings} path="multiplayer.spoofer"/>
-        {/if}
-        {#if clientInfo && clientInfo.viaFabricPlus}
-            <SingleSelect title="Version" value={selectedProtocol.name} options={protocols.map(p => p.name)}
-                          on:change={changeProtocolVersion}/>
-            <ButtonSetting title="ViaFabricPlus" on:click={() => openScreen("viafabricplus_protocol_selection")}/>
-        {:else}
-            <ButtonSetting title="Install ViaFabricPlus" on:click={() => browse("VIAFABRICPLUS")}/>
-        {/if}
-    </OptionBar>
+<OptionBar>
+    <Search on:search={handleSearch}/>
 
-    <MenuList sortable={renderedServers.length === servers.length && lanServers.length === 0} elementCount={servers.length}
-              on:sort={handleServerSort}>
-        {#key timesSorted}
-            {#each renderedServers as server}
-                <MenuListItem imageText={server.ping > 0 ? `${server.ping}ms` : null}
-                              imageTextBackgroundColor={getPingColor(server.ping)}
-                              image={server.ping < 0 || !server.icon
+    <SwitchSetting title="Online only" bind:value={onlineOnly}/>
+    <Divider/>
+    <SwitchSetting title="Auto Config" bind:value={autoConfig} on:change={updateAutoConfigState}/>
+    {#if spooferConfigurable}
+        <WrappedSetting bind:value={spooferConfigurable} on:change={updateSpooferSettings} path="multiplayer.spoofer"/>
+    {/if}
+    {#if clientInfo && clientInfo.viaFabricPlus}
+        <SingleSelect title="Version" value={selectedProtocol.name} options={protocols.map(p => p.name)}
+                      on:change={changeProtocolVersion}/>
+        <ButtonSetting title="ViaFabricPlus" on:click={() => openScreen("viafabricplus_protocol_selection")}/>
+    {:else}
+        <ButtonSetting title="Install ViaFabricPlus" on:click={() => browse("VIAFABRICPLUS")}/>
+    {/if}
+</OptionBar>
+
+<MenuList sortable={renderedServers.length === servers.length && lanServers.length === 0} elementCount={servers.length}
+          on:sort={handleServerSort}>
+    {#key timesSorted}
+        {#each renderedServers as server}
+            <MenuListItem imageText={server.ping > 0 ? `${server.ping}ms` : null}
+                          imageTextBackgroundColor={getPingColor(server.ping)}
+                          image={server.ping < 0 || !server.icon
                             ? `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`
                             :`data:image/png;base64,${server.icon}`}
-                              title={server.name}
-                              on:dblclick={() => connectToServer(server.address)}>
-                    <TextComponent allowPreformatting={true} preFormattingMonospace={false} slot="subtitle"
-                                   fontSize={18}
-                                   textComponent={server.ping <= 0 ? "§CCan't connect to server" : server.label}/>
+                          title={server.name}
+                          on:dblclick={() => connectToServer(server.address)}>
+                <TextComponent allowPreformatting={true} preFormattingMonospace={false} slot="subtitle"
+                               fontSize={18}
+                               textComponent={server.ping <= 0 ? "§CCan't connect to server" : server.label}/>
 
-                    <svelte:fragment slot="tag">
-                        {#if server.lan}
-                            <MenuListItemTag text="LAN"/>
-                        {/if}
-                        {#if server.ping > 0}
-                            <MenuListItemTag text="{server.players.online}/{server.players.max} Players"/>
-                            <MenuListItemTag text={server.version}/>
-                        {/if}
-                    </svelte:fragment>
+                <svelte:fragment slot="tag">
+                    {#if server.lan}
+                        <MenuListItemTag text="LAN"/>
+                    {/if}
+                    {#if server.ping > 0}
+                        <MenuListItemTag text="{server.players.online}/{server.players.max} Players"/>
+                        <MenuListItemTag text={server.version}/>
+                    {/if}
+                </svelte:fragment>
 
-                    <svelte:fragment slot="active-visible">
-                        {#if !server.lan}
-                            <MenuListItemButton title="Remove" icon="trash" on:click={() => removeServer(server.id)}/>
-                            <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editServer(server)}/>
-                        {/if}
-                    </svelte:fragment>
+                <svelte:fragment slot="active-visible">
+                    {#if !server.lan}
+                        <MenuListItemButton title="Remove" icon="trash" on:click={() => removeServer(server.id)}/>
+                        <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editServer(server)}/>
+                    {/if}
+                </svelte:fragment>
 
-                    <svelte:fragment slot="always-visible">
-                        <MenuListItemButton title="Join" icon="play" on:click={() => connectToServer(server.address)}/>
-                    </svelte:fragment>
-                </MenuListItem>
-            {/each}
-        {/key}
-    </MenuList>
+                <svelte:fragment slot="always-visible">
+                    <MenuListItemButton title="Join" icon="play" on:click={() => connectToServer(server.address)}/>
+                </svelte:fragment>
+            </MenuListItem>
+        {/each}
+    {/key}
+</MenuList>
 
-    <BottomButtonWrapper>
-        <ButtonContainer>
-            <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addServerModalVisible = true}/>
-            <IconTextButton icon="icon-plane.svg" title="Direct" on:click={() => directConnectModalVisible = true}/>
-            <IconTextButton icon="icon-refresh.svg" title="Refresh" on:click={refreshServers}/>
-        </ButtonContainer>
+<BottomButtonWrapper>
+    <ButtonContainer>
+        <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addServerModalVisible = true}/>
+        <IconTextButton icon="icon-plane.svg" title="Direct" on:click={() => directConnectModalVisible = true}/>
+        <IconTextButton icon="icon-refresh.svg" title="Refresh" on:click={refreshServers}/>
+    </ButtonContainer>
 
-        <ButtonContainer>
-            <IconTextButton icon="icon-back.svg" title="Back" on:click={() => openScreen("title")}/>
-        </ButtonContainer>
-    </BottomButtonWrapper>
-</Menu>
+    <ButtonContainer>
+        <IconTextButton icon="icon-back.svg" title="Back" on:click={() => openScreen("title")}/>
+    </ButtonContainer>
+</BottomButtonWrapper>
