@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -67,6 +68,23 @@ private fun Routing.postComponent() = post("/:id") {
         ConfigSystem.store(modulesConfig)
     }
     call.respondNoContent()
+}
+
+// POST /api/v1/client/components/:id/z-index
+private fun Routing.postComponentZIndex() = post("/:id/z-index") {
+    val id = call.parameters["id"] ?: call.badRequest("Missing component id")
+    val component = HudComponentManager.getComponent(id)
+        ?: call.notFound(id, "HUD component not found")
+
+    val zIndex = withContext(Dispatchers.Minecraft) {
+        HudComponentManager.bringComponentToFront(component).also {
+            ConfigSystem.store(modulesConfig)
+        }
+    }
+
+    call.respond(JsonObject().apply {
+        addProperty("zIndex", zIndex)
+    })
 }
 
 // POST /api/v1/client/components/:id/alignment
@@ -118,6 +136,7 @@ internal fun Routing.componentRoutes() = route("/components") {
     getComponentCatalog()
     getComponents()
     postComponent()
+    postComponentZIndex()
     postComponentAlignment()
     getComponentSettings()
     putComponentSettings()

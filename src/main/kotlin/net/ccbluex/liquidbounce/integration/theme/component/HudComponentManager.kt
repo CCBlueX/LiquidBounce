@@ -79,6 +79,12 @@ object HudComponentManager {
                 .flatMap { it.components.asSequence() }
                 .find { it.id.toString() == id }
 
+    fun bringComponentToFront(component: HudComponent): Int {
+        val zIndex = (components.maxOfOrNull { it.zIndex } ?: 0) + 1
+        component.zIndex = zIndex
+        return zIndex
+    }
+
     fun addComponent(id: String): HudComponent? {
         nativeComponents.find { it.id.toString() == id }?.let { component ->
             if (component.enabled) {

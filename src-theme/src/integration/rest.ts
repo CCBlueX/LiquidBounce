@@ -687,6 +687,15 @@ export async function setComponentAlignment(id: string, alignment: Alignment): P
     });
 }
 
+export async function bringComponentToFront(id: string): Promise<number> {
+    const response = await fetch(`${API_BASE}/client/components/${id}/z-index`, {
+        method: "POST"
+    });
+
+    const data: { zIndex: number } = await response.json();
+    return data.zIndex;
+}
+
 export async function getComponentSettings(id: string): Promise<ConfigurableSetting> {
     const response = await fetch(`${API_BASE}/client/components/${id}/settings`);
     return await response.json();

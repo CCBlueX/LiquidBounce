@@ -83,6 +83,7 @@
                     componentId={c.id}
                     componentName={c.name}
                     alignment={c.settings.alignment}
+                    zIndex={c.settings.zIndex ?? 0}
                     magneticallyReferenced={magneticTargetIds.includes(c.id)}
                     width={c.width}
                     height={c.height}

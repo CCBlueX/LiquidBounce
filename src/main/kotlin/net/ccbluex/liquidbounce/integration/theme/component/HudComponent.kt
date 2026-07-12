@@ -43,6 +43,7 @@ abstract class HudComponent(
         alignment.verticalAlignment,
         alignment.verticalOffset,
     )
+    var zIndex by int("ZIndex", 0, 0..Int.MAX_VALUE).notAnOption()
     val alignment = tree(alignment)
 
     fun resetAlignment() {
