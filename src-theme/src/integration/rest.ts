@@ -270,6 +270,18 @@ export async function getServers(): Promise<Server[]> {
     return data;
 }
 
+export async function getLanServers(): Promise<Server[]> {
+    const response = await fetch(`${API_BASE}/client/servers/lan`);
+
+    if (!response.ok) {
+        return [];
+    }
+
+    const data: Server[] = await response.json();
+
+    return data;
+}
+
 export async function connectToServer(address: string) {
     await fetch(`${API_BASE}/client/servers/connect`, {
         method: "POST",

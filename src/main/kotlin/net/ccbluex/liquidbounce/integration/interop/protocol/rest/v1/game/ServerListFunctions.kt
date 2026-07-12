@@ -20,9 +20,13 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ResourcePolicy
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,6 +35,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Active
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.netty.http.routing.Routing
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.screens.ConnectScreen
@@ -41,6 +46,7 @@ import net.minecraft.client.multiplayer.ServerData.ServerPackStatus
 import net.minecraft.client.multiplayer.ServerList
 import net.minecraft.client.multiplayer.ServerStatusPinger
 import net.minecraft.client.multiplayer.resolver.ServerAddress
+import net.minecraft.client.server.LanServerDetection
 import net.minecraft.network.chat.CommonComponents
 import net.minecraft.network.chat.Component
 import net.minecraft.server.network.EventLoopGroupHolder
@@ -172,6 +178,13 @@ private fun Routing.postOrderServers() = post("/order") {
     call.respondNoContent()
 }
 
+// GET /api/v1/client/servers/lan
+private fun Routing.getLanServers() = get("/lan") {
+    runCatching {
+        call.respond(ActiveServerList.getLanServers())
+    }.getOrElse { call.internalServerError("Failed to get LAN servers due to ${it.message}") }
+}
+
 object ActiveServerList : EventListener {
 
     internal val serverList = ServerList(mc).apply { load() }
@@ -183,6 +196,76 @@ object ActiveServerList : EventListener {
         .withColor(CommonColors.RED)
 
     private val pingTasks = mutableListOf<Future<*>>()
+
+    // LAN server detection using vanilla Minecraft's LanServerDetection
+    private val lanServerList = LanServerDetection.LanServerList()
+    @Volatile
+    private var lanDetector: LanServerDetection.LanServerDetector? = null
+
+    /**
+     * Tracks ServerData for each LAN server (for ping info), keyed by address
+     * Should be accessed from main thread
+     */
+    private val lanServers = hashMapOf<String, ServerData>()
+
+    init {
+        startLanDetection()
+    }
+
+    @Suppress("unused")
+    private val shutdownHandler = handler<ClientShutdownEvent> {
+        stopLanDetection()
+    }
+
+    private fun startLanDetection() {
+        lanDetector = LanServerDetection.LanServerDetector(lanServerList).apply { start() }
+    }
+
+    private fun stopLanDetection() {
+        lanDetector?.interrupt()
+        lanDetector = null
+        lanServerList.takeDirtyServers()
+        lanServers.clear()
+    }
+
+    /**
+     * Returns the list of currently detected LAN servers with full Server-compatible JSON fields.
+     * Mirrors vanilla's updateNetworkServers pattern: takeDirtyServers returns full list → full replacement.
+     * Uses negative IDs (sorted by address) to avoid collision with regular server IDs.
+     */
+    suspend fun getLanServers(): List<JsonObject> {
+        // Check for new/updated servers from vanilla detector — returns full list when dirty
+        val serverDatas = withContext(Dispatchers.Minecraft) {
+            lanServerList.takeDirtyServers()?.let { allServers ->
+                // Full replacement: stale servers are naturally removed when takeDirtyServers drops them
+                lanServers.clear()
+                for (lan in allServers) {
+                    lanServers.computeIfAbsent(lan.address) {
+                        ServerData(lan.motd, it, ServerData.Type.LAN)
+                    }
+                }
+            }
+            lanServers.values.toTypedArray()
+        }
+
+        serverDatas.sortBy { it.ip }
+
+        // Ping newly added LAN servers
+        serverDatas.forEach {
+            if (it.state() == ServerData.State.INITIAL) {
+                this.ping(it)
+            }
+        }
+
+        return serverDatas.mapIndexed { index, serverData ->
+            interopGson.toJsonTree(serverData).asJsonObject.apply {
+                addProperty("id", -(index + 1))
+                addProperty("lan", true)
+                addProperty("online", serverData.state() == ServerData.State.SUCCESSFUL ||
+                    serverData.state() == ServerData.State.INCOMPATIBLE)
+            }
+        }
+    }
 
     private fun cancelTasks() {
         pingTasks.forEach { it.cancel(true) }
@@ -237,6 +320,28 @@ object ActiveServerList : EventListener {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         serverListPinger.tick()
+        maybeRePingLanServers()
+    }
+
+    // Periodic re-ping interval for LAN servers
+    private var lastLanPingTime = 0L
+
+    private fun maybeRePingLanServers() {
+        val now = System.currentTimeMillis()
+        if (now - lastLanPingTime < 30_000L) return
+        lastLanPingTime = now
+
+        for (entry in lanServers.values) {
+            when (entry.state()) {
+                ServerData.State.SUCCESSFUL,
+                ServerData.State.INCOMPATIBLE,
+                ServerData.State.UNREACHABLE -> {
+                    entry.setState(ServerData.State.INITIAL)
+                    ping(entry)
+                }
+                else -> {}
+            }
+        }
     }
 
     override val running = true
@@ -250,6 +355,7 @@ fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.ip == ad
 
 internal fun Routing.serverListRoutes() = route("/servers") {
     getServers()
+    getLanServers()
     putAddServer()
     deleteServer()
     putEditServer()
