@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.inventory.SingleItemStackPickMode
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.minecraft.world.phys.BlockHitResult
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Macros module
@@ -104,7 +105,7 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
                         network.sendChatOrCommand(message)
                     }
 
-                    delay(delay.random().toLong())
+                    delay(delay.random().milliseconds)
                 }
             }
 

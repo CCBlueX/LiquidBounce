@@ -93,6 +93,7 @@ import net.minecraft.server.packs.resources.ReloadableResourceManager
 import java.io.InputStream
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
 
 /**
@@ -320,7 +321,7 @@ object LiquidBounce : EventListener {
                 LanguageManager.loadDefault()
             }
             launch {
-                val update = withTimeoutOrNull(8000) { ClientUpdate.update.await() } ?: return@launch
+                val update = withTimeoutOrNull(8.seconds) { ClientUpdate.update.await() } ?: return@launch
                 logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
             }
             launch {

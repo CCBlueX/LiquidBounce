@@ -90,7 +90,7 @@ object SituationalProjectileAngleCalculator: ProjectileAngleCalculator {
                 .calculateAngleFor(projectileInfo, sourcePos, targetPosFunction, targetShape) ?: return null
 
             val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-                owner = player,
+                simulationOwner = player,
                 trajectoryInfo = projectileInfo,
                 rotation = rotation,
                 trajectoryType = resolveTrajectoryType(projectileInfo),

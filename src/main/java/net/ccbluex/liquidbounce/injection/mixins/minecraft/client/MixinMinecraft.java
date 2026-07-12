@@ -41,8 +41,8 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.render.ClientTesselator;
-import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer;
-import net.ccbluex.liquidbounce.render.StaticGpuBufferPool;
+import net.ccbluex.liquidbounce.render.buffers.StaticGpuBufferPool;
+import net.ccbluex.liquidbounce.render.mesh.MeshDraw;
 import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
@@ -138,6 +138,7 @@ public abstract class MixinMinecraft {
      */
     @Inject(method = "close", at = @At("HEAD"))
     private void stopClient(CallbackInfo callback) {
+        MeshDraw.DefaultUploader.close();
         EventManager.INSTANCE.callEvent(ClientShutdownEvent.INSTANCE);
     }
 
@@ -430,11 +431,15 @@ public abstract class MixinMinecraft {
         }
     }
 
+    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;submit()V", shift = At.Shift.BEFORE))
+    private void endDynamicGpuBufferFrame(boolean advanceGameTime, CallbackInfo ci) {
+        MeshDraw.DefaultUploader.endFrame();
+    }
+
     @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;endFrame()V", shift = At.Shift.AFTER))
     private void onFlipFrame(boolean advanceGameTime, CallbackInfo ci) {
         RenderingDebug.flipFrame();
         ClientTesselator.Shared.clear();
-        GrowableMappableRingBuffer.cleanup();
         StaticGpuBufferPool.cleanup();
     }
 

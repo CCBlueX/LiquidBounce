@@ -56,17 +56,11 @@ object CommandVClip : Command.Factory {
                         ParameterBuilder
                             .begin<Float>("distance")
                             .required()
+                            .verifiedBy(ParameterBuilder.FLOAT_VALIDATOR)
                             .build()
                     )
                     .handler {
-                        val dy = (args[0] as String).toDoubleOrNull()
-                            ?: run {
-                                chat(
-                                    markAsError(translation("liquidbounce.command.vclip.result.invalidDistance")),
-                                    command
-                                )
-                                return@handler
-                            }
+                        val dy = args[0] as Float
 
                         ModuleTeleport.indicateTeleport(getX(), getY() + dy, getZ())
                     }
@@ -88,6 +82,7 @@ object CommandVClip : Command.Factory {
                 ParameterBuilder
                     .begin<Int>("max")
                     .optional()
+                    .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
                     .build()
             )
             .handler {
@@ -98,10 +93,7 @@ object CommandVClip : Command.Factory {
 
     private fun performAutomaticClip(args: Array<out Any>, command: Command, direction: Direction) {
         val max = if (args.isNotEmpty()) {
-            abs((args[0] as String).toIntOrNull() ?: run {
-                chat(markAsError(translation("liquidbounce.command.vclip.result.invalidDistance")), command)
-                return
-            })
+            abs(args[0] as Int)
         } else {
             10
         }

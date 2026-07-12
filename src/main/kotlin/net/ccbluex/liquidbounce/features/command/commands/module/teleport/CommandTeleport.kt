@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.module.teleport
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
@@ -43,38 +42,36 @@ object CommandTeleport : Command.Factory {
                 ParameterBuilder
                     .begin<Float>("x")
                     .required()
+                    .verifiedBy(ParameterBuilder.FLOAT_VALIDATOR)
                     .build(),
             )
             .parameter(
                 ParameterBuilder
                     .begin<Float>("y|z")
                     .required()
+                    .verifiedBy(ParameterBuilder.FLOAT_VALIDATOR)
                     .build()
             )
             .parameter(
                 ParameterBuilder
                     .begin<Float>("z")
                     .optional()
+                    .verifiedBy(ParameterBuilder.FLOAT_VALIDATOR)
                     .build()
             )
             .handler {
-                val x = (args[0] as String).toDoubleOrNull()
-                val z = (args[args.size - 1] as String).toDoubleOrNull()
-                val y = if (args.size == 3) {
-                    (args[1] as String).toDoubleOrNull()
+                val x = args[0] as Float
+                val yOrZ = args[1] as Float
+                val z = if (args.size > 2) args[2] as Float else yOrZ
+                val y = if (args.size > 2) {
+                    yOrZ.toDouble()
+                } else if (ModuleTeleport.highTp) {
+                    ModuleTeleport.highTpAmount.toDouble()
                 } else {
-                    if (ModuleTeleport.highTp) {
-                        ModuleTeleport.highTpAmount
-                    } else {
-                        player.y
-                    }
+                    player.y
                 }
 
-                if (x == null || y == null || z == null) {
-                    throw CommandException(command.result("invalidCoordinates"))
-                }
-
-                ModuleTeleport.indicateTeleport(x, y.toDouble(), z)
+                ModuleTeleport.indicateTeleport(x.toDouble(), y, z.toDouble())
             }
             .build()
     }

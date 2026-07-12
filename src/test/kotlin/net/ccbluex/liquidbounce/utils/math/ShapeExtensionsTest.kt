@@ -18,139 +18,49 @@
  */
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.fastutil.objectHashSetOf
-import net.minecraft.core.BlockPos
-import net.ccbluex.liquidbounce.test.assertIn
-import net.ccbluex.liquidbounce.test.assertNotIn
 import net.minecraft.core.Direction
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
-import net.minecraft.world.phys.shapes.VoxelShape
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class ShapeExtensionsTest {
 
     @Test
-    fun `mergeAdjacentVoxelShapes returns empty list for empty input`() {
-        assertEquals(
-            emptyList<PositionedShapeSpec>(),
-            emptyList<PositionedVoxelShape<Int>>().mergeAdjacentVoxelShapes().toSpecs(),
-        )
-    }
-
-    @Test
-    fun `mergeAdjacentVoxelShapes merges adjacent same key regardless of input order`() {
-        val merged = listOf(
-            positionedShape(1, 0, 0, 1),
-            positionedShape(0, 0, 0, 1),
-        ).mergeAdjacentVoxelShapes()
-
-        assertEquals(
-            listOf(
-                PositionedShapeSpec(
-                    blockPos = BlockPos.asLong(0, 0, 0),
-                    key = 1,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 2.0, 1.0, 1.0)),
-                )
-            ),
-            merged.toSpecs(),
-        )
-    }
-
-    @Test
-    fun `mergeAdjacentVoxelShapes keeps disconnected components separate`() {
-        val merged = listOf(
-            positionedShape(0, 0, 0, 1),
-            positionedShape(2, 0, 0, 1),
-        ).mergeAdjacentVoxelShapes()
-
-        assertEquals(
-            listOf(
-                PositionedShapeSpec(
-                    blockPos = BlockPos.asLong(0, 0, 0),
-                    key = 1,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
-                ),
-                PositionedShapeSpec(
-                    blockPos = BlockPos.asLong(2, 0, 0),
-                    key = 1,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
-                ),
-            ),
-            merged.toSpecs(),
-        )
-    }
-
-    @Test
-    fun `mergeAdjacentVoxelShapes does not merge adjacent shapes with different keys`() {
-        val merged = listOf(
-            positionedShape(0, 0, 0, 1),
-            positionedShape(1, 0, 0, 2),
-        ).mergeAdjacentVoxelShapes()
-
-        assertEquals(
-            listOf(
-                PositionedShapeSpec(
-                    blockPos = BlockPos.asLong(0, 0, 0),
-                    key = 1,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
-                ),
-                PositionedShapeSpec(
-                    blockPos = BlockPos.asLong(1, 0, 0),
-                    key = 2,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)),
-                ),
-            ),
-            merged.toSpecs(),
-        )
-    }
-
-    @Test
-    fun `mergeAdjacentVoxelShapes preserves partial shape geometry when merging`() {
-        val slab = Shapes.box(0.0, 0.0, 0.0, 1.0, 0.5, 1.0)
-
-        val merged = listOf(
-            positionedShape(0, 0, 0, 1, slab),
-            positionedShape(1, 0, 0, 1, slab),
-        ).mergeAdjacentVoxelShapes()
-
-        assertEquals(
-            listOf(
-                PositionedShapeSpec(
-                    blockPos = BlockPos.asLong(0, 0, 0),
-                    key = 1,
-                    boxes = listOf(BoxSpec(0.0, 0.0, 0.0, 2.0, 0.5, 1.0)),
-                )
-            ),
-            merged.toSpecs(),
-        )
+    fun `forAllFaces returns empty for empty shape`() {
+        assertSameFaces(emptyList(), Shapes.empty().collectFacesForTest())
     }
 
     @Test
     fun `forAllFaces returns six faces for full cube`() {
-        val faces = Shapes.block().collectFaces()
-
-        assertEquals(6, faces.size)
-        assertIn(faces, FaceRect(Direction.DOWN, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0))
-        assertIn(faces, FaceRect(Direction.UP, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0))
-        assertIn(faces, FaceRect(Direction.NORTH, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0))
-        assertIn(faces, FaceRect(Direction.SOUTH, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0))
-        assertIn(faces, FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0))
-        assertIn(faces, FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0))
+        assertSameFaces(
+            expected = listOf(
+                face(Direction.DOWN, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0),
+                face(Direction.UP, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0),
+                face(Direction.NORTH, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0),
+                face(Direction.SOUTH, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0),
+                face(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0),
+                face(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0),
+            ),
+            actual = Shapes.block().collectFacesForTest(),
+        )
     }
 
     @Test
     fun `forAllFaces returns correct slab faces without internal surfaces`() {
         val slab = Shapes.box(0.0, 0.0, 0.0, 1.0, 0.5, 1.0)
-        val faces = slab.collectFaces()
 
-        assertEquals(6, faces.size)
-        assertIn(faces, FaceRect(Direction.UP, 0.0, 0.5, 0.0, 1.0, 0.5, 1.0))
-        assertIn(faces, FaceRect(Direction.DOWN, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0))
-        assertIn(faces, FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0))
-        assertIn(faces, FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 0.5, 1.0))
+        assertSameFaces(
+            expected = listOf(
+                face(Direction.DOWN, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0),
+                face(Direction.UP, 0.0, 0.5, 0.0, 1.0, 0.5, 1.0),
+                face(Direction.NORTH, 0.0, 0.0, 0.0, 1.0, 0.5, 0.0),
+                face(Direction.SOUTH, 0.0, 0.0, 1.0, 1.0, 0.5, 1.0),
+                face(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0),
+                face(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 0.5, 1.0),
+            ),
+            actual = slab.collectFacesForTest(),
+        )
     }
 
     @Test
@@ -160,19 +70,21 @@ class ShapeExtensionsTest {
             Shapes.box(0.0, 0.5, 0.0, 0.5, 1.0, 1.0),
         )
 
-        val faces = shape.collectFaces()
-        val westFaces = faces.filter { it.direction == Direction.WEST }
-        val eastFaces = faces.filter { it.direction == Direction.EAST }
+        val faces = shape.collectFacesForTest()
 
-        assertEquals(1, westFaces.size)
-        assertIn(westFaces, FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0))
-
-        assertEquals(2, eastFaces.size)
-        assertIn(eastFaces, FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 0.5, 1.0))
-        assertIn(eastFaces, FaceRect(Direction.EAST, 0.5, 0.5, 0.0, 0.5, 1.0, 1.0))
-
-        assertNotIn(faces, FaceRect(Direction.UP, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0))
-        assertNotIn(faces, FaceRect(Direction.DOWN, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0))
+        assertSameFaces(
+            expected = listOf(face(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0)),
+            actual = faces.filter { it.direction == Direction.WEST },
+        )
+        assertSameFaces(
+            expected = listOf(
+                face(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 0.5, 1.0),
+                face(Direction.EAST, 0.5, 0.5, 0.0, 0.5, 1.0, 1.0),
+            ),
+            actual = faces.filter { it.direction == Direction.EAST },
+        )
+        assertTrue(faces.none { it == face(Direction.UP, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0) })
+        assertTrue(faces.none { it == face(Direction.DOWN, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0) })
     }
 
     @Test
@@ -182,11 +94,13 @@ class ShapeExtensionsTest {
             Shapes.box(0.0, 0.0, 0.6, 0.5, 1.0, 1.0),
         )
 
-        val westFaces = shape.collectFaces().filter { it.direction == Direction.WEST }
-
-        assertEquals(2, westFaces.size)
-        assertIn(westFaces, FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 0.4))
-        assertIn(westFaces, FaceRect(Direction.WEST, 0.0, 0.0, 0.6, 0.0, 1.0, 1.0))
+        assertSameFaces(
+            expected = listOf(
+                face(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 0.4),
+                face(Direction.WEST, 0.0, 0.0, 0.6, 0.0, 1.0, 1.0),
+            ),
+            actual = shape.collectFacesForTest().filter { it.direction == Direction.WEST },
+        )
     }
 
     @Test
@@ -195,16 +109,50 @@ class ShapeExtensionsTest {
             Shapes.box(0.0, 0.0, 0.0, 1.0, 1.0, 0.5),
             Shapes.box(0.0, 0.0, 0.5, 0.5, 1.0, 1.0),
         )
+        val faces = shape.collectFacesForTest()
 
-        val eastFaces = shape.collectFaces().filter { it.direction == Direction.EAST }
-        val southFaces = shape.collectFaces().filter { it.direction == Direction.SOUTH }
+        assertSameFaces(
+            expected = listOf(
+                face(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 1.0, 0.5),
+                face(Direction.EAST, 0.5, 0.0, 0.5, 0.5, 1.0, 1.0),
+            ),
+            actual = faces.filter { it.direction == Direction.EAST },
+        )
+        assertSameFaces(
+            expected = listOf(
+                face(Direction.SOUTH, 0.5, 0.0, 0.5, 1.0, 1.0, 0.5),
+                face(Direction.SOUTH, 0.0, 0.0, 1.0, 0.5, 1.0, 1.0),
+            ),
+            actual = faces.filter { it.direction == Direction.SOUTH },
+        )
+    }
 
-        assertEquals(2, eastFaces.size)
-        assertIn(eastFaces, FaceRect(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 1.0, 0.5))
-        assertIn(eastFaces, FaceRect(Direction.EAST, 0.5, 0.0, 0.5, 0.5, 1.0, 1.0))
-        assertEquals(2, southFaces.size)
-        assertIn(southFaces, FaceRect(Direction.SOUTH, 0.5, 0.0, 0.5, 1.0, 1.0, 0.5))
-        assertIn(southFaces, FaceRect(Direction.SOUTH, 0.0, 0.0, 1.0, 0.5, 1.0, 1.0))
+    @Test
+    fun `forAllFaces never emits zero area faces`() {
+        val shape = Shapes.or(
+            Shapes.box(0.0, 0.0, 0.0, 1.0, 0.5, 1.0),
+            Shapes.box(0.0, 0.5, 0.0, 0.5, 1.0, 1.0),
+            Shapes.box(0.5, 0.5, 0.0, 1.0, 0.75, 0.25),
+        )
+
+        assertHasNoZeroAreaFaces(shape.collectFacesForTest())
+    }
+
+    @Test
+    fun `forAllFaces handles sub-block thin shape like fence post`() {
+        val fencePost = Shapes.box(0.375, 0.0, 0.375, 0.625, 1.0, 0.625)
+
+        assertSameFaces(
+            expected = listOf(
+                face(Direction.DOWN, 0.375, 0.0, 0.375, 0.625, 0.0, 0.625),
+                face(Direction.UP, 0.375, 1.0, 0.375, 0.625, 1.0, 0.625),
+                face(Direction.NORTH, 0.375, 0.0, 0.375, 0.625, 1.0, 0.375),
+                face(Direction.SOUTH, 0.375, 0.0, 0.625, 0.625, 1.0, 0.625),
+                face(Direction.WEST, 0.375, 0.0, 0.375, 0.375, 1.0, 0.625),
+                face(Direction.EAST, 0.625, 0.0, 0.375, 0.625, 1.0, 0.625),
+            ),
+            actual = fencePost.collectFacesForTest(),
+        )
     }
 
     @Test
@@ -214,12 +162,56 @@ class ShapeExtensionsTest {
             Shapes.box(0.0, 0.0, 0.6, 0.5, 1.0, 1.0),
         )
 
-        val faces = mutableListOf<FaceRect>()
-        shape.forAllSideFaces(Direction.WEST, Vec3(0.0, 0.5, 0.2)) { direction, minX, minY, minZ, maxX, maxY, maxZ ->
-            faces += FaceRect(direction, minX, minY, minZ, maxX, maxY, maxZ)
-        }
+        assertSameFaces(
+            expected = listOf(face(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 0.4)),
+            actual = shape.collectSideFacesForTest(Direction.WEST, Vec3(0.0, 0.5, 0.2)),
+        )
+    }
 
-        assertEquals(listOf(FaceRect(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 0.4)), faces)
+    @Test
+    fun `forAllSideFaces returns empty when hit position does not touch a component`() {
+        val shape = Shapes.or(
+            Shapes.box(0.0, 0.0, 0.0, 0.5, 1.0, 0.4),
+            Shapes.box(0.0, 0.0, 0.6, 0.5, 1.0, 1.0),
+        )
+
+        assertSameFaces(
+            expected = emptyList(),
+            actual = shape.collectSideFacesForTest(Direction.WEST, Vec3(0.0, 0.5, 0.5)),
+        )
+    }
+
+    @Test
+    fun `forAllSideFaces resolves correct component when hit is exactly on face boundary`() {
+        val shape = Shapes.or(
+            Shapes.box(0.0, 0.0, 0.0, 0.5, 1.0, 0.4),
+            Shapes.box(0.0, 0.0, 0.6, 0.5, 1.0, 1.0),
+        )
+
+        assertSameFaces(
+            expected = listOf(face(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 0.4)),
+            actual = shape.collectSideFacesForTest(Direction.WEST, Vec3(0.0, 0.5, 0.4)),
+        )
+    }
+
+    @Test
+    fun `forAllSideFaces returns empty when hit is on correct side but behind the face`() {
+        val shape = Shapes.box(0.0, 0.0, 0.0, 0.5, 1.0, 1.0)
+
+        assertSameFaces(
+            expected = emptyList(),
+            actual = shape.collectSideFacesForTest(Direction.WEST, Vec3(0.25, 0.5, 0.5)),
+        )
+    }
+
+    @Test
+    fun `forAllSideFaces returns one full face for each cube side`() {
+        for (side in Direction.entries) {
+            assertSameFaces(
+                expected = listOf(expectedCubeFace(side)),
+                actual = Shapes.block().collectSideFacesForTest(side, centerOfCubeFace(side)),
+            )
+        }
     }
 
     @Test
@@ -229,170 +221,119 @@ class ShapeExtensionsTest {
             Shapes.box(0.0, 0.0, 0.6, 0.5, 1.0, 1.0),
         )
 
-        val lines = objectHashSetOf<Line3>()
-        shape.forAllSideOutlineEdges(Direction.WEST, Vec3(0.0, 0.5, 0.2)) { startX, startY, startZ, endX, endY, endZ ->
-            lines += Line3(startX, startY, startZ, endX, endY, endZ)
-        }
-
-        assertEquals(
-            objectHashSetOf(
-                Line3(0.0, 0.0, 0.0, 0.0, 0.0, 0.4),
-                Line3(0.0, 1.0, 0.0, 0.0, 1.0, 0.4),
-                Line3(0.0, 0.0, 0.0, 0.0, 1.0, 0.0),
-                Line3(0.0, 0.0, 0.4, 0.0, 1.0, 0.4),
+        assertSameLines(
+            expected = listOf(
+                line(0.0, 0.0, 0.0, 0.0, 0.0, 0.4),
+                line(0.0, 1.0, 0.0, 0.0, 1.0, 0.4),
+                line(0.0, 0.0, 0.0, 0.0, 1.0, 0.0),
+                line(0.0, 0.0, 0.4, 0.0, 1.0, 0.4),
             ),
-            lines,
+            actual = shape.collectSideOutlineEdgesForTest(Direction.WEST, Vec3(0.0, 0.5, 0.2)),
         )
     }
 
-    private fun VoxelShape.collectFaces(): List<FaceRect> {
-        val faces = mutableListOf<FaceRect>()
-        forAllFaces { direction, minX, minY, minZ, maxX, maxY, maxZ ->
-            faces += FaceRect(direction, minX, minY, minZ, maxX, maxY, maxZ)
-        }
-        return faces
+    @Test
+    fun `forAllSideOutlineEdges returns empty when hit position does not touch a component`() {
+        val shape = Shapes.or(
+            Shapes.box(0.0, 0.0, 0.0, 0.5, 1.0, 0.4),
+            Shapes.box(0.0, 0.0, 0.6, 0.5, 1.0, 1.0),
+        )
+
+        assertSameLines(
+            expected = emptyList(),
+            actual = shape.collectSideOutlineEdgesForTest(Direction.WEST, Vec3(0.0, 0.5, 0.5)),
+        )
     }
 
-    private fun positionedShape(
-        x: Int,
-        y: Int,
-        z: Int,
-        key: Int,
-        shape: VoxelShape = Shapes.block(),
-    ) = PositionedVoxelShape(
-        blockPos = BlockPos.asLong(x, y, z),
-        key = key,
-        shape = shape,
-    )
-
-    private fun List<PositionedVoxelShape<Int>>.toSpecs(): List<PositionedShapeSpec> =
-        map { shape ->
-            PositionedShapeSpec(
-                blockPos = shape.blockPos,
-                key = shape.key,
-                boxes = shape.shape.toAabbs().map(::BoxSpec).sortedBy(BoxSpec::sortKey),
+    @Test
+    fun `forAllSideOutlineEdges returns the four perimeter edges for each cube face`() {
+        for (side in Direction.entries) {
+            assertSameLines(
+                expected = expectedCubeFacePerimeter(side),
+                actual = Shapes.block().collectSideOutlineEdgesForTest(side, centerOfCubeFace(side)),
             )
-        }.sortedBy(PositionedShapeSpec::sortKey)
-
-    private data class PositionedShapeSpec(
-        val blockPos: Long,
-        val key: Int,
-        val boxes: List<BoxSpec>,
-    ) {
-        fun sortKey(): String = "$key|$blockPos|$boxes"
-    }
-
-    private data class BoxSpec(
-        val minX: Double,
-        val minY: Double,
-        val minZ: Double,
-        val maxX: Double,
-        val maxY: Double,
-        val maxZ: Double,
-    ) {
-        constructor(box: AABB) : this(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ)
-
-        fun sortKey(): String = "$minX|$minY|$minZ|$maxX|$maxY|$maxZ"
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is BoxSpec) return false
-
-            return minX.closeTo(other.minX) &&
-                minY.closeTo(other.minY) &&
-                minZ.closeTo(other.minZ) &&
-                maxX.closeTo(other.maxX) &&
-                maxY.closeTo(other.maxY) &&
-                maxZ.closeTo(other.maxZ)
-        }
-
-        override fun hashCode(): Int = sortKey().hashCode()
-    }
-
-    private data class FaceRect(
-        val direction: Direction,
-        val minX: Double,
-        val minY: Double,
-        val minZ: Double,
-        val maxX: Double,
-        val maxY: Double,
-        val maxZ: Double,
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is FaceRect) return false
-
-            return direction == other.direction &&
-                minX.closeTo(other.minX) &&
-                minY.closeTo(other.minY) &&
-                minZ.closeTo(other.minZ) &&
-                maxX.closeTo(other.maxX) &&
-                maxY.closeTo(other.maxY) &&
-                maxZ.closeTo(other.maxZ)
-        }
-
-        override fun hashCode(): Int = listOf(direction.ordinal, minX, minY, minZ, maxX, maxY, maxZ)
-            .joinToString("|") { value -> value.toString() }
-            .hashCode()
-    }
-
-    private data class Line3(
-        val startX: Double,
-        val startY: Double,
-        val startZ: Double,
-        val endX: Double,
-        val endY: Double,
-        val endZ: Double,
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is Line3) return false
-
-            val a = normalized()
-            val b = other.normalized()
-            return a.first.closeTo(b.first) &&
-                a.second.closeTo(b.second) &&
-                a.third.closeTo(b.third) &&
-                a.fourth.closeTo(b.fourth) &&
-                a.fifth.closeTo(b.fifth) &&
-                a.sixth.closeTo(b.sixth)
-        }
-
-        override fun hashCode(): Int = normalized().toString().hashCode()
-
-        private fun normalized(): LineTuple {
-            return if (comesBefore(startX, startY, startZ, endX, endY, endZ)) {
-                LineTuple(startX, startY, startZ, endX, endY, endZ)
-            } else {
-                LineTuple(endX, endY, endZ, startX, startY, startZ)
-            }
         }
     }
 
-    private data class LineTuple(
-        val first: Double,
-        val second: Double,
-        val third: Double,
-        val fourth: Double,
-        val fifth: Double,
-        val sixth: Double,
-    )
+    @Test
+    fun `forAllSideOutlineEdges returns L-shaped perimeter for notch face`() {
+        val shape = Shapes.or(
+            Shapes.box(0.0, 0.0, 0.0, 1.0, 0.5, 0.5),
+            Shapes.box(0.0, 0.0, 0.5, 0.5, 1.0, 1.0),
+        )
 
-}
+        assertSameLines(
+            expected = listOf(
+                line(0.0, 0.0, 0.0, 0.0, 0.0, 1.0),
+                line(0.0, 0.5, 0.0, 0.0, 0.5, 0.5),
+                line(0.0, 1.0, 0.5, 0.0, 1.0, 1.0),
+                line(0.0, 0.0, 0.0, 0.0, 0.5, 0.0),
+                line(0.0, 0.5, 0.5, 0.0, 1.0, 0.5),
+                line(0.0, 0.0, 1.0, 0.0, 1.0, 1.0),
+            ),
+            actual = shape.collectSideOutlineEdgesForTest(Direction.WEST, Vec3(0.0, 0.25, 0.25)),
+        )
+    }
 
-private fun comesBefore(
-    ax: Double,
-    ay: Double,
-    az: Double,
-    bx: Double,
-    by: Double,
-    bz: Double,
-): Boolean {
-    return when {
-        !ax.closeTo(bx) -> ax < bx
-        !ay.closeTo(by) -> ay < by
-        else -> az <= bz
+    private fun expectedCubeFace(side: Direction): FaceSpec = when (side) {
+        Direction.DOWN -> face(Direction.DOWN, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0)
+        Direction.UP -> face(Direction.UP, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0)
+        Direction.NORTH -> face(Direction.NORTH, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0)
+        Direction.SOUTH -> face(Direction.SOUTH, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0)
+        Direction.WEST -> face(Direction.WEST, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0)
+        Direction.EAST -> face(Direction.EAST, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+    }
+
+    private fun centerOfCubeFace(side: Direction): Vec3 = when (side) {
+        Direction.DOWN -> Vec3(0.5, 0.0, 0.5)
+        Direction.UP -> Vec3(0.5, 1.0, 0.5)
+        Direction.NORTH -> Vec3(0.5, 0.5, 0.0)
+        Direction.SOUTH -> Vec3(0.5, 0.5, 1.0)
+        Direction.WEST -> Vec3(0.0, 0.5, 0.5)
+        Direction.EAST -> Vec3(1.0, 0.5, 0.5)
+    }
+
+    private fun expectedCubeFacePerimeter(side: Direction): List<LineSpec> = when (side) {
+        Direction.DOWN -> listOf(
+            line(0.0, 0.0, 0.0, 1.0, 0.0, 0.0),
+            line(1.0, 0.0, 0.0, 1.0, 0.0, 1.0),
+            line(1.0, 0.0, 1.0, 0.0, 0.0, 1.0),
+            line(0.0, 0.0, 1.0, 0.0, 0.0, 0.0),
+        )
+
+        Direction.UP -> listOf(
+            line(0.0, 1.0, 0.0, 1.0, 1.0, 0.0),
+            line(1.0, 1.0, 0.0, 1.0, 1.0, 1.0),
+            line(1.0, 1.0, 1.0, 0.0, 1.0, 1.0),
+            line(0.0, 1.0, 1.0, 0.0, 1.0, 0.0),
+        )
+
+        Direction.NORTH -> listOf(
+            line(0.0, 0.0, 0.0, 1.0, 0.0, 0.0),
+            line(1.0, 0.0, 0.0, 1.0, 1.0, 0.0),
+            line(1.0, 1.0, 0.0, 0.0, 1.0, 0.0),
+            line(0.0, 1.0, 0.0, 0.0, 0.0, 0.0),
+        )
+
+        Direction.SOUTH -> listOf(
+            line(0.0, 0.0, 1.0, 1.0, 0.0, 1.0),
+            line(1.0, 0.0, 1.0, 1.0, 1.0, 1.0),
+            line(1.0, 1.0, 1.0, 0.0, 1.0, 1.0),
+            line(0.0, 1.0, 1.0, 0.0, 0.0, 1.0),
+        )
+
+        Direction.WEST -> listOf(
+            line(0.0, 0.0, 0.0, 0.0, 0.0, 1.0),
+            line(0.0, 0.0, 1.0, 0.0, 1.0, 1.0),
+            line(0.0, 1.0, 1.0, 0.0, 1.0, 0.0),
+            line(0.0, 1.0, 0.0, 0.0, 0.0, 0.0),
+        )
+
+        Direction.EAST -> listOf(
+            line(1.0, 0.0, 0.0, 1.0, 0.0, 1.0),
+            line(1.0, 0.0, 1.0, 1.0, 1.0, 1.0),
+            line(1.0, 1.0, 1.0, 1.0, 1.0, 0.0),
+            line(1.0, 1.0, 0.0, 1.0, 0.0, 0.0),
+        )
     }
 }
-
-private fun Double.closeTo(other: Double): Boolean = kotlin.math.abs(this - other) <= 1.0E-7

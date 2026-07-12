@@ -73,6 +73,8 @@ object ClientRenderPipelines {
     inline fun RenderPipeline.Builder.withBindGroupLayout(block: BindGroupLayout.Builder.() -> Unit) =
         this.withBindGroupLayout(BindGroupLayout.builder().apply(block).build())
 
+    inline fun BindGroupLayout.Builder.withUniformBuffer(define: ClientUniformDefine) = define.appendTo(this)
+
     inline fun RenderPipeline.Builder.withUniformBuffer(define: ClientUniformDefine) =
         withBindGroupLayout(define.bindGroupLayout)
 
@@ -433,16 +435,30 @@ object ClientRenderPipelines {
     }
 
     @JvmField
-    val GuiBlur = newPipeline("blur") {
+    val GuiBlurH = newPipeline("blur_h") {
         screenQuadSnippet()
-        withFragmentShader(ClientShaders.Fragment.GuiBlur)
+        withFragmentShader(ClientShaders.Fragment.GuiBlurH)
+        withBindGroupLayout {
+            withSampler("texture0")
+            withUniformBuffer(ClientUniformDefine.GUI_BLUR_KERNEL)
+        }
+        withCull(false)
+        withColorTargetState(ColorTargetState.DEFAULT)
+        withDepthStencilState(optional())
+    }
+
+    @JvmField
+    val GuiBlurV = newPipeline("blur_v") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.GuiBlurV)
         withBindGroupLayout {
             withSampler("texture0")
             withSampler("overlay")
+            withUniformBuffer(ClientUniformDefine.GUI_BLUR)
+            withUniformBuffer(ClientUniformDefine.GUI_BLUR_KERNEL)
         }
-        withUniformBuffer(ClientUniformDefine.GUI_BLUR)
         withCull(false)
-        withColorTargetState(ColorTargetState.DEFAULT)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         withDepthStencilState(optional())
     }
 

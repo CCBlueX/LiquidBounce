@@ -6,7 +6,9 @@
 
     export let settings: { [name: string]: any };
 
-    const cSettings = settings as HudBlockCounterSettings;
+    let cSettings: HudBlockCounterSettings;
+
+    $: cSettings = settings as HudBlockCounterSettings;
 
     let nextBlock: string | undefined = undefined;
     let count: number | undefined = undefined;
