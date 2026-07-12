@@ -1,12 +1,8 @@
-<script lang="ts" context="module">
-    let highestEditorZIndex = 0;
-</script>
-
 <script lang="ts">
     import {getContext, onMount, tick} from "svelte";
 
     import type {KeyboardKeyEvent, ScaleFactorChangeEvent} from "../../../integration/events";
-    import {getGameWindow, setComponentAlignment} from "../../../integration/rest";
+    import {bringComponentToFront, getGameWindow, setComponentAlignment} from "../../../integration/rest";
     import {type Alignment, HorizontalAlignment, VerticalAlignment} from "../../../integration/types.js";
     import {listen} from "../../../integration/ws";
     import ComponentSettings from "../../clickgui/tabs/hud_editor/ComponentSettings.svelte";
@@ -28,6 +24,7 @@
     export let magneticallyReferenced = false;
     export let width: number | undefined = undefined;
     export let height: number | undefined = undefined;
+    export let zIndex = 0;
 
     let scaleFactor = 2;
     let element: HTMLElement | undefined;
@@ -41,7 +38,7 @@
     let horizontalGuide: number | undefined;
     let horizontalTargetId: string | undefined;
     let verticalTargetId: string | undefined;
-    let editorZIndex = 0;
+    let displayedZIndex = zIndex;
 
     let displayPosition = {
         x: 0,
@@ -54,6 +51,7 @@
     const editorElements = getContext<Map<string, HTMLElement>>(HUD_EDITOR_ELEMENTS_CONTEXT);
 
     $: styleString = generateStyleString(alignment);
+    $: displayedZIndex = zIndex;
     $: sizeStyleString = (width !== undefined && height !== undefined)
         ? `width: ${width}px; height: ${height}px;`
         : "";
@@ -286,8 +284,8 @@
     }
 
     function onMouseDown(event: MouseEvent): void {
-        if (inEditor) {
-            editorZIndex = ++highestEditorZIndex;
+        if (inEditor && event.button === 0) {
+            updateZIndex();
         }
 
         if (event.button !== 0 && event.button !== 1) {
@@ -308,8 +306,12 @@
         horizontalGuide = undefined;
         horizontalTargetId = undefined;
         verticalTargetId = undefined;
-        void updateDisplayedPosition();
+        updateDisplayedPosition();
         emitDragState(true);
+    }
+
+    async function updateZIndex(): Promise<void> {
+        displayedZIndex = await bringComponentToFront(componentId);
     }
 
     async function updateDisplayedPosition(): Promise<void> {
@@ -370,7 +372,7 @@
             horizontalSnap?.targetId,
             verticalSnap?.targetId,
         );
-        void updateDisplayedPosition();
+        updateDisplayedPosition();
     }
 
     function clampHorizontalOffset(offset: number): number {
@@ -509,7 +511,7 @@
         on:mousemove={onMouseMove}
 />
 
-<div class="draggable-element" style="{styleString} z-index: {editorZIndex};" bind:this={element}
+<div class="draggable-element" style="{styleString} z-index: {displayedZIndex};" bind:this={element}
      transition:editorFade|global>
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
