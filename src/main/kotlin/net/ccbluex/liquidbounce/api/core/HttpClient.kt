@@ -29,11 +29,14 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
 import net.ccbluex.liquidbounce.authlib.Authlib
 import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
+import net.ccbluex.liquidbounce.authlib.mojangapi.MojangApiClient
+import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.ReportedException
@@ -95,6 +98,9 @@ object HttpClient {
     val EMPTY_HEADERS = Headers.Builder().build()
 
     object MediaTypes {
+        @JvmField
+        val TEXT_PLAIN = "text/plain; charset=utf-8".toMediaType()
+
         @JvmField
         val JSON = "application/json; charset=utf-8".toMediaType()
 
@@ -170,6 +176,13 @@ object HttpClient {
     @get:JvmStatic
     val client = defaultClient.newBuilder()
         .addInterceptor(clientHttpApiInterceptor)
+        .build()
+
+    @get:JvmStatic
+    val mojangApiClient = MojangApiClient.Builder()
+        .gson(interopGson)
+        .httpClient(this.defaultClient)
+        .tokenProvider { mc.user.accessToken }
         .build()
 
     @Suppress("LongParameterList")

@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.chat.AxochatClient
 import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestJWTPacket
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -97,13 +98,13 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                 .vararg()
                 .build()
         )
-        .handler {
+        .suspendHandler {
             if (!chatClient.isConnected) {
                 chat(
                     prefix, translation("liquidbounce.liquidchat.notConnected").withStyle(ChatFormatting.GRAY),
                     metadata = exceptionData
                 )
-                return@handler
+                return@suspendHandler
             }
 
             if (!chatClient.isLoggedIn) {
@@ -111,7 +112,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                     prefix, translation("liquidbounce.liquidchat.notLoggedIn").withStyle(ChatFormatting.GRAY),
                     metadata = exceptionData
                 )
-                return@handler
+                return@suspendHandler
             }
 
             chatClient.sendMessage((args[0] as Array<*>).joinToString(" ") { it as String })
@@ -120,13 +121,13 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private fun createChatJwtCommand() = CommandBuilder
         .begin("chatjwt")
-        .handler {
+        .suspendHandler {
             if (!chatClient.isConnected) {
                 chat(
                     prefix, translation("liquidbounce.liquidchat.notConnected").withStyle(ChatFormatting.GRAY),
                     metadata = exceptionData
                 )
-                return@handler
+                return@suspendHandler
             }
 
             chatClient.sendPacket(C2SRequestJWTPacket())
@@ -227,7 +228,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     }
 
     @Suppress("unused")
-    private val handleStateChange = handler<ClientChatStateChange> {
+    private val handleStateChange = suspendHandler<ClientChatStateChange>(behavior = CancelPrevious) {
         when (it.state) {
             ClientChatStateChange.State.CONNECTED -> {
                 notification(
