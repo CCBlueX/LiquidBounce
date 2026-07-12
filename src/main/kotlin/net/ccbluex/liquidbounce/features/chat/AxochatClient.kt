@@ -45,6 +45,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
 import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
+import net.ccbluex.liquidbounce.api.thirdparty.lookupUuidByName
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
@@ -225,23 +226,23 @@ class AxochatClient {
     /**
      * Ban user from server
      */
-    fun banUser(target: String) = sendPacket(C2SBanUserPacket(toUUID(target)))
+    suspend fun banUser(target: String) = sendPacket(C2SBanUserPacket(toUUID(target)))
 
     /**
      * Unban user from server
      */
-    fun unbanUser(target: String) = sendPacket(C2SUnbanUserPacket(toUUID(target)))
+    suspend fun unbanUser(target: String) = sendPacket(C2SUnbanUserPacket(toUUID(target)))
 
     /**
      * Convert username or uuid to UUID
      */
-    private fun toUUID(target: String): String {
+    private suspend fun toUUID(target: String): String {
         return try {
             UUID.fromString(target)
 
             target
         } catch (_: IllegalArgumentException) {
-            val incomingUUID = GameProfileRepository.Default.fetchUuidByUsername(target)
+            val incomingUUID = lookupUuidByName(target)
             incomingUUID.toString()
         }
     }
