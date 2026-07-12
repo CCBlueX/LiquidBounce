@@ -169,14 +169,15 @@ class Theme private constructor(val origin: Origin, url: String) :
             return null
         }
 
-        val component = if (factory.singleton) {
-            components.find { it.name == source.name && !it.enabled }
-                ?: createComponent(factory)?.also(::registerComponent)
-                ?: return null
-        } else {
-            createComponent(factory)?.also(::registerComponent)
-                ?: return null
+        val disabledComponent = components.find { it.name == source.name && !it.enabled }
+        val component = disabledComponent
+            ?: createComponent(factory)?.also(::registerComponent)
+            ?: return null
+
+        if (!factory.singleton && disabledComponent != null) {
+            component.restore()
         }
+
         component.enabled = true
         return component
     }
