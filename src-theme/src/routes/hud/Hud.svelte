@@ -104,7 +104,7 @@
                     <Scoreboard settings={c.settings}/>
                 {:else if c.name === "ArmorItems"}
                     <GenericPlayerInventory
-                            rowLength={1}
+                            rowLength={c.settings.layout === "Horizontal" ? 4 : 1}
                             backgroundColor="transparent"
                             gap="2px"
                             getRenderedStacks={it => Array.from(it.armor).reverse()}
