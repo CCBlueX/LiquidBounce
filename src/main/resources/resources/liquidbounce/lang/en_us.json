@@ -676,6 +676,8 @@
   "liquidbounce.module.safeWalk.description": "Prevents you from falling down block (as if you were sneaking).",
   "liquidbounce.module.snapTap.description": "Prioritize the last pressed movement key.",
   "liquidbounce.module.scaffold.description": "Automatically places blocks beneath your feet allowing you to walk across gaps.",
+  "liquidbounce.module.scaffold.messages.hypixelTower.wrongProtocolVersion": "Please use 1.8.x as protocol for this tower to work.",
+  "liquidbounce.module.scaffold.messages.hypixelTower.stationaryWarning": "This tower only works only when standing still.",
   "liquidbounce.module.serverCrasher.description": "Attempts to crash the server by exploiting known bugs.",
   "liquidbounce.module.serverCrasher.messages.singleplayer": "Server Crasher is intended for multiplayer servers only.",
   "liquidbounce.module.serverCrasher.messages.signExploit.missingProtocolTranslator": "ViaFabricPlus is required for this exploit to work.",
