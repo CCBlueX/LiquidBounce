@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.misc.proxy
 
 import io.netty.handler.proxy.Socks5ProxyHandler
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
@@ -29,10 +28,9 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.network.Connection
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 
 /**
  * Proxy Manager
@@ -41,7 +39,7 @@ import org.apache.logging.log4j.Logger
  */
 object ProxyManager : Config("proxy"), EventListener {
 
-    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ProxyManager")
+    private val logger = clientLogger("ProxyManager")
 
     var proxy by value("selectedProxy", Proxy.NONE, valueType = ValueType.PROXY).onChanged {
         ConfigSystem.store(this)

@@ -38,23 +38,25 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.chat.AxochatClient
 import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestJWTPacket
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.plus
+import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.textOf
+import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
@@ -96,13 +98,13 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                 .vararg()
                 .build()
         )
-        .handler {
+        .suspendHandler {
             if (!chatClient.isConnected) {
                 chat(
                     prefix, translation("liquidbounce.liquidchat.notConnected").withStyle(ChatFormatting.GRAY),
                     metadata = exceptionData
                 )
-                return@handler
+                return@suspendHandler
             }
 
             if (!chatClient.isLoggedIn) {
@@ -110,7 +112,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                     prefix, translation("liquidbounce.liquidchat.notLoggedIn").withStyle(ChatFormatting.GRAY),
                     metadata = exceptionData
                 )
-                return@handler
+                return@suspendHandler
             }
 
             chatClient.sendMessage((args[0] as Array<*>).joinToString(" ") { it as String })
@@ -119,13 +121,13 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private fun createChatJwtCommand() = CommandBuilder
         .begin("chatjwt")
-        .handler {
+        .suspendHandler {
             if (!chatClient.isConnected) {
                 chat(
                     prefix, translation("liquidbounce.liquidchat.notConnected").withStyle(ChatFormatting.GRAY),
                     metadata = exceptionData
                 )
-                return@handler
+                return@suspendHandler
             }
 
             chatClient.sendPacket(C2SRequestJWTPacket())
@@ -174,12 +176,13 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     @Suppress("unused")
     private val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
         val resolvableProfile = ResolvableProfile.createUnresolved(event.user.uuid)
-        withTimeoutOrNull(5000L) {
+        withTimeoutOrNull(5.seconds) {
             resolvableProfile.resolveProfile(mc.services().profileResolver).await()
         }
 
-        val playerSpritePart = MutableComponent.create(ObjectContents(PlayerSprite(resolvableProfile, false)))
-            .copyable(copyContent = event.user.uuid.toString())
+        val playerSpritePart = MutableComponent.create(
+            ObjectContents(PlayerSprite(resolvableProfile, false), optional())
+        ).copyable(copyContent = event.user.uuid.toString())
 
         fun namePart(formatting: ChatFormatting) =
             event.user.name.asPlainText(
@@ -225,7 +228,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     }
 
     @Suppress("unused")
-    private val handleStateChange = handler<ClientChatStateChange> {
+    private val handleStateChange = suspendHandler<ClientChatStateChange>(behavior = CancelPrevious) {
         when (it.state) {
             ClientChatStateChange.State.CONNECTED -> {
                 notification(
@@ -272,7 +275,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private fun writeChat(playerPrefix: Component, message: Component) {
         if (!inGame) {
-            logger.info("[Chat] ${playerPrefix.string} $message")
+            logger.info("[Chat] ${playerPrefix.string} ${message.string}")
         } else {
             chat(prefix, playerPrefix, message, metadata = messageData)
         }

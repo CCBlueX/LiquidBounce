@@ -40,7 +40,7 @@ public abstract class MixinArmedEntityRenderState {
         method = "extractArmedEntityRenderState",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getItemHeldByArm(Lnet/minecraft/world/entity/HumanoidArm;)Lnet/minecraft/world/item/ItemStack;")
     )
-    private static ItemStack hideOffhandShield(LivingEntity entity, HumanoidArm arm, Operation<ItemStack> original, @Local(argsOnly = true) ArmedEntityRenderState reusedState) {
+    private static ItemStack hideOffhandShield(LivingEntity entity, HumanoidArm arm, Operation<ItemStack> original, @Local(argsOnly = true, name = "state") ArmedEntityRenderState reusedState) {
         if (entity == Minecraft.getInstance().player
             && ModuleSwordBlock.INSTANCE.getApplyToThirdPersonView()
             && ModuleSwordBlock.INSTANCE.shouldHideOffhand()

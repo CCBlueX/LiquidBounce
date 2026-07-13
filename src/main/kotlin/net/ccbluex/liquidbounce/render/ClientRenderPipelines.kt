@@ -20,17 +20,22 @@
 @file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.GpuFormat
+import com.mojang.blaze3d.PrimitiveTopology
+import com.mojang.blaze3d.pipeline.BindGroupLayout
 import com.mojang.blaze3d.pipeline.BlendFunction
+import com.mojang.blaze3d.pipeline.ColorTargetState
+import com.mojang.blaze3d.pipeline.DepthStencilState
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.DepthTestFunction
-import com.mojang.blaze3d.shaders.UniformType
+import com.mojang.blaze3d.platform.CompareOp
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
-import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.optional
+import net.minecraft.client.renderer.BindGroupLayouts
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 
@@ -57,71 +62,77 @@ object ClientRenderPipelines {
     }
 
     private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() {
-        withSnippet(RenderPipelines.MATRICES_PROJECTION_SNIPPET)
+        withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
         withVertexShader("core/position_tex_color")
         withFragmentShader(ClientShaders.Fragment.BgraPosTex)
-        withSampler("Sampler0")
-        withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+        withBindGroupLayout(BindGroupLayouts.SAMPLER0)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
     }
 
+    inline fun RenderPipeline.Builder.withBindGroupLayout(block: BindGroupLayout.Builder.() -> Unit) =
+        this.withBindGroupLayout(BindGroupLayout.builder().apply(block).build())
+
+    inline fun BindGroupLayout.Builder.withUniformBuffer(define: ClientUniformDefine) = define.appendTo(this)
+
     inline fun RenderPipeline.Builder.withUniformBuffer(define: ClientUniformDefine) =
-        withUniform(define.uboName, UniformType.UNIFORM_BUFFER)
+        withBindGroupLayout(define.bindGroupLayout)
 
     private inline fun RenderPipeline.Builder.forWorldRender(noDepthTest: Boolean = true) {
         withCull(false)
-        withBlend(BlendFunction.TRANSLUCENT)
-        if (noDepthTest) withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        if (noDepthTest) withDepthStencilState(optional())
     }
 
     inline fun RenderPipeline.Builder.screenQuadSnippet() = apply {
         withVertexShader("core/screenquad")
-        withVertexFormat(DefaultVertexFormat.EMPTY, VertexFormat.Mode.TRIANGLES)
+        withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
     }
 
-    private fun RenderPipeline.Builder.posColorSnippet(mode: VertexFormat.Mode) {
+    private fun RenderPipeline.Builder.posColorSnippet(mode: PrimitiveTopology) {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        withVertexFormat(DefaultVertexFormat.POSITION_COLOR, mode)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+        withPrimitiveTopology(mode)
     }
 
-    private inline fun RenderPipeline.Builder.relativePosSnippet(mode: VertexFormat.Mode) {
+    private inline fun RenderPipeline.Builder.relativePosSnippet(mode: PrimitiveTopology) {
         withVertexShader(ClientShaders.Vertex.PosRelativeToCamera)
         withFragmentShader(ClientShaders.Fragment.PosRelativeToCamera)
-        withVertexFormat(DefaultVertexFormat.POSITION, mode)
+        withVertexBinding(0, DefaultVertexFormat.POSITION)
+        withPrimitiveTopology(mode)
     }
 
-    private inline fun RenderPipeline.Builder.relativePosColorSnippet(mode: VertexFormat.Mode) {
+    private inline fun RenderPipeline.Builder.relativePosColorSnippet(mode: PrimitiveTopology) {
         withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
         withFragmentShader("core/position_color")
-        withVertexFormat(DefaultVertexFormat.POSITION_COLOR, mode)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+        withPrimitiveTopology(mode)
     }
 
     object JCEF {
         @JvmField
         val SMOOTH_TEXTURE = newPipeline("jcef/smooth_texture") {
             withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withBlend(BlendFunction.TRANSLUCENT)
-            withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+            withDepthStencilState(optional())
         }
 
         @JvmField
         val BLURRED_TEXTURE = newPipeline("jcef/blurred_texture") {
             withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withBlend(JCEF_COMPATIBLE_BLEND)
-            withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
         }
 
         @JvmField
         val BGRA_TEXTURE = newPipeline("jcef/bgra_texture") {
             bgraPosTexColorQuads()
-            withBlend(JCEF_COMPATIBLE_BLEND)
-            withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
         }
 
         @JvmField
         val BGRA_BLURRED_TEXTURE = newPipeline("jcef/bgra_blurred_texture") {
             bgraPosTexColorQuads()
-            withBlend(JCEF_COMPATIBLE_BLEND)
-            withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
         }
 
         /**
@@ -131,43 +142,57 @@ object ClientRenderPipelines {
         val Blit = newPipeline("jcef_blit") {
             screenQuadSnippet()
             withFragmentShader("core/blit_screen")
-            withSampler("InSampler")
-            withBlend(JCEF_COMPATIBLE_BLEND)
-            withDepthWrite(false)
-            withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-            withColorWrite(true, false)
+            withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
+            withColorTargetState(
+                ColorTargetState(
+                    optional(JCEF_COMPATIBLE_BLEND),
+                    GpuFormat.RGBA8_UNORM,
+                    ColorTargetState.WRITE_COLOR,
+                )
+            )
+            withDepthStencilState(optional())
         }
     }
 
     object GUI {
-        private fun RenderPipeline.Builder.guiPosColorSnippet(mode: VertexFormat.Mode) {
+        private fun RenderPipeline.Builder.guiPosColorSnippet(mode: PrimitiveTopology) {
             withSnippet(RenderPipelines.GUI_SNIPPET)
-            withVertexFormat(DefaultVertexFormat.POSITION_COLOR, mode)
+            withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+            withPrimitiveTopology(mode)
         }
 
         private val CircleLut = newPipeline("gui/circle_lut") {
             withSnippet(RenderPipelines.GUI_SNIPPET)
             withVertexShader(ClientShaders.Vertex.GuiCircleLut)
             withFragmentShader(ClientShaders.Fragment.GuiCircleLut)
-            withSampler("Sampler0")
-            withVertexFormat(ClientVertexFormats.GUI_CIRCLE_LUT, VertexFormat.Mode.QUADS)
+            withBindGroupLayout(BindGroupLayouts.SAMPLER0)
+            withVertexBinding(0, ClientVertexFormats.GUI_CIRCLE_LUT)
+            withPrimitiveTopology(PrimitiveTopology.QUADS)
+        }
+
+        private val RoundedRect = newPipeline("gui/rounded_rect") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withVertexShader(ClientShaders.Vertex.GuiRoundedRect)
+            withFragmentShader(ClientShaders.Fragment.GuiRoundedRect)
+            withVertexBinding(0, ClientVertexFormats.GUI_ROUNDED_RECT)
+            withPrimitiveTopology(PrimitiveTopology.QUADS)
         }
 
         private val Lines = newPipeline("gui/lines") {
-            guiPosColorSnippet(VertexFormat.Mode.DEBUG_LINES)
+            guiPosColorSnippet(PrimitiveTopology.DEBUG_LINES)
         }
 
         private val Triangles = newPipeline("gui/triangles") {
-            guiPosColorSnippet(VertexFormat.Mode.TRIANGLES)
+            guiPosColorSnippet(PrimitiveTopology.TRIANGLES)
         }
 
         private val LinesNoCull = newPipeline("gui/lines_no_cull") {
-            guiPosColorSnippet(VertexFormat.Mode.DEBUG_LINES)
+            guiPosColorSnippet(PrimitiveTopology.DEBUG_LINES)
             withCull(false)
         }
 
         private val TrianglesNoCull = newPipeline("gui/triangles_no_cull") {
-            guiPosColorSnippet(VertexFormat.Mode.TRIANGLES)
+            guiPosColorSnippet(PrimitiveTopology.TRIANGLES)
             withCull(false)
         }
 
@@ -185,6 +210,9 @@ object ClientRenderPipelines {
 
         @JvmStatic
         fun circleLut() = CircleLut
+
+        @JvmStatic
+        fun roundedRect() = RoundedRect
     }
 
     /**
@@ -193,26 +221,28 @@ object ClientRenderPipelines {
     @JvmField
     val LinesWithWidth = newPipeline("lines_with_width") {
         withSnippet(RenderPipelines.LINES_SNIPPET)
-        withDepthWrite(false)
+        withDepthStencilState(DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
         forWorldRender()
     }
 
     @JvmField
     val Lines = newPipeline("lines") {
-        posColorSnippet(VertexFormat.Mode.DEBUG_LINES)
+        posColorSnippet(PrimitiveTopology.DEBUG_LINES)
         forWorldRender()
     }
 
     private val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        relativePosColorSnippet(VertexFormat.Mode.DEBUG_LINES)
+        relativePosColorSnippet(PrimitiveTopology.DEBUG_LINES)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
 
     private val LinesRelativeToCameraNoColor = newPipeline("lines_relative_to_camera_no_color") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        relativePosColorSnippet(VertexFormat.Mode.DEBUG_LINES)
+        relativePosColorSnippet(PrimitiveTopology.DEBUG_LINES)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
@@ -222,23 +252,23 @@ object ClientRenderPipelines {
 
     @JvmField
     val LineStrip = newPipeline("line_strip") {
-        posColorSnippet(VertexFormat.Mode.DEBUG_LINE_STRIP)
+        posColorSnippet(PrimitiveTopology.DEBUG_LINE_STRIP)
         forWorldRender()
     }
 
     @JvmField
     val Triangles = newPipeline("triangles") {
-        posColorSnippet(VertexFormat.Mode.TRIANGLES)
+        posColorSnippet(PrimitiveTopology.TRIANGLES)
         forWorldRender()
     }
 
     private val TriangleStrip = newPipeline("triangle_strip") {
-        posColorSnippet(VertexFormat.Mode.TRIANGLE_STRIP)
+        posColorSnippet(PrimitiveTopology.TRIANGLE_STRIP)
         forWorldRender(noDepthTest = false)
     }
 
     private val TriangleStripNoDepthTest = newPipeline("triangle_strip_no_depth_test") {
-        posColorSnippet(VertexFormat.Mode.TRIANGLE_STRIP)
+        posColorSnippet(PrimitiveTopology.TRIANGLE_STRIP)
         forWorldRender(noDepthTest = true)
     }
 
@@ -247,20 +277,22 @@ object ClientRenderPipelines {
 
     @JvmField
     val Quads = newPipeline("quads") {
-        posColorSnippet(VertexFormat.Mode.QUADS)
+        posColorSnippet(PrimitiveTopology.QUADS)
         forWorldRender()
     }
 
     private val QuadsRelativeToCamera = newPipeline("quads_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        relativePosColorSnippet(VertexFormat.Mode.QUADS)
+        relativePosColorSnippet(PrimitiveTopology.QUADS)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
 
     private val QuadsRelativeToCameraNoColor = newPipeline("quads_relative_to_camera_no_color") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        relativePosSnippet(VertexFormat.Mode.QUADS)
+        relativePosSnippet(PrimitiveTopology.QUADS)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
     }
@@ -276,9 +308,11 @@ object ClientRenderPipelines {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
-        withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
-        withBlend(BlendFunction.TRANSLUCENT)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
     }
 
     private val OutlineQuadsNoColor = newPipeline("outline_quads_no_color") {
@@ -286,9 +320,11 @@ object ClientRenderPipelines {
         withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         withVertexShader(ClientShaders.Vertex.PosRelativeToCamera)
         withFragmentShader(ClientShaders.Fragment.PosRelativeToCamera)
-        withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
+        withVertexBinding(0, DefaultVertexFormat.POSITION)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
-        withBlend(BlendFunction.TRANSLUCENT)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
     }
 
     @JvmStatic
@@ -297,7 +333,8 @@ object ClientRenderPipelines {
     @JvmField
     val TexQuads = newPipeline("tex_quads") {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-        withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
     }
 
@@ -305,7 +342,8 @@ object ClientRenderPipelines {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         withVertexShader(ClientShaders.Vertex.Circle)
         withFragmentShader(ClientShaders.Fragment.RoundedRect)
-        withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
         withUniformBuffer(ClientUniformDefine.ROUNDED_RECT)
     }
 
@@ -313,7 +351,8 @@ object ClientRenderPipelines {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         withVertexShader(ClientShaders.Vertex.GradientCircle)
         withFragmentShader(ClientShaders.Fragment.GradientCircle)
-        withVertexFormat(ClientVertexFormats.GRADIENT_CIRCLE, VertexFormat.Mode.QUADS)
+        withVertexBinding(0, ClientVertexFormats.GRADIENT_CIRCLE)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
     }
 
     private val RoundedRect = newPipeline("rounded_rect") {
@@ -341,6 +380,26 @@ object ClientRenderPipelines {
     fun gradientCircle(noDepthTest: Boolean) =
         if (noDepthTest) GradientCircleNoDepthTest else GradientCircle
 
+    private fun RenderPipeline.Builder.heartSdfSnippet() {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withVertexShader(ClientShaders.Vertex.Circle)
+        withFragmentShader(ClientShaders.Fragment.HeartSDF)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
+    }
+
+    private val Heart = newPipeline("heart") {
+        heartSdfSnippet()
+        forWorldRender(noDepthTest = false)
+    }
+
+    private val HeartNoDepthTest = newPipeline("heart_no_depth_test") {
+        heartSdfSnippet()
+        forWorldRender(noDepthTest = true)
+    }
+
+    fun heart(noDepthTest: Boolean) = if (noDepthTest) HeartNoDepthTest else Heart
+
     // Special
 
     /**
@@ -351,45 +410,69 @@ object ClientRenderPipelines {
     val Outline = newPipeline("outline") {
         screenQuadSnippet()
         withFragmentShader(ClientShaders.Fragment.EntityOutline)
-        withSampler("InSampler")
-        withBlend(BlendFunction.ENTITY_OUTLINE_BLIT)
-        withDepthWrite(false)
-        withColorWrite(true, false)
+        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
+        withColorTargetState(
+            ColorTargetState(
+                optional(BlendFunction.ENTITY_OUTLINE_BLIT),
+                GpuFormat.RGBA8_UNORM,
+                ColorTargetState.WRITE_COLOR,
+            )
+        )
+        withDepthStencilState(optional())
     }
 
     @JvmField
     val ItemChams = newPipeline("item_chams") {
         screenQuadSnippet()
         withFragmentShader(ClientShaders.Fragment.Glow)
-        withSampler("texture0")
-        withSampler("image")
+        withBindGroupLayout {
+            withSampler("texture0")
+            withSampler("image")
+        }
         withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
-        withoutBlend()
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withDepthWrite(false)
+        withColorTargetState(ColorTargetState.DEFAULT)
+        withDepthStencilState(optional())
     }
 
     @JvmField
-    val GuiBlur = newPipeline("blur") {
+    val GuiBlurH = newPipeline("blur_h") {
         screenQuadSnippet()
-        withFragmentShader(ClientShaders.Fragment.GuiBlur)
-        withSampler("texture0")
-        withSampler("overlay")
-        withUniformBuffer(ClientUniformDefine.GUI_BLUR)
+        withFragmentShader(ClientShaders.Fragment.GuiBlurH)
+        withBindGroupLayout {
+            withSampler("texture0")
+            withUniformBuffer(ClientUniformDefine.GUI_BLUR_KERNEL)
+        }
         withCull(false)
-        withoutBlend()
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withDepthWrite(false)
+        withColorTargetState(ColorTargetState.DEFAULT)
+        withDepthStencilState(optional())
+    }
+
+    @JvmField
+    val GuiBlurV = newPipeline("blur_v") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.GuiBlurV)
+        withBindGroupLayout {
+            withSampler("texture0")
+            withSampler("overlay")
+            withUniformBuffer(ClientUniformDefine.GUI_BLUR)
+            withUniformBuffer(ClientUniformDefine.GUI_BLUR_KERNEL)
+        }
+        withCull(false)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        withDepthStencilState(optional())
     }
 
     @JvmField
     val Blend = newPipeline("blend") {
         withVertexShader(ClientShaders.Vertex.PlainPosTex)
         withFragmentShader(ClientShaders.Fragment.Blend)
-        withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.TRIANGLES)
-        withSampler("texture0")
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX)
+        withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
+        withBindGroupLayout {
+            withSampler("texture0")
+        }
         withUniformBuffer(ClientUniformDefine.BLEND)
-        withoutBlend()
+        withColorTargetState(ColorTargetState.DEFAULT)
     }
 
     /**

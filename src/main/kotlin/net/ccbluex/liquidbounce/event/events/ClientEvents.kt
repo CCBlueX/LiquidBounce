@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEven
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
@@ -41,6 +42,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.Block
+
+@Tag("themeColorChange")
+class ThemeColorChangeEvent(val themeId: String, val name: String, val value: Color4b) : Event(), WebSocketEvent
 
 @Deprecated(
     "The `clickGuiScaleChange` event has been deprecated.",
@@ -182,7 +186,19 @@ class VirtualScreenEvent(
 class ServerPingedEvent(val server: ServerData) : Event(), WebSocketEvent
 
 @Tag("componentsUpdate")
-class ComponentsUpdateEvent(val id: String? = null, val components: List<HudComponent>) : Event(), WebSocketEvent {
+class ComponentsUpdateEvent(
+    val source: Source,
+    val components: List<HudComponent>,
+    val themeId: String? = null,
+) : Event(), WebSocketEvent {
+    enum class Source {
+        @SerializedName("native")
+        NATIVE,
+
+        @SerializedName("theme")
+        THEME,
+    }
+
     override val serializer get() = accessibleInteropGson
 }
 
@@ -234,4 +250,3 @@ object UserLoggedInEvent : Event(), WebSocketEvent
 
 @Tag("userLoggedOut")
 object UserLoggedOutEvent : Event(), WebSocketEvent
-

@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.event
 
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -30,17 +30,32 @@ import java.util.function.IntPredicate
 import java.util.function.Predicate
 import kotlin.coroutines.resume
 
-typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
-
 object CoroutineTicker {
 
     private val logger = LoggerFactory.getLogger("$CLIENT_NAME/CoroutineTicker")
+
+    // Tracks nested Minecraft.tick() calls. Only the outermost tick may advance coroutine waiters.
+    private var minecraftTickDepth = 0
 
     // Running callbacks
     private val runningList = ReferenceArrayList<BooleanSupplier>()
 
     // Next tick callbacks
     private val pendingList = ReferenceArrayList<BooleanSupplier>()
+
+    fun beginMinecraftTick() {
+        minecraftTickDepth++
+    }
+
+    fun endMinecraftTick() {
+        if (minecraftTickDepth <= 0) {
+            logger.warn("CoroutineTicker minecraftTickDepth underflow")
+            minecraftTickDepth = 0
+            return
+        }
+
+        minecraftTickDepth--
+    }
 
     /**
      * Registers a task to be ticked.
@@ -56,6 +71,10 @@ object CoroutineTicker {
      * new ones are added and might be ticked in the same tick
      */
     fun tick() {
+        if (minecraftTickDepth > 1) {
+            return
+        }
+
         runningList.addAll(pendingList)
         pendingList.clear()
         runningList.removeIf(Predicate {
@@ -88,8 +107,16 @@ object CoroutineTicker {
 suspend fun tickUntil(
     stopAt: IntPredicate,
 ): Int = suspendCancellableCoroutine { continuation ->
-    var elapsedTicks = 0
-    CoroutineTicker.register {
+    CoroutineTicker.register(TickUntilCallback(continuation, stopAt))
+}
+
+private class TickUntilCallback(
+    private val continuation: CancellableContinuation<Int>,
+    private val stopAt: IntPredicate,
+) : BooleanSupplier {
+    private var elapsedTicks = 0
+
+    override fun getAsBoolean(): Boolean =
         when {
             !continuation.isActive -> true
             stopAt.test(++elapsedTicks) -> {
@@ -99,7 +126,9 @@ suspend fun tickUntil(
 
             else -> false
         }
-    }
+
+    override fun toString(): String =
+        "TickUntilCallback(elapsedTicks=$elapsedTicks, continuation=$continuation, stopAt=$stopAt)"
 }
 
 /**

@@ -18,62 +18,64 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpBadRequest
-import net.ccbluex.netty.http.util.httpFile
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpNotFound
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.routing.Routing
+
+// GET /api/v1/client/theme
+private fun Routing.getCurrentTheme() = get {
+    call.respond(accessibleInteropGson.toJsonTree(ThemeManager.theme))
+}
 
 // GET /api/v1/client/theme/:id
-@Suppress("UNUSED_PARAMETER")
-fun getTheme(requestObject: RequestObject): FullHttpResponse {
-    val id = requestObject.params["id"]
-    val theme = if (id != null) {
-        ThemeManager.themes.find { it.metadata.id == id } ?: return httpNotFound(id, "Theme not found")
-    } else {
-        ThemeManager.theme
-    }
+private fun Routing.getTheme() = get("/:id") {
+    val id = call.parameters["id"] ?: call.forbidden("No id")
+    val theme = ThemeManager.themes.find { it.metadata.id == id } ?: call.notFound(id, "Theme not found")
 
-    return httpOk(accessibleInteropGson.toJsonTree(theme))
+    call.respond(accessibleInteropGson.toJsonTree(theme))
 }
 
 // GET /api/v1/client/shader
-@Suppress("UNUSED_PARAMETER")
-fun getToggleShaderInfo(requestObject: RequestObject): FullHttpResponse = httpOk(JsonObject().apply {
-    addProperty("shaderEnabled", ThemeManager.shaderEnabled)
-})
+private fun Routing.getToggleShaderInfo() = get {
+    call.respond(JsonObject().apply {
+        addProperty("shaderEnabled", ThemeManager.shaderEnabled)
+    })
+}
 
 // POST /api/v1/client/shader
-@Suppress("UNUSED_PARAMETER")
-fun postToggleShader(requestObject: RequestObject): FullHttpResponse {
+private fun Routing.postToggleShader() = post {
     ThemeManager.shaderEnabled = !ThemeManager.shaderEnabled
     ConfigSystem.store(ThemeManager)
-    return httpNoContent()
+    call.respondNoContent()
 }
 
 
 // GET /api/v1/client/fonts
-@Suppress("UNUSED_PARAMETER")
-fun getFonts(requestObject: RequestObject): FullHttpResponse = httpOk(JsonArray().apply {
-    FontManager.fontFaces.forEach { (name, _) ->
-        add(name)
-    }
-})
+private fun Routing.getFonts() = get { call.respond(FontManager.fontFaces.keys, interopGson) }
 
 // GET /api/v1/client/fonts/:name
-@Suppress("UNUSED_PARAMETER")
-fun getFont(requestObject: RequestObject): FullHttpResponse {
-    val name = requestObject.params["name"] ?: return httpBadRequest("Missing font name")
-    val font = FontManager.fontFace(name) ?: return httpNotFound(name, "Font not found")
-    val file = font.file ?: return httpNoContent()
+private fun Routing.getFont() = get("/:name") {
+    val name = call.parameters["name"] ?: call.badRequest("Missing font name")
+    val font = FontManager.fontFace(name) ?: call.notFound(name, "Font not found")
+    val file = font.file ?: run {
+        call.respondNoContent()
+        return@get
+    }
 
-    return httpFile(file)
+    call.respondFile(file)
+}
+
+internal fun Routing.themeRoutes() {
+    route("/theme") {
+        getCurrentTheme()
+        getTheme()
+    }
+    route("/shader") {
+        getToggleShaderInfo()
+        postToggleShader()
+    }
 }

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.input
 
 import com.mojang.blaze3d.platform.InputConstants
+import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -51,7 +52,7 @@ object InputTracker : EventListener {
      * Tracks the last time each keyboard key was pressed.
      * Map key is the GLFW key code, value is the timestamp.
      */
-    private val keyLastPressed = mutableMapOf<Int, Long>()
+    private val keyLastPressed = Int2LongOpenHashMap()
 
     /**
      * Extension property that checks if a key binding is pressed on either the keyboard or mouse.
@@ -164,8 +165,8 @@ object InputTracker : EventListener {
      * @return True if the key was pressed within the specified time, false otherwise.
      */
     fun wasKeyPressedRecently(keyCode: Int, withinMs: Long): Boolean {
-        val lastPressed = keyLastPressed[keyCode] ?: return false
-        return (System.currentTimeMillis() - lastPressed) <= withinMs
+        val lastPressed = keyLastPressed[keyCode]
+        return lastPressed > 0 && (System.currentTimeMillis() - lastPressed) <= withinMs
     }
 
     /**
@@ -176,7 +177,7 @@ object InputTracker : EventListener {
      */
     fun getTimeSinceKeyPress(keyCode: Int): Long {
         val lastPressed = keyLastPressed[keyCode]
-        return if (lastPressed != null) {
+        return if (lastPressed > 0) {
             System.currentTimeMillis() - lastPressed
         } else {
             Long.MAX_VALUE

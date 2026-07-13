@@ -22,12 +22,13 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toDegrees
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.toDegrees
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
+import java.lang.Math.fma
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -56,8 +57,8 @@ data class Rotation @JvmOverloads constructor(
         @JvmStatic
         fun fromRotationVec(diffX: Double, diffY: Double, diffZ: Double): Rotation {
             return Rotation(
-                Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
-                Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat())
+                yaw = Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
+                pitch = Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat()),
             )
         }
     }
@@ -131,17 +132,27 @@ data class Rotation @JvmOverloads constructor(
         val straightLineYaw = abs(diff.deltaYaw / rotationDifference) * horizontalFactor
         val straightLinePitch = abs(diff.deltaPitch / rotationDifference) * verticalFactor
 
-        return Rotation(
-            this.yaw + diff.deltaYaw.coerceIn(-straightLineYaw, straightLineYaw),
-            this.pitch + diff.deltaPitch.coerceIn(-straightLinePitch, straightLinePitch)
+        return this.add(
+            y = diff.deltaYaw.coerceIn(-straightLineYaw, straightLineYaw),
+            x = diff.deltaPitch.coerceIn(-straightLinePitch, straightLinePitch),
         )
     }
+
+    /**
+     * Interpolates this rotation towards [other] using the given [factor].
+     */
+    fun interpolateTo(other: Rotation, factor: Float): Rotation = Rotation(
+        fma(factor, other.yaw - yaw, yaw),
+        fma(factor, other.pitch - pitch, pitch),
+    )
 
     @JvmOverloads
     fun approximatelyEquals(other: Rotation, tolerance: Float = 2f): Boolean {
         return angleTo(other) <= tolerance
     }
 
+    fun add(x: Float, y: Float): Rotation {
+        return Rotation(yaw = this.yRot + y, pitch = this.xRot + x)
+    }
+
 }
-
-

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.integration.task
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import java.util.concurrent.ConcurrentHashMap
 
@@ -61,7 +61,7 @@ class TaskManager(private val scope: CoroutineScope) {
         action: suspend (Task) -> T
     ): Task {
         val task = createTask(taskName)
-        scope.async {
+        scope.launch {
             task.job = coroutineContext[Job]
             task.progress = 0f
 

@@ -63,7 +63,7 @@ public class TweakedMethods {
             return d <= e ? blockHitResult : blockHitResult2;
         }, contextx -> {
             Vec3 vec3d = contextx.getFrom().subtract(contextx.getTo());
-            return BlockHitResult.miss(contextx.getTo(), Direction.getApproximateNearest(vec3d.x, vec3d.y, vec3d.z), BlockPos.containing(contextx.getTo()));
+            return BlockHitResult.miss(contextx.getTo(), Direction.getApproximateNearest(vec3d), BlockPos.containing(contextx.getTo()));
         });
     }
 

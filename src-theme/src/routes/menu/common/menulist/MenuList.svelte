@@ -44,10 +44,9 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
 
   .menu-list {
-    background-color: rgba($menu-base-color, 0.68);
+    background-color: var(--menu-button-container-background-color);
     flex: 1;
     border-radius: 5px;
     margin-bottom: 25px;

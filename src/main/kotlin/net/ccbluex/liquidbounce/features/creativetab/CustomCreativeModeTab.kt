@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.creativetab
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.item.CreativeModeTab
@@ -39,14 +39,14 @@ open class CustomCreativeModeTab(
 ) {
 
     fun init(): CreativeModeTab {
-        val itemGroup = FabricItemGroup.builder()
+        val creativeTab = FabricCreativeModeTab.builder()
             .title(plainName.asPlainText())
             .icon(icon)
             .displayItems { _, entries ->
                 runCatching {
                     items.accept(entries)
                 }.onFailure {
-                    logger.error("Unable to create item group $plainName", it)
+                    logger.error("Unable to create creative tab $plainName", it)
                 }
             }
             .build()
@@ -55,10 +55,10 @@ open class CustomCreativeModeTab(
         Registry.register(
             BuiltInRegistries.CREATIVE_MODE_TAB,
             LiquidBounce.identifier(plainName.lowercase()),
-            itemGroup
+            creativeTab
         )
 
-        return itemGroup
+        return creativeTab
     }
 
 }

@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.gui.Font
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.achievement.StatsScreen
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -58,13 +58,13 @@ object ItemStackListRenderer : EventListener {
 
     @JvmStatic
     @JvmName("create")
-    fun GuiGraphics.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderState {
+    fun GuiGraphicsExtractor.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderState {
         return ItemStackListRenderState(this, stacks)
     }
 
     @JvmStatic
     @JvmName("create")
-    fun GuiGraphics.drawItemStackList(stacks: Array<ItemStack>): ItemStackListRenderState =
+    fun GuiGraphicsExtractor.drawItemStackList(stacks: Array<ItemStack>): ItemStackListRenderState =
         drawItemStackList(stacks.asList())
 
     @JvmStatic
@@ -84,7 +84,7 @@ object ItemStackListRenderer : EventListener {
     }
 
     private fun fillBackground(
-        guiGraphics: GuiGraphics,
+        guiGraphics: GuiGraphicsExtractor,
         width: Int,
         height: Int,
         color: Color4b,
@@ -101,7 +101,7 @@ object ItemStackListRenderer : EventListener {
         )
     }
 
-    private fun drawSlotTexture(guiGraphics: GuiGraphics, x: Int, y: Int) {
+    private fun drawSlotTexture(guiGraphics: GuiGraphicsExtractor, x: Int, y: Int) {
         guiGraphics.blitSprite(
             RenderPipelines.GUI_TEXTURED,
             ID_SINGLE_SLOT,
@@ -142,7 +142,7 @@ object ItemStackListRenderer : EventListener {
             }
 
             state.title?.let { title ->
-                guiGraphics.drawCenteredString(textRenderer, title, width / 2, 0, state.titleColor)
+                guiGraphics.centeredText(textRenderer, title, width / 2, 0, state.titleColor)
                 translate(0F, textRenderer.lineHeight + 2F)
             }
 
@@ -203,19 +203,19 @@ object ItemStackListRenderer : EventListener {
     }
 
     fun interface SingleItemStackRenderer {
-        fun GuiGraphics.drawItemStack(font: Font, index: Int, stack: ItemStack, x: Int, y: Int)
+        fun GuiGraphicsExtractor.drawItemStack(font: Font, index: Int, stack: ItemStack, x: Int, y: Int)
 
         companion object {
 
             @JvmField
             val OnlyItem = SingleItemStackRenderer { _, _, stack, x, y ->
-                renderItem(stack, x, y)
+                item(stack, x, y)
             }
 
             @JvmField
             val All = SingleItemStackRenderer { textRenderer, _, stack, x, y ->
-                renderItem(stack, x, y)
-                renderItemDecorations(textRenderer, stack, x, y)
+                item(stack, x, y)
+                itemDecorations(textRenderer, stack, x, y)
             }
 
             @JvmField
@@ -229,7 +229,7 @@ object ItemStackListRenderer : EventListener {
             ): SingleItemStackRenderer {
                 return SingleItemStackRenderer { textRenderer, _, stack, x, y ->
                     if (stack.isEmpty) return@SingleItemStackRenderer
-                    renderItem(stack, x, y)
+                    item(stack, x, y)
                     pose().withPush {
                         if (drawItemBar) drawItemBar(stack, x, y)
                         if (drawStackCount) drawStackCount(textRenderer, stack, x, y, null)

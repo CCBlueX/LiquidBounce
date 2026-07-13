@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
+import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.minecraft.world.entity.item.ItemEntity
@@ -74,7 +75,8 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
 
         allowedStates.add(AutoFarmTrackedState.ReadyForHarvest)
 
-        for (item in Slots.OffhandWithHotbar.items) {
+        for (slot in Slots.OffhandWithHotbar) {
+            val item = slot.itemStack.item
             AutoFarmTrackedState.Plantable.entries.filterTo(allowedStates) { it.items.contains(item) }
 
             if (item is BoneMealItem && ModuleAutoFarm.AutoUseBoneMeal.enabled) {

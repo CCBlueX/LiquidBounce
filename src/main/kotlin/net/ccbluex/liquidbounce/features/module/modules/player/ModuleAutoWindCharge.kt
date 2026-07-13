@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.world.item.Items
 
 /**
@@ -78,8 +77,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
         val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.WIND_CHARGE) ?: return@tickHandler
 
         val isHorizontalBoost = HorizontalBoost.enabled && HorizontalBoost.boostKey.isPressed
-        val directionYaw = getMovementDirectionOfInput(player.yRot,
-            DirectionalInput(player.input)) - 180f
+        val directionYaw = player.getMovementDirectionOfInput() - 180f
         val directionPitch = when {
             isHorizontalBoost -> HorizontalBoost.pitch
             else -> 90f

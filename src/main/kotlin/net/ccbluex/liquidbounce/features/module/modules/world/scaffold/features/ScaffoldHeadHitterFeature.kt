@@ -19,16 +19,27 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.entity.moving
 
-object ScaffoldHeadHitterFeature : ToggleableValueGroup(ModuleScaffold, "HeadHitter", false) {
-    fun canHeadHit() =
-        !world.getBlockState(player.blockPosition().offset(0, 2, 0)).isAir && player.onGround()
+object ScaffoldHeadHitterFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "HeadHitter", false) {
+    private fun canHeadHit() =
+        !player.blockPosition().above(2).collisionShape.isEmpty && player.onGround()
 
-    val repeatable = tickHandler {
+    private val jumpDelay by intRange("JumpDelay", 0..0, 0..20, "ticks")
+    private var jumpCooldown = 0
+
+    val repeatable = handler<GameTickEvent> {
+        if (jumpCooldown > 0) {
+            jumpCooldown--
+            return@handler
+        }
+
         if (canHeadHit() && player.moving) {
+            jumpCooldown = jumpDelay.random()
             player.jumpFromGround()
         }
     }

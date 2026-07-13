@@ -19,12 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
 import it.unimi.dsi.fastutil.doubles.DoubleLongPair
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockIntentProvider
 import net.ccbluex.liquidbounce.utils.block.collidingRegion
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -36,7 +38,6 @@ import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
@@ -66,7 +67,7 @@ abstract class TrapPlanner<T>(
         val ticksToLookAhead = 5
         val blockPos = pos.toBlockPos()
         val normalizedStartBB =
-            dims.makeBoundingBox(pos).move(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -pos.z.toInt().toDouble())
+            dims.makeBoundingBox(pos).move(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -blockPos.z.toDouble())
         val normalizedEndBB = normalizedStartBB.move(
             velocity.x * ticksToLookAhead,
             0.0,
@@ -78,6 +79,31 @@ abstract class TrapPlanner<T>(
         }
 
         return findOffsetsBetween(normalizedStartBB, normalizedEndBB, blockPos, mustBeOnGround)
+    }
+
+    protected fun targetOverlapComparator(
+        origin: BlockPos,
+        orderedOffsets: List<BlockPos>,
+        eyePos: Vec3,
+    ): Comparator<BlockPos> {
+        val priorityByPos = Long2IntOpenHashMap(orderedOffsets.size)
+        priorityByPos.defaultReturnValue(Int.MAX_VALUE)
+        orderedOffsets.forEachIndexed { index, offset ->
+            priorityByPos.putIfAbsent(origin.offset(offset).asLong(), index)
+        }
+
+        val eyeDistanceComparator = BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(eyePos)
+
+        return Comparator { first, second ->
+            val firstRank = priorityByPos[first.asLong()]
+            val secondRank = priorityByPos[second.asLong()]
+
+            if (firstRank != secondRank) {
+                secondRank.compareTo(firstRank)
+            } else {
+                eyeDistanceComparator.compare(first, second)
+            }
+        }
     }
 
     private fun findOffsetsBetween(
@@ -97,13 +123,13 @@ abstract class TrapPlanner<T>(
                 return@forEach
             }
 
-            val currentState = bp.getState()?.block
+            val currentState = bp.state ?: return@forEach
 
-            if (currentState in trapWorthyBlocks || currentState != Blocks.AIR) {
+            if (currentState.block in trapWorthyBlocks || !currentState.canBeReplaced()) {
                 return@forEach
             }
 
-            if (mustBeOnGround && (bp.below().getState()?.isAir != false)) {
+            if (mustBeOnGround && (bp.below().state?.isAir != false)) {
                 return@forEach
             }
 

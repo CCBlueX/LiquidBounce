@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module
 
 import com.mojang.blaze3d.platform.InputConstants
 import kotlinx.coroutines.launch
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.loadingNow
@@ -39,12 +38,16 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.text.plus
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -63,7 +66,10 @@ open class ClientModule(
     hide: Boolean = false // default hide
 ) : ToggleableValueGroup(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
-    protected val logger: Logger = LogManager.getLogger("$CLIENT_NAME/$name")
+    protected val logger = clientLogger("Module/$name")
+
+    override val debugDisplayName: Component
+        get() = this.name.asPlainText(Style.EMPTY + ChatFormatting.GOLD + ChatFormatting.BOLD)
 
     /**
      * If a module is running or not is separated from the enabled state. A module can be paused even when

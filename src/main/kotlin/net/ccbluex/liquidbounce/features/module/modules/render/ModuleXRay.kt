@@ -25,19 +25,18 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.kotlin.addAll
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks.ANCIENT_DEBRIS
 import net.minecraft.world.level.block.Blocks.ANVIL
 import net.minecraft.world.level.block.Blocks.BARREL
 import net.minecraft.world.level.block.Blocks.BEACON
-import net.minecraft.world.level.block.Blocks.BLACK_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.BLAST_FURNACE
-import net.minecraft.world.level.block.Blocks.BLUE_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.BOOKSHELF
 import net.minecraft.world.level.block.Blocks.BREWING_STAND
-import net.minecraft.world.level.block.Blocks.BROWN_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.CARTOGRAPHY_TABLE
 import net.minecraft.world.level.block.Blocks.CAULDRON
 import net.minecraft.world.level.block.Blocks.CHAIN_COMMAND_BLOCK
@@ -49,9 +48,9 @@ import net.minecraft.world.level.block.Blocks.COAL_ORE
 import net.minecraft.world.level.block.Blocks.COMMAND_BLOCK
 import net.minecraft.world.level.block.Blocks.COMPOSTER
 import net.minecraft.world.level.block.Blocks.COPPER_BLOCK
+import net.minecraft.world.level.block.Blocks.COPPER_CHEST
 import net.minecraft.world.level.block.Blocks.COPPER_ORE
 import net.minecraft.world.level.block.Blocks.CRAFTING_TABLE
-import net.minecraft.world.level.block.Blocks.CYAN_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.DAMAGED_ANVIL
 import net.minecraft.world.level.block.Blocks.DEEPSLATE_COAL_ORE
 import net.minecraft.world.level.block.Blocks.DEEPSLATE_COPPER_ORE
@@ -66,6 +65,7 @@ import net.minecraft.world.level.block.Blocks.DIAMOND_ORE
 import net.minecraft.world.level.block.Blocks.DISPENSER
 import net.minecraft.world.level.block.Blocks.DRAGON_EGG
 import net.minecraft.world.level.block.Blocks.DROPPER
+import net.minecraft.world.level.block.Blocks.DYED_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.EMERALD_BLOCK
 import net.minecraft.world.level.block.Blocks.EMERALD_ORE
 import net.minecraft.world.level.block.Blocks.ENCHANTING_TABLE
@@ -78,8 +78,6 @@ import net.minecraft.world.level.block.Blocks.FLOWER_POT
 import net.minecraft.world.level.block.Blocks.FURNACE
 import net.minecraft.world.level.block.Blocks.GOLD_BLOCK
 import net.minecraft.world.level.block.Blocks.GOLD_ORE
-import net.minecraft.world.level.block.Blocks.GRAY_SHULKER_BOX
-import net.minecraft.world.level.block.Blocks.GREEN_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.GRINDSTONE
 import net.minecraft.world.level.block.Blocks.HOPPER
 import net.minecraft.world.level.block.Blocks.IRON_BLOCK
@@ -90,26 +88,18 @@ import net.minecraft.world.level.block.Blocks.LAPIS_ORE
 import net.minecraft.world.level.block.Blocks.LAVA
 import net.minecraft.world.level.block.Blocks.LAVA_CAULDRON
 import net.minecraft.world.level.block.Blocks.LECTERN
-import net.minecraft.world.level.block.Blocks.LIGHT_BLUE_SHULKER_BOX
-import net.minecraft.world.level.block.Blocks.LIGHT_GRAY_SHULKER_BOX
-import net.minecraft.world.level.block.Blocks.LIME_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.LODESTONE
 import net.minecraft.world.level.block.Blocks.LOOM
-import net.minecraft.world.level.block.Blocks.MAGENTA_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.NETHERITE_BLOCK
 import net.minecraft.world.level.block.Blocks.NETHER_GOLD_ORE
 import net.minecraft.world.level.block.Blocks.NETHER_PORTAL
 import net.minecraft.world.level.block.Blocks.NETHER_QUARTZ_ORE
-import net.minecraft.world.level.block.Blocks.ORANGE_SHULKER_BOX
-import net.minecraft.world.level.block.Blocks.PINK_SHULKER_BOX
-import net.minecraft.world.level.block.Blocks.PURPLE_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.QUARTZ_BLOCK
 import net.minecraft.world.level.block.Blocks.RAW_COPPER_BLOCK
 import net.minecraft.world.level.block.Blocks.RAW_GOLD_BLOCK
 import net.minecraft.world.level.block.Blocks.RAW_IRON_BLOCK
 import net.minecraft.world.level.block.Blocks.REDSTONE_BLOCK
 import net.minecraft.world.level.block.Blocks.REDSTONE_ORE
-import net.minecraft.world.level.block.Blocks.RED_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.REPEATING_COMMAND_BLOCK
 import net.minecraft.world.level.block.Blocks.RESPAWN_ANCHOR
 import net.minecraft.world.level.block.Blocks.SHULKER_BOX
@@ -121,9 +111,8 @@ import net.minecraft.world.level.block.Blocks.TNT
 import net.minecraft.world.level.block.Blocks.TRAPPED_CHEST
 import net.minecraft.world.level.block.Blocks.WATER
 import net.minecraft.world.level.block.Blocks.WATER_CAULDRON
-import net.minecraft.world.level.block.Blocks.WHITE_SHULKER_BOX
-import net.minecraft.world.level.block.Blocks.YELLOW_SHULKER_BOX
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * XRay module
@@ -136,12 +125,16 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
     // Lighting of blocks through walls
     val fullBright by boolean("FullBright", true)
+        .onChanged(::valueChangedReload)
 
     // Only render blocks with non-solid blocks around
     private val exposedOnly by boolean("ExposedOnly", false)
         .onChanged(::valueChangedReload)
 
-    private val defaultBlocks = arrayOf(
+    val backgroundOpacity by int("BackgroundOpacity", 0, 0..255)
+        .onChanged(::valueChangedReload)
+
+    private val defaultBlocks = arrayOf<Block>(
         // Overworld ores
         COAL_ORE,
         COPPER_ORE,
@@ -164,7 +157,6 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
         // Overworld mineral blocks
         COAL_BLOCK,
-        COPPER_BLOCK,
         DIAMOND_BLOCK,
         EMERALD_BLOCK,
         GOLD_BLOCK,
@@ -193,25 +185,7 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
         ENDER_CHEST,
         HOPPER,
         TRAPPED_CHEST,
-
-        // Storage blocks (shulker box variants)
-        BLACK_SHULKER_BOX,
-        BLUE_SHULKER_BOX,
-        BROWN_SHULKER_BOX,
-        CYAN_SHULKER_BOX,
-        GRAY_SHULKER_BOX,
-        GREEN_SHULKER_BOX,
-        LIGHT_BLUE_SHULKER_BOX,
-        LIGHT_GRAY_SHULKER_BOX,
-        LIME_SHULKER_BOX,
-        MAGENTA_SHULKER_BOX,
-        ORANGE_SHULKER_BOX,
-        PINK_SHULKER_BOX,
-        PURPLE_SHULKER_BOX,
-        RED_SHULKER_BOX,
         SHULKER_BOX,
-        WHITE_SHULKER_BOX,
-        YELLOW_SHULKER_BOX,
 
         // Utility blocks
         BEACON,
@@ -273,7 +247,14 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
     // Set of blocks that will not be excluded
     val blocks: MutableSet<Block> by blocks(
         "Blocks",
-        blockSortedSetOf(blocks = defaultBlocks)
+        blockSortedSetOf(blocks = defaultBlocks).apply {
+            // Copper blocks
+            addAll(COPPER_BLOCK)
+
+            // Shulkers, Copper chests
+            addAll(DYED_SHULKER_BOX)
+            addAll(COPPER_CHEST)
+        }
     ).onChanged(::valueChangedReload)
 
     /**
@@ -293,6 +274,41 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
         else -> true
     }
 
+    fun shouldRenderTransparentBackground(blockState: BlockState) =
+        backgroundOpacity > 0 && blockState.block !in blocks && !blockState.isAir
+
+    fun shouldSkipRender(blockState: BlockState, blockPos: BlockPos) =
+        !shouldRender(blockState, blockPos) && !shouldRenderTransparentBackground(blockState)
+
+    fun transparentBackgroundAlpha(blockState: BlockState) =
+        if (shouldRenderTransparentBackground(blockState)) backgroundOpacity else 255
+
+    /**
+     * Keeps vanilla/Sodium face culling unless this is a whitelisted XRay block hidden behind another block.
+     *
+     * @see net.minecraft.client.renderer.block.ModelBlockRenderer.shouldRenderFace
+     * @see net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext.shouldDrawSide
+     */
+    fun modifyDrawSide(
+        blockState: BlockState,
+        level: BlockGetter,
+        blockPos: BlockPos,
+        side: Direction,
+        original: Boolean
+    ): Boolean {
+        if (original || !shouldRender(blockState, blockPos)) {
+            return original
+        }
+
+        val adjacentPos = blockPos.relative(side)
+        val adjacentState = level.getBlockState(adjacentPos)
+
+        return adjacentState.getFaceOcclusionShape(side.opposite) != Shapes.block()
+            || adjacentState.block != blockState.block
+            || !adjacentState.isSolidRender
+            || !shouldRender(adjacentState, adjacentPos)
+    }
+
     fun shouldRender(state: BlockState, otherState: BlockState, side: Direction) = when {
         state.block !in blocks -> false
 
@@ -300,6 +316,13 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
         else -> true
     }
+
+    fun modifyShouldRenderFace(original: Boolean, state: BlockState, otherState: BlockState, side: Direction) =
+        if (shouldRenderTransparentBackground(state)) {
+            original
+        } else {
+            shouldRender(state, otherState, side)
+        }
 
     /**
      * Resets the block list to the default values
@@ -310,11 +333,11 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
     }
 
     override fun onEnabled() {
-        mc.levelRenderer.allChanged()
+        mc.levelExtractor.allChanged()
     }
 
     override fun onDisabled() {
-        mc.levelRenderer.allChanged()
+        mc.levelExtractor.allChanged()
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -323,7 +346,7 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
         mc.execute {
             // Reload world renderer on block list change
-            mc.levelRenderer.allChanged()
+            mc.levelExtractor.allChanged()
         }
     }
 

@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.imp
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.SigmoidAngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -68,7 +69,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
     private val requirementsMet
-        get() = requires.all { it.asBoolean }
+        get() = mc.gui.screen() == null && requires.all { it.asBoolean }
 
     private var angleSmooth = modes(this, "AngleSmooth") {
         arrayOf(
@@ -77,6 +78,8 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
             LinearAngleSmooth(it)
         )
     }
+
+    private val axis by multiEnumChoice<Axis>("Axis", Axis.HORIZONTAL, Axis.VERTICAL)
 
     private val ignores by multiEnumChoice<IgnoreOpened>("Ignore")
 
@@ -119,39 +122,25 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
         val partialTicks = event.partialTicks
         val target = targetTracker.target ?: return@handler
 
-        if (IgnoreOpened.SCREEN !in ignores && mc.screen != null) {
+        if (IgnoreOpened.SCREEN !in ignores && mc.gui.screen() != null) {
             return@handler
         }
 
         if (IgnoreOpened.CONTAINER !in ignores && (InventoryManager.isInventoryOpen ||
-                mc.screen is AbstractContainerScreen<*>)) {
+                mc.gui.screen() is AbstractContainerScreen<*>)) {
             return@handler
         }
 
-        val currentRotation = playerRotation ?: return@handler
-
-        val timerSpeed = Timer.timerSpeed
-        targetRotation?.let { rotation ->
-            val interpolatedRotation = Rotation(
-                currentRotation.yaw + (rotation.yaw - currentRotation.yaw) * (timerSpeed * partialTicks),
-                currentRotation.pitch + (rotation.pitch - currentRotation.pitch) * (timerSpeed * partialTicks)
-            )
-
-            player.setRotation(interpolatedRotation)
-        }
+        lookAt(partialTicks)
     }
 
-    @Suppress("unused", "MagicNumber")
+    @Suppress("unused")
     private val mouseMovement = handler<MouseRotationEvent> { event ->
-        val f = event.cursorDeltaY.toFloat() * 0.15f
-        val g = event.cursorDeltaX.toFloat() * 0.15f
-
         fun updateRotation(rotation: Rotation): Rotation =
-            Rotation(yaw = rotation.yaw + g, pitch = (rotation.pitch + f).coerceIn(-90f, 90f))
+            RotationUtil.applyMouseTurnDelta(rotation, event.cursorDeltaX, event.cursorDeltaY)
 
         playerRotation?.let { rotation ->
             playerRotation = updateRotation(rotation)
@@ -160,6 +149,23 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         targetRotation?.let { rotation ->
             targetRotation = updateRotation(rotation)
         }
+    }
+
+    /**
+     * Looks at the target rotation, with interpolation based on the timer speed and partial ticks to make it smooth.
+     */
+    private fun lookAt(partialTicks: Float) {
+        val playerRotation = playerRotation ?: return
+        val targetRotation = targetRotation ?: return
+        val timerSpeed = Timer.timerSpeed
+        val interpolatedRotation = playerRotation.interpolateTo(targetRotation, timerSpeed * partialTicks)
+
+        player.setRotation(
+            Rotation(
+                yaw = if (Axis.HORIZONTAL in axis) interpolatedRotation.yaw else playerRotation.yaw,
+                pitch = if (Axis.VERTICAL in axis) interpolatedRotation.pitch else playerRotation.pitch,
+            )
+        )
     }
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
@@ -192,5 +198,10 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     ) : Tagged {
         SCREEN("Screen"),
         CONTAINER("Container")
+    }
+
+    private enum class Axis(override val tag: String) : Tagged {
+        HORIZONTAL("Horizontal"),
+        VERTICAL("Vertical")
     }
 }

@@ -80,11 +80,11 @@ public abstract class MixinRenderLayer {
         );
     }
 
-    @WrapOperation(method = "renderColoredCutoutModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/rendertype/RenderTypes;entityCutoutNoCull(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/client/renderer/rendertype/RenderType;"))
+    @WrapOperation(method = "renderColoredCutoutModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/rendertype/RenderTypes;entityCutout(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/client/renderer/rendertype/RenderType;"))
     private static RenderType injectTrueSight(
-        Identifier texture, Operation<RenderType> original, @Local(argsOnly = true) LivingEntityRenderState state) {
+        Identifier texture, Operation<RenderType> original, @Local(argsOnly = true, name = "state") LivingEntityRenderState state) {
         if (ModuleTrueSight.canRenderEntities(state) || ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
-            return RenderTypes.itemEntityTranslucentCull(texture);
+            return RenderTypes.entityTranslucentCullItemTarget(texture);
         }
         return original.call(texture);
     }

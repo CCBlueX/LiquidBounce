@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.shouldHideOffhand
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinGuiAccessor
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -33,10 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
-import net.minecraft.client.gui.Gui
+import net.ccbluex.netty.http.routing.Routing
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.NumberFormat
@@ -53,19 +50,35 @@ import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Scoreboard
 import kotlin.math.min
 
-private fun nullableResponse(item: Any?) = item?.let { httpOk(interopGson.toJsonTree(it)) } ?: httpNoContent()
-
 // GET /api/v1/client/player
-@Suppress("UNUSED_PARAMETER")
-fun getPlayerData(requestObject: RequestObject) = nullableResponse(mc.player?.let(PlayerData::fromPlayer))
+private fun Routing.getPlayerData() = get {
+    val playerData = mc.player?.let(PlayerData::fromPlayer)
+    if (playerData != null) {
+        call.respond(playerData, interopGson)
+    } else {
+        call.respondNoContent()
+    }
+}
 
 // GET /api/v1/client/player/inventory
-@Suppress("UNUSED_PARAMETER")
-fun getPlayerInventory(requestObject: RequestObject) = nullableResponse(mc.player?.let(PlayerInventoryData::fromPlayer))
+private fun Routing.getPlayerInventory() = get("/inventory") {
+    val playerInventoryData = mc.player?.let(PlayerInventoryData::fromPlayer)
+    if (playerInventoryData != null) {
+        call.respond(playerInventoryData, interopGson)
+    } else {
+        call.respondNoContent()
+    }
+}
 
 // GET /api/v1/client/crosshair
-@Suppress("UNUSED_PARAMETER")
-fun getCrosshairData(requestObject: RequestObject) = nullableResponse(mc.hitResult)
+private fun Routing.getCrosshairData() = get("/crosshair") {
+    val crosshairData = mc.hitResult
+    if (crosshairData != null) {
+        call.respond(crosshairData, interopGson)
+    } else {
+        call.respondNoContent()
+    }
+}
 
 @JvmRecord
 data class PlayerData(
@@ -170,7 +183,8 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
          *
          * Taken from the Minecraft source code
          *
-         * @see Gui.renderScoreboardSidebar
+         * @see net.minecraft.client.gui.Hud.extractScoreboardSidebar
+         * @see net.minecraft.client.gui.Hud.displayScoreboardSidebar
          */
         @JvmStatic
         fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
@@ -180,16 +194,16 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
                 scoreboard.getPlayersTeam(player.scoreboardName)
             }
 
-            val objective = team?.let {
-                DisplaySlot.teamColorToSlot(team.color)?.let { scoreboard.getDisplayObjective(it) }
-            } ?: scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR) ?: return null
+            val objective = team?.color?.orElse(null)?.displaySlot()?.let(scoreboard::getDisplayObjective)
+                ?: scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR)
+                ?: return null
 
             val objectiveScoreboard: Scoreboard = objective.scoreboard
             val numberFormat: NumberFormat = objective.numberFormatOrDefault(StyledFormat.SIDEBAR_DEFAULT)
 
             val sidebarEntries = objectiveScoreboard.listPlayerScores(objective)
                 .filter { score: PlayerScoreEntry -> !score.isHidden }
-                .sortedWith(MixinGuiAccessor.getScoreboardEntryComparator())
+                .sortedWith(MixinHudAccessor.getScoreboardEntryComparator())
                 .take(15)
                 .mapToArray { scoreboardEntry: PlayerScoreEntry ->
                     val team = objectiveScoreboard.getPlayersTeam(scoreboardEntry.owner())
@@ -210,3 +224,11 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
  * GSON is not happy with NaN values, so we fix them to be 0.
  */
 private fun Float.fixNaN() = if (isNaN()) 0f else this
+
+internal fun Routing.playerRoutes() {
+    route("/player") {
+        getPlayerData()
+        getPlayerInventory()
+    }
+    getCrosshairData()
+}

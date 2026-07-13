@@ -9,10 +9,9 @@
   Taken from https://loading.io/css/
  */
 
-  @use "../../../colors.scss" as *;
  
   .lds-ripple {
-    color: $accent-color;
+    color: var(--accent-color);
   }
 
   .lds-ripple,

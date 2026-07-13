@@ -25,9 +25,11 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.CameraType
 import net.minecraft.client.KeyMapping
+import net.minecraft.client.Minecraft
 import net.minecraft.client.User
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.Screen
@@ -35,7 +37,9 @@ import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.multiplayer.TransferState
 import net.minecraft.client.multiplayer.resolver.ServerAddress
 import net.minecraft.network.chat.Component
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.ItemStack
+import java.util.function.UnaryOperator
 
 @Tag("gameTick")
 object GameTickEvent : Event()
@@ -133,7 +137,7 @@ class ChatReceiveEvent(
     val message: String,
     val textData: Component,
     val type: ChatType,
-    val applyChatDecoration: (Component) -> Component,
+    val applyChatDecoration: UnaryOperator<Component>,
 ) : CancellableEvent(), WebSocketEvent {
     enum class ChatType(override val tag: String) : Tagged {
         CHAT_MESSAGE("ChatMessage"),
@@ -160,9 +164,23 @@ class OverlayMessageEvent(
 ) : Event(), WebSocketEvent
 
 @Tag("perspective")
-class PerspectiveEvent(
-    var perspective: CameraType,
-) : Event()
+object PerspectiveEvent : Event() {
+    var perspective: CameraType = CameraType.FIRST_PERSON
+    var distance: Float = 0f
+    var noClip: Boolean = false
+
+    var lastPerspective: CameraType = CameraType.FIRST_PERSON
+    var lastDistance: Float = 0f
+
+    fun update(mc: Minecraft, entity: Entity?) {
+        lastDistance = distance
+        lastPerspective = perspective
+
+        perspective = mc.options.cameraType
+        noClip = false
+        distance = entity.cameraDistance
+    }
+}
 
 @Tag("itemLoreQuery")
 class ItemLoreQueryEvent(

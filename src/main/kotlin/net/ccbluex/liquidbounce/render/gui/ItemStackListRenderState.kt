@@ -21,13 +21,13 @@ package net.ccbluex.liquidbounce.render.gui
 
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 import net.minecraft.world.item.ItemStack
 import org.joml.Vector2fc
 
 data class ItemStackListRenderState internal constructor(
-    internal val guiGraphics: GuiGraphics,
+    internal val guiGraphics: GuiGraphicsExtractor,
     internal val stacks: List<ItemStack>,
     internal val title: Component? = null,
     internal val titleColor: Int = 0xffffffff.toInt(),

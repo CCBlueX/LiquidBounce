@@ -22,17 +22,20 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.outlineBox
-import net.ccbluex.liquidbounce.utils.block.toBlockPos
-import net.ccbluex.liquidbounce.utils.client.getFace
+import net.ccbluex.liquidbounce.utils.block.outlineShape
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.centerOnSide
+import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.getFace
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
@@ -71,27 +74,26 @@ class BlockPlacementTargetFindingOptions(
     val playerLocationOnPlacement: PlayerLocationOnPlacement
 ) {
     companion object {
-        @JvmField
-        val PRIORITIZE_LEAST_BLOCK_DISTANCE: Comparator<Vec3i> = compareBy { vec ->
-            -player.distanceToSqr(vec.x.toDouble(), vec.y.toDouble(), vec.z.toDouble())
-        }
-
         @JvmStatic
-        fun leastBlockDistanceToLine(optimalLine: Line): Comparator<Vec3i> =
-            compareBy { vec ->
-                val blockPos = vec.toBlockPos()
-                val blockState = world.getBlockState(blockPos)
-                val box = blockState.outlineBox(blockPos)
-                -optimalLine.distanceToSqr(box)
+        fun leastBlockDistanceToLine(line: Line): Comparator<BlockPos> =
+            compareBy { blockPos ->
+                val shape = blockPos.outlineShape.move(blockPos)
+                if (shape.isEmpty) {
+                    -line.distanceToSqr(blockPos.center)
+                } else {
+                    -(line.getNearestPointTo(shape)?.distanceSquared ?: Double.POSITIVE_INFINITY)
+                }
             }
 
         @JvmStatic
-        fun leastBlockDistanceToPos(pos: Vec3): Comparator<Vec3i> =
-            compareBy { vec ->
-                val blockPos = vec.toBlockPos()
-                val blockState = world.getBlockState(blockPos)
-                val box = blockState.outlineBox(blockPos)
-                -box.distanceToSqr(pos)
+        fun leastBlockDistanceToPos(pos: Vec3): Comparator<BlockPos> =
+            compareBy { blockPos ->
+                val shape = blockPos.outlineShape.move(blockPos)
+                if (shape.isEmpty) {
+                    -blockPos.distToCenterSqr(pos)
+                } else {
+                    -shape.distanceToSqr(pos)
+                }
             }
     }
 }
@@ -105,13 +107,21 @@ class BlockPlacementTargetFindingOptions(
  */
 class BlockOffsetOptions(
     val offsetsToInvestigate: List<Vec3i>,
-    val priorityComparator: Comparator<Vec3i>,
+    val priorityComparator: Comparator<BlockPos>,
 ) {
     companion object {
         @JvmField
         val Default = BlockOffsetOptions(
             BlockPosOffsets.NO_OFFSET.offsets,
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+            compareBy { blockPos ->
+                val pos = player.position()
+                val shape = blockPos.outlineShape.move(blockPos)
+                if (shape.isEmpty) {
+                    -blockPos.distToCenterSqr(pos)
+                } else {
+                    -shape.distanceToSqr(pos)
+                }
+            },
         )
     }
 }
@@ -170,7 +180,7 @@ data class BlockTargetPlan(
     fun calculateAngleToPlayerEyeCosine(eyePos: Vec3): Double {
         val deltaToPlayerPos = eyePos.subtract(targetPositionOnBlock)
 
-        return deltaToPlayerPos.dot(Vec3.atLowerCornerOf(interactionDirection.unitVec3i)) / deltaToPlayerPos.length()
+        return deltaToPlayerPos.dot(interactionDirection.unitVec3) / deltaToPlayerPos.length()
     }
 
 }
@@ -215,7 +225,7 @@ private fun findBestTargetPlanForTargetPosition(
 /**
  * @return null if it is impossible to target the block with the given parameters
  */
-fun getTargetPlanForPositionAndDirection(
+private fun getTargetPlanForPositionAndDirection(
     pos: BlockPos,
     direction: Direction,
     mode: BlockTargetingMode
@@ -223,7 +233,7 @@ fun getTargetPlanForPositionAndDirection(
     when (mode) {
         BlockTargetingMode.PLACE_AT_NEIGHBOR -> {
             val currPos = pos.offset(direction.opposite.unitVec3i)
-            val currState = currPos.getState() ?: return null
+            val currState = currPos.state ?: return null
 
             if (currState.canBeReplaced()) {
                 return null
@@ -237,10 +247,14 @@ fun getTargetPlanForPositionAndDirection(
     }
 }
 
-private class PointOnFace(val face: AlignedFace, val point: Vec3)
+private class PointOnFace(
+    val face: AlignedFace,
+    val side: Direction,
+    val point: Vec3,
+)
 
 fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFindingOptions): BlockPlacementTarget? {
-    val state = pos.getState()!!
+    val state = pos.stateOrEmpty
 
     // We cannot place blocks when there is already a block at that position
     if (isBlockSolid(state, pos)) {
@@ -249,12 +263,12 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
 
     val offsetsToInvestigate = options.offsetOptions.offsetsToInvestigate.sortedWith { a, b ->
         // Sort DESCENDING!
-        options.offsetOptions.priorityComparator.compare(b.offset(pos), a.offset(pos))
+        options.offsetOptions.priorityComparator.compare(pos + b, pos + a)
     }
 
     for (offset in offsetsToInvestigate) {
         val posToInvestigate = pos.offset(offset)
-        val blockStateToInvestigate = posToInvestigate.getState()!!
+        val blockStateToInvestigate = posToInvestigate.stateOrEmpty
 
         // Already a block in that position?
         if (isBlockSolid(blockStateToInvestigate, posToInvestigate)) {
@@ -284,17 +298,17 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
 
         // We found the optimal block to place the block/face to place at. Now we need to find a point on the face.
         // to rotate to
-        val pointOnFace = findTargetPointOnFace(currPos.getState()!!, currPos, targetPlan, options) ?: continue
+        val pointOnFace = findTargetPointOnFace(currPos.stateOrEmpty, currPos, targetPlan, options) ?: continue
 
         val rotation = Rotation.lookingAt(
-            point = pointOnFace.point.add(Vec3.atLowerCornerOf(currPos)),
+            point = pointOnFace.point + currPos,
             from = options.playerLocationOnPlacement.eyePos,
         )
 
         return BlockPlacementTarget(
             currPos,
             posToInvestigate,
-            targetPlan.interactionDirection,
+            pointOnFace.side,
             pointOnFace.face.from.y + currPos.y,
             rotation
         )
@@ -302,6 +316,13 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
 
     return null
 }
+
+private val COMPARATOR_POINT_ON_FACE =
+    Comparator.comparingDouble<PointOnFace> {
+        it.point.subtract(0.5, 0.5, 0.5)
+            .multiply(it.side.unitVec3)
+            .lengthSqr()
+    }.thenComparingDouble { it.point.y }
 
 private fun findTargetPointOnFace(
     currState: BlockState,
@@ -311,7 +332,7 @@ private fun findTargetPointOnFace(
 ): PointOnFace? {
     val shapeBBs = currState.getShape(world, currPos, CollisionContext.of(player)).toAabbs()
 
-    val face = shapeBBs.mapNotNull {
+    return shapeBBs.mapNotNull {
         val face = it.getFace(targetPlan.interactionDirection)
 
         var searchFace = face
@@ -326,16 +347,10 @@ private fun findTargetPointOnFace(
 
         PointOnFace(
             face,
-            targetPos
+            targetPlan.interactionDirection,
+            targetPos,
         )
-    }.maxWithOrNull(
-        Comparator.comparingDouble<PointOnFace> {
-            it.point.subtract(0.5, 0.5, 0.5)
-                .multiply(Vec3.atLowerCornerOf(targetPlan.interactionDirection.unitVec3i))
-                .lengthSqr()
-        }.thenComparingDouble { it.point.y }
-    )
-    return face
+    }.maxWithOrNull(COMPARATOR_POINT_ON_FACE)
 }
 
 

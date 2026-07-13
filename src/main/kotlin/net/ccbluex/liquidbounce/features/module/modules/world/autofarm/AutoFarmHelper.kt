@@ -30,11 +30,9 @@ import net.minecraft.world.level.block.BonemealableBlock
 import net.minecraft.world.level.block.CactusBlock
 import net.minecraft.world.level.block.CocoaBlock
 import net.minecraft.world.level.block.CropBlock
-import net.minecraft.world.level.block.FarmBlock
 import net.minecraft.world.level.block.KelpPlantBlock
 import net.minecraft.world.level.block.NetherWartBlock
 import net.minecraft.world.level.block.PumpkinBlock
-import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.world.level.block.StemBlock
 import net.minecraft.world.level.block.SugarCaneBlock
 import net.minecraft.world.level.block.SweetBerryBushBlock
@@ -97,8 +95,8 @@ fun BlockPos.readyForHarvest(state: BlockState): Boolean {
     }
 }
 
-inline val BlockState.supportsCrops: Boolean get() = block is FarmBlock
+inline val BlockState.supportsCrops: Boolean get() = `is`(BlockTags.SUPPORTS_CROPS)
 
-inline val BlockState.supportsCocoa: Boolean get() = `is`(BlockTags.JUNGLE_LOGS)
+inline val BlockState.supportsCocoa: Boolean get() = `is`(BlockTags.SUPPORTS_COCOA)
 
-inline val BlockState.supportsNetherWart: Boolean get() = block is SoulSandBlock
+inline val BlockState.supportsNetherWart: Boolean get() = `is`(BlockTags.SUPPORTS_NETHER_WART)

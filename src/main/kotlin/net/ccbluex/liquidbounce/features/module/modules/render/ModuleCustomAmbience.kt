@@ -18,12 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.textures.GpuTexture
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.minecraft.client.renderer.fog.FogData
+import net.minecraft.client.renderer.state.LightmapRenderState
+import org.joml.Vector4fc
 
 /**
  * CustomAmbience module
@@ -59,7 +65,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
         private val cloudEnd by float("CloudEnd", 20480f, 0f..4096f)
 
         /**
-         * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinFogRenderer
+         * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.fog.MixinFogRenderer
          */
         fun modifyFogData(fogData: FogData) {
             if (!this.running) {
@@ -74,22 +80,63 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
             fogData.cloudEnd = this.cloudEnd
         }
 
-        fun modifyClearColor(original: Int): Int {
+        fun modifyClearColor(original: Vector4fc): Vector4fc {
             if (!this.running || backgroundColor.a == 0) {
                 return original
             }
 
-            return backgroundColor.argb
+            return backgroundColor.toVector4f()
         }
     }
 
     /**
      * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmap
-     *
-     * FIXME: redesign
      */
     object CustomLightmap : ToggleableValueGroup(this, "CustomLightmap", false) {
-        val color by color("Color", Color4b.LIQUID_BOUNCE)
+        val mode = choices("Mode", 0) {
+            arrayOf(EditorMode.SingleColor, EditorMode.Custom)
+        }
+
+        sealed class EditorMode(name: String) : Mode(name) {
+            final override val parent: ModeValueGroup<*>
+                get() = mode
+
+            abstract fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean
+
+            object SingleColor : EditorMode("SingleColor") {
+                private val color by color("Color", Color4b.BLUE)
+
+                override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
+                    texture.clearColor(color)
+                    return true
+                }
+            }
+
+            object Custom : EditorMode("Custom") {
+                private val blockLightTint by color("BlockLightTint", Color4b.WHITE.alpha(0))
+                private val skyLightColor by color("SkyLightColor", Color4b.BLUE.alpha(0))
+                private val ambientColor by color("AmbientColor", Color4b.BLUE.alpha(0))
+                private val nightVisionColor by color("NightVisionColor", Color4b.WHITE.alpha(0))
+
+                override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
+                    if (!blockLightTint.isTransparent) {
+                        lightmapRenderState.blockLightTint = blockLightTint.toRgbVector3f()
+                    }
+                    if (!skyLightColor.isTransparent) {
+                        lightmapRenderState.skyLightColor = skyLightColor.toRgbVector3f()
+                    }
+                    if (!ambientColor.isTransparent) {
+                        lightmapRenderState.ambientColor = ambientColor.toRgbVector3f()
+                    }
+                    if (!nightVisionColor.isTransparent) {
+                        lightmapRenderState.nightVisionColor = nightVisionColor.toRgbVector3f()
+                    }
+
+                    return false
+                }
+            }
+
+        }
     }
 
     object SkyColor : ToggleableValueGroup(this, "SkyColor", false) {
@@ -104,7 +151,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
     }
 
     @JvmStatic
-    fun getTime(original: Long): Long {
+    fun getWorldClockTime(original: Long): Long {
         return if (running) {
             when (time.get()) {
                 TimeType.NO_CHANGE -> original

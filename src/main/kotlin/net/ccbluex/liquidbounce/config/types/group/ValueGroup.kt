@@ -45,12 +45,13 @@ import net.ccbluex.liquidbounce.config.types.list.ListValue
 import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
 import net.ccbluex.liquidbounce.config.types.list.MutableListValue
 import net.ccbluex.liquidbounce.config.types.list.RegistryListValue
+import net.ccbluex.liquidbounce.config.types.list.RegistryMutableListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.asTagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputBind
@@ -97,6 +98,11 @@ open class ValueGroup(
     valueType,
     independentDescription = independentDescription
 ) {
+
+    /**
+     * Allows dynamic groups to create their children before stored values are applied.
+     */
+    open fun prepareDeserialize(jsonObject: JsonObject) = Unit
 
     /**
      * Stores the [ValueGroup] in which
@@ -359,6 +365,14 @@ open class ValueGroup(
         this@ValueGroup.inner.add(this)
     }
 
+    internal inline fun <T : MutableList<E>, reified E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = RegistryMutableListValue(name, defaultValue, valueType, E::class.java).apply {
+        this@ValueGroup.inner.add(this)
+    }
+
     private fun <T : Any> rangedValue(
         name: String,
         defaultValue: T,
@@ -473,6 +487,9 @@ open class ValueGroup(
     fun <C : SequencedSet<Item>> items(name: String, default: C) =
         registryList(name, default, ValueType.ITEM)
 
+    fun <C : MutableList<Item>> itemList(name: String, default: C) =
+        registryMutableList(name, default, ValueType.ITEM)
+
     fun <C : SequencedSet<SoundEvent>> sounds(name: String, default: C) =
         registryList(name, default, ValueType.SOUND_EVENT)
 
@@ -554,11 +571,20 @@ open class ValueGroup(
         this@ValueGroup.inner.add(this)
     }
 
-    inline fun <reified T> enumChoice(name: String, default: T): ChoiceListValue<T>
-        where T : Enum<T>, T : Tagged = enumChoice(name, default, enumSetAllOf())
+    inline fun <reified T> enumChoice(
+        name: String,
+        default: T,
+        aliases: List<String> = emptyList(),
+    ): ChoiceListValue<T> where T : Enum<T>, T : Tagged = enumChoice(name, default, enumSetAllOf(), aliases)
 
-    fun <T : Tagged> enumChoice(name: String, default: T, choices: Set<T>): ChoiceListValue<T> =
-        ChoiceListValue(name, defaultValue = default, choices = choices).apply { this@ValueGroup.inner.add(this) }
+    fun <T : Tagged> enumChoice(
+        name: String,
+        default: T,
+        choices: Set<T>,
+        aliases: List<String> = emptyList(),
+    ): ChoiceListValue<T> = ChoiceListValue(name, defaultValue = default, choices = choices, aliases = aliases).apply {
+        this@ValueGroup.inner.add(this)
+    }
 
     protected fun <T : Mode> modes(
         eventListener: EventListener,

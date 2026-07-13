@@ -79,11 +79,11 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
     private val range by float("Range", 4.5f, 1f..6f)
     private val wallsRange by float("WallsRange", 4.5f, 0f..6f).onChange {
-        it.coerceAtLeast(range)
+        minOf(range, it)
     }
 
     val keepRange by float("KeepRange", 25f, 0f..200f).onChange {
-        it.coerceAtLeast(wallsRange)
+        maxOf(range, it)
     }
 
     val swingMode by enumChoice("Swing", SwingMode.HIDE_CLIENT)
@@ -335,7 +335,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
     @Suppress("unused")
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
-        val openScreen = mc.screen != null
+        val openScreen = mc.gui.screen() != null
         val unchangeableActive = !mode.activeMode.canManuallyChange && _target != null
         if (openScreen || unchangeableActive || !player.abilities.mayBuild) {
             return@handler

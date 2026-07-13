@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.utils.client.Timer;
 import net.minecraft.client.DeltaTracker;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,7 +36,7 @@ public abstract class MixinRenderTickCounter {
     /**
      * Hook timer speed to modify frame duration
      */
-    @Inject(method = "advanceGameTime(J)I", at = @At(value = "FIELD", target = "Lnet/minecraft/client/DeltaTracker$Timer;deltaTicks:F", shift = At.Shift.AFTER))
+    @Inject(method = "advanceGameTime(J)I", at = @At(value = "FIELD", target = "Lnet/minecraft/client/DeltaTracker$Timer;deltaTicks:F", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void hookTimer(CallbackInfoReturnable<Integer> callback) {
         float customTimer = Timer.INSTANCE.getTimerSpeed();
         if (customTimer > 0) {

@@ -30,13 +30,13 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
 import net.ccbluex.liquidbounce.utils.block.isInteractable
@@ -53,6 +53,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
@@ -64,6 +65,7 @@ import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
+import java.util.function.LongPredicate
 import kotlin.math.max
 
 @Suppress("TooManyFunctions")
@@ -154,7 +156,7 @@ class BlockPlacer(
             ticksToWait = cooldown.random()
         }
 
-        val inventoryOpen = !ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>
+        val inventoryOpen = !ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>
         val usingItem = !ignoreUsingItem && player.isUsingItem
         if (inventoryOpen || usingItem) {
             return@handler
@@ -272,7 +274,7 @@ class BlockPlacer(
             }
 
             debugGeometry("PlacementTarget") {
-                ModuleDebug.DebuggedPoint(pos.center, Color4b.GREEN.with(a = 100))
+                DebuggedPoint(pos.center, Color4b.GREEN.with(a = 100))
             }
 
             // sneak when placing on interactable block to not trigger their action
@@ -367,7 +369,7 @@ class BlockPlacer(
 
     fun canReach(pos: BlockPos, rotation: Rotation): Boolean {
         // not the exact distance but good enough
-        val distance = pos.getCenterDistanceSquaredEyes()
+        val distance = pos.distToCenterSqr(player.eyePosition)
         val wallRangeSq = wallRange.toDouble().sq()
 
         // if the wall range already covers it, the actual range doesn't matter
@@ -382,7 +384,7 @@ class BlockPlacer(
     /**
      * Removes all positions that are not in [positions] and adds all that are not in the queue.
      */
-    fun update(positions: Set<BlockPos>) {
+    fun update(positions: Collection<BlockPos>) {
         val iterator = blocks.fastIterator()
         while (iterator.hasNext()) {
             val entry = iterator.next()
@@ -406,10 +408,10 @@ class BlockPlacer(
      * @param update Whether the renderer should update the culling.
      */
     fun addToQueue(pos: BlockPos, update: Boolean = true, isSupport: Boolean = false) {
-        blocks.computeIfAbsent(pos.asLong()) {
+        blocks.computeIfAbsent(pos.asLong(), LongPredicate {
             targetRenderer.addBlock(blockPosCache.set(it), update, FULL_BOX)
             isSupport
-        }
+        })
     }
 
     /**

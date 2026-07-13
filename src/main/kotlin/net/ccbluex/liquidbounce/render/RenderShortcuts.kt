@@ -27,22 +27,24 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.fastutil.objectObjectMapOf
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
+import net.ccbluex.liquidbounce.render.utils.VertexList
+import net.ccbluex.liquidbounce.render.utils.forEachVertex
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.render.writeStd140
-import net.minecraft.client.Camera
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Vector3f
 import org.joml.Vector3fc
-import org.lwjgl.opengl.GL11C
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -55,8 +57,8 @@ import org.lwjgl.opengl.GL11C
  * But as of now, 01.02.2025, they haven't.
  */
 @JvmField
-val HAS_AMD_VEGA_APU = (GL11C.glGetString(GL11C.GL_RENDERER)?.startsWith("AMD Radeon(TM) RX Vega") ?: false) &&
-    GL11C.glGetString(GL11C.GL_VENDOR) == "ATI Technologies Inc."
+val HAS_AMD_VEGA_APU = gpuDevice.deviceInfo.name.startsWith("AMD Radeon(TM) RX Vega") &&
+    gpuDevice.deviceInfo.vendorName == "ATI Technologies Inc."
 
 @JvmField
 val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
@@ -73,31 +75,8 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
     slice
 }
 
-/**
- * Helper function to render an environment with the specified [poseStack] and [draw] block.
- *
- * @param poseStack The matrix stack for rendering.
- * @param mode The default draw mode for [draw].
- * @param draw The block of code to be executed in the rendering environment.
- */
-inline fun renderEnvironmentForWorld(
-    poseStack: PoseStack,
-    renderTarget: RenderTarget = mc.mainRenderTarget,
-    mode: DrawMode = DrawMode.BATCH,
-    camera: Camera = mc.gameRenderer.mainCamera,
-    draw: WorldRenderEnvironment.() -> Unit,
-) {
-    GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
-    val environment = WorldRenderEnvironment.create(renderTarget, poseStack, camera)
-    try {
-        when (mode) {
-            DrawMode.BATCH -> environment.batch(draw)
-            DrawMode.IMMEDIATE -> environment.immediate(draw)
-        }
-    } finally {
-        environment.flushBatchIfLocalEnvironment()
-        GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
-    }
+inline fun WorldRenderEvent.renderEnvironment(draw: WorldRenderEnvironment.() -> Unit) {
+    environment.draw()
 }
 
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRenderEnvironment.() -> Unit) {
@@ -107,40 +86,30 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRender
     }
 }
 
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(
+    x: Double, y: Double, z: Double, draw: WorldRenderEnvironment.() -> Unit
+) {
+    poseStack.withPush {
+        val cameraPos = camera.position()
+        translate(x - cameraPos.x, y - cameraPos.y, z - cameraPos.z)
+        draw()
+    }
+}
+
 /**
  * Shorthand for `withPosition(relativeToCamera(pos))`
  */
-inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) {
-    poseStack.withPush {
-        translate(relativeToCamera(pos))
-        draw()
-    }
-}
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) =
+    withPositionRelativeToCamera(pos.x, pos.y, pos.z, draw)
 
 /**
- * Shortcut of `withPositionRelativeToCamera(Vec3d.of(pos))`
+ * Shortcut of `withPositionRelativeToCamera(Vec3.atLowerCornerOf(pos))`
  */
-inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) {
-    poseStack.withPush {
-        translate(relativeToCamera(pos))
-        draw()
-    }
-}
-
-/**
- * Disables [GL11C.GL_LINE_SMOOTH] if [HAS_AMD_VEGA_APU].
- */
-inline fun WorldRenderEnvironment.longLines(draw: WorldRenderEnvironment.() -> Unit) {
-    if (HAS_AMD_VEGA_APU) GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
-    try {
-        draw()
-    } finally {
-        if (HAS_AMD_VEGA_APU) GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
-    }
-}
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) =
+    withPositionRelativeToCamera(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), draw)
 
 internal inline fun RenderTarget.drawGenericBlockESP(
-    renderState: StaticMeshStorage,
+    renderState: CachedMeshStorage,
     pipeline: RenderPipeline,
     distanceFade: DistanceFadeUniformValueGroup,
     dynamicTransforms: () -> GpuBufferSlice = ::getDynamicTransformsUniform,
@@ -155,6 +124,7 @@ internal inline fun RenderTarget.drawGenericBlockESP(
         pass.bindProjectionUniform()
         pass.bindGlobalsUniform()
         pass.bindDynamicTransformsUniform(dynamicTransforms)
+        renderState.bindUniform(pass)
         distanceFade.bindUniform(pass)
         renderState.bindAndDraw(pass)
     }
@@ -185,16 +155,12 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
     uniforms: Map<String, GpuBufferSlice> = emptyMap(),
     drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) {
-    val buffer = start(
+    start(
         pipeline = pipeline,
         textures = textures,
         uniforms = uniforms,
-    )
-
-    try {
-        drawer(buffer, poseStack.last())
-    } finally {
-        finish(buffer)
+    ).use { scope ->
+        drawer(scope.consumer, poseStack.last())
     }
 }
 
@@ -232,6 +198,31 @@ fun WorldRenderEnvironment.drawLinesWithWidth(argb: Int, width: Float, vararg po
     }
 }
 
+fun WorldRenderEnvironment.drawLinesWithWidth(argb: Int, width: Float, positions: VertexList) {
+    if (positions.size == 0) return
+    require(positions.size and 1 == 0)
+
+    val p1 = Vector3f()
+    val p2 = Vector3f()
+    val norm1 = Vector3f()
+    drawCustomMesh(pipeline = ClientRenderPipelines.LinesWithWidth) { pose ->
+        for (i in 0 until positions.size step 2) {
+            positions.vec(i, p1)
+            positions.vec(i + 1, p2)
+            val norm1 = p1.sub(p2, norm1).normalize()
+
+            addVertex(pose, p1)
+                .setColor(argb)
+                .setNormal(pose, norm1)
+                .setLineWidth(width)
+            addVertex(pose, p2)
+                .setColor(argb)
+                .setNormal(pose, norm1.negate())
+                .setLineWidth(width)
+        }
+    }
+}
+
 /**
  * Function to draw lines using the specified [positions] vectors.
  *
@@ -244,6 +235,17 @@ fun WorldRenderEnvironment.drawLines(argb: Int, vararg positions: Vec3f) {
     drawCustomMesh(pipeline = ClientRenderPipelines.Lines) { pose ->
         for (pos in positions) {
             addVertex(pose, pos).setColor(argb)
+        }
+    }
+}
+
+fun WorldRenderEnvironment.drawLines(argb: Int, positions: VertexList) {
+    if (positions.size == 0) return
+    require(positions.size and 1 == 0)
+
+    drawCustomMesh(pipeline = ClientRenderPipelines.Lines) { pose ->
+        positions.forEachVertex { x, y, z ->
+            addVertex(pose, x, y, z).setColor(argb)
         }
     }
 }
@@ -263,22 +265,12 @@ fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3f) {
     }
 }
 
-/**
- * Function to draw a 'line strip' using the specified [positions] vectors,
- * actual pipeline is [ClientRenderPipelines.Lines].
- *
- * @param positions The vectors representing the line strip, the size should be even.
- */
-fun WorldRenderEnvironment.drawLineStripAsLines(argb: Int, positions: Collection<Vec3>) {
-    if (positions.isEmpty()) return
-    require(positions.size and 1 == 0)
+fun WorldRenderEnvironment.drawLineStrip(argb: Int, positions: VertexList) {
+    if (positions.size == 0) return
 
-    drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
-        positions.forEachIndexed { index, pos ->
-            if (index != 0 && index != positions.size - 1) {
-                addVertex(pose, pos).setColor(argb)
-            }
-            addVertex(pose, pos).setColor(argb)
+    drawCustomMesh(pipeline = ClientRenderPipelines.LineStrip) { pose ->
+        positions.forEachVertex { x, y, z ->
+            addVertex(pose, x, y, z).setColor(argb)
         }
     }
 }
@@ -344,6 +336,44 @@ fun WorldRenderEnvironment.drawBox(
     if (outlineColor != null && !outlineColor.isTransparent) {
         drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
             addBoxOutlines(pose.pose(), box, outlineColor, outlineVertices)
+        }
+    }
+}
+
+fun WorldRenderEnvironment.drawShape(
+    shape: VoxelShape,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) {
+    if (faceColor != null && !faceColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+            addShapeFaces(pose.pose(), shape, color = faceColor)
+        }
+    }
+
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+            addShapeOutlines(pose.pose(), shape, outlineColor)
+        }
+    }
+}
+
+fun WorldRenderEnvironment.drawShapeSide(
+    shape: VoxelShape,
+    side: Direction,
+    hitPos: Vec3,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) {
+    if (faceColor != null && !faceColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+            addShapeSideFaces(pose.pose(), shape, side, hitPos, color = faceColor)
+        }
+    }
+
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+            addShapeSideOutlines(pose.pose(), shape, side, hitPos, outlineColor)
         }
     }
 }
@@ -433,7 +463,7 @@ fun WorldRenderEnvironment.drawGradientCircle(
     innerOffset: Vector3fc = Vector3f(),
     noDepthTest: Boolean = true,
 ) {
-    if (outerRadius <= 0f) {
+    if (outerRadius <= 0f || outerColor.isTransparent && innerColor.isTransparent) {
         return
     }
 
@@ -520,7 +550,7 @@ fun WorldRenderEnvironment.drawCircle(
     radius: Float,
     color: Color4b,
 ) {
-    if (radius <= 0f) {
+    if (radius <= 0f || color.isTransparent) {
         return
     }
 
@@ -541,6 +571,10 @@ fun WorldRenderEnvironment.drawCircle(
  */
 @JvmOverloads
 fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b, noDepthTest: Boolean = true) {
+    if (radius <= 0f || color.isTransparent) {
+        return
+    }
+
     drawRoundedRectQuad(
         radius = radius,
         argb = color.argb,

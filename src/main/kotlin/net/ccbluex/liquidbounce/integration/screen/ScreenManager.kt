@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.integration.screen
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
@@ -48,6 +47,7 @@ import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.QuickFix
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -55,15 +55,13 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import org.lwjgl.glfw.GLFW
 import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
 
 object ScreenManager : EventListener {
 
-    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ScreenManager")
+    private val logger = clientLogger("ScreenManager")
 
     /**
      * The main browser will constantly be updated to display the current screen.
@@ -89,10 +87,8 @@ object ScreenManager : EventListener {
      */
     val screenAcknowledgement = ScreenAcknowledgement()
 
-    private val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
-
     internal val parent: Screen
-        get() = mc.screen ?: TitleScreen()
+        get() = mc.gui.screen() ?: TitleScreen()
 
     @Suppress("unused")
     private val handleBrowserReady = suspendHandler<BrowserReadyEvent>(
@@ -226,8 +222,8 @@ object ScreenManager : EventListener {
     }
 
     fun restoreOriginalScreen() {
-        if (mc.screen is CustomSharedMinecraftScreen) {
-            mc.setScreen((mc.screen as CustomSharedMinecraftScreen).originalScreen)
+        if (mc.gui.screen() is CustomSharedMinecraftScreen) {
+            mc.gui.setScreen((mc.gui.screen() as CustomSharedMinecraftScreen).originalScreen)
         }
     }
 
@@ -237,7 +233,7 @@ object ScreenManager : EventListener {
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
         // Set to default GLFW cursor
-        GLFW.glfwSetCursor(mc.window.handle(), standardCursor)
+        GLFW.glfwSetCursor(mc.window.handle(), 0)
 
         if (handleCurrentScreen(event.screen)) {
             event.cancelEvent()
@@ -246,7 +242,7 @@ object ScreenManager : EventListener {
 
     @Suppress("unused")
     private val screenUpdater = handler<GameTickEvent> {
-        handleCurrentScreen(mc.screen)
+        handleCurrentScreen(mc.gui.screen())
     }
 
     @Suppress("unused")
@@ -268,7 +264,7 @@ object ScreenManager : EventListener {
 
     @Suppress("unused")
     private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
-        if (this.mainBrowser == null || !browserSettings.syncGameFps || !isClientScreen(mc.screen)) {
+        if (this.mainBrowser == null || !browserSettings.syncGameFps || !isClientScreen(mc.gui.screen())) {
             return@handler
         }
 
@@ -299,8 +295,8 @@ object ScreenManager : EventListener {
     }
 
     private fun handleCurrentScreen(screen: Screen?): Boolean {
-        // We check against mc.screen, not screen, because somehow this works.
-        if (mc.screen is TaskProgressScreen) {
+        // We check against mc.gui.screen(), not screen, because somehow this works.
+        if (mc.gui.screen() is TaskProgressScreen) {
             return false
         }
 
@@ -311,7 +307,7 @@ object ScreenManager : EventListener {
                     return false
                 }
 
-                mc.setScreen(original)
+                mc.gui.setScreen(original)
                 true
             } else {
                 closeScreen()
@@ -357,7 +353,7 @@ object ScreenManager : EventListener {
         return when {
             // When we want to fully replace a screen.
             theme.isScreenSupported(name) -> {
-                mc.setScreen(CustomSharedMinecraftScreen(customScreenType, theme, originalScreen = minecraftScreen))
+                mc.gui.setScreen(CustomSharedMinecraftScreen(customScreenType, theme, originalScreen = minecraftScreen))
                 true
             }
             // When we just want to overlay it.

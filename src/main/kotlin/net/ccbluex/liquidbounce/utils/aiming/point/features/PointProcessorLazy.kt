@@ -49,13 +49,13 @@ internal class PointProcessorLazy(parent: EventListener) : PointProcessor(parent
             return point
         }
 
-        val distance = point.distanceToSqr(currentPoint)
-        val currentThreshold = currentThreshold.sq()
-        debugParameter("Threshold") { currentThreshold }
-        debugParameter("Distance") { distance }
+        val distSqr = point.distanceToSqr(currentPoint)
+        val currentThresholdSqr = currentThreshold.sq()
+        debugParameter("Threshold^2") { currentThresholdSqr }
+        debugParameter("Distance^2") { distSqr }
 
         // Check if the current point has not reached the minimum threshold to move
-        if (distance < currentThreshold) {
+        if (distSqr < currentThresholdSqr) {
             return currentPoint
         }
 

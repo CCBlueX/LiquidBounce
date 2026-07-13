@@ -24,18 +24,22 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
 import net.ccbluex.liquidbounce.authlib.Authlib
 import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
+import net.ccbluex.liquidbounce.authlib.mojangapi.MojangApiClient
+import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.readJson
+import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.ReportedException
-import net.minecraft.util.Util
 import okhttp3.Cache
 import okhttp3.Call
 import okhttp3.Callback
@@ -58,8 +62,8 @@ import java.io.Reader
 import java.util.Locale
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
 val renderScope = CoroutineScope(
     Dispatchers.Minecraft + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
@@ -95,6 +99,9 @@ object HttpClient {
 
     object MediaTypes {
         @JvmField
+        val TEXT_PLAIN = "text/plain; charset=utf-8".toMediaType()
+
+        @JvmField
         val JSON = "application/json; charset=utf-8".toMediaType()
 
         @JvmField
@@ -108,7 +115,13 @@ object HttpClient {
     }
 
     private val defaultClient = OkHttpClient.Builder()
-        .dispatcher(Dispatcher(Util.nonCriticalIoPool().service))
+        .dispatcher(
+            Dispatcher(
+                Executors.newThreadPerTaskExecutor(
+                    Thread.ofVirtual().name("OkHttpClient Dispatcher ", 0L).factory()
+                )
+            )
+        )
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)
@@ -127,8 +140,9 @@ object HttpClient {
         }
         .addInterceptor(CacheBlacklistInterceptor(setOf("localhost", "127.0.0.1")))
         .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
+        .proxy(java.net.Proxy.NO_PROXY)
         .build().also {
-            McefFileUtils.setOkHttpClient(it)
+            MCEF.INSTANCE.settings.okHttpClient = it
             Authlib.client = it
         }
 
@@ -164,6 +178,13 @@ object HttpClient {
         .addInterceptor(clientHttpApiInterceptor)
         .build()
 
+    @get:JvmStatic
+    val mojangApiClient = MojangApiClient.Builder()
+        .gson(interopGson)
+        .httpClient(this.defaultClient)
+        .tokenProvider { mc.user.accessToken }
+        .build()
+
     @Suppress("LongParameterList")
     suspend fun request(
         url: String,
@@ -195,7 +216,9 @@ object HttpClient {
         file: File,
         agent: String = DEFAULT_AGENT,
         progressListener: OkHttpProgressInterceptor.ProgressListener? = null
-    ) = request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
+    ) = withContext(Dispatchers.IO) {
+        request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
+    }
 
     // For Java and JS
     @JvmStatic

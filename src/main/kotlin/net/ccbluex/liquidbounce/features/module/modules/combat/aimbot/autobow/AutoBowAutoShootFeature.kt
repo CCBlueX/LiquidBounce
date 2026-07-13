@@ -25,15 +25,13 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
-import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.useItem
+import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.minecraft.client.player.AbstractClientPlayer
@@ -43,7 +41,6 @@ import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.CrossbowItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.TridentItem
-import net.minecraft.world.phys.Vec3
 
 object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot", true) {
 
@@ -68,7 +65,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
         currentChargeRandom =
             (mid + ModuleAutoBow.random.nextGaussian() * lenHalf).toInt()
-                .coerceIn(chargedRandom.start.toInt()..chargedRandom.endInclusive.toInt())
+                .coerceIn(chargedRandom.start.toInt(), chargedRandom.endInclusive.toInt())
     }
 
     private fun getChargedRandom(): Int {
@@ -92,7 +89,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                 return@handler
             }
 
-        val usingItemStack = if (player.isUsingItem) player.useItem else player.getItemInHand(usingItemHand)
+        val usingItemStack = player.usingItemOrNull ?: player.getItemInHand(usingItemHand)
 
         when (usingItemStack.item) {
             is CrossbowItem -> {
@@ -168,24 +165,15 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
     private fun getHypotheticalHit(): Entity? {
         player.usingItemHand ?: return null
         val rotation = RotationManager.serverRotation
-        val yaw = rotation.yaw
-        val pitch = rotation.pitch
-
         val trajectoryInfo = HeldItemTrajectoryResolver
             .resolveHeldItemPrimaryShot(player, player.activeItem, false)
             ?.trajectoryInfo
             ?: return null
 
-        val velocity = trajectoryInfo.initialVelocity
-
-        val vX = -yaw.toRadians().fastSin() * pitch.toRadians().fastCos() * velocity
-        val vY = -pitch.toRadians().fastSin() * velocity
-        val vZ = yaw.toRadians().fastCos() * pitch.toRadians().fastCos() * velocity
-
         val arrow = SimulatedArrow(
             world,
             player.eyePosition,
-            Vec3(vX, vY, vZ),
+            rotation.directionVector.scale(trajectoryInfo.initialVelocity),
             collideEntities = false
         )
 
@@ -204,7 +192,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                 }
 
                 val entityBox = entity.boundingBox
-                    .inflate(0.3)
+                    .inflate(projectileEntityHitMargin(i).toDouble())
                     .move(predictedPos.subtract(entity.position()))
 
                 if (entityBox.clip(lastPos, arrow.pos).isPresent) {
@@ -216,11 +204,17 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
         return null
     }
 
+    /**
+     * @see net.minecraft.world.entity.projectile.ProjectileUtil.computeMargin
+     */
+    private fun projectileEntityHitMargin(tickCount: Int) =
+        ((tickCount - 2) / 20.0F).coerceIn(0.0F, 0.3F)
+
     private fun findAndBuildSimulatedEntities(): List<Pair<Entity, SimulatedPlayerCache?>> {
         return world.entitiesForRendering().filter { entity ->
             entity != player &&
                 entity.shouldBeAttacked() &&
-                Line(player.position(), player.rotation.directionVector)
+                Line(player.eyePosition, player.rotation.directionVector)
                     .distanceToSqr(entity.position()) < 10.0 * 10.0
         }.map { entity ->
             val simulation = if (entity is AbstractClientPlayer) {

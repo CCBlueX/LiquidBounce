@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
+import com.mojang.blaze3d.GpuFormat
+import com.mojang.blaze3d.pipeline.ColorTargetState
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
-import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuadSnippet
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.withUniformBuffer
@@ -36,12 +36,13 @@ import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.asTextureSetup
 import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.writeStd140
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.resources.Identifier
 import java.io.Closeable
@@ -54,7 +55,7 @@ sealed interface ThemeBackground : Closeable {
      */
     object Minecraft : ThemeBackground {
         override fun draw(
-            context: GuiGraphics,
+            context: GuiGraphicsExtractor,
             width: Int,
             height: Int,
             mouseX: Int,
@@ -79,7 +80,7 @@ sealed interface ThemeBackground : Closeable {
         private val textureSetup = texture.textureSetup
 
         override fun draw(
-            context: GuiGraphics,
+            context: GuiGraphicsExtractor,
             width: Int,
             height: Int,
             mouseX: Int,
@@ -120,7 +121,7 @@ sealed interface ThemeBackground : Closeable {
         private var textureSetup: TextureSetup? = null
 
         override fun draw(
-            context: GuiGraphics,
+            context: GuiGraphicsExtractor,
             width: Int,
             height: Int,
             mouseX: Int,
@@ -145,7 +146,7 @@ sealed interface ThemeBackground : Closeable {
             ).use { pass ->
                 pass.setPipeline(pipeline)
                 pass.setUniform(ClientUniformDefine.THEME_BACKGROUND.uboName, uboSlice)
-                pass.draw(0, 3)
+                pass.draw(3, 1, 0, 0)
             }
 
             context.drawBlitOnCurrentLayer(
@@ -186,8 +187,8 @@ sealed interface ThemeBackground : Closeable {
                 background?.close()
                 background = gpuDevice.createTexture(
                     "ThemeBackground/Shader - ${metadata.name} ($framebufferWidth x $framebufferHeight)",
-                    GpuTexture.USAGE_RENDER_ATTACHMENT,
-                    TextureFormat.RGBA8, framebufferWidth, framebufferHeight,
+                    GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_TEXTURE_BINDING,
+                    GpuFormat.RGBA8_UNORM, framebufferWidth, framebufferHeight,
                     1, 1,
                 )
                 backgroundView?.close()
@@ -217,8 +218,8 @@ sealed interface ThemeBackground : Closeable {
                     .screenQuadSnippet()
                     .withFragmentShader(fshId)
                     .withUniformBuffer(ClientUniformDefine.THEME_BACKGROUND)
-                    .withoutBlend()
-                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+                    .withColorTargetState(ColorTargetState.DEFAULT)
+                    .withDepthStencilState(optional())
                     .build()
 
                 return Shader(metadata, pipeline, fshId, fragmentShader)
@@ -238,7 +239,7 @@ sealed interface ThemeBackground : Closeable {
      */
     @Suppress("LongParameterList")
     fun draw(
-        context: GuiGraphics,
+        context: GuiGraphicsExtractor,
         width: Int,
         height: Int,
         mouseX: Int,

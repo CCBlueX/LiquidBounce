@@ -26,9 +26,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
@@ -63,7 +64,7 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
         val entityToColor: (Entity) -> Int?,
     ) : Tagged {
         TEAM("Team", { entity ->
-            entity.team?.color?.color
+            entity.team?.color?.orElse(null)?.rgb()
         }),
         ARMOR("Armor", { entity ->
             val armorColorSlots = armorColorSlots
@@ -93,7 +94,7 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
      * name color, armor color or team prefix.
      */
     private fun isInClientPlayersTeam(entity: LivingEntity) =
-        matches.any { it.testMatches.test(entity) } || checkArmor(entity)
+        matches.matchesAny(entity) || checkArmor(entity)
 
     /**
      * Checks if the color of any armor piece matches.
@@ -104,8 +105,8 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
     @Suppress("unused")
     private enum class Matches(
         override val tag: String,
-        val testMatches: Predicate<LivingEntity>,
-    ) : Tagged {
+        private val testMatches: Predicate<LivingEntity>,
+    ) : Tagged, Predicate<LivingEntity> by testMatches {
         /**
          * Check if [LivingEntity] is in your own team using scoreboard,
          */

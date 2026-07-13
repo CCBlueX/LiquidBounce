@@ -1,0 +1,52 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.utils.item.armor
+
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.item.armorKnockbackResistance
+import net.ccbluex.liquidbounce.utils.item.armorToughness
+import net.ccbluex.liquidbounce.utils.item.armorValue
+import net.ccbluex.liquidbounce.utils.item.equipmentSlot
+import net.minecraft.world.entity.EquipmentSlot
+
+/**
+ * @see net.minecraft.world.item.equipment.ArmorMaterial.createAttributes
+ */
+@JvmInline
+value class ArmorPiece(val itemSlot: ItemSlot) {
+    val slotType: EquipmentSlot
+        get() = itemSlot.itemStack.equipmentSlot!!
+    val entitySlotId: Int
+        get() = this.slotType.index
+    val inventorySlot: Int
+        get() = 36 + entitySlotId
+    val isAlreadyEquipped: Boolean
+        get() = itemSlot.slotType == ItemSlot.Type.ARMOR
+    val isReachableByHand: Boolean
+        get() = itemSlot.slotType == ItemSlot.Type.HOTBAR
+
+    val toughness: Float
+        get() = itemSlot.itemStack.armorToughness.toFloat()
+
+    val defensePoints: Float
+        get() = itemSlot.itemStack.armorValue.toFloat()
+
+    val knockbackResistance: Float
+        get() = itemSlot.itemStack.armorKnockbackResistance.toFloat()
+}

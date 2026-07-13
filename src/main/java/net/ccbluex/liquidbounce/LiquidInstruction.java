@@ -19,12 +19,11 @@
 package net.ccbluex.liquidbounce;
 
 import net.ccbluex.liquidbounce.utils.client.GitInfo;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
 
 import javax.swing.*;
 import java.awt.*;
 import java.net.URI;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -33,22 +32,22 @@ import java.util.stream.Stream;
  * It should not use any other external libraries such as Kotlin stdlib, JavaFX or Minecraft
  * because they are not included in the jar.
  */
+@NullMarked
 public final class LiquidInstruction {
 
   private LiquidInstruction() {}
 
-  private static @NotNull List<Image> loadIcons() {
+  private static Stream<ImageIcon> loadIcons() {
     return Stream.of(
             "/resources/liquidbounce/icon_64x64.png",
             "/resources/liquidbounce/icon_32x32.png",
             "/resources/liquidbounce/icon_16x16.png"
         ).map(LiquidInstruction.class::getResource)
         .filter(Objects::nonNull)
-        .map(it -> new ImageIcon(it).getImage())
-        .toList();
+        .map(ImageIcon::new);
   }
 
-  private static boolean browse(@NotNull URI uri) {
+  private static boolean browse(URI uri) {
     try {
       Desktop.getDesktop().browse(uri);
       return true;
@@ -75,7 +74,7 @@ public final class LiquidInstruction {
         LiquidBounce.CLIENT_NAME + " by " + LiquidBounce.CLIENT_AUTHOR + " (" + GitInfo.version() + ")",
         JOptionPane.DEFAULT_OPTION,
         JOptionPane.INFORMATION_MESSAGE,
-        loadIcons().stream().findFirst().map(ImageIcon::new).orElse(null),
+        loadIcons().findFirst().orElse(null),
         buttons,
         buttons[0]
     );

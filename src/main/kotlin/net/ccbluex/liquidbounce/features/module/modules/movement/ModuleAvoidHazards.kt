@@ -88,7 +88,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent>(priority = SAFETY_FEATURE) { event ->
-        if (mode != AvoidMode.MOVEMENT || !event.directionalInput.isMoving) {
+        if (mode != AvoidMode.INPUT || !event.directionalInput.isMoving) {
             return@handler
         }
 
@@ -200,7 +200,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
                             // Cactus damage is handled by entity-inside logic, which can trigger on block-cell
                             // contact. Use the whole block cell for conservative prediction.
                             val expandedBox = boundingBox.inflate(CACTUS_BLOCK_MARGIN, 0.0, CACTUS_BLOCK_MARGIN)
-                            expandedBox.intersects(AABB(pos))
+                            expandedBox.intersects(pos)
                         }
                     }
                     else -> {
@@ -216,9 +216,12 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         }
     }
 
-    private enum class AvoidMode(override val tag: String) : Tagged {
+    private enum class AvoidMode(
+        override val tag: String,
+        override val tagAliases: List<String> = emptyList(),
+    ) : Tagged {
         SHAPE("Shape"),
-        MOVEMENT("Movement"),
+        INPUT("Input", listOf("Movement")),
     }
 
     private enum class Avoid(

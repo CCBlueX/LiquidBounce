@@ -47,19 +47,19 @@ object ModuleAutoQueue : ClientModule("AutoQueue", ModuleCategories.PLAYER, alia
     private enum class PauseCondition(override val tag: String) : Tagged, BooleanSupplier {
         CLICK_GUI_OPEN("ClickGuiOpen") {
             override fun getAsBoolean(): Boolean {
-                val screen = mc.screen
+                val screen = mc.gui.screen()
                 return screen is CustomSharedMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI ||
                     screen is CustomStandaloneMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI
             }
         },
         CHAT_SCREEN_OPEN("ChatScreenOpen") {
-            override fun getAsBoolean() = mc.screen is ChatScreen
+            override fun getAsBoolean() = mc.gui.screen() is ChatScreen
         },
         CONTAINER_SCREEN_OPEN("ContainerScreenOpen") {
-            override fun getAsBoolean() = mc.screen is AbstractContainerScreen<*>
+            override fun getAsBoolean() = mc.gui.screen() is AbstractContainerScreen<*>
         },
         PAUSE_SCREEN_OPEN("PauseScreenOpen") {
-            override fun getAsBoolean() = mc.screen is PauseScreen
+            override fun getAsBoolean() = mc.gui.screen() is PauseScreen
         },
     }
 }

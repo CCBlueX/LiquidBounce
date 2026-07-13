@@ -1,7 +1,8 @@
 <script lang="ts">
-    import {fade, fly} from "svelte/transition";
+    import {fly} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
     import {backIn, backOut} from "svelte/easing";
+    import TitleButtonIcon from "./TitleButtonIcon.svelte";
 
     export let title: string;
     export let icon: string;
@@ -18,11 +19,7 @@
      on:click={() => dispatch("click")} out:fly|global={{duration: 400, x: -500, delay: index * 100, easing: backIn}}
      in:fly|global={{duration: 400, x: -500, delay: index * 100, easing: backOut}}>
     <div class="icon">
-        {#if !hovered}
-            <img transition:fade={{duration: 200}} src="img/menu/icon-{icon}.svg" alt={icon}>
-        {:else}
-            <img transition:fade={{duration: 200}} src="img/menu/icon-{icon}-hover.svg" alt={icon}>
-        {/if}
+        <TitleButtonIcon {icon} />
     </div>
 
     <div class="title">{title}</div>
@@ -33,10 +30,9 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
 
   .main-button {
-    background-color: rgba($menu-base-color, 0.68);
+    background-color: var(--menu-main-button-background-color);
     width: 590px;
     padding: 25px 35px;
     display: grid;
@@ -46,7 +42,7 @@
     border-radius: 5px;
     column-gap: 25px;
 
-    background: linear-gradient(to left, rgba($menu-base-color, .68) 50%, $accent-color 50%);
+    background: linear-gradient(to left, var(--menu-main-button-background-color) 50%, var(--menu-main-button-accent-color) 50%);
     background-size: 200% 100%;
     background-position: right bottom;
     will-change: background-position;
@@ -56,30 +52,27 @@
       background-position: left bottom;
 
       .icon {
-        background-color: $menu-text-color;
+        background-color: var(--menu-main-button-icon-hover-background-color);
+        color: var(--menu-main-button-icon-hover-foreground-color);
       }
     }
   }
 
   .icon {
-    background-color: $accent-color;
+    background-color: var(--menu-main-button-icon-background-color);
+    color: var(--menu-main-button-icon-foreground-color);
     width: 90px;
     height: 90px;
     border-radius: 50%;
-    transition: ease background-color 0.2s;
-    position: relative;
-
-    img {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-    }
+    transition: ease background-color 0.2s, ease color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .title {
     font-size: 26px;
-    color: $menu-text-color;
+    color: var(--menu-main-button-text-color);
     font-weight: 600;
   }
 </style>

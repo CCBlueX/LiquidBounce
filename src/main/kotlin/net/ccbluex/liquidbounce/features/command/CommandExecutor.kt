@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.highlight
@@ -124,7 +124,7 @@ object CommandExecutor : EventListener {
             }.invokeOnCompletion {
                 running.set(false)
                 progressJob.cancel()
-                mc.gui.chat.removeMessage(progressMessageMetadata.id)
+                mc.gui.hud.chat.removeMessage(progressMessageMetadata.id)
             }
         }
     }
@@ -150,7 +150,7 @@ object CommandExecutor : EventListener {
     internal fun handleExceptions(e: Throwable) {
         when (e) {
             is CommandException -> {
-                mc.gui.chat.removeMessage("CommandManager#error")
+                mc.gui.hud.chat.removeMessage("CommandManager#error")
                 val data = MessageMetadata(id = "CommandManager#error", remove = false)
                 chat(e.text.withStyle(ChatFormatting.RED), metadata = data)
 

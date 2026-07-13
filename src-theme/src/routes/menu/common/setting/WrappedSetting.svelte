@@ -74,10 +74,9 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
 
   .configurable-title {
-    color: $menu-text-color;
+    color: var(--menu-text-color);
     font-size: 20px;
     font-weight: 500;
   }
@@ -96,7 +95,7 @@
       cursor: pointer;
 
       .header {
-        background-color: rgba($menu-base-color, .36);
+        background-color: var(--menu-wrapped-setting-header-background-color);
         padding: 20px;
         display: flex;
         column-gap: 20px;
@@ -112,7 +111,7 @@
     position: absolute;
     z-index: 1000;
     border-radius: 0 0 5px 5px;
-    background-color: rgba($menu-base-color, 0.9);
+    background-color: var(--menu-wrapped-setting-content-background-color);
     padding: 10px 13px;
     zoom: 1.5;
     width: 100%;

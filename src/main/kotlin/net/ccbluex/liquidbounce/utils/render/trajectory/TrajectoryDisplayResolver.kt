@@ -20,23 +20,69 @@
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.core.component.DataComponentGetter
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.projectile.FireworkRocketEntity
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.entity.projectile.hurtingprojectile.Fireball
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile
-import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.alchemy.PotionContents
 
 object TrajectoryDisplayResolver {
+    /**
+     * @see Arrow.NO_EFFECT_COLOR
+     */
+    private const val POTION_ARROW_COLOR_NONE = -1
+
     @JvmStatic
-    fun resolveEntityColor(entity: Entity): Color4b {
-        return when (entity) {
-            is Arrow -> Color4b(255, 0, 0, 200)
-            is ThrownEnderpearl -> Color4b(128, 0, 128, 200)
-            is FireworkRocketEntity -> Color4b(255, 165, 0, 220)
-            else -> Color4b(200, 200, 200, 200)
+    fun resolveTrajectoryColor(
+        trajectoryType: TrajectoryType,
+        colorSource: DataComponentGetter = ItemStack.EMPTY,
+        entity: Entity? = null,
+    ): Color4b {
+        return when (trajectoryType) {
+            TrajectoryType.Arrow -> resolveArrowColor(colorSource, entity)
+            TrajectoryType.Potion -> resolvePotionColor(colorSource)
+            TrajectoryType.EnderPearl -> Color4b.PURPLE.alpha(200)
+            TrajectoryType.FishingBobber -> Color4b.CYAN.alpha(200)
+            TrajectoryType.Trident -> Color4b(180, 210, 255, 220)
+            TrajectoryType.Snowball -> Color4b.LIGHT_GRAY.alpha(220)
+            TrajectoryType.Egg -> Color4b(240, 234, 214, 220)
+            TrajectoryType.ExpBottle -> Color4b(120, 230, 120, 220)
+            TrajectoryType.FireworkRocket -> Color4b.ORANGE.alpha(220)
+            TrajectoryType.Fireball -> Color4b.ORANGE.alpha(220)
+            TrajectoryType.WindCharge -> Color4b(180, 235, 255, 220)
+        }
+    }
+
+    private fun resolveArrowColor(
+        colorSource: DataComponentGetter,
+        entity: Entity?,
+    ): Color4b {
+        if (entity is Arrow) {
+            val potionColor = entity.color
+            if (potionColor != POTION_ARROW_COLOR_NONE) {
+                return Color4b.fullAlpha(potionColor).alpha(220)
+            }
+        }
+
+        val potionColor = colorSource[DataComponents.POTION_CONTENTS]?.color
+        return if (potionColor != null) {
+            Color4b.fullAlpha(potionColor).alpha(220)
+        } else {
+            Color4b.WHITE.alpha(220)
+        }
+    }
+
+    private fun resolvePotionColor(colorSource: DataComponentGetter): Color4b {
+        val potionColor = colorSource[DataComponents.POTION_CONTENTS]?.color
+        return if (potionColor != null) {
+            Color4b.fullAlpha(potionColor).alpha(220)
+        } else {
+            Color4b.fullAlpha(PotionContents.BASE_POTION_COLOR).alpha(220)
         }
     }
 

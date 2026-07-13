@@ -25,13 +25,13 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.CachedMeshStorage
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.MapColorMode
-import net.ccbluex.liquidbounce.render.StaticMeshStorage
-import net.ccbluex.liquidbounce.render.addBoxFaces
-import net.ccbluex.liquidbounce.render.addBoxOutlines
+import net.ccbluex.liquidbounce.render.addShapeFaces
+import net.ccbluex.liquidbounce.render.addShapeOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -41,13 +41,15 @@ import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.math.PositionedVoxelShape
+import net.ccbluex.liquidbounce.utils.math.mergeAdjacentVoxelShapes
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.AABB
-import org.joml.Matrix4fc
+import net.minecraft.world.phys.shapes.VoxelShape
+import org.joml.Matrix4f
 import java.util.concurrent.ConcurrentSkipListSet
 
 /**
@@ -61,8 +63,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     private val modes = choices("Mode", 0) {
         arrayOf(
             BoxMode,
-            OutlineMode("Glow", DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW),
-            OutlineMode("Outline", DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE),
+            GlowMode,
         )
     }
     private val targets by blocks(
@@ -85,12 +86,21 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     private val distanceFade = tree(DistanceFadeUniformValueGroup())
+    private val mergeAdjacent by boolean("MergeAdjacent", false).onChanged {
+        markDirtyForModes()
+    }
 
-    private sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
+    sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
         final override val parent get() = modes
 
         protected var useColor = false
-        val dirtyFlag = atomic(true)
+        protected val dirtyFlag = atomic(true)
+
+        fun markDirty() {
+            if (this.running) {
+                dirtyFlag.value = true
+            }
+        }
 
         final override fun enable() {
             dirtyFlag.value = true
@@ -98,7 +108,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         }
 
         protected fun getDynamicTransformsUniform(
-            modelView: Matrix4fc? = null,
+            modelView: Matrix4f? = null,
             colorModulatorAlpha: Int = -1,
         ) = getDynamicTransformsUniform(
             modelView = modelView,
@@ -107,7 +117,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
             } else {
                 val color = colorMode.activeMode.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
                 if (colorModulatorAlpha == -1) color else color.alpha(colorModulatorAlpha)
-            }
+            },
         )
     }
 
@@ -117,8 +127,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 outlinesRenderState.clearStates()
             }
         }
-        private val facesRenderState = StaticMeshStorage("${ModuleBlockESP.name} $name Faces")
-        private val outlinesRenderState = StaticMeshStorage("${ModuleBlockESP.name} $name Outlines")
+        private val facesRenderState = CachedMeshStorage("${ModuleBlockESP.name} $name Faces")
+        private val outlinesRenderState = CachedMeshStorage("${ModuleBlockESP.name} $name Outlines")
 
         override fun disable() {
             facesRenderState.clearStates()
@@ -131,24 +141,26 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
             if (outline) {
-                mc.mainRenderTarget.drawGenericBlockESP(
+                mc.gameRenderer.mainRenderTarget().drawGenericBlockESP(
                     outlinesRenderState,
                     ClientRenderPipelines.relativeLines(useColor),
                     distanceFade,
                 ) {
                     getDynamicTransformsUniform(
-                        modelView = event.matrixStack.last().pose(),
+                        modelView = event.poseStack.last().pose(),
                         colorModulatorAlpha = 150,
                     )
                 }
             }
 
-            mc.mainRenderTarget.drawGenericBlockESP(
+            mc.gameRenderer.mainRenderTarget().drawGenericBlockESP(
                 facesRenderState,
                 ClientRenderPipelines.relativeQuads(useColor),
                 distanceFade,
             ) {
-                getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
+                getDynamicTransformsUniform(
+                    modelView = event.poseStack.last().pose(),
+                )
             }
         }
 
@@ -166,16 +178,16 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
             val colorMode = colorMode.activeMode
             useColor = colorMode.isParamSensitive
+            val mergedShapes = collectBlockShapes(colorMode, useColor)
 
             facesRenderState.buildMesh(
                 pipeline = ClientRenderPipelines.relativeQuads(useColor),
-            ) { pose ->
-                forEachTrackedBlocks { blockPos, blockState, outlineBox ->
-                    val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
-
+                origin = player.blockPosition(),
+            ) { pose, origin ->
+                for (mergedShape in mergedShapes) {
                     pose.withPush {
-                        translate(blockPos)
-                        addBoxFaces(last().pose(), outlineBox, color)
+                        translate(mergedShape.blockPos, origin)
+                        addShapeFaces(last().pose(), mergedShape.shape, mergedShape.key.color)
                     }
                 }
             }
@@ -183,13 +195,12 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
             if (outline) {
                 outlinesRenderState.buildMesh(
                     pipeline = ClientRenderPipelines.relativeLines(useColor),
-                ) { pose ->
-                    forEachTrackedBlocks { blockPos, blockState, outlineBox ->
-                        val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
-
+                    origin = player.blockPosition(),
+                ) { pose, meshOrigin ->
+                    for (mergedShape in mergedShapes) {
                         pose.withPush {
-                            translate(blockPos)
-                            addBoxOutlines(last().pose(), outlineBox, color)
+                            translate(mergedShape.blockPos, meshOrigin)
+                            addShapeOutlines(last().pose(), mergedShape.shape, mergedShape.key.color)
                         }
                     }
                 }
@@ -198,8 +209,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
     }
 
-    private class OutlineMode(name: String, type: DrawOutlinesEvent.OutlineType) : Mode(name) {
-        private val renderState = StaticMeshStorage("${ModuleBlockESP.name} $name")
+    object GlowMode : Mode("Glow") {
+        private val renderState = CachedMeshStorage("${ModuleBlockESP.name} $name")
 
         override fun disable() {
             renderState.clearStates()
@@ -209,16 +220,14 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
         @Suppress("unused")
         private val renderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != type) {
-                return@handler
-            }
-
             val dirty = event.renderTarget.drawGenericBlockESP(
                 renderState,
                 ClientRenderPipelines.outlineQuads(useColor),
                 distanceFade,
             ) {
-                getDynamicTransformsUniform(colorModulatorAlpha = 255)
+                getDynamicTransformsUniform(
+                    colorModulatorAlpha = 255,
+                )
             }
 
             if (dirty) {
@@ -239,16 +248,16 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
             val colorMode = colorMode.activeMode
             useColor = colorMode.isParamSensitive
+            val origin = player.blockPosition()
 
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor),
-            ) { pose ->
-                forEachTrackedBlocks { blockPos, blockState, outlineBox ->
-                    val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
-
+                origin = origin,
+            ) { pose, meshOrigin ->
+                for (mergedShape in collectBlockShapes(colorMode, useColor)) {
                     pose.withPush {
-                        translate(blockPos)
-                        addBoxFaces(last().pose(), outlineBox, color?.alpha(255))
+                        translate(mergedShape.blockPos, meshOrigin)
+                        addShapeFaces(last().pose(), mergedShape.shape, mergedShape.key.color?.alpha(255))
                     }
                 }
             }
@@ -266,25 +275,47 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     private fun markDirtyForModes() {
-        modes.modes.forEach { it.dirtyFlag.value = true }
+        modes.modes.forEach { it.markDirty() }
     }
 
     private inline fun forEachTrackedBlocks(
-        block: (blockPos: BlockPos, blockState: BlockState, outlineBox: AABB) -> Unit,
+        block: (blockPos: BlockPos, blockState: BlockState, outlineShape: VoxelShape) -> Unit,
     ) {
         for ((blockPos, t) in BlockTracker.iterate()) {
             val blockState = t.state
-            val outlineBox = t.box
-            block(blockPos, blockState, outlineBox)
+            val outlineShape = t.shape
+            block(blockPos, blockState, outlineShape)
         }
     }
 
-    private class TrackedState(@JvmField val state: BlockState, @JvmField val box: AABB)
+    private fun collectBlockShapes(
+        colorMode: net.ccbluex.liquidbounce.render.GenericColorMode<Pair<BlockPos, BlockState>>,
+        useColor: Boolean,
+    ): List<PositionedVoxelShape<BlockMergeKey>> {
+        val shapes = buildList {
+            forEachTrackedBlocks { blockPos, blockState, outlineShape ->
+                val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
+                add(
+                    PositionedVoxelShape(
+                        blockPos = blockPos.asLong(),
+                        key = BlockMergeKey(blockState.block, color),
+                        shape = outlineShape,
+                    )
+                )
+            }
+        }
+
+        return if (mergeAdjacent) shapes.mergeAdjacentVoxelShapes() else shapes
+    }
+
+    private data class BlockMergeKey(val block: Block, val color: Color4b?)
+
+    private class TrackedState(@JvmField val state: BlockState, @JvmField val shape: VoxelShape)
 
     private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
             return if (!state.isAir && state.block in targets) {
-                TrackedState(state, state.outlineBox(pos))
+                TrackedState(state, state.getShape(world, pos))
             } else {
                 null
             }

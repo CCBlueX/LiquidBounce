@@ -28,14 +28,13 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawGradientSides
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.hole.Hole
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
 import net.ccbluex.liquidbounce.utils.math.box
-import net.ccbluex.liquidbounce.utils.math.from
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
@@ -85,20 +84,20 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
             val vDistance = verticalDistance
             val hDistance = horizontalDistance
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
-                    val valOutOfRange = abs(pos.y - positions.minY()) > vDistance
-                    val xzOutOfRange = abs(pos.x - positions.minX()) > hDistance ||
-                        abs(pos.z - positions.minZ()) > hDistance
+                    val valOutOfRange = abs(pos.y - it.pos.y) > vDistance
+                    val xzOutOfRange = abs(pos.x - it.pos.x) > hDistance ||
+                        abs(pos.z - it.pos.z) > hDistance
                     if (valOutOfRange || xzOutOfRange) {
                         return@forEach
                     }
 
-                    val fade = calculateFade(positions.from)
+                    val fade = calculateFade(it.pos)
                     val baseColor = it.color().with(a = 50).fade(fade)
-                    withPositionRelativeToCamera(positions.from) {
+                    withPositionRelativeToCamera(it.pos) {
                         drawBox(
                             positions.box,
                             baseColor,
@@ -126,22 +125,22 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
             val vDistance = verticalDistance
             val hDistance = horizontalDistance
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
-                    val valOutOfRange = abs(pos.y - positions.minY()) > vDistance
-                    val xzOutOfRange = abs(pos.x - positions.minX()) > hDistance ||
-                        abs(pos.z - positions.minZ()) > hDistance
+                    val valOutOfRange = abs(pos.y - it.pos.y) > vDistance
+                    val xzOutOfRange = abs(pos.x - it.pos.x) > hDistance ||
+                        abs(pos.z - it.pos.z) > hDistance
                     if (valOutOfRange || xzOutOfRange) {
                         return@forEach
                     }
 
-                    val fade = calculateFade(positions.from)
+                    val fade = calculateFade(it.pos)
                     val baseColor = it.color().with(a = 50).fade(fade)
                     val transparentColor = baseColor.with(a = 0)
                     val box = positions.box
-                    withPositionRelativeToCamera(positions.from) {
+                    withPositionRelativeToCamera(it.pos) {
                         drawBoxSide(
                             box,
                             Direction.DOWN,
@@ -155,11 +154,10 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
         }
     }
 
-    private fun Hole.color() = when (type) {
-        Hole.Type.ONE_ONE if bedrockOnly -> colorBedrock
-        Hole.Type.ONE_TWO -> color1by2
-        Hole.Type.TWO_TWO -> color2by2
-        else -> color1by1
+    private fun Hole.color() = when (this) {
+        is Hole.OneByOne -> if (bedrockOnly) colorBedrock else color1by1
+        is Hole.OneByTwo -> color1by2
+        is Hole.TwoByTwo -> color2by2
     }
 
     private fun calculateFade(pos: BlockPos): Float {

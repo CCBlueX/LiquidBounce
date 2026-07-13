@@ -1,22 +1,26 @@
 import type {
     BedState,
-    HudComponent,
     ConfigurableSetting,
-    ItemStack, MinecraftKey, MinecraftKeyboardKey, MinecraftMouseKey,
+    HudComponent,
+    ItemStack,
+    MinecraftKey,
+    MinecraftKeyboardKey,
+    MinecraftMouseKey,
     PlayerData,
     Proxy,
     Screen,
     Server,
-    Session, Setting,
-    TextComponent,
+    Session,
+    Setting,
     StatusEffect,
+    TextComponent,
 } from "./types";
-
 
 
 export interface EventMap {
     socketReady: void;
 
+    themeColorChange: ThemeColorChangeEvent;
     clickGuiScaleChange: ClickGuiScaleChangeEvent;
     clickGuiValueChange: ClickGuiValueChangeEvent;
     spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
@@ -74,6 +78,12 @@ export interface EventMap {
     death: void;
 }
 
+export interface ThemeColorChangeEvent {
+    themeId: string;
+    name: "Accent" | "Tint";
+    value: number;
+}
+
 export interface ClickGuiValueChangeEvent {
     configurable: ConfigurableSetting;
 }
@@ -103,17 +113,22 @@ export interface MouseButtonEvent {
 
 export interface KeyboardCharEvent {
     codePoint: number;
-    modifiers: number;
 }
 
 export interface ScaleFactorChangeEvent {
     scaleFactor: number;
 }
 
-export interface ComponentsUpdateEvent {
-    id: string | null;
-    components: HudComponent[];
-}
+export type ComponentsUpdateEvent =
+    | {
+        source: "native";
+        components: HudComponent[];
+    }
+    | {
+        source: "theme";
+        themeId: string;
+        components: HudComponent[];
+    };
 
 export interface ClientPlayerDataEvent {
     playerData: PlayerData;

@@ -55,6 +55,7 @@ object ModuleMiddleClickAction : ClientModule(
     private val mode = modes(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
 
     override fun onDisabled() {
+        SilentHotbar.resetSlot(Pearl)
         Pearl.disable()
     }
 
@@ -65,7 +66,7 @@ object ModuleMiddleClickAction : ClientModule(
         private var wasPressed = false
 
         val repeatable = handler<GameTickEvent> {
-            if (mc.screen != null) {
+            if (mc.gui.screen() != null) {
                 wasPressed = false
                 return@handler
             }

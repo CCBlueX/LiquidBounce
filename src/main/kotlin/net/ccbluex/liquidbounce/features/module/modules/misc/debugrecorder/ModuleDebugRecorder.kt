@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatTrainerRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.GenericDebugRecorder
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.onClick
@@ -105,7 +105,7 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", ModuleCategories.MISC
                 }
                 file.absolutePath
             }.onFailure {
-                chat(markAsError("Failed to write log to file $it".asText()))
+                chat(markAsError("Failed to write log to file $it"))
             }.onSuccess { path ->
                 val text = path.asText()
                     .underline(true)

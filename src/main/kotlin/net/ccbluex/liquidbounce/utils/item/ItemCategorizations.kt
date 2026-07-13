@@ -19,92 +19,101 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.utils.kotlin.contains
+import net.minecraft.core.TypedInstance
+import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.food.FoodProperties
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.Tool
 
 val ItemStack.isConsumable: Boolean
-    get() = this.isFood || this.item == Items.POTION || this.item == Items.MILK_BUCKET
+    get() = this.has(DataComponents.CONSUMABLE)
 
 val ItemStack.isFood: Boolean
-    get() = foodComponent != null && this.useAnimation == ItemUseAnimation.EAT
+    get() = foodComponent != null
 
-val ItemStack.foodComponent: FoodProperties?
+val DataComponentGetter.foodComponent: FoodProperties?
     get() = this.get(DataComponents.FOOD)
 
-val ItemStack.toolComponent: Tool?
+val DataComponentGetter.toolComponent: Tool?
     get() = this.get(DataComponents.TOOL)
 
-val ItemStack.isBundle
+val TypedInstance<Item>.isBundle
     get() = this.`is`(ItemTags.BUNDLES)
+
+val TypedInstance<Item>.isAnyChest: Boolean
+    get() = this.`is`(Items.CHEST)
+        || this.`is`(Items.TRAPPED_CHEST)
+        || this.`is`(Items.ENDER_CHEST)
+        || this.typeHolder().value() in Items.COPPER_CHEST
 
 // Tools
 
-val ItemStack.isSword
+val TypedInstance<Item>.isSword
     get() = this.`is`(ItemTags.SWORDS)
 
-val ItemStack.isSpear
+val TypedInstance<Item>.isSpear
     get() = this.`is`(ItemTags.SPEARS)
 
-val ItemStack.isPickaxe
+val TypedInstance<Item>.isPickaxe
     get() = this.`is`(ItemTags.PICKAXES)
 
-val ItemStack.isAxe
+val TypedInstance<Item>.isAxe
     get() = this.`is`(ItemTags.AXES)
 
-val ItemStack.isShovel
+val TypedInstance<Item>.isShovel
     get() = this.`is`(ItemTags.SHOVELS)
 
-val ItemStack.isHoe
+val TypedInstance<Item>.isHoe
     get() = this.`is`(ItemTags.HOES)
 
 /**
  * Replacement of 1.21.4 `MiningToolItem`
  */
-val ItemStack.isMiningTool
+val TypedInstance<Item>.isMiningTool
     get() = isAxe || isPickaxe || isShovel || isHoe
 
 // Armors
 
-val ItemStack.isFootArmor
+val TypedInstance<Item>.isFootArmor
     get() = this.`is`(ItemTags.FOOT_ARMOR)
 
-val ItemStack.isLegArmor
+val TypedInstance<Item>.isLegArmor
     get() = this.`is`(ItemTags.LEG_ARMOR)
 
-val ItemStack.isChestArmor
+val TypedInstance<Item>.isChestArmor
     get() = this.`is`(ItemTags.CHEST_ARMOR)
 
-val ItemStack.isHeadArmor
+val TypedInstance<Item>.isHeadArmor
     get() = this.`is`(ItemTags.HEAD_ARMOR)
 
-val ItemStack.isPlayerArmor
+val TypedInstance<Item>.isPlayerArmor
     get() = isFootArmor || isLegArmor || isChestArmor || isHeadArmor
 
-val ItemStack.equippableComponent
+val DataComponentGetter.equippableComponent
     get() = this.get(DataComponents.EQUIPPABLE)
 
-val ItemStack.equipmentSlot
+val DataComponentGetter.equipmentSlot
     get() = this.equippableComponent?.slot
 
-val ItemStack.armorToughness
-    get() = this.getAttributeValue(Attributes.ARMOR_TOUGHNESS)
+val DataComponentGetter.armorToughness
+    get() = this.getAttributeValue(Attributes.ARMOR_TOUGHNESS, this.equipmentSlot)
 
-val ItemStack.armorValue
-    get() = this.getAttributeValue(Attributes.ARMOR)
+val DataComponentGetter.armorValue
+    get() = this.getAttributeValue(Attributes.ARMOR, this.equipmentSlot)
 
-val ItemStack.armorKnockbackResistance
-    get() = this.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE)
+val DataComponentGetter.armorKnockbackResistance
+    get() = this.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE, this.equipmentSlot)
 
 // Shield
 
 /**
  * @see Items.SHIELD
  */
-val ItemStack.blocksAttacksComponent
+val DataComponentGetter.blocksAttacksComponent
     get() = this.get(DataComponents.BLOCKS_ATTACKS)

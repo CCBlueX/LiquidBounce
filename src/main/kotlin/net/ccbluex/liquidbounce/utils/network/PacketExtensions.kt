@@ -21,15 +21,22 @@ package net.ccbluex.liquidbounce.utils.network
 
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_9
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.toNullable
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.network.protocol.game.ServerboundContainerSlotStateChangedPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
+import net.minecraft.world.phys.Vec3
 
 fun Packet<*>?.isC2SContainerPacket() =
     this is ServerboundContainerClickPacket ||
@@ -51,9 +58,30 @@ fun Packet<*>?.isLocalPlayerVelocity(considerExplosion: Boolean = true): Boolean
     }
 }
 
+val ServerboundMovePlayerPacket.position: Vec3
+    inline get() = Vec3(x, y, z)
+
 fun ClientboundSetEntityMotionPacket.isMovementYFallDamage(): Boolean {
     // >= 1.21.9 -0.0783739241897089
     // < 1.21.9 -0.07825184642617344
     return this.movement.y.toRawBits() ==
         (if (isNewerThanOrEquals1_21_9) -4633060179779189496L else -4633068976409115392L)
 }
+
+/**
+ * In version <= 1.21.11 [ServerboundAttackPacket] & [ServerboundSpectatorActionPacket]
+ * belong to [ServerboundInteractPacket]
+ */
+val Packet<*>.entityIdC2SInteractOrAttack: Int?
+    get() = when (this) {
+        is ServerboundInteractPacket -> this.entityId
+        is ServerboundAttackPacket -> this.entityId
+        is ServerboundSpectatorActionPacket -> this.spectateEntityId.toNullable()
+        else -> null
+    }
+
+/**
+ * @see net.minecraft.world.entity.LivingEntity.checkTotemDeathProtection
+ */
+val ClientboundEntityEventPacket.isDeathProtection: Boolean
+    get() = this.eventId == 35.toByte()

@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
+import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
@@ -46,16 +48,12 @@ class AlignedFace(from: Vec3, to: Vec3) {
     val area: Double
         get() {
             val dims = dimensions
-
-            return (dims.x * dims.y + dims.y * dims.z + dims.x * dims.z) * 2.0
+            return dims.x * dims.y + dims.y * dims.z + dims.x * dims.z
         }
 
     val center: Vec3
-        get() = Vec3(
-            (to.x + from.x) * 0.5,
-            (to.y + from.y) * 0.5,
-            (to.z + from.z) * 0.5
-        )
+        get() = from.lerp(to, 0.5)
+
     val dimensions: Vec3
         get() = Vec3(
             to.x - from.x,
@@ -63,52 +61,20 @@ class AlignedFace(from: Vec3, to: Vec3) {
             to.z - from.z,
         )
 
-    /**
-     * If this face is empty, return null, otherwise return this face
-     */
-    fun requireNonEmpty(): AlignedFace? {
-        if (Mth.equal(this.area, 0.0)) {
-            return null
-        }
+    fun requireNonEmpty(): AlignedFace? =
+        takeUnless { Mth.equal(area, 0.0) }
 
-        return this
-    }
-
-    fun truncateY(minY: Double): AlignedFace {
-        val newFace = AlignedFace(
-            Vec3(this.from.x, this.from.y.coerceAtLeast(minY), this.from.z),
-            Vec3(this.to.x, this.to.y.coerceAtLeast(minY), this.to.z)
+    fun truncateY(minY: Double): AlignedFace =
+        AlignedFace(
+            Vec3(from.x, from.y.coerceAtLeast(minY), from.z),
+            Vec3(to.x, to.y.coerceAtLeast(minY), to.z)
         )
 
-        return newFace
-    }
+    fun clamp(box: AABB): AlignedFace = AlignedFace(box.getNearestPoint(from), box.getNearestPoint(to))
 
-    fun clamp(box: AABB): AlignedFace {
-        val xRange = box.minX..box.maxX
-        val yRange = box.minY..box.maxY
-        val zRange = box.minZ..box.maxZ
+    fun offset(vec: Vec3): AlignedFace = AlignedFace(from + vec, to + vec)
 
-        val newFrom = Vec3(
-            this.from.x.coerceIn(xRange),
-            this.from.y.coerceIn(yRange),
-            this.from.z.coerceIn(zRange)
-        )
-        val newTo = Vec3(
-            this.to.x.coerceIn(xRange),
-            this.to.y.coerceIn(yRange),
-            this.to.z.coerceIn(zRange)
-        )
-
-        return AlignedFace(newFrom, newTo)
-    }
-
-    fun offset(vec: Vec3): AlignedFace {
-        return AlignedFace(this.from + vec, this.to + vec)
-    }
-
-    fun offset(vec: Vec3i): AlignedFace {
-        return AlignedFace(this.from + vec, this.to + vec)
-    }
+    fun offset(vec: Vec3i): AlignedFace = AlignedFace(from + vec, to + vec)
 
     fun randomPointOnFace(): Vec3 {
         return Vec3(
@@ -118,74 +84,45 @@ class AlignedFace(from: Vec3, to: Vec3) {
         )
     }
 
-    fun coerceInFace(line: Line): LineSegment? {
-        val edges = getEdges()
-
-        val nearestPointsToEdges = edges.mapNotNull {
-            val (nearestPointOnLine, nearestPointOnFace) = line.getNearestPointsTo(it) ?: return@mapNotNull null
-
+    fun coerceInFace(line: LinearGeometry3): LineSegment? {
+        val nearestPointsToEdges = getEdges().mapNotNull { edge ->
+            val (nearestPointOnLine, nearestPointOnFace) = line.getNearestPointsTo(edge) ?: return@mapNotNull null
             nearestPointOnFace.distanceToSqr(nearestPointOnLine) to nearestPointOnFace
         }.sortedBy { it.first }
 
-        // If less than 2 points found, we can't form a valid segment
         if (nearestPointsToEdges.size < 2) {
             return null
         }
 
         val p1 = nearestPointsToEdges[0].second
         val p2 = nearestPointsToEdges[1].second
-        val direction = p2.subtract(p1)
-
-        // If points are too close, it's a zero-length segment which is invalid
-        if (direction.isLikelyZero) {
+        if (p2.subtract(p1).isLikelyZero) {
             return null
         }
 
-        return LineSegment(p1, direction, 0.0..1.0)
+        return LineSegment(p1, p2)
     }
 
     fun toPlane(): NormalizedPlane {
-        val dims = this.dimensions
-
-        val xy = Vec3(
-            dims.x,
-            dims.y,
-            0.0
-        )
-
-        val zy = Vec3(
-            0.0,
-            dims.y,
-            dims.z
-        )
-
-        return NormalizedPlane.fromParams(this.from, xy, zy)
+        val (directionA, directionB) = getDirectionVectors()
+        return NormalizedPlane.fromParams(from, directionA, directionB)
     }
 
-    /**
-     * The face needs to be axis-aligned.
-     */
-    fun nearestPointTo(otherLine: Line): Vec3 {
+    fun nearestPointTo(otherLine: LinearGeometry3): Vec3 {
         val (d1, d2) = getDirectionVectors()
-
-        val plane = NormalizedPlane.fromParams(this.from, d1, d2)
-
+        val plane = NormalizedPlane.fromParams(from, d1, d2)
         val edges = getEdges()
-
         val intersection = plane.intersection(otherLine)
+        val faceCenter = center
 
         if (intersection != null) {
             val isIntersectionInFace = edges.all {
-                val lineCenter = it.getPosition(0.5)
-                val lineCenterToFaceCenter = lineCenter.subtract(this.center)
+                val lineCenter = it.pointAt(0.5)
+                val lineCenterToFaceCenter = lineCenter.subtract(faceCenter)
                 val lineCenterToIntersection = lineCenter.subtract(intersection)
-
-                // Check if the two vectors are pointing in the same direction
-                return@all lineCenterToIntersection.dot(lineCenterToFaceCenter) > 0.0
+                lineCenterToIntersection.dot(lineCenterToFaceCenter) > 0.0
             }
 
-            // Is the intersection in the face?
-            // If edges are empty (tiny face), we assume intersection on plane IS in face if it exists
             if (edges.isEmpty() || isIntersectionInFace) {
                 return intersection
             }
@@ -193,47 +130,33 @@ class AlignedFace(from: Vec3, to: Vec3) {
 
         val minDistanceToBorder = edges.mapNotNull {
             val (p1, p2) = it.getNearestPointsTo(otherLine) ?: return@mapNotNull null
-
             p1.distanceToSqr(p2) to p1
         }.minByOrNull { it.first }
 
-        return minDistanceToBorder?.second ?: intersection ?: center
+        return minDistanceToBorder?.second ?: intersection ?: faceCenter
     }
 
     private fun getEdges(): List<LineSegment> = buildList(4) {
         val (d1, d2) = getDirectionVectors()
-        val phiRange = 0.0..1.0
 
         if (!d1.isLikelyZero) {
-            this += LineSegment(from, d1, phiRange)
-            this += LineSegment(to, d1.reverse(), phiRange)
+            this += LineSegment(from, from + d1)
+            this += LineSegment(to, to - d1)
         }
         if (!d2.isLikelyZero) {
-            this += LineSegment(from, d2, phiRange)
-            this += LineSegment(to, d2.reverse(), phiRange)
+            this += LineSegment(from, from + d2)
+            this += LineSegment(to, to - d2)
         }
     }
 
     private fun getDirectionVectors(): Pair<Vec3, Vec3> {
-        val dims = this.dimensions
+        val dims = dimensions
 
-        // This is a quick hack. If a non-axis-aligned face should be processed, this part just
-        // has to be swapped with more robust code.
         return when {
-            Mth.equal(dims.x, 0.0) -> {
-                Vec3(0.0, dims.y, 0.0) to Vec3(0.0, 0.0, dims.z)
-            }
-
-            Mth.equal(dims.y, 0.0) -> {
-                Vec3(dims.x, 0.0, 0.0) to Vec3(0.0, 0.0, dims.z)
-            }
-
-            Mth.equal(dims.z, 0.0) -> {
-                Vec3(0.0, dims.y, 0.0) to Vec3(dims.x, 0.0, 0.0)
-            }
-
+            Mth.equal(dims.x, 0.0) -> Vec3(0.0, dims.y, 0.0) to Vec3(0.0, 0.0, dims.z)
+            Mth.equal(dims.y, 0.0) -> Vec3(dims.x, 0.0, 0.0) to Vec3(0.0, 0.0, dims.z)
+            Mth.equal(dims.z, 0.0) -> Vec3(0.0, dims.y, 0.0) to Vec3(dims.x, 0.0, 0.0)
             else -> error("Face must be axis aligned for this function to work. dimensions=$dimensions")
         }
     }
-
 }

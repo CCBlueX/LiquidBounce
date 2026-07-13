@@ -18,11 +18,21 @@
  */
 package net.ccbluex.liquidbounce.utils.world.stronghold
 
+import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
 class StrongholdHypothesisGeneratorTest {
+
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun bootstrapMinecraft() {
+            MinecraftBootstrap.ensureInitialized()
+        }
+    }
 
     @Test
     fun `generator emits fixed stronghold count`() {
@@ -30,8 +40,7 @@ class StrongholdHypothesisGeneratorTest {
 
         assertEquals(10, hypotheses.size)
         hypotheses.forEach {
-            assertEquals(128, it.chunkX.size)
-            assertEquals(128, it.chunkZ.size)
+            assertEquals(128, it.chunks.size)
         }
     }
 
@@ -47,7 +56,6 @@ class StrongholdHypothesisGeneratorTest {
         val generatedA = StrongholdHypothesisGenerator.generate(1, seed = 42L).first()
         val generatedB = StrongholdHypothesisGenerator.generate(1, seed = 42L).first()
 
-        assertArrayEquals(generatedA.chunkX, generatedB.chunkX)
-        assertArrayEquals(generatedA.chunkZ, generatedB.chunkZ)
+        assertArrayEquals(generatedA.chunks, generatedB.chunks)
     }
 }

@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.CachedPlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -74,7 +73,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
         && !ModuleBlink.running
         && !ModuleMurderMystery.disallowsArrowDodge()
         && !(Ignore.OPEN_INVENTORY !in ignore
-            && (InventoryManager.isInventoryOpen || mc.screen is ContainerScreen))
+            && (InventoryManager.isInventoryOpen || mc.gui.screen() is ContainerScreen))
         && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
         && !(Ignore.USING_SCAFFOLD !in ignore && ModuleScaffold.running)
 
@@ -206,7 +205,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
 
     fun getInflictedHit(pos: Vec3): HitInfo? {
         val arrows = world.findFlyingArrows()
-        val playerSimulation = RigidPlayerSimulation(pos)
+        val playerSimulation = PlayerSimulation.Rigid(pos)
 
         return getInflictedHits(playerSimulation, arrows, maxTicks = 40)
     }

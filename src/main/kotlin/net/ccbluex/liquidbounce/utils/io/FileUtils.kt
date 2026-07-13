@@ -19,12 +19,16 @@
 
 package net.ccbluex.liquidbounce.utils.io
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.RandomAccessFile
-import java.util.BitSet
 import javax.imageio.ImageIO
 import okio.Buffer
 import okio.BufferedSource
+import java.awt.Font
+import java.io.File
+import java.io.InputStream
 
 /**
  * Skips the current line in the file.
@@ -52,19 +56,6 @@ fun RandomAccessFile.skipLine(): Long {
     }
 
     return read
-}
-
-@JvmField
-val ILLEGAL_FILE_NAME_CHARS_WINDOWS = BitSet(128).apply {
-    set('\\'.code)
-    set('/'.code)
-    set(':'.code)
-    set('*'.code)
-    set('?'.code)
-    set('"'.code)
-    set('<'.code)
-    set('>'.code)
-    set('|'.code)
 }
 
 @Suppress("ThrowsCount")
@@ -105,3 +96,15 @@ fun BufferedSource.ensurePngOrConvertJpeg(): BufferedSource {
 
     throw IllegalArgumentException("Unsupported image format: only PNG and JPEG are allowed")
 }
+
+suspend fun File.createFont(fontFormat: Int = Font.TRUETYPE_FONT): Font =
+    withContext(Dispatchers.IO) {
+        Font.createFont(fontFormat, this@createFont)
+    }
+
+suspend fun InputStream.createFont(fontFormat: Int = Font.TRUETYPE_FONT): Font =
+    withContext(Dispatchers.IO) {
+        this@createFont.use {
+            Font.createFont(fontFormat, it)
+        }
+    }

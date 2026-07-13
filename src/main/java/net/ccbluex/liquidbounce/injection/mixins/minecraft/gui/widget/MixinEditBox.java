@@ -31,7 +31,7 @@ public abstract class MixinEditBox {
     @Shadow
     private int displayPos;
 
-    @ModifyArg(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/EditBox;applyFormat(Ljava/lang/String;I)Lnet/minecraft/util/FormattedCharSequence;"))
+    @ModifyArg(method = "extractWidgetRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/EditBox;applyFormat(Ljava/lang/String;I)Lnet/minecraft/util/FormattedCharSequence;"))
     private String censorText(String string) {
         return ModuleTextFieldProtect.INSTANCE.protect(string, this.displayPos);
     }

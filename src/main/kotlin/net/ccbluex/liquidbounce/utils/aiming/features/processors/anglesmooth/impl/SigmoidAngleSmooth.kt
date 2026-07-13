@@ -69,9 +69,7 @@ class SigmoidAngleSmooth(parent: ModeValueGroup<*>) : FactorAngleSmooth("Sigmoid
         val sigmoid = 1 / (1 + exp((-steepness * (scaledDifference - midpoint)).toDouble()))
         val interpolatedSpeed = sigmoid * turnSpeed
 
-        return interpolatedSpeed.toFloat()
-            .coerceAtLeast(0f)
-            .coerceAtMost(180f)
+        return interpolatedSpeed.toFloat().coerceIn(0f, 180f)
     }
 
 }

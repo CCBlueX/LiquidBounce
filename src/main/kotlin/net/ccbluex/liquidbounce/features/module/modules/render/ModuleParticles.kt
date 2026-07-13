@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.collisionShape
@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.render.asTexture
@@ -97,7 +97,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        val cameraPos = mc.gameRenderer.mainCamera.position()
+        val cameraPos = mc.gameRenderer.mainCamera().position()
         particles.removeIf { particle ->
             if (particle.alpha <= 0 || cameraPos.distanceToSqr(particle.pos) > 30 * 30) {
                 true
@@ -117,7 +117,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
         chronometer.reset()
 
         val directionVector = (RotationManager.currentRotation ?: player.rotation).directionVector
-        val pos = player.eyePosition.add(directionVector * player.distanceTo(event.entity).toDouble())
+        val pos = player.eyePosition.fma(player.distanceTo(event.entity).toDouble(), directionVector)
 
         repeat(count.random()) {
             particles.add(Particle(pos, builtinParticles.random()))
@@ -126,7 +126,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
 
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             for (particle in particles) {
                 if (!particle.visible) continue
 
@@ -236,7 +236,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
 
                 with(poseStack) {
                     translate(-size / 2.0, -size / 2.0, 0.0)
-                    mulPose(mc.gameRenderer.mainCamera.rotation())
+                    mulPose(mc.gameRenderer.mainCamera().rotation())
                     scale(-1.0f, 1.0f, -1.0f)
                     mulPose(Quaternionf().fromAxisAngleDeg(0.0f, 0.0f, 1.0f, rotation))
                     translate(size / 2.0, size / 2.0, 0.0)

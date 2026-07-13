@@ -29,12 +29,12 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.world.phys.AABB
 
 /**
@@ -89,7 +89,7 @@ object ModuleRotations : ClientModule("Rotations", ModuleCategories.RENDER) {
         }
 
         val next = if (smooth > 0f) {
-            interpolate(prev, current, 1f - smooth)
+            prev.interpolateTo(current, 1f - smooth)
         } else {
             current
         }
@@ -100,51 +100,30 @@ object ModuleRotations : ClientModule("Rotations", ModuleCategories.RENDER) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val partialTicks = event.partialTicks
-
         val drawVectorLine = vectorLine.a > 0
         val drawVectorDot = vectorDot.a > 0
 
         if (drawVectorLine || drawVectorDot) {
             val currentRotation = RotationManager.currentRotation ?: return@handler
             val previousRotation = RotationManager.previousRotation ?: currentRotation
-            val camera = mc.gameRenderer.mainCamera
 
-            val interpolatedRotationVec = previousRotation.directionVector.lerp(currentRotation.directionVector,
-                partialTicks.toDouble()
-            )
+            val interpolatedRotationVec = previousRotation.directionVector
+                .lerp(currentRotation.directionVector, event.partialTicks.toDouble())
+                .toVec3f()
 
-            val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotateX((-Math.toRadians(camera.xRot().toDouble())).toFloat())
-                .rotateY((-Math.toRadians(camera.yRot().toDouble())).toFloat())
+            val eyeVector = Vec3f.eyeVector(event.camera)
 
-            if (drawVectorLine) {
-                renderEnvironmentForWorld(matrixStack) {
-                    drawLine(
-                        eyeVector, eyeVector + Vec3f(interpolatedRotationVec * 100.0),
-                        vectorLine.argb,
-                    )
+            event.renderEnvironment {
+                val vector = eyeVector.fma(100f, interpolatedRotationVec)
+                if (drawVectorLine) {
+                    drawLine(eyeVector, vector, vectorLine.argb)
                 }
-            }
 
-            if (drawVectorDot) {
-                renderEnvironmentForWorld(matrixStack) {
-                    val vector = eyeVector + Vec3f(interpolatedRotationVec * 100.0)
+                if (drawVectorDot) {
                     drawBox(AABB.ofSize(vector.toVec3d(), 2.5, 2.5, 2.5), vectorDot)
                 }
             }
         }
-    }
-
-    private fun interpolate(from: Rotation, to: Rotation, factor: Float): Rotation {
-        val diffYaw = to.yaw - from.yaw
-        val diffPitch = to.pitch - from.pitch
-
-        val interpolatedYaw = from.yaw + diffYaw * factor
-        val interpolatedPitch = from.pitch + diffPitch * factor
-
-        return Rotation(interpolatedYaw, interpolatedPitch)
     }
 
     override fun onDisabled() {
