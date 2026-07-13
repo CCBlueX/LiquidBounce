@@ -36,7 +36,7 @@ object CriticalsStopSprint : Mode("StopSprint") {
         get() = ModuleCriticals.modes
 
     private val controlSprintKey by boolean("ControlSprintKey", true)
-    private val hurtTime by intRange("HurtTime", 0..2, 0..10)
+    private val hurtTime by intRange("HurtTime", 0..10, 0..10)
 
     @Suppress("unused")
     private val sprintEventHandler = handler<SprintEvent> { event ->

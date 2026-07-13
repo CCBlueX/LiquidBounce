@@ -64,8 +64,9 @@ import net.minecraft.world.phys.Vec3
  */
 object VelocityReduce : VelocityMode("Reduce") {
 
-    private val attackCount by intRange("AttackCount", 3..3, 0..20)
-    private val attackTargetRange by floatRange("AttackTargetRange", 2f..3f, 0f..6f)
+
+    private val attackCount by intRange("AttackCount", 4..5, 0..20)
+    private val attackTargetRange by floatRange("AttackTargetRange", 2f..2.5f, 0f..6f)
     private val lagTargetRange by floatRange("LagTargetRange", 2f..6f, 0f..20f)
     private val lagMaxDelay by int("LagMaxDelay", 10, 1..1000, "ticks")
     private val lagRequireKillAura by boolean("LagRequireKillAura", false)
