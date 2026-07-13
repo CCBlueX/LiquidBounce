@@ -193,14 +193,14 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
         else -> CriticalsJump.shouldWaitForCrit(target, ignoreState)
     }
 
-    fun allowsCriticalHit(ignoreOnGround: Boolean = false): Boolean {
-        val blockingEffects = arrayOf(LEVITATION, BLINDNESS, SLOW_FALLING)
+    private val blockingEffects = arrayOf(LEVITATION, BLINDNESS, SLOW_FALLING)
 
+    fun allowsCriticalHit(ignoreOnGround: Boolean = false): Boolean {
         val blockingConditions = booleanArrayOf(
             // Modules
             ModuleFly.running,
             ModuleLiquidWalk.running && ModuleLiquidWalk.standingOnWater(),
-            player.isInLava, player.isInWater, player.isPassenger,
+            player.isInLiquid, player.isPassenger,
             // Cobwebs
             player.box.collideBlockIntersects(checkCollisionShape = false) { it is WebBlock },
             // Effects

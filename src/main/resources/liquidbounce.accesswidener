@@ -183,6 +183,3 @@ accessible field net/minecraft/client/gui/GuiGraphicsExtractor scissorStack Lnet
 accessible field net/minecraft/client/gui/GuiGraphicsExtractor guiRenderState Lnet/minecraft/client/renderer/state/gui/GuiRenderState;
 
 accessible method net/minecraft/world/item/enchantment/EnchantmentHelper getComponentType (Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/core/component/DataComponentType;
-
-accessible class net/minecraft/client/gui/components/SubtitleOverlay$Subtitle
-accessible class net/minecraft/client/gui/components/SubtitleOverlay$SoundPlayedAt

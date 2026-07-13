@@ -66,13 +66,16 @@ sealed class TitleEvent : CancellableEvent(), WebSocketEvent {
     class Clear(var reset: Boolean) : TitleEvent()
 }
 
-@Tag("soundSubtitles")
-class SoundSubtitlesEvent(val subtitles: List<SoundSubtitleEntry>) : Event(), WebSocketEvent
+@Tag("closedCaptions")
+class ClosedCaptionsEvent(val entries: Array<ClosedCaptionEntry>) : Event(), WebSocketEvent {
+    override val serializeAsync: Boolean = false
+}
 
-enum class SubtitleDirection { LEFT, RIGHT, CENTER }
+enum class ClosedCaptionDirection { NONE, LEFT, RIGHT }
 
-data class SoundSubtitleEntry(
+data class ClosedCaptionEntry(
     val text: Component,
-    val direction: SubtitleDirection,
-    val opacity: Float
+    val direction: ClosedCaptionDirection,
+    val textColor: Int,
+    val backgroundColor: Int,
 )

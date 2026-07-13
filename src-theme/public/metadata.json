@@ -43,7 +43,7 @@
     "Image",
     "Text",
     "KeyBinds",
-    "Subtitles"
+    "ClosedCaptions"
   ],
   "fonts": [
     "Inter-Black.ttf",

@@ -64,7 +64,7 @@ export interface EventMap {
     subtitle: TitleEventSubtitle;
     titleFade: TitleEventFade;
     clearTitle: TitleEventClear;
-    soundSubtitles: SoundSubtitlesEvent;
+    closedCaptions: ClosedCaptionsEvent;
 
     //GameEvents.kt
     key: KeyEvent;
@@ -285,14 +285,15 @@ export interface TitleEventClear {
     reset: boolean;
 }
 
-export interface SoundSubtitlesEvent {
-    subtitles: SoundSubtitleEntry[];
+export interface ClosedCaptionsEvent {
+    entries: ClosedCaptionEntry[];
 }
 
-export interface SoundSubtitleEntry {
+export interface ClosedCaptionEntry {
     text: TextComponent | string;
-    direction: "LEFT" | "RIGHT" | "CENTER";
-    opacity: number;
+    direction: "NONE" | "LEFT" | "RIGHT";
+    textColor: number;
+    backgroundColor: number;
 }
 
 export interface VirtualScreenEvent {
