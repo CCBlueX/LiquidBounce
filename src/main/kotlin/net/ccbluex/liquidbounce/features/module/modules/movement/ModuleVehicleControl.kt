@@ -58,7 +58,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
     private val glide by float("Glide", -0.15f, -0.3f..0.3f)
 
     private val mouseControl by boolean("MouseControl", false)
-    private val noGlideOnSprint by boolean("NoGlideOnSpring", false)
+    private val noGlideOnSprint by boolean("NoGlideOnSprint", false)
 
     init {
         tree(BaseSpeed)
