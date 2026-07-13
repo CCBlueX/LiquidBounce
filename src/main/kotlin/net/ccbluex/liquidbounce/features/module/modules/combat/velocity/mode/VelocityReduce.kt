@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.multiply
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -63,7 +64,9 @@ import net.minecraft.world.phys.Vec3
  */
 object VelocityReduce : VelocityMode("Reduce") {
 
-    private val attackCount by intRange("AttackCount", 3..3, 0..20)
+
+    private val attackCount by intRange("AttackCount", 5..5, 0..20)
+    private val attackTargetRange by floatRange("AttackTargetRange", 2f..2f, 0f..6f)
     private val lagTargetRange by floatRange("LagTargetRange", 2f..6f, 0f..20f)
     private val lagMaxDelay by int("LagMaxDelay", 10, 1..1000, "ticks")
     private val lagRequireKillAura by boolean("LagRequireKillAura", false)
@@ -93,6 +96,7 @@ object VelocityReduce : VelocityMode("Reduce") {
         doNotIncludeAlways()
     }
 
+    @Suppress("unused")
     private val espMode = modes("BlinkEsp", 2) {
         arrayOf(
             BlinkEspBox(it, ::getEspData),
@@ -171,7 +175,8 @@ object VelocityReduce : VelocityMode("Reduce") {
                 renderTarget = ModuleKillAura.targetTracker.target
             }
             if (!canLag ||
-                ModuleKillAura.targetTracker.target!!.squaredBoxedDistanceTo(player) <= lagTargetRange.start.sq()
+                ModuleKillAura.targetTracker.target!!.squaredBoxedDistanceTo(player)
+                    <= attackTargetRange.endInclusive.sq()
             ) {
                 target = ModuleKillAura.targetTracker.target
             }
@@ -180,11 +185,7 @@ object VelocityReduce : VelocityMode("Reduce") {
 
 
         target = findEntityInCrosshair(
-            (if (canLag) {
-                lagTargetRange.start.toDouble()
-            } else {
-                ModuleKillAura.range.interactionRange.toDouble()
-            }),
+            attackTargetRange.start.toDouble(),
             RotationManager.currentRotation ?: player.rotation
         ) { !it.isRemoved && it.shouldBeAttacked() }?.entity
 
@@ -291,6 +292,12 @@ object VelocityReduce : VelocityMode("Reduce") {
                 target = null
                 return@handler
             }
+            if (target!!.boxedDistanceTo(player) > attackTargetRange.endInclusive) {
+                remainingAttackCount = 0
+                target = null
+                return@handler
+            }
+
             player.isSprinting = false
             attackEntity(target!!, SwingMode.DO_NOT_HIDE)
             forwardInputAttackGameTick = currentGameTick

@@ -31,14 +31,15 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.C
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsPacket
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsTimer
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
-import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
 import net.minecraft.world.effect.MobEffects.BLINDNESS
 import net.minecraft.world.effect.MobEffects.LEVITATION
 import net.minecraft.world.effect.MobEffects.SLOW_FALLING
@@ -61,6 +62,7 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
             CriticalsJump,
             CriticalsBlink,
             CriticalsTimer
+
         )
     }.apply(::tagBy)
 
@@ -70,7 +72,8 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
             NONE("None"),
             LEGIT("Legit"),
             ON_NETWORK("OnNetwork"),
-            ON_ATTACK("OnAttack")
+            ON_ATTACK("OnAttack"),
+            CRITICALS_STOP_SPRINT("controlSprintKey")
         }
 
         override val running: Boolean
@@ -79,6 +82,8 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
         val stopSprinting by enumChoice("StopSprinting", StopSprintingMode.LEGIT)
         private val enemyInRange by float("Range", 4.0f, 0.0f..10.0f)
+        private val stopSprintHurtTime by intRange("HurtTime", 0..2, 0..10)
+        private val stopSprintControlKey by boolean("StopSprintControlKey", true)
 
         @Suppress("unused")
         private val attackHandler = handler<AttackEntityEvent>(
@@ -97,10 +102,35 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
                     if (event.source == SprintEvent.Source.MOVEMENT_TICK || event.source == SprintEvent.Source.INPUT) {
                         event.sprint = false
                     }
+
                 StopSprintingMode.ON_NETWORK ->
                     if (event.source == SprintEvent.Source.NETWORK || event.source == SprintEvent.Source.INPUT) {
                         event.sprint = false
                     }
+
+                StopSprintingMode.CRITICALS_STOP_SPRINT -> {
+                    val isFalling = player.deltaMovement.y < 0.0
+                        && !player.onGround()
+                        && !player.isInWater
+                        && !player.isInLava
+                        && !player.onClimbable()
+                    val isSprintInput = event.sprint && event.source == SprintEvent.Source.INPUT
+                    val killAuraTarget = ModuleKillAura.targetTracker.target
+
+                    if (isFalling
+                        && isSprintInput
+                        && ModuleKillAura.running
+                        && killAuraTarget != null
+                        && killAuraTarget.hurtTime in stopSprintHurtTime
+                    ) {
+                        if (stopSprintControlKey) {
+                            mc.options.keySprint.isDown = false
+                        } else {
+                            event.sprint = false
+                        }
+                    }
+                }
+
                 else -> {}
             }
         }

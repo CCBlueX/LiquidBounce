@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArmorItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArrowItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.GodAxeFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BlockItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BowItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.CrossbowItemFacet
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PotionItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PrimitiveItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.RodItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SharpAxeFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ShieldItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SpearItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SwordItemFacet
@@ -44,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isAxe
@@ -58,6 +61,7 @@ import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ArrowItem
+import net.minecraft.world.item.AxeItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.BucketItem
@@ -239,6 +243,15 @@ class ItemCategorization(
                 is BowItem -> add(BowItemFacet(slot))
                 is CrossbowItem -> add(CrossbowItemFacet(slot))
                 is ArrowItem -> add(ArrowItemFacet(slot))
+                is AxeItem -> {
+                    if (slot.itemStack.attackDamage >= 100) {
+                        add(GodAxeFacet(slot))
+                    } else if (slot.itemStack.attackDamage >= 5) {
+                        add(SharpAxeFacet(slot))
+                    } else {
+                        add(MiningToolItemFacet(slot))
+                    }
+                }
                 is FishingRodItem -> add(RodItemFacet(slot))
                 is ShieldItem -> add(ShieldItemFacet(slot))
                 is BlockItem -> {
