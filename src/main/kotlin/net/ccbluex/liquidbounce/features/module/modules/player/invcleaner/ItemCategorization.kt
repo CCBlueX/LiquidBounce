@@ -20,14 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArmorItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArrowItemFacet
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.GodAxeFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BlockItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BowItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.CrossbowItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.FoodItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.GodAxeFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MaceItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MiningToolItemFacet
@@ -44,10 +43,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldB
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparator
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
-import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.foodComponent
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isFood
@@ -77,6 +77,7 @@ import net.minecraft.world.item.PotionItem
 import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.WindChargeItem
+import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.material.LavaFluid
 import net.minecraft.world.level.material.WaterFluid
 import java.util.function.Predicate
@@ -239,19 +240,24 @@ class ItemCategorization(
             // Everything could be a weapon (i.e. a stick with Knockback II should be considered a weapon)
             add(WeaponItemFacet(slot))
 
+
+
             when (val item = itemStack.item) {
                 is BowItem -> add(BowItemFacet(slot))
                 is CrossbowItem -> add(CrossbowItemFacet(slot))
                 is ArrowItem -> add(ArrowItemFacet(slot))
                 is AxeItem -> {
-                    if (slot.itemStack.attackDamage >= 100) {
+
+                    val getsharpnessLevel = itemStack.getEnchantment(Enchantments.SHARPNESS)
+                    if (getsharpnessLevel >= 100) {
                         add(GodAxeFacet(slot))
-                    } else if (slot.itemStack.attackDamage >= 5) {
+                    } else if (getsharpnessLevel >= 5) {
                         add(SharpAxeFacet(slot))
                     } else {
                         add(MiningToolItemFacet(slot))
                     }
                 }
+
                 is FishingRodItem -> add(RodItemFacet(slot))
                 is ShieldItem -> add(ShieldItemFacet(slot))
                 is BlockItem -> {
@@ -273,6 +279,7 @@ class ItemCategorization(
                     }
                     add(PrimitiveItemFacet(slot, category))
                 }
+
                 is PotionItem -> {
                     val areAllEffectsGood =
                         itemStack.getPotionEffects()
