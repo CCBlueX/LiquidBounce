@@ -36,25 +36,27 @@ object CriticalsStopSprint : Mode("StopSprint") {
         get() = ModuleCriticals.modes
 
     private val controlSprintKey by boolean("ControlSprintKey", true)
-    private val hurtTime by intRange("HurtTime", 0..5, 0..10)
+    private val hurtTime by intRange("HurtTime", 0..2, 0..10)
 
     @Suppress("unused")
     private val sprintEventHandler = handler<SprintEvent> { event ->
-        if (player.deltaMovement.y < 0.0
+        val isFalling = player.deltaMovement.y < 0.0
             && !player.onGround()
             && !player.isInWater
             && !player.isInLava
             && !player.onClimbable()
-            && event.sprint
-            && event.source == SprintEvent.Source.INPUT
+        val isSprintInput = event.sprint && event.source == SprintEvent.Source.INPUT
+        val killAuraTarget = ModuleKillAura.targetTracker.target
+
+        if (isFalling
+            && isSprintInput
             && ModuleKillAura.running
-            && ModuleKillAura.targetTracker.target != null
-            && ModuleKillAura.targetTracker.target!!.hurtTime in hurtTime
+            && killAuraTarget != null
+            && killAuraTarget.hurtTime in hurtTime
         ) {
             if (controlSprintKey) {
                 mc.options.keySprint.isDown = false
-            }
-            else {
+            } else {
                 event.sprint = false
             }
         }

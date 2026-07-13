@@ -36,10 +36,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
-import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
 import net.minecraft.world.effect.MobEffects.BLINDNESS
 import net.minecraft.world.effect.MobEffects.LEVITATION
 import net.minecraft.world.effect.MobEffects.SLOW_FALLING
@@ -58,11 +58,12 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
         arrayOf(
             NoneMode(it),
             CriticalsPacket,
+            CriticalsStopSprint,
             CriticalsNoGround,
             CriticalsJump,
             CriticalsBlink,
-            CriticalsTimer,
-            CriticalsStopSprint
+            CriticalsTimer
+
         )
     }.apply(::tagBy)
 
@@ -99,10 +100,12 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
                     if (event.source == SprintEvent.Source.MOVEMENT_TICK || event.source == SprintEvent.Source.INPUT) {
                         event.sprint = false
                     }
+
                 StopSprintingMode.ON_NETWORK ->
                     if (event.source == SprintEvent.Source.NETWORK || event.source == SprintEvent.Source.INPUT) {
                         event.sprint = false
                     }
+
                 else -> {}
             }
         }
