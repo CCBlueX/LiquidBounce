@@ -28,9 +28,10 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.item.isSpear
-import net.ccbluex.liquidbounce.utils.raytracing.clip
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
@@ -41,10 +42,8 @@ import kotlin.math.ceil
 
 object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, aliases = listOf("AutoSpear")) {
 
-    private const val MIN_SPEAR_DISTANCE = 3f
-    private val maxTargetDistance by float("MaxTargetDistance", 50f, 2f..128f)
-    private val maxSpeed by float("MaxSpeed", 7f, 2f..10f)
-    private val autoAttackOnCharge by boolean("AutoAttackOnCharge", true)
+    private val maxTargetDistance by float("MaxTargetDistance", 50f, 3f..200f)
+    private val maxAllowedSpeed by float("MaxSpeed", 7f, 2f..10f)
 
     private object Preview : ToggleableValueGroup(this, "Preview", true) {
         val fillColor by color("FillColor", Color4b.RED.alpha(67))
@@ -55,138 +54,111 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
         tree(Preview)
     }
 
-    private var state: State = State.Idle
-    private var target: LivingEntity? = null
+    private val attackMovements = ArrayDeque<Vec3>()
+    private var previewTarget: LivingEntity? = null
 
+    internal val currentAttackVelocity get() = currentMovement.length()
+    internal val currentAttackDirection get() = currentMovement.normalize()
+    private val currentMovement get() = attackMovements.firstOrNull() ?: Vec3.ZERO
 
-    private sealed class State {
-        data object Idle : State()
-        data class ChargeDelay(val ticksRemaining: Int) : State()
-        data class Attack(val ticks: Int, val duration: Int, val speed: Double, val direction: Vec3) : State()
+    private val isUsingSpear get() = player.isUsingItem && player.useItem.isSpear
+    private val holdingSpear get() = player.mainHandItem.isSpear || player.offhandItem.isSpear
+
+    private fun resetAttack() {
+        previewTarget = null
+        if (attackMovements.isNotEmpty()) player.deltaMovement = Vec3.ZERO
+        attackMovements.clear()
     }
 
-    internal val currentAttackVelocity: Double
-        get() {
-            val attack = state as? State.Attack ?: return 0.0
-            if (attack.ticks >= attack.duration * 2) return 0.0
-            return attack.speed * if (attack.ticks < attack.duration) 1.0 else -1.0
-        }
-
-    internal val currentAttackDirection: Vec3
-        get() = (state as? State.Attack)?.direction ?: Vec3.ZERO
-
-    private fun freeLookDistance(max: Double): Double {
+    private fun findTarget(): Pair<LivingEntity, Double>? {
         val eye = player.eyePosition
-        val hit = world.clip(
-            eye,
-            eye.add(player.lookAngle.scale(max)),
-            ClipContext.Block.COLLIDER,
-            ClipContext.Fluid.NONE,
-            player
-        )
-        return if (hit.type == HitResult.Type.MISS) max else hit.location.distanceTo(eye)
-    }
+        val lookEnd = eye.add(player.lookAngle.scale(maxTargetDistance.toDouble()))
+        var best: Pair<LivingEntity, Double>? = null
+        var bestDist = Double.MAX_VALUE
 
-    private fun attackDist(d: Float) = d - maxSpeed / 2.0 * (d / (d + maxSpeed / 2.0))
-
-    private fun isTargetReachable(d: Float): Boolean =
-        d in MIN_SPEAR_DISTANCE..maxTargetDistance && attackDist(d).let { travel -> freeLookDistance(travel) >= travel }
-
-    private fun selectTarget(): LivingEntity? {
-        val eye = player.eyePosition
-        val look = player.lookAngle.scale(maxTargetDistance.toDouble())
-        val lookEnd = eye.add(look)
-        val candidates = world.getEntitiesOfClass(
+        for (entity in world.getEntitiesOfClass(
             LivingEntity::class.java,
-            player.boundingBox.expandTowards(look).inflate(1.0)
-        ) { e ->
-            e != player && e.isAlive && e.boundingBox.clip(eye, lookEnd).isPresent
-        }
+            player.boundingBox.expandTowards(lookEnd.subtract(eye)).inflate(1.0)
+        ) { it != player && it.isAlive && it.boundingBox.clip(eye, lookEnd).isPresent }) {
 
-        return candidates
-            .asSequence()
-            .filter { hasLineOfSight(eye, it.boundingBox.center) }
-            .filter { isTargetReachable(player.distanceTo(it)) }
-            .minByOrNull { player.distanceToSqr(it) }
+            val distSq = player.distanceToSqr(entity)
+            if (distSq >= bestDist) continue
+
+            val dist = player.distanceTo(entity)
+            if (dist !in 3f..maxTargetDistance || !hasLineOfSight(eye, entity.boundingBox.center)) continue
+
+            val ticks = ceil(dist / maxAllowedSpeed - 0.5).toInt().coerceAtLeast(1)
+            val travel = 2.0 * dist * ticks / (2.0 * ticks + 1)
+
+            val hit = traceFromPlayer(range = travel, block = ClipContext.Block.COLLIDER)
+            if (hit.type == HitResult.Type.MISS || hit.location.distanceTo(eye) >= travel) {
+                best = entity to travel
+                bestDist = distSq
+            }
+        }
+        return best
     }
 
-    private fun startAttack(): State {
-        val t = target ?: return State.Idle
-        val travel = freeLookDistance(attackDist(player.distanceTo(t)))
-        val duration = ceil(travel / maxSpeed).toInt().coerceAtLeast(1)
-        val direction = t.boundingBox.center.subtract(player.eyePosition).normalize().let {
-            if (it.lengthSqr() > 0.0) it else player.lookAngle.normalize()
-        }
-        return State.Attack(0, duration, travel / duration, direction)
-    }
+    private fun createAttackMovement(target: LivingEntity, distance: Double) {
+        val ticks = ceil(distance / maxAllowedSpeed).toInt().coerceAtLeast(1)
+        val velocity = distance / ticks
 
-    private fun resetState() {
-        target = null
-        if (state is State.Attack) player.deltaMovement = Vec3.ZERO
-        state = State.Idle
+        val direction = PositionExtrapolation.getBestForEntity(target)
+            .getPositionInTicks(ticks.toDouble())
+            .subtract(player.eyePosition)
+            .normalize()
+            .takeIf { it.lengthSqr() > 0 } ?: player.lookAngle.normalize()
+
+        val movement = direction.scale(velocity)
+        val reverse = movement.scale(-1.0)
+
+        repeat(ticks) { attackMovements += movement }
+        repeat(ticks) { attackMovements += reverse }
+        attackMovements += Vec3.ZERO
     }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        if (player.mainHandItem.isSpear || player.offhandItem.isSpear) {
-            target = selectTarget()
+        if (!holdingSpear || !isUsingSpear) {
+            resetAttack()
+            return@handler
+        }
+
+        val shouldFindTarget = Preview.enabled || (attackMovements.isEmpty() && mc.options.keyAttack.isDown)
+        val target = if (shouldFindTarget) findTarget() else null
+        previewTarget = target?.first
+
+        val kineticWeapon = player.useItem.get(DataComponents.KINETIC_WEAPON) ?: run {
+            resetAttack()
+            return@handler
+        }
+        val chargeDuration = kineticWeapon.computeDamageUseDuration() - kineticWeapon.delayTicks
+
+        if (player.ticksUsingItem <= kineticWeapon.delayTicks) {
+            attackMovements.clear()
+            return@handler
+        }
+
+        if (attackMovements.isEmpty()) {
+            val (entity, dist) = target ?: return@handler
+            if (player.ticksUsingItem >= chargeDuration || !mc.options.keyAttack.isDown) return@handler
+            createAttackMovement(entity, dist)
         } else {
-            resetState()
-            return@handler
-        }
-
-        if (!player.isUsingItem || !player.useItem.isSpear) {
-            resetState()
-            return@handler
-        }
-
-        val kineticWeapon = player.useItem.get(DataComponents.KINETIC_WEAPON) ?: return@handler
-        val ticksUsingItem = player.ticksUsingItem
-        val chargeFullDuration = kineticWeapon.computeDamageUseDuration() - kineticWeapon.delayTicks
-        val canAttack = target != null && ticksUsingItem < chargeFullDuration
-
-        state = when {
-            ticksUsingItem == 1 -> State.ChargeDelay(kineticWeapon.delayTicks)
-            ticksUsingItem >= chargeFullDuration && state !is State.Attack -> State.Idle
-            else -> when (val s = state) {
-                State.Idle -> when {
-                    mc.options.keyAttack.isDown && canAttack && autoAttackOnCharge -> startAttack()
-                    else -> State.Idle
-                }
-
-                is State.ChargeDelay -> if (s.ticksRemaining > 1) {
-                    State.ChargeDelay(s.ticksRemaining - 1)
-                } else if (canAttack) {
-                    startAttack()
-                } else {
-                    State.Idle
-                }
-
-                is State.Attack -> if (s.ticks >= s.duration * 2) {
-                    player.deltaMovement = Vec3.ZERO
-                    State.Idle
-                } else {
-                    player.deltaMovement = s.direction.scale(currentAttackVelocity)
-                    player.hurtMarked = true
-                    State.Attack(s.ticks + 1, s.duration, s.speed, s.direction)
-                }
-            }
+            player.deltaMovement = attackMovements.removeFirst()
         }
     }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        if (!Preview.enabled) return@handler
-        val t = target ?: return@handler
-
-        event.renderEnvironment {
-            withPositionRelativeToCamera {
-                if (t is EnderDragon) {
-                    t.subEntities.forEach {
-                        drawBox(it.boundingBox, Preview.fillColor, Preview.outlineColor)
+        if (!Preview.enabled || !isUsingSpear) return@handler
+        previewTarget?.let { target ->
+            event.renderEnvironment {
+                withPositionRelativeToCamera {
+                    if (target is EnderDragon) {
+                        target.subEntities.forEach { drawBox(it.boundingBox, Preview.fillColor, Preview.outlineColor) }
+                    } else {
+                        drawBox(target.boundingBox, Preview.fillColor, Preview.outlineColor)
                     }
-                } else {
-                    drawBox(t.boundingBox, Preview.fillColor, Preview.outlineColor)
                 }
             }
         }
