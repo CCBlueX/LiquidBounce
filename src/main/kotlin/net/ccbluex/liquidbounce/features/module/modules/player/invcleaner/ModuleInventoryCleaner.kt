@@ -25,12 +25,14 @@ import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.fastutil.objectIntArrayMapOf
 import net.ccbluex.fastutil.referenceIntArrayMapOf
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
@@ -38,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.world.item.Item
 
 /**
  * InventoryCleaner module
@@ -50,10 +53,18 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategorie
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
+
     private val maxBlocks by int("MaximumBlocks", 512, 0..2500)
     private val maxArrows by int("MaximumArrows", 128, 0..2500)
     private val maxThrowables by int("MaximumThrowables", 64, 0..600)
     private val maxFoods by int("MaximumFoodPoints", 200, 0..2000)
+    private val maxWaterBuckets by int("MaximumWaterBuckets", 2, 0..16)
+    private val maxLavaBuckets by int("MaximumLavaBuckets", 2, 0..16)
+    private val maxMilkBuckets by int("MaximumMilkBuckets",2,0..16)
+
+
+    private val blockBlackList by items("BlockBlacklist", itemSortedSetOf())
+    private val itemsBlackList by items("ItemsBlacklist", itemSortedSetOf())
 
     private val isGreedy by boolean("Greedy", true)
 
@@ -112,6 +123,9 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategorie
                     ItemType.BLOCK.defaultCategory, maxBlocks,
                     ItemType.THROWABLE.defaultCategory, maxThrowables,
                     ItemType.ARROW.defaultCategory, maxArrows,
+                    ItemCategory(ItemType.BUCKET,0), maxWaterBuckets,
+                    ItemCategory(ItemType.BUCKET,1), maxLavaBuckets,
+                    ItemCategory(ItemType.BUCKET,2), maxMilkBuckets,
                 ),
                 desiredValuePerFunction = referenceIntArrayMapOf(
                     ItemFunction.FOOD, maxFoods,
@@ -181,16 +195,17 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategorie
         return true
     }
 
-    /**
-     * Handles disposal of unwanted items
-     * @return true if an item was scheduled for disposal, false otherwise
-     */
     private fun processItemDisposal(
         event: ScheduleInventoryActionEvent,
         cleanupPlan: InventoryCleanupPlan,
         currentInventorySlots: List<ItemSlot>
     ): Boolean {
-        val itemsToDispose = cleanupPlan.findItemsToThrowOut(currentInventorySlots)
+        val planDisposalItems = cleanupPlan.findItemsToThrowOut(currentInventorySlots)
+        val blacklistedItems = currentInventorySlots
+            .filter { isItemBlackListed(it.itemStack.item) }
+
+        // Blacklisted items
+        val itemsToDispose = (blacklistedItems + planDisposalItems).distinct()
         val itemToThrow = itemsToDispose.firstOrNull() ?: return false
 
         event.schedule(
@@ -200,6 +215,11 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategorie
         )
 
         return true
+    }
+
+
+    private fun isItemBlackListed(item: Item): Boolean {
+        return item in blockBlackList || item in itemsBlackList
     }
 
     private class AmountConstraintProvider(
