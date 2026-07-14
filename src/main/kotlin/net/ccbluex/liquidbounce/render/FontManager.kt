@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
@@ -117,10 +118,16 @@ object FontManager {
     fun fontFace(name: String) = fontFaces[name]
 
     internal fun createGlyphManager() {
+        _glyphManager?.close()
         _glyphManager = FontGlyphPageManager(
-            baseFonts = fontFaces.values,
-            additionalFonts = setOfNotNull(CJK_FONT)
+            baseFonts = ObjectImmutableList(fontFaces.values),
+            fallbackFonts = listOfNotNull(COMMON_FONT, CJK_FONT),
         )
+    }
+
+    internal fun closeGlyphManager() {
+        _glyphManager?.close()
+        _glyphManager = null
     }
 
     internal suspend fun queueFontFromFile(file: File) {

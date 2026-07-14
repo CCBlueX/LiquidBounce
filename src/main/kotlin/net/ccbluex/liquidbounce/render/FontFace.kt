@@ -52,10 +52,15 @@ class FontFace(
     @Volatile
     private var cachedHash: Int = 0
 
+    private var cachedRenderer: FontRenderer? = null
+
     // We only access it on the main thread so don't do synchronized
-    val renderer: FontRenderer by lazy(LazyThreadSafetyMode.NONE) {
-        FontRenderer(this, FontManager.glyphManager)
-    }
+    val renderer: FontRenderer
+        get() {
+            val glyphManager = FontManager.glyphManager
+            return cachedRenderer?.takeIf { it.glyphManager === glyphManager }
+                ?: FontRenderer(this, glyphManager).also { cachedRenderer = it }
+        }
 
     val plainStyle: FontId
         get() = requireNotNull(styles[0]) {
@@ -75,9 +80,13 @@ class FontFace(
         }
 
         withContext(Dispatchers.Default) {
-            val metrics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics().apply {
-                setFont(font)
-            }.fontMetrics
+            val graphics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics()
+            val metrics = try {
+                graphics.font = font
+                graphics.fontMetrics
+            } finally {
+                graphics.dispose()
+            }
 
             styles[style] = FontId(style, font, metrics.height.toFloat(), metrics.ascent.toFloat())
             cachedHash = 0

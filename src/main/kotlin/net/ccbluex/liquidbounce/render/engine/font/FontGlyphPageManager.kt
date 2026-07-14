@@ -19,9 +19,8 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,40 +29,41 @@ import net.ccbluex.liquidbounce.render.engine.font.dynamic.DynamicFontCacheManag
 import net.ccbluex.liquidbounce.render.engine.font.dynamic.DynamicGlyphPage
 import kotlin.math.ceil
 
-private val BASIC_CHARS = '\u0000'..'\u0200'
+private val BASIC_CODEPOINTS = 0x0000..0x0200
 
 class FontGlyphPageManager(
     baseFonts: Collection<FontFace>,
-    additionalFonts: Collection<FontFace> = emptySet()
-): EventListener {
+    private val fallbackFonts: List<FontFace> = emptyList()
+) : EventListener, AutoCloseable {
 
     private val staticPage: List<StaticGlyphPage> = StaticGlyphPage.createGlyphPages(baseFonts.flatMap { loadedFont ->
-        loadedFont.filledStyles.flatMap { font -> BASIC_CHARS.map { ch -> FontGlyph(ch, font) } }
+        loadedFont.filledStyles.flatMap { font -> BASIC_CODEPOINTS.map { codepoint -> FontGlyph(codepoint, font) } }
     })
     private val dynamicPage: DynamicGlyphPage = DynamicGlyphPage(
         fontHeight = ceil(baseFonts.first().plainStyle.height * 2.0F).toInt()
     )
     private val dynamicFontManager: DynamicFontCacheManager = DynamicFontCacheManager(
-        this.dynamicPage,
-        ObjectOpenHashSet<FontFace>(baseFonts.size + staticPage.size).apply {
-            addAll(baseFonts)
-            addAll(additionalFonts)
-        }
+        this.dynamicPage
     )
 
-    private val availableFonts: Map<FontFace, FontGlyphRegistry>
-    private val dynamicallyLoadedGlyphs = Long2ObjectOpenHashMap<GlyphDescriptor>()
+    private val registeredFonts = baseFonts.toSet()
+    private val staticGlyphs = createStaticGlyphRegistry(this.staticPage)
+    private val fallbackGlyphs = baseFonts.associateWith { font ->
+        requireNotNull(staticGlyphs[font.plainStyle]?.get('?'.code)) {
+            "Font $font has no fallback glyph"
+        }
+    }
+    private val dynamicallyLoadedGlyphs = Object2ObjectOpenHashMap<GlyphIdentifier, GlyphDescriptor>()
+    private var closed = false
 
     init {
         this.dynamicFontManager.startThread()
-
-        this.availableFonts = createGlyphRegistries(baseFonts, this.staticPage)
     }
 
     @Suppress("unused")
     private val renderHandler = handler<GameRenderEvent> {
         this.dynamicFontManager.update().forEach { update ->
-            val key = GlyphIdentifier.asLong(update.descriptor.renderInfo.char, update.style)
+            val key = GlyphIdentifier(update.descriptor.renderInfo.codepoint, update.font)
 
             if (!update.removed) {
                 dynamicallyLoadedGlyphs.put(key, update.descriptor)
@@ -73,61 +73,67 @@ class FontGlyphPageManager(
         }
     }
 
-    private fun createGlyphRegistries(
-        baseFonts: Collection<FontFace>,
+    private fun createStaticGlyphRegistry(
         glyphPages: List<StaticGlyphPage>
-    ): Map<FontFace, FontGlyphRegistry> = baseFonts.associateWith { loadedFont ->
-        val array = Array(4) { Char2ObjectOpenHashMap<GlyphDescriptor>(512) }
-
-        loadedFont.filledStyles.forEach { fontId ->
-            glyphPages.forEach { glyphPage ->
-                for ((font, glyphRenderInfo) in glyphPage.glyphs) {
-                    if (font != fontId) {
-                        continue
-                    }
-
-                    array[font.style].put(glyphRenderInfo.char, GlyphDescriptor(glyphPage, glyphRenderInfo))
-                }
+    ): Map<FontId, Int2ObjectOpenHashMap<GlyphDescriptor>> {
+        val result = Object2ObjectOpenHashMap<FontId, Int2ObjectOpenHashMap<GlyphDescriptor>>()
+        glyphPages.forEach { glyphPage ->
+            for ((font, glyphRenderInfo) in glyphPage.glyphs) {
+                result.computeIfAbsent(font) { Int2ObjectOpenHashMap(512) }
+                    .put(glyphRenderInfo.codepoint, GlyphDescriptor(glyphPage, glyphRenderInfo))
             }
         }
-
-        FontGlyphRegistry(array, array[0]['?']!!)
+        return result
     }
 
-    private fun getFont(font: FontFace): FontGlyphRegistry {
-        return availableFonts[font] ?: error("Font $font is not registered")
-    }
+    fun requestGlyph(font: FontFace, style: @FontStyle Int, codepoint: Int): GlyphDescriptor? {
+        check(font in registeredFonts) { "Font $font is not registered" }
 
-    fun requestGlyph(font: FontFace, style: @FontStyle Int, ch: Char): GlyphDescriptor? {
-        val glyph = getFont(font).glyphs[style][ch]
+        val requestedFont = font.style(style) ?: font.plainStyle
+        staticGlyphs[requestedFont]?.get(codepoint)?.let { return it }
 
-        if (glyph == null) {
-            val altGlyph = this.dynamicallyLoadedGlyphs[GlyphIdentifier.asLong(ch, style)]
+        val resolvedFont = resolveFont(font, fallbackFonts, style, codepoint) ?: return null
+        staticGlyphs[resolvedFont]?.get(codepoint)?.let { return it }
 
-            if (altGlyph == null) {
-                this.dynamicFontManager.requestGlyph(ch, style)
-            } else {
-                return altGlyph
-            }
-        }
-
-        return glyph
+        val fontGlyph = FontGlyph(codepoint, resolvedFont)
+        val glyphIdentifier = GlyphIdentifier(fontGlyph)
+        this.dynamicFontManager.requestGlyph(fontGlyph)
+        return this.dynamicallyLoadedGlyphs[glyphIdentifier]
     }
 
     fun getFallbackGlyph(font: FontFace): GlyphDescriptor {
-        return getFont(font).fallbackGlyph
+        return fallbackGlyphs[font] ?: error("Font $font is not registered")
     }
 
-    fun unload() {
+    override fun close() {
+        if (closed) {
+            return
+        }
+        closed = true
+        unregister()
+        this.dynamicFontManager.close()
         this.dynamicPage.texture.close()
         this.staticPage.forEach { it.texture.close() }
+        this.dynamicallyLoadedGlyphs.clear()
     }
-
-    private class FontGlyphRegistry(
-        @JvmField val glyphs: Array<Char2ObjectOpenHashMap<GlyphDescriptor>>,
-        @JvmField val fallbackGlyph: GlyphDescriptor,
-    )
 
 }
 
 class GlyphDescriptor(val page: GlyphPage, val renderInfo: GlyphRenderInfo)
+
+internal fun resolveFont(
+    requestedFace: FontFace,
+    fallbackFaces: List<FontFace>,
+    style: @FontStyle Int,
+    codepoint: Int,
+): FontId? {
+    val requestedFont = requestedFace.style(style) ?: requestedFace.plainStyle
+    if (requestedFont.awtFont.canDisplay(codepoint)) {
+        return requestedFont
+    }
+
+    return fallbackFaces.asSequence()
+        .filter { it !== requestedFace }
+        .map { it.style(style) ?: it.plainStyle }
+        .firstOrNull { it.awtFont.canDisplay(codepoint) }
+}

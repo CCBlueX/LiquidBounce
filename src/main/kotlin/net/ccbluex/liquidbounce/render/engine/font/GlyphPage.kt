@@ -44,9 +44,9 @@ import kotlin.math.max
 @JvmRecord
 data class GlyphRenderInfo(
     /**
-     * Which char does this glyph represent?
+     * Which Unicode codepoint does this glyph represent?
      */
-    val char: Char,
+    val codepoint: Int,
     /**
      * The location of the Glyph on the sprite, may be null if the glyph is a whitespace
      */
@@ -180,7 +180,7 @@ abstract class GlyphPage {
 
             // Draw the character to the atlas, offset by start of the character + a pixel padding
             atlasGraphics.drawString(
-                characterInfo.fontGlyph.codepoint.toString(),
+                Character.toString(characterInfo.fontGlyph.codepoint),
                 characterInfo.atlasLocation.x - characterInfo.glyphMetrics.bounds2D.x.toInt() + 1,
                 characterInfo.atlasLocation.y - characterInfo.glyphMetrics.bounds2D.y.toInt() + 1
             )
@@ -227,7 +227,7 @@ abstract class GlyphPage {
                 return null
             }
 
-            val charString = it.codepoint.toString()
+            val charString = Character.toString(it.codepoint)
             val glyphVector = font.createGlyphVector(fontRendererContext, charString)
 
             val lineMetrics = font.getLineMetrics(charString, fontRendererContext)
@@ -239,5 +239,4 @@ abstract class GlyphPage {
 }
 
 @JvmRecord
-data class FontGlyph(val codepoint: Char, val font: FontId)
-
+data class FontGlyph(val codepoint: Int, val font: FontId)

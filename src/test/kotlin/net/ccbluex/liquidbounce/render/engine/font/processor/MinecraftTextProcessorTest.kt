@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.fastutil.asIntList
 import net.ccbluex.fastutil.intListOf
 import net.ccbluex.fastutil.mapToIntArray
@@ -47,7 +48,7 @@ class MinecraftTextProcessorTest {
             intListOf(Font.PLAIN, Font.BOLD, Font.ITALIC, Font.BOLD or Font.ITALIC),
             processed.chars.mapToIntArray { it.font }.asIntList(),
         )
-        assertEquals("pbix", processed.chars.joinToString("") { it.char.toString() })
+        assertEquals("pbix", processed.chars.joinToString("") { Character.toString(it.codepoint) })
     }
 
     @Test
@@ -69,20 +70,35 @@ class MinecraftTextProcessorTest {
             .append("ab".asPlainText(Style.EMPTY.withUnderlined(true)))
             .append("cd".asPlainText(Style.EMPTY.withStrikethrough(true)))
 
-        val processed = MinecraftTextProcessor.process(text, Color4b(255, 255, 255, 255))
+        val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
 
-        assertEquals(listOf(0, 2), processed.underlines.toIntArray().toList())
-        assertEquals(listOf(2, 4), processed.strikeThroughs.toIntArray().toList())
+        assertEquals(intListOf(0, 2), processed.underlines)
+        assertEquals(intListOf(2, 4), processed.strikeThroughs)
     }
 
     @Test
     fun testProcessUsesObfuscationCharsetWhenRequested() {
         val text = "abcd".asPlainText(Style.EMPTY.withObfuscated(true))
-        val processed = MinecraftTextProcessor.process(text, Color4b(255, 255, 255, 255))
-        val randomChars = TextProcessor.RANDOM_CHARS.toSet()
+        val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
+        val randomCodepoints = IntOpenHashSet(TextProcessor.RANDOM_CHARS)
 
         assertEquals(4, processed.chars.size)
         assertTrue(processed.chars.all { it.obfuscated })
-        assertTrue(processed.chars.all { it.char in randomChars })
+        assertTrue(processed.chars.all { it.codepoint in randomCodepoints })
+    }
+
+    @Test
+    fun testProcessKeepsSupplementaryCodepointsIntact() {
+        val supplementaryCodepoint = 0x20000
+        val text = "a${Character.toString(supplementaryCodepoint)}b"
+            .asPlainText(Style.EMPTY.withUnderlined(true))
+
+        val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
+
+        assertEquals(
+            intListOf('a'.code, supplementaryCodepoint, 'b'.code),
+            processed.chars.mapToIntArray { it.codepoint }.asIntList()
+        )
+        assertEquals(intListOf(0, 3), processed.underlines)
     }
 }
