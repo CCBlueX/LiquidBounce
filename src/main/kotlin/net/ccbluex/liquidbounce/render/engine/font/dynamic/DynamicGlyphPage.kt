@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
-import com.mojang.blaze3d.platform.NativeImage
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
@@ -30,16 +29,16 @@ import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
 import net.ccbluex.liquidbounce.render.engine.font.GlyphRenderInfo
 import net.ccbluex.liquidbounce.utils.render.asTexture
+import net.ccbluex.liquidbounce.utils.render.copyToNativeImage
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import java.awt.Dimension
-import java.awt.Point
-import java.awt.image.BufferedImage
 import kotlin.math.min
 
 class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight: Int) : GlyphPage() {
     private val image = createBufferedImageWithDimensions(atlasSize)
     override val texture = image.toNativeImage().asTexture { "DynamicGlyphPage ${atlasSize.width}x${atlasSize.height}" }
     private val glyphMap = Object2ObjectOpenHashMap<GlyphIdentifier, Pair<GlyphRenderInfo, AtlasSliceHandle>>()
+    private var copyScratchBuffer = IntArray(0)
 
     private val allocator = DynamicAtlasAllocator(
         atlasSize,
@@ -117,30 +116,18 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
     }
 
     private fun updateNativeTexture(generationInfo: Companion.CharacterGenerationInfo) {
-        copyImageSection(
-            fromImage = this.image,
-            toImage = texture.pixels!!,
-            fromLocation = generationInfo.atlasLocation,
-            toLocation = generationInfo.atlasLocation,
-            patchSize = generationInfo.atlasDimension
+        val location = generationInfo.atlasLocation
+        val dimension = generationInfo.atlasDimension
+        copyScratchBuffer = image.copyToNativeImage(
+            target = texture.pixels!!,
+            sourceX = location.x,
+            sourceY = location.y,
+            targetX = location.x,
+            targetY = location.y,
+            width = dimension.width,
+            height = dimension.height,
+            scratchBuffer = copyScratchBuffer,
         )
-
-    }
-
-    private fun copyImageSection(
-        fromImage: BufferedImage,
-        toImage: NativeImage,
-        fromLocation: Point,
-        toLocation: Point,
-        patchSize: Dimension
-    ) {
-        for (i in 0 until patchSize.width) {
-            for (j in 0 until patchSize.height) {
-                val color = fromImage.getRGB(fromLocation.x + i, fromLocation.y + j)
-
-                toImage.setPixel(toLocation.x + i, toLocation.y + j, color)
-            }
-        }
     }
 
     private fun planCharacterPlacement(glyph: FontGlyph): Pair<Companion.CharacterGenerationInfo, AtlasSliceHandle>? {
