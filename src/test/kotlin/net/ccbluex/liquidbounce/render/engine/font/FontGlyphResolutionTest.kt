@@ -23,7 +23,9 @@ import kotlinx.coroutines.test.runTest
 import net.ccbluex.liquidbounce.render.FontFace
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.awt.Font
 
@@ -41,8 +43,8 @@ class FontGlyphResolutionTest {
 
     @Test
     fun testGlyphIdentifierIncludesActualFont() {
-        val firstFont = FontId(Font.PLAIN, Font(Font.SANS_SERIF, Font.PLAIN, 43), 51f, 40f)
-        val secondFont = FontId(Font.PLAIN, Font(Font.SERIF, Font.PLAIN, 43), 51f, 40f)
+        val firstFont = createFontId(Font.SANS_SERIF)
+        val secondFont = createFontId(Font.SERIF)
         val codepoint = 0x20000
 
         val first = GlyphIdentifier(codepoint, firstFont)
@@ -51,4 +53,29 @@ class FontGlyphResolutionTest {
         assertEquals(codepoint, first.codepoint)
         assertNotEquals(first, second)
     }
+
+    @Test
+    fun testDerivedStylesAndDecorationMetrics() = runTest {
+        val face = FontFace("Test", 43f)
+        face.fillDerivedStyles(Font(Font.SANS_SERIF, Font.PLAIN, 43))
+
+        assertTrue(face.style(Font.BOLD)!!.awtFont.isBold)
+        assertTrue(face.style(Font.ITALIC)!!.awtFont.isItalic)
+        assertNotNull(face.style(Font.BOLD or Font.ITALIC))
+        assertTrue(face.plainStyle.underlineOffset > 0f)
+        assertTrue(face.plainStyle.underlineThickness > 0f)
+        assertTrue(face.plainStyle.strikethroughOffset < 0f)
+        assertTrue(face.plainStyle.strikethroughThickness > 0f)
+    }
+
+    private fun createFontId(name: String) = FontId(
+        Font.PLAIN,
+        Font(name, Font.PLAIN, 43),
+        51f,
+        40f,
+        2f,
+        1f,
+        -12f,
+        1f,
+    )
 }

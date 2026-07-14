@@ -71,6 +71,13 @@ class FontFace(
 
     fun style(style: Int): FontId? = styles.getOrNull(style)
 
+    internal suspend fun fillDerivedStyles(baseFont: Font) {
+        for (style in 0..3) {
+            val font = if (style == Font.PLAIN) baseFont else baseFont.deriveFont(style, size)
+            fillStyle(font, style)
+        }
+    }
+
     /**
      * Fills the font style at the given index.
      */
@@ -81,14 +88,25 @@ class FontFace(
 
         withContext(Dispatchers.Default) {
             val graphics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics()
-            val metrics = try {
+            val fontId = try {
                 graphics.font = font
-                graphics.fontMetrics
+                val metrics = graphics.fontMetrics
+                val lineMetrics = font.getLineMetrics("Ag", graphics.fontRenderContext)
+                FontId(
+                    style,
+                    font,
+                    metrics.height.toFloat(),
+                    metrics.ascent.toFloat(),
+                    lineMetrics.underlineOffset,
+                    lineMetrics.underlineThickness,
+                    lineMetrics.strikethroughOffset,
+                    lineMetrics.strikethroughThickness,
+                )
             } finally {
                 graphics.dispose()
             }
 
-            styles[style] = FontId(style, font, metrics.height.toFloat(), metrics.ascent.toFloat())
+            styles[style] = fontId
             cachedHash = 0
         }
     }

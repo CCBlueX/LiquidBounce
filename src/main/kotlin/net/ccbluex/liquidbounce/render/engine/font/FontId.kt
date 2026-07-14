@@ -26,5 +26,9 @@ data class FontId(
     val style: @FontStyle Int,
     val awtFont: Font,
     val height: Float,
-    val ascent: Float
+    val ascent: Float,
+    val underlineOffset: Float,
+    val underlineThickness: Float,
+    val strikethroughOffset: Float,
+    val strikethroughThickness: Float,
 )

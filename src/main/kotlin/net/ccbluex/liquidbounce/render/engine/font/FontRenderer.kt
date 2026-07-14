@@ -64,6 +64,11 @@ class FontRenderer(
 
     private val ascent: Float = font.plainStyle.ascent
 
+    private val underlineOffset: Float = font.plainStyle.underlineOffset
+    private val underlineThickness: Float = font.plainStyle.underlineThickness
+    private val strikethroughOffset: Float = font.plainStyle.strikethroughOffset
+    private val strikethroughThickness: Float = font.plainStyle.strikethroughThickness
+
     private val shadowColor = Color4b(0, 0, 0, 150)
 
     private fun loadUnderlines(text: ProcessedText): IntStack = underlinesIdxStack.apply {
@@ -249,18 +254,18 @@ class FontRenderer(
         color: Color4b,
         through: Boolean
     ) {
-        val lineWidth = scale.coerceAtLeast(0f)
-        val y = if (through) {
-            y + (-this.height * 0.85f + this.ascent) * scale
+        val lineWidth = if (through) {
+            strikethroughThickness * scale
         } else {
-            y + scale
-        }
+            underlineThickness * scale
+        }.coerceAtLeast(0f)
+        val lineY = y + if (through) strikethroughOffset * scale else underlineOffset * scale
         if (z.isNaN()) {
-            (ctx as GuiGraphicsExtractor).drawHorizontalLine(x0, x1, y, lineWidth, color)
+            (ctx as GuiGraphicsExtractor).drawHorizontalLine(x0, x1, lineY, lineWidth, color)
         } else {
             (ctx as WorldRenderEnvironment).drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
-                val y0 = y
-                val y1 = y + lineWidth
+                val y0 = lineY
+                val y1 = lineY + lineWidth
                 addVertex(matrix, x0, y0, z).setColor(color)
                 addVertex(matrix, x0, y1, z).setColor(color)
                 addVertex(matrix, x1, y1, z).setColor(color)

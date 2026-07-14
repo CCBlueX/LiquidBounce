@@ -152,8 +152,7 @@ object FontManager {
             // Name will consist of the font name and family. This makes it possible
             // to select the different styles of the font.
             val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file)
-            // In this case, we have only one style available, which is the plain style.
-            fontFace.fillStyle(font, Font.PLAIN)
+            fontFace.fillDerivedStyles(font)
             addFontFace(fontFace)
         } catch (e: Exception) {
             logger.warn("Failed to load font from file ${file.absolutePath}", e)
@@ -163,7 +162,7 @@ object FontManager {
     suspend fun queueFontFromStream(stream: InputStream) {
         val font = stream.createFont().deriveFont(DEFAULT_FONT_SIZE)
         val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file = null)
-        fontFace.fillStyle(font, Font.PLAIN)
+        fontFace.fillDerivedStyles(font)
         addFontFace(fontFace)
     }
 
