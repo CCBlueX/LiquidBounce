@@ -438,6 +438,7 @@ object LiquidBounce : EventListener {
 
         // Unregister all event listener and stop all running tasks
         ChunkScanner.stopThread()
+        FontManager.closeGlyphManager()
         EventManager.unregisterAll()
 
         // Shutdown HTTP server

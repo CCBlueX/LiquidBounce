@@ -52,10 +52,15 @@ class FontFace(
     @Volatile
     private var cachedHash: Int = 0
 
+    private var cachedRenderer: FontRenderer? = null
+
     // We only access it on the main thread so don't do synchronized
-    val renderer: FontRenderer by lazy(LazyThreadSafetyMode.NONE) {
-        FontRenderer(this, FontManager.glyphManager)
-    }
+    val renderer: FontRenderer
+        get() {
+            val glyphManager = FontManager.glyphManager
+            return cachedRenderer?.takeIf { it.glyphManager === glyphManager }
+                ?: FontRenderer(this, glyphManager).also { cachedRenderer = it }
+        }
 
     val plainStyle: FontId
         get() = requireNotNull(styles[0]) {
@@ -66,6 +71,13 @@ class FontFace(
 
     fun style(style: Int): FontId? = styles.getOrNull(style)
 
+    internal suspend fun fillDerivedStyles(baseFont: Font) {
+        for (style in 0..3) {
+            val font = if (style == Font.PLAIN) baseFont else baseFont.deriveFont(style, size)
+            fillStyle(font, style)
+        }
+    }
+
     /**
      * Fills the font style at the given index.
      */
@@ -75,11 +87,26 @@ class FontFace(
         }
 
         withContext(Dispatchers.Default) {
-            val metrics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics().apply {
-                setFont(font)
-            }.fontMetrics
+            val graphics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics()
+            val fontId = try {
+                graphics.font = font
+                val metrics = graphics.fontMetrics
+                val lineMetrics = font.getLineMetrics("Ag", graphics.fontRenderContext)
+                FontId(
+                    style,
+                    font,
+                    metrics.height.toFloat(),
+                    metrics.ascent.toFloat(),
+                    lineMetrics.underlineOffset,
+                    lineMetrics.underlineThickness,
+                    lineMetrics.strikethroughOffset,
+                    lineMetrics.strikethroughThickness,
+                )
+            } finally {
+                graphics.dispose()
+            }
 
-            styles[style] = FontId(style, font, metrics.height.toFloat(), metrics.ascent.toFloat())
+            styles[style] = fontId
             cachedHash = 0
         }
     }

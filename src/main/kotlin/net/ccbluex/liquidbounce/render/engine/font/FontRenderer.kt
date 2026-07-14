@@ -64,6 +64,11 @@ class FontRenderer(
 
     private val ascent: Float = font.plainStyle.ascent
 
+    private val underlineOffset: Float = font.plainStyle.underlineOffset
+    private val underlineThickness: Float = font.plainStyle.underlineThickness
+    private val strikethroughOffset: Float = font.plainStyle.strikethroughOffset
+    private val strikethroughThickness: Float = font.plainStyle.strikethroughThickness
+
     private val shadowColor = Color4b(0, 0, 0, 150)
 
     private fun loadUnderlines(text: ProcessedText): IntStack = underlinesIdxStack.apply {
@@ -101,10 +106,11 @@ class FontRenderer(
         parameters: DrawParameters,
     ): Float {
         val scale = parameters.scale
+        val width = getStringWidth(text, parameters.shadow)
 
         val x = parameters.horizontalAnchor?.anchorToDrawX(
             x = parameters.x,
-            width = getStringWidth(text, parameters.shadow),
+            width = width,
             scale,
         ) ?: parameters.x
 
@@ -116,10 +122,8 @@ class FontRenderer(
 
         val z = parameters.z
 
-        var len = 0.0f
-
         if (parameters.shadow) {
-            len = drawInternal(
+            drawInternal(
                 text,
                 posX = x + 2.0f * scale,
                 posY = y + 2.0f * scale,
@@ -129,21 +133,17 @@ class FontRenderer(
             )
         }
 
-        len = maxOf(
-            len,
-            drawInternal(text, x, y, if (z.isNaN()) z else z + 0.001f, scale, overrideColor = null)
-        )
+        drawInternal(text, x, y, if (z.isNaN()) z else z + 0.001f, scale, overrideColor = null)
 
         MinecraftTextProcessor.TEXT_POOL.recycle(text)
 
-        return len
+        return width
     }
 
     /**
      * @param ctx [GuiGraphicsExtractor] or [WorldRenderEnvironment]
      * @param posZ if it's [Float.NaN], then use 2D rendering; or else use 3D rendering
      *
-     * @return The resulting x value
      */
     context(ctx: Any)
     @Suppress("CognitiveComplexMethod")
@@ -154,9 +154,9 @@ class FontRenderer(
         posZ: Float,
         scale: Float,
         overrideColor: Color4b?,
-    ): Float {
+    ) {
         if (text.chars.isEmpty()) {
-            return posX
+            return
         }
 
         val underlineStack = loadUnderlines(text)
@@ -172,7 +172,7 @@ class FontRenderer(
         val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
 
         text.chars.forEachIndexed { charIdx, processedChar ->
-            val glyph = this.glyphManager.requestGlyph(this.font, processedChar.font, processedChar.char)
+            val glyph = this.glyphManager.requestGlyph(this.font, processedChar.font, processedChar.codepoint)
                 ?: fallbackGlyph
             color = overrideColor ?: processedChar.color
 
@@ -193,28 +193,26 @@ class FontRenderer(
             x += layoutInfo.advanceX * scale
             y += layoutInfo.advanceY * scale
 
-            if (!underlineStack.isEmpty && underlineStack.topInt() == charIdx) {
+            if (!underlineStack.isEmpty && underlineStack.topInt() == charIdx + 1) {
                 underlineStack.popInt()
-                drawLine(underlineStartX, x, y, posZ, color, false)
+                drawLine(underlineStartX, x, y, posZ, scale, color, false)
             }
 
-            if (!strikethroughStack.isEmpty && strikethroughStack.topInt() == charIdx) {
+            if (!strikethroughStack.isEmpty && strikethroughStack.topInt() == charIdx + 1) {
                 strikethroughStack.popInt()
-                drawLine(strikeThroughStartX, x, y, posZ, color, true)
+                drawLine(strikeThroughStartX, x, y, posZ, scale, color, true)
             }
         }
 
         if (!underlineStack.isEmpty && !underlineStartX.isNaN()) {
             underlineStack.popInt()
-            drawLine(underlineStartX, x, y, posZ, color!!, false)
+            drawLine(underlineStartX, x, y, posZ, scale, color!!, false)
         }
 
         if (!strikethroughStack.isEmpty && !strikeThroughStartX.isNaN()) {
             strikethroughStack.popInt()
-            drawLine(strikeThroughStartX, x, y, posZ, color!!, true)
+            drawLine(strikeThroughStartX, x, y, posZ, scale, color!!, true)
         }
-
-        return x
     }
 
     override fun getStringWidth(
@@ -230,7 +228,7 @@ class FontRenderer(
         val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
 
         for (processedChar in text.chars) {
-            val glyph = this.glyphManager.requestGlyph(this.font, processedChar.font, processedChar.char)
+            val glyph = this.glyphManager.requestGlyph(this.font, processedChar.font, processedChar.codepoint)
                 ?: fallbackGlyph
 
             val layoutInfo =
@@ -252,16 +250,22 @@ class FontRenderer(
         x1: Float,
         y: Float,
         z: Float,
+        scale: Float,
         color: Color4b,
         through: Boolean
     ) {
-        val y = if (through) y - this.height * 0.85f + this.ascent else y + 1f
+        val lineWidth = if (through) {
+            strikethroughThickness * scale
+        } else {
+            underlineThickness * scale
+        }.coerceAtLeast(0f)
+        val lineY = y + if (through) strikethroughOffset * scale else underlineOffset * scale
         if (z.isNaN()) {
-            (ctx as GuiGraphicsExtractor).drawHorizontalLine(x0, x1, y, 1f, color)
+            (ctx as GuiGraphicsExtractor).drawHorizontalLine(x0, x1, lineY, lineWidth, color)
         } else {
             (ctx as WorldRenderEnvironment).drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
-                val y0 = y
-                val y1 = y + 1f
+                val y0 = lineY
+                val y1 = lineY + lineWidth
                 addVertex(matrix, x0, y0, z).setColor(color)
                 addVertex(matrix, x0, y1, z).setColor(color)
                 addVertex(matrix, x1, y1, z).setColor(color)

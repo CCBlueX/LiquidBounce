@@ -35,6 +35,7 @@ import java.awt.font.LineMetrics
 import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
 import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.max
 
 /**
@@ -44,9 +45,9 @@ import kotlin.math.max
 @JvmRecord
 data class GlyphRenderInfo(
     /**
-     * Which char does this glyph represent?
+     * Which Unicode codepoint does this glyph represent?
      */
-    val char: Char,
+    val codepoint: Int,
     /**
      * The location of the Glyph on the sprite, may be null if the glyph is a whitespace
      */
@@ -113,13 +114,21 @@ abstract class GlyphPage {
         ) {
             lateinit var atlasLocation: Point
 
+            private val bounds = glyphMetrics.bounds2D
+            val pixelXMin = floor(bounds.minX).toInt()
+            val pixelYMin = floor(bounds.minY).toInt()
+            val pixelXMax = ceil(bounds.maxX).toInt()
+            val pixelYMax = ceil(bounds.maxY).toInt()
+            val pixelWidth = pixelXMax - pixelXMin
+            val pixelHeight = pixelYMax - pixelYMin
+
             /**
              * The space the character will take up in the atlas (character size + padding)
              */
             val atlasDimension: Dimension
                 get() = Dimension(
-                    ceil(glyphMetrics.bounds2D.width).toInt() + 2,
-                    ceil(glyphMetrics.bounds2D.height).toInt() + 2
+                    pixelWidth + DEFAULT_PADDING * 2,
+                    pixelHeight + DEFAULT_PADDING * 2
                 )
         }
 
@@ -180,9 +189,9 @@ abstract class GlyphPage {
 
             // Draw the character to the atlas, offset by start of the character + a pixel padding
             atlasGraphics.drawString(
-                characterInfo.fontGlyph.codepoint.toString(),
-                characterInfo.atlasLocation.x - characterInfo.glyphMetrics.bounds2D.x.toInt() + 1,
-                characterInfo.atlasLocation.y - characterInfo.glyphMetrics.bounds2D.y.toInt() + 1
+                Character.toString(characterInfo.fontGlyph.codepoint),
+                characterInfo.atlasLocation.x - characterInfo.pixelXMin + DEFAULT_PADDING,
+                characterInfo.atlasLocation.y - characterInfo.pixelYMin + DEFAULT_PADDING
             )
         }
 
@@ -192,14 +201,14 @@ abstract class GlyphPage {
             atlasDimensions: Dimension
         ): GlyphRenderInfo {
             val atlasLocation = if (!it.glyphMetrics.isWhitespace) {
-                val x = it.atlasLocation.x.toFloat()
-                val y = it.atlasLocation.y.toFloat()
+                val x = it.atlasLocation.x.toFloat() + DEFAULT_PADDING
+                val y = it.atlasLocation.y.toFloat() + DEFAULT_PADDING
 
                 val boundingBox = BoundingBox2f(
                     x,
                     y,
-                    (x + ceil(it.glyphMetrics.bounds2D.width.toFloat()) + DEFAULT_PADDING),
-                    (y + ceil(it.glyphMetrics.bounds2D.height.toFloat()) + DEFAULT_PADDING)
+                    x + it.pixelWidth,
+                    y + it.pixelHeight
                 )
 
                 GlyphAtlasLocation(boundingBox, atlasDimensions)
@@ -210,7 +219,12 @@ abstract class GlyphPage {
             return GlyphRenderInfo(
                 it.fontGlyph.codepoint,
                 atlasLocation = atlasLocation,
-                glyphBounds = BoundingBox2f(it.glyphMetrics.bounds2D),
+                glyphBounds = BoundingBox2f(
+                    it.pixelXMin.toFloat(),
+                    it.pixelYMin.toFloat(),
+                    it.pixelXMax.toFloat(),
+                    it.pixelYMax.toFloat(),
+                ),
                 layoutInfo = GlyphLayoutInfo(
                     useHorizontalBaseline = false, // TODO Find this out
                     advanceX = it.glyphMetrics.advanceX,
@@ -227,7 +241,7 @@ abstract class GlyphPage {
                 return null
             }
 
-            val charString = it.codepoint.toString()
+            val charString = Character.toString(it.codepoint)
             val glyphVector = font.createGlyphVector(fontRendererContext, charString)
 
             val lineMetrics = font.getLineMetrics(charString, fontRendererContext)
@@ -239,5 +253,4 @@ abstract class GlyphPage {
 }
 
 @JvmRecord
-data class FontGlyph(val codepoint: Char, val font: FontId)
-
+data class FontGlyph(val codepoint: Int, val font: FontId)
