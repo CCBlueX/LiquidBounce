@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -87,8 +89,8 @@ object PlayerSimulationCache: EventListener {
     fun getSimulationForOtherPlayers(player: Player): SimulatedPlayerCache {
         return otherPlayerCache.computeIfAbsent(player) {
             val simulatedPlayer = SimulatedPlayer.fromOtherPlayer(
-                player,
-                SimulatedPlayer.SimulatedPlayerInput.guessInput(player)
+                it,
+                SimulatedPlayer.SimulatedPlayerInput.guessInput(it)
             )
 
             SimulatedPlayerCache(simulatedPlayer)
@@ -116,7 +118,7 @@ object PlayerSimulationCache: EventListener {
 
 class SimulatedPlayerCache(internal val simulatedPlayer: SimulatedPlayer) {
     private var currentSimulationStep = 0
-    private val simulationSteps = ArrayList<SimulatedPlayerSnapshot>().apply {
+    private val simulationSteps = ObjectArrayList<SimulatedPlayerSnapshot>().apply {
         add(SimulatedPlayerSnapshot(simulatedPlayer))
     }
     private val lock = ReentrantReadWriteLock()
@@ -146,7 +148,7 @@ class SimulatedPlayerCache(internal val simulatedPlayer: SimulatedPlayer) {
         }
     }
 
-    fun simulate() = sequence<SimulatedPlayerSnapshot> {
+    fun simulate(): Sequence<SimulatedPlayerSnapshot> = sequence {
         var idx = 0
 
         while (true) {
@@ -162,7 +164,7 @@ class SimulatedPlayerCache(internal val simulatedPlayer: SimulatedPlayer) {
         simulateUntil(tickRange.last + 1)
 
         return lock.read {
-            ArrayList(simulationSteps.subList(tickRange.first, tickRange.last + 1))
+            ObjectImmutableList(simulationSteps.subList(tickRange.first, tickRange.last + 1))
         }
     }
 
@@ -171,7 +173,7 @@ class SimulatedPlayerCache(internal val simulatedPlayer: SimulatedPlayer) {
 
         simulateUntil(tickRange.last + 1)
 
-        return sequence<SimulatedPlayerSnapshot> {
+        return sequence {
             for (i in tickRange) {
                 yield(getSnapshotAt(i))
             }

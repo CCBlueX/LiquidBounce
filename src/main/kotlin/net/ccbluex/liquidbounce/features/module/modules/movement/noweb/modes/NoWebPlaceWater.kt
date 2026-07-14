@@ -325,8 +325,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             .filter { side ->
                 val adjacentState = webPos.relative(side).getState() ?: return@filter false
                 // Find a replaceable side to place water
-                adjacentState.isAir ||
-                    (adjacentState.fluidState.`is`(Fluids.LAVA) && adjacentState.fluidState.isSource)
+                adjacentState.isAir || adjacentState.fluidState.isSourceOfType(Fluids.LAVA)
             }
             .maxByOrNull { side ->
                 player.lookAngle.dot(side.unitVec3)
