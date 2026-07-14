@@ -48,7 +48,7 @@ object ModuleNoPush : ClientModule("NoPush", ModuleCategories.MOVEMENT) {
             return@handler
         }
 
-        if ((player.isInWater || player.isInLava) && player.deltaMovement.y < 0) {
+        if (player.isInLiquid && player.deltaMovement.y < 0) {
             player.deltaMovement.y = 0.0
         }
     }
