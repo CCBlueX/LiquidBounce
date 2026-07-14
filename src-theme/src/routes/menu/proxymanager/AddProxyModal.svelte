@@ -6,6 +6,7 @@
     import {addProxy as addProxyRest, browse} from "../../../integration/rest";
     import {listen} from "../../../integration/ws";
     import SingleSelect from "../common/setting/select/SingleSelect.svelte";
+    import LiquidProxyAd from "./LiquidProxyAd.svelte";
 
     export let visible: boolean;
 
@@ -62,6 +63,7 @@
 </script>
 
 <Modal title="Add Proxy" bind:visible={visible} on:close={cleanup}>
+    <LiquidProxyAd/>
     <IconTextInput title="Host:Port" icon="server" pattern=".+:[0-9]+" bind:value={hostPort}/>
     <SingleSelect title="Proxy Type" options={["HTTP", "SOCKS5"]} bind:value={proxyType}/>
     <SwitchSetting title="Requires Authentication" bind:value={requiresAuthentication}/>
@@ -71,5 +73,4 @@
     {/if}
     <SwitchSetting title="Forward Microsoft Authentication" bind:value={forwardAuthentication}/>
     <ButtonSetting title="Add Proxy" {disabled} on:click={addProxy} listenForEnter={true} {loading}/>
-    <ButtonSetting title="Get Proxy" on:click={() => browse("PROXY_WEBSITE")} secondary={true}/>
 </Modal>
