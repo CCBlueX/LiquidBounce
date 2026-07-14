@@ -332,3 +332,5 @@ fun ItemStack.isInteractable(): Boolean {
         || item is FlintAndSteelItem
         || item is PotionItem
 }
+
+

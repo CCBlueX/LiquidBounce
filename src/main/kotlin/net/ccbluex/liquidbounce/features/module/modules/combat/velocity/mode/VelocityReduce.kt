@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.fastutil.filterIsInstance
-import net.ccbluex.fastutil.weightedMinByOrNullAtMost
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.TrackedEntityPosition
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspBox
@@ -38,8 +39,14 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.AccelerationAngleSmooth
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.InterpolationAngleSmooth
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.LinearAngleSmooth
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.SigmoidAngleSmooth
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -48,12 +55,14 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.multiply
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerDamage
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
+import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -66,12 +75,42 @@ object VelocityReduce : VelocityMode("Reduce") {
 
 
     private val attackCount by intRange("AttackCount", 5..5, 0..20)
-    private val attackTargetRange by floatRange("AttackTargetRange", 2f..2f, 0f..6f)
-    private val lagTargetRange by floatRange("LagTargetRange", 2f..6f, 0f..20f)
-    private val lagMaxDelay by int("LagMaxDelay", 10, 1..1000, "ticks")
-    private val lagRequireKillAura by boolean("LagRequireKillAura", false)
+    private val autoAttackCount by boolean("AutoAttackCount", true)
+
+    private enum class AttackMode(override val tag: String) : Tagged {
+        ONE_TIME("OneTime"),
+        PER_TICK("PerTick")
+    }
+
+    private val attackMode by enumChoice("AttackMode", AttackMode.PER_TICK)
+    private val attackTargetRange by floatRange("AttackTargetRange", 2f..3f, 0f..6f)
+    private val lagInAir by boolean("LagInAir", true)
+    private val lagTargetRange by float("LagTargetRange", 6f, 0f..20f)
+    private val lagMaxDelay by int("LagMaxDelay", 30, 0..200, "ticks")
+    private val requireKillAura by boolean("RequireKillAura", true)
     private val horizontal by float("Horizontal", 0.6f, 0f..1f)
-    private val vertical by float("Vertical", 1.0f, 0f..1f)
+    private val vertical by float("Vertical", 0.6f, 0f..1f)
+
+    private val autoRotate = tree(object : ToggleableValueGroup(this, "AutoRotate", true) {
+        val rotationTime by int("RotationTime", 2, 0..20, "ticks")
+        val angleSmooth = choices("AngleSmooth", 0) {
+            val linear = LinearAngleSmooth(it)
+            val interpolation = InterpolationAngleSmooth(it)
+            arrayOf(
+                linear,
+                SigmoidAngleSmooth(it),
+                interpolation,
+                AccelerationAngleSmooth(it)
+            )
+        }
+        val notDuringKillAura by boolean("NotDuringKillAura", false)
+
+        val canRotate: Boolean
+            get() = enabled
+                && (!notDuringKillAura
+                || !ModuleKillAura.running
+                || ModuleKillAura.targetTracker.target == null)
+    })
 
     private object Debug : ToggleableValueGroup(this, "Debug", false) {
         val chatMessage by boolean("ChatMessage", false)
@@ -96,6 +135,8 @@ object VelocityReduce : VelocityMode("Reduce") {
         doNotIncludeAlways()
     }
 
+    // === ESP Render Modes ===
+
     @Suppress("unused")
     private val espMode = modes("BlinkEsp", 2) {
         arrayOf(
@@ -108,13 +149,10 @@ object VelocityReduce : VelocityMode("Reduce") {
         doNotIncludeAlways()
     }
 
-    private val canLag: Boolean
-        get() = !lagRequireKillAura || ModuleKillAura.running
 
     private var target: Entity? = null
     private var renderTarget: Entity? = null
     private var renderTargetPos: TrackedEntityPosition? = null
-
     var remainingAttackCount = 0
         private set
     private var currentGameTick = 0L
@@ -131,16 +169,58 @@ object VelocityReduce : VelocityMode("Reduce") {
         MAX_DELAY("max delay"),
     }
 
+
+
+    private val canLag: Boolean
+        get() = !requireKillAura || ModuleKillAura.running
+
     val backtrackBlocked: Boolean
         get() = lagTicks >= 0 || remainingAttackCount > 0
 
     val ownsIncomingBlinkQueue: Boolean
         get() = lagTicks >= 0
 
+    private val isInAir: Boolean
+        get() = !player.onGround() && !player.isInLiquid
+
+
     private fun resetRenderState() {
         renderTarget = null
         renderTargetPos = null
     }
+
+    private fun getCurrentAttackCount(): Int {
+        if (!autoAttackCount) return attackCount.random()
+        return attackCount.random()
+    }
+
+    private fun rotate(targetEntity: Entity) {
+        val rotation = Rotation.lookingAt(point = targetEntity.boundingBox.center, from = player.eyePosition)
+        RotationManager.setRotationTarget(
+            RotationTarget(
+                rotation = rotation,
+                entity = targetEntity,
+                processors = listOf(autoRotate.angleSmooth.activeMode),
+                ticksUntilReset = autoRotate.rotationTime,
+                resetThreshold = 2f,
+                considerInventory = false,
+                movementCorrection = MovementCorrection.STRICT
+            ),
+            priority = Priority.IMPORTANT_FOR_USAGE_2,
+            provider = ModuleVelocity
+        )
+    }
+
+    private fun getEspData(): BlinkEspData? {
+        if (lagTicks == -1) {
+            return null
+        }
+
+        val renderTarget = renderTarget ?: return null
+        val renderTargetPos = renderTargetPos ?: return null
+        return BlinkEspData(renderTarget, renderTargetPos.base, renderTarget.rotation)
+    }
+
 
     override fun enable() {
         target = null
@@ -167,9 +247,9 @@ object VelocityReduce : VelocityMode("Reduce") {
         releaseReason = null
     }
 
-    private fun findTarget() {
-        if (!canLag && lagTicks >= 0) return
 
+
+    private fun findTarget() {
         if (ModuleKillAura.running && ModuleKillAura.targetTracker.target != null) {
             if (lagTicks == -1) {
                 renderTarget = ModuleKillAura.targetTracker.target
@@ -183,7 +263,6 @@ object VelocityReduce : VelocityMode("Reduce") {
             return
         }
 
-
         target = findEntityInCrosshair(
             attackTargetRange.start.toDouble(),
             RotationManager.currentRotation ?: player.rotation
@@ -193,36 +272,24 @@ object VelocityReduce : VelocityMode("Reduce") {
             renderTarget = target
         }
 
-        if (target != null || lagTicks >= 0) return
+        if (target != null) return
 
         renderTarget = world.entitiesForRendering().filterIsInstance<LivingEntity> { entity ->
             !entity.isRemoved && entity.shouldBeAttacked()
-        }.weightedMinByOrNullAtMost(lagTargetRange.endInclusive.sq().toDouble()) { entity ->
-            entity.squaredBoxedDistanceTo(player)
+        }.minByOrNull { entity -> entity.distanceTo(player) }
+
+
+        if (renderTarget != null
+            && lagTicks >= 0
+            && autoRotate.canRotate
+            && renderTarget!!.squaredBoxedDistanceTo(player) <= attackTargetRange.start.sq()
+        ) {
+            rotate(renderTarget!!)
+            target = renderTarget
         }
     }
 
 
-    private fun getEspData(): BlinkEspData? {
-        if (lagTicks == -1) {
-            return null
-        }
-
-        val renderTarget = renderTarget ?: return null
-        val renderTargetPos = renderTargetPos ?: return null
-        return BlinkEspData(renderTarget, renderTargetPos.base, renderTarget.rotation)
-    }
-
-    private fun hasLostReduceTarget(): Boolean {
-        val reduceTarget = target ?: return true
-
-        if (!ModuleKillAura.running) {
-            return false
-        }
-
-        val killAuraTarget = ModuleKillAura.targetTracker.target ?: return true
-        return killAuraTarget.id != reduceTarget.id
-    }
 
     @Suppress("unused")
     private val packetEventHandler = handler<PacketEvent> { event ->
@@ -252,32 +319,31 @@ object VelocityReduce : VelocityMode("Reduce") {
 
         if (packet.isLocalPlayerVelocity() && receiveDamage) {
             receiveDamage = false
-            if (player.isUsingItem || ModuleScaffold.running) return@handler
 
             findTarget()
 
-            if (renderTarget == null) return@handler
+            if (renderTarget == null && !(lagInAir && isInAir)) return@handler
 
-            if ((target == null && canLag) || (target != null && !player.isSprinting)) {
-                if (target != null) {
-                    debug.notify("Lag... (not sprinting)")
-                } else {
-                    debug.notify("Lag...")
-                }
+            if (target == null || !player.isSprinting || (lagInAir && isInAir)) {
+                debug.notify(when {
+                    !player.isSprinting -> "Lag... (not sprinting)"
+                    else -> "Lag..."
+                })
 
-                if (target == null) {
+                if (renderTarget != null) {
                     renderTargetPos = TrackedEntityPosition(renderTarget!!)
                 }
                 lagTicks = lagMaxDelay
             } else if (target != null) {
-                remainingAttackCount = attackCount.random()
+                remainingAttackCount = getCurrentAttackCount()
+                debug.notify("Attack count: $remainingAttackCount")
             }
         }
     }
 
     @Suppress("unused")
     private val queuePacketHandler = handler<BlinkPacketEvent> { event ->
-        if (lagTicks >= 0 && event.origin == TransferOrigin.INCOMING) {
+        if (lagTicks >= 0 && event.origin == TransferOrigin.INCOMING && event.packet !is ClientboundKeepAlivePacket) {
             event.action = BlinkManager.Action.QUEUE
         }
     }
@@ -287,71 +353,120 @@ object VelocityReduce : VelocityMode("Reduce") {
         currentGameTick++
 
         if (remainingAttackCount > 0) {
-            if (hasLostReduceTarget()) {
-                remainingAttackCount = 0
-                target = null
-                return@handler
-            }
-            if (target!!.boxedDistanceTo(player) > attackTargetRange.endInclusive) {
+            if (target == null || target !in world.entitiesForRendering()) {
                 remainingAttackCount = 0
                 target = null
                 return@handler
             }
 
-            player.isSprinting = false
-            attackEntity(target!!, SwingMode.DO_NOT_HIDE)
-            forwardInputAttackGameTick = currentGameTick
-            player.deltaMovement = player.deltaMovement.multiply(horizontal, vertical, horizontal)
-            remainingAttackCount--
-            if (remainingAttackCount == 0) {
-                target = null
+            when (attackMode) {
+                AttackMode.ONE_TIME -> {
+                    for (i in 1..remainingAttackCount) {
+                        if (target !in world.entitiesForRendering()) break
+
+                        val sprinting = player.isSprinting
+                        if (sprinting) player.isSprinting = false
+                        attackEntity(target!!, SwingMode.DO_NOT_HIDE)
+                        forwardInputAttackGameTick = currentGameTick
+                        if (sprinting) {
+                            player.deltaMovement = player.deltaMovement.multiply(
+                                horizontal, vertical, horizontal
+                            )
+                        }
+                    }
+
+                    remainingAttackCount = 0
+                    target = null
+                }
+
+                AttackMode.PER_TICK -> {
+                    if (target!!.boxedDistanceTo(player) > attackTargetRange.endInclusive) {
+                        debug.notify("Unable to attack")
+                        remainingAttackCount--
+                        if (remainingAttackCount == 0) {
+                            target = null
+                        }
+                        return@handler
+                    }
+
+                    if (autoRotate.canRotate) {
+                        rotate(target!!)
+                    }
+
+                    val sprinting = player.isSprinting
+                    if (sprinting) player.isSprinting = false
+                    attackEntity(target!!, SwingMode.DO_NOT_HIDE)
+                    forwardInputAttackGameTick = currentGameTick
+                    if (sprinting) {
+                        player.deltaMovement = player.deltaMovement.multiply(
+                            horizontal, vertical, horizontal
+                        )
+                    }
+
+                    remainingAttackCount--
+                    if (remainingAttackCount == 0) {
+                        target = null
+                    }
+                }
             }
         }
     }
 
     @Suppress("unused")
-    private val tickPacketProcessEventHandler = handler<TickPacketProcessEvent> {
-        releaseReason?.let { releaseReason ->
+    private val tickPacketProcessHandler = sequenceHandler<TickPacketProcessEvent> {
+        if (releaseReason != null) {
+            val reason = releaseReason!!
             BlinkManager.flush(TransferOrigin.INCOMING)
             lagTicks = -1
             resetRenderState()
-            if (releaseReason == ReleaseReason.TARGET_REACHED) {
+            if (reason == ReleaseReason.TARGET_REACHED) {
                 debug.notify("Finish lag")
-                remainingAttackCount = attackCount.random()
+                remainingAttackCount = getCurrentAttackCount()
             } else {
-                debug.notify("Finish lag (${releaseReason.debugSuffix})")
+                debug.notify("Finish lag (${reason.debugSuffix})")
             }
-            this.releaseReason = null
+            releaseReason = null
         }
     }
 
     @Suppress("unused")
     private val movementInputEventHandler = handler<MovementInputEvent> { event ->
-        if (lagTicks > 0 && releaseReason == null) {
-            lagTicks--
+        if (remainingAttackCount > 0) {
+            event.directionalInput = DirectionalInput.FORWARDS
+        }
+
+        if (lagTicks >= 0 && releaseReason == null) {
+            if (lagTicks > 0) lagTicks--
             findTarget()
 
+
             when {
+                lagTicks == 0 -> releaseReason = ReleaseReason.MAX_DELAY
+
                 player.abilities.flying -> releaseReason = ReleaseReason.SPECTATOR
 
-                target != null -> {
-                    event.directionalInput = DirectionalInput.FORWARDS
-                    releaseReason = ReleaseReason.TARGET_REACHED
-                }
+                renderTarget !in world.entitiesForRendering() -> releaseReason = ReleaseReason.OUT_OF_RANGE
 
-                player.distanceToSqr(renderTargetPos?.base ?: Vec3.ZERO) > lagTargetRange.endInclusive.sq() -> {
+                player.distanceToSqr(renderTargetPos?.base ?: Vec3.ZERO) > lagTargetRange.sq() -> {
                     releaseReason = ReleaseReason.OUT_OF_RANGE
                 }
 
-                lagTicks == 0 -> releaseReason = ReleaseReason.MAX_DELAY
+                target != null && (!lagInAir || !isInAir ) -> {
+                    remainingAttackCount = getCurrentAttackCount()
+                    releaseReason = ReleaseReason.TARGET_REACHED
+                    event.directionalInput = DirectionalInput.FORWARDS
+                }
+            }
+
+            if (releaseReason != null && releaseReason != ReleaseReason.TARGET_REACHED) {
+                if (player.onGround() && player.isSprinting) {
+                    player.isSprinting = false
+                }
             }
         }
 
         if (currentGameTick == forwardInputAttackGameTick) {
-            event.directionalInput = event.directionalInput.copy(
-                forwards = true,
-                backwards = false
-            )
+            event.directionalInput = DirectionalInput.FORWARDS
         }
     }
 
