@@ -1,6 +1,6 @@
 {
   "name": "ClosedCaptions",
-  "description": "Displays Minecraft's closed captions (Accessibility Settings -> Closed Captions).",
+  "description": "Displays Minecraft's closed captions (Settings -> Accessibility Settings -> Closed Captions).",
   "enabled": false,
   "singleton": true,
   "alignment": {
