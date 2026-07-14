@@ -1,6 +1,6 @@
 {
   "name": "ClosedCaptions",
-  "enabled": true,
+  "enabled": false,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "Right",
