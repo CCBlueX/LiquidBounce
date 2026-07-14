@@ -24,6 +24,8 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
@@ -54,6 +56,9 @@ import java.util.function.BiPredicate
  * Automatically chooses the best tool in your inventory to mine a block.
  */
 object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
+    private var pendingPos: BlockPos? = null
+    private var lastSwappedPos: BlockPos? = null
+
     val toolSelector =
         choices(
             "ToolSelector",
@@ -165,6 +170,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     }
 
     private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
+    private val swapDelay by int("SwapDelay", 0, 0..100, "ticks")
 
     private val requireSneaking by boolean("RequireSneaking", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)
@@ -198,17 +204,22 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
 
     @Suppress("unused")
     private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->
-        switchToBreakBlock(event.pos)
+        pendingPos = event.pos
     }
 
     @Suppress("unused")
     private val handleCancelBlockBreaking = handler<CancelBlockBreakingEvent> {
+        pendingPos = null
+        lastSwappedPos = null
         if (isInventoryConsidered) {
             DynamicSelectMode.ConsiderInventory.onNoTool()
         }
     }
 
-    fun switchToBreakBlock(pos: BlockPos) {
+    @Suppress("unused")
+    private val handleSwapDelay = tickHandler {
+        val pos = pendingPos ?: return@tickHandler
+
         val cancelDueToCombat = notDuringCombat && CombatManager.isInCombat
         val cancelDueToNotSneaking = requireSneaking && !player.isShiftKeyDown
         if (cancelDueToCombat
@@ -218,15 +229,27 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
             if (isInventoryConsidered) {
                 DynamicSelectMode.ConsiderInventory.onNoTool()
             }
-            return
+            return@tickHandler
         }
 
         val blockState = pos.stateOrEmpty
-        val slot = toolSelector.activeMode.getTool(blockState) ?: return
-        SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
+        val slot = toolSelector.activeMode.getTool(blockState) ?: return@tickHandler
+
+        if (pos != lastSwappedPos) {
+            lastSwappedPos = pos
+            waitTicks(swapDelay)
+        }
+
+        SilentHotbar.selectSlotSilently(this@ModuleAutoTool, slot, swapPreviousDelay)
+    }
+
+    fun switchToBreakBlock(pos: BlockPos) {
+        pendingPos = pos
     }
 
     override fun onDisabled() {
+        pendingPos = null
+        lastSwappedPos = null
         SilentHotbar.resetSlot(this)
     }
 
