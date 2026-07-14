@@ -130,7 +130,7 @@ object FontManager {
                 return
             }
 
-            if (file.extension.equals("ttf", ignoreCase = true)) {
+            if (!file.extension.equals("ttf", ignoreCase = true)) {
                 logger.warn("Font file ${file.absolutePath} is not a TrueType font.")
                 return
             }
