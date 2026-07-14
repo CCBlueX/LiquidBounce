@@ -60,6 +60,8 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
     private var timeout = false
 
+    private var pendingCombatWaitTicks = 0
+
     override fun onEnabled() {
         resetState()
     }
@@ -72,6 +74,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     private fun resetState() {
         timeout = false
         currentPlan = null
+        pendingCombatWaitTicks = 0
         targetTracker.reset()
     }
 
@@ -85,10 +88,15 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             return@handler
         }
 
+        targetTracker.validate()
+
         val enemies = targetTracker.targets()
         TrapPlayerSimulation.runSimulations(enemies)
 
-        currentPlan = webTrapPlanner.plan(enemies) ?: ignitionTrapPlanner.plan(enemies)
+        val newPlan = webTrapPlanner.plan(enemies) ?: ignitionTrapPlanner.plan(enemies)
+        if (newPlan != null) {
+            currentPlan = newPlan
+        }
         currentPlan?.let { intent ->
             val blockChangeInfo = intent.blockChangeInfo
             if (blockChangeInfo !is BlockChangeInfo.PlaceBlock) {
@@ -149,6 +157,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         }
 
         timeout = true
+        pendingCombatWaitTicks = 0
         try {
             waitTicks(delay)
         } finally {
@@ -160,11 +169,20 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         return when (plan.timing) {
             IntentTiming.INSTANT -> false
 
-            // Let ongoing combat modules consume the current hit window first, then place during recovery.
-            IntentTiming.NEXT_PROPITIOUS_MOMENT -> hasPendingCombatAction() && (
-                player.getAttackStrengthScale(0.5f) > 0.9f
-                    || ModuleCriticals.wouldDoCriticalHit(ignoreSprint = true)
-                )
+            IntentTiming.NEXT_PROPITIOUS_MOMENT -> {
+                val shouldWait = hasPendingCombatAction() && (
+                    player.getAttackStrengthScale(0.5f) > 0.9f
+                        || ModuleCriticals.wouldDoCriticalHit(ignoreSprint = true)
+                    )
+
+                if (!shouldWait) {
+                    pendingCombatWaitTicks = 0
+                } else {
+                    pendingCombatWaitTicks++
+                }
+
+                pendingCombatWaitTicks < 40 && shouldWait
+            }
         }
     }
 
