@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.minecraft.world.entity.player.Inventory
+import org.jetbrains.annotations.Range
 
 /**
  * Manages things like [ModuleScaffold]'s silent mode.
@@ -55,7 +57,16 @@ object SilentHotbar : EventListener {
     fun selectSlotSilently(requester: Any?, slot: HotbarItemSlot, ticksUntilReset: Int): Boolean =
         slot.hotbarIndex?.let { selectSlotSilently(requester, it, ticksUntilReset) } ?: true
 
-    fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int): Boolean {
+    /**
+     * @see net.minecraft.world.entity.player.Inventory.isHotbarSlot
+     */
+    fun selectSlotSilently(
+        requester: Any?,
+        slot: @Range(from = 0, to = Inventory.SELECTION_SIZE - 1L) Int,
+        ticksUntilReset: Int,
+    ): Boolean {
+        require(Inventory.isHotbarSlot(slot)) { "Invalid hotbar slot: $slot" }
+
         val event = EventManager.callEvent(SelectHotbarSlotSilentlyEvent(requester, slot))
         if (event.isCancelled) {
             return false
