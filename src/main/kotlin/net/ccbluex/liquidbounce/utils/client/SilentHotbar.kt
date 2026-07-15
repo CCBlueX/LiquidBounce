@@ -66,7 +66,7 @@ object SilentHotbar : EventListener {
     }
 
     fun resetSlot(requester: Any?) {
-        if (hotbarState?.requester == requester) {
+        if (hotbarState?.requester === requester) {
             hotbarState = null
         }
     }
@@ -76,7 +76,7 @@ object SilentHotbar : EventListener {
     /**
      * Returns if the slot is currently getting modified by a given requester
      */
-    fun isSlotModifiedBy(requester: Any?) = hotbarState?.requester == requester
+    fun isSlotModifiedBy(requester: Any?) = hotbarState?.requester === requester
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = 1001) {
