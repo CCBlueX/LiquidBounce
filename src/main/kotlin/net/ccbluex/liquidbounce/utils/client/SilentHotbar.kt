@@ -48,21 +48,21 @@ object SilentHotbar : EventListener {
     /**
      * Silently selects a main-hand hotbar slot for duration of [ticksUntilReset].
      * Offhand is ignored because it is not selected through held-item changes.
+     *
+     * @return `true` when the slot is selected or no selection is required, `false` when the request is cancelled
      */
-    fun selectSlotSilently(requester: Any?, slot: HotbarItemSlot, ticksUntilReset: Int) {
-        slot.hotbarIndex?.let {
-            selectSlotSilently(requester, it, ticksUntilReset)
-        }
-    }
+    fun selectSlotSilently(requester: Any?, slot: HotbarItemSlot, ticksUntilReset: Int): Boolean =
+        slot.hotbarIndex?.let { selectSlotSilently(requester, it, ticksUntilReset) } ?: true
 
-    fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int) {
+    fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int): Boolean {
         val event = EventManager.callEvent(SelectHotbarSlotSilentlyEvent(requester, slot))
         if (event.isCancelled) {
-            return
+            return false
         }
 
         hotbarState = SilentHotbarState(slot, requester, ticksUntilReset, clientsideSlot)
         ticksSinceLastUpdate = 0
+        return true
     }
 
     fun resetSlot(requester: Any?) {
