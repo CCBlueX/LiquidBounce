@@ -18,188 +18,116 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
+import net.ccbluex.liquidbounce.additions.realSelectedSlot
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeated
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
-import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
-import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
-import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.entity.interactBlock
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
-import net.ccbluex.liquidbounce.utils.world.waterEvaporates
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.Items
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.Vec3
 
 internal object NoFallMLG : NoFallMode("MLG") {
-    private const val PICKUP_TRACKER_CAPACITY = 8
-
-    private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
-
-    private object PickupWater : ToggleableValueGroup(NoFallMLG, "PickUpWater", true) {
-        /**
-         * Don't pick up before the lower bound, don't pick up after the upper bound
-         */
-        val pickupSpan by intRange("PickupSpan", 200..1000, 0..10000, "ms")
-    }
 
     private val rotations = tree(RotationsValueGroup(this))
-
-    private var currentTarget: PlacementPlan? = null
-    private val pickupTracker = TimedPickupTracker(PICKUP_TRACKER_CAPACITY)
-
-    private val netherItems =
-        setOf(
-            // overworld
-            Items.SCAFFOLDING,
-            Items.COBWEB,
-            Items.POWDER_SNOW_BUCKET,
-            Items.HAY_BLOCK,
-            Items.SLIME_BLOCK,
-            Items.HONEY_BLOCK,
-            // nether
-            Items.TWISTING_VINES,
-        )
-    private val normalItems = netherItems + Items.WATER_BUCKET
-
-    private val itemsForMLG
-        get() = if (world.waterEvaporates) netherItems else normalItems
-
-    init {
-        tree(PickupWater)
-    }
-
-    /**
-     * We need to sneak for at least 3 ticks to eliminate
-     * the fall damage.
-     */
-    const val SCAFFOLDING_SNEAKING_TICKS = 3
-
-    override val running: Boolean
-        get() = super.running && !ModuleFreeze.running
-
-    override fun disable() {
-        SilentHotbar.resetSlot(this)
-    }
+    private val fallDistance by float("FallDistance", 3f, 0f..15f)
+    private val pickupWater = tree(object : ToggleableValueGroup(this, "PickupWater", true) {})
+    private var savedSlot: Int = -1
 
     @Suppress("unused")
-    private val tickMovementHandler =
-        handler<RotationUpdateEvent> {
-            val currentGoal = this.getCurrentGoal()
+    private val tickHandler = tickHandler {
+        if (player.fallDistance < fallDistance || player.deltaMovement.y >= -0.08)
+            return@tickHandler
 
-            this.currentTarget = currentGoal
+        val landing = predictLanding() ?: return@tickHandler
+        if (landing.ticks < 2) return@tickHandler
 
-            if (currentGoal == null) {
-                return@handler
-            }
+        val slot = findWaterBucketSlot()
+        if (slot < 0) return@tickHandler
 
-            RotationManager.setRotationTarget(
-                currentGoal.placementTarget.rotation,
-                valueGroup = rotations,
-                priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-                provider = ModuleNoFall,
-            )
-        }
+        val offhand = slot == 9
+        savedSlot = player.inventory.realSelectedSlot
+        if (!offhand) SilentHotbar.selectSlotSilently(this, slot, 4)
 
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        val target = currentTarget ?: return@handler
-
-        val rayTraceResult = traceFromPlayer()
-
-        if (!target.doesCorrespondTo(rayTraceResult)) {
-            return@handler
-        }
-
-        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
-
-        val onSuccess: () -> Boolean = {
-            pickupTracker.record(target.targetPos)
-
-            if (target.hotbarItemSlot.itemStack.item == Items.SCAFFOLDING) {
-                repeated<MovementInputEvent>(SCAFFOLDING_SNEAKING_TICKS) { event ->
-                    event.sneak = true
-                }
-            }
-
-            true
-        }
-
-        doPlacement(
-            rayTraceResult,
-            hand = target.hotbarItemSlot.useHand,
-            onItemUseSuccess = onSuccess,
-            onPlacementSuccess = onSuccess,
+        val hand = if (offhand) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
+        RotationManager.setRotationTarget(
+            rotations.toRotationTarget(Rotation.lookingAt(landing.pos, player.eyePosition)),
+            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
+            provider = ModuleNoFall
         )
 
-        currentTarget = null
+        // Wait until ground is within interaction range (~2.5 blocks from feet)
+        val groundY = ((landing.pos.y - 0.001).toInt() + 1.0)
+        while (player.position().y - groundY > 2.5) {
+            waitTicks(1)
+        }
+
+        val rot = RotationManager.serverRotation
+        val hit = traceFromPoint(start = player.eyePosition, direction = rot.directionVector) as BlockHitResult
+
+        if (hit.direction == Direction.UP) {
+            interactBlock(hit, hand)
+            useItem(hand)
+        }
+
+        if (pickupWater.enabled) {
+            var timeout = 100
+            while (!player.isInWater && timeout-- > 0) {
+                waitTicks(1)
+            }
+            val ph = traceFromPlayer(rot) as BlockHitResult
+            if (ph.direction == Direction.UP
+                && player.getItemInHand(hand).`is`(Items.BUCKET)
+            ) {
+                interactBlock(ph, hand)
+                useItem(hand)
+            }
+        }
+
+        restoreSlot()
     }
 
-    /**
-     * Finds something to do, either
-     * 1. Preventing fall damage by placing something
-     * 2. Picking up water which we placed earlier to prevent fall damage
-     */
-    private fun getCurrentGoal(): PlacementPlan? {
-        getCurrentMLGPlacementPlan()?.let {
-            return it
-        }
+    private data class Landing(val pos: Vec3, val ticks: Int)
 
-        if (PickupWater.enabled) {
-            return getCurrentPickupTarget()
+    private fun predictLanding(): Landing? {
+        var pos = player.position()
+        var vel = player.deltaMovement
+        for (t in 0..5) {
+            vel = vel.add(0.0, -0.08, 0.0).multiply(1.0, 0.98, 1.0)
+            pos = pos.add(vel)
+            val blockUnder = BlockPos(pos.x.toInt(), (pos.y - 0.001).toInt(), pos.z.toInt())
+            if (!world.getBlockState(blockUnder).isAir) {
+                return Landing(pos, t)
+            }
         }
-
         return null
     }
 
-    /**
-     * Finds a position to pickup placed water from
-     */
-    private fun getCurrentPickupTarget(): PlacementPlan? {
-        if (!canPickUpWaterSafely()) {
-            return null
+    private fun findWaterBucketSlot(): Int {
+        for (i in 0..8) {
+            if (player.inventory.getItem(i).`is`(Items.WATER_BUCKET)) return i
         }
-
-        val bestPickupItem = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
-
-        // Remove all time outed/invalid pickup targets from the list
-        pickupTracker.prune(PickupWater.pickupSpan.last.toLong(), TimedPickupTracker.PickupFilter.WATER)
-
-        val pickupPos = pickupTracker.firstEligible(PickupWater.pickupSpan.first.toLong()) ?: return null
-        return planPlacementAtPos(pickupPos, bestPickupItem)
+        return if (player.offhandItem.`is`(Items.WATER_BUCKET)) 9 else -1
     }
 
-    private fun canPickUpWaterSafely(): Boolean {
-        return player.isInWater || player.onGround() || player.fallDistance <= minFallDist
+    private fun restoreSlot() {
+        if (savedSlot >= 0) {
+            SilentHotbar.resetSlot(this)
+            savedSlot = -1
+        }
     }
 
-    /**
-     * Find a way to prevent fall damage if we are falling.
-     */
-    private fun getCurrentMLGPlacementPlan(): PlacementPlan? {
-        val itemForMLG = Slots.OffhandWithHotbar.findClosestSlot(items = itemsForMLG)
-
-        if (player.fallDistance <= minFallDist || itemForMLG == null) {
-            return null
-        }
-
-        val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos ?: return null
-
-        if (collision.fallDamageMultiplier(player) <= 0f) {
-            return null
-        }
-
-        return planPlacementAtPos(collision.above(), itemForMLG)
-    }
+    override fun disable() = restoreSlot()
 }
