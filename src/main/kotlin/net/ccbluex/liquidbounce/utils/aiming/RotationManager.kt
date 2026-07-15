@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
@@ -249,16 +248,13 @@ object RotationManager : EventListener {
         rotationTargetHandler.tick()
     }
 
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> { event ->
-        val activeRotationTarget = this.activeRotationTarget ?: return@handler
-
-        val partialTicks = event.partialTicks
+    fun applyChangeLookRotation(partialTicks: Float) {
+        val activeRotationTarget = this.activeRotationTarget ?: return
 
         if (isRotatingAllowed(activeRotationTarget)
             && activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
-            val playerRotation = playerRotation ?: return@handler
-            val currentRotation = currentRotation ?: return@handler
+            val playerRotation = playerRotation ?: return
+            val currentRotation = currentRotation ?: return
             val timerSpeed = Timer.timerSpeed
 
             val interpolated = playerRotation.interpolateTo(currentRotation, timerSpeed * partialTicks)

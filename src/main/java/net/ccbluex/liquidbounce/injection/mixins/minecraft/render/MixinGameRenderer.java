@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen;
 import net.minecraft.client.Camera;
@@ -82,6 +83,14 @@ public abstract class MixinGameRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     public void hookGameRender(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(GameRenderEvent.INSTANCE);
+    }
+
+    /**
+     * Apply change-look rotations before vanilla updates and extracts the camera state.
+     */
+    @Inject(method = "update", at = @At("HEAD"))
+    private void applyChangeLookRotation(DeltaTracker deltaTracker, CallbackInfo ci) {
+        RotationManager.INSTANCE.applyChangeLookRotation(deltaTracker.getGameTimeDeltaPartialTick(false));
     }
 
     @Inject(method = "extractCamera", at = @At("TAIL"))
