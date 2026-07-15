@@ -18,74 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.netty
 
-import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.ChannelFactory
-import io.netty.channel.EventLoopGroup
-import io.netty.channel.IoHandlerFactory
-import io.netty.channel.MultiThreadIoEventLoopGroup
-import io.netty.channel.ServerChannel
-import io.netty.channel.epoll.Epoll
-import io.netty.channel.epoll.EpollIoHandler
-import io.netty.channel.epoll.EpollServerSocketChannel
-import io.netty.channel.kqueue.KQueue
-import io.netty.channel.kqueue.KQueueIoHandler
-import io.netty.channel.kqueue.KQueueServerSocketChannel
-import io.netty.channel.nio.NioIoHandler
-import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.util.concurrent.Future
 import io.netty.util.concurrent.GenericFutureListener
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.CancellationException
-import java.util.concurrent.ThreadFactory
-
-// ---- Netty Transport Setup ----
-
-private enum class TransportType(
-    val serverChannelFactory: ChannelFactory<out ServerChannel>,
-) {
-    NIO(::NioServerSocketChannel) {
-        override val isAvailable get() = true
-        override val ioHandlerFactory: IoHandlerFactory = NioIoHandler.newFactory()
-    },
-
-    EPOLL(::EpollServerSocketChannel) {
-        override val isAvailable get() = try {
-            Epoll.isAvailable()
-        } catch (_: Throwable) { false }
-        override val ioHandlerFactory: IoHandlerFactory get() = EpollIoHandler.newFactory()
-    },
-
-    KQUEUE(::KQueueServerSocketChannel) {
-        override val isAvailable get() = try {
-            KQueue.isAvailable()
-        } catch (_: Throwable) { false }
-        override val ioHandlerFactory: IoHandlerFactory get() = KQueueIoHandler.newFactory()
-    };
-
-    abstract val isAvailable: Boolean
-
-    abstract val ioHandlerFactory: IoHandlerFactory
-}
-
-private val availableTransport by lazy {
-    arrayOf(TransportType.EPOLL, TransportType.KQUEUE, TransportType.NIO)
-        .first { it.isAvailable }
-}
-
-@JvmOverloads
-fun ServerBootstrap.setup(
-    useNativeTransport: Boolean = true,
-    threadFactory: ThreadFactory? = null,
-): Pair<EventLoopGroup, EventLoopGroup> {
-    val type = if (useNativeTransport) availableTransport else TransportType.NIO
-
-    val parentGroup = MultiThreadIoEventLoopGroup(1, threadFactory, type.ioHandlerFactory)
-    val childGroup = MultiThreadIoEventLoopGroup(threadFactory, type.ioHandlerFactory)
-    group(parentGroup, childGroup)
-        .channelFactory(type.serverChannelFactory)
-    return parentGroup to childGroup
-}
 
 // ---- Netty Future Coroutine Bridges ----
 

@@ -90,7 +90,7 @@ object ClientInteropServer {
     }
 
     suspend fun stop() {
-        server?.stop(1000, 2000)
+        server?.stopSuspend(gracePeriodMillis = 1000, timeoutMillis = 2000)
         server = null
     }
 
