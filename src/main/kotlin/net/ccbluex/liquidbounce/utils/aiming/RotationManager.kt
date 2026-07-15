@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
-import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -255,9 +254,8 @@ object RotationManager : EventListener {
             && activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
             val playerRotation = playerRotation ?: return
             val currentRotation = currentRotation ?: return
-            val timerSpeed = Timer.timerSpeed
 
-            val interpolated = playerRotation.interpolateTo(currentRotation, timerSpeed * partialTicks)
+            val interpolated = playerRotation.interpolateTo(currentRotation, partialTicks)
             player.setRotation(interpolated)
         }
     }
