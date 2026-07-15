@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.platform.Platform
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.io.File
@@ -50,9 +50,11 @@ object ConfigSystem {
     var isFirstLaunch: Boolean = false
         private set
 
-    // Config directory folder
+    // Config directory folder. Resolved through the Platform because this can run
+    // before the Minecraft instance exists (e.g. from the registry bootstrap
+    // thread on NeoForge).
     val rootFolder = File(
-        mc.gameDirectory, LiquidBounce.CLIENT_NAME
+        Platform.current.gameDirectory.toFile(), LiquidBounce.CLIENT_NAME
     ).apply {
         // Check if there is already a config folder and if not create new folder
         // (mkdirs not needed - .minecraft should always exist)

@@ -12,6 +12,12 @@ fabric-loader = "0.19.3"
 fabric-loaderMin = "0.18.4"
 fabric-api = "0.153.0+26.2"
 
+# NeoForge Properties
+# https://projects.neoforged.net/neoforged/neoforge
+neoforge = "26.2.0.7-beta"
+# https://projects.neoforged.net/neoforged/moddevgradle
+moddev = "2.0.141"
+
 # mcef
 mcef = "3.3.2-26.2-SNAPSHOT"
 # mc-authlib
@@ -28,17 +34,24 @@ discordIpc = "0.6.0-SNAPSHOT"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
 fastutil4k = "0.2.8"
+# Transitive dependency of DiscordIPC; constrained on NeoForge for Java 25 support
+lenni0451-reflect = "1.6.2"
 
 # Recommended mods
 modmenu = "20.0.0-beta.4"
 exploit_preventer_api = "1.0.0"
 exploit_preventer_mod = "1.1.0+26.2"
 sodium = "mc26.2-0.9.0-fabric"
+sodium-neoforge = "mc26.2-0.9.0-neoforge"
 lithium = "mc26.2-0.25.0-fabric"
+lithium-neoforge = "mc26.2-0.25.0-neoforge"
 viafabricplus = "4.6.1"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.16.0+26.2-fabric"
+immediatelyFast-neoforge = "1.16.0+26.2-neoforge"
 iris = "1.11.1+26.2-fabric"
+# Iris has no NeoForge build for 26.2 yet; the NeoForge runtime skips it (see neoforge/build.gradle.kts).
+iris-neoforge = "1.10.9+26.1-neoforge"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
@@ -49,6 +62,13 @@ junit = "6.1.1"
 kotlinx-coroutines = "1.11.0"
 # https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
 fabric-kotlin = "1.13.12+kotlin.2.4.0"
+# Kotlin runtime bundled into the NeoForge jar; the versions mirror the
+# libraries fabric-language-kotlin ships on Fabric
+kotlinx-coroutines-runtime = "1.11.0"
+kotlinx-atomicfu = "0.33.0"
+kotlinx-datetime = "0.8.0"
+kotlinx-io = "0.9.0"
+kotlinx-serialization = "1.11.0"
 
 # Netty, should be sync with game version
 # https://mvnrepository.com/artifact/io.netty/netty-all
@@ -69,6 +89,17 @@ fabric-loader = { group = "net.fabricmc", name = "fabric-loader", version.ref = 
 fabric-api = { group = "net.fabricmc.fabric-api", name = "fabric-api", version.ref = "fabric-api" }
 fabric-kotlin = { group = "net.fabricmc", name = "fabric-language-kotlin", version.ref = "fabric-kotlin" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines-runtime" }
+kotlinx-coroutines-jdk8 = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-jdk8", version.ref = "kotlinx-coroutines-runtime" }
+kotlinx-atomicfu = { group = "org.jetbrains.kotlinx", name = "atomicfu", version.ref = "kotlinx-atomicfu" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-io-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-io-core", version.ref = "kotlinx-io" }
+kotlinx-io-bytestring = { group = "org.jetbrains.kotlinx", name = "kotlinx-io-bytestring", version.ref = "kotlinx-io" }
+kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-serialization-cbor = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-cbor", version.ref = "kotlinx-serialization" }
 fabric-loader-junit = { group = "net.fabricmc", name = "fabric-loader-junit", version.ref = "fabric-loader" }
 junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
@@ -80,6 +111,7 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 okhttp-coroutines = { group = "com.squareup.okhttp3", name = "okhttp-coroutines", version.ref = "okhttp" }
 mcAuthlib = { group = "net.ccbluex", name = "mc-authlib", version.ref = "mc_authlib" }
 mcef = { group = "net.ccbluex", name = "mcef", version.ref = "mcef" }
+mcef-neoforge = { group = "net.ccbluex", name = "mcef-neoforge", version.ref = "mcef" }
 httpServer = { group = "net.ccbluex", name = "netty-httpserver", version.ref = "httpServer" }
 discordIpc = { group = "com.jagrosh", name = "DiscordIPC", version.ref = "discordIpc" }
 semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
@@ -99,16 +131,22 @@ djl-pytorch = { group = "ai.djl.pytorch", name = "pytorch-engine", version.ref =
 # mods
 modmenu = { group = "maven.modrinth", name = "modmenu", version.ref = "modmenu" }
 sodium = { group = "maven.modrinth", name = "sodium", version.ref = "sodium" }
+sodium-neoforge = { group = "maven.modrinth", name = "sodium", version.ref = "sodium-neoforge" }
 lithium = { group = "maven.modrinth", name = "lithium", version.ref = "lithium" }
+lithium-neoforge = { group = "maven.modrinth", name = "lithium", version.ref = "lithium-neoforge" }
 vfp-api = { group = "com.viaversion", name = "viafabricplus-api", version.ref = "viafabricplus" }
 vfp = { group = "com.viaversion", name = "viafabricplus", version.ref = "viafabricplus" }
 exploitPreventer-api = { group = "com.nikoverflow", name = "exploit-preventer-api", version.ref = "exploit_preventer_api" }
 exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
+lenni0451-reflect = { group = "net.lenni0451", name = "Reflect", version.ref = "lenni0451-reflect" }
 immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
+immediatelyFast-neoforge = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast-neoforge" }
 iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
+iris-neoforge = { group = "maven.modrinth", name = "iris", version.ref = "iris-neoforge" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
+moddev = { id = "net.neoforged.moddev", version.ref = "moddev" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 gradleGitProperties = { id = "com.gorylenko.gradle-git-properties", version.ref = "gradleGitProperties" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }

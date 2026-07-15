@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.misc
 
 import com.mojang.blaze3d.platform.IconSet
-import com.terraformersmc.modmenu.util.mod.Mod
 import kotlinx.coroutines.cancel
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -33,21 +32,15 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
+import net.ccbluex.liquidbounce.platform.Platform
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.modmenu.ModMenuCompatibility
-import net.fabricmc.loader.impl.FabricLoaderImpl
 import net.minecraft.SharedConstants
 import org.lwjgl.glfw.GLFW
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
-
-private val modMenuPresent = runCatching {
-    Class.forName("com.terraformersmc.modmenu.ModMenu")
-    true
-}.getOrDefault(false)
 
 /**
  * Hides client appearance
@@ -57,17 +50,11 @@ private val modMenuPresent = runCatching {
 object HideAppearance : EventListener {
 
     /**
-     * These mods will be removed from ModMenu.
+     * These mods will be removed from the loader's mod list UI.
      * When [isHidingNow] is true
      * Or added, if [isHidingNow] is false
-     *
-     * Because we don't know about the [Mod] container on each mod in this list
-     * We set the default value is null.
-     * And we'll provide the value after first removing the mod
      */
-    private val modContainersToHide: MutableMap<String, Mod?> = arrayOf(
-        "liquidbounce", "mcef"
-    ).associateWith { null }.toMutableMap()
+    private val modsToHide = listOf("liquidbounce", "mcef")
 
     private val shiftChronometer = Chronometer()
 
@@ -76,18 +63,10 @@ object HideAppearance : EventListener {
             field = value
             mc.schedule(::updateClient)
 
-            if (modMenuPresent) {
-                if (value) {
-                    for (id in modContainersToHide.keys) {
-                        modContainersToHide[id] = ModMenuCompatibility.INSTANCE.removeModUnchecked(id)
-                    }
-                } else {
-                    for ((id, container) in modContainersToHide) {
-                        container?.let {
-                            ModMenuCompatibility.INSTANCE.addModUnchecked(id, it)
-                        }
-                    }
-                }
+            if (value) {
+                Platform.current.hideModsFromModList(modsToHide)
+            } else {
+                Platform.current.restoreModsInModList()
             }
         }
 
@@ -167,25 +146,8 @@ object HideAppearance : EventListener {
             ConfigSystem.rootFolder.deleteRecursively()
         }
 
-        FabricLoaderImpl.INSTANCE.allMods.find {
-            it.metadata.id == "liquidbounce"
-        }?.let { mod ->
-            // Delete JAR file
-            runCatching {
-                val origin = mod.origin
-
-                for (path in origin.paths) {
-                    runCatching {
-                        path.toFile().delete()
-                    }
-                }
-            }
-
-            // Remove from Fabric Loader Impl
-            runCatching {
-                FabricLoaderImpl.INSTANCE.modsInternal.remove(mod)
-            }
-        }
+        // Remove from the mod loader and delete the JAR file
+        Platform.current.removeModAndDeleteJars("liquidbounce")
 
         // History clear
         mc.gui.hud.chat.clearMessages(true)

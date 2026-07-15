@@ -66,6 +66,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.platform.Platform
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
@@ -89,7 +90,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
-import net.minecraft.server.packs.resources.ReloadableResourceManager
 import java.io.InputStream
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
@@ -472,11 +472,13 @@ object LiquidBounce : EventListener {
             EventManager
 
             // Register resource reloader
-            val resourceManager = mc.resourceManager
-            if (resourceManager is ReloadableResourceManager) {
-                resourceManager.registerReloadListener(ClientResourceReloader)
-                resourceManager.registerReloadListener(ThemeManager.reloader)
-            } else {
+            val reloadersRegistered = Platform.current.registerResourceReloadListeners(
+                linkedMapOf(
+                    Platform.RELOAD_LISTENER_CLIENT_RESOURCES to ClientResourceReloader,
+                    Platform.RELOAD_LISTENER_THEME to ThemeManager.reloader,
+                )
+            )
+            if (!reloadersRegistered) {
                 logger.warn("Failed to register resource reloader!")
 
                 // Run resource reloader directly as fallback
@@ -484,7 +486,7 @@ object LiquidBounce : EventListener {
                     workerDispatcher = Dispatchers.Default,
                     renderThreadDispatcher = Dispatchers.Minecraft,
                 ).thenRun {
-                    ThemeManager.reloader.onResourceManagerReload(resourceManager)
+                    ThemeManager.reloader.onResourceManagerReload(mc.resourceManager)
                 }
             }
         }.onFailure {

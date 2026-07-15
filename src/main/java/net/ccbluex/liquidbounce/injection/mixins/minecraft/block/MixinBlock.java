@@ -32,7 +32,10 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(Block.class)
 public abstract class MixinBlock {
 
-    @ModifyReturnValue(method = "shouldRenderFace", at = @At("RETURN"))
+    // Qualified to the vanilla 3-arg overload: NeoForge adds a 5-arg shouldRenderFace(BlockGetter,
+    // BlockPos, BlockState, BlockState, Direction) which the bare selector would also match (suffix
+    // capture), double-applying the XRay result. Keep parity with Fabric by binding only this overload.
+    @ModifyReturnValue(method = "shouldRenderFace(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;)Z", at = @At("RETURN"))
     private static boolean injectXRay(boolean original, BlockState state, BlockState otherState, Direction side) {
         var xRay = ModuleXRay.INSTANCE;
         if (xRay.getRunning()) {

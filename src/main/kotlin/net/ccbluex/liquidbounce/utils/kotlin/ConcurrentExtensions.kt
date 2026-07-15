@@ -20,18 +20,34 @@
 
 package net.ccbluex.liquidbounce.utils.kotlin
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import net.ccbluex.liquidbounce.utils.client.mc
+import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KProperty
 
 inline operator fun <T> ThreadLocal<T>.getValue(receiver: Any?, property: KProperty<*>): T = get()
 
 inline operator fun <T> ThreadLocal<T>.setValue(receiver: Any?, property: KProperty<*>, value: T) = set(value)
 
+/**
+ * Dispatches to the [mc] thread. The instance is resolved on first dispatch,
+ * because the dispatcher can be captured in coroutine contexts (e.g. through
+ * class initializers running on the registry bootstrap thread) before [mc]
+ * exists.
+ */
 @JvmField
-val MinecraftDispatcher = mc.asCoroutineDispatcher()
+val MinecraftDispatcher: CoroutineDispatcher = object : CoroutineDispatcher() {
+
+    private val delegate by lazy { mc.asCoroutineDispatcher() }
+
+    override fun isDispatchNeeded(context: CoroutineContext) = delegate.isDispatchNeeded(context)
+
+    override fun dispatch(context: CoroutineContext, block: Runnable) = delegate.dispatch(context, block)
+
+}
 
 inline val Dispatchers.Minecraft get() = MinecraftDispatcher
 

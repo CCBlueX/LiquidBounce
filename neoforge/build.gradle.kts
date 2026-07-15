@@ -1,0 +1,315 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+plugins {
+    `java-library`
+    alias(libs.plugins.moddev)
+    alias(libs.plugins.kotlin.jvm)
+    // Generates git.properties (read by GitInfo) for this module's own resources output
+    alias(libs.plugins.gradleGitProperties)
+    alias(libs.plugins.detekt)
+}
+
+base {
+    archivesName = "${rootProject.property("archives_base_name")}-neoforge"
+    version = rootProject.property("mod_version") as String
+    group = rootProject.property("maven_group") as String
+}
+
+// If NeoForge lags behind after a Minecraft update, it must not break the Fabric
+// build: disable this module's tasks while the versions do not match.
+val neoForgeMinecraftVersion = libs.versions.neoforge.get().split('.').take(3).joinToString(".")
+val paddedMinecraftVersion = (libs.versions.minecraft.get().split('.') + listOf("0", "0"))
+    .take(3)
+    .joinToString(".")
+
+if (neoForgeMinecraftVersion != paddedMinecraftVersion) {
+    logger.warn(
+        "NeoForge ${libs.versions.neoforge.get()} targets Minecraft $neoForgeMinecraftVersion, but the " +
+            "project is on Minecraft ${libs.versions.minecraft.get()}. The neoforge tasks are disabled " +
+            "until a matching NeoForge version is available."
+    )
+
+    tasks.configureEach {
+        enabled = false
+    }
+}
+
+/** Includes dependency recursively in the JAR file (NeoForge jarJar) */
+val jij: Configuration by configurations.creating
+
+jij.excludeProvidedLibs()
+
+/**
+ * Kotlin runtime bundled into the jar. On Fabric it is provided by the
+ * fabric-language-kotlin mod; NeoForge has no equivalent dependency, so the
+ * runtime is shipped the same way KotlinForForge does (nested library jars).
+ * Kept separate from [jij] because [excludeProvidedLibs] excludes it there.
+ */
+val kotlinRuntime: Configuration by configurations.creating
+
+// Reuses the loader-agnostic sources of the root (Fabric) project. The Fabric-specific
+// sources live in src/fabric and are not part of this source set; this module provides
+// its own platform implementation instead.
+sourceSets {
+    main {
+        java.srcDir(rootProject.file("src/main/java"))
+        kotlin.srcDir(rootProject.file("src/main/kotlin"))
+        resources.srcDirs(
+            rootProject.file("src/main/resources"),
+            rootProject.file("src-theme/resources")
+        )
+    }
+}
+
+val convertAccessWidener = tasks.register<ConvertAccessWidenerTask>("convertAccessWidener") {
+    description = "Generates the NeoForge access transformer from the shared access widener."
+
+    accessWidener = rootProject.file("src/main/resources/liquidbounce.accesswidener")
+    // The root project's Loom-provided Minecraft jar uses the same Mojang mappings
+    // as NeoForge and provides the class hierarchy for override propagation.
+    hierarchyClasspath.from(
+        (rootProject.extensions.getByName("loom") as net.fabricmc.loom.api.LoomGradleExtensionAPI)
+            .namedMinecraftJars
+    )
+    output = layout.buildDirectory.file("generated/accessTransformer/accesstransformer.cfg")
+}
+
+/**
+ * Statically checks the shared mixins against the NeoForge-patched Minecraft jar so
+ * that divergences that would only crash in-world (an injector silently failing to
+ * bind because NeoForge reshaped a vanilla method) are caught at build time.
+ */
+val checkMixinDivergence = tasks.register<MixinDivergenceCheckTask>("checkMixinDivergence") {
+    description = "Checks shared mixins against the NeoForge-patched Minecraft jar for injector divergence."
+
+    // The whole compile output is fine; the task filters to the shared mixin package.
+    mixinClasses.from(sourceSets.main.map { it.output.classesDirs })
+
+    // The patched jar is produced by ModDevGradle's setup; :compileJava depends on it.
+    targetClasses.from(
+        layout.buildDirectory.file("moddev/artifacts/minecraft-patched-${libs.versions.neoforge.get()}.jar")
+    )
+
+    // Summary report; declaring it as an output lets Gradle cache the task result.
+    report = layout.buildDirectory.file("reports/mixinDivergence.txt")
+
+    // compileJava produces the mixin classes and transitively drives the moddev
+    // artifact creation that yields the patched jar.
+    dependsOn(tasks.named("compileJava"))
+}
+
+tasks.named("check") {
+    dependsOn(checkMixinDivergence)
+}
+
+neoForge {
+    version = libs.versions.neoforge.get()
+
+    accessTransformers.from(convertAccessWidener.map { it.output })
+    validateAccessTransformers = true
+
+    runs {
+        register("client") {
+            client()
+        }
+    }
+
+    mods {
+        register("liquidbounce") {
+            sourceSet(sourceSets.main.get())
+        }
+    }
+}
+
+dependencies {
+    // ViaFabricPlus API - compile-time only; all usage sites are guarded by
+    // Platform.isModLoaded("viafabricplus"), which is always false on NeoForge.
+    compileOnly(libs.vfp.api)
+
+    // Exploit Preventer API - compile-time only, guarded by Class.forName checks.
+    compileOnly(libs.exploitPreventer.api)
+
+    // Mixin targets of the mod-compat mixins, which are inert at runtime unless
+    // the target classes are present. Sodium and Lithium are multiloader, so the
+    // Fabric artifacts provide the correct classes to compile against; the dev
+    // run loads the NeoForge variants of the same versions instead.
+    compileOnly(libs.sodium)
+    compileOnly(libs.lithium)
+    runtimeOnly(libs.sodium.neoforge)
+    runtimeOnly(libs.lithium.neoforge)
+
+    // Mods for compatibility test (runtime only)
+    runtimeOnly(libs.immediatelyFast.neoforge)
+    // Iris has no NeoForge build for Minecraft 26.2 yet; re-add once it is published.
+    // runtimeOnly(libs.iris.neoforge)
+
+    constraints {
+        // DiscordIPC pulls Reflect 1.6.1, which breaks on Java 25. ImmediatelyFast
+        // bundles 1.6.2 but binds the older copy from the dev classpath, crashing
+        // the dev run; 1.6.2 works for both.
+        jij(libs.lenni0451.reflect)
+    }
+
+    // The bundled (jij) dependencies below mirror the root project's list -
+    // keep the two in sync.
+
+    // JCEF Support - nested as a NeoForge mod jar, like the Fabric jar includes
+    // the mcef artifact. Without it at runtime, the browser backend is skipped.
+    jij(libs.mcef.neoforge)
+
+    // Minecraft Authlib
+    jij(libs.mcAuthlib)
+
+    // LWJGL EGL
+    jij(libs.lwjgl.egl)
+
+    jij(libs.httpServer)
+
+    // Discord RPC Support
+    jij(libs.discordIpc)
+
+    // ScriptAPI
+    jij(libs.polyglot)
+    jij(libs.polyglot.js)
+    jij(libs.polyglot.tools)
+
+    // Machine Learning
+    jij(libs.djl.api)
+    jij(libs.djl.pytorch)
+
+    // HTTP library
+    jij(libs.bundles.okhttp)
+
+    // SOCKS5 & HTTP Proxy Support
+    jij(libs.netty.handler.proxy)
+
+    // Update Checker
+    jij(libs.semver4j)
+
+    // Name Protect
+    jij(libs.ahocorasick)
+
+    // External utils
+    compileOnlyApi(libs.fastutil4k.extensionsOnly)
+    jij(libs.fastutil4k.moreCollections)
+
+    // Kotlin runtime
+    kotlinRuntime(libs.kotlin.stdlib)
+    kotlinRuntime(libs.kotlin.reflect)
+    kotlinRuntime(libs.kotlinx.coroutines.core)
+    kotlinRuntime(libs.kotlinx.coroutines.jdk8)
+    kotlinRuntime(libs.kotlinx.atomicfu)
+    kotlinRuntime(libs.kotlinx.datetime)
+    kotlinRuntime(libs.kotlinx.io.core)
+    kotlinRuntime(libs.kotlinx.io.bytestring)
+    kotlinRuntime(libs.kotlinx.serialization.core)
+    kotlinRuntime(libs.kotlinx.serialization.json)
+    kotlinRuntime(libs.kotlinx.serialization.cbor)
+}
+
+addResolvedDependencies(jij, "compileOnly", "jarJar", "api")
+addResolvedDependencies(kotlinRuntime, "compileOnly", "jarJar", "runtimeOnly")
+
+tasks.processResources {
+    dependsOn(rootProject.tasks.named("bundleTheme"))
+
+    // Fabric-only metadata; the equivalent access transformer is generated by convertAccessWidener
+    exclude("liquidbounce.accesswidener")
+
+    from(convertAccessWidener.map { it.output }) {
+        into("META-INF")
+    }
+
+    val modVersion = rootProject.providers.gradleProperty("mod_version")
+    // Exact Minecraft version, like the Fabric manifest: the mixins do not survive game updates
+    val minecraftVersionRange = libs.versions.minecraft.map { "[$it]" }
+    val neoforgeVersionRange = libs.versions.neoforge.map { "[$it,)" }
+
+    inputs.property("version", modVersion)
+    inputs.property("minecraft_version_range", minecraftVersionRange)
+    inputs.property("neoforge_version_range", neoforgeVersionRange)
+
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand(
+            mapOf(
+                "version" to modVersion.get(),
+                "minecraft_version_range" to minecraftVersionRange.get(),
+                "neoforge_version_range" to neoforgeVersionRange.get()
+            )
+        )
+    }
+}
+
+detekt {
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    baseline = rootProject.file("config/detekt/baseline.xml")
+    // The shared sources of the root project are part of this source set, but
+    // they are already analyzed by the root project's detekt task.
+    source.setFrom(files("src/main/kotlin", "src/main/java"))
+}
+
+gitProperties {
+    // A dedicated output directory; generating into the default (the resources
+    // output directory) overlaps with processResources' outputs, and Gradle
+    // deletes files of overlapping outputs as stale when tasks re-execute.
+    gitPropertiesResourceDir = layout.buildDirectory.dir("generated/gitProperties")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
+    options.release = libs.versions.jdk.get().toInt()
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.jdk.get().toInt()))
+    }
+}
+
+kotlin {
+    compilerOptions {
+        suppressWarnings = true
+        jvmToolchain(libs.versions.jdk.get().toInt())
+    }
+}
+
+tasks.jar {
+    val archivesBaseName = rootProject.providers.gradleProperty("archives_base_name")
+    val modVersion = rootProject.providers.gradleProperty("mod_version")
+    val mavenGroup = rootProject.providers.gradleProperty("maven_group")
+
+    inputs.property("archives_base_name", archivesBaseName)
+    inputs.property("mod_version", modVersion)
+    inputs.property("maven_group", mavenGroup)
+
+    manifest {
+        attributes["Main-Class"] = "net.ccbluex.liquidbounce.LiquidInstruction"
+        attributes["Implementation-Title"] = archivesBaseName.get()
+        attributes["Implementation-Version"] = modVersion.get()
+        attributes["Implementation-Vendor"] = mavenGroup.get()
+    }
+
+    from(rootProject.file("LICENSE")) {
+        rename {
+            "${it}_${archivesBaseName.get()}"
+        }
+    }
+}

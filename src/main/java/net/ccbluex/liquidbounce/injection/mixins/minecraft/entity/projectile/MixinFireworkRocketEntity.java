@@ -59,7 +59,7 @@ public abstract class MixinFireworkRocketEntity implements FireworkRocketEntityA
     }
 
     @ModifyArgs(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(DDD)Lnet/minecraft/world/phys/Vec3;", ordinal = 0))
-    private void hookExtendedFirework(Args args, @Local(name = "lookAngle") Vec3 lookAngle, @Local(name = "movement") Vec3 movement) {
+    private void hookExtendedFirework(Args args, @Local(ordinal = 0) Vec3 lookAngle, @Local(ordinal = 1) Vec3 movement) {
         if (attachedToEntity != Minecraft.getInstance().player
                 || !ModuleExtendedFirework.INSTANCE.getRunning()
         ) return;

@@ -354,7 +354,9 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
     }
 
-    @Inject(method = "setItemSlot", at = @At("HEAD"))
+    // Qualified to the vanilla 2-arg overload: NeoForge adds setItemSlot(EquipmentSlot, ItemStack, boolean)
+    // and makes this the delegating wrapper, so the bare selector would fire the event twice on NeoForge.
+    @Inject(method = "setItemSlot(Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/item/ItemStack;)V", at = @At("HEAD"))
     private void hookEquipmentChange(EquipmentSlot slot, ItemStack itemStack, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, itemStack));
     }

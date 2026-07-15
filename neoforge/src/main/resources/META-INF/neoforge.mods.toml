@@ -1,0 +1,36 @@
+# This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+#
+# NeoForge mod manifest. The Fabric equivalent lives in src/fabric/resources/fabric.mod.json.
+
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "GNU General Public License v3.0"
+issueTrackerURL = "https://github.com/CCBlueX/LiquidBounce/issues"
+
+[[mods]]
+modId = "liquidbounce"
+version = "${version}"
+displayName = "LiquidBounce"
+authors = "CCBlueX"
+description = '''A free mixin-based injection hacked-client for Minecraft.'''
+logoFile = "resources/liquidbounce/icon_64x64.png"
+
+[[mixins]]
+config = "liquidbounce.mixins.json"
+
+[[mixins]]
+config = "liquidbounce-neoforge.mixins.json"
+
+[[dependencies.liquidbounce]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neoforge_version_range}"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.liquidbounce]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "CLIENT"

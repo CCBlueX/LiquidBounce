@@ -23,9 +23,15 @@ pluginManagement {
             name = "Fabric"
             url = uri("https://maven.fabricmc.net/")
         }
+        maven {
+            name = "NeoForged"
+            url = uri("https://maven.neoforged.net/releases")
+        }
         gradlePluginPortal()
         mavenCentral()
     }
 }
 
 rootProject.name = "LiquidBounce"
+
+include("neoforge")

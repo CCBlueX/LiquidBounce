@@ -20,16 +20,12 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ScreenEvent;
-import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -88,16 +84,8 @@ public abstract class MixinGui {
             !FeatureSilentScreen.INSTANCE.getShouldHide() || FeatureSilentScreen.INSTANCE.getUnlockCursor();
     }
 
-    /**
-     * Hook screen render event
-     */
-    @Inject(method = "extractRenderState", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V",
-        shift = At.Shift.AFTER))
-    public void hookScreenRender(DeltaTracker deltaTracker, boolean shouldRenderLevel, boolean resourcesLoaded,
-        CallbackInfo ci, @Local(name = "graphics") GuiGraphicsExtractor graphics) {
-        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)));
-    }
-
+    // Note: the screen render event is fired from the loader-specific companion mixins
+    // (injection.mixins.{fabric,neoforge}.MixinGui) because NeoForge patches the screen
+    // extraction in Gui#extractRenderState through ClientHooks#extractScreen.
 
 }
