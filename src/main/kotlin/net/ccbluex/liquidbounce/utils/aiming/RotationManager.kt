@@ -20,12 +20,14 @@ package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -68,6 +70,12 @@ object RotationManager : EventListener {
         get() = rotationTargetHandler.getActiveRequestValue()
     private val rotationTargetHandler = RequestHandler<RotationTarget>()
 
+    @Suppress("unused")
+    private val lifecycleListener = object : EventListener {
+        private val worldChangeHandler = handler<WorldChangeEvent> { reset() }
+        private val disconnectHandler = handler<DisconnectEvent> { reset() }
+    }
+
     val activeRotationTarget: RotationTarget?
         get() = rotationTarget ?: previousRotationTarget
     internal var previousRotationTarget: RotationTarget? = null
@@ -109,6 +117,16 @@ object RotationManager : EventListener {
         private set
 
     private var theoreticalServerRotation = Rotation.ZERO
+
+    private fun reset() {
+        rotationTargetHandler.clear()
+        previousRotationTarget = null
+        currentRotation = null
+        playerRotation = null
+        previousRotation = null
+        actualServerRotation = Rotation.ZERO
+        theoreticalServerRotation = Rotation.ZERO
+    }
 
     @Suppress("LongParameterList")
     fun setRotationTarget(
