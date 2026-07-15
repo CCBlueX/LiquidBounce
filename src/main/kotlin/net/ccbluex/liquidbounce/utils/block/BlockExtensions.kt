@@ -509,6 +509,10 @@ val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.
 /**
  * Simulated [net.minecraft.world.phys.HitResult.Type.BLOCK] branch in vanilla
  *
+ * This function does not perform the surrounding checks from [net.minecraft.client.Minecraft.startUseItem],
+ * such as whether the game mode is destroying a block, the player's hands are busy, or the held item is enabled.
+ * Callers should perform the applicable checks before calling this function.
+ *
  * @see net.minecraft.client.Minecraft.startUseItem
  */
 fun doPlacement(
@@ -524,23 +528,27 @@ fun doPlacement(
     val useItemOnResult = interaction.useItemOn(player, hand, hitResult)
 
     when {
-        useItemOnResult == InteractionResult.FAIL -> {
+        useItemOnResult is InteractionResult.Fail -> {
             return
         }
 
-        useItemOnResult == InteractionResult.PASS -> {
+        useItemOnResult is InteractionResult.Pass -> {
             // Ok, we cannot place on the block, so let's just use the item in the direction
             // without targeting a block (for buckets, etc.)
             if (!stack.isEmpty) {
                 val useItemResult = interaction.useItem(player, hand)
-                if (useItemResult.consumesAction()) {
-                    handleActionsOnAccept(hand, useItemResult, true, onItemUseSuccess, swingMode)
+                if (useItemResult is Success) {
+                    if (useItemResult.swingSource == SwingSource.CLIENT && onItemUseSuccess()) {
+                        swingMode.swing(hand)
+                    }
+
+                    mc.gameRenderer.itemInHandRenderer.itemUsed(hand) // <- no condition on this
                 }
             }
         }
 
         useItemOnResult.consumesAction() -> {
-            val wasStackUsed = !stack.isEmpty && (stack.count != count || player.isCreative)
+            val wasStackUsed = !stack.isEmpty && (stack.count != count || player.hasInfiniteMaterials())
 
             handleActionsOnAccept(hand, useItemOnResult, wasStackUsed, onPlacementSuccess, swingMode)
         }
