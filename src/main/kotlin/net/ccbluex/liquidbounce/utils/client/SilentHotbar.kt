@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -77,6 +78,12 @@ object SilentHotbar : EventListener {
      * Returns if the slot is currently getting modified by a given requester
      */
     fun isSlotModifiedBy(requester: Any?) = hotbarState?.requester === requester
+
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        hotbarState = null
+        ticksSinceLastUpdate = 0
+    }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = 1001) {
