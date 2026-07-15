@@ -522,11 +522,10 @@ object LiquidBounce : EventListener {
                 .thenCompose {
                     val prepareDispatcher = prepareExecutor.asCoroutineDispatcher()
                     val applyDispatcher = applyExecutor.asCoroutineDispatcher()
-                    @Suppress("UNCHECKED_CAST") // Kotlin Unit to Java Void
                     initializeClient(
                         workerDispatcher = prepareDispatcher,
                         renderThreadDispatcher = applyDispatcher,
-                    ) as CompletableFuture<Void>
+                    ).thenApply<Void> { null }
                 }
         }
 
