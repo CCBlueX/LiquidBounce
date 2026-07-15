@@ -18,9 +18,9 @@
  */
 
 import com.github.gradle.node.npm.task.NpmTask
-import com.github.gradle.node.task.NodeTask
 import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
+import org.gradle.api.tasks.bundling.Zip
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 plugins {
@@ -224,7 +224,7 @@ tasks.processResources {
 
 tasks.register<NpmTask>("npmInstallTheme") {
     workingDir = file("src-theme")
-    args.set(listOf("i"))
+    args.set(listOf("ci"))
     doLast {
         logger.info("Successfully installed dependencies for theme")
     }
@@ -243,33 +243,24 @@ tasks.register<NpmTask>("buildTheme") {
     inputs.files(
         "src-theme/package.json",
         "src-theme/package-lock.json",
-        "src-theme/bundle.cjs",
-        "src-theme/rollup.config.js"
+        "src-theme/index.html",
+        "src-theme/svelte.config.js",
+        "src-theme/tsconfig.json",
+        "src-theme/tsconfig.node.json",
+        "src-theme/vite.config.ts",
     )
     inputs.dir("src-theme/src")
     inputs.dir("src-theme/public")
     outputs.dir("src-theme/dist")
 }
 
-tasks.register<NodeTask>("bundleTheme") {
+tasks.register<Zip>("bundleTheme") {
     dependsOn("buildTheme")
-    workingDir = file("src-theme")
-    script = file("src-theme/bundle.cjs")
-    doLast {
-        logger.info("Successfully attached theme to build")
-    }
-
-    // Incremental stuff
-    inputs.files(
-        "src-theme/package.json",
-        "src-theme/package-lock.json",
-        "src-theme/bundle.cjs",
-        "src-theme/rollup.config.js"
-    )
-    inputs.dir("src-theme/src")
-    inputs.dir("src-theme/public")
-    inputs.dir("src-theme/dist")
-    outputs.files("src-theme/resources/assets/liquidbounce/themes/liquidbounce.zip")
+    from("src-theme/dist")
+    destinationDirectory = file("src-theme/resources/resources/liquidbounce/themes")
+    archiveFileName = "liquidbounce.zip"
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
 }
 
 sourceSets {
