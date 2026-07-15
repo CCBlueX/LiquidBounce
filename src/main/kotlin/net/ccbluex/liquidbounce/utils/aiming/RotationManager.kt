@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -75,7 +74,6 @@ object RotationManager : EventListener {
     @Suppress("unused")
     private val lifecycleListener = object : EventListener {
         private val worldChangeHandler = handler<WorldChangeEvent> { reset() }
-        private val disconnectHandler = handler<DisconnectEvent> { reset() }
     }
 
     val activeRotationTarget: RotationTarget?
@@ -87,7 +85,7 @@ object RotationManager : EventListener {
      * The rotation we want to aim at. This DOES NOT mean that the server already received this rotation.
      */
     var currentRotation: Rotation? = null
-        set(value) {
+        private set(value) {
             previousRotation = if (value == null) {
                 null
             } else {
@@ -99,7 +97,9 @@ object RotationManager : EventListener {
 
     // Used for rotation interpolation
     var playerRotation: Rotation? = null
+        private set
     var previousRotation: Rotation? = null
+        private set
 
     private val fakeLagging
         get() = BlinkManager.isLagging || ModuleBacktrack.isLagging()
@@ -340,13 +340,13 @@ object RotationManager : EventListener {
                 packet.change.yRot,
                 packet.change.xRot,
                 Relative.Y_ROT in packet.relatives,
-                Relative.X_ROT in packet.relatives
+                Relative.X_ROT in packet.relatives,
             )
             is ClientboundPlayerRotationPacket -> clientboundRotation(
                 packet.yRot,
                 packet.xRot,
                 packet.relativeY,
-                packet.relativeX
+                packet.relativeX,
             )
             is ServerboundUseItemPacket -> serverboundRotation(packet.yRot, packet.xRot)
             else -> return@handler
