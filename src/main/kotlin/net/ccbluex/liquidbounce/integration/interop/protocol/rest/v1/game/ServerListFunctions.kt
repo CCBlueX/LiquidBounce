@@ -218,7 +218,11 @@ object ActiveServerList : EventListener {
     }
 
     private fun startLanDetection() {
-        lanDetector = LanServerDetection.LanServerDetector(lanServerList).apply { start() }
+        try {
+            lanDetector = LanServerDetection.LanServerDetector(lanServerList).apply { start() }
+        } catch (exception: Exception) {
+            logger.warn("Unable to start LAN server detection", exception)
+        }
     }
 
     private fun stopLanDetection() {
