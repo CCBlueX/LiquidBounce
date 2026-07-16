@@ -41,6 +41,11 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
+/**
+ * Spear kill module
+ *
+ * Automatically attacks enemies using a charged spear.
+ */
 object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, aliases = listOf("AutoSpear")) {
 
     private val maxTargetDistance by float("MaxTargetDistance", 50f, 3f..200f)
