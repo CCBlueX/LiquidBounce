@@ -23,9 +23,12 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.minecraft.world.entity.player.Inventory
+import org.jetbrains.annotations.Range
 
 /**
  * Manages things like [ModuleScaffold]'s silent mode.
@@ -48,25 +51,34 @@ object SilentHotbar : EventListener {
     /**
      * Silently selects a main-hand hotbar slot for duration of [ticksUntilReset].
      * Offhand is ignored because it is not selected through held-item changes.
+     *
+     * @return `true` when the slot is selected or no selection is required, `false` when the request is cancelled
      */
-    fun selectSlotSilently(requester: Any?, slot: HotbarItemSlot, ticksUntilReset: Int) {
-        slot.hotbarIndex?.let {
-            selectSlotSilently(requester, it, ticksUntilReset)
-        }
-    }
+    fun selectSlotSilently(requester: Any?, slot: HotbarItemSlot, ticksUntilReset: Int): Boolean =
+        slot.hotbarIndex?.let { selectSlotSilently(requester, it, ticksUntilReset) } ?: true
 
-    fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int) {
+    /**
+     * @see net.minecraft.world.entity.player.Inventory.isHotbarSlot
+     */
+    fun selectSlotSilently(
+        requester: Any?,
+        slot: @Range(from = 0, to = Inventory.SELECTION_SIZE - 1L) Int,
+        ticksUntilReset: Int,
+    ): Boolean {
+        require(Inventory.isHotbarSlot(slot)) { "Invalid hotbar slot: $slot" }
+
         val event = EventManager.callEvent(SelectHotbarSlotSilentlyEvent(requester, slot))
         if (event.isCancelled) {
-            return
+            return false
         }
 
         hotbarState = SilentHotbarState(slot, requester, ticksUntilReset, clientsideSlot)
         ticksSinceLastUpdate = 0
+        return true
     }
 
     fun resetSlot(requester: Any?) {
-        if (hotbarState?.requester == requester) {
+        if (hotbarState?.requester === requester) {
             hotbarState = null
         }
     }
@@ -76,7 +88,13 @@ object SilentHotbar : EventListener {
     /**
      * Returns if the slot is currently getting modified by a given requester
      */
-    fun isSlotModifiedBy(requester: Any?) = hotbarState?.requester == requester
+    fun isSlotModifiedBy(requester: Any?) = hotbarState?.requester === requester
+
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        hotbarState = null
+        ticksSinceLastUpdate = 0
+    }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = 1001) {
