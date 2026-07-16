@@ -75,4 +75,20 @@ class RequestHandlerTest {
 
         assertNull(requestHandler.getActiveRequestValue())
     }
+
+    @Test
+    fun testClear() {
+        val requestHandler = RequestHandler<String>()
+        requestHandler.request(RequestHandler.Request(1000, 0, MODULE_1, "request"))
+        requestHandler.tick(100)
+
+        requestHandler.clear()
+
+        assertNull(requestHandler.getActiveRequestValue())
+
+        requestHandler.request(RequestHandler.Request(1, 0, MODULE_1, "newRequest"))
+        assertEquals("newRequest", requestHandler.getActiveRequestValue())
+        requestHandler.tick()
+        assertNull(requestHandler.getActiveRequestValue())
+    }
 }

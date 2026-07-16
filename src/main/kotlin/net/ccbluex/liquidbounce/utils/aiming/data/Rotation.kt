@@ -30,6 +30,7 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import java.lang.Math.fma
 import kotlin.math.abs
+import kotlin.math.acos
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.roundToInt
@@ -107,7 +108,11 @@ data class Rotation @JvmOverloads constructor(
      * @return angle in degrees
      */
     fun angleTo(other: Rotation): Float {
-        return rotationDeltaTo(other).length().coerceAtMost(180.0F)
+        val cosine = directionVector
+            .dot(other.directionVector)
+            .coerceIn(-1.0, 1.0)
+
+        return acos(cosine).toDegrees().toFloat()
     }
 
     /**
