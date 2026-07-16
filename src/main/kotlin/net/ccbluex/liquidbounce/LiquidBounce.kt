@@ -196,11 +196,11 @@ object LiquidBounce : EventListener {
     private fun initializeClient(
         workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
-    ): CompletableFuture<Unit> = CoroutineScope(
+    ): CompletableFuture<Void?> = CoroutineScope(
         renderThreadDispatcher + CoroutineName("$CLIENT_NAME Initializer")
-    ).future {
+    ).future<Void?> {
         if (isInitialized) {
-            return@future
+            return@future null
         }
 
         // Ensure we are on the render thread
@@ -237,6 +237,7 @@ object LiquidBounce : EventListener {
 
         isInitialized = true
         logger.info("$CLIENT_NAME has been successfully initialized.")
+        null
     }.exceptionally { throwable ->
         ErrorHandler.fatal(throwable, additionalMessage = "$CLIENT_NAME initializer")
     }
@@ -522,11 +523,10 @@ object LiquidBounce : EventListener {
                 .thenCompose {
                     val prepareDispatcher = prepareExecutor.asCoroutineDispatcher()
                     val applyDispatcher = applyExecutor.asCoroutineDispatcher()
-                    @Suppress("UNCHECKED_CAST") // Kotlin Unit to Java Void
                     initializeClient(
                         workerDispatcher = prepareDispatcher,
                         renderThreadDispatcher = applyDispatcher,
-                    ) as CompletableFuture<Void>
+                    )
                 }
         }
 
