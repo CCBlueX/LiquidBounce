@@ -39,6 +39,7 @@ import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
+import kotlin.math.sqrt
 
 object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, aliases = listOf("AutoSpear")) {
 
@@ -79,12 +80,12 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
         for (entity in world.getEntitiesOfClass(
             LivingEntity::class.java,
             player.boundingBox.expandTowards(lookEnd.subtract(eye)).inflate(1.0)
-        ) { it != player && it.isAlive && it.boundingBox.clip(eye, lookEnd).isPresent }) {
+        ) { it !== player && it.isAlive && it.boundingBox.clip(eye, lookEnd).isPresent }) {
 
             val distSq = player.distanceToSqr(entity)
             if (distSq >= bestDist) continue
 
-            val dist = player.distanceTo(entity)
+            val dist = sqrt(distSq)
             if (dist !in 3f..maxTargetDistance || !hasLineOfSight(eye, entity.boundingBox.center)) continue
 
             val ticks = ceil(dist / maxAllowedSpeed - 0.5).toInt().coerceAtLeast(1)
