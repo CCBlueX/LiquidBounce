@@ -83,11 +83,12 @@ internal object SocketEventListener : EventListener {
     }
 
     private fun serializeAndBroadcast(event: Event) {
+        val eventName = event.javaClass.eventName
         val json = try {
             val writer = writeBuffer.get()
             JsonWriter(writer).use { writer ->
                 writer.beginObject()
-                writer.name("name").value(event.javaClass.eventName)
+                writer.name("name").value(eventName)
                 writer.name("event")
                 (event as WebSocketEvent).serializer.toJson(event, event.javaClass, writer)
                 writer.endObject()
@@ -99,7 +100,7 @@ internal object SocketEventListener : EventListener {
         }
 
         WebSocketSessionManager.broadcast(json) { _, t ->
-            logger.error("WebSocket event broadcast failed, event: ${event.javaClass.eventName}", t)
+            logger.error("WebSocket event broadcast failed, event: $eventName", t)
         }
     }
 

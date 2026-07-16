@@ -18,31 +18,30 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
-import io.ktor.websocket.Frame
-import io.ktor.websocket.WebSocketSession
+import io.ktor.server.sse.ServerSSESession
+import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.launch
 import java.util.Collections
 import java.util.WeakHashMap
 
-object WebSocketSessionManager {
+object SseSessionManager {
 
-    private val sessions: MutableSet<WebSocketSession> =
+    private val sessions: MutableSet<ServerSSESession> =
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
 
-    fun add(session: WebSocketSession) {
+    fun add(session: ServerSSESession) {
         sessions.add(session)
     }
 
-    fun remove(session: WebSocketSession) {
+    fun remove(session: ServerSSESession) {
         sessions.remove(session)
     }
 
-    fun broadcast(message: String, onError: (WebSocketSession, Throwable) -> Unit) {
+    fun broadcast(eventName: String, eventJson: String, onError: (ServerSSESession, Throwable) -> Unit) {
         val snapshot = sessions.toTypedArray().ifEmpty { return }
-        val messageBytes = message.toByteArray(Charsets.UTF_8)
+        val frame = ServerSentEvent(data = eventJson, event = eventName)
         for (session in snapshot) {
             session.launch {
-                val frame = Frame.Text(fin = true, messageBytes)
                 try {
                     session.send(frame)
                 } catch (t: Throwable) {
