@@ -146,7 +146,7 @@ object LiquidBounce : EventListener {
      *
      * TODO: Replace this approach with full semantic versioning.
      */
-    const val IN_DEVELOPMENT = true
+    const val IN_DEVELOPMENT = false
 
     /**
      * Client logger to print out console messages
