@@ -159,8 +159,8 @@ inline fun GpuTexture.copyTo(
     mipLevel: Int = 0,
     x: Int = 0,
     y: Int = 0,
-    width: Int = getWidth(0),
-    height: Int = getHeight(0),
+    width: Int = getWidth(mipLevel),
+    height: Int = getHeight(mipLevel),
     callback: Runnable = Runnables.doNothing(),
 ) = gpuDevice.createCommandEncoder().copyTextureToBuffer(
     this, destination, offset, callback, mipLevel,
@@ -173,8 +173,8 @@ fun GpuTexture.asyncCopyTo(
     mipLevel: Int = 0,
     x: Int = 0,
     y: Int = 0,
-    width: Int = getWidth(0),
-    height: Int = getHeight(0),
+    width: Int = getWidth(mipLevel),
+    height: Int = getHeight(mipLevel),
 ): CompletableFuture<*> {
     val future = CompletableFuture<Any?>()
     copyTo(destination, offset, mipLevel, x, y, width, height) { future.complete(null) }

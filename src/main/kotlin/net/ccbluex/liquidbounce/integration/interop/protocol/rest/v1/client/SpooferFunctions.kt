@@ -29,11 +29,13 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 
+// GET /api/v1/client/spoofer
 private fun Route.getSpooferConfig() = get {
     // Serialize MultiplayerConfigurable to JSON
     call.respond(ConfigSystem.serializeValueGroup(SpooferManager, gson = interopGson))
 }
 
+// PUT /api/v1/client/spoofer
 private fun Route.putSpooferConfig() = put {
     ConfigSystem.deserializeValueGroup(SpooferManager, call.receiveText().reader())
     ConfigSystem.store(SpooferManager)

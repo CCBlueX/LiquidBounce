@@ -29,10 +29,12 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.global.GlobalManager
 
+// GET /api/v1/client/global
 private fun Route.getGlobalConfig() = get {
     call.respond(ConfigSystem.serializeValueGroup(GlobalManager, gson = interopGson))
 }
 
+// PUT /api/v1/client/global
 private fun Route.putGlobalConfig() = put {
     ConfigSystem.deserializeValueGroup(GlobalManager, call.receiveText().reader())
     ConfigSystem.store(GlobalManager)

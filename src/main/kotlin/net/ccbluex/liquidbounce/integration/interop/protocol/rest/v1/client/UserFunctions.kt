@@ -52,7 +52,7 @@ private fun Route.getUser() = get {
     call.respond(interopGson.toJsonTree(userInformation))
 }
 
-// POST /api/v2/client/user/login
+// POST /api/v1/client/user/login
 private fun Route.loginUser() = post("/login") {
     val clientAccount = ClientAccountManager.clientAccount
     if (clientAccount != ClientAccount.EMPTY_ACCOUNT) {
@@ -69,7 +69,7 @@ private fun Route.loginUser() = post("/login") {
     call.respond(interopGson.toJsonTree(account.userInformation))
 }
 
-// POST /api/v2/client/user/logout
+// POST /api/v1/client/user/logout
 private fun Route.logoutUser() = post("/logout") {
     val clientAccount = ClientAccountManager.clientAccount
     if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
