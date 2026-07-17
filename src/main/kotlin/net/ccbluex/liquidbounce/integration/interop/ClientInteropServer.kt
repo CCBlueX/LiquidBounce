@@ -18,10 +18,6 @@
  */
 package net.ccbluex.liquidbounce.integration.interop
 
-import com.google.gson.JsonObject
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.serialization.gson.GsonConverter
 import io.ktor.server.application.install
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
@@ -29,10 +25,9 @@ import io.ktor.server.http.content.singlePageApplication
 import io.ktor.server.http.content.staticFiles
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.compression.Compression
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
@@ -46,6 +41,7 @@ import net.ccbluex.liquidbounce.integration.interop.middleware.isWebSocketAuthen
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketSessionManager
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondJsonWriter
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.env
@@ -105,20 +101,9 @@ object ClientInteropServer {
                     }
                 }
 
-                install(ContentNegotiation) {
-                    register(ContentType.Application.Json, GsonConverter(interopGson))
-                }
+                installGson(interopGson)
 
-                install(CORS) {
-                    hosts += "localhost"
-                    hosts += "127.0.0.1"
-                    anyMethod()
-                    allowHeader(HttpHeaders.Authorization)
-                    allowHeader(HttpHeaders.ContentLength)
-                    allowHeader("X-Requested-With")
-                    allowCredentials = true
-                    allowNonSimpleContentTypes = true
-                }
+                installCors()
 
                 install(Compression) {
                     default()
@@ -151,15 +136,7 @@ object ClientInteropServer {
                         }
                     }
 
-                    get("/") {
-                        call.respond(
-                            JsonObject().apply {
-                                addProperty("name", LiquidBounce.CLIENT_NAME)
-                                addProperty("version", LiquidBounce.clientVersion)
-                                addProperty("author", LiquidBounce.CLIENT_AUTHOR)
-                            }
-                        )
-                    }
+                    rootResponse()
 
                     registerInteropFunctions()
 
@@ -191,4 +168,15 @@ object ClientInteropServer {
             ErrorHandler.fatal(exception, additionalMessage = "Start interop server")
         }
     }
+
+    private fun Route.rootResponse() = get("/") {
+        call.respondJsonWriter {
+            beginObject()
+            name("name").value(LiquidBounce.CLIENT_NAME)
+            name("version").value(LiquidBounce.clientVersion)
+            name("author").value(LiquidBounce.CLIENT_AUTHOR)
+            endObject()
+        }
+    }
+
 }

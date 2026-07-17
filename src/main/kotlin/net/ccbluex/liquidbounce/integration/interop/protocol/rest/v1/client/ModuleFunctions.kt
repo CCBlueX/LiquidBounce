@@ -134,7 +134,8 @@ private fun Route.postPanic() = post("/panic") { withContext(Dispatchers.Minecra
 private data class ModuleRequest(val name: String) {
     suspend fun handle(call: ApplicationCall) {
         val module = ModuleManager[this.name] ?: call.forbidden("Module '${this.name}' not found")
-        val supposedNew = call.request.httpMethod == HttpMethod.Put || (call.request.httpMethod == HttpMethod.Post && !module.enabled)
+        val supposedNew = call.request.httpMethod == HttpMethod.Put ||
+            (call.request.httpMethod == HttpMethod.Post && !module.enabled)
         if (module.enabled == supposedNew) {
             call.forbidden("${this.name} already ${if (supposedNew) "enabled" else "disabled"}")
         }

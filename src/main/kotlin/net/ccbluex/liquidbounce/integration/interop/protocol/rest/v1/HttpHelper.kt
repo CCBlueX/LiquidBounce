@@ -19,11 +19,13 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1
 
+import com.google.gson.stream.JsonWriter
 import com.mojang.blaze3d.platform.NativeImage
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respondOutputStream
+import io.ktor.server.response.respondTextWriter
 import net.minecraft.server.packs.resources.Resource
 import java.awt.image.BufferedImage
 import java.nio.channels.Channels
@@ -33,11 +35,9 @@ suspend fun ApplicationCall.respondResource(
     resource: Resource,
     contentType: ContentType? = null,
     status: HttpStatusCode? = null,
-) {
-    respondOutputStream(contentType, status) {
-        resource.open().use {
-            it.transferTo(this)
-        }
+) = respondOutputStream(contentType, status) {
+    resource.open().use {
+        it.transferTo(this)
     }
 }
 
@@ -45,18 +45,24 @@ suspend fun ApplicationCall.respondImage(
     image: NativeImage,
     contentType: ContentType? = ContentType.Image.PNG,
     status: HttpStatusCode? = null,
-) {
-    respondOutputStream(contentType, status) {
-        image.writeToChannel(Channels.newChannel(this))
-    }
+) = respondOutputStream(contentType, status) {
+    image.writeToChannel(Channels.newChannel(this))
 }
 
 suspend fun ApplicationCall.respondImage(
     image: BufferedImage,
     contentType: ContentType? = ContentType.Image.PNG,
     status: HttpStatusCode? = null,
-) {
-    respondOutputStream(contentType, status) {
-        ImageIO.write(image, "PNG", this)
+) = respondOutputStream(contentType, status) {
+    ImageIO.write(image, "PNG", this)
+}
+
+suspend fun ApplicationCall.respondJsonWriter(
+    contentType: ContentType? = ContentType.Application.Json,
+    status: HttpStatusCode? = null,
+    block: suspend JsonWriter.() -> Unit,
+) = respondTextWriter(contentType, status) {
+    JsonWriter(this).use {
+        it.block()
     }
 }

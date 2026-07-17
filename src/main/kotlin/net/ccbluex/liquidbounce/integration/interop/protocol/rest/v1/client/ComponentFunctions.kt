@@ -42,17 +42,23 @@ import org.apache.commons.io.input.CharSequenceReader
 
 // GET /api/v1/client/components/native
 private fun Route.getNativeComponents() = get("/native") {
-    call.respond(accessibleInteropGson.toJsonTree(HudComponentManager.nativeComponents))
+    call.respond(accessibleInteropGson.toJsonTree(
+        HudComponentManager.nativeComponents
+    ))
 }
 
 // GET /api/v1/client/components/{id}
 private fun Route.getComponents() = get("/{id}") {
-    call.respond(accessibleInteropGson.toJsonTree(HudComponentManager.getComponents(call.parameters["id"])))
+    call.respond(accessibleInteropGson.toJsonTree(
+        HudComponentManager.getComponents(call.parameters["id"]))
+    )
 }
 
 // GET /api/v1/client/components/{id}/catalog
 private fun Route.getComponentCatalog() = get("/{id}/catalog") {
-    call.respond(accessibleInteropGson.toJsonTree(HudComponentManager.getComponentCatalog(call.parameters["id"].orEmpty())))
+    call.respond(accessibleInteropGson.toJsonTree(
+        HudComponentManager.getComponentCatalog(call.parameters["id"].orEmpty())
+    ))
 }
 
 // POST /api/v1/client/components/{id}
