@@ -244,8 +244,19 @@ object ThemeManager : Config("theme") {
             theme?.backgroundImage
         } ?: return false
 
-        background.draw(context, width, height, mouseX, mouseY, delta)
-        return true
+        try {
+            background.draw(context, width, height, mouseX, mouseY, delta)
+            return true
+        } catch (e: Exception) {
+            if (shaderEnabled) {
+                logger.warn("Failed to draw theme background, " +
+                    "the shader may be invalid, disabling...", e)
+                shaderEnabled = false
+            } else {
+                logger.warn("Failed to draw theme background", e)
+            }
+            return false
+        }
     }
 
     data class ScreenLocation(val theme: Theme, val url: String)
