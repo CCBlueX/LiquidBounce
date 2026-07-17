@@ -23,7 +23,7 @@ djl = "0.36.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 okhttp = "5.4.0"
 
-ktor = "3.5.0"
+ktor = "3.5.1"
 discordIpc = "0.6.0-SNAPSHOT"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
@@ -95,9 +95,6 @@ djl-pytorch = { group = "ai.djl.pytorch", name = "pytorch-engine", version.ref =
 #djl-mxnet = { group = "ai.djl.mxnet", name = "mxnet-engine", version.ref = "djl" }
 #djl-tensorflow = { group = "ai.djl.tensorflow", name = "tensorflow-engine", version.ref = "djl" }
 
-# mods
-modmenu = { group = "maven.modrinth", name = "modmenu", version.ref = "modmenu" }
-
 # Ktor
 ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
@@ -108,6 +105,9 @@ ktor-server-compression = { group = "io.ktor", name = "ktor-server-compression",
 ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-server-status-pages = { group = "io.ktor", name = "ktor-server-status-pages", version.ref = "ktor" }
 ktor-serialization-gson = { group = "io.ktor", name = "ktor-serialization-gson", version.ref = "ktor" }
+
+# mods
+modmenu = { group = "maven.modrinth", name = "modmenu", version.ref = "modmenu" }
 sodium = { group = "maven.modrinth", name = "sodium", version.ref = "sodium" }
 lithium = { group = "maven.modrinth", name = "lithium", version.ref = "lithium" }
 vfp-api = { group = "com.viaversion", name = "viafabricplus-api", version.ref = "viafabricplus" }
