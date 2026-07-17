@@ -306,7 +306,6 @@ object ClientRenderPipelines {
      */
     private val OutlineQuads = newPipeline("outline_quads") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
         withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
@@ -317,7 +316,6 @@ object ClientRenderPipelines {
 
     private val OutlineQuadsNoColor = newPipeline("outline_quads_no_color") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         withVertexShader(ClientShaders.Vertex.PosRelativeToCamera)
         withFragmentShader(ClientShaders.Fragment.PosRelativeToCamera)
         withVertexBinding(0, DefaultVertexFormat.POSITION)
