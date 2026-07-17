@@ -19,36 +19,41 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
-import net.ccbluex.liquidbounce.config.gson.interopGson
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.utils.client.defaultProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersions
 import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
-import net.ccbluex.netty.http.routing.Routing
 
 // GET /api/v1/protocols
-private fun Routing.getProtocols() = get { call.respond(protocolVersions, interopGson) }
+private fun Route.getProtocols() = get { call.respond(protocolVersions) }
 
 // GET /api/v1/protocols/protocol
-private fun Routing.getProtocol() = get { call.respond(protocolVersion, interopGson) }
+private fun Route.getProtocol() = get { call.respond(protocolVersion) }
 
 // PUT /api/v1/protocols/protocol
-private fun Routing.putProtocol() = put {
+private fun Route.putProtocol() = put {
     data class ProtocolRequest(val version: Int)
 
     val protocolRequest = call.receive<ProtocolRequest>()
 
     selectProtocolVersion(protocolRequest.version)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/protocols/protocol
-private fun Routing.deleteProtocol() = delete {
+private fun Route.deleteProtocol() = delete {
     selectProtocolVersion(defaultProtocolVersion.version)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-internal fun Routing.protocolRoutes() = route("/protocols") {
+internal fun Route.protocolRoutes() = route("/protocols") {
     getProtocols()
     route("/protocol") {
         getProtocol()

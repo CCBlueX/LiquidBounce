@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ThemeColorChangeEvent
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
-import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
+import net.ccbluex.liquidbounce.integration.interop.middleware.AuthConfig
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory.JsonHudComponentFactory
@@ -61,7 +61,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         url.trimEnd('/'),
         defaultHeaders = headersOf(
             HttpHeaderNames.COOKIE.toString(),
-            "${AuthMiddleware.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
+            "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
         )
     ), Closeable, ResourceManagerReloadListener {
 
@@ -312,7 +312,7 @@ class Theme private constructor(val origin: Origin, url: String) :
      * Get the URL to the given page name in the theme.
      */
     fun getUrl(name: String? = null, markAsStatic: Boolean = false): String {
-        val baseUrlWithFragment = "$baseUrl/?${AuthMiddleware.AUTH_CODE_PARAM}=" +
+        val baseUrlWithFragment = "$baseUrl/?${AuthConfig.AUTH_CODE_PARAM}=" +
             "${ClientInteropServer.AUTH_CODE}#/${name.orEmpty()}"
         val params = buildList {
             if (origin.external) add("port=${ClientInteropServer.PORT}")

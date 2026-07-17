@@ -46,7 +46,6 @@ import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import net.ccbluex.liquidbounce.api.thirdparty.lookupUuidByName
-import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
@@ -72,8 +71,8 @@ import net.ccbluex.liquidbounce.features.chat.packet.S2CSuccessPacket
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
-import net.ccbluex.netty.http.coroutines.syncSuspend
+import net.ccbluex.liquidbounce.utils.netty.clientChannelAndGroup
+import net.ccbluex.liquidbounce.utils.netty.syncSuspend
 import java.net.URI
 import java.util.UUID
 

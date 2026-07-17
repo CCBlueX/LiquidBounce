@@ -18,19 +18,24 @@
  */
 package net.ccbluex.liquidbounce.utils.io
 
-import io.netty.bootstrap.AbstractBootstrap
-import io.netty.channel.Channel
-import net.minecraft.server.network.EventLoopGroupHolder
+import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
+import java.io.OutputStream
+import java.nio.file.Path
+import java.util.Base64
+import kotlin.io.path.fileSize
+import kotlin.io.path.inputStream
 
-/**
- * Shortcut for Netty client [io.netty.bootstrap.Bootstrap],
- * using shared [io.netty.channel.EventLoopGroup] from [EventLoopGroupHolder]
- */
-internal fun <B : AbstractBootstrap<B, Channel>> AbstractBootstrap<B, Channel>.clientChannelAndGroup(
-    useEpoll: Boolean = true
-): B {
-    val networkingBackend = EventLoopGroupHolder.remote(useEpoll)
-    return channel(networkingBackend.channelCls())
-            .group(networkingBackend.eventLoopGroup())
+private fun Path.readAsBase64(output: OutputStream) {
+    this.inputStream().use { input ->
+        Base64.getEncoder().wrap(output).use { base64 ->
+            input.copyTo(base64)
+        }
+    }
 }
 
+
+fun Path.readAsBase64(): String {
+    val output = FastByteArrayOutputStream(Math.toIntExact(((this.fileSize() + 2) / 3) * 4))
+    this.readAsBase64(output)
+    return output.toString(Charsets.UTF_8)
+}

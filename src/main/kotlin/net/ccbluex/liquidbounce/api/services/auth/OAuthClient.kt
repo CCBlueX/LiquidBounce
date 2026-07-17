@@ -18,35 +18,26 @@
  */
 package net.ccbluex.liquidbounce.api.services.auth
 
-import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.ChannelFutureListener
-import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInitializer
-import io.netty.channel.SimpleChannelInboundHandler
-import io.netty.channel.socket.SocketChannel
-import io.netty.handler.codec.http.DefaultFullHttpResponse
-import io.netty.handler.codec.http.FullHttpRequest
-import io.netty.handler.codec.http.HttpHeaderNames
-import io.netty.handler.codec.http.HttpObjectAggregator
-import io.netty.handler.codec.http.HttpResponseStatus
-import io.netty.handler.codec.http.HttpServerCodec
-import io.netty.handler.codec.http.HttpVersion
-import io.netty.handler.codec.http.QueryStringDecoder
+import io.ktor.http.ContentType
+import io.ktor.server.engine.EmbeddedServer
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_AUTHORIZE_URL
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_CLIENT_ID
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.netty.http.coroutines.awaitSuspend
-import net.ccbluex.netty.http.util.setup
-import java.net.InetSocketAddress
 import java.util.UUID
 import java.util.function.Consumer
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * OAuth client for handling the authentication flow
@@ -55,8 +46,12 @@ object OAuthClient : EventListener {
 
     @Volatile
     private var serverPort: Int? = null
+
     @Volatile
-    private var authCodeContinuation: Continuation<String>? = null
+    private var authCodeDeferred: CompletableDeferred<String>? = null
+
+    @Volatile
+    private var server: EmbeddedServer<*, *>? = null
 
     /**
      * Start the OAuth authentication flow
@@ -69,7 +64,7 @@ object OAuthClient : EventListener {
         val state = UUID.randomUUID().toString()
 
         if (serverPort == null) {
-            serverPort = startNettyServer()
+            serverPort = startKtorServer()
         }
 
         val redirectUri = "http://127.0.0.1:$serverPort/"
@@ -93,73 +88,47 @@ object OAuthClient : EventListener {
         return tokenResponse.toAuthSession()
     }
 
-    private suspend fun startNettyServer(): Int {
-        val bootstrap = ServerBootstrap()
-        val (bossGroup, workerGroup) = bootstrap.setup(useNativeTransport = true)
-        bootstrap.childHandler(NettyChannelInitializer())
+    private suspend fun startKtorServer(): Int {
+        val deferred = CompletableDeferred<String>()
+        authCodeDeferred = deferred
 
-        val channel = bootstrap.bind(0).awaitSuspend().channel()
-        val localPort = (channel.localAddress() as InetSocketAddress).port
-
-        channel.closeFuture().addListener {
-            // Cleanup
-            bossGroup.shutdownGracefully()
-            workerGroup.shutdownGracefully()
-            logger.info("OAuth server stopped on port $localPort.")
-        }
-
-        return localPort
-    }
-
-    private class NettyChannelInitializer : ChannelInitializer<SocketChannel>() {
-        override fun initChannel(ch: SocketChannel) {
-            ch.pipeline().addLast(HttpServerCodec(), HttpObjectAggregator(65536), NettyAuthHandler())
-        }
-    }
-
-    private class NettyAuthHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
-        override fun channelRead0(ctx: ChannelHandlerContext, msg: FullHttpRequest) {
-            val uri = msg.uri()
-            val uriData = QueryStringDecoder(uri)
-            val code = uriData.parameters()["code"]?.firstOrNull()
-
-            authCodeContinuation?.let {
-                if (code != null) {
-                    val content = ctx.alloc().buffer()
-                    content.writeCharSequence(SUCCESS_HTML, Charsets.UTF_8)
-
-                    val response = DefaultFullHttpResponse(
-                        HttpVersion.HTTP_1_1,
-                        HttpResponseStatus.OK,
-                        content
-                    )
-                    response.headers()
-                        .set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8")
-                        .set(HttpHeaderNames.CONTENT_LENGTH, content.readableBytes())
-
-                    ctx.writeAndFlush(response).addListener(ChannelFutureListener { channelFuture ->
-                        // Close the server channel after sending the response
-                        channelFuture.channel().close()
-                        channelFuture.channel().parent()?.close()
-                    })
-                    it.resume(code)
-                } else {
-                    it.resumeWithException(IllegalArgumentException("No code found in the redirect URL"))
+        val server = embeddedServer(Netty, host = "127.0.0.1", port = 0) {
+            routing {
+                get("/") {
+                    val code = call.request.queryParameters["code"]
+                    if (code != null) {
+                        call.respondText(SUCCESS_HTML, ContentType.Text.Html)
+                        deferred.complete(code)
+                    } else {
+                        deferred.completeExceptionally(
+                            IllegalArgumentException("No code found in the redirect URL")
+                        )
+                    }
                 }
-                authCodeContinuation = null
             }
         }
+
+        server.start(wait = false)
+        this.server = server
+
+        val port = server.engine.resolvedConnectors().first().port
+
+        deferred.invokeOnCompletion {
+            ioScope.launch {
+                server.stopSuspend(gracePeriodMillis = 1000, timeoutMillis = 2000)
+            }
+            this.server = null
+        }
+
+        return port
     }
 
-    @Suppress("NOTHING_TO_INLINE")
-    private inline fun buildAuthUrl(codeChallenge: String, state: String, redirectUri: String): String {
+    private fun buildAuthUrl(codeChallenge: String, state: String, redirectUri: String): String {
         return "$AUTH_AUTHORIZE_URL?client_id=$AUTH_CLIENT_ID&redirect_uri=$redirectUri&" +
             "response_type=code&state=$state&code_challenge=$codeChallenge&code_challenge_method=S256"
     }
 
-    private suspend fun waitForAuthCode(): String = suspendCoroutine { cont ->
-        authCodeContinuation = cont
-    }
+    private suspend fun waitForAuthCode(): String = authCodeDeferred!!.await()
 
     private const val SUCCESS_HTML = """
         <!DOCTYPE html>

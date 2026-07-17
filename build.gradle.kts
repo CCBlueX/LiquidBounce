@@ -20,7 +20,7 @@
 import com.github.gradle.node.npm.task.NpmTask
 import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
-import org.gradle.api.tasks.bundling.Zip
+import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 plugins {
@@ -128,7 +128,17 @@ dependencies {
     // JCEF Support
     api(libs.mcef)
     include(libs.mcef)
-    jij(libs.httpServer)
+
+    // Ktor Server
+    jij(libs.ktor.server.core)
+    jij(libs.ktor.server.netty)
+    jij(libs.ktor.server.websockets)
+    jij(libs.ktor.server.sse)
+    jij(libs.ktor.server.cors)
+    jij(libs.ktor.server.compression)
+    jij(libs.ktor.server.content.negotiation)
+    jij(libs.ktor.server.status.pages)
+    jij(libs.ktor.serialization.gson)
 
     // Discord RPC Support
     jij(libs.discordIpc)
@@ -170,7 +180,11 @@ dependencies {
 addResolvedDependencies(jij, "compileOnly", "include", "api")
 
 tasks.processResources {
-    dependsOn("bundleTheme")
+    dependsOn("buildTheme")
+
+    from("src-theme/dist") {
+        into("resources/liquidbounce/themes/liquidbounce")
+    }
 
     val modVersion = providers.gradleProperty("mod_version")
     val minecraftVersion = providers.gradleProperty("mod_mc_version")
@@ -252,23 +266,6 @@ tasks.register<NpmTask>("buildTheme") {
     inputs.dir("src-theme/src")
     inputs.dir("src-theme/public")
     outputs.dir("src-theme/dist")
-}
-
-tasks.register<Zip>("bundleTheme") {
-    dependsOn("buildTheme")
-    from("src-theme/dist")
-    destinationDirectory = file("src-theme/resources/resources/liquidbounce/themes")
-    archiveFileName = "liquidbounce.zip"
-    isPreserveFileTimestamps = false
-    isReproducibleFileOrder = true
-}
-
-sourceSets {
-    main {
-        resources {
-            srcDirs("src-theme/resources")
-        }
-    }
 }
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
@@ -379,8 +376,11 @@ tasks.register<Copy>("copyZipInclude") {
     into("build/libs/zip")
 }
 
-tasks.named("sourcesJar") {
-    dependsOn("bundleTheme", "generateGitProperties")
+tasks.named<Jar>("sourcesJar") {
+    dependsOn("buildTheme", "generateGitProperties")
+    from("src-theme/dist") {
+        into("resources/liquidbounce/themes/liquidbounce")
+    }
 }
 
 tasks.named("build") {

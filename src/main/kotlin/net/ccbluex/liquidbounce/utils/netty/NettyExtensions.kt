@@ -16,19 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
+package net.ccbluex.liquidbounce.utils.netty
 
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.post
-import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import io.netty.bootstrap.AbstractBootstrap
+import io.netty.channel.Channel
+import net.minecraft.server.network.EventLoopGroupHolder
 
-// POST /api/v1/client/reconnect
-private fun Route.postReconnect() = post("/reconnect") {
-    ServerObserver.reconnect()
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+/**
+ * Shortcut for Netty client [io.netty.bootstrap.Bootstrap],
+ * using shared [io.netty.channel.EventLoopGroup] from [EventLoopGroupHolder]
+ */
+internal fun <B : AbstractBootstrap<B, Channel>> AbstractBootstrap<B, Channel>.clientChannelAndGroup(
+    useEpoll: Boolean = true
+): B {
+    val networkingBackend = EventLoopGroupHolder.remote(useEpoll)
+    return channel(networkingBackend.channelCls())
+            .group(networkingBackend.eventLoopGroup())
 }
 
-internal fun Route.reconnectRoutes() {
-    postReconnect()
-}
