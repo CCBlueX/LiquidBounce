@@ -30,7 +30,6 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import java.lang.Math.fma
 import kotlin.math.abs
-import kotlin.math.acos
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.roundToInt
@@ -103,16 +102,22 @@ data class Rotation @JvmOverloads constructor(
     }
 
     /**
-     * Calculates the angle between this and the other rotation.
+     * Calculates the great-circle angle between the two view directions.
      *
-     * @return angle in degrees
+     * This intentionally ignores differences that do not change the forward vector, such as yaw
+     * at a vertical pitch. Use [rotationDeltaLengthTo] for mouse movement, smoothing and rotation
+     * state comparisons.
+     *
+     * @return direction angle in degrees
      */
-    fun angleTo(other: Rotation): Float {
-        val cosine = directionVector
-            .dot(other.directionVector)
-            .coerceIn(-1.0, 1.0)
+    fun directionAngleTo(other: Rotation): Float {
+        val direction = directionVector
+        val otherDirection = other.directionVector
 
-        return acos(cosine).toDegrees().toFloat()
+        return atan2(
+            direction.cross(otherDirection).length(),
+            direction.dot(otherDirection)
+        ).toDegrees().toFloat()
     }
 
     /**
@@ -126,6 +131,14 @@ data class Rotation @JvmOverloads constructor(
             angleDifference(other.pitch, this.pitch)
         )
     }
+
+    /**
+     * Calculates the Euclidean length of the wrapped yaw/pitch control delta.
+     *
+     * Unlike [directionAngleTo], this preserves yaw differences at vertical pitches and therefore
+     * matches Minecraft's independent mouse, packet and movement rotation axes.
+     */
+    fun rotationDeltaLengthTo(other: Rotation): Float = rotationDeltaTo(other).length()
 
     /**
      * Calculates a new rotation that is closer to the [other] rotation by a limiting factor of
@@ -152,9 +165,12 @@ data class Rotation @JvmOverloads constructor(
     )
 
     @JvmOverloads
-    fun approximatelyEquals(other: Rotation, tolerance: Float = 2f): Boolean {
-        return angleTo(other) <= tolerance
-    }
+    fun isDirectionCloseTo(other: Rotation, tolerance: Float = 2f): Boolean =
+        directionAngleTo(other) <= tolerance
+
+    @JvmOverloads
+    fun isRotationDeltaCloseTo(other: Rotation, tolerance: Float = 2f): Boolean =
+        rotationDeltaLengthTo(other) <= tolerance
 
     fun add(x: Float, y: Float): Rotation {
         return Rotation(yaw = this.yRot + y, pitch = this.xRot + x)

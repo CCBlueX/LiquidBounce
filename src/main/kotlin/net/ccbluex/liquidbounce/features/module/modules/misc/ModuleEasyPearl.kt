@@ -237,7 +237,7 @@ object ModuleEasyPearl :
      */
     @Suppress("ReturnCount")
     private fun isRotationDone(targetPosition: Vec3): Boolean {
-        return RotationManager.serverRotation.angleTo(
+        return RotationManager.serverRotation.directionAngleTo(
             getTargetRotation(targetPosition) ?: return true,
         ) <= aimOffThreshold
     }

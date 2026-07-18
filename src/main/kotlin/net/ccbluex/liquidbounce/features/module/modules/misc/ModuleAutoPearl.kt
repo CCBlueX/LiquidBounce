@@ -129,7 +129,7 @@ object ModuleAutoPearl : ClientModule(
 
         if (Rotate.enabled) {
             fun isRotationSufficient(): Boolean {
-                return RotationManager.serverRotation.angleTo(rotation) <= 1.0f
+                return RotationManager.serverRotation.directionAngleTo(rotation) <= 1.0f
             }
 
             tickConditional(20) {

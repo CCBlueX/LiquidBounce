@@ -119,7 +119,7 @@ object RotationUtil {
 
         val rotationToEntity = Rotation.lookingAt(point = entity.boundingBox.center, from = eyes)
 
-        return player.rotation.angleTo(rotationToEntity)
+        return player.rotation.directionAngleTo(rotationToEntity)
     }
 
     /**

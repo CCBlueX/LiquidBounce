@@ -173,7 +173,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         val target = targetTracker.target ?: return@tickHandler
 
         val rotation = gravityType.apply(target) ?: return@tickHandler
-        val rotationDifference = RotationManager.serverRotation.angleTo(rotation)
+        val rotationDifference = RotationManager.serverRotation.directionAngleTo(rotation)
         if (rotationDifference > aimOffThreshold) return@tickHandler
 
         // If the player used rod manually, skip use
