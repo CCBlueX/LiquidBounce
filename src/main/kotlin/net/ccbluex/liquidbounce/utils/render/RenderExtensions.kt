@@ -139,7 +139,7 @@ inline fun GpuTexture.write(
     destX: Int = 0,
     destY: Int = 0,
     width: Int = getWidth(mipLevel),
-    height: Int = getWidth(mipLevel),
+    height: Int = getHeight(mipLevel),
     sourceX: Int = 0,
     sourceY: Int = 0,
 ) {

@@ -101,7 +101,7 @@ class GlyphAtlasTexture(
     }
 
     private fun upload(source: NativeImage) {
-        getTexture().write(source)
+        getTexture().write(source, width = source.width, height = source.height)
     }
 
     override fun close() {
