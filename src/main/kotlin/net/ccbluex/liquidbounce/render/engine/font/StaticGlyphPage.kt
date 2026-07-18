@@ -21,13 +21,10 @@ package net.ccbluex.liquidbounce.render.engine.font
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
-import net.ccbluex.liquidbounce.render.engine.font.StaticGlyphPage.Companion.createGlyphPageWithFittingCharacters
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.renderer.texture.DynamicTexture
 import java.awt.Dimension
 import java.awt.Point
+import java.awt.image.BufferedImage
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -36,18 +33,21 @@ import kotlin.math.sqrt
  * A statically allocated glyph page.
  */
 class StaticGlyphPage(
-    override val texture: DynamicTexture,
+    override val texture: GlyphAtlasTexture,
     val glyphs: Set<Pair<FontId, GlyphRenderInfo>>
 ): GlyphPage() {
     companion object {
         @JvmStatic
-        fun createGlyphPages(chars: List<FontGlyph>): List<StaticGlyphPage> {
-            val glyphPages = mutableListOf<StaticGlyphPage>()
+        fun createGlyphPages(chars: List<FontGlyph>): List<StaticGlyphPage> =
+            prepareGlyphPages(chars).map(PreparedStaticGlyphPage::materialize)
+
+        internal fun prepareGlyphPages(chars: List<FontGlyph>): List<PreparedStaticGlyphPage> {
+            val glyphPages = mutableListOf<PreparedStaticGlyphPage>()
 
             var remainingChars = chars
 
             do {
-                val result = createGlyphPageWithFittingCharacters(remainingChars)
+                val result = prepareGlyphPageWithFittingCharacters(remainingChars)
 
                 glyphPages.add(result.first)
 
@@ -62,16 +62,23 @@ class StaticGlyphPage(
          */
         @JvmStatic
         fun createGlyphPageWithFittingCharacters(chars: List<FontGlyph>): Pair<StaticGlyphPage, List<FontGlyph>> {
+            val (preparedPage, remainingGlyphs) = prepareGlyphPageWithFittingCharacters(chars)
+            return preparedPage.materialize() to remainingGlyphs
+        }
+
+        private fun prepareGlyphPageWithFittingCharacters(
+            chars: List<FontGlyph>
+        ): Pair<PreparedStaticGlyphPage, List<FontGlyph>> {
             val result = tryCharacterPlacementWithShrinking(chars)
 
             val (res, remainingGlyphs) = result ?: error("Unable to create static atlas.")
 
-            if (res.glyphsToRender.size < chars.size) {
-                logger.warn("Failed to place all characters (${chars.size}) on the atlas, " +
-                        "using a reduced charset (${res.glyphsToRender.size}) instead!")
+            if (remainingGlyphs.isNotEmpty()) {
+                logger.info("Placed part of the requested character set on the current atlas; " +
+                    "${remainingGlyphs.size} glyph requests will continue on another atlas")
             }
 
-            return renderGlyphPage(res) to remainingGlyphs
+            return prepareGlyphPage(res) to remainingGlyphs
         }
 
         /**
@@ -98,7 +105,7 @@ class StaticGlyphPage(
         }
 
         @JvmStatic
-        private fun renderGlyphPage(placementPlan: GlyphPlacementResult): StaticGlyphPage {
+        private fun prepareGlyphPage(placementPlan: GlyphPlacementResult): PreparedStaticGlyphPage {
             val atlas = createBufferedImageWithDimensions(placementPlan.atlasDimension)
 
             renderGlyphs(atlas, placementPlan.glyphsToRender)
@@ -108,12 +115,7 @@ class StaticGlyphPage(
                     it.fontGlyph.font to createGlyphFromGenerationInfo(it, placementPlan.atlasDimension)
                 }
 
-            return StaticGlyphPage(
-                atlas.toNativeImage().asTexture {
-                    "StaticGlyphPage ${placementPlan.atlasDimension.width}x${placementPlan.atlasDimension.height}"
-                },
-                glyphs,
-            )
+            return PreparedStaticGlyphPage(atlas, glyphs)
         }
 
         /**
@@ -197,4 +199,18 @@ class StaticGlyphPage(
     }
 
     private class GlyphPlacementResult(val glyphsToRender: List<CharacterGenerationInfo>, val atlasDimension: Dimension)
+}
+
+internal class PreparedStaticGlyphPage(
+    private val atlas: BufferedImage,
+    private val glyphs: Set<Pair<FontId, GlyphRenderInfo>>,
+) {
+    fun materialize(): StaticGlyphPage = StaticGlyphPage(
+        GlyphAtlasTexture(
+            label = { "StaticGlyphPage ${atlas.width}x${atlas.height}" },
+            pixels = atlas.toLuminanceNativeImage(),
+            retainPixels = false,
+        ),
+        glyphs,
+    )
 }

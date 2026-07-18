@@ -22,7 +22,6 @@ import com.mojang.blaze3d.GpuFormat
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2s
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import net.minecraft.client.renderer.texture.DynamicTexture
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Dimension
@@ -84,7 +83,7 @@ class GlyphAtlasLocation(val pixelBoundingBox: BoundingBox2f, atlasDimensions: D
 data class GlyphLayoutInfo(val useHorizontalBaseline: Boolean, val advanceX: Float, val advanceY: Float)
 
 abstract class GlyphPage {
-    abstract val texture: DynamicTexture
+    abstract val texture: GlyphAtlasTexture
 
     companion object {
         /**
@@ -96,11 +95,15 @@ abstract class GlyphPage {
         protected val maxTextureSize = lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
             // As specified in the OpenGL reference, GL_MAX_TEXTURE_SIZE must be at least 1024.
             // If it is less than that, an error occurred, the 1024 is just a failsafe.
-            max(gpuDevice.deviceInfo.limits().maxTextureSizeForFormat(GpuFormat.RGBA8_UNORM), 1024)
+            max(gpuDevice.deviceInfo.limits().maxTextureSizeForFormat(GpuFormat.R8_UNORM), 1024)
         }
 
         @JvmStatic
         protected val fontRendererContext = FontRenderContext(AffineTransform(), true, true)
+
+        /** Java2D's native font scaler is shared by static and dynamic atlas generation. */
+        @JvmField
+        internal val fontRasterizationLock = Any()
 
         protected const val DEFAULT_PADDING: Int = 1
 
@@ -141,7 +144,7 @@ abstract class GlyphPage {
 
         @JvmStatic
         protected fun createBufferedImageWithDimensions(atlasDimensions: Dimension) =
-            BufferedImage(atlasDimensions.width, atlasDimensions.height, BufferedImage.TYPE_INT_ARGB)
+            BufferedImage(atlasDimensions.width, atlasDimensions.height, BufferedImage.TYPE_BYTE_GRAY)
 
         @JvmStatic
         protected fun renderGlyphs(
@@ -188,11 +191,13 @@ abstract class GlyphPage {
             atlasGraphics.composite = AlphaComposite.SrcOver
 
             // Draw the character to the atlas, offset by start of the character + a pixel padding
-            atlasGraphics.drawString(
-                Character.toString(characterInfo.fontGlyph.codepoint),
-                characterInfo.atlasLocation.x - characterInfo.pixelXMin + DEFAULT_PADDING,
-                characterInfo.atlasLocation.y - characterInfo.pixelYMin + DEFAULT_PADDING
-            )
+            synchronized(fontRasterizationLock) {
+                atlasGraphics.drawString(
+                    Character.toString(characterInfo.fontGlyph.codepoint),
+                    characterInfo.atlasLocation.x - characterInfo.pixelXMin + DEFAULT_PADDING,
+                    characterInfo.atlasLocation.y - characterInfo.pixelYMin + DEFAULT_PADDING
+                )
+            }
         }
 
         @JvmStatic
@@ -234,21 +239,22 @@ abstract class GlyphPage {
         }
 
         @JvmStatic
-        protected fun createCharacterCreationInfo(it: FontGlyph): CharacterGenerationInfo? {
-            val font = it.font.awtFont
+        protected fun createCharacterCreationInfo(it: FontGlyph): CharacterGenerationInfo? =
+            synchronized(fontRasterizationLock) {
+                val font = it.font.awtFont
 
-            if (!font.canDisplay(it.codepoint)) {
-                return null
+                if (!font.canDisplay(it.codepoint)) {
+                    return@synchronized null
+                }
+
+                val charString = Character.toString(it.codepoint)
+                val glyphVector = font.createGlyphVector(fontRendererContext, charString)
+
+                val lineMetrics = font.getLineMetrics(charString, fontRendererContext)
+                val glyph = glyphVector.getGlyphMetrics(0)
+
+                CharacterGenerationInfo(it, glyph, lineMetrics)
             }
-
-            val charString = Character.toString(it.codepoint)
-            val glyphVector = font.createGlyphVector(fontRendererContext, charString)
-
-            val lineMetrics = font.getLineMetrics(charString, fontRendererContext)
-            val glyph = glyphVector.getGlyphMetrics(0)
-
-            return CharacterGenerationInfo(it, glyph, lineMetrics)
-        }
     }
 }
 

@@ -97,7 +97,10 @@ object FontManager {
      * TODO: Replaces this with Module-based Font Selection
      */
     val FONT_RENDERER
-        get() = (fontFace("Inter Regular") ?: COMMON_FONT).renderer
+        get() = defaultFontFace.renderer
+
+    private val defaultFontFace
+        get() = fontFace("Inter Regular") ?: COMMON_FONT
 
     /**
      * Since our font renderer does not support dynamic font size changes,
@@ -120,7 +123,8 @@ object FontManager {
     internal fun createGlyphManager() {
         _glyphManager?.close()
         _glyphManager = FontGlyphPageManager(
-            baseFonts = ObjectImmutableList(fontFaces.values),
+            registeredFaces = ObjectImmutableList(fontFaces.values),
+            primaryFace = defaultFontFace,
             fallbackFonts = listOfNotNull(COMMON_FONT, CJK_FONT),
         )
     }

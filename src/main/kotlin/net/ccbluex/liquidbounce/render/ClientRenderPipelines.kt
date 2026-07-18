@@ -202,6 +202,12 @@ object ClientRenderPipelines {
             withCull(false)
         }
 
+        @JvmField
+        val FontMask = newPipeline("gui/font_mask") {
+            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+            withFragmentShader(ClientShaders.Fragment.FontMask)
+        }
+
         @JvmStatic
         fun lines(cull: Boolean) = if (cull) Lines else LinesNoCull
 
@@ -331,6 +337,15 @@ object ClientRenderPipelines {
     @JvmField
     val TexQuads = newPipeline("tex_quads") {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
+        forWorldRender()
+    }
+
+    @JvmField
+    val FontMaskQuads = newPipeline("font_mask_quads") {
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withFragmentShader(ClientShaders.Fragment.FontMask)
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
