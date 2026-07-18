@@ -102,6 +102,10 @@ abstract class GlyphPage {
         @JvmStatic
         protected val fontRendererContext = FontRenderContext(AffineTransform(), true, true)
 
+        /** Java2D's native font scaler is shared by static and dynamic atlas generation. */
+        @JvmField
+        internal val fontRasterizationLock = Any()
+
         protected const val DEFAULT_PADDING: Int = 1
 
         /**
@@ -188,11 +192,13 @@ abstract class GlyphPage {
             atlasGraphics.composite = AlphaComposite.SrcOver
 
             // Draw the character to the atlas, offset by start of the character + a pixel padding
-            atlasGraphics.drawString(
-                Character.toString(characterInfo.fontGlyph.codepoint),
-                characterInfo.atlasLocation.x - characterInfo.pixelXMin + DEFAULT_PADDING,
-                characterInfo.atlasLocation.y - characterInfo.pixelYMin + DEFAULT_PADDING
-            )
+            synchronized(fontRasterizationLock) {
+                atlasGraphics.drawString(
+                    Character.toString(characterInfo.fontGlyph.codepoint),
+                    characterInfo.atlasLocation.x - characterInfo.pixelXMin + DEFAULT_PADDING,
+                    characterInfo.atlasLocation.y - characterInfo.pixelYMin + DEFAULT_PADDING
+                )
+            }
         }
 
         @JvmStatic
@@ -234,21 +240,22 @@ abstract class GlyphPage {
         }
 
         @JvmStatic
-        protected fun createCharacterCreationInfo(it: FontGlyph): CharacterGenerationInfo? {
-            val font = it.font.awtFont
+        protected fun createCharacterCreationInfo(it: FontGlyph): CharacterGenerationInfo? =
+            synchronized(fontRasterizationLock) {
+                val font = it.font.awtFont
 
-            if (!font.canDisplay(it.codepoint)) {
-                return null
+                if (!font.canDisplay(it.codepoint)) {
+                    return@synchronized null
+                }
+
+                val charString = Character.toString(it.codepoint)
+                val glyphVector = font.createGlyphVector(fontRendererContext, charString)
+
+                val lineMetrics = font.getLineMetrics(charString, fontRendererContext)
+                val glyph = glyphVector.getGlyphMetrics(0)
+
+                CharacterGenerationInfo(it, glyph, lineMetrics)
             }
-
-            val charString = Character.toString(it.codepoint)
-            val glyphVector = font.createGlyphVector(fontRendererContext, charString)
-
-            val lineMetrics = font.getLineMetrics(charString, fontRendererContext)
-            val glyph = glyphVector.getGlyphMetrics(0)
-
-            return CharacterGenerationInfo(it, glyph, lineMetrics)
-        }
     }
 }
 

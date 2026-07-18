@@ -24,6 +24,7 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.FontStyle
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.fontRasterizationLock
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
@@ -87,23 +88,25 @@ class FontFace(
         }
 
         withContext(Dispatchers.Default) {
-            val graphics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics()
-            val fontId = try {
-                graphics.font = font
-                val metrics = graphics.fontMetrics
-                val lineMetrics = font.getLineMetrics("Ag", graphics.fontRenderContext)
-                FontId(
-                    style,
-                    font,
-                    metrics.height.toFloat(),
-                    metrics.ascent.toFloat(),
-                    lineMetrics.underlineOffset,
-                    lineMetrics.underlineThickness,
-                    lineMetrics.strikethroughOffset,
-                    lineMetrics.strikethroughThickness,
-                )
-            } finally {
-                graphics.dispose()
+            val fontId = synchronized(fontRasterizationLock) {
+                val graphics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics()
+                try {
+                    graphics.font = font
+                    val metrics = graphics.fontMetrics
+                    val lineMetrics = font.getLineMetrics("Ag", graphics.fontRenderContext)
+                    FontId(
+                        style,
+                        font,
+                        metrics.height.toFloat(),
+                        metrics.ascent.toFloat(),
+                        lineMetrics.underlineOffset,
+                        lineMetrics.underlineThickness,
+                        lineMetrics.strikethroughOffset,
+                        lineMetrics.strikethroughThickness,
+                    )
+                } finally {
+                    graphics.dispose()
+                }
             }
 
             styles[style] = fontId

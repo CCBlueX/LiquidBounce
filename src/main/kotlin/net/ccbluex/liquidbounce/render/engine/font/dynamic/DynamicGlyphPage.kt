@@ -60,24 +60,19 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
 
         val changesToDo = c
             .filter { glyphId -> !glyphMap.containsKey(GlyphIdentifier(glyphId)) }
-            .sortedByDescending { glyphId ->
-                val text = Character.toString(glyphId.codepoint)
-                val dims = glyphId.font.awtFont.createGlyphVector(fontRendererContext, text)
-
-                val bounds2D = dims.getGlyphMetrics(0).bounds2D
-
-                bounds2D.width * bounds2D.height
+            .mapNotNull(::createCharacterCreationInfo)
+            .sortedByDescending { characterInfo ->
+                characterInfo.glyphMetrics.bounds2D.run { width * height }
             }
-            .mapNotNull { glyphId ->
-                val placementPlan = planCharacterPlacement(glyphId)
-
-                if (placementPlan != null) {
-                    placementPlan
-                } else {
-                    failed.add(glyphId)
-
-                    null
+            .mapNotNull { characterInfo ->
+                val atlasAllocation = allocator.allocate(characterInfo.atlasDimension)
+                if (atlasAllocation == null) {
+                    failed.add(characterInfo.fontGlyph)
+                    return@mapNotNull null
                 }
+
+                characterInfo.atlasLocation = atlasAllocation.pos
+                characterInfo to atlasAllocation
             }
 
         // Render the characters to the image
@@ -129,16 +124,6 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
             scratchBuffer = copyScratchBuffer,
         )
     }
-
-    private fun planCharacterPlacement(glyph: FontGlyph): Pair<Companion.CharacterGenerationInfo, AtlasSliceHandle>? {
-        val characterInfo = createCharacterCreationInfo(glyph) ?: return null
-        val atlasAllocation = allocator.allocate(characterInfo.atlasDimension) ?: return null
-
-        characterInfo.atlasLocation = atlasAllocation.pos
-
-        return characterInfo to atlasAllocation
-    }
-
 
     companion object {
         private val DEFAULT_ATLAS_SIZE by lazy(LazyThreadSafetyMode.NONE) {
