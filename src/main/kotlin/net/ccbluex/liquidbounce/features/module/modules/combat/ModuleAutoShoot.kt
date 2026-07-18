@@ -195,7 +195,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
         val rotation = getRotation(target, slot)
 
         // Check the difference between server and client rotation
-        val rotationDifference = RotationManager.serverRotation.angleTo(rotation ?: return@tickHandler)
+        val rotationDifference = RotationManager.serverRotation.directionAngleTo(rotation ?: return@tickHandler)
 
         // Check if we are not aiming at the target yet
         if (rotationDifference > aimOffThreshold) {

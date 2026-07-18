@@ -59,7 +59,7 @@ abstract class FactorAngleSmooth(name: String, parent: ModeValueGroup<*>) : Angl
 
             currentRotation = currentRotation.towardsLinear(targetRotation, horizontalFactor, verticalFactor)
             ticks++
-        } while (!currentRotation.approximatelyEquals(targetRotation) && ticks < 80)
+        } while (!currentRotation.isRotationDeltaCloseTo(targetRotation) && ticks < 80)
 
         return ticks
     }

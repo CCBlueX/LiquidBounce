@@ -222,7 +222,7 @@ object RotationManager : EventListener {
                 // After generating the next rotation, we need to normalize it
                 .normalize()
 
-            val diff = rotation.angleTo(playerRotation)
+            val diff = rotation.rotationDeltaLengthTo(playerRotation)
 
             if (rotationTarget == null && (activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK
                     || activeRotationTarget.processors.isEmpty()

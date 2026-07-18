@@ -132,7 +132,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
             val targetRotation = RotationManager.activeRotationTarget ?: return@handler
 
-            val aimDifference = RotationManager.serverRotation.angleTo(targetRotation.rotation)
+            val aimDifference = RotationManager.serverRotation.directionAngleTo(targetRotation.rotation)
 
             if (aimDifference > aimThreshold) {
                 return@handler
