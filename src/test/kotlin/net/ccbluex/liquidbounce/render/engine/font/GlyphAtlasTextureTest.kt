@@ -34,7 +34,7 @@ class GlyphAtlasTextureTest {
         source.setRGB(0, 0, 2, 2, ALPHA_PIXELS, 0, 2)
 
         NativeImage(NativeImage.Format.LUMINANCE, 2, 2, true).use { target ->
-            val returnedScratch = source.copyAlphaToNativeImage(target, width = 2, height = 2)
+            val returnedScratch = source.copyCoverageToNativeImage(target, width = 2, height = 2)
 
             assertEquals(0, returnedScratch.size)
             assertLuminanceEquals(target, 0, 0, 0x10)
@@ -51,7 +51,7 @@ class GlyphAtlasTextureTest {
         val scratch = IntArray(4)
 
         NativeImage(NativeImage.Format.LUMINANCE, 3, 3, true).use { target ->
-            val returnedScratch = source.copyAlphaToNativeImage(
+            val returnedScratch = source.copyCoverageToNativeImage(
                 target,
                 targetX = 1,
                 targetY = 1,
@@ -65,6 +65,26 @@ class GlyphAtlasTextureTest {
             assertLuminanceEquals(target, 2, 1, 0x50)
             assertLuminanceEquals(target, 1, 2, 0x90)
             assertLuminanceEquals(target, 2, 2, 0xD0)
+        }
+    }
+
+    @Test
+    fun testCopyByteGraySubImageToLuminanceImage() {
+        val parent = BufferedImage(4, 4, BufferedImage.TYPE_BYTE_GRAY)
+        val source = parent.getSubimage(1, 1, 2, 2)
+        source.raster.setSample(0, 0, 0, 0x10)
+        source.raster.setSample(1, 0, 0, 0x50)
+        source.raster.setSample(0, 1, 0, 0x90)
+        source.raster.setSample(1, 1, 0, 0xD0)
+
+        NativeImage(NativeImage.Format.LUMINANCE, 2, 2, true).use { target ->
+            val returnedScratch = source.copyCoverageToNativeImage(target, width = 2, height = 2)
+
+            assertEquals(0, returnedScratch.size)
+            assertLuminanceEquals(target, 0, 0, 0x10)
+            assertLuminanceEquals(target, 1, 0, 0x50)
+            assertLuminanceEquals(target, 0, 1, 0x90)
+            assertLuminanceEquals(target, 1, 1, 0xD0)
         }
     }
 

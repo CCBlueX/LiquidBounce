@@ -144,7 +144,7 @@ abstract class GlyphPage {
 
         @JvmStatic
         protected fun createBufferedImageWithDimensions(atlasDimensions: Dimension) =
-            BufferedImage(atlasDimensions.width, atlasDimensions.height, BufferedImage.TYPE_INT_ARGB)
+            BufferedImage(atlasDimensions.width, atlasDimensions.height, BufferedImage.TYPE_BYTE_GRAY)
 
         @JvmStatic
         protected fun renderGlyphs(

@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.font.GlyphAtlasTexture
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
 import net.ccbluex.liquidbounce.render.engine.font.GlyphRenderInfo
-import net.ccbluex.liquidbounce.render.engine.font.copyAlphaToNativeImage
+import net.ccbluex.liquidbounce.render.engine.font.copyCoverageToNativeImage
 import net.ccbluex.liquidbounce.render.engine.font.toLuminanceNativeImage
 import java.awt.Dimension
 import kotlin.math.min
@@ -117,7 +117,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
     private fun updateNativeTexture(generationInfo: Companion.CharacterGenerationInfo) {
         val location = generationInfo.atlasLocation
         val dimension = generationInfo.atlasDimension
-        copyScratchBuffer = image.copyAlphaToNativeImage(
+        copyScratchBuffer = image.copyCoverageToNativeImage(
             target = texture.pixels!!,
             sourceX = location.x,
             sourceY = location.y,
