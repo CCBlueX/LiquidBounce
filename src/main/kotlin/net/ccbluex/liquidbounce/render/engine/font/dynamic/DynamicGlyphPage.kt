@@ -64,7 +64,12 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
 
         val changesToDo = c
             .filter { glyphId -> !glyphMap.containsKey(GlyphIdentifier(glyphId)) }
-            .mapNotNull(::createCharacterCreationInfo)
+            .mapNotNull { fontGlyph ->
+                createCharacterCreationInfo(fontGlyph) ?: run {
+                    failed.add(fontGlyph)
+                    null
+                }
+            }
             .sortedByDescending { characterInfo ->
                 characterInfo.glyphMetrics.bounds2D.run { width * height }
             }
