@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.util.Collections
 import java.util.WeakHashMap
@@ -45,6 +46,8 @@ object WebSocketSessionManager {
                 val frame = Frame.Text(fin = true, messageBytes)
                 try {
                     session.send(frame)
+                } catch (_: CancellationException) {
+                    remove(session)
                 } catch (t: Throwable) {
                     onError(session, t)
                 }
