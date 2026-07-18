@@ -22,9 +22,6 @@ package net.ccbluex.liquidbounce.render.engine.font
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.renderer.texture.DynamicTexture
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.image.BufferedImage
@@ -36,7 +33,7 @@ import kotlin.math.sqrt
  * A statically allocated glyph page.
  */
 class StaticGlyphPage(
-    override val texture: DynamicTexture,
+    override val texture: GlyphAtlasTexture,
     val glyphs: Set<Pair<FontId, GlyphRenderInfo>>
 ): GlyphPage() {
     companion object {
@@ -209,7 +206,11 @@ internal class PreparedStaticGlyphPage(
     private val glyphs: Set<Pair<FontId, GlyphRenderInfo>>,
 ) {
     fun materialize(): StaticGlyphPage = StaticGlyphPage(
-        atlas.toNativeImage().asTexture { "StaticGlyphPage ${atlas.width}x${atlas.height}" },
+        GlyphAtlasTexture(
+            label = { "StaticGlyphPage ${atlas.width}x${atlas.height}" },
+            pixels = atlas.toLuminanceNativeImage(),
+            retainPixels = false,
+        ),
         glyphs,
     )
 }

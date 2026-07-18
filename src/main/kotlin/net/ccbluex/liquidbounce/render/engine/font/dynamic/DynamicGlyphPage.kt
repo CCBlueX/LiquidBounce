@@ -25,18 +25,22 @@ import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
 import net.ccbluex.liquidbounce.render.engine.font.DynamicAtlasAllocator
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
+import net.ccbluex.liquidbounce.render.engine.font.GlyphAtlasTexture
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
 import net.ccbluex.liquidbounce.render.engine.font.GlyphRenderInfo
-import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.copyToNativeImage
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.ccbluex.liquidbounce.render.engine.font.copyAlphaToNativeImage
+import net.ccbluex.liquidbounce.render.engine.font.toLuminanceNativeImage
 import java.awt.Dimension
 import kotlin.math.min
 
 class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight: Int) : GlyphPage() {
     private val image = createBufferedImageWithDimensions(atlasSize)
-    override val texture = image.toNativeImage().asTexture { "DynamicGlyphPage ${atlasSize.width}x${atlasSize.height}" }
+    override val texture = GlyphAtlasTexture(
+        label = { "DynamicGlyphPage ${atlasSize.width}x${atlasSize.height}" },
+        pixels = image.toLuminanceNativeImage(),
+        retainPixels = true,
+    )
     private val glyphMap = Object2ObjectOpenHashMap<GlyphIdentifier, Pair<GlyphRenderInfo, AtlasSliceHandle>>()
     private var copyScratchBuffer = IntArray(0)
 
@@ -113,7 +117,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
     private fun updateNativeTexture(generationInfo: Companion.CharacterGenerationInfo) {
         val location = generationInfo.atlasLocation
         val dimension = generationInfo.atlasDimension
-        copyScratchBuffer = image.copyToNativeImage(
+        copyScratchBuffer = image.copyAlphaToNativeImage(
             target = texture.pixels!!,
             sourceX = location.x,
             sourceY = location.y,

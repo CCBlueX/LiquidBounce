@@ -22,7 +22,6 @@ import com.mojang.blaze3d.GpuFormat
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2s
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import net.minecraft.client.renderer.texture.DynamicTexture
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Dimension
@@ -84,7 +83,7 @@ class GlyphAtlasLocation(val pixelBoundingBox: BoundingBox2f, atlasDimensions: D
 data class GlyphLayoutInfo(val useHorizontalBaseline: Boolean, val advanceX: Float, val advanceY: Float)
 
 abstract class GlyphPage {
-    abstract val texture: DynamicTexture
+    abstract val texture: GlyphAtlasTexture
 
     companion object {
         /**
@@ -96,7 +95,7 @@ abstract class GlyphPage {
         protected val maxTextureSize = lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
             // As specified in the OpenGL reference, GL_MAX_TEXTURE_SIZE must be at least 1024.
             // If it is less than that, an error occurred, the 1024 is just a failsafe.
-            max(gpuDevice.deviceInfo.limits().maxTextureSizeForFormat(GpuFormat.RGBA8_UNORM), 1024)
+            max(gpuDevice.deviceInfo.limits().maxTextureSizeForFormat(GpuFormat.R8_UNORM), 1024)
         }
 
         @JvmStatic

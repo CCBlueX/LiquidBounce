@@ -299,9 +299,13 @@ class FontRenderer(
                     glyph.page.texture.textureSetup,
                     x0 = x0, y0 = y0, x1 = x1, y1 = y1,
                     u1 = uv1.u, v1 = uv1.v, u2 = uv2.u, v2 = uv2.v, argb = argb,
+                    pipeline = ClientRenderPipelines.GUI.FontMask,
                 )
             } else {
-                (ctx as WorldRenderEnvironment).drawCustomMeshTextured(glyph.page.texture) { matrix ->
+                (ctx as WorldRenderEnvironment).drawCustomMeshTextured(
+                    glyph.page.texture,
+                    pipeline = ClientRenderPipelines.FontMaskQuads,
+                ) { matrix ->
                     addVertex(matrix, x0, y0, z)
                         .setUv(uv1.u, uv1.v)
                         .setColor(argb)
