@@ -56,13 +56,13 @@ fun traceFromPlayer(
     rotation: Rotation = RotationManager.currentRotation ?: player.rotation,
     range: Double = max(player.blockInteractionRange(), player.entityInteractionRange()),
     block: ClipContext.Block = ClipContext.Block.OUTLINE,
-    includeFluids: Boolean = false,
+    fluid: ClipContext.Fluid = ClipContext.Fluid.NONE,
     tickDelta: Float = 1f,
 ): BlockHitResult {
     return traceFromPoint(
         range = range,
         block = block,
-        includeFluids = includeFluids,
+        fluid = fluid,
         start = player.getEyePosition(tickDelta),
         direction = rotation.directionVector
     )
@@ -71,7 +71,7 @@ fun traceFromPlayer(
 fun traceFromPoint(
     range: Double = max(player.blockInteractionRange(), player.entityInteractionRange()),
     block: ClipContext.Block = ClipContext.Block.OUTLINE,
-    includeFluids: Boolean = false,
+    fluid: ClipContext.Fluid = ClipContext.Fluid.NONE,
     start: Vec3,
     direction: Vec3,
     entity: Entity = mc.cameraEntity!!,
@@ -82,7 +82,7 @@ fun traceFromPoint(
         start,
         end,
         block,
-        if (includeFluids) ClipContext.Fluid.ANY else ClipContext.Fluid.NONE,
+        fluid,
         entity,
     )
 }

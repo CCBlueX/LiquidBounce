@@ -26,6 +26,7 @@
     "minecraft.client.MixinClientClockManager",
     "minecraft.client.MixinClientInput",
     "minecraft.client.MixinClientLevel",
+    "minecraft.client.MixinClientLevelAccessor",
     "minecraft.client.MixinGameNarrator",
     "minecraft.client.MixinGameType",
     "minecraft.client.MixinGui",
