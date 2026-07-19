@@ -123,6 +123,18 @@ val isOlderThanOrEqual1_15_2: Boolean
         logger.error("Failed to check if the server is using 1.15.2", it)
     }.getOrDefault(false)
 
+/**
+ * Since 1.21.2 falling on slime block while sneaking won't cause damage.
+ * (Yes this is a bug, not feature)
+ */
+val isOlderThanOrEqual1_12_1: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_12_1
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.12.1", it)
+    }.getOrDefault(false)
+
 val isOlderThanOrEqual1_12_2: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
