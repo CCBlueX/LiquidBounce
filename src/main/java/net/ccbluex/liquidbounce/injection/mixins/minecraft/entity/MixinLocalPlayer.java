@@ -289,7 +289,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
             rotation,
             Math.max(blockInteractionRange, entityInteractionRange),
             ClipContext.Block.OUTLINE,
-            ModuleLiquidPlace.INSTANCE.getRunning(),
+            ModuleLiquidPlace.INSTANCE.getRunning() ? ClipContext.Fluid.ANY : ClipContext.Fluid.NONE,
             tickDelta
         );
     }
