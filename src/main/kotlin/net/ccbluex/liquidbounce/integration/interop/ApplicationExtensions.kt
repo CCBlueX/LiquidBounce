@@ -27,6 +27,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import java.net.URI
 
 fun Application.installGson(gson: Gson) =
     install(ContentNegotiation) {
@@ -35,8 +36,7 @@ fun Application.installGson(gson: Gson) =
 
 fun Application.installCors() =
     install(CORS) {
-        hosts += "localhost"
-        hosts += "127.0.0.1"
+        allowOrigins(::isLocalOrigin)
         anyMethod()
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentLength)
@@ -44,3 +44,11 @@ fun Application.installCors() =
         allowCredentials = true
         allowNonSimpleContentTypes = true
     }
+
+internal fun isLocalOrigin(origin: String): Boolean = runCatching {
+    val uri = URI(origin)
+    val supportedScheme = uri.scheme.equals("http", true) || uri.scheme.equals("https", true)
+    val localHost = uri.host.equals("localhost", true) || uri.host == "127.0.0.1"
+
+    supportedScheme && localHost
+}.getOrDefault(false)
