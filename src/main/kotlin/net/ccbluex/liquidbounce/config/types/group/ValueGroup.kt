@@ -698,7 +698,7 @@ open class ValueGroup(
             ValueType.FILE -> {
                 val value = valueObject["value"]
                     ?.takeUnless { it is JsonNull }
-                    ?.asString
+                    ?.asString?.takeUnless(String::isBlank)
                     ?.let(::File)
                 val dialogMode = valueObject["dialogMode"]
                     ?.takeUnless { it is JsonNull }
@@ -757,7 +757,7 @@ open class ValueGroup(
                 val isOrderSensitive = parseBoolean(key = "isOrderSensitive", default = false)
 
                 val value = valueObject["value"].asJsonArray.mapTo(
-                    if (isOrderSensitive) sortedSetOf() else linkedSetOf()
+                    if (isOrderSensitive) linkedSetOf() else sortedSetOf()
                 ) { it.asString.asTagged() }
                 val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asTagged() }
 

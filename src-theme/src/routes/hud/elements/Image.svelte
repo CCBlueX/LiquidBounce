@@ -20,18 +20,8 @@
         }
 
         return settings.file
-            ? getComponentFileUrl(componentId, hash(settings.file))
+            ? getComponentFileUrl(componentId)
             : "";
-    }
-
-    function hash(value: string) {
-        let result = 0;
-
-        for (let index = 0; index < value.length; index++) {
-            result = Math.imul(31, result) + value.charCodeAt(index) | 0;
-        }
-
-        return result.toString(36);
     }
 
     function resolveScale(value: unknown) {

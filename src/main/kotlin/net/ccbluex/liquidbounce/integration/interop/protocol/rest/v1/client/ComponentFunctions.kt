@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import io.ktor.server.request.receiveText
-import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
 import io.ktor.server.routing.Route
@@ -29,7 +28,6 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import com.google.gson.JsonObject
-import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -148,7 +146,6 @@ private fun Route.getComponentFile() = get("/{id}/file") {
         call.badRequest("Unsupported file extension: ${file.extension.lowercase(Locale.ROOT)}")
     }
 
-    call.response.header(HttpHeaders.CacheControl, "no-store")
     call.respondFile(file)
 }
 
