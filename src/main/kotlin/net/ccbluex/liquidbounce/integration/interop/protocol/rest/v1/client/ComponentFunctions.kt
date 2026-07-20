@@ -27,7 +27,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -37,6 +36,7 @@ import net.ccbluex.liquidbounce.config.types.FileValue
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.notFound
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondJsonWriter
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.Alignment
@@ -45,21 +45,21 @@ import java.util.Locale
 
 // GET /api/v1/client/components/native
 private fun Route.getNativeComponents() = get("/native") {
-    call.respond(accessibleInteropGson.toJsonTree(
+    call.respond(accessibleInteropGson.toJson(
         HudComponentManager.nativeComponents
     ))
 }
 
 // GET /api/v1/client/components/{id}
 private fun Route.getComponents() = get("/{id}") {
-    call.respond(accessibleInteropGson.toJsonTree(
+    call.respond(accessibleInteropGson.toJson(
         HudComponentManager.getComponents(call.parameters["id"]))
     )
 }
 
 // GET /api/v1/client/components/{id}/catalog
 private fun Route.getComponentCatalog() = get("/{id}/catalog") {
-    call.respond(accessibleInteropGson.toJsonTree(
+    call.respond(accessibleInteropGson.toJson(
         HudComponentManager.getComponentCatalog(call.parameters["id"].orEmpty())
     ))
 }
@@ -90,9 +90,11 @@ private fun Route.postComponentZIndex() = post("/{id}/z-index") {
         }
     }
 
-    call.respond(JsonObject().apply {
-        addProperty("zIndex", zIndex)
-    })
+    call.respondJsonWriter {
+        beginObject()
+        name("zIndex").value(zIndex)
+        endObject()
+    }
 }
 
 // POST /api/v1/client/components/{id}/alignment
@@ -129,7 +131,7 @@ private fun Route.getComponentFile() = get("/{id}/file") {
     val component = HudComponentManager.getComponent(id)
         ?.takeIf { it.name == "Image" }
         ?: call.notFound(id, "Image HUD component not found")
-    val fileValue = component.inner
+    val fileValue = component.collectValuesRecursively()
         .filterIsInstance<FileValue>()
         .find { it.name == "File" }
         ?: call.notFound(id, "Image file setting not found")

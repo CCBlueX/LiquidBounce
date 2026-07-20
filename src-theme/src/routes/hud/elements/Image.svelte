@@ -15,12 +15,15 @@
     let source = $derived(resolveSource());
 
     function resolveSource() {
-        if (settings.source !== "File") {
-            return settings.uRL;
+        const sourceSetting = settings.source;
+
+        if (sourceSetting?.active !== "File") {
+            return sourceSetting?.value?.uRL;
         }
 
-        return settings.file
-            ? getComponentFileUrl(componentId)
+        const file = sourceSetting.value?.file;
+        return file
+            ? getComponentFileUrl(componentId, file)
             : "";
     }
 
@@ -32,8 +35,10 @@
 </script>
 
 {#if source}
-    <img src={source} alt="" class="image" style:zoom={scale} style:max-height={maxHeight}
-         style:opacity="{settings.opacity}%">
+    {#key source}
+        <img src={source} alt="" class="image" style:zoom={scale} style:max-height={maxHeight}
+             style:opacity="{settings.opacity}%">
+    {/key}
 {/if}
 
 <style lang="scss">

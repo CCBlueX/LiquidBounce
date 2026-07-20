@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.config.types.group
 
 import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
@@ -26,6 +27,7 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachIsInstance
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.publicGson
@@ -586,23 +588,80 @@ open class ValueGroup(
         this@ValueGroup.inner.add(this)
     }
 
+    fun interface ModeBuilder {
+        fun ValueGroup.build()
+    }
+
+    fun modes(
+        name: String,
+        default: String,
+        modes: Map<String, ModeBuilder>,
+    ): ModeValueGroup<Mode> {
+        require(modes.isNotEmpty()) { "Mode group '$name' must contain at least one mode." }
+        class SimpleMode(name: String, override val parent: ModeValueGroup<*>) : Mode(name)
+
+        return modes(
+            eventListener = null,
+            name = name,
+            activeCallback = { modes ->
+                val idx = modes.indexOfFirst { it.name == default }
+
+                check(idx != -1) {
+                    "The active choice $default is not contained within the choice array (${modes.joinToString { it.name }})"
+                }
+
+                idx
+            },
+            modesCallback = { parent ->
+                modes.entries.mapToArray { (modeName, configure) ->
+                    val mode = SimpleMode(modeName, parent)
+
+                    with(configure) {
+                        mode.build()
+                    }
+                    mode
+                }
+            },
+        )
+    }
+
+    private fun jsonChoice(name: String, valueObject: JsonObject) {
+        val value = valueObject["value"].asString
+        val modes = valueObject["choices"].asJsonArray.associateTo(linkedMapOf()) { choiceElement ->
+            val choiceObject = choiceElement.asJsonObject
+            val choiceName = choiceObject["name"].asString
+            val settings = choiceObject["values"]?.asJsonArray ?: emptyList<JsonElement>()
+            val configure = ModeBuilder {
+                for (setting in settings) {
+                    json(setting.asJsonObject)
+                }
+            }
+
+            choiceName to configure
+        }
+
+        modes(name, value, modes)
+    }
+
     protected fun <T : Mode> modes(
-        eventListener: EventListener,
+        eventListener: EventListener?,
         name: String,
         active: T,
         modes: Array<T>,
     ): ModeValueGroup<T> {
-        return modes(eventListener, name, {
+        return modes(eventListener, name, { modes ->
             val idx = modes.indexOf(active)
 
-            check(idx != -1) { "The active choice $active is not contained within the choice array ($it)" }
+            check(idx != -1) {
+                "The active choice $active is not contained within the choice array (${modes.joinToString { it.name }})"
+            }
 
             idx
         }) { modes }
     }
 
     protected fun <T : Mode> modes(
-        eventListener: EventListener,
+        eventListener: EventListener?,
         name: String,
         activeCallback: ToIntFunction<List<T>>,
         modesCallback: (ModeValueGroup<T>) -> Array<T>,
@@ -745,6 +804,8 @@ open class ValueGroup(
 
                 enumChoice(name, value, choices)
             }
+
+            ValueType.CHOICE -> jsonChoice(name, valueObject)
 
             ValueType.MULTI_CHOOSE -> {
                 fun parseBoolean(key: String, default: Boolean) = when (val json = valueObject[key]) {
