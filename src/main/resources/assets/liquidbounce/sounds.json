@@ -2,9 +2,6 @@
   "bonk": {
     "sounds": ["liquidbounce:bonk"]
   },
-  "click": {
-    "sounds": ["liquidbounce:click"]
-  },
   "pop": {
     "sounds": ["liquidbounce:pop"]
   },
@@ -74,8 +71,8 @@
   "soft": {
     "sounds": ["liquidbounce:soft"]
   },
-  "magicsquash": {
-    "sounds": ["liquidbounce:magicsquash"]
+  "magics_quash": {
+    "sounds": ["liquidbounce:magics_quash"]
   },
   "squash": {
     "sounds": ["liquidbounce:squash"]
