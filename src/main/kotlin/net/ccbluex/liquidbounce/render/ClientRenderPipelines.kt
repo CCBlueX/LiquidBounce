@@ -247,7 +247,7 @@ object ClientRenderPipelines {
 
     private val LinesRelativeToCameraNoColor = newPipeline("lines_relative_to_camera_no_color") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        relativePosColorSnippet(PrimitiveTopology.DEBUG_LINES)
+        relativePosSnippet(PrimitiveTopology.DEBUG_LINES)
         withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
