@@ -157,7 +157,9 @@ private fun Route.postFileDialog() = post("/fileDialog") {
         call.receive<RequestBody>()
     }.getOrNull() ?: call.badRequest("No dialog mode provided")
 
-    val files = mode.selectFiles(supportedExtensions)
+    val files = withContext(Dispatchers.IO) {
+        mode.selectFiles(supportedExtensions)
+    }
 
     call.respond(JsonObject().apply {
         files.firstOrNull()?.let { addProperty("file", it) }

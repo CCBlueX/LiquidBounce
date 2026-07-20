@@ -701,6 +701,11 @@ export async function getComponentSettings(id: string): Promise<ConfigurableSett
     return await response.json();
 }
 
+export function getComponentFileUrl(id: string, version: string): string {
+    const searchParams = new URLSearchParams({version});
+    return `${API_BASE}/client/components/${id}/file?${searchParams.toString()}`;
+}
+
 export async function setComponentSettings(id: string, settings: ConfigurableSetting): Promise<void> {
     await fetch(`${API_BASE}/client/components/${id}/settings`, {
         method: "PUT",

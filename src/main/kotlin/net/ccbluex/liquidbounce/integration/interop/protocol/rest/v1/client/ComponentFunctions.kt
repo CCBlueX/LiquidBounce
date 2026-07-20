@@ -20,18 +20,22 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import io.ktor.server.request.receiveText
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondFile
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import com.google.gson.JsonObject
+import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.config.types.FileValue
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.notFound
@@ -39,6 +43,7 @@ import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import org.apache.commons.io.input.CharSequenceReader
+import java.util.Locale
 
 // GET /api/v1/client/components/native
 private fun Route.getNativeComponents() = get("/native") {
@@ -119,6 +124,34 @@ private fun Route.getComponentSettings() = get("/{id}/settings") {
     call.respond(ConfigSystem.serializeValueGroup(component, gson = interopGson))
 }
 
+// GET /api/v1/client/components/{id}/file
+private fun Route.getComponentFile() = get("/{id}/file") {
+    val id = call.parameters["id"] ?: call.badRequest("Missing component id")
+    // Strict check, only default theme component 'Image' uses this feature currently
+    val component = HudComponentManager.getComponent(id)
+        ?.takeIf { it.name == "Image" }
+        ?: call.notFound(id, "Image HUD component not found")
+    val fileValue = component.inner
+        .filterIsInstance<FileValue>()
+        .find { it.name == "File" }
+        ?: call.notFound(id, "Image file setting not found")
+    val file = fileValue.absoluteFile
+
+    if (!file.isFile) {
+        call.notFound(file.path, "File not found")
+    }
+
+    val supportedExtensions = fileValue.supportedExtensions
+    if (supportedExtensions != null && supportedExtensions.none { extension ->
+            extension.equals(file.extension, ignoreCase = true)
+        }) {
+        call.badRequest("Unsupported file extension: ${file.extension.lowercase(Locale.ROOT)}")
+    }
+
+    call.response.header(HttpHeaders.CacheControl, "no-store")
+    call.respondFile(file)
+}
+
 // PUT /api/v1/client/components/{id}/settings
 private fun Route.putComponentSettings() = put("/{id}/settings") {
     val id = call.parameters["id"] ?: call.badRequest("Missing component id")
@@ -144,5 +177,6 @@ internal fun Route.componentRoutes() = route("/components") {
     postComponentZIndex()
     postComponentAlignment()
     getComponentSettings()
+    getComponentFile()
     putComponentSettings()
 }

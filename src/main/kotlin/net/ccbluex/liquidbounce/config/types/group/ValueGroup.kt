@@ -695,6 +695,24 @@ open class ValueGroup(
                 text(name, value)
             }
 
+            ValueType.FILE -> {
+                val value = valueObject["value"]
+                    ?.takeUnless { it is JsonNull }
+                    ?.asString
+                    ?.let(::File)
+                val dialogMode = valueObject["dialogMode"]
+                    ?.takeUnless { it is JsonNull }
+                    ?.asString
+                    ?.let(FileDialogMode::valueOf)
+                    ?: FileDialogMode.OPEN_FILE
+                val supportedExtensions = valueObject["supportedExtensions"]
+                    ?.takeUnless { it is JsonNull }
+                    ?.asJsonArray
+                    ?.mapTo(linkedSetOf()) { it.asString }
+
+                file(name, value, dialogMode, supportedExtensions)
+            }
+
             ValueType.COLOR -> {
                 val value = valueObject["value"].asInt
                 color(name, Color4b(value))
