@@ -45,21 +45,21 @@ import java.util.Locale
 
 // GET /api/v1/client/components/native
 private fun Route.getNativeComponents() = get("/native") {
-    call.respond(accessibleInteropGson.toJson(
+    call.respond(accessibleInteropGson.toJsonTree(
         HudComponentManager.nativeComponents
     ))
 }
 
 // GET /api/v1/client/components/{id}
 private fun Route.getComponents() = get("/{id}") {
-    call.respond(accessibleInteropGson.toJson(
+    call.respond(accessibleInteropGson.toJsonTree(
         HudComponentManager.getComponents(call.parameters["id"]))
     )
 }
 
 // GET /api/v1/client/components/{id}/catalog
 private fun Route.getComponentCatalog() = get("/{id}/catalog") {
-    call.respond(accessibleInteropGson.toJson(
+    call.respond(accessibleInteropGson.toJsonTree(
         HudComponentManager.getComponentCatalog(call.parameters["id"].orEmpty())
     ))
 }
