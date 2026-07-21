@@ -348,7 +348,9 @@ internal fun resolveStepUpMovement(
 ): Vec3 {
     val candidates = FloatArraySet(4)
     for (collider in colliders) {
-        for (coordinate in collider.getCoords(Direction.Axis.Y)) {
+        val coords = collider.getCoords(Direction.Axis.Y)
+        for (i in coords.indices) {
+            val coordinate = coords.getDouble(i)
             val relativeCoordinate = (coordinate - groundedBox.minY).toFloat()
             if (relativeCoordinate >= 0f && relativeCoordinate != directMovement.y.toFloat()) {
                 if (relativeCoordinate > maxUpStep) {
