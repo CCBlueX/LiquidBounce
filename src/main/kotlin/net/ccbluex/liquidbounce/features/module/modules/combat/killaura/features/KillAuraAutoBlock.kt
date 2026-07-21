@@ -187,7 +187,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     @Suppress("ReturnCount", "CognitiveComplexMethod")
     fun startBlocking(): Boolean {
-        if (!running || Random.nextInt(100) > chance) {
+        if (!running) {
             return false
         }
 
@@ -198,6 +198,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         if (player.isUsingItem) {
             hasBlockedSinceAttack = true
+            return false
+        }
+
+        if (Random.nextFloat() * 100f >= chance) {
             return false
         }
 
