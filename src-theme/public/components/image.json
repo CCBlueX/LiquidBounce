@@ -1,6 +1,6 @@
 {
   "name": "Image",
-  "description": "Displays a custom image from a URL.",
+  "description": "Displays a custom image from a URL or local file.",
   "enabled": false,
   "singleton": false,
   "alignment": {
@@ -11,9 +11,33 @@
   },
   "values": [
     {
-      "type": "TEXT",
-      "name": "URL",
-      "value": "https://liquidbounce.net/images/logos/logo.svg"
+      "type": "CHOICE",
+      "name": "Source",
+      "value": "URL",
+      "choices": [
+        {
+          "name": "URL",
+          "values": [
+            {
+              "type": "TEXT",
+              "name": "URL",
+              "value": "https://liquidbounce.net/images/logos/logo.svg"
+            }
+          ]
+        },
+        {
+          "name": "File",
+          "values": [
+            {
+              "type": "FILE",
+              "name": "File",
+              "value": "",
+              "dialogMode": "OPEN_FILE",
+              "supportedExtensions": ["png", "jpg", "jpeg", "webp", "gif", "svg"]
+            }
+          ]
+        }
+      ]
     },
     {
       "type": "FLOAT",

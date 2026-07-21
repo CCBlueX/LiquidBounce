@@ -28,12 +28,12 @@ import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.utils.client.mc
 
 // GET /api/v1/client/session
-private fun Route.getSessionInfo() = get("/session") { call.respond(interopGson.toJsonTree(mc.user)) }
+private fun Route.getSessionInfo() = get("/session") { call.respond(mc.user) }
 
 // GET /api/v1/client/location
 private fun Route.getLocationInfo() = get("/location") {
     val locationInfo = IpInfoApi.current ?: call.forbidden("Location is not known")
-    call.respond(interopGson.toJsonTree(locationInfo))
+    call.respond(locationInfo)
 }
 
 internal fun Route.sessionRoutes() {
