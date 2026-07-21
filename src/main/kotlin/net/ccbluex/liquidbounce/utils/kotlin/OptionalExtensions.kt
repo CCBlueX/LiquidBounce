@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import java.util.Optional

@@ -17,18 +17,22 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.kotlin
+package net.ccbluex.liquidbounce.injection.mixins.blaze3d;
 
-import net.ccbluex.liquidbounce.utils.math.high32
-import net.ccbluex.liquidbounce.utils.math.longFrom32
-import net.ccbluex.liquidbounce.utils.math.low32
+import com.mojang.blaze3d.systems.RenderPass;
+import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
+import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@JvmInline
-value class IntIntValuePair private constructor(private val bits: Long) {
-    constructor(left: Int, right: Int): this(longFrom32(left, right))
-    inline val left get() = component1()
-    inline val right get() = component2()
+@Mixin(RenderPass.class)
+public abstract class MixinRenderPass {
 
-    operator fun component1(): Int = bits.high32()
-    operator fun component2(): Int = bits.low32()
+    @Inject(method = "close", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/systems/RenderPass;isClosed:Z", opcode = Opcodes.PUTFIELD))
+    private void onClose(CallbackInfo callbackInfo) {
+        RenderingDebug.increaseRenderPassCount();
+    }
+
 }

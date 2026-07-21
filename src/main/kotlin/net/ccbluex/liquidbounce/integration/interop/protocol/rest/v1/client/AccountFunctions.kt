@@ -69,7 +69,7 @@ private fun Route.postNewMicrosoftAccount() = post {
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/clipboard
+// POST /api/v1/client/accounts/new/microsoft/clipboard
 private fun Route.postClipboardMicrosoftAccount() = post("/clipboard") {
     AccountManager.newMicrosoftAccount {
         mc.execute {
@@ -109,7 +109,7 @@ private fun Route.postNewAlteningAccount() = post {
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/generate
+// POST /api/v1/client/accounts/new/altening/generate
 private fun Route.postGenerateAlteningAccount() = post("/generate") {
     data class AlteningGenForm(val apiToken: String)
 
@@ -139,7 +139,7 @@ private fun Route.postOrderAccounts() = post("/order") {
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/login
+// POST /api/v1/client/account/login
 private fun Route.postLoginAccount() = post {
     data class AccountForm(val id: Int)
 
@@ -149,7 +149,7 @@ private fun Route.postLoginAccount() = post {
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/cracked
+// POST /api/v1/client/account/login/cracked
 private fun Route.postLoginCrackedAccount() = post("/cracked") {
     data class AccountForm(val username: String, val online: Boolean?)
 
@@ -159,7 +159,7 @@ private fun Route.postLoginCrackedAccount() = post("/cracked") {
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/session
+// POST /api/v1/client/account/login/session
 private fun Route.postLoginSessionAccount() = post("/session") {
     data class AccountForm(val token: String)
 
@@ -169,13 +169,13 @@ private fun Route.postLoginSessionAccount() = post("/session") {
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/restore
+// POST /api/v1/client/account/restore
 private fun Route.postRestoreInitial() = post("/restore") {
     AccountManager.restoreInitial()
     call.respond(mc.user)
 }
 
-// PUT /api/v1/client/accounts/favorite
+// PUT /api/v1/client/account/favorite
 private fun Route.putFavoriteAccount() = put {
     data class AccountForm(val id: Int)
 
@@ -185,7 +185,7 @@ private fun Route.putFavoriteAccount() = put {
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// DELETE /api/v1/client/accounts/favorite
+// DELETE /api/v1/client/account/favorite
 private fun Route.deleteFavoriteAccount() = delete {
     data class AccountForm(val id: Int)
 
@@ -195,7 +195,7 @@ private fun Route.deleteFavoriteAccount() = delete {
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// DELETE /api/v1/client/accounts
+// DELETE /api/v1/client/account
 private fun Route.deleteAccount() = delete {
     data class AccountForm(val id: Int)
 
