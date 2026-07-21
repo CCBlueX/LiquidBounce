@@ -120,7 +120,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
         }
 
         // 1. Stop blocking
-        if (player.isBlockingServerside) {
+        if (player.isBlockingServerside || KillAuraAutoBlock.enforcedBlockingHand != null) {
             if (!KillAuraAutoBlock.enabled && !ModuleMultiActions.mayAttackWhileUsing()) {
                 return
             }

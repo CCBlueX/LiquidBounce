@@ -49,6 +49,7 @@ import net.ccbluex.liquidbounce.utils.entity.interactBlockLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.interactEntityLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
+import net.ccbluex.liquidbounce.utils.entity.isSlowDueToUsingItem
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.useItem
@@ -142,7 +143,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     var hasBlockedSinceAttack = false
 
-    var isInDanger = false
+    private var isInDanger = false
 
     /**
      * This will decrease our CPS and prioritize blocking.
@@ -186,7 +187,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     @Suppress("ReturnCount", "CognitiveComplexMethod")
     fun startBlocking(): Boolean {
-        if (!running || Random.nextInt(100) > chance) {
+        if (!running) {
             return false
         }
 
@@ -197,6 +198,10 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         if (player.isUsingItem) {
             hasBlockedSinceAttack = true
+            return false
+        }
+
+        if (Random.nextFloat() * 100f >= chance) {
             return false
         }
 
@@ -251,6 +256,11 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             ) != null
         }
         debugParameter("IsInDanger") { isInDanger }
+        debugParameter("blockingTicks") { blockingTicks }
+        debugParameter("isBlocking") { player.isBlocking }
+        debugParameter("isUsingItem") { player.isUsingItem }
+        debugParameter("isSlowDueToUsingItem") { player.isSlowDueToUsingItem }
+        debugParameter("isBlockingServerside") { player.isBlockingServerside }
     }
 
     @Suppress("unused")
@@ -294,8 +304,9 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             }
         }
 
-        // We do not want the player to stop eating or else. Only when he blocks.
-        if (!player.isBlockingServerside) {
+        // We do not want the player to stop eating or else.
+        // Only when he blocks or AutoBlock owns the use action.
+        if (enforcedBlockingHand == null && !player.isBlockingServerside) {
             return false
         }
 
