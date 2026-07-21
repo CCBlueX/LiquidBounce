@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.client.interaction
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_12_1
+import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
@@ -638,7 +638,7 @@ fun BlockPos?.fallDamageMultiplier(entity: Entity = player): Float {
     return when (block) {
         Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW -> 0f
         Blocks.HAY_BLOCK, Blocks.HONEY_BLOCK -> 0.2f
-        Blocks.SLIME_BLOCK -> if (!entity.isSuppressingBounce && isOlderThanOrEqual1_12_1) 0f else 1f
+        Blocks.SLIME_BLOCK -> if (!entity.isSuppressingBounce && isOlderThan1_21_2) 0f else 1f
         is BedBlock -> 0.5f
         else -> 1f
     }
