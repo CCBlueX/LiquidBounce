@@ -59,7 +59,7 @@ object EntityTrajectoryResolver {
             is Snowball -> TrajectoryDescriptor.SNOWBALL
             is ThrownExperienceBottle -> TrajectoryDescriptor.EXP_BOTTLE
             is ThrownEgg -> TrajectoryDescriptor.EGG
-            is FishingHook -> TrajectoryDescriptor.FISHING_BOBBER
+            is FishingHook -> if (entity.hookedIn != null) null else TrajectoryDescriptor.FISHING_BOBBER
             is FireworkRocketEntity -> TrajectoryDescriptor.FIREWORK_ROCKET
             is Fireball -> TrajectoryDescriptor.FIREBALL
             is WindCharge -> TrajectoryDescriptor.WIND_CHARGE
