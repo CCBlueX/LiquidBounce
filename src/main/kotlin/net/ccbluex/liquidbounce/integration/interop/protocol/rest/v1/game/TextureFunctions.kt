@@ -50,7 +50,7 @@ private fun Route.getResource() = get {
     call.respondResource(resource, ContentType.Image.PNG)
 }
 
-// GET /api/v1/client/itemTexture
+// GET /api/v1/client/resource/itemTexture
 private fun Route.getItemTexture() = get("/itemTexture") {
     if (!ItemImageAtlas.isAtlasAvailable) {
         call.internalServerError("Item atlas not available yet")
@@ -71,7 +71,7 @@ private fun Route.getItemTexture() = get("/itemTexture") {
     call.respondImage(image)
 }
 
-// GET /api/v1/client/effectTexture
+// GET /api/v1/client/resource/effectTexture
 private fun Route.getEffectTexture() = get("/effectTexture") {
     val identifier = call.queryParameters["id"]
         ?: call.badRequest("Missing identifier parameter")
@@ -86,7 +86,7 @@ private fun Route.getEffectTexture() = get("/effectTexture") {
     call.respondResource(resource, ContentType.Image.PNG)
 }
 
-// GET /api/v1/client/skin
+// GET /api/v1/client/resource/skin
 private fun Route.getSkin() = get("/skin") {
     val uuid = call.queryParameters["uuid"]?.let { UUID.fromString(it) }
         ?: call.badRequest("Missing UUID parameter")

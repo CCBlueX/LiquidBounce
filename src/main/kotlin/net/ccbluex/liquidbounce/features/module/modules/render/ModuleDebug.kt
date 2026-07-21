@@ -54,9 +54,9 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 /**
- * Rotations module
+ * Debug module
  *
- * Allows you to see server-sided rotations.
+ * Only of interest to developers.
  */
 
 object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {

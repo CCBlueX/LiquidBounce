@@ -19,19 +19,16 @@
 
 package net.ccbluex.liquidbounce.render.gui.element;
 
-import net.ccbluex.liquidbounce.utils.collection.Pools;
-import org.joml.Matrix3x2f;
+import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 
-public sealed interface PoseReusableGuiElementRenderState
-    extends RecyclableGuiElementRenderState
-    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState, RoundedRectGuiElementRenderState {
+/**
+ * A GUI element render state that owns frame-scoped pooled resources.
+ */
+public interface RecyclableGuiElementRenderState extends GuiElementRenderState {
+
     /**
-     * Recyclable pose matrix.
+     * Releases all resources owned by this state after the GUI frame has been rendered.
      */
-    Matrix3x2f pose();
+    void recycle();
 
-    @Override
-    default void recycle() {
-        Pools.Mat3x2f.recycle(this.pose());
-    }
 }

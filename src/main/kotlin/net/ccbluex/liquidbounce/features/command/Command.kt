@@ -57,7 +57,10 @@ class Command(
         internal set
 
     override val debugDisplayName: Component
-        get() = "Command $name".asPlainText(Style.EMPTY + ChatFormatting.GOLD + ChatFormatting.UNDERLINE)
+        get() = "Command$name".asPlainText(Style.EMPTY + ChatFormatting.GOLD + ChatFormatting.UNDERLINE)
+
+    override val debugOwnerId: String
+        get() = "Command$name"
 
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"

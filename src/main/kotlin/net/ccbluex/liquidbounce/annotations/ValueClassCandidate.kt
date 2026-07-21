@@ -17,21 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.gui.element;
+package net.ccbluex.liquidbounce.annotations
 
-import net.ccbluex.liquidbounce.utils.collection.Pools;
-import org.joml.Matrix3x2f;
-
-public sealed interface PoseReusableGuiElementRenderState
-    extends RecyclableGuiElementRenderState
-    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState, RoundedRectGuiElementRenderState {
-    /**
-     * Recyclable pose matrix.
-     */
-    Matrix3x2f pose();
-
-    @Override
-    default void recycle() {
-        Pools.Mat3x2f.recycle(this.pose());
-    }
-}
+/**
+ * Marks a class which will (or can) be a `value class` after
+ * [JEP-401](https://openjdk.org/jeps/401) has been used in Minecraft.
+ */
+@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.CLASS)
+annotation class ValueClassCandidate

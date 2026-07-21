@@ -31,13 +31,13 @@ import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersions
 import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
 
-// GET /api/v1/protocols
+// GET /api/v1/client/protocols
 private fun Route.getProtocols() = get { call.respond(protocolVersions) }
 
-// GET /api/v1/protocols/protocol
+// GET /api/v1/client/protocols/protocol
 private fun Route.getProtocol() = get { call.respond(protocolVersion) }
 
-// PUT /api/v1/protocols/protocol
+// PUT /api/v1/client/protocols/protocol
 private fun Route.putProtocol() = put {
     data class ProtocolRequest(val version: Int)
 
@@ -47,7 +47,7 @@ private fun Route.putProtocol() = put {
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// DELETE /api/v1/protocols/protocol
+// DELETE /api/v1/client/protocols/protocol
 private fun Route.deleteProtocol() = delete {
     selectProtocolVersion(defaultProtocolVersion.version)
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
