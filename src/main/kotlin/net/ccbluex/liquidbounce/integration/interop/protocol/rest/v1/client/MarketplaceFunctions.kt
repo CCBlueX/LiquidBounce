@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.utils.client.logger
 
-
 /**
  * Extract a required integer path parameter or respond with 403 Forbidden
  */
@@ -96,7 +95,7 @@ private fun Route.getMarketplaceItemRevisions() = get {
     val limit = call.queryParameters["limit"]?.toIntOrNull() ?: 10
 
     val response = MarketplaceApi.getMarketplaceItemRevisions(id, page, limit)
-    call.respond(interopGson.toJsonTree(response))
+    call.respond(response)
 }
 
 /**
@@ -107,7 +106,7 @@ private fun Route.getMarketplaceItemRevision() = get("/{revisionId}") {
     val revisionId = call.requireId("revisionId")
 
     val response = MarketplaceApi.getMarketplaceItemRevision(id, revisionId)
-    call.respond(interopGson.toJsonTree(response))
+    call.respond(response)
 }
 
 /**
@@ -168,7 +167,7 @@ private fun Route.getMarketplaceItemReviews() = get {
     val limit = call.queryParameters["limit"]?.toIntOrNull() ?: 10
 
     val response = MarketplaceApi.getReviews(id, page, limit)
-    call.respond(interopGson.toJsonTree(response))
+    call.respond(response)
 }
 
 /**
@@ -189,7 +188,7 @@ private fun Route.postMarketplaceItemReview() = post {
     }
 
     val response = MarketplaceApi.createReview(clientAccount.takeSession(), id, review.rating, review.comment)
-    call.respond(interopGson.toJsonTree(response))
+    call.respond(response)
 }
 
 internal fun Route.marketplaceRoutes() = route("/marketplace") {

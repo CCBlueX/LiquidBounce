@@ -31,7 +31,8 @@ import org.joml.Vector2f
 
 internal object HatsImage : HatsMode("Image") {
 
-    private val image by file("Image").toTextureProperty(this, printErrorToChat = true)
+    private val image by file("Image", supportedExtensions = setOf("png"))
+        .toTextureProperty(this, printErrorToChat = true)
     private val colorModulator by color("ColorModulator", Color4b.WHITE)
     private val scale by vec2f("Scale", Vector2f(1f, 1f))
     private val spinSpeed by float("SpinSpeed", 1f, -10f..10f)

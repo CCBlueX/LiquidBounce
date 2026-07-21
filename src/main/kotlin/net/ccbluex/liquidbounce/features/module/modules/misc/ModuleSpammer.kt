@@ -88,7 +88,7 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
 
             private val coroutineName = CoroutineName("SpammerFileSourceReader")
 
-            private val source by file("Source").onChanged {
+            private val source by file("Source", supportedExtensions = setOf("txt")).onChanged {
                 if (!it.isFile) return@onChanged
 
                 ioScope.launch(coroutineName) {

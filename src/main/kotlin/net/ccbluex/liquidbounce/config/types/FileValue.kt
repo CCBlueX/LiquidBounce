@@ -93,21 +93,25 @@ enum class FileDialogMode(
     private val fallbackTitle: String
 ) {
     OPEN_FILE("liquidbounce.fileDialog.mode.openFile", "Open File") {
-        override fun selectFilesRaw(extensions: Iterable<String>?) = TinyFileDialogs.tinyfd_openFileDialog(
-            title,
-            null,
-            getFilterPatterns(extensions),
-            null,
-            false
-        )
+        override fun selectFilesRaw(extensions: Iterable<String>?) = withFilterPatterns(extensions) {
+            TinyFileDialogs.tinyfd_openFileDialog(
+                title,
+                ConfigSystem.rootFolder.path,
+                it,
+                null,
+                false
+            )
+        }
     },
     SAVE_FILE("liquidbounce.fileDialog.mode.saveFile", "Save File As") {
-        override fun selectFilesRaw(extensions: Iterable<String>?) = TinyFileDialogs.tinyfd_saveFileDialog(
-            title,
-            null,
-            getFilterPatterns(extensions),
-            null
-        )
+        override fun selectFilesRaw(extensions: Iterable<String>?) = withFilterPatterns(extensions) {
+            TinyFileDialogs.tinyfd_saveFileDialog(
+                title,
+                ConfigSystem.rootFolder.path,
+                it,
+                null
+            )
+        }
     },
     OPEN_DIRECTORY("liquidbounce.fileDialog.mode.openDirectory", "Select Folder") {
         override fun selectFilesRaw(extensions: Iterable<String>?) = TinyFileDialogs.tinyfd_selectFolderDialog(
@@ -127,16 +131,23 @@ enum class FileDialogMode(
     }
 
     companion object {
-        @JvmStatic
-        private fun getFilterPatterns(extensions: Iterable<String>?): PointerBuffer? {
-            extensions ?: return null
+        private fun <T> withFilterPatterns(
+            extensions: Iterable<String>?,
+            block: (PointerBuffer?) -> T,
+        ): T? {
+            val patterns = extensions?.map { "*.$it" }.orEmpty()
+            if (patterns.isEmpty()) {
+                return block(null)
+            }
+
             return MemoryStack.stackPush().use { stack ->
-                val patternList = extensions.map { ext -> "*.$ext" }
-                val buffer = stack.mallocPointer(patternList.size)
-                patternList.forEach { pattern ->
+                val buffer = stack.mallocPointer(patterns.size)
+
+                for (pattern in patterns) {
                     buffer.put(stack.ASCII(pattern))
                 }
-                buffer.flip()
+
+                block(buffer.flip())
             }
         }
     }

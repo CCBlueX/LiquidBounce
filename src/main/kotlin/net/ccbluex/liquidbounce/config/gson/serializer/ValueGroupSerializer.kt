@@ -23,6 +23,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -75,6 +76,10 @@ class ValueGroupSerializer(
             for (v in valueGroup.inner) {
                 add(v.name.toLowerCamelCase(), when (v) {
                     is Alignment -> context.serialize(v, Alignment::class.java)
+                    is ModeValueGroup<*> -> JsonObject().apply {
+                        addProperty("active", v.activeMode.name)
+                        add("value", serializeReadOnly(v.activeMode, context))
+                    }
                     is ValueGroup -> serializeReadOnly(v, context)
                     else -> context.serialize(v.inner)
                 })

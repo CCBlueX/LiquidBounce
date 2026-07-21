@@ -701,6 +701,11 @@ export async function getComponentSettings(id: string): Promise<ConfigurableSett
     return await response.json();
 }
 
+export function getComponentFileUrl(id: string, cacheKey?: string): string {
+    const url = `${API_BASE}/client/components/${id}/file`;
+    return cacheKey === undefined ? url : `${url}?v=${encodeURIComponent(cacheKey)}`;
+}
+
 export async function setComponentSettings(id: string, settings: ConfigurableSetting): Promise<void> {
     await fetch(`${API_BASE}/client/components/${id}/settings`, {
         method: "PUT",

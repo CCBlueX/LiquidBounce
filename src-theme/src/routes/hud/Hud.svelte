@@ -129,7 +129,7 @@
                 {:else if c.name === "Text"}
                     <Text settings={c.settings}/>
                 {:else if c.name === "Image"}
-                    <Image settings={c.settings}/>
+                    <Image componentId={c.id} settings={c.settings}/>
                 {:else if c.name === "KeyBinds"}
                     <KeyBinds/>
                 {:else if c.name === "ClosedCaptions"}

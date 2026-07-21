@@ -182,7 +182,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
         }
 
         object File : Mode("File"), ClientAsset.Texture {
-            private val image = file("Image")
+            private val image = file("Image", supportedExtensions = setOf("png"))
 
             private val skinType by enumChoice("Model", ModelChoice.WIDE)
 
