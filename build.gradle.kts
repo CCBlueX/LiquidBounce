@@ -39,7 +39,7 @@ base {
 }
 
 /** Includes dependency recursively in the JAR file */
-val jij: Configuration by configurations.creating
+val jij = configurations.create("jij")
 
 jij.excludeProvidedLibs()
 
@@ -62,10 +62,6 @@ allprojects {
         maven {
             name = "Jitpack"
             url = uri("https://jitpack.io")
-        }
-        maven {
-            name = "TerraformersMC"
-            url = uri("https://maven.terraformersmc.com/")
         }
         maven {
             name = "ViaVersion"

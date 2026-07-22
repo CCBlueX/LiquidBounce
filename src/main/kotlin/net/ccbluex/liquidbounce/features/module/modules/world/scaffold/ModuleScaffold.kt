@@ -155,10 +155,10 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         ON("On", { blockPos -> blockPos.copy(y = placementY) }),
 
         /**
-         * Places blocks at the same Y level only while the physical jump key is held
+         * Places blocks at the same Y level only while the physical jump key is not held
          */
         JUMP_KEY("JumpKey", { blockPos ->
-            (if (mc.options.keyJump.isDown) ON else OFF).getTargetedBlockPos(blockPos)
+            (if (mc.options.keyJump.isDown) OFF else ON).getTargetedBlockPos(blockPos)
         }),
 
         /**
@@ -269,7 +269,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
      */
     val autoSpeed by boolean("AutoSpeed", false)
 
-    private var ledge by boolean("Ledge", true)
+    private val ledge by boolean("Ledge", true)
 
     private val renderer = tree(PlacementRenderer("Render", true, this, keep = false))
 
