@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.item.armor
 
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.armorKnockbackResistance
 import net.ccbluex.liquidbounce.utils.item.armorToughness
@@ -39,7 +40,7 @@ value class ArmorPiece(val itemSlot: ItemSlot) {
     val isAlreadyEquipped: Boolean
         get() = itemSlot.slotType == ItemSlot.Type.ARMOR
     val isReachableByHand: Boolean
-        get() = itemSlot.slotType == ItemSlot.Type.HOTBAR
+        get() = itemSlot is HotbarItemSlot
 
     val toughness: Float
         get() = itemSlot.itemStack.armorToughness.toFloat()

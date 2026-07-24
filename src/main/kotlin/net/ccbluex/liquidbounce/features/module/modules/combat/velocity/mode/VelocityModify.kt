@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
@@ -27,7 +28,6 @@ import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import java.util.function.BooleanSupplier
-import kotlin.random.Random
 
 /**
  * Basic velocity which should bypass most servers with common anti-cheats like NCP.
@@ -38,7 +38,7 @@ internal object VelocityModify : VelocityMode("Modify") {
     private val vertical by float("Vertical", 0f, -1f..1f)
     private val motionHorizontal by float("MotionHorizontal", 0f, 0f..1f)
     private val motionVertical by float("MotionVertical", 0f, 0f..1f)
-    private val chance by int("Chance", 100, 0..100, "%")
+    private val chance = percentageChance("Chance", 100)
     private val filter by enumChoice("Filter", VelocityTriggerFilter.ALWAYS)
     private val onlyMove by boolean("OnlyMove", false)
     private val transactionBufferAmount by int("TransactionBuffer", 0, 0..3)
@@ -56,7 +56,7 @@ internal object VelocityModify : VelocityMode("Modify") {
         when (val packet = event.packet) {
             // Check if this is a regular velocity update
             is ClientboundSetEntityMotionPacket if packet.id == player.id -> {
-                if (chance != 100 && Random.nextInt(100) > chance) return@handler
+                if (!chance.asBoolean) return@handler
                 if (!filter.condition.asBoolean) return@handler
                 if (onlyMove && !player.input.keyPresses.anyHorizontal) return@handler
 
@@ -92,7 +92,7 @@ internal object VelocityModify : VelocityMode("Modify") {
 
             // Check if velocity is affected by explosion
             is ClientboundExplodePacket if packet.playerKnockback.isPresent && considerExplosion -> {
-                if (chance != 100 && Random.nextInt(100) > chance) return@handler
+                if (!chance.asBoolean) return@handler
                 if (!filter.condition.asBoolean) return@handler
                 if (onlyMove && !player.input.keyPresses.anyHorizontal) return@handler
 
