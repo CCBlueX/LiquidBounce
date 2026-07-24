@@ -20,10 +20,10 @@
 package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.platform.NativeImage
-import org.junit.jupiter.api.Assertions.assertArrayEquals
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertSame
+import kotlin.test.Test
 import java.awt.image.BufferedImage
 
 class RenderExtensionsTest {
@@ -39,7 +39,7 @@ class RenderExtensionsTest {
             val returnedScratch = source.copyToNativeImage(target, width = 2, height = 2)
 
             assertEquals(0, returnedScratch.size)
-            assertArrayEquals(expected, target.pixels)
+            assertContentEquals(expected, target.pixels)
         }
     }
 

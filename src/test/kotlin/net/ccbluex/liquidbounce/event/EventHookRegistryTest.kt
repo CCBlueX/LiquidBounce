@@ -20,12 +20,11 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.fastutil.asShortList
 import net.ccbluex.fastutil.mapToShortArray
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
+import kotlin.test.Test
 import java.util.concurrent.CopyOnWriteArrayList
 
 class EventHookRegistryTest {
@@ -174,16 +173,13 @@ class EventHookRegistryTest {
         registry.addIfAbsent(hook2)
         registry.addIfAbsent(hook3)
 
-        // Test concurrent modification during iteration
-        assertDoesNotThrow {
-            val iterator = registry.snapshot.iterator()
-            while (iterator.hasNext()) {
-                val hook = iterator.next() as EventHook<*>
-                // Try to modify while iterating
-                if (hook.priority.toInt() == 10) {
-                    registry.remove(hook1)
-                    registry.addIfAbsent(TestEventListener.newEventHook(20) { })
-                }
+        val iterator = registry.snapshot.iterator()
+        while (iterator.hasNext()) {
+            val hook = iterator.next() as EventHook<*>
+            // Try to modify while iterating
+            if (hook.priority.toInt() == 10) {
+                registry.remove(hook1)
+                registry.addIfAbsent(TestEventListener.newEventHook(20) { })
             }
         }
     }
@@ -326,9 +322,7 @@ class EventHookRegistryTest {
         }
 
         // Should be a no-op and not throw
-        assertDoesNotThrow {
-            registry.remove(otherListener)
-        }
+        registry.remove(otherListener)
 
         // Registry unchanged
         assertEquals(1, registry.snapshot.size)

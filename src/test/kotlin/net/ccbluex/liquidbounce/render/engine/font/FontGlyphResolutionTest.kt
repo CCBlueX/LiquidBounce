@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.render.engine.font
 
 import kotlinx.coroutines.test.runTest
 import net.ccbluex.liquidbounce.render.FontFace
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
+import kotlin.test.Test
 import java.awt.Font
 
 class FontGlyphResolutionTest {

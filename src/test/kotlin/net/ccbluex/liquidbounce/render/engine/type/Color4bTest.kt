@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.render.engine.type
 
 import net.minecraft.util.ARGB
 import net.minecraft.world.item.DyeColor
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertEquals
+import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class Color4bTest {
 
@@ -65,7 +65,7 @@ class Color4bTest {
 
     @Test
     fun `fromHex with invalid format`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             Color4b.fromHex("FF00")
         }
     }

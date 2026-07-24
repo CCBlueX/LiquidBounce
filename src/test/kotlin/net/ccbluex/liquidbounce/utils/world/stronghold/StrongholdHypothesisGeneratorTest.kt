@@ -19,17 +19,15 @@
 package net.ccbluex.liquidbounce.utils.world.stronghold
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
-import org.junit.jupiter.api.Assertions.assertArrayEquals
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 
 class StrongholdHypothesisGeneratorTest {
 
     companion object {
-        @JvmStatic
-        @BeforeAll
-        fun bootstrapMinecraft() {
+        init {
+            // Stronghold generation reads vanilla bootstrap state without starting the game.
             MinecraftBootstrap.ensureInitialized()
         }
     }
@@ -48,7 +46,7 @@ class StrongholdHypothesisGeneratorTest {
     fun `ring distribution matches vanilla concentric rings`() {
         val ringDistribution = StrongholdHypothesisGenerator.ringDistribution()
 
-        assertArrayEquals(intArrayOf(3, 6, 10, 15, 21, 28, 36, 9), ringDistribution)
+        assertContentEquals(intArrayOf(3, 6, 10, 15, 21, 28, 36, 9), ringDistribution)
     }
 
     @Test
@@ -56,6 +54,6 @@ class StrongholdHypothesisGeneratorTest {
         val generatedA = StrongholdHypothesisGenerator.generate(1, seed = 42L).first()
         val generatedB = StrongholdHypothesisGenerator.generate(1, seed = 42L).first()
 
-        assertArrayEquals(generatedA.chunks, generatedB.chunks)
+        assertContentEquals(generatedA.chunks, generatedB.chunks)
     }
 }

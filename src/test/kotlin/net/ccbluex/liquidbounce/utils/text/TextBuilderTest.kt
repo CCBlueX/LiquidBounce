@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.utils.text
 
 import net.minecraft.ChatFormatting
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class TextBuilderTest {
 

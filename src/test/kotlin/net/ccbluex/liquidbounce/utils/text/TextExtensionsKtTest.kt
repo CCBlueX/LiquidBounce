@@ -19,39 +19,39 @@
 
 package net.ccbluex.liquidbounce.utils.text
 
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class TextExtensionsKtTest {
     @Test
     fun testHideSensitiveAddress() {
         // Should redact subdomains
-        Assertions.assertEquals("<redacted>.liquidbounce.net", "test.liquidbounce.net".hideSensitiveAddress())
-        Assertions.assertEquals(
+        assertEquals("<redacted>.liquidbounce.net", "test.liquidbounce.net".hideSensitiveAddress())
+        assertEquals(
             "<redacted>.liquidbounce.net:12345",
             "test.liquidbounce.net:12345".hideSensitiveAddress()
         )
-        Assertions.assertEquals("<redacted>.liquidbounce.net", "another.test.liquidbounce.net".hideSensitiveAddress())
-        Assertions.assertEquals(
+        assertEquals("<redacted>.liquidbounce.net", "another.test.liquidbounce.net".hideSensitiveAddress())
+        assertEquals(
             "<redacted>.liquidbounce.net:54321",
             "another.test.liquidbounce.net:54321".hideSensitiveAddress()
         )
-        Assertions.assertEquals("<redacted>.liquidproxy.net", "test.liquidproxy.net".hideSensitiveAddress())
-        Assertions.assertEquals("<redacted>.liquidproxy.net:12345", "test.liquidproxy.net:12345".hideSensitiveAddress())
+        assertEquals("<redacted>.liquidproxy.net", "test.liquidproxy.net".hideSensitiveAddress())
+        assertEquals("<redacted>.liquidproxy.net:12345", "test.liquidproxy.net:12345".hideSensitiveAddress())
 
         // Should not change other addresses
-        Assertions.assertEquals("example.com", "example.com".hideSensitiveAddress())
-        Assertions.assertEquals("example.com:12345", "example.com:12345".hideSensitiveAddress())
-        Assertions.assertEquals("localhost", "localhost".hideSensitiveAddress())
-        Assertions.assertEquals("localhost:25565", "localhost:25565".hideSensitiveAddress())
-        Assertions.assertEquals("liquidbounce.net", "liquidbounce.net".hideSensitiveAddress())
-        Assertions.assertEquals("liquidproxy.net", "liquidproxy.net".hideSensitiveAddress())
+        assertEquals("example.com", "example.com".hideSensitiveAddress())
+        assertEquals("example.com:12345", "example.com:12345".hideSensitiveAddress())
+        assertEquals("localhost", "localhost".hideSensitiveAddress())
+        assertEquals("localhost:25565", "localhost:25565".hideSensitiveAddress())
+        assertEquals("liquidbounce.net", "liquidbounce.net".hideSensitiveAddress())
+        assertEquals("liquidproxy.net", "liquidproxy.net".hideSensitiveAddress())
 
         // Edge cases
-        Assertions.assertEquals("<redacted>.liquidbounce.net", ".liquidbounce.net".hideSensitiveAddress())
-        Assertions.assertEquals("<redacted>.liquidproxy.net", ".liquidproxy.net".hideSensitiveAddress())
-        Assertions.assertEquals("", "".hideSensitiveAddress())
-        Assertions.assertEquals(":12345", ":12345".hideSensitiveAddress())
-        Assertions.assertEquals("<redacted>.liquidbounce.net:", "test.liquidbounce.net:".hideSensitiveAddress())
+        assertEquals("<redacted>.liquidbounce.net", ".liquidbounce.net".hideSensitiveAddress())
+        assertEquals("<redacted>.liquidproxy.net", ".liquidproxy.net".hideSensitiveAddress())
+        assertEquals("", "".hideSensitiveAddress())
+        assertEquals(":12345", ":12345".hideSensitiveAddress())
+        assertEquals("<redacted>.liquidbounce.net:", "test.liquidbounce.net:".hideSensitiveAddress())
     }
 }

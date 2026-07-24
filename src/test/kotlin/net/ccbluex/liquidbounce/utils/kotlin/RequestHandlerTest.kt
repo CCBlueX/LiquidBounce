@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.utils.kotlin
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.RequestHandler
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 
 class RequestHandlerTest {
 
@@ -38,7 +38,7 @@ class RequestHandlerTest {
         private val MODULE_4 = TestEventListener("module4")
     }
 
-    @BeforeEach
+    @BeforeTest
     fun resetModules() {
         MODULE_1.running = true
         MODULE_2.running = true

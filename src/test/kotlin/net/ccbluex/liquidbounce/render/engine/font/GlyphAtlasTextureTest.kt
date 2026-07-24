@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import com.mojang.blaze3d.platform.NativeImage
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertSame
+import kotlin.test.Test
 import java.awt.image.BufferedImage
 
 class GlyphAtlasTextureTest {

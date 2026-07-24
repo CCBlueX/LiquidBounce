@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 import java.awt.Font
 
 class MinecraftTextProcessorTest {

@@ -23,11 +23,11 @@ import net.ccbluex.liquidbounce.test.assertVec3Equals
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class PointFindingKtTest {
 
