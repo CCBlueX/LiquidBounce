@@ -490,6 +490,8 @@
   "liquidbounce.module.autoTool.description": "Automatically chooses the best tool in your inventory to mine a block.",
   "liquidbounce.module.autoWalk.description": "Automatically makes you walk in the direction you are facing.",
   "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "Favors a sword when AutoBlock only blocks on danger and you are in danger, so you have a blockable item in hand.",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Prefers a weapon enchanted with Knockback when the target stands next to the void, to push them off the edge.",
   "liquidbounce.module.avoidHazards.description": "Prevents you from walking into blocks that might affect you negatively.",
   "liquidbounce.module.backtrack.description": "Causes targets to lag allowing you to attack them more efficiently.",
   "liquidbounce.module.blink.description": "Makes it look as if you were teleporting to other players.",

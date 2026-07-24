@@ -297,6 +297,8 @@
   "liquidbounce.module.autoTool.description": "Wählt automatisch das beste Werkzeug in deinem Inventar aus, um einen Block abzubauen.",
   "liquidbounce.module.autoWalk.description": "Lässt dich automatisch in die Richtung gehen, in die du blickst.",
   "liquidbounce.module.autoWeapon.description": "Wählt automatisch die beste Waffe in deiner Hotbar aus.",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "Bevorzugt ein Schwert, wenn AutoBlock nur bei Gefahr blockt und du in Gefahr bist, damit du ein blockbares Item in der Hand hast.",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Bevorzugt eine mit Rückstoß verzauberte Waffe, wenn das Ziel an der Leere steht, um es hinabzustoßen.",
   "liquidbounce.module.avoidHazards.description": "Verhindert, dass du auf Blöcke stoßt, die sich negativ auf dich auswirken könnten.",
   "liquidbounce.module.backtrack.description": "Bewirkt, dass Ziele gelaggt werden, sodass du sie effizienter/weiter angreifen kannst.",
   "liquidbounce.module.blink.description": "Lässt es so ausschauen, als würde man sich zu anderen Spielern teleportieren.",

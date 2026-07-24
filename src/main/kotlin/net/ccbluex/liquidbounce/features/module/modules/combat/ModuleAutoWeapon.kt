@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -27,11 +28,14 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.onTarget
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
@@ -39,13 +43,20 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.WeaponType
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
+import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.MaceItem
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.phys.Vec3
+import kotlin.math.cos
+import kotlin.math.floor
+import kotlin.math.sin
 
 /**
  * AutoWeapon module
@@ -65,6 +76,18 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     private val autoShieldBreak by boolean("AutoShieldBreak", true)
     private val autoMace by boolean("AutoMace", true)
+
+    /**
+     * Favor a sword when KillAura AutoBlock only blocks on danger and we are currently in danger,
+     * so there is a blockable item in hand. Applies wherever item blocking exists (1.8 and 1.21.5+).
+     */
+    private val preferBlockingSword by boolean("PreferBlockingSword", true)
+
+    /**
+     * When the target stands next to the void, prefer a weapon enchanted with Knockback to push
+     * them off the edge.
+     */
+    private val prioritizeVoidKnockback by boolean("PrioritizeVoidKnockback", true)
 
     private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
 
@@ -126,6 +149,32 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     private val canMaceSmash
         get() = (!isOlderThanOrEqual1_8 && MaceItem.canSmashAttack(player)) || ModuleMaceKill.enabled
 
+    private val voidCheckCache = Int2BooleanOpenHashMap()
+    private var voidCheckCacheTick = -1
+
+    /**
+     * Distances (in blocks, away from the target along the knockback direction) at which we sample
+     * the landing zone. Knockback throws the target roughly 3+ blocks, so we start right behind its
+     * hitbox and walk outward.
+     */
+    private val voidCheckDistances = doubleArrayOf(1.0, 1.5, 2.0, 2.75, 3.5)
+
+    /**
+     * Yaw offsets (in radians) for the rays we cast away from the target. Knockback has spread and
+     * the target may stand on a narrow strip rather than a solid platform, so we fan out a center
+     * ray plus two angled side rays instead of trusting a single line.
+     */
+    private val voidRayAngles = doubleArrayOf(0.0, 0.30, -0.30)
+
+    /**
+     * How many of the *nearest* samples along a ray must all be void for that ray to count as a
+     * push-into-void. Requiring the closest samples (not just any) avoids false positives from a
+     * far-away pit beyond solid ground the target would actually land on.
+     */
+    private const val VOID_NEAR_SAMPLES = 2
+    private const val VOID_MIN_Y = -64
+    private const val DIRECTION_EPSILON = 1.0E-4
+
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         val entity = event.entity as? LivingEntity ?: return@handler
@@ -168,27 +217,167 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         SilentHotbar.resetSlot(this)
     }
 
+    private fun shouldPrioritizeKnockback(target: LivingEntity): Boolean {
+        val direction = Vec3(target.x - player.x, 0.0, target.z - player.z)
+        if (direction.lengthSqr() < DIRECTION_EPSILON) {
+            return false
+        }
+
+        return isNearVoid(target, direction.normalize())
+    }
+
+    private fun isNearVoid(target: LivingEntity, direction: Vec3): Boolean {
+        val tick = player.tickCount
+        if (voidCheckCacheTick != tick) {
+            voidCheckCache.clear()
+            voidCheckCacheTick = tick
+        }
+
+        val targetId = target.id
+        if (voidCheckCache.containsKey(targetId)) {
+            return voidCheckCache.get(targetId)
+        }
+
+        val result = isNearVoidInDirection(target, direction)
+        voidCheckCache.put(targetId, result)
+        return result
+    }
+
+    private fun isNearVoidInDirection(target: LivingEntity, direction: Vec3): Boolean {
+        val targetY = floor(target.boundingBox.minY).toInt()
+
+        // Fan out several rays away from the target. If any single ray drops straight into the void
+        // over its nearest samples, knockback there sends the target off the edge — so prioritize it.
+        // This catches narrow strips/ledges that a single-ray majority vote would miss.
+        for (angle in voidRayAngles) {
+            val cos = cos(angle)
+            val sin = sin(angle)
+            // Rotate the horizontal direction by [angle] around the Y axis.
+            val dirX = direction.x * cos - direction.z * sin
+            val dirZ = direction.x * sin + direction.z * cos
+
+            if (isVoidAlongRay(targetY, target.x, target.z, dirX, dirZ)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    /**
+     * A ray counts as a push-into-void when its [VOID_NEAR_SAMPLES] closest samples are all over the
+     * void. Requiring the nearest contiguous samples (rather than any) prevents firing when the
+     * target stands on solid ground that merely has a distant pit beyond it.
+     */
+    private fun isVoidAlongRay(targetY: Int, originX: Double, originZ: Double, dirX: Double, dirZ: Double): Boolean {
+        for (i in voidCheckDistances.indices) {
+            val distance = voidCheckDistances[i]
+            val checkX = originX + dirX * distance
+            val checkZ = originZ + dirZ * distance
+
+            val isVoid = isNearVoidAt(targetY, checkX, checkZ)
+            if (i < VOID_NEAR_SAMPLES) {
+                // All of the nearest samples must be void.
+                if (!isVoid) {
+                    return false
+                }
+            } else if (isVoid) {
+                // Past the near zone any additional void sample only reinforces the verdict.
+                return true
+            }
+        }
+
+        // The near samples were all void (and there were no farther samples to contradict it).
+        return true
+    }
+
+    private fun isNearVoidAt(
+        targetY: Int,
+        checkX: Double,
+        checkZ: Double,
+    ): Boolean {
+        val blockX = floor(checkX).toInt()
+        val blockZ = floor(checkZ).toInt()
+        val pos = BlockPos.MutableBlockPos()
+
+        for (y in targetY downTo VOID_MIN_Y) {
+            // A column counts as void only when no block below has a collision shape to stand on.
+            if (!pos.set(blockX, y, blockZ).collisionShape.isEmpty) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    private fun findKnockbackSlot(): HotbarItemSlot? {
+        var bestSlot: HotbarItemSlot? = null
+        var bestLevel = 0
+
+        for (slot in Slots.Hotbar) {
+            val knockbackLevel = slot.itemStack.getEnchantment(Enchantments.KNOCKBACK)
+            if (knockbackLevel <= 0) {
+                continue
+            }
+
+            if (knockbackLevel > bestLevel) {
+                bestLevel = knockbackLevel
+                bestSlot = slot
+                continue
+            }
+
+            if (knockbackLevel == bestLevel && bestSlot != null &&
+                HotbarItemSlot.PREFER_NEARBY.compare(slot, bestSlot) < 0
+            ) {
+                bestSlot = slot
+            }
+        }
+
+        return bestSlot
+    }
+
+    private fun List<WeaponItemFacet>.firstBestMatching(
+        predicate: (WeaponItemFacet) -> Boolean,
+    ): WeaponItemFacet? = filter(predicate).maxOrNull()
+
     private fun determineWeaponSlot(target: LivingEntity?, enforceShield: Boolean = false): HotbarItemSlot? {
         val itemCategorization = ItemCategorization(Slots.Hotbar)
         val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
+        // When AutoBlock only blocks on danger and we are in danger, favor a sword so we can block with it.
+        // Sword blocking is not a 1.8-only feature: it also applies on 1.21.5+ where any item can block.
+        val requiresBlockingSword = preferBlockingSword && isBlocksAttacksExisting &&
+            KillAuraAutoBlock.enabled && KillAuraAutoBlock.onlyWhenInDanger && KillAuraAutoBlock.isInDanger
+        val prioritizeKnockback = prioritizeVoidKnockback && target?.let(::shouldPrioritizeKnockback) == true
 
-        val bestSlot = Slots.Hotbar
+        val weaponFacets = Slots.Hotbar
             .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
-            .filter { itemFacet ->
-                val itemStack = itemFacet.itemStack
-                when {
-                    // A mace's smash attack cannot be blocked by a shield
-                    requiresMace -> WeaponType.MACE.test(itemStack)
-                    // An axe will stun the target if it is blocking with a shield
-                    requiresShield -> WeaponType.AXE.test(itemStack)
-                    // Fall back to a preferred weapon when no special case applies
-                    else -> preferredWeapon.matchesAny(itemStack)
-                }
-            }
-            .maxOrNull()
 
-        return bestSlot?.itemSlot as HotbarItemSlot?
+        val specialSlot = when {
+            // A mace's smash attack cannot be blocked by a shield
+            requiresMace -> weaponFacets.firstBestMatching { WeaponType.MACE.test(it.itemStack) }
+            // An axe will stun the target if it is blocking with a shield
+            requiresShield -> weaponFacets.firstBestMatching { WeaponType.AXE.test(it.itemStack) }
+            // Favor a sword so AutoBlock can block with it when only blocking on danger
+            requiresBlockingSword -> weaponFacets.firstBestMatching { WeaponType.SWORD.test(it.itemStack) }
+            else -> null
+        }
+
+        if (specialSlot != null) {
+            return specialSlot.itemSlot as HotbarItemSlot?
+        }
+
+        if (prioritizeKnockback) {
+            val knockbackSlot = findKnockbackSlot()
+            if (knockbackSlot != null) {
+                return knockbackSlot
+            }
+        }
+
+        val preferredSlot = weaponFacets
+            .firstBestMatching { preferredWeapon.matchesAny(it.itemStack) }
+
+        return preferredSlot?.itemSlot as HotbarItemSlot?
     }
 
     /**

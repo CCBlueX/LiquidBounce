@@ -300,6 +300,8 @@
   "liquidbounce.module.antiVanish.messages.staffDetected": "We have detect a vanished staff member.",
   "liquidbounce.module.antiVanish.messages.allClear": "No vanished player was found.",
   "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "Favors a sword when AutoBlock only blocks on danger and you are in danger, so you have a blockable item in hand.",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Prefers a weapon enchanted with Knockback when the target stands next to the void, to push them off the edge.",
   "liquidbounce.module.derp.description": "Makes it look as if you were derping around.",
   "liquidbounce.command.config.subcommand.load.result.notFoundLocal": "Local configuration file named %s does not exist.",
   "liquidbounce.command.config.subcommand.load.result.failedToLoadLocal": "Failed to load local configuration file named %s.",
