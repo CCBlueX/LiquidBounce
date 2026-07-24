@@ -25,17 +25,15 @@ import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.ValueGroupSerializer
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertInstanceOf
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class ValueGroupJsonChoiceTest {
 
     companion object {
-        @JvmStatic
-        @BeforeAll
-        fun bootstrapMinecraft() {
+        init {
+            // Value deserialization touches vanilla registries before a game instance exists.
             MinecraftBootstrap.ensureInitialized()
         }
     }
@@ -69,7 +67,7 @@ class ValueGroupJsonChoiceTest {
 
         valueGroup.json(choiceDefinition)
 
-        val choice = assertInstanceOf(ModeValueGroup::class.java, valueGroup.inner.single())
+        val choice = assertIs<ModeValueGroup<*>>(valueGroup.inner.single())
         assertEquals(ValueType.CHOICE, choice.valueType)
         assertEquals("URL", choice.activeMode.name)
         assertEquals(listOf("URL", "File"), choice.modes.map(Mode::name))
