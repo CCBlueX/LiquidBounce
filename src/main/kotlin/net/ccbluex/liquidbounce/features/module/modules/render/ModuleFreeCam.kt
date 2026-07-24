@@ -59,7 +59,6 @@ import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.client.CameraType
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import org.lwjgl.glfw.GLFW
@@ -204,7 +203,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         fun update(velocity: Vec3) = set(pos + velocity)
         fun rotation(xDelta: Double, yDelta: Double) = set(
             Rotation(
-                Mth.wrapDegrees(rot.yaw + xDelta.toFloat()),
+                rot.yaw + xDelta.toFloat(),
                 (rot.pitch + yDelta.toFloat()).coerceIn(-90f..90f)
             )
         )
