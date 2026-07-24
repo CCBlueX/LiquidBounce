@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.utils.math
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class ShapeExtensionsTest {
 

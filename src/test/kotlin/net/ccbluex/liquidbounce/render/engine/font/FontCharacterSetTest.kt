@@ -22,11 +22,11 @@ package net.ccbluex.liquidbounce.render.engine.font
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import kotlinx.coroutines.test.runTest
 import net.ccbluex.liquidbounce.render.FontFace
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
+import kotlin.test.Test
 import java.awt.Font
 
 class FontCharacterSetTest {

@@ -20,6 +20,7 @@
 import com.github.gradle.node.npm.task.NpmTask
 import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
@@ -165,12 +166,9 @@ dependencies {
     jij(libs.fastutil4k.moreCollections)
 
     // Test libraries
-//    testImplementation(kotlin("test"))
-//    testImplementation(libs.fabric.loader.junit)
+    testImplementation(kotlin("test"))
+    testImplementation(libs.fabric.loader.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(platform(libs.junit.bom))
-    testImplementation(libs.junit.jupiter)
-    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 addResolvedDependencies(jij, "compileOnly", "include", "api")
@@ -232,24 +230,32 @@ tasks.processResources {
 
 // The following code will include the theme into the build
 
+// The plugin uses global tools when download=false, so include their actual versions in the cache key.
+val nodeVersion = providers.exec {
+    commandLine("node", "--version")
+}.standardOutput.asText.map(String::trim)
+val npmVersion = providers.exec {
+    commandLine("npm", "--version")
+}.standardOutput.asText.map(String::trim)
+
 tasks.register<NpmTask>("npmInstallTheme") {
+    description = "Installs the locked dependencies for the web theme"
     workingDir = file("src-theme")
     args.set(listOf("ci"))
-    doLast {
-        logger.info("Successfully installed dependencies for theme")
-    }
+
     inputs.files("src-theme/package.json", "src-theme/package-lock.json")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
     outputs.dir("src-theme/node_modules")
 }
 
 tasks.register<NpmTask>("buildTheme") {
+    description = "Builds the distributable web theme assets"
     dependsOn("npmInstallTheme")
     workingDir = file("src-theme")
     args.set(listOf("run", "build"))
-    doLast {
-        logger.info("Successfully build theme")
-    }
 
+    inputs.property("nodeVersion", nodeVersion)
+    inputs.property("npmVersion", npmVersion)
     inputs.files(
         "src-theme/package.json",
         "src-theme/package-lock.json",
@@ -258,10 +264,11 @@ tasks.register<NpmTask>("buildTheme") {
         "src-theme/tsconfig.json",
         "src-theme/tsconfig.node.json",
         "src-theme/vite.config.ts",
-    )
-    inputs.dir("src-theme/src")
-    inputs.dir("src-theme/public")
+    ).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir("src-theme/src").withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir("src-theme/public").withPathSensitivity(PathSensitivity.RELATIVE)
     outputs.dir("src-theme/dist")
+    outputs.cacheIf("Theme output is reproducible for locked dependencies and tool versions") { true }
 }
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
@@ -279,6 +286,30 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
+    // Prevent macOS AWT from starting a native window session during font tests.
+    systemProperty("java.awt.headless", "true")
+    systemProperty(
+        "fabric.debug.disableModIds",
+        arrayOf(
+            // ImmediatelyFast's platform service requires a fully initialized Fabric game process.
+            "immediatelyfast",
+            // Avoid loading Fabric Language Kotlin's nested Kotlin runtime alongside Gradle's test runtime.
+            "org_jetbrains_kotlin_kotlin-reflect",
+            "org_jetbrains_kotlin_kotlin-stdlib",
+            "org_jetbrains_kotlin_kotlin-stdlib-jdk7",
+            "org_jetbrains_kotlin_kotlin-stdlib-jdk8",
+        ).joinToString(","),
+    )
+    // Let Knot delegate Kotlin Test and the Kotlin runtime to JUnit's parent class loader.
+    // Resolve the classpath at execution time so dependency-report tasks can configure normally.
+    doFirst {
+        systemProperty(
+            "fabric.systemLibraries",
+            configurations.testRuntimeClasspath.get()
+                .filter { it.name.startsWith("kotlin-") }
+                .joinToString(File.pathSeparator),
+        )
+    }
 }
 
 // Detekt check
@@ -297,10 +328,8 @@ tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
     setSource(files(rootDir))
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     baseline.set(file("$rootDir/config/detekt/baseline.xml"))
-    include("**/*.kt")
-    include("**/*.kts")
-    exclude("**/resources/**")
-    exclude("**/build/**")
+    include("**/*.kt", "**/*.kts")
+    exclude("**/resources/**", "**/build/**")
 }
 
 // i18n check
