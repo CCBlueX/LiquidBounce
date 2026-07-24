@@ -148,7 +148,7 @@ public enum VfpCompatibility {
         }
     }
 
-    public boolean isOlderThan1_12_2() {
+    public boolean isOlderThanOrEqual1_12_2() {
         try {
             var version = ViaFabricPlus.getImpl().getTargetVersion();
 
@@ -159,13 +159,13 @@ public enum VfpCompatibility {
         }
     }
 
-    public boolean isOlderThanOrEqual1_12_2() {
+    public boolean isOlderThan1_21_2() {
         try {
             var version = ViaFabricPlus.getImpl().getTargetVersion();
 
-            return version.olderThanOrEqualTo(ProtocolVersion.v1_12_2);
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_21_2);
         } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.12.2", throwable);
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.21.2(3)", throwable);
             return false;
         }
     }

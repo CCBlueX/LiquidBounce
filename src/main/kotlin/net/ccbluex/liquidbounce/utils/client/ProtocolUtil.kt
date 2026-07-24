@@ -138,9 +138,9 @@ val isOlderThanOrEqual1_12_2: Boolean
 val isOlderThan1_21_2: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThan1_12_2
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThan1_21_2
     }.onFailure {
-        logger.error("Failed to check if the server is using 1.12.2", it)
+        logger.error("Failed to check if the server is using 1.21.2(3)", it)
     }.getOrDefault(false)
 
 /**
