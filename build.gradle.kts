@@ -235,7 +235,9 @@ val nodeVersion = providers.exec {
     commandLine("node", "--version")
 }.standardOutput.asText.map(String::trim)
 val npmVersion = providers.exec {
-    commandLine("npm", "--version")
+    // On Windows, CreateProcess cannot launch bare "npm" (a .cmd shim); node-gradle uses npm.cmd as well.
+    val npmExecutable = if (System.getProperty("os.name").lowercase().contains("windows")) "npm.cmd" else "npm"
+    commandLine(npmExecutable, "--version")
 }.standardOutput.asText.map(String::trim)
 
 tasks.register<NpmTask>("npmInstallTheme") {
