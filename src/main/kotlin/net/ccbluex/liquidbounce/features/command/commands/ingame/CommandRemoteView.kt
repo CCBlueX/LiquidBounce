@@ -57,9 +57,9 @@ object CommandRemoteView : Command.Factory, MinecraftShortcuts {
         )
         .handler {
             val name = args[0] as String
-            for (entity in mc.level!!.entitiesForRendering()) {
+            for (entity in world.players()) {
                 if (name.equals(entity.scoreboardName, true)) {
-                    if (mc.cameraEntity == entity) {
+                    if (mc.cameraEntity === entity) {
                         chat(
                             regular(command.result("alreadyViewing", variable(entity.scoreboardName))),
                             metadata = MessageMetadata(id = "CRemoteView#info")

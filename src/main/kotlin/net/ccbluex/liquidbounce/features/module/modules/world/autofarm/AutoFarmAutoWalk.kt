@@ -30,6 +30,9 @@ import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.filter
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.item.BoneMealItem
 import net.minecraft.world.phys.Vec3
@@ -41,7 +44,7 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
     // Makes the player move to farmland blocks where there is a need for crop replacement
     private val toPlant by boolean("ToPlant", true, aliases = listOf("ToPlace"))
 
-    private val toItems = object : ToggleableValueGroup(this, "ToItems", true) {
+    private object ToItems : ToggleableValueGroup(this, "ToItems", true) {
         private val range by float("Range", 20f, 8f..64f).onChanged {
             rangeSquared = it.sq()
         }
@@ -58,7 +61,7 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
     }
 
     init {
-        tree(toItems)
+        tree(ToItems)
     }
 
     private var invHadSpace = true
@@ -101,7 +104,7 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
     private fun findWalkTarget(invHasSpace: Boolean): Vec3? {
         val blockTarget = findWalkToBlock()
 
-        if (toItems.enabled && invHasSpace) {
+        if (ToItems.enabled && invHasSpace) {
             val playerPos = player.position()
             val itemTarget = findWalkToItem() ?: return blockTarget
             blockTarget ?: return itemTarget
@@ -114,15 +117,15 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
         }
     }
 
-    private fun findWalkToItem(): Vec3? = world.entitiesForRendering().filter {
-        it is ItemEntity && toItems.shouldPickUp(it)
-    }.weightedMinByOrNullAtMost(toItems.rangeSquared.toDouble()) {
-        it.distanceToSqr(player)
-    }?.position()
+    private fun findWalkToItem(): Vec3? = world.entityGetter
+        .filter(EntityTypes.ITEM, ToItems::shouldPickUp)
+        .weightedMinByOrNullAtMost(ToItems.rangeSquared.toDouble()) {
+            it.distanceToSqr(player)
+        }?.position()
 
     override fun createNavigationContext(): Vec3? {
         val invHasSpace = hasInventorySpace()
-        if (!invHasSpace && invHadSpace && toItems.enabled) {
+        if (!invHasSpace && invHadSpace && ToItems.enabled) {
             notification("Inventory is Full", "AutoFarm will no longer ", NotificationEvent.Severity.ERROR)
             return null
         }

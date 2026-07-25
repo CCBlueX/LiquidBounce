@@ -26,9 +26,11 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.forEach
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
-import net.minecraft.world.entity.item.FallingBlockEntity
+import net.minecraft.world.entity.EntityTypes
 
 object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
     aliases = listOf("BlockUpdateDetector", "FallingBlockESP")
@@ -57,10 +59,8 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         if (Tracking.FALLING_BLOCKS in tracking) {
-            for (entity in world.entitiesForRendering()) {
-                if (entity is FallingBlockEntity) {
-                    renderer.addBlock(entity.blockPosition(), update = false)
-                }
+            world.entityGetter.forEach(EntityTypes.FALLING_BLOCK) {
+                renderer.addBlock(it.blockPosition(), update = false)
             }
         }
         renderer.updateAll()
