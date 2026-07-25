@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.utils.network.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.network.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interactBlock
 import net.ccbluex.liquidbounce.utils.entity.interactBlockLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
@@ -110,6 +111,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     private object OnlyWhenInDanger : ToggleableValueGroup(this, "OnlyWhenInDanger", false) {
         private val tolerance by float("Tolerance", 0.3f, 0f..1f, "blocks")
+        private val forceActiveRange by floatRange("ForceActiveRange", 0f..1f, 0f..6f)
 
         fun isInDanger(): Boolean {
             return this.enabled && targetTracker.targets().any { target ->
@@ -120,12 +122,13 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
                 val eyes = target.eyePosition
                 val lookEnd = eyes.add(target.rotation.directionVector.scale(interactionRange))
-                val toleratedBox = player.boundingBox.inflate(tolerance.toDouble())
+                val toleratedBox = player.box.inflate(tolerance.toDouble())
                 val hitPosition = toleratedBox.firstHit(eyes, lookEnd) ?: return@any false
-                val squaredDistance = eyes.distanceToSqr(hitPosition)
+                val distance = eyes.distanceTo(hitPosition)
 
-                squaredDistance <= range.interactionThroughWallsRange.toDouble().sq() ||
-                    squaredDistance <= interactionRange.sq() && hasLineOfSight(eyes, hitPosition, target)
+                distance in forceActiveRange ||
+                    distance <= range.interactionThroughWallsRange ||
+                    distance <= interactionRange && hasLineOfSight(eyes, hitPosition, target)
             }
         }
     }
