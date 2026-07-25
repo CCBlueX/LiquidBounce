@@ -79,8 +79,8 @@ internal object FlyVanilla : Mode("Vanilla") {
 
         player.deltaMovement = player.deltaMovement.withStrafe(speed = hSpeed.toDouble())
         player.deltaMovement.y = when {
-            mc.options.keyJump.isDown -> vSpeed.toDouble()
-            mc.options.keyShift.isDown -> (-vSpeed).toDouble()
+            mc.options.keyJump.isDown && !mc.options.keyShift.isDown -> vSpeed.toDouble()
+            mc.options.keyShift.isDown && !mc.options.keyJump.isDown -> (-vSpeed).toDouble()
             else -> glide.toDouble()
         }
 
