@@ -18,9 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.forEachFloat
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
@@ -40,7 +39,8 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.math.vector2f
@@ -54,9 +54,9 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 /**
- * Rotations module
+ * Debug module
  *
- * Allows you to see server-sided rotations.
+ * Only of interest to developers.
  */
 
 object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
@@ -88,10 +88,11 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
                 .getSimulationForLocalPlayer()
                 .getSnapshotsBetween(0 until this.ticksToPredict)
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 drawLineStrip(
                     Color4b.BLUE.argb,
-                    positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3f() },
+                    positions = MutableVertexList(cachedPositions.size)
+                        .addAllRelativeToCamera(cachedPositions, camera) { it.pos },
                 )
             }
         }
@@ -163,12 +164,15 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     @JvmRecord
     private data class DebuggedKey(val owner: DebuggedOwner, val name: String)
 
+    private val KEY_COMPARATOR = compareBy<DebuggedKey> { it.owner.debugOwnerId }
+        .thenComparing(DebuggedKey::name)
+
     @JvmRecord
     private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
 
-    private val debugParameters = Object2ObjectOpenHashMap<DebuggedKey, ParameterCapture>()
+    private val debugParameters = Object2ObjectRBTreeMap<DebuggedKey, ParameterCapture>(KEY_COMPARATOR)
 
-    private val debuggedGeometry = Object2ObjectOpenHashMap<DebuggedKey, DebuggedGeometry>()
+    private val debuggedGeometry = Object2ObjectRBTreeMap<DebuggedKey, DebuggedGeometry>(KEY_COMPARATOR)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -176,7 +180,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
             return@handler
         }
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             debuggedGeometry.values.forEach { geometry ->
                 geometry.render()
             }

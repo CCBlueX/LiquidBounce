@@ -22,7 +22,6 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.filterIsInstanceTo
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -38,8 +37,6 @@ import net.ccbluex.liquidbounce.utils.text.textOf
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.item.PrimedTnt
-import java.text.DecimalFormat
-import java.util.function.IntFunction
 import kotlin.math.sin
 
 /**
@@ -61,18 +58,6 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
         val ownerName by boolean("OwnerName", true)
         val timeUnit by enumChoice("TimeUnit", TimeUnit.TICKS)
 
-        enum class TimeUnit(override val tag: String): Tagged, IntFunction<String> {
-            TICKS("Ticks"),
-            SECONDS("Seconds");
-
-            override fun apply(t: Int): String = when (this) {
-                TICKS -> t.toString()
-                SECONDS -> SECONDS_FORMAT.format(t * 0.05)
-            }
-        }
-
-        private val SECONDS_FORMAT = DecimalFormat("0.00s")
-
         @Suppress("unused")
         private val render2DHandler = handler<OverlayRenderEvent> { event ->
             for (tnt in tntEntities) {
@@ -83,7 +68,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
                 // Yellow #ffff00 -> Red #ff0000
                 val color = Color4b(255, Mth.floor(255F * tnt.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
 
-                var text = timeUnit.apply(tnt.fuse).asPlainText(Style.EMPTY + color)
+                var text = timeUnit.format(tnt.fuse).asPlainText(Style.EMPTY + color)
 
                 if (ownerName) {
                     tnt.owner?.name?.let {

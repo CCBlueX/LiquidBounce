@@ -53,7 +53,7 @@ object CommandCoordinates : Command.Factory {
                     )
                     .handler {
                         val name = args[0] as String
-                        network.sendChat("/msg $name ${getCoordinates(fancy = true)}")
+                        network.sendCommand("msg $name ${getCoordinates(fancy = true)}")
                     }
                     .build()
             )

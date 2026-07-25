@@ -17,18 +17,19 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.kotlin
+package net.ccbluex.liquidbounce.render.mesh
 
-import net.ccbluex.liquidbounce.utils.math.high32
-import net.ccbluex.liquidbounce.utils.math.longFrom32
-import net.ccbluex.liquidbounce.utils.math.low32
+import com.mojang.blaze3d.vertex.VertexConsumer
 
-@JvmInline
-value class IntIntValuePair private constructor(private val bits: Long) {
-    constructor(left: Int, right: Int): this(longFrom32(left, right))
-    inline val left get() = component1()
-    inline val right get() = component2()
+/**
+ * Scoped vertex writing target owned by [BatchCollector].
+ *
+ * Close the scope after writing vertices so collector-specific draw finalization can run.
+ */
+sealed interface MeshBuildScope : AutoCloseable {
 
-    operator fun component1(): Int = bits.high32()
-    operator fun component2(): Int = bits.low32()
+    val consumer: VertexConsumer
+
+    override fun close()
+
 }

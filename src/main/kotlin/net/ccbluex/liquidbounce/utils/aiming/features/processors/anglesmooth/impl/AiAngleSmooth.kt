@@ -51,7 +51,7 @@ import kotlin.time.measureTimedValue
 class AiAngleSmooth(
     parent: ModeValueGroup<*>,
     val fallback: AngleSmooth
-) : AngleSmooth("AI", parent, arrayListOf("Minarai")) {
+) : AngleSmooth("AI", parent, listOf("Minarai")) {
 
     private val choices = modes("Model", 0) { local ->
         models.onChanged { _ ->
@@ -62,11 +62,11 @@ class AiAngleSmooth(
     }
 
     private class OutputMultiplier : ValueGroup("OutputMultiplier") {
-        var yawMultiplier by float("Yaw", 1.5f, 0.5f..2f)
-        var pitchMultiplier by float("Pitch", 1f, 0.5f..2f)
+        val yawMultiplier by float("Yaw", 1.5f, 0.5f..2f)
+        val pitchMultiplier by float("Pitch", 1f, 0.5f..2f)
     }
 
-    private var correctionMode = modes(this, "Correction") {
+    private val correctionMode = modes(this, "Correction") {
         arrayOf(
             /**
              * Works best with the model, as it allows for the most natural movement.

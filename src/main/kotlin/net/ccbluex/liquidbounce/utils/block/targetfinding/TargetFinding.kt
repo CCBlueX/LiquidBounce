@@ -218,7 +218,7 @@ private fun findBestTargetPlanForTargetPosition(
     return options.minByOrNull {
         val targetRotation = Rotation.lookingAt(point = it.targetPositionOnBlock, from = playerEyePositionOnPlacement)
 
-        currentRotation.angleTo(targetRotation)
+        currentRotation.rotationDeltaLengthTo(targetRotation)
     }
 }
 

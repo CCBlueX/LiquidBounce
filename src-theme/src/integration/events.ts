@@ -64,6 +64,7 @@ export interface EventMap {
     subtitle: TitleEventSubtitle;
     titleFade: TitleEventFade;
     clearTitle: TitleEventClear;
+    closedCaptions: ClosedCaptionsEvent;
 
     //GameEvents.kt
     key: KeyEvent;
@@ -119,10 +120,16 @@ export interface ScaleFactorChangeEvent {
     scaleFactor: number;
 }
 
-export interface ComponentsUpdateEvent {
-    id: string | null;
-    components: HudComponent[];
-}
+export type ComponentsUpdateEvent =
+    | {
+        source: "native";
+        components: HudComponent[];
+    }
+    | {
+        source: "theme";
+        themeId: string;
+        components: HudComponent[];
+    };
 
 export interface ClientPlayerDataEvent {
     playerData: PlayerData;
@@ -276,6 +283,17 @@ export interface TitleEventFade {
 
 export interface TitleEventClear {
     reset: boolean;
+}
+
+export interface ClosedCaptionsEvent {
+    entries: ClosedCaptionEntry[];
+}
+
+export interface ClosedCaptionEntry {
+    text: TextComponent | string;
+    direction: "NONE" | "LEFT" | "RIGHT";
+    textColor: number;
+    backgroundColor: number;
 }
 
 export interface VirtualScreenEvent {

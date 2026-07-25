@@ -18,14 +18,12 @@
  */
 package net.ccbluex.liquidbounce.render.engine.type
 
-import net.ccbluex.liquidbounce.utils.math.high32
-import net.ccbluex.liquidbounce.utils.math.longFrom32
-import net.ccbluex.liquidbounce.utils.math.low32
+import net.ccbluex.liquidbounce.utils.kotlin.FloatFloatValuePair
 
 @JvmInline
-value class UV2f private constructor(private val bits: Long) {
-    val u: Float get() = Float.fromBits(bits.high32())
-    val v: Float get() = Float.fromBits(bits.low32())
+value class UV2f private constructor(private val pair: FloatFloatValuePair) {
+    val u: Float get() = pair.left
+    val v: Float get() = pair.right
 
-    constructor(u: Float, v: Float) : this(longFrom32(u.toRawBits(), v.toRawBits()))
+    constructor(u: Float, v: Float) : this(FloatFloatValuePair(u, v))
 }

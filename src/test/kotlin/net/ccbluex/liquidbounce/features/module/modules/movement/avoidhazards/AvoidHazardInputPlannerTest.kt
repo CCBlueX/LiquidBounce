@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards
 
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class AvoidHazardInputPlannerTest {
 

@@ -16,21 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.io
 
-import io.netty.bootstrap.AbstractBootstrap
-import io.netty.channel.Channel
-import net.minecraft.server.network.EventLoopGroupHolder
-
-/**
- * Shortcut for Netty client [io.netty.bootstrap.Bootstrap],
- * using shared [io.netty.channel.EventLoopGroup] from [EventLoopGroupHolder]
- */
-internal fun <B : AbstractBootstrap<B, Channel>> AbstractBootstrap<B, Channel>.clientChannelAndGroup(
-    useEpoll: Boolean = true
-): B {
-    val networkingBackend = EventLoopGroupHolder.remote(useEpoll)
-    return channel(networkingBackend.channelCls())
-            .group(networkingBackend.eventLoopGroup())
-}
-
+@org.jspecify.annotations.NullMarked
+package net.ccbluex.liquidbounce.render.engine;

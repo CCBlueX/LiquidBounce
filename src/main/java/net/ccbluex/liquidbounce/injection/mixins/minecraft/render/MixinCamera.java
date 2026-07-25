@@ -84,10 +84,11 @@ public abstract class MixinCamera {
         var freeLook = ModuleFreeLook.INSTANCE.getRunning();
         var freeLockInvertedView = ModuleFreeLook.INSTANCE.isInvertedView();
         var qps = ModuleQuickPerspectiveSwap.INSTANCE.getRunning();
-        var rearView = qps && ModuleQuickPerspectiveSwap.INSTANCE.getRearView() && !freeLook && !this.detached;
+        var rearView = qps && ModuleQuickPerspectiveSwap.INSTANCE.getRearView() && !freeLook
+            && this.minecraft.options.getCameraType().isFirstPerson();
 
         if (freeLook || qps) {
-            if (!rearView) this.detached = true;
+            this.detached = true;
 
             if (freeLook) {
                 var cameraYaw = ModuleFreeLook.INSTANCE.getCameraYaw();
@@ -100,16 +101,14 @@ public abstract class MixinCamera {
                 }
             }
 
-            if (qps) {
+            if (qps && !rearView) {
                 setRotation(yRot + 180.0f, freeLook && !freeLockInvertedView ? xRot : -xRot);
             }
 
             float scale = this.entity instanceof LivingEntity livingEntity ? livingEntity.getScale() : 1.0F;
             float desiredCameraDistance = PerspectiveEvent.INSTANCE.getDistance();
 
-            if (!rearView) {
-                move(-getMaxZoom(desiredCameraDistance * scale), 0.0f, 0.0f);
-            }
+            move(-getMaxZoom(desiredCameraDistance * scale), 0.0f, 0.0f);
 
             ci.cancel();
             return;
@@ -232,6 +231,10 @@ public abstract class MixinCamera {
 
     @ModifyExpressionValue(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
     private float hookCameraDistance(float original, float partialTicks) {
+        if (!PerspectiveEvent.INSTANCE.getNoClip()) {
+            return original;
+        }
+
         final float lastDistance = PerspectiveEvent.INSTANCE.getLastDistance();
         final float distance = PerspectiveEvent.INSTANCE.getDistance();
         return distance != lastDistance ? Mth.lerp(partialTicks, lastDistance, distance) : distance;

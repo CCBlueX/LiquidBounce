@@ -16,21 +16,25 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.render
 
-@file:Suppress("FunctionName", "PropertyName", "NOTHING_TO_INLINE")
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderSetupAccessor
+import net.minecraft.client.renderer.rendertype.OutputTarget
+import net.minecraft.client.renderer.rendertype.RenderSetup
 
-package net.ccbluex.liquidbounce.additions
+fun RenderSetup.withOutputTarget(outputTarget: OutputTarget): RenderSetup {
+    this as MixinRenderSetupAccessor
 
-import net.minecraft.client.renderer.MappableRingBuffer
-
-interface MappableRingBufferAddition {
-    fun `liquidBounce$isSafeForClose`(): Boolean
-
-    fun `liquidBounce$awaitAndRotate`()
+    return MixinRenderSetupAccessor.`liquid_bounce$invokeInit`(
+        this.getPipeline(),
+        this.getTextures(),
+        this.getUseLightmap(),
+        this.getUseOverlay(),
+        this.getLayeringTransform(),
+        outputTarget,
+        this.getTextureTransform(),
+        this.getOutlineProperty(),
+        this.getAffectsCrumbling(),
+        this.getSortOnUpload()
+    )
 }
-
-inline val MappableRingBuffer.isSafeForClose
-    get() = (this as MappableRingBufferAddition).`liquidBounce$isSafeForClose`()
-
-inline fun MappableRingBuffer.awaitAndRotate() =
-    (this as MappableRingBufferAddition).`liquidBounce$awaitAndRotate`()
