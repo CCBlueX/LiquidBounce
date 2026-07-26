@@ -212,8 +212,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
     private fun findAndBuildSimulatedEntities(): List<Pair<Entity, SimulatedPlayerCache?>> {
         return world.entitiesForRendering().filter { entity ->
-            entity != player &&
-                entity.shouldBeAttacked() &&
+            entity.shouldBeAttacked() &&
                 Line(player.eyePosition, player.rotation.directionVector)
                     .distanceToSqr(entity.position()) < 10.0 * 10.0
         }.map { entity ->
