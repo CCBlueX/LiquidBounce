@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityAccessor;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
@@ -451,32 +452,32 @@ public abstract class MixinMinecraft {
     private HitResult updateTargetedEntityInvoke(LocalPlayer instance, float a, Entity cameraEntity, Operation<HitResult> original) {
         HitResult result;
         if (ModuleFreeCam.shouldCameraInteractActive()) {
-            final Vec3 position = cameraEntity.position;
+            final Vec3 position = cameraEntity.position();
             final Vec3 lastPosition = new Vec3(cameraEntity.xo, cameraEntity.yo, cameraEntity.zo);
-            final float yaw = cameraEntity.getYRot();
-            final float pitch = cameraEntity.getXRot();
-            final float lastYaw = cameraEntity.yRotO;
-            final float lastPitch = cameraEntity.xRotO;
+            final float yRot = cameraEntity.getYRot();
+            final float xRot = cameraEntity.getXRot();
+            final float yRot0 = cameraEntity.yRotO;
+            final float xRot0 = cameraEntity.xRotO;
 
-            cameraEntity.position = ModuleFreeCam.PositionState.pos.subtract(0.0, cameraEntity.getEyeHeight(), 0.0);
+            ((MixinEntityAccessor) cameraEntity).position(ModuleFreeCam.PositionState.pos.subtract(0.0, cameraEntity.getEyeHeight(), 0.0));
             cameraEntity.xo = ModuleFreeCam.PositionState.lastPos.x;
             cameraEntity.yo = ModuleFreeCam.PositionState.lastPos.y - cameraEntity.getEyeHeight();
             cameraEntity.zo = ModuleFreeCam.PositionState.lastPos.z;
-            cameraEntity.yRot = ModuleFreeCam.PositionState.rot.yRot();
-            cameraEntity.xRot = ModuleFreeCam.PositionState.rot.xRot();
+            ((MixinEntityAccessor) cameraEntity).yRot(ModuleFreeCam.PositionState.rot.yRot());
+            ((MixinEntityAccessor) cameraEntity).xRot(ModuleFreeCam.PositionState.rot.xRot());
             cameraEntity.yRotO = ModuleFreeCam.PositionState.lastRot.yRot();
             cameraEntity.xRotO = ModuleFreeCam.PositionState.lastRot.xRot();
 
             result = original.call(instance, a, cameraEntity);
 
-            cameraEntity.position = position;
+            ((MixinEntityAccessor) cameraEntity).position(position);
             cameraEntity.xo = lastPosition.x;
             cameraEntity.yo = lastPosition.y;
             cameraEntity.zo = lastPosition.z;
-            cameraEntity.yRot = yaw;
-            cameraEntity.xRot = pitch;
-            cameraEntity.yRotO = lastPitch;
-            cameraEntity.xRotO = lastYaw;
+            ((MixinEntityAccessor) cameraEntity).yRot(yRot);
+            ((MixinEntityAccessor) cameraEntity).xRot(xRot);
+            cameraEntity.yRotO = yRot0;
+            cameraEntity.xRotO = xRot0;
         } else {
             result = original.call(instance, a, cameraEntity);
         }

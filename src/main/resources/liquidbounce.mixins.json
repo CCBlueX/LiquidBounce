@@ -51,6 +51,7 @@
     "minecraft.entity.MixinClientAvatarState",
     "minecraft.entity.MixinCustomHeadLayer",
     "minecraft.entity.MixinEntity",
+    "minecraft.entity.MixinEntityAccessor",
     "minecraft.entity.MixinEntityFluidInteraction",
     "minecraft.entity.MixinEntityFluidInteractionAccessor",
     "minecraft.entity.MixinEntityFluidInteractionTrackerAccessor",

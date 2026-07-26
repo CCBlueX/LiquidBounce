@@ -203,8 +203,8 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         fun update(velocity: Vec3) = set(pos + velocity)
         fun rotation(xDelta: Double, yDelta: Double) = set(
             Rotation(
-                rot.yaw + xDelta.toFloat(),
-                (rot.pitch + yDelta.toFloat()).coerceIn(-90f..90f)
+                rot.yRot + xDelta.toFloat(),
+                (rot.xRot + yDelta.toFloat()).coerceIn(-90f..90f)
             )
         )
         fun interpolate(partialTicks: Float) = lastPos.lerp(pos, partialTicks.toDouble())
