@@ -47,7 +47,7 @@ object AntiVoidInteractMode : AntiVoidMode("Interact") {
 
     private val yMotionThreshold by float("YMotionThreshold", -0.5f, -1.0f..-0.1f)
 
-    val slotResetDelay by intRange("SlotResetDelay", 4..6, 0..40, "ticks")
+    private val slotResetDelay by intRange("SlotResetDelay", 4..6, 0..40, "ticks")
 
     /**
      * Whitelist of items that can be used to prevent void death.
