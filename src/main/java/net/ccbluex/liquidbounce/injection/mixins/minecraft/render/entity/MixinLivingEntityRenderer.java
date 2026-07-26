@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
@@ -74,11 +73,6 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
             if (rotation != null && prevRotation != null) {
                 return new Pair<>(prevRotation, rotation);
             }
-        }
-
-        if (ModuleFreeCam.INSTANCE.getRunning()) {
-            var serverRotation = RotationManager.INSTANCE.getServerRotation();
-            return new Pair<>(serverRotation, serverRotation);
         }
 
         return null;
