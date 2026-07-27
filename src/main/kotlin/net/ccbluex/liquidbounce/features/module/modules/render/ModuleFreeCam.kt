@@ -320,7 +320,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         val target = traceFromPoint(
             range = 200.0,
             start = cameraPosition,
-            direction = mc.cameraEntity?.rotation?.directionVector ?: return null
+            direction = PositionState.rot.directionVector
         )
 
         return target.location
