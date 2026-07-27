@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.world.item.Items
 
 /**
- * AntiVoid Interact mode.
+ * AntiVoid UseItem mode.
  *
  * When the player is falling into the void with no way to recover, a configured item
  * from the hotbar is used. This is useful on servers with power-ups where using
@@ -40,7 +40,7 @@ import net.minecraft.world.item.Items
  * 2. the player's y motion is fast enough to be below [yMotionThreshold].
  * 3. the simulation predicts the player will not reach solid ground within 40 ticks.
  */
-object AntiVoidInteractMode : AntiVoidMode("Interact") {
+object AntiVoidUseItemMode : AntiVoidMode("UseItem") {
 
     override val parent: ModeValueGroup<*>
         get() = ModuleAntiVoid.mode
