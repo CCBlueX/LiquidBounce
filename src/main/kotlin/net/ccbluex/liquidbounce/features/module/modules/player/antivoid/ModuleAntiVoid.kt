@@ -47,7 +47,7 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
             AntiVoidGhostBlockMode,
             AntiVoidFlagMode,
             AntiVoidBlinkMode,
-            AntiVoidInteractMode
+            AntiVoidInteractMode,
         )
     )
 
