@@ -66,6 +66,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.component.AttackRange;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -453,13 +454,16 @@ public abstract class MixinMinecraft {
         HitResult result;
         if (ModuleFreeCam.shouldCameraInteractActive()) {
             final Vec3 position = cameraEntity.position();
+            final AABB boundingBox = cameraEntity.getBoundingBox();
             final Vec3 lastPosition = new Vec3(cameraEntity.xo, cameraEntity.yo, cameraEntity.zo);
             final float yRot = cameraEntity.getYRot();
             final float xRot = cameraEntity.getXRot();
             final float yRot0 = cameraEntity.yRotO;
             final float xRot0 = cameraEntity.xRotO;
 
-            ((MixinEntityAccessor) cameraEntity).position(ModuleFreeCam.PositionState.pos.subtract(0.0, cameraEntity.getEyeHeight(), 0.0));
+            final Vec3 cameraPosition = ModuleFreeCam.PositionState.pos.subtract(0.0, cameraEntity.getEyeHeight(), 0.0);
+            ((MixinEntityAccessor) cameraEntity).position(cameraPosition);
+            cameraEntity.setBoundingBox(boundingBox.move(cameraPosition.subtract(position)));
             cameraEntity.xo = ModuleFreeCam.PositionState.lastPos.x;
             cameraEntity.yo = ModuleFreeCam.PositionState.lastPos.y - cameraEntity.getEyeHeight();
             cameraEntity.zo = ModuleFreeCam.PositionState.lastPos.z;
@@ -468,16 +472,19 @@ public abstract class MixinMinecraft {
             cameraEntity.yRotO = ModuleFreeCam.PositionState.lastRot.yRot();
             cameraEntity.xRotO = ModuleFreeCam.PositionState.lastRot.xRot();
 
-            result = original.call(instance, a, cameraEntity);
-
-            ((MixinEntityAccessor) cameraEntity).position(position);
-            cameraEntity.xo = lastPosition.x;
-            cameraEntity.yo = lastPosition.y;
-            cameraEntity.zo = lastPosition.z;
-            ((MixinEntityAccessor) cameraEntity).yRot(yRot);
-            ((MixinEntityAccessor) cameraEntity).xRot(xRot);
-            cameraEntity.yRotO = yRot0;
-            cameraEntity.xRotO = xRot0;
+            try {
+                result = original.call(instance, a, cameraEntity);
+            } finally {
+                ((MixinEntityAccessor) cameraEntity).position(position);
+                cameraEntity.setBoundingBox(boundingBox);
+                cameraEntity.xo = lastPosition.x;
+                cameraEntity.yo = lastPosition.y;
+                cameraEntity.zo = lastPosition.z;
+                ((MixinEntityAccessor) cameraEntity).yRot(yRot);
+                ((MixinEntityAccessor) cameraEntity).xRot(xRot);
+                cameraEntity.yRotO = yRot0;
+                cameraEntity.xRotO = xRot0;
+            }
         } else {
             result = original.call(instance, a, cameraEntity);
         }
