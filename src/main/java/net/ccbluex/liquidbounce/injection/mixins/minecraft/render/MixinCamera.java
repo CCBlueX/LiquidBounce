@@ -83,7 +83,7 @@ public abstract class MixinCamera {
 
     @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"))
     private void hookFreeCamModifiedRotation(Args args, @Local(argsOnly = true, name = "partialTicks") float partialTicks) {
-        if (ModuleFreeCam.PositionState.INSTANCE.getAvailable()) {
+        if (this.entity == this.minecraft.player && ModuleFreeCam.PositionState.INSTANCE.getAvailable()) {
             final Rotation rot = ModuleFreeCam.PositionState.INSTANCE.interpolateRot(partialTicks);
             args.set(0, rot.yaw());
             args.set(1, rot.pitch());

@@ -452,7 +452,7 @@ public abstract class MixinMinecraft {
     @WrapOperation(method = "pick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;raycastHitResult(FLnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/phys/HitResult;"))
     private HitResult updateTargetedEntityInvoke(LocalPlayer instance, float a, Entity cameraEntity, Operation<HitResult> original) {
         HitResult result;
-        if (ModuleFreeCam.shouldCameraInteractActive()) {
+        if (cameraEntity == instance && ModuleFreeCam.shouldCameraInteractActive()) {
             final Vec3 position = cameraEntity.position();
             final AABB boundingBox = cameraEntity.getBoundingBox();
             final Vec3 lastPosition = new Vec3(cameraEntity.xo, cameraEntity.yo, cameraEntity.zo);
