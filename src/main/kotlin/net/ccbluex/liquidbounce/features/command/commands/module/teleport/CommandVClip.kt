@@ -108,7 +108,7 @@ object CommandVClip : Command.Factory {
             newPos = newPos.below()
         }
 
-        for (x in 1 until max) {
+        for (x in 0 until max) {
             // go to the next position in the direction
             newPos = newPos.relative(direction)
 
