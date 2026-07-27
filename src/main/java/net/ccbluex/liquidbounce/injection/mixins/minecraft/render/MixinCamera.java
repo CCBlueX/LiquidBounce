@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -77,6 +79,15 @@ public abstract class MixinCamera {
     @Inject(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V", shift = At.Shift.AFTER))
     private void hookFreeCamModifiedPosition(float partialTicks, CallbackInfo ci) {
         ModuleFreeCam.INSTANCE.applyCameraPosition(this.entity, partialTicks);
+    }
+
+    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"))
+    private void hookFreeCamModifiedRotation(Args args, @Local(argsOnly = true, name = "partialTicks") float partialTicks) {
+        if (this.entity == this.minecraft.player && ModuleFreeCam.PositionState.INSTANCE.getAvailable()) {
+            final Rotation rot = ModuleFreeCam.PositionState.INSTANCE.interpolateRot(partialTicks);
+            args.set(0, rot.yaw());
+            args.set(1, rot.pitch());
+        }
     }
 
     @Inject(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V", shift = At.Shift.AFTER), cancellable = true)

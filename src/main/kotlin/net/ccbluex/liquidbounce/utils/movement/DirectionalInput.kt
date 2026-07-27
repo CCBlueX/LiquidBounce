@@ -19,7 +19,10 @@
 
 package net.ccbluex.liquidbounce.utils.movement
 
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.utils.entity.untransformed
+import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.minecraft.client.Options
 import net.minecraft.client.player.ClientInput
 import net.minecraft.world.entity.player.Input
 
@@ -29,6 +32,13 @@ data class DirectionalInput(
     val left: Boolean,
     val right: Boolean,
 ) {
+
+    constructor(options: Options) : this(
+        ModuleInventoryMove.shouldHandleInputs(options.keyUp) && options.keyUp.isPressedOnAny,
+        ModuleInventoryMove.shouldHandleInputs(options.keyDown) && options.keyDown.isPressedOnAny,
+        ModuleInventoryMove.shouldHandleInputs(options.keyLeft) && options.keyLeft.isPressedOnAny,
+        ModuleInventoryMove.shouldHandleInputs(options.keyRight) && options.keyRight.isPressedOnAny
+    )
 
     constructor(input: ClientInput) : this(
         input.untransformed
