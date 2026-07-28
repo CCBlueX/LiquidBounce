@@ -237,6 +237,12 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
+    @JvmField
+    val LinesDepthTested = newPipeline("lines_depth_tested") {
+        posColorSnippet(PrimitiveTopology.DEBUG_LINES)
+        forWorldRender(noDepthTest = false)
+    }
+
     private val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         relativePosColorSnippet(PrimitiveTopology.DEBUG_LINES)
@@ -268,6 +274,12 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
+    @JvmField
+    val TrianglesDepthTested = newPipeline("triangles_depth_tested") {
+        posColorSnippet(PrimitiveTopology.TRIANGLES)
+        forWorldRender(noDepthTest = false)
+    }
+
     private val TriangleStrip = newPipeline("triangle_strip") {
         posColorSnippet(PrimitiveTopology.TRIANGLE_STRIP)
         forWorldRender(noDepthTest = false)
@@ -285,6 +297,12 @@ object ClientRenderPipelines {
     val Quads = newPipeline("quads") {
         posColorSnippet(PrimitiveTopology.QUADS)
         forWorldRender()
+    }
+
+    @JvmField
+    val QuadsDepthTested = newPipeline("quads_depth_tested") {
+        posColorSnippet(PrimitiveTopology.QUADS)
+        forWorldRender(noDepthTest = false)
     }
 
     private val QuadsRelativeToCamera = newPipeline("quads_relative_to_camera") {

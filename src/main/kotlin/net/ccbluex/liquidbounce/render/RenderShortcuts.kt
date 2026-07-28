@@ -309,8 +309,9 @@ fun WorldRenderEnvironment.drawSquareTexture(
         .setColor(argb)
 }
 
-fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: Int) {
-    drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: Int, noDepthTest: Boolean = true) {
+    val pipeline = if (noDepthTest) ClientRenderPipelines.Triangles else ClientRenderPipelines.TrianglesDepthTested
+    drawCustomMesh(pipeline) { matrix ->
         addVertex(matrix, p1).setColor(argb)
         addVertex(matrix, p2).setColor(argb)
         addVertex(matrix, p3).setColor(argb)
@@ -326,15 +327,18 @@ fun WorldRenderEnvironment.drawBox(
     outlineColor: Color4b? = Color4b.TRANSPARENT,
     faceVertices: Int = -1,
     outlineVertices: Int = -1,
+    noDepthTest: Boolean = true,
 ) {
     if (faceColor != null && !faceColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+        val facePipeline = if (noDepthTest) ClientRenderPipelines.Quads else ClientRenderPipelines.QuadsDepthTested
+        drawCustomMesh(facePipeline) { pose ->
             addBoxFaces(pose.pose(), box, color = faceColor, verticesToUse = faceVertices)
         }
     }
 
     if (outlineColor != null && !outlineColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+        val outlinePipeline = if (noDepthTest) ClientRenderPipelines.Lines else ClientRenderPipelines.LinesDepthTested
+        drawCustomMesh(outlinePipeline) { pose ->
             addBoxOutlines(pose.pose(), box, outlineColor, outlineVertices)
         }
     }
