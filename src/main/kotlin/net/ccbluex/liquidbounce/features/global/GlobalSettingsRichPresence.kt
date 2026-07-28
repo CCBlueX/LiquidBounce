@@ -216,12 +216,7 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
     }
 
     private fun buildText(parts: Set<RichPresencePart>): String {
-        val pieces = RichPresencePart.entries
-            .asSequence()
-            .filter { it in parts }
-            .mapNotNull { it.getText() }
-            .filter { it.isNotBlank() }
-            .toList()
+        val pieces = parts.mapNotNull { it.getText()?.takeIf(String::isNotBlank) }
 
         if (pieces.isEmpty()) {
             return ""
