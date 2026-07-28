@@ -49,10 +49,6 @@ object AntiVoidUseItemMode : AntiVoidMode("UseItem") {
 
     private val slotResetDelay by intRange("SlotResetDelay", 4..6, 0..40, "ticks")
 
-    /**
-     * Whitelist of items that can be used to prevent void death.
-     * The first matching item found in the hotbar/offhand will be used.
-     */
     private val items by items("Items", itemSortedSetOf(Items.MAGMA_CREAM))
     private const val SIMULATION_TICKS = 40
 
@@ -66,9 +62,7 @@ object AntiVoidUseItemMode : AntiVoidMode("UseItem") {
         }
 
         val simulation = PlayerSimulationCache.getSimulationForLocalPlayer()
-        val canReachGround = (1..SIMULATION_TICKS).any { tick ->
-            simulation.getSnapshotAt(tick).onGround
-        }
+        val canReachGround = simulation.getSnapshotsBetween(1..SIMULATION_TICKS).any { it.onGround }
 
         debugParameter("CanReachGround") { canReachGround }
 
