@@ -30,7 +30,7 @@ fastutil4k = "0.2.8"
 discord-ipc = "-SNAPSHOT"
 
 # Recommended mods
-modmenu = "20.0.0-beta.4"
+modmenu = "21.0.0-alpha.1"
 exploit_preventer_api = "1.0.0"
 exploit_preventer_mod = "1.1.0+26.2"
 sodium = "mc26.2-0.9.0-fabric"
