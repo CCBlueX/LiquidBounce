@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
 import net.ccbluex.liquidbounce.utils.item.getOrNull
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
+import net.ccbluex.liquidbounce.render.gui.EntityImageAtlas
 import net.minecraft.core.BlockPos
 import net.minecraft.core.DefaultedRegistry
 import net.minecraft.core.Registry
@@ -204,6 +205,8 @@ private fun Route.getRegistry() = get {
         "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id"
     fun effectTextureUrl(id: Identifier) =
         "${ClientInteropServer.url}/api/v1/client/resource/effectTexture?id=$id"
+    fun entityTextureUrl(id: Identifier) =
+        "${ClientInteropServer.url}/api/v1/client/resource/entityTexture?id=$id"
 
     val registryName = call.parameters["name"]
         ?: call.forbidden("Missing registry name parameter")
@@ -258,7 +261,14 @@ private fun Route.getRegistry() = get {
         }
 
         "entity_type" -> {
-            BuiltInRegistries.ENTITY_TYPE.buildOutput(name = { _, id -> id.description.string })
+            BuiltInRegistries.ENTITY_TYPE.buildOutput(
+                name = { _, id -> id.description.string },
+                iconUrl = { id ->
+                    BuiltInRegistries.ENTITY_TYPE.getValue(id)?.takeIf {
+                        it in EntityImageAtlas.supportedEntityTypes
+                    }?.let { entityTextureUrl(id) }
+                },
+            ).filterValues { it.icon != null }
         }
 
         "screen_handler", "menu" -> {

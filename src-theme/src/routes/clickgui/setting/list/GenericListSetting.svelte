@@ -7,10 +7,12 @@
     import {setItem} from "../../../../integration/persistent_storage";
     import ListItem from "./ListItem.svelte";
     import SearchableList from "./SearchableList.svelte";
+    import BulkListActions from "../common/BulkListActions.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
     export let items: NamedItem[];
+    export let showBulkActions = false;
 
     const cSetting = setting as ListSetting;
     const thisPath = `${path}.${cSetting.name}`;
@@ -30,13 +32,30 @@
         setting = {...cSetting};
         dispatch("change");
     }
+
+    function selectAll() {
+        cSetting.value = items.map(item => item.value);
+        setting = {...cSetting};
+        dispatch("change");
+    }
+
+    function deselectAll() {
+        cSetting.value = [];
+        setting = {...cSetting};
+        dispatch("change");
+    }
 </script>
 
 <div class="setting">
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="head" class:expanded on:contextmenu|preventDefault={() => expanded = !expanded}>
         <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-        <ExpandArrow bind:expanded/>
+        <div class="head-actions">
+            {#if showBulkActions}
+                <BulkListActions on:selectAll={selectAll} on:deselectAll={deselectAll}/>
+            {/if}
+            <ExpandArrow bind:expanded/>
+        </div>
     </div>
     {#if expanded}
         <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
@@ -68,5 +87,10 @@
       font-size: 12px;
       font-weight: 600;
     }
+  }
+
+  .head-actions {
+    display: flex;
+    align-items: stretch;
   }
 </style>

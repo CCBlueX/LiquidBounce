@@ -140,7 +140,8 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     private static boolean liquid_bounce$shouldRenderOutline(Entity entity) {
         if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
             return true;
-        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
+        } else if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning()
+            && CombatExtensionsKt.shouldBeShown(livingEntity) && EspGlowMode.INSTANCE.shouldRender(livingEntity)) {
             return true;
         } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof PrimedTnt) {
             return true;

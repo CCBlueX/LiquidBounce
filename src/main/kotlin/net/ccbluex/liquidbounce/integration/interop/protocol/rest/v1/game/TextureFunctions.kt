@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.integration.interop.internalServerError
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondImage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondResource
 import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
+import net.ccbluex.liquidbounce.render.gui.EntityImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.client.renderer.texture.DynamicTexture
@@ -86,6 +87,25 @@ private fun Route.getEffectTexture() = get("/effectTexture") {
     call.respondResource(resource, ContentType.Image.PNG)
 }
 
+// GET /api/v1/client/resource/entityTexture
+private fun Route.getEntityTexture() = get("/entityTexture") {
+    if (!EntityImageAtlas.isAtlasAvailable) {
+        call.internalServerError("Entity atlas not available yet")
+    }
+
+    val identifier = call.queryParameters["id"]
+        ?: call.badRequest("Missing identifier parameter")
+    val minecraftIdentifier = Identifier.tryParse(identifier)
+        ?: call.badRequest("Invalid identifier $identifier")
+    val key = ResourceKey.create(Registries.ENTITY_TYPE, minecraftIdentifier)
+    val type = BuiltInRegistries.ENTITY_TYPE.getValue(key)
+        ?: call.badRequest("Entity type not found")
+    val image = EntityImageAtlas.getEntityImage(type)
+        ?: call.badRequest("Entity image not found")
+
+    call.respondImage(image)
+}
+
 // GET /api/v1/client/resource/skin
 private fun Route.getSkin() = get("/skin") {
     val uuid = call.queryParameters["uuid"]?.let { UUID.fromString(it) }
@@ -110,5 +130,6 @@ internal fun Route.textureRoutes() = route("/resource") {
     getResource()
     getItemTexture()
     getEffectTexture()
+    getEntityTexture()
     getSkin()
 }
