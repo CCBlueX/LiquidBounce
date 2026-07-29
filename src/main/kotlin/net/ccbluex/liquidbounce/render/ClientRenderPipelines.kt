@@ -435,14 +435,29 @@ object ClientRenderPipelines {
     }
 
     @JvmField
+    val ChamsImage = newPipeline("chams/image_blit") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.Chams)
+        withBindGroupLayout {
+            withSampler("entityColor")
+            withSampler("entityDepth")
+            withSampler("sceneDepth")
+            withSampler("image")
+        }
+        withUniformBuffer(ClientUniformDefine.CHAMS)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        withDepthStencilState(optional())
+    }
+
+    @JvmField
     val ItemChams = newPipeline("item_chams") {
         screenQuadSnippet()
         withFragmentShader(ClientShaders.Fragment.Glow)
         withBindGroupLayout {
             withSampler("texture0")
             withSampler("image")
+            withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
         }
-        withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
         withColorTargetState(ColorTargetState.DEFAULT)
         withDepthStencilState(optional())
     }
