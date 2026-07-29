@@ -10,6 +10,7 @@ uniform sampler2D image;
 
 layout(std140) uniform ChamsData {
     vec2 imageScale;
+    vec2 imageOffset;
 };
 
 void main() {
@@ -25,5 +26,5 @@ void main() {
         return;
     }
 
-    fragColor = textureLod(image, gl_FragCoord.xy / imageScale, 0.0);
+    fragColor = textureLod(image, (gl_FragCoord.xy - imageOffset) / imageScale, 0.0);
 }

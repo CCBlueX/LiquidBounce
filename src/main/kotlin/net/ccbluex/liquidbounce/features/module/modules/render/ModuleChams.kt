@@ -25,6 +25,8 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -35,19 +37,20 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTyp
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuadSnippet
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
+import net.ccbluex.liquidbounce.render.buffers.CachedUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
 import net.ccbluex.liquidbounce.render.withOutputTarget
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.io.PNG_AND_JPG
 import net.ccbluex.liquidbounce.utils.kotlin.optional
-import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.renderer.BindGroupLayouts
 import net.minecraft.client.renderer.feature.ItemFeatureRenderer
 import net.minecraft.client.renderer.rendertype.OutputTarget
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.util.Util
 import net.minecraft.world.entity.Entity
+import org.joml.Vector2f
 import java.util.function.Function
 
 object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
@@ -70,11 +73,18 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         "item_translucent"
     )
 
-    private val renderTargetHolder = LazyRenderTargetHolder("Chams", useDepth = true)
+    private val renderTargetHolder = LazyRenderTargetHolder(this.name, useDepth = true)
     private val blitSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
-    private val repeatSampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
     private val outputTarget = OutputTarget("liquidbounce_chams", renderTargetHolder)
-    private val imageUniform = ClientUniformDefine.CHAMS.createSingleBuffer()
+
+    @ValueClassCandidate
+    @JvmRecord
+    private data class ImageUniform(
+        val scaleX: Float,
+        val scaleY: Float,
+        val offsetX: Float = 0f,
+        val offsetY: Float = 0f,
+    )
 
     private val pipelineBlit: RenderPipeline =
         ClientRenderPipelines.newPipeline("chams/blit") {
@@ -195,36 +205,43 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
     }
 
     private object Image : ChamsMode("Image") {
-        private val imageMode by enumChoice("ImageMode", ImageMode.REPEAT)
-        private val tileSize by int("TileSize", 256, 16..2048, "px")
         private val texture by file("File", supportedExtensions = PNG_AND_JPG).toTextureProperty(this)
+        val mapping = modes("Mapping", Repeat, arrayOf(Repeat, Stretch, Cover))
+        private val filtering by enumChoice("Filtering", ImageFiltering.NEAREST)
+        private val offset by vec2f("Offset", Vector2f())
+
+        private val imageUniform = CachedUniform<ImageUniform>(ClientUniformDefine.CHAMS) { value ->
+            putVec2(value.scaleX, value.scaleY)
+            putVec2(value.offsetX, value.offsetY)
+        }
 
         override fun render(target: RenderTarget, chamsTarget: RenderTarget) {
             val colorTexture = chamsTarget.colorTextureView
             val chamsDepth = chamsTarget.depthTextureView
             val sceneDepth = target.depthTextureView
-            val image = texture?.textureView
-            if (colorTexture == null || chamsDepth == null || sceneDepth == null || image == null) {
+            val imageView = texture?.textureView
+            if (colorTexture == null || chamsDepth == null || sceneDepth == null || imageView == null) {
                 Normal.render(target, chamsTarget)
                 return
             }
 
-            imageUniform.writeStd140 {
-                val imageScale = if (imageMode == ImageMode.REPEAT) {
-                    tileSize.toFloat()
-                } else {
-                    target.width.toFloat()
-                }
-                putVec2(imageScale, if (imageMode == ImageMode.REPEAT) imageScale else target.height.toFloat())
-            }
+            val imageWidth = imageView.getWidth(0)
+            val imageHeight = imageView.getHeight(0)
+            val mappingData = mapping.activeMode.uniform(target.width, target.height, imageWidth, imageHeight)
+            val imageData = mappingData.copy(
+                offsetX = mappingData.offsetX + offset.x(),
+                offsetY = mappingData.offsetY + offset.y(),
+            )
+            val sampler = filtering.sampler(mapping.activeMode.repeats)
+            val ubo = imageUniform.get(imageData)
 
             target.createRenderPass({ "Chams image blit pass" }, useDepthAttachment = false).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.ChamsImage)
                 pass.bindTexture("entityColor", colorTexture, blitSampler)
                 pass.bindTexture("entityDepth", chamsDepth, blitSampler)
                 pass.bindTexture("sceneDepth", sceneDepth, blitSampler)
-                pass.bindTexture("image", image, repeatSampler)
-                pass.setUniform(ClientUniformDefine.CHAMS.uboName, imageUniform)
+                pass.bindTexture("image", imageView, sampler)
+                pass.setUniform(ClientUniformDefine.CHAMS.uboName, ubo)
                 pass.draw(3, 1, 0, 0)
             }
         }
@@ -237,9 +254,48 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         abstract fun render(target: RenderTarget, chamsTarget: RenderTarget)
     }
 
-    private enum class ImageMode(override val tag: String) : Tagged {
-        REPEAT("Repeat"),
-        STRETCH("Stretch"),
+    private abstract class ImageMappingMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
+            get() = Image.mapping
+
+        open val repeats: Boolean get() = false
+
+        abstract fun uniform(targetWidth: Int, targetHeight: Int, imageWidth: Int, imageHeight: Int): ImageUniform
+    }
+
+    private object Repeat : ImageMappingMode("Repeat") {
+        private val tileWidth by int("TileWidth", 256, 16..2048, "px")
+
+        override val repeats: Boolean get() = true
+
+        override fun uniform(targetWidth: Int, targetHeight: Int, imageWidth: Int, imageHeight: Int): ImageUniform {
+            val width = tileWidth.toFloat()
+            return ImageUniform(width, width * imageHeight / imageWidth)
+        }
+    }
+
+    private object Stretch : ImageMappingMode("Stretch") {
+        override fun uniform(targetWidth: Int, targetHeight: Int, imageWidth: Int, imageHeight: Int) =
+            ImageUniform(targetWidth.toFloat(), targetHeight.toFloat())
+    }
+
+    private object Cover : ImageMappingMode("Cover") {
+        override fun uniform(targetWidth: Int, targetHeight: Int, imageWidth: Int, imageHeight: Int): ImageUniform {
+            val scale = maxOf(targetWidth.toFloat() / imageWidth, targetHeight.toFloat() / imageHeight)
+            val width = imageWidth * scale
+            val height = imageHeight * scale
+            return ImageUniform(width, height, (targetWidth - width) * 0.5f, (targetHeight - height) * 0.5f)
+        }
+    }
+
+    private enum class ImageFiltering(override val tag: String, val filterMode: FilterMode) : Tagged {
+        NEAREST("Nearest", FilterMode.NEAREST),
+        LINEAR("Linear", FilterMode.LINEAR),
+        ;
+
+        fun sampler(repeat: Boolean) = RenderSystem.getSamplerCache().let { cache ->
+            if (repeat) cache.getRepeat(filterMode) else cache.getClampToEdge(filterMode)
+        }
     }
 
 }
