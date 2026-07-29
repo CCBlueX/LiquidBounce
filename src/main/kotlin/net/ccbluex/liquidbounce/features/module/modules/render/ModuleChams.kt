@@ -25,16 +25,26 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.toTextureProperty
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuadSnippet
+import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
 import net.ccbluex.liquidbounce.render.withOutputTarget
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.utils.io.PNG_AND_JPG
 import net.ccbluex.liquidbounce.utils.kotlin.optional
+import net.ccbluex.liquidbounce.utils.render.asTexture
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
+import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.renderer.BindGroupLayouts
 import net.minecraft.client.renderer.feature.ItemFeatureRenderer
 import net.minecraft.client.renderer.rendertype.OutputTarget
@@ -44,6 +54,8 @@ import net.minecraft.world.entity.Entity
 import java.util.function.Function
 
 object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
+
+    private val modes = choices("Mode", Normal, arrayOf(Normal, Image))
 
     private val supportedRenderTypes: Set<String> = hashSetOf(
         "armor_cutout_no_cull",
@@ -63,7 +75,9 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
     private val renderTargetHolder = LazyRenderTargetHolder("Chams", useDepth = true)
     private val blitSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
+    private val repeatSampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
     private val outputTarget = OutputTarget("liquidbounce_chams", renderTargetHolder)
+    private val imageUniform = ClientUniformDefine.CHAMS.createSingleBuffer()
 
     private val pipelineBlit: RenderPipeline =
         ClientRenderPipelines.newPipeline("chams/blit") {
@@ -160,9 +174,32 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
         val colorTexture = renderTargetHolder.get()?.colorTextureView ?: return
 
-        target.createRenderPass({ "Chams blit pass" }).use { pass ->
-            pass.setPipeline(pipelineBlit)
-            pass.bindTexture("InSampler", colorTexture, blitSampler)
+        target.createRenderPass({ "Chams blit pass" }, useDepthAttachment = false).use { pass ->
+            if (modes.activeMode === Image) {
+                val chamsTarget = renderTargetHolder.get() ?: return
+                val chamsDepth = chamsTarget.depthTextureView ?: return
+                val sceneDepth = target.depthTextureView ?: return
+                val image = Image.texture?.textureView ?: return
+
+                imageUniform.writeStd140 {
+                    val imageScale = if (Image.imageMode == ImageMode.REPEAT) {
+                        Image.tileSize.toFloat()
+                    } else {
+                        target.width.toFloat()
+                    }
+                    putVec2(imageScale, if (Image.imageMode == ImageMode.REPEAT) imageScale else target.height.toFloat())
+                }
+
+                pass.setPipeline(ClientRenderPipelines.ChamsImage)
+                pass.bindTexture("entityColor", colorTexture, blitSampler)
+                pass.bindTexture("entityDepth", chamsDepth, blitSampler)
+                pass.bindTexture("sceneDepth", sceneDepth, blitSampler)
+                pass.bindTexture("image", image, repeatSampler)
+                pass.setUniform(ClientUniformDefine.CHAMS.uboName, imageUniform)
+            } else {
+                pass.setPipeline(pipelineBlit)
+                pass.bindTexture("InSampler", colorTexture, blitSampler)
+            }
             pass.draw(3, 1, 0, 0)
         }
 
@@ -173,6 +210,24 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         dirty = false
         heldItemSubmits.clear()
         renderTargetHolder.close()
+    }
+
+    private object Normal : ChamsMode("Normal")
+
+    private object Image : ChamsMode("Image") {
+        val imageMode by enumChoice("ImageMode", ImageMode.REPEAT)
+        val tileSize by int("TileSize", 256, 16..2048, "px")
+        val texture by file("File", supportedExtensions = PNG_AND_JPG).toTextureProperty(this)
+    }
+
+    private abstract class ChamsMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
+            get() = modes
+    }
+
+    private enum class ImageMode(override val tag: String) : Tagged {
+        REPEAT("Repeat"),
+        STRETCH("Stretch"),
     }
 
 }
