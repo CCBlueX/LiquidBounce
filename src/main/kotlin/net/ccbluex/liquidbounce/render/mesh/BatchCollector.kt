@@ -116,10 +116,12 @@ internal class BatchCollector {
                 dynamicTransforms?.let(pass::bindDynamicTransformsUniform)
 
                 builtBuffers.forEach { draw ->
+                    pass.pushDebugGroup { "BatchCollector draw key=${draw.key}" }
                     pass.setPipeline(draw.key.pipeline)
                     pass.setUniforms(draw.key.uniforms)
                     pass.bindTextures(draw.key.textures)
                     pass.bindAndDraw(draw.meshDraw)
+                    pass.popDebugGroup()
                 }
             }
         } finally {

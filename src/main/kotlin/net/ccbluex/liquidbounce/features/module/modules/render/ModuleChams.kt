@@ -25,7 +25,6 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -42,8 +41,6 @@ import net.ccbluex.liquidbounce.render.withOutputTarget
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.io.PNG_AND_JPG
 import net.ccbluex.liquidbounce.utils.kotlin.optional
-import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.renderer.BindGroupLayouts
 import net.minecraft.client.renderer.feature.ItemFeatureRenderer
@@ -89,14 +86,14 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         }
 
     private val remapRenderType: Function<RenderType, RenderType> =
-        Util.memoize(Function<RenderType, RenderType> { original ->
+        Util.memoize { original ->
             val renderTypeAccessor = original as MixinRenderTypeAccessor
 
             RenderType.create(
                 "liquidbounce_chams/${renderTypeAccessor.name}",
                 renderTypeAccessor.state.withOutputTarget(outputTarget),
             )
-        })
+        }
 
     private val heldItemEntityContext = ScopedValue.newInstance<Entity>()
     private val heldItemSubmits = ReferenceOpenHashSet<ItemFeatureRenderer.Submit>()
@@ -172,38 +169,11 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
         dirty = false
 
-        val colorTexture = renderTargetHolder.get()?.colorTextureView ?: return
-
-        target.createRenderPass({ "Chams blit pass" }, useDepthAttachment = false).use { pass ->
-            if (modes.activeMode === Image) {
-                val chamsTarget = renderTargetHolder.get() ?: return
-                val chamsDepth = chamsTarget.depthTextureView ?: return
-                val sceneDepth = target.depthTextureView ?: return
-                val image = Image.texture?.textureView ?: return
-
-                imageUniform.writeStd140 {
-                    val imageScale = if (Image.imageMode == ImageMode.REPEAT) {
-                        Image.tileSize.toFloat()
-                    } else {
-                        target.width.toFloat()
-                    }
-                    putVec2(imageScale, if (Image.imageMode == ImageMode.REPEAT) imageScale else target.height.toFloat())
-                }
-
-                pass.setPipeline(ClientRenderPipelines.ChamsImage)
-                pass.bindTexture("entityColor", colorTexture, blitSampler)
-                pass.bindTexture("entityDepth", chamsDepth, blitSampler)
-                pass.bindTexture("sceneDepth", sceneDepth, blitSampler)
-                pass.bindTexture("image", image, repeatSampler)
-                pass.setUniform(ClientUniformDefine.CHAMS.uboName, imageUniform)
-            } else {
-                pass.setPipeline(pipelineBlit)
-                pass.bindTexture("InSampler", colorTexture, blitSampler)
-            }
-            pass.draw(3, 1, 0, 0)
+        try {
+            renderTargetHolder.get()?.let { modes.activeMode.render(target, it) }
+        } finally {
+            heldItemSubmits.clear()
         }
-
-        heldItemSubmits.clear()
     }
 
     override fun onDisabled() {
@@ -212,17 +182,59 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         renderTargetHolder.close()
     }
 
-    private object Normal : ChamsMode("Normal")
+    private object Normal : ChamsMode("Normal") {
+        override fun render(target: RenderTarget, chamsTarget: RenderTarget) {
+            val colorTexture = chamsTarget.colorTextureView ?: return
+
+            target.createRenderPass({ "Chams blit pass" }, useDepthAttachment = false).use { pass ->
+                pass.setPipeline(pipelineBlit)
+                pass.bindTexture("InSampler", colorTexture, blitSampler)
+                pass.draw(3, 1, 0, 0)
+            }
+        }
+    }
 
     private object Image : ChamsMode("Image") {
-        val imageMode by enumChoice("ImageMode", ImageMode.REPEAT)
-        val tileSize by int("TileSize", 256, 16..2048, "px")
-        val texture by file("File", supportedExtensions = PNG_AND_JPG).toTextureProperty(this)
+        private val imageMode by enumChoice("ImageMode", ImageMode.REPEAT)
+        private val tileSize by int("TileSize", 256, 16..2048, "px")
+        private val texture by file("File", supportedExtensions = PNG_AND_JPG).toTextureProperty(this)
+
+        override fun render(target: RenderTarget, chamsTarget: RenderTarget) {
+            val colorTexture = chamsTarget.colorTextureView
+            val chamsDepth = chamsTarget.depthTextureView
+            val sceneDepth = target.depthTextureView
+            val image = texture?.textureView
+            if (colorTexture == null || chamsDepth == null || sceneDepth == null || image == null) {
+                Normal.render(target, chamsTarget)
+                return
+            }
+
+            imageUniform.writeStd140 {
+                val imageScale = if (imageMode == ImageMode.REPEAT) {
+                    tileSize.toFloat()
+                } else {
+                    target.width.toFloat()
+                }
+                putVec2(imageScale, if (imageMode == ImageMode.REPEAT) imageScale else target.height.toFloat())
+            }
+
+            target.createRenderPass({ "Chams image blit pass" }, useDepthAttachment = false).use { pass ->
+                pass.setPipeline(ClientRenderPipelines.ChamsImage)
+                pass.bindTexture("entityColor", colorTexture, blitSampler)
+                pass.bindTexture("entityDepth", chamsDepth, blitSampler)
+                pass.bindTexture("sceneDepth", sceneDepth, blitSampler)
+                pass.bindTexture("image", image, repeatSampler)
+                pass.setUniform(ClientUniformDefine.CHAMS.uboName, imageUniform)
+                pass.draw(3, 1, 0, 0)
+            }
+        }
     }
 
     private abstract class ChamsMode(name: String) : Mode(name) {
         override val parent: ModeValueGroup<*>
             get() = modes
+
+        abstract fun render(target: RenderTarget, chamsTarget: RenderTarget)
     }
 
     private enum class ImageMode(override val tag: String) : Tagged {

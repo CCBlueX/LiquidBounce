@@ -456,8 +456,8 @@ object ClientRenderPipelines {
         withBindGroupLayout {
             withSampler("texture0")
             withSampler("image")
+            withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
         }
-        withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
         withColorTargetState(ColorTargetState.DEFAULT)
         withDepthStencilState(optional())
     }
