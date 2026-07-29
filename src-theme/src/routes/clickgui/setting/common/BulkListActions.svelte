@@ -6,10 +6,10 @@
 
 <div class="actions">
     <button type="button" title="Select all" aria-label="Select all" on:click|stopPropagation={() => dispatch("selectAll")}>
-  <span class="icon icon-select"></span>
+        <span class="icon icon-select"></span>
     </button>
     <button type="button" title="Deselect all" aria-label="Deselect all" on:click|stopPropagation={() => dispatch("deselectAll")}>
-  <span class="icon icon-deselect"></span>
+        <span class="icon icon-deselect"></span>
     </button>
 </div>
 

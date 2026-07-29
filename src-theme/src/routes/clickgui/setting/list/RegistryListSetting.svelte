@@ -26,6 +26,6 @@
     {path}
     bind:setting={setting}
     {items}
-    showBulkActions={cSetting.registry === "block" || cSetting.registry === "blocks"}
+    showBulkActions
     on:change
 />
