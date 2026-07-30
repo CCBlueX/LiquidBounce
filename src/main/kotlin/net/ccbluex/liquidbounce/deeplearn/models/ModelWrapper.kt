@@ -46,6 +46,9 @@ import java.io.Closeable
 import java.io.InputStream
 import java.nio.file.Path
 import java.util.Locale
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 private const val NUM_EPOCH = 100
 private const val BATCH_SIZE = 32
@@ -65,12 +68,15 @@ abstract class ModelWrapper<I, O>(
     private val model: Model by lazyModel
     private val lazyPredictor = lazy { model.newPredictor(translator) }
     private val predictor: Predictor<I, O> by lazyPredictor
+    private val lock = ReentrantReadWriteLock()
 
     @Throws(TranslateException::class)
     fun predict(input: I): O {
         require(DeepLearningEngine.isInitialized) { "DeepLearningEngine is not initialized" }
 
-        return predictor.predict(input)
+        return lock.read {
+            predictor.predict(input)
+        }
     }
 
     fun train(features: Array<FloatArray>, labels: Array<FloatArray>) {
@@ -80,33 +86,39 @@ abstract class ModelWrapper<I, O>(
         require(features.isNotEmpty()) { "Features and labels must not be empty" }
         val inputs = features[0].size.toLong()
 
-        val trainingConfig = DefaultTrainingConfig(Loss.l2Loss())
-            .optInitializer(XavierInitializer(), "weight")
-            .optOptimizer(
-                Adam.builder()
-                    .optLearningRateTracker(Tracker.fixed(0.001f))
-                    .build()
-            )
-            .addTrainingListeners(LoggingTrainingListener(), OverlayTrainingListener(NUM_EPOCH))
-        val trainer = model.newTrainer(trainingConfig)
+        lock.write {
+            val trainingConfig = DefaultTrainingConfig(Loss.l2Loss())
+                .optInitializer(XavierInitializer(), "weight")
+                .optOptimizer(
+                    Adam.builder()
+                        .optLearningRateTracker(Tracker.fixed(0.001f))
+                        .build()
+                )
+                .addTrainingListeners(LoggingTrainingListener(), OverlayTrainingListener(NUM_EPOCH))
+            val trainer = model.newTrainer(trainingConfig)
 
-        val manager = NDManager.newBaseManager()
-        val trainingSet = ArrayDataset.Builder()
-            .setData(manager.create(features))
-            .optLabels(manager.create(labels))
-            .setSampling(BATCH_SIZE, true)
-            .build()
-        trainer.initialize(Shape(BATCH_SIZE.toLong(), inputs))
+            val manager = NDManager.newBaseManager()
+            val trainingSet = ArrayDataset.Builder()
+                .setData(manager.create(features))
+                .optLabels(manager.create(labels))
+                .setSampling(BATCH_SIZE, true)
+                .build()
+            trainer.initialize(Shape(BATCH_SIZE.toLong(), inputs))
 
-        EasyTrain.fit(trainer, NUM_EPOCH, trainingSet, null)
+            EasyTrain.fit(trainer, NUM_EPOCH, trainingSet, null)
+        }
     }
 
     fun load(stream: InputStream) {
-        model.load(stream)
+        lock.write {
+            model.load(stream)
+        }
     }
 
     fun load(path: Path) {
-        model.load(path, "tf")
+        lock.write {
+            model.load(path, "tf")
+        }
     }
 
     fun load(name: String = this.name) {
@@ -137,11 +149,13 @@ abstract class ModelWrapper<I, O>(
     }
 
     override fun close() {
-        if (lazyPredictor.isInitialized()) {
-            predictor.close()
-        }
-        if (lazyModel.isInitialized()) {
-            model.close()
+        lock.write {
+            if (lazyPredictor.isInitialized()) {
+                predictor.close()
+            }
+            if (lazyModel.isInitialized()) {
+                model.close()
+            }
         }
     }
 
