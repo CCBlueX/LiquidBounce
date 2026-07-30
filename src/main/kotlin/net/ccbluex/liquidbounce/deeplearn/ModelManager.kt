@@ -70,24 +70,28 @@ object ModelManager : EventListener, ValueGroup("AI") {
      */
     fun load() {
         logger.info("Loading models...")
-        val choices = allCombatModels.mapToArray { name ->
-            TwoDimensionalRegressionModel(name, models)
-        }
+        val activeModelName = models.activeMode.name
+        val choices = allCombatModels.mapNotNull { name ->
+            val model = TwoDimensionalRegressionModel(name, models)
 
-        for (model in choices) {
             runCatching {
                 measureTime {
                     model.load()
                 }
             }.onFailure { error ->
                 logger.error("Failed to load model '${model.name}'.", error)
+                model.close()
             }.onSuccess { time ->
                 logger.info("Loaded model '${model.name}' in ${time.inWholeMilliseconds}ms.")
-            }
+            }.getOrNull()?.let { model }
         }
 
+        check(choices.isNotEmpty()) { "No combat models could be loaded" }
+
         models.modes = choices.toMutableList()
-        models.setByString(models.activeMode.name)
+        val nextModelName = choices.firstOrNull { model -> model.name == activeModelName }
+            ?.name ?: choices.first().name
+        models.setByString(nextModelName)
         ModuleClickGui.sync()
     }
 

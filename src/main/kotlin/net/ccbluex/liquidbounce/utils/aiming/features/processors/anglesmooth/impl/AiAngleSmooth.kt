@@ -136,8 +136,15 @@ class AiAngleSmooth(
             age = 0
         )
 
-        val (output, time) = measureTimedValue {
-            choices.activeMode.predict(input.asInput)
+        val (output, time) = runCatching {
+            measureTimedValue {
+                choices.activeMode.predict(input.asInput)
+            }
+        }.getOrElse {
+            return fallback.process(rotationTarget, currentRotation, targetRotation)
+        }
+        if (output.size < 2 || !output[0].isFinite() || !output[1].isFinite()) {
+            return fallback.process(rotationTarget, currentRotation, targetRotation)
         }
         ModuleDebug.debugParameter(this, "Output [0]", output[0])
         ModuleDebug.debugParameter(this, "Output [1]", output[1])

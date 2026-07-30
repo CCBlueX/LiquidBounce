@@ -57,12 +57,14 @@ abstract class ModelWrapper<I, O>(
     override val parent: ModeValueGroup<*>
 ) : Mode(name), Closeable {
 
-    private val model: Model by lazy {
+    private val lazyModel = lazy {
         Model.newInstance(name).apply {
             block = createMlpBlock(outputs)
         }
     }
-    private val predictor: Predictor<I, O> by lazy { model.newPredictor(translator) }
+    private val model: Model by lazyModel
+    private val lazyPredictor = lazy { model.newPredictor(translator) }
+    private val predictor: Predictor<I, O> by lazyPredictor
 
     @Throws(TranslateException::class)
     fun predict(input: I): O {
@@ -134,8 +136,12 @@ abstract class ModelWrapper<I, O>(
     }
 
     override fun close() {
-        predictor.close()
-        model.close()
+        if (lazyPredictor.isInitialized()) {
+            predictor.close()
+        }
+        if (lazyModel.isInitialized()) {
+            model.close()
+        }
     }
 
 }
