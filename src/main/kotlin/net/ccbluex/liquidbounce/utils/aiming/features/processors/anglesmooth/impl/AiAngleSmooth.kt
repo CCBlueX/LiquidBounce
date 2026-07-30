@@ -167,7 +167,7 @@ class AiAngleSmooth(
         targetRotation: Rotation
     ): Int {
         // TODO: Implement correctly
-        return 0
+        return correctionMode.activeMode.calculateTicks(currentRotation, targetRotation)
     }
 
 }
