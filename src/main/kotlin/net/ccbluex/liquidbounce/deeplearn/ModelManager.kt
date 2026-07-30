@@ -39,7 +39,7 @@ object ModelManager : EventListener, ValueGroup("AI") {
      * The name can contain uppercase characters,
      * but the file should always be lowercase.
      */
-    val combatModels = arrayOf(
+    private val combatModels = arrayOf(
         "21KC11KP",
         "19KC8KP"
     )
@@ -47,10 +47,8 @@ object ModelManager : EventListener, ValueGroup("AI") {
     /**
      * Available models from the models folder
      */
-    private val availableCombatModels: List<String>
-        get() = modelsFolder
-            .listFiles { file -> file.isDirectory }
-            ?.map { file -> file.nameWithoutExtension } ?: emptyList()
+    private val availableCombatModels: Array<out String>
+        get() = modelsFolder.list { file, _ -> file.isDirectory }.orEmpty()
 
     private val allCombatModels: Array<String>
         get() = combatModels + availableCombatModels
