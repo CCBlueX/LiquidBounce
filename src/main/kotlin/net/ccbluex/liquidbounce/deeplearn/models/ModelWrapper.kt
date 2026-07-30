@@ -95,17 +95,19 @@ abstract class ModelWrapper<I, O>(
                         .build()
                 )
                 .addTrainingListeners(LoggingTrainingListener(), OverlayTrainingListener(NUM_EPOCH))
-            val trainer = model.newTrainer(trainingConfig)
 
-            val manager = NDManager.newBaseManager()
-            val trainingSet = ArrayDataset.Builder()
-                .setData(manager.create(features))
-                .optLabels(manager.create(labels))
-                .setSampling(BATCH_SIZE, true)
-                .build()
-            trainer.initialize(Shape(BATCH_SIZE.toLong(), inputs))
+            model.newTrainer(trainingConfig).use { trainer ->
+                NDManager.newBaseManager().use { manager ->
+                    val trainingSet = ArrayDataset.Builder()
+                        .setData(manager.create(features))
+                        .optLabels(manager.create(labels))
+                        .setSampling(BATCH_SIZE, true)
+                        .build()
+                    trainer.initialize(Shape(BATCH_SIZE.toLong(), inputs))
 
-            EasyTrain.fit(trainer, NUM_EPOCH, trainingSet, null)
+                    EasyTrain.fit(trainer, NUM_EPOCH, trainingSet, null)
+                }
+            }
         }
     }
 
