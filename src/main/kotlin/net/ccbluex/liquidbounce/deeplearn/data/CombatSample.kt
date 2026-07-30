@@ -100,18 +100,18 @@ data class CombatSample(
         )
 
     companion object {
-        const val CURRENT_DIRECTION_VECTOR = "a"
-        const val PREVIOUS_DIRECTION_VECTOR = "b"
-        const val TARGET_DIRECTION_VECTOR = "c"
-        const val DELTA_VECTOR = "d"
-        const val HURT_TIME = "e"
-        const val AGE = "f"
-        const val P_DIFF = "g"
-        const val T_DIFF = "h"
-        const val DISTANCE = "i"
+        private const val CURRENT_DIRECTION_VECTOR = "a"
+        private const val PREVIOUS_DIRECTION_VECTOR = "b"
+        private const val TARGET_DIRECTION_VECTOR = "c"
+        private const val DELTA_VECTOR = "d"
+        private const val HURT_TIME = "e"
+        private const val AGE = "f"
+        private const val P_DIFF = "g"
+        private const val T_DIFF = "h"
+        private const val DISTANCE = "i"
 
         private fun parse(file: File): List<CombatSample> = when {
-            file.isDirectory -> file.listFiles().flatMap(::parse)
+            file.isDirectory -> file.listFiles()?.flatMap(::parse).orEmpty()
             file.extension == "json" -> file.readJson<List<CombatSample>>()
             else -> emptyList()
         }
