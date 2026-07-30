@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
 import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
+import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -53,9 +54,13 @@ class AiAngleSmooth(
     val fallback: AngleSmooth
 ) : AngleSmooth("AI", parent, listOf("Minarai")) {
 
-    private val choices = modes("Model", 0) { local ->
-        models.onChanged { _ ->
+    private val choices = modes<TwoDimensionalRegressionModel>("Model", 0) { local ->
+        models.onChanged {
+            val activeModelName = local.activeMode.tag
             local.modes = models.modes
+            val nextModelName = local.modes.firstOrNull { model -> model.tag == activeModelName }
+                ?.tag ?: models.activeMode.tag
+            local.setByString(nextModelName)
         }
 
         models.modes.toTypedArray()
