@@ -120,7 +120,9 @@ object CommandModels : Command.Factory {
             )
             .handler {
                 val name = args[0] as String
-                val model = models.modes.find { model -> model.name.equals(name, true) }
+                val model = models.modes.find { model ->
+                    model.name.equals(name, true) && modelsFolder.resolve(model.name).isDirectory
+                }
 
                 if (model == null) {
                     chat(markAsError(command.result("modelNotFound", name)))
@@ -128,7 +130,7 @@ object CommandModels : Command.Factory {
                 }
 
                 model.delete()
-                models.modes.remove(model)
+                ModelManager.reload()
                 chat(command.result("modelDeleted", name))
             }
             .build()

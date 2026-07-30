@@ -131,8 +131,9 @@ abstract class ModelWrapper<I, O>(
     }
 
     fun delete() {
-        close()
-        modelsFolder.resolve(name).delete()
+        val folder = modelsFolder.resolve(name)
+        check(folder.isDirectory) { "Model '$name' is not a user model" }
+        check(folder.deleteRecursively()) { "Failed to delete model '$name'" }
     }
 
     override fun close() {
