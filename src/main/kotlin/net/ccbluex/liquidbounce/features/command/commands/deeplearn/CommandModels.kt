@@ -140,8 +140,10 @@ object CommandModels : Command.Factory {
     private fun reloadModelCommand(): Command {
         return CommandBuilder
             .begin("reload")
-            .handler {
-                ModelManager.reload()
+            .suspendHandler {
+                withContext(Dispatchers.Default) {
+                    ModelManager.reload()
+                }
                 chat(command.result("modelsReloaded"))
             }
             .build()
