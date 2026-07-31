@@ -188,11 +188,18 @@ object CommandModels : Command.Factory {
         chat(command.result("preparedData", datasetTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
         val trainingTime = measureTime {
-            val model = model ?: TwoDimensionalRegressionModel(name, models).also { model -> models.modes.add(model) }
-            model.train(dataset.features, dataset.labels)
-            model.save()
+            TwoDimensionalRegressionModel(name, models).use { candidate ->
+                if (model != null) {
+                    candidate.load(model.name)
+                }
 
-            models.setByString(model.name)
+                candidate.train(dataset.features, dataset.labels)
+                candidate.save()
+            }
+
+            ModelManager.reload()
+
+            models.setByString(name)
             ModuleClickGui.sync()
         }
 
