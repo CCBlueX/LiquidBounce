@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.deeplearn
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
@@ -139,10 +141,25 @@ object CommandModels : Command.Factory {
                         return@withLock
                     }
 
-                    withContext(Dispatchers.IO) {
-                        model.delete()
+                    val deleted = withContext(Dispatchers.IO) {
+                        runCatching { model.delete() }
+                            .onFailure { error ->
+                                logger.error("Failed to delete model '$name'.", error)
+                                chat(markAsError(command.result("modelDeleteFailed", name, error.localizedMessage)))
+                            }
+                            .isSuccess
                     }
-                    ModelManager.reload()
+                    if (!deleted) {
+                        return@withLock
+                    }
+
+                    runCatching {
+                        ModelManager.reload()
+                    }.onFailure { error ->
+                        logger.error("Failed to reload models after deleting '$name'.", error)
+                        chat(markAsError(command.result("modelDeleteFailed", name, error.localizedMessage)))
+                        return@withLock
+                    }
                     chat(command.result("modelDeleted", name))
                 }
             }
@@ -176,7 +193,7 @@ object CommandModels : Command.Factory {
         command: Command,
         name: String,
         model: TwoDimensionalRegressionModel? = null
-    ) = runCatching {
+    ): Unit = try {
         val (samples, sampleTime) = measureTimedValue {
             CombatSample.parse(
                 // Combat data
@@ -188,7 +205,7 @@ object CommandModels : Command.Factory {
 
         if (samples.isEmpty()) {
             chat(markAsError(command.result("noSamples")))
-            return@runCatching
+            return
         }
 
         chat(command.result("samplesLoaded", samples.size, sampleTime.toString(DurationUnit.SECONDS, decimals = 2)))
@@ -223,8 +240,10 @@ object CommandModels : Command.Factory {
         }
 
         chat(command.result("trainingEnd", name, trainingTime.toString(DurationUnit.MINUTES, decimals = 2)))
-    }.onFailure { error ->
-        chat(markAsError(command.result("trainingFailed", error.localizedMessage)))
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        chat(markAsError(command.result("trainingFailed", e.localizedMessage)))
     }
 
 }
