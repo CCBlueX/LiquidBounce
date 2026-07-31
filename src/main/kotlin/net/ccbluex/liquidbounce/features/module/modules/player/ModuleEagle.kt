@@ -64,9 +64,6 @@ object ModuleEagle : ClientModule(
     private var wasSneaking = false
     private var sneakCaptured = false
 
-    internal val isClutching
-        get() = Clutch.isRescuing
-
     private fun shouldActivateEagle(event: MovementInputEvent, conditionsMet: Boolean): Boolean {
         if (player.abilities.flying || !conditionsMet) {
             return false
@@ -175,6 +172,7 @@ object ModuleEagle : ClientModule(
             isRescuing = true
             rescueTicks = 0
             enabledScaffold = true
+            ModuleScaffold.requestExpandedSearch(this, true)
             ModuleScaffold.enabled = true
 
             if (!ModuleScaffold.running) {
@@ -183,6 +181,8 @@ object ModuleEagle : ClientModule(
         }
 
         private fun stopRescue(failed: Boolean = false) {
+            ModuleScaffold.requestExpandedSearch(this, false)
+
             if (enabledScaffold && ModuleScaffold.enabled) {
                 ModuleScaffold.enabled = false
             }
@@ -191,6 +191,11 @@ object ModuleEagle : ClientModule(
             isRescuing = false
             rescueTicks = 0
             failedRescue = failed
+        }
+
+        override fun onEnabled() {
+            stopRescue()
+            failedRescue = false
         }
 
         override fun onDisabled() {
@@ -233,7 +238,7 @@ object ModuleEagle : ClientModule(
                 return@handler
             }
 
-            when (val packet = event.packet) {
+            when (event.packet) {
                 is ServerboundMovePlayerPacket -> event.cancelEvent()
                 is ServerboundUseItemOnPacket -> {
                     event.cancelEvent()
@@ -247,7 +252,7 @@ object ModuleEagle : ClientModule(
                             player.horizontalCollision
                         )
                     )
-                    sendPacketSilently(packet)
+                    sendPacketSilently(event.packet)
                 }
             }
         }

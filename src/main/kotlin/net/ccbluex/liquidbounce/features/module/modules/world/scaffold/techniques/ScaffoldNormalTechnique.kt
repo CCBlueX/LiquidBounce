@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldHeadHitterFeature
@@ -89,7 +89,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
     ): BlockPlacementTarget? {
         val priorityComparator = priorityComparator(predictedPos, optimalLine)
 
-        val offsets = if (ModuleFreeze.running || ModuleEagle.isClutching) {
+        val offsets = if (ModuleFreeze.running || ModuleScaffold.expandedSearchRequested) {
             BlockPosOffsets.FULL.offsets
         } else if (ScaffoldDownFeature.shouldGoDown) {
             BlockPosOffsets.DOWN.offsets

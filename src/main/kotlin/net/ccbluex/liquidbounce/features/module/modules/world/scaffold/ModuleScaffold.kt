@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -117,6 +119,19 @@ import kotlin.math.abs
  */
 @Suppress("TooManyFunctions")
 object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
+
+    private val expandedSearchProviders = ReferenceOpenHashSet<EventListener>()
+
+    internal val expandedSearchRequested
+        get() = expandedSearchProviders.isNotEmpty()
+
+    internal fun requestExpandedSearch(provider: EventListener, requested: Boolean) {
+        if (requested) {
+            expandedSearchProviders.add(provider)
+        } else {
+            expandedSearchProviders.remove(provider)
+        }
+    }
 
     private val delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
