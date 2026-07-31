@@ -57,7 +57,7 @@ object ModelManager : EventListener, ValueGroup("AI") {
      * Available models from the models folder
      */
     private val availableCombatModels: Array<out String>
-        get() = modelsFolder.list { file, _ -> file.isDirectory }.orEmpty()
+        get() = modelsFolder.list { folder, name -> folder.resolve(name).isDirectory }.orEmpty()
 
     /**
      * Bundled models merged with user models from the models folder.
