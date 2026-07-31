@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.command.commands.deeplearn
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
@@ -38,12 +40,15 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import net.minecraft.util.Util
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
 object CommandModels : Command.Factory {
+
+    private val mutationMutex = Mutex()
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -67,21 +72,23 @@ object CommandModels : Command.Factory {
                     .build()
             )
             .suspendHandler {
-                val name = args[0] as String
+                mutationMutex.withLock {
+                    val name = args[0] as String
 
-                // Check if model exists
-                if (models.modes.any { model -> model.name.equals(name, true) }) {
-                    throw CommandException(command.result("modelExists", name))
-                }
+                    // Check if model exists
+                    if (models.modes.any { model -> model.name.equals(name, true) }) {
+                        throw CommandException(command.result("modelExists", name))
+                    }
 
-                // Check if the name is a valid name
-                if (name.contains(Regex("[^a-zA-Z0-9-]"))) {
-                    throw CommandException(command.result("invalidName"))
-                }
+                    // Check if the name is a valid name
+                    if (name.contains(Regex("[^a-zA-Z0-9-]"))) {
+                        throw CommandException(command.result("invalidName"))
+                    }
 
-                chat(command.result("trainingStart", name))
-                withContext(Dispatchers.Default) {
-                    trainModel(command, name)
+                    chat(command.result("trainingStart", name))
+                    withContext(Dispatchers.Default) {
+                        trainModel(command, name)
+                    }
                 }
             }
             .build()
@@ -97,13 +104,15 @@ object CommandModels : Command.Factory {
                     .build()
             )
             .suspendHandler {
-                val name = args[0] as String
-                val model = models.modes.find { model -> model.name.equals(name, true) } ?:
-                    throw CommandException(command.result("modelNotFound", name))
+                mutationMutex.withLock {
+                    val name = args[0] as String
+                    val model = models.modes.find { model -> model.name.equals(name, true) } ?:
+                        throw CommandException(command.result("modelNotFound", name))
 
-                chat(command.result("trainingStart", name))
-                withContext(Dispatchers.Default) {
-                    trainModel(command, name, model)
+                    chat(command.result("trainingStart", name))
+                    withContext(Dispatchers.Default) {
+                        trainModel(command, name, model)
+                    }
                 }
             }
             .build()
@@ -118,20 +127,24 @@ object CommandModels : Command.Factory {
                     .required()
                     .build()
             )
-            .handler {
-                val name = args[0] as String
-                val model = models.modes.find { model ->
-                    model.name.equals(name, true) && modelsFolder.resolve(model.name).isDirectory
-                }
+            .suspendHandler {
+                mutationMutex.withLock {
+                    val name = args[0] as String
+                    val model = models.modes.find { model ->
+                        model.name.equals(name, true) && modelsFolder.resolve(model.name).isDirectory
+                    }
 
-                if (model == null) {
-                    chat(markAsError(command.result("modelNotFound", name)))
-                    return@handler
-                }
+                    if (model == null) {
+                        chat(markAsError(command.result("modelNotFound", name)))
+                        return@withLock
+                    }
 
-                model.delete()
-                ModelManager.reload()
-                chat(command.result("modelDeleted", name))
+                    withContext(Dispatchers.IO) {
+                        model.delete()
+                    }
+                    ModelManager.reload()
+                    chat(command.result("modelDeleted", name))
+                }
             }
             .build()
     }
@@ -141,7 +154,7 @@ object CommandModels : Command.Factory {
         return CommandBuilder
             .begin("reload")
             .suspendHandler {
-                withContext(Dispatchers.Default) {
+                mutationMutex.withLock {
                     ModelManager.reload()
                 }
                 chat(command.result("modelsReloaded"))
@@ -159,7 +172,11 @@ object CommandModels : Command.Factory {
             .build()
     }
 
-    private fun trainModel(command: Command, name: String, model: TwoDimensionalRegressionModel? = null) = runCatching {
+    private suspend fun trainModel(
+        command: Command,
+        name: String,
+        model: TwoDimensionalRegressionModel? = null
+    ) = runCatching {
         val (samples, sampleTime) = measureTimedValue {
             CombatSample.parse(
                 // Combat data
@@ -199,8 +216,10 @@ object CommandModels : Command.Factory {
 
             ModelManager.reload()
 
-            models.setByString(name)
-            ModuleClickGui.sync()
+            withContext(MinecraftDispatcher) {
+                models.setByString(name)
+                ModuleClickGui.sync()
+            }
         }
 
         chat(command.result("trainingEnd", name, trainingTime.toString(DurationUnit.MINUTES, decimals = 2)))

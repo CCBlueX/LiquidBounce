@@ -19,6 +19,10 @@
 
 package net.ccbluex.liquidbounce.deeplearn
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
@@ -26,11 +30,13 @@ import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import kotlin.time.measureTime
 
 object ModelManager : EventListener, ValueGroup("AI") {
 
     private val logger = clientLogger("AI/ModelManager")
+    private val lifecycleMutex = Mutex()
 
     /**
      * Base models that are always available
@@ -66,10 +72,32 @@ object ModelManager : EventListener, ValueGroup("AI") {
      * when reloading the models. Otherwise, the models are loaded on startup
      * through the choice initialization.
      */
-    fun load() {
+    suspend fun load() = lifecycleMutex.withLock {
         logger.info("Loading models...")
-        val activeModelName = models.activeMode.name
-        val choices = allCombatModels.mapNotNull { name ->
+        val activeModelName = withContext(MinecraftDispatcher) {
+            models.activeMode.name
+        }
+        val choices = withContext(Dispatchers.IO) {
+            loadModels()
+        }
+
+        val previousModels = withContext(MinecraftDispatcher) {
+            val previousModels = models.modes.toTypedArray()
+            models.modes = choices.toMutableList()
+            val nextModelName = choices.firstOrNull { model -> model.name == activeModelName }
+                ?.name ?: choices.first().name
+            models.setByString(nextModelName)
+            ModuleClickGui.sync()
+            previousModels
+        }
+
+        withContext(Dispatchers.IO) {
+            previousModels.forEach { model -> model.close() }
+        }
+    }
+
+    private fun loadModels(): List<TwoDimensionalRegressionModel> {
+        val loadedModels = allCombatModels.mapNotNull { name ->
             val model = TwoDimensionalRegressionModel(name, models)
 
             runCatching {
@@ -84,29 +112,13 @@ object ModelManager : EventListener, ValueGroup("AI") {
             }.getOrNull()?.let { model }
         }
 
-        check(choices.isNotEmpty()) { "No combat models could be loaded" }
-
-        models.modes = choices.toMutableList()
-        val nextModelName = choices.firstOrNull { model -> model.name == activeModelName }
-            ?.name ?: choices.first().name
-        models.setByString(nextModelName)
-        ModuleClickGui.sync()
-    }
-
-    /**
-     * Unload all models.
-     */
-    fun unload() {
-        models.modes.forEach { it.close() }
-        models.modes.clear()
+        check(loadedModels.isNotEmpty()) { "No combat models could be loaded" }
+        return loadedModels
     }
 
     /**
      * Clear out all models and load-in the models again.
      */
-    fun reload() {
-        unload()
-        load()
-    }
+    suspend fun reload() = load()
 
 }
