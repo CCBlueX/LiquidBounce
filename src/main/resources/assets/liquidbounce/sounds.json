@@ -71,8 +71,8 @@
   "soft": {
     "sounds": ["liquidbounce:soft"]
   },
-  "magics_quash": {
-    "sounds": ["liquidbounce:magics_quash"]
+  "magic_squash": {
+    "sounds": ["liquidbounce:magic_squash"]
   },
   "squash": {
     "sounds": ["liquidbounce:squash"]

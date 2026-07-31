@@ -38,6 +38,7 @@ import net.minecraft.world.level.entity.EntityTypeTest
 import net.minecraft.world.level.entity.LevelEntityGetter
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
 import java.util.function.Predicate
 
@@ -174,3 +175,13 @@ fun <B : Entity, T : B> LevelEntityGetter<B>.any(
     predicate: Predicate<T>,
 ): Boolean = firstOrNull(type, predicate) != null
 
+private val localEntityIdGenerator = AtomicInteger(-1)
+
+/**
+ * Allocates a unique negative entity ID for a locally spawned entity.
+ *
+ * Server entity IDs are always positive, and [Level.getNextEntityId] returns 0 on the client,
+ * which [net.minecraft.client.multiplayer.ClientLevel.addEntity] rejects by throwing
+ * `Tried to access entity ID before ID assignment`.
+ */
+fun Level.nextLocalEntityId(): Int = localEntityIdGenerator.getAndDecrement()
