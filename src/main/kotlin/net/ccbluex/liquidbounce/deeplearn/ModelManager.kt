@@ -44,8 +44,11 @@ object ModelManager : EventListener, ValueGroup("AI") {
      *
      * The name can contain uppercase characters,
      * but the file should always be lowercase.
+     *
+     * A user model from the models folder with the same name
+     * overrides the bundled model of the same name.
      */
-    private val combatModels = arrayOf(
+    private val builtInCombatModels = arrayOf(
         "21KC11KP",
         "19KC8KP"
     )
@@ -56,8 +59,16 @@ object ModelManager : EventListener, ValueGroup("AI") {
     private val availableCombatModels: Array<out String>
         get() = modelsFolder.list { file, _ -> file.isDirectory }.orEmpty()
 
-    private val allCombatModels: Array<String>
-        get() = combatModels + availableCombatModels
+    /**
+     * Bundled models merged with user models from the models folder.
+     * User models take precedence over bundled models with the same name,
+     * so that improved copies of bundled models are used instead of the originals.
+     */
+    private val allCombatModels: Collection<String>
+        get() = buildSet {
+            addAll(availableCombatModels)
+            addAll(builtInCombatModels)
+        }
 
     val models = modes(this, "Model", 0) { modeValueGroup ->
         // Empty models for start-up initialization.
