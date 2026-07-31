@@ -70,11 +70,15 @@ abstract class ModelWrapper<I, O>(
     private val predictor: Predictor<I, O> by lazyPredictor
     private val lock = ReentrantReadWriteLock()
 
+    @Volatile
+    private var closed = false
+
     @Throws(TranslateException::class)
     fun predict(input: I): O {
         require(DeepLearningEngine.isInitialized) { "DeepLearningEngine is not initialized" }
 
         return lock.read {
+            check(!closed) { "Model '$name' is closed" }
             predictor.predict(input)
         }
     }
@@ -87,6 +91,7 @@ abstract class ModelWrapper<I, O>(
         val inputs = features[0].size.toLong()
 
         lock.write {
+            check(!closed) { "Model '$name' is closed" }
             val trainingConfig = DefaultTrainingConfig(Loss.l2Loss())
                 .optInitializer(XavierInitializer(), "weight")
                 .optOptimizer(
@@ -113,12 +118,14 @@ abstract class ModelWrapper<I, O>(
 
     fun load(stream: InputStream) {
         lock.write {
+            check(!closed) { "Model '$name' is closed" }
             model.load(stream)
         }
     }
 
     fun load(path: Path) {
         lock.write {
+            check(!closed) { "Model '$name' is closed" }
             model.load(path, "tf")
         }
     }
@@ -152,6 +159,11 @@ abstract class ModelWrapper<I, O>(
 
     override fun close() {
         lock.write {
+            if (closed) {
+                return
+            }
+            closed = true
+
             if (lazyPredictor.isInitialized()) {
                 predictor.close()
             }
