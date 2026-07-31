@@ -150,6 +150,11 @@ object CommandModels : Command.Factory {
                             .isSuccess
                     }
                     if (!deleted) {
+                        runCatching {
+                            ModelManager.reload()
+                        }.onFailure { error ->
+                            logger.error("Failed to restore models after deleting '$name' failed.", error)
+                        }
                         return@withLock
                     }
 
