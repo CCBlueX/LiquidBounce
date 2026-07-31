@@ -83,12 +83,17 @@ abstract class ModelWrapper<I, O>(
         }
     }
 
-    fun train(features: Array<FloatArray>, labels: Array<FloatArray>) {
+    fun train(features: FloatArray, labels: FloatArray) {
         require(DeepLearningEngine.isInitialized) { "DeepLearningEngine is not initialized" }
 
-        require(features.size == labels.size) { "Features and labels must have the same size" }
         require(features.isNotEmpty()) { "Features and labels must not be empty" }
-        val inputs = features[0].size.toLong()
+        require(labels.isNotEmpty()) { "Features and labels must not be empty" }
+
+        val outputSize = Math.toIntExact(outputs)
+        require(labels.size % outputSize == 0) { "Labels must contain $outputSize values per sample" }
+        val sampleCount = labels.size / outputSize
+        require(features.size % sampleCount == 0) { "Features must have the same sample count as labels" }
+        val inputSize = features.size / sampleCount
 
         lock.write {
             check(!closed) { "Model '$name' is closed" }
@@ -104,11 +109,11 @@ abstract class ModelWrapper<I, O>(
             model.newTrainer(trainingConfig).use { trainer ->
                 NDManager.newBaseManager().use { manager ->
                     val trainingSet = ArrayDataset.Builder()
-                        .setData(manager.create(features))
-                        .optLabels(manager.create(labels))
+                        .setData(manager.create(features, Shape(sampleCount.toLong(), inputSize.toLong())))
+                        .optLabels(manager.create(labels, Shape(sampleCount.toLong(), outputs)))
                         .setSampling(BATCH_SIZE, true)
                         .build()
-                    trainer.initialize(Shape(BATCH_SIZE.toLong(), inputs))
+                    trainer.initialize(Shape(BATCH_SIZE.toLong(), inputSize.toLong()))
 
                     EasyTrain.fit(trainer, NUM_EPOCH, trainingSet, null)
                 }

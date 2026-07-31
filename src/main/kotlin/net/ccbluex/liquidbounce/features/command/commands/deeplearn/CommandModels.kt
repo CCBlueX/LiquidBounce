@@ -23,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
@@ -215,13 +214,30 @@ object CommandModels : Command.Factory {
 
         chat(command.result("samplesLoaded", samples.size, sampleTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
-        class Dataset(val features: Array<FloatArray>, val labels: Array<FloatArray>)
+        class Dataset(val features: FloatArray, val labels: FloatArray)
 
         val (dataset, datasetTime) = measureTimedValue {
-            Dataset(
-                samples.mapToArray { it.asInput },
-                samples.mapToArray { it.asOutput }
-            )
+            val inputSize = samples.first().inputSize
+            val outputSize = samples.first().outputSize
+            require(inputSize > 0 && outputSize > 0) { "Sample input and output sizes must be positive" }
+            val features = FloatArray(Math.multiplyExact(samples.size, inputSize))
+            val labels = FloatArray(Math.multiplyExact(samples.size, outputSize))
+            var featureIndex = 0
+            var labelIndex = 0
+
+            for (sample in samples) {
+                require(sample.inputSize == inputSize && sample.outputSize == outputSize) {
+                    "All samples must have the same input and output sizes"
+                }
+                val nextFeatureIndex = sample.fillAsInput(features, featureIndex)
+                val nextLabelIndex = sample.fillAsOutput(labels, labelIndex)
+                check(nextFeatureIndex == featureIndex + inputSize) { "Sample wrote an unexpected number of inputs" }
+                check(nextLabelIndex == labelIndex + outputSize) { "Sample wrote an unexpected number of outputs" }
+                featureIndex = nextFeatureIndex
+                labelIndex = nextLabelIndex
+            }
+
+            Dataset(features, labels)
         }
 
         chat(command.result("preparedData", datasetTime.toString(DurationUnit.SECONDS, decimals = 2)))

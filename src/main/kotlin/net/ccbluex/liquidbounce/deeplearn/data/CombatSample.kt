@@ -53,7 +53,7 @@ data class CombatSample(
      */
     @SerializedName(AGE)
     val age: Int
-) {
+) : TrainingSample {
 
     val currentRotation
         get() = Rotation.fromRotationVec(currentVector)
@@ -76,30 +76,48 @@ data class CombatSample(
     val previousVelocityDelta
         get() = previousRotation.rotationDeltaTo(currentRotation)
 
-    val asInput: FloatArray
-        get() = floatArrayOf(
-            // Total Delta
-            totalDelta.deltaYaw,
-            totalDelta.deltaPitch,
+    override val inputSize: Int
+        get() = INPUT_SIZE
 
-            // Velocity Delta
-            previousVelocityDelta.deltaYaw,
-            previousVelocityDelta.deltaPitch,
+    override val outputSize: Int
+        get() = OUTPUT_SIZE
 
-            // Speed
-            targetDiff.horizontalDistance().toFloat() + playerDiff.horizontalDistance().toFloat(),
+    override fun fillAsInput(dest: FloatArray, fromIndex: Int): Int {
+        require(fromIndex in 0..dest.size && inputSize <= dest.size - fromIndex) {
+            "Destination does not have enough space for $inputSize input values"
+        }
 
-            // Distance
-            distance
-        )
+        val totalDelta = totalDelta
+        val previousVelocityDelta = previousVelocityDelta
+        var index = fromIndex
+        // Total Delta
+        dest[index++] = totalDelta.deltaYaw
+        dest[index++] = totalDelta.deltaPitch
+        // Velocity Delta
+        dest[index++] = previousVelocityDelta.deltaYaw
+        dest[index++] = previousVelocityDelta.deltaPitch
+        // Speed
+        dest[index++] = targetDiff.horizontalDistance().toFloat() + playerDiff.horizontalDistance().toFloat()
+        // Distance
+        dest[index++] = distance
+        return index
+    }
 
-    val asOutput
-        get() = floatArrayOf(
-            velocityDelta.x,
-            velocityDelta.y
-        )
+    override fun fillAsOutput(dest: FloatArray, fromIndex: Int): Int {
+        require(fromIndex in 0..dest.size && outputSize <= dest.size - fromIndex) {
+            "Destination does not have enough space for $outputSize output values"
+        }
+
+        var index = fromIndex
+        dest[index++] = velocityDelta.x
+        dest[index++] = velocityDelta.y
+        return index
+    }
 
     companion object {
+        private const val INPUT_SIZE = 6
+        private const val OUTPUT_SIZE = 2
+
         private const val CURRENT_DIRECTION_VECTOR = "a"
         private const val PREVIOUS_DIRECTION_VECTOR = "b"
         private const val TARGET_DIRECTION_VECTOR = "c"
@@ -120,4 +138,3 @@ data class CombatSample(
 
     }
 }
-
