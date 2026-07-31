@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("TooManyFunctions")
 package net.ccbluex.liquidbounce.utils.world
 
 import com.google.common.base.Predicates
