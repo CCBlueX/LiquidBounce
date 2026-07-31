@@ -20,16 +20,29 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
+import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import java.util.function.Predicate
 
 /**
@@ -50,6 +63,9 @@ object ModuleEagle : ClientModule(
     private var currentEdgeDistance: Float = edgeDistance.random()
     private var wasSneaking = false
     private var sneakCaptured = false
+
+    internal val isClutching
+        get() = Clutch.isRescuing
 
     private fun shouldActivateEagle(event: MovementInputEvent, conditionsMet: Boolean): Boolean {
         if (player.abilities.flying || !conditionsMet) {
@@ -123,8 +139,130 @@ object ModuleEagle : ClientModule(
         }
     }
 
+    private object Clutch : ToggleableValueGroup(this, "Clutch", false) {
+
+        private val predictionTicks by int("PredictionTicks", 10, 1..40, "ticks")
+        private val minFallDistance by float("MinFallDistance", 0.5f, 0.0f..5.0f)
+        private val maxStuckTicks by int("MaxStuckTicks", 20, 1..100, "ticks")
+
+        var isRescuing = false
+            private set
+
+        private var enabledScaffold = false
+        private var rescueTicks = 0
+        private var failedRescue = false
+
+        private fun isFallPredictedIntoVoid(): Boolean {
+            if (player.onGround() || player.abilities.flying || player.isSpectator || player.isDeadOrDying ||
+                !player.wouldFallIntoVoid(player.position())
+            ) {
+                return false
+            }
+
+            val snapshots = PlayerSimulationCache.getSimulationForLocalPlayer()
+                .getSnapshotsBetween(1..predictionTicks)
+
+            return snapshots.any { snapshot ->
+                snapshot.fallDistance >= minFallDistance && player.wouldFallIntoVoid(snapshot.pos)
+            }
+        }
+
+        private fun startRescue() {
+            if (ModuleScaffold.enabled || ModuleFreeze.enabled || ModuleScaffold.blockCount == 0) {
+                return
+            }
+
+            isRescuing = true
+            rescueTicks = 0
+            enabledScaffold = true
+            ModuleScaffold.enabled = true
+
+            if (!ModuleScaffold.running) {
+                stopRescue(failed = true)
+            }
+        }
+
+        private fun stopRescue(failed: Boolean = false) {
+            if (enabledScaffold && ModuleScaffold.enabled) {
+                ModuleScaffold.enabled = false
+            }
+
+            enabledScaffold = false
+            isRescuing = false
+            rescueTicks = 0
+            failedRescue = failed
+        }
+
+        override fun onDisabled() {
+            stopRescue()
+            failedRescue = false
+        }
+
+        @Suppress("unused")
+        private val gameTickHandler = handler<GameTickEvent> {
+            if (!isRescuing) {
+                val fallPredictedIntoVoid = isFallPredictedIntoVoid()
+
+                if (!fallPredictedIntoVoid) {
+                    failedRescue = false
+                } else if (!failedRescue) {
+                    startRescue()
+                }
+                return@handler
+            }
+
+            rescueTicks++
+
+            when {
+                !ModuleScaffold.running -> stopRescue(failed = true)
+                !player.wouldFallIntoVoid(player.position()) -> stopRescue()
+                rescueTicks >= maxStuckTicks -> stopRescue(failed = true)
+            }
+        }
+
+        @Suppress("unused")
+        private val playerTickHandler = handler<PlayerTickEvent>(priority = SAFETY_FEATURE) { event ->
+            if (isRescuing) {
+                event.cancelEvent()
+            }
+        }
+
+        @Suppress("unused")
+        private val packetHandler = handler<PacketEvent>(priority = SAFETY_FEATURE) { event ->
+            if (!isRescuing || event.origin != TransferOrigin.OUTGOING || event.isCancelled) {
+                return@handler
+            }
+
+            when (val packet = event.packet) {
+                is ServerboundMovePlayerPacket -> event.cancelEvent()
+                is ServerboundUseItemOnPacket -> {
+                    event.cancelEvent()
+
+                    val rotation = RotationManager.currentRotation ?: player.rotation
+                    sendPacketSilently(
+                        ServerboundMovePlayerPacket.Rot(
+                            rotation.yaw,
+                            rotation.pitch,
+                            player.onGround(),
+                            player.horizontalCollision
+                        )
+                    )
+                    sendPacketSilently(packet)
+                }
+            }
+        }
+
+        @Suppress("unused")
+        private val worldChangeHandler = handler<WorldChangeEvent> {
+            stopRescue()
+            failedRescue = false
+        }
+
+    }
+
     init {
         tree(Conditional)
+        tree(Clutch)
     }
 
     override fun onDisabled() {
