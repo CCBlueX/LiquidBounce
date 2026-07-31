@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.deeplearn
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
@@ -36,14 +38,18 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import net.minecraft.util.Util
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
 object CommandModels : Command.Factory {
+
+    private val mutationMutex = Mutex()
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -67,21 +73,23 @@ object CommandModels : Command.Factory {
                     .build()
             )
             .suspendHandler {
-                val name = args[0] as String
+                mutationMutex.withLock {
+                    val name = args[0] as String
 
-                // Check if model exists
-                if (models.modes.any { model -> model.name.equals(name, true) }) {
-                    throw CommandException(command.result("modelExists", name))
-                }
+                    // Check if model exists
+                    if (models.modes.any { model -> model.name.equals(name, true) }) {
+                        throw CommandException(command.result("modelExists", name))
+                    }
 
-                // Check if the name is a valid name
-                if (name.contains(Regex("[^a-zA-Z0-9-]"))) {
-                    throw CommandException(command.result("invalidName"))
-                }
+                    // Check if the name is a valid name
+                    if (name.contains(Regex("[^a-zA-Z0-9-]"))) {
+                        throw CommandException(command.result("invalidName"))
+                    }
 
-                chat(command.result("trainingStart", name))
-                withContext(Dispatchers.Default) {
-                    trainModel(command, name)
+                    chat(command.result("trainingStart", name))
+                    withContext(Dispatchers.Default) {
+                        trainModel(command, name)
+                    }
                 }
             }
             .build()
@@ -97,13 +105,15 @@ object CommandModels : Command.Factory {
                     .build()
             )
             .suspendHandler {
-                val name = args[0] as String
-                val model = models.modes.find { model -> model.name.equals(name, true) } ?:
-                    throw CommandException(command.result("modelNotFound", name))
+                mutationMutex.withLock {
+                    val name = args[0] as String
+                    val model = models.modes.find { model -> model.name.equals(name, true) } ?:
+                        throw CommandException(command.result("modelNotFound", name))
 
-                chat(command.result("trainingStart", name))
-                withContext(Dispatchers.Default) {
-                    trainModel(command, name, model)
+                    chat(command.result("trainingStart", name))
+                    withContext(Dispatchers.Default) {
+                        trainModel(command, name, model)
+                    }
                 }
             }
             .build()
@@ -118,18 +128,44 @@ object CommandModels : Command.Factory {
                     .required()
                     .build()
             )
-            .handler {
-                val name = args[0] as String
-                val model = models.modes.find { model -> model.name.equals(name, true) }
+            .suspendHandler {
+                mutationMutex.withLock {
+                    val name = args[0] as String
+                    val model = models.modes.find { model ->
+                        model.name.equals(name, true) && modelsFolder.resolve(model.name).isDirectory
+                    }
 
-                if (model == null) {
-                    chat(markAsError(command.result("modelNotFound", name)))
-                    return@handler
+                    if (model == null) {
+                        chat(markAsError(command.result("modelNotFound", name)))
+                        return@withLock
+                    }
+
+                    val deleted = withContext(Dispatchers.IO) {
+                        runCatching { model.delete() }
+                            .onFailure { error ->
+                                logger.error("Failed to delete model '$name'.", error)
+                                chat(markAsError(command.result("modelDeleteFailed", name, error.localizedMessage)))
+                            }
+                            .isSuccess
+                    }
+                    if (!deleted) {
+                        runCatching {
+                            ModelManager.reload()
+                        }.onFailure { error ->
+                            logger.error("Failed to restore models after deleting '$name' failed.", error)
+                        }
+                        return@withLock
+                    }
+
+                    runCatching {
+                        ModelManager.reload()
+                    }.onFailure { error ->
+                        logger.error("Failed to reload models after deleting '$name'.", error)
+                        chat(markAsError(command.result("modelDeleteFailed", name, error.localizedMessage)))
+                        return@withLock
+                    }
+                    chat(command.result("modelDeleted", name))
                 }
-
-                model.delete()
-                models.modes.remove(model)
-                chat(command.result("modelDeleted", name))
             }
             .build()
     }
@@ -138,8 +174,10 @@ object CommandModels : Command.Factory {
     private fun reloadModelCommand(): Command {
         return CommandBuilder
             .begin("reload")
-            .handler {
-                ModelManager.reload()
+            .suspendHandler {
+                mutationMutex.withLock {
+                    ModelManager.reload()
+                }
                 chat(command.result("modelsReloaded"))
             }
             .build()
@@ -155,7 +193,11 @@ object CommandModels : Command.Factory {
             .build()
     }
 
-    private fun trainModel(command: Command, name: String, model: TwoDimensionalRegressionModel? = null) = runCatching {
+    private suspend fun trainModel(
+        command: Command,
+        name: String,
+        model: TwoDimensionalRegressionModel? = null
+    ): Unit = try {
         val (samples, sampleTime) = measureTimedValue {
             CombatSample.parse(
                 // Combat data
@@ -167,34 +209,62 @@ object CommandModels : Command.Factory {
 
         if (samples.isEmpty()) {
             chat(markAsError(command.result("noSamples")))
-            return@runCatching
+            return
         }
 
         chat(command.result("samplesLoaded", samples.size, sampleTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
-        class Dataset(val features: Array<FloatArray>, val labels: Array<FloatArray>)
+        class Dataset(val features: FloatArray, val labels: FloatArray)
 
         val (dataset, datasetTime) = measureTimedValue {
-            Dataset(
-                samples.mapToArray { it.asInput },
-                samples.mapToArray { it.asOutput }
-            )
+            val inputSize = samples.first().inputSize
+            val outputSize = samples.first().outputSize
+            require(inputSize > 0 && outputSize > 0) { "Sample input and output sizes must be positive" }
+            val features = FloatArray(Math.multiplyExact(samples.size, inputSize))
+            val labels = FloatArray(Math.multiplyExact(samples.size, outputSize))
+            var featureIndex = 0
+            var labelIndex = 0
+
+            for (sample in samples) {
+                require(sample.inputSize == inputSize && sample.outputSize == outputSize) {
+                    "All samples must have the same input and output sizes"
+                }
+                val nextFeatureIndex = sample.fillAsInput(features, featureIndex)
+                val nextLabelIndex = sample.fillAsOutput(labels, labelIndex)
+                check(nextFeatureIndex == featureIndex + inputSize) { "Sample wrote an unexpected number of inputs" }
+                check(nextLabelIndex == labelIndex + outputSize) { "Sample wrote an unexpected number of outputs" }
+                featureIndex = nextFeatureIndex
+                labelIndex = nextLabelIndex
+            }
+
+            Dataset(features, labels)
         }
 
         chat(command.result("preparedData", datasetTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
         val trainingTime = measureTime {
-            val model = model ?: TwoDimensionalRegressionModel(name, models).also { model -> models.modes.add(model) }
-            model.train(dataset.features, dataset.labels)
-            model.save()
+            TwoDimensionalRegressionModel(name, models).use { candidate ->
+                if (model != null) {
+                    candidate.load(model.name)
+                }
 
-            models.setByString(model.name)
-            ModuleClickGui.sync()
+                candidate.train(dataset.features, dataset.labels)
+                candidate.save()
+            }
+
+            ModelManager.reload()
+
+            withContext(MinecraftDispatcher) {
+                models.setByString(name)
+                ModuleClickGui.sync()
+            }
         }
 
         chat(command.result("trainingEnd", name, trainingTime.toString(DurationUnit.MINUTES, decimals = 2)))
-    }.onFailure { error ->
-        chat(markAsError(command.result("trainingFailed", error.localizedMessage)))
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        chat(markAsError(command.result("trainingFailed", e.localizedMessage)))
     }
 
 }

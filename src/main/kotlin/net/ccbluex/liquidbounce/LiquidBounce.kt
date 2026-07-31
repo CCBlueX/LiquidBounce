@@ -399,8 +399,10 @@ object LiquidBounce : EventListener {
                 runCatching {
                     DeepLearningEngine.init(task)
                     ModelManager.load()
+                    DeepLearningEngine.markInitialized()
                 }.onFailure { exception ->
                     task.subTasks.clear()
+                    DeepLearningEngine.markUnavailable()
 
                     // LiquidBounce can still run without deep learning,
                     // and we don't want to crash the client if it fails.

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -51,6 +52,8 @@ class Command(
     val handler: Handler?,
     val requiresIngame: Boolean,
 ) : MinecraftShortcuts, DebuggedOwner {
+    val logger = clientLogger("Command/$name")
+
     var parentCommand: Command? = null
         private set
     var index: Int = -1
@@ -265,7 +268,9 @@ class Command(
     fun interface Handler {
         operator fun Context.invoke()
 
-        class Context(@JvmField val command: Command, @JvmField val args: Array<out Any>)
+        class Context(@JvmField val command: Command, @JvmField val args: Array<out Any>) {
+            inline val logger get() = command.logger
+        }
 
         fun interface Suspend {
             suspend operator fun Context.invoke()

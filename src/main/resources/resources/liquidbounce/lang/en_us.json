@@ -327,6 +327,7 @@
 
   "liquidbounce.command.models.subcommand.delete.description": "Deletes a DL model.",
   "liquidbounce.command.models.subcommand.delete.result.modelNotFound": "Model %s not found.",
+  "liquidbounce.command.models.subcommand.delete.result.modelDeleteFailed": "Failed to delete model %s: %s",
   "liquidbounce.command.models.subcommand.delete.result.modelDeleted": "Model %s deleted.",
 
   "liquidbounce.command.models.subcommand.browse.description": "Opens the DL models directory.",

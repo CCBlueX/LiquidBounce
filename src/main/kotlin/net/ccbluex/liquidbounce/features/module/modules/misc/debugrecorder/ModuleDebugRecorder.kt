@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
-import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.fileGson
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.client.underline
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.HoverEvent
+import java.io.File
 import java.time.LocalDateTime
 
 object ModuleDebugRecorder : ClientModule("DebugRecorder", ModuleCategories.MISC, disableOnQuit = true) {
@@ -67,7 +68,8 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", ModuleCategories.MISC
         val folder = ConfigSystem.rootFolder.resolve("debug-recorder/$name").apply {
             mkdirs()
         }
-        internal val packets = mutableListOf<T>()
+
+        protected val packets = mutableListOf<T>()
 
         protected fun recordPacket(packet: T) {
             if (!this.isSelected) {
@@ -75,6 +77,15 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", ModuleCategories.MISC
             }
 
             packets.add(packet)
+        }
+
+        protected open val fileExtension: String get() = "json"
+
+        protected open fun writePackets(file: File) {
+            file.bufferedWriter().use { writer ->
+                // No indent as default
+                fileGson.toJson(this.packets, writer)
+            }
         }
 
         override fun enable() {
@@ -93,16 +104,14 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", ModuleCategories.MISC
                 folder.mkdirs()
 
                 val baseName = LocalDateTime.now().toUnderlinedString()
-                var file = folder.resolve("${baseName}.json")
+                var file = folder.resolve("$baseName.$fileExtension")
 
                 var idx = 0
                 while (file.exists()) {
-                    file = folder.resolve("${baseName}_${idx++}.json")
+                    file = folder.resolve("${baseName}_${idx++}.$fileExtension")
                 }
 
-                file.bufferedWriter().use { writer ->
-                    publicGson.toJson(this.packets, writer)
-                }
+                writePackets(file)
                 file.absolutePath
             }.onFailure {
                 chat(markAsError("Failed to write log to file $it"))

@@ -30,6 +30,7 @@ object DeepLearningEngine {
 
     private val logger = clientLogger("AI")
 
+    @Volatile
     var isInitialized = false
         private set
 
@@ -65,6 +66,7 @@ object DeepLearningEngine {
     }
 
     @JvmStatic
+    @Volatile
     var task: Task? = null
 
     /**
@@ -77,6 +79,7 @@ object DeepLearningEngine {
      */
     suspend fun init(task: Task) {
         this.task = task
+        isInitialized = false
 
         logger.info("Initializing engine...")
         val engine = withContext(Dispatchers.IO) {
@@ -86,8 +89,15 @@ object DeepLearningEngine {
         val version = engine.version
         val deviceType = engine.defaultDevice().deviceType.uppercase(Locale.ENGLISH)
         logger.info("Using deep learning engine $name $version on $deviceType.")
+    }
 
+    internal fun markInitialized() {
         isInitialized = true
+        this.task = null
+    }
+
+    internal fun markUnavailable() {
+        isInitialized = false
         this.task = null
     }
 

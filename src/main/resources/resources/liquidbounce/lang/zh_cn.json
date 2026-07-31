@@ -323,6 +323,7 @@
   "liquidbounce.command.models.subcommand.reload.result.modelsReloaded": "✔ 模型已重新加载。",
   "liquidbounce.command.models.subcommand.delete.description": "删除一个深度学习模型。",
   "liquidbounce.command.models.subcommand.delete.result.modelNotFound": "❌ 未找到模型%s。",
+  "liquidbounce.command.models.subcommand.delete.result.modelDeleteFailed": "❌ 删除模型%s失败：%s",
   "liquidbounce.command.models.subcommand.delete.result.modelDeleted": "✔ 模型%s已删除。",
   "liquidbounce.command.models.subcommand.browse.description": "打开深度学习模型目录。",
   "liquidbounce.command.marketplace.description": "管理市场物品和与 LiquidBounce 市场的交互。",
