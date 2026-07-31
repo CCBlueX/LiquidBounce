@@ -94,12 +94,22 @@ object ModelManager : EventListener, ValueGroup("AI") {
 
         val previousModels = withContext(MinecraftDispatcher) {
             val previousModels = models.modes.toTypedArray()
-            models.modes = choices.toMutableList()
-            val nextModelName = choices.firstOrNull { model -> model.name == activeModelName }
-                ?.name ?: choices.first().name
-            models.setByString(nextModelName)
-            ModuleClickGui.sync()
-            previousModels
+
+            runCatching {
+                models.modes = choices.toMutableList()
+                val nextModelName = choices.firstOrNull { model -> model.name == activeModelName }
+                    ?.name ?: choices.first().name
+                models.setByString(nextModelName)
+                ModuleClickGui.sync()
+                previousModels.asList()
+            }.getOrElse { error ->
+                // Roll back the swap, keeping the previous models active.
+                logger.error("Failed to activate the newly loaded models, keeping the previous ones.", error)
+                models.modes = previousModels.toMutableList()
+                models.setByString(activeModelName)
+                choices.forEach { model -> model.close() }
+                emptyList()
+            }
         }
 
         withContext(Dispatchers.IO) {

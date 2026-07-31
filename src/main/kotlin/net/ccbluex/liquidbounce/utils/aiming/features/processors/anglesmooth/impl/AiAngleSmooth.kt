@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.Ang
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.NoneAngleSmooth
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
@@ -56,11 +57,15 @@ class AiAngleSmooth(
 
     private val choices = modes<TwoDimensionalRegressionModel>("Model", 0) { local ->
         models.onChanged {
-            val activeModelName = local.activeMode.tag
-            local.modes = models.modes
-            val nextModelName = local.modes.firstOrNull { model -> model.tag == activeModelName }
-                ?.tag ?: models.activeMode.tag
-            local.setByString(nextModelName)
+            runCatching {
+                val activeModelName = local.activeMode.tag
+                local.modes = models.modes
+                val nextModelName = local.modes.firstOrNull { model -> model.tag == activeModelName }
+                    ?.tag ?: models.activeMode.tag
+                local.setByString(nextModelName)
+            }.onFailure { error ->
+                logger.error("Failed to sync AI model selection after model reload.", error)
+            }
         }
 
         models.modes.toTypedArray()
