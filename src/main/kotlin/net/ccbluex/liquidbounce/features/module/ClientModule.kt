@@ -153,6 +153,7 @@ open class ClientModule(
 
     final override fun onToggled(state: Boolean): Boolean {
         if (!inGame) {
+            EventManager.callEvent(ModuleToggleEvent(name, hidden, state))
             return state
         }
         calledSinceStartup = true
