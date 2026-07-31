@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
+import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.Entity
@@ -129,6 +130,7 @@ object DebugCombatTrainerRecorder : ModuleDebugRecorder.DebugRecorderMode<Combat
     fun spawn(): LivingEntity {
         val slime = Slime(EntityTypes.SLIME, world)
         slime.setUUID(UUID.randomUUID())
+        slime.id = world.nextLocalEntityId()
 
         val distance = Random.nextDouble() * 0.9 + 2.0
 
