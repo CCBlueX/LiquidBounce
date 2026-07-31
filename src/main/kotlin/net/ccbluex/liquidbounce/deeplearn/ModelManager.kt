@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
+import java.util.Locale
 import kotlin.time.measureTime
 
 object ModelManager : EventListener, ValueGroup("AI") {
@@ -65,10 +66,14 @@ object ModelManager : EventListener, ValueGroup("AI") {
      * so that improved copies of bundled models are used instead of the originals.
      */
     private val allCombatModels: Collection<String>
-        get() = buildSet {
-            addAll(availableCombatModels)
-            addAll(builtInCombatModels)
-        }
+        get() = buildMap {
+            availableCombatModels.forEach { name ->
+                putIfAbsent(name.lowercase(Locale.ENGLISH), name)
+            }
+            builtInCombatModels.forEach { name ->
+                putIfAbsent(name.lowercase(Locale.ENGLISH), name)
+            }
+        }.values
 
     val models = modes(this, "Model", 0) { modeValueGroup ->
         // Empty models for start-up initialization.
