@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
 import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
+import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -66,9 +67,6 @@ object CommandFakePlayer : Command.Factory, EventListener {
 
     private var recording = false
     private val snapshots = ArrayList<PosPoseSnapshot>()
-
-    // the entity ids of fake players shouldn't conflict with real entity ids, so they are negative
-    private var fakePlayerId = -1
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -262,8 +260,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
             )
         }
 
-        fakePlayer.id = fakePlayerId
-        fakePlayerId--
+        fakePlayer.id = world.nextLocalEntityId()
 
         if (!moving) {
             fakePlayer.loadAttributes(fromPlayer(player))
