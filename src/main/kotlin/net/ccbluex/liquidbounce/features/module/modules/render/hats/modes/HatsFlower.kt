@@ -52,7 +52,7 @@ internal object HatsFlower : HatsMode("Flower") {
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         val rotAngle = getRotationAngle(HatFlowerSettings.spinSpeed)
         withHatRotation(rotAngle) {
-            drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+            drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->
                 val petals = HatFlowerSettings.petalCount
                 val outerSegments = petals * 32
                 val innerSegments = 12

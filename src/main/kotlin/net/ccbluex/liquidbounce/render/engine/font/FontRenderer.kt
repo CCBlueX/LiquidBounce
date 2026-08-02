@@ -263,7 +263,7 @@ class FontRenderer(
         if (z.isNaN()) {
             (ctx as GuiGraphicsExtractor).drawHorizontalLine(x0, x1, lineY, lineWidth, color)
         } else {
-            (ctx as WorldRenderEnvironment).drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
+            (ctx as WorldRenderEnvironment).drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { matrix ->
                 val y0 = lineY
                 val y1 = lineY + lineWidth
                 addVertex(matrix, x0, y0, z).setColor(color)

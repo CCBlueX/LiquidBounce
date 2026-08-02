@@ -59,7 +59,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
-        drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->
             val time = ((System.currentTimeMillis() % 1000000L).toFloat() / 1000f) * HatOrbsSettings.speed
 
             // Loop for rendering each individual orb (orbit).
