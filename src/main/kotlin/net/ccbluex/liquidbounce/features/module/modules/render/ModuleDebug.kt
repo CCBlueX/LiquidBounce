@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.math.vector2f
@@ -316,11 +317,13 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
         context(env: WorldRenderEnvironment)
         override fun render() {
-            env.drawLine(
-                env.relativeToCamera(from).toVec3f(),
-                env.relativeToCamera(to).toVec3f(),
-                color.argb,
-            )
+            env.withPositionRelativeToCamera {
+                env.drawLine(
+                    from,
+                    to,
+                    color.argb,
+                )
+            }
         }
     }
 
@@ -332,23 +335,27 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     ) : DebuggedGeometry {
         context(env: WorldRenderEnvironment)
         override fun render() {
-            env.drawTriangle(
-                p1 = env.relativeToCamera(p1).toVec3f(),
-                p2 = env.relativeToCamera(p2).toVec3f(),
-                p3 = env.relativeToCamera(p3).toVec3f(),
-                argb = color.argb,
-            )
+            env.withPositionRelativeToCamera {
+                env.drawTriangle(
+                    p1 = p1.toVec3f(),
+                    p2 = p2.toVec3f(),
+                    p3 = p3.toVec3f(),
+                    argb = color.argb,
+                )
+            }
         }
     }
 
     class DebuggedLineSegment(val from: Vec3, val to: Vec3, val color: Color4b) : DebuggedGeometry {
         context(env: WorldRenderEnvironment)
         override fun render() {
-            env.drawLine(
-                env.relativeToCamera(from).toVec3f(),
-                env.relativeToCamera(to).toVec3f(),
-                color.argb,
-            )
+            env.withPositionRelativeToCamera {
+                env.drawLine(
+                    from,
+                    to,
+                    color.argb,
+                )
+            }
         }
     }
 

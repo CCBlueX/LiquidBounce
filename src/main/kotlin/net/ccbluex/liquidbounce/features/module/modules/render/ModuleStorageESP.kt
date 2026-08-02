@@ -367,7 +367,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 for (type in types) {
                     for (blockPos in StorageScanner.iterate(type)) {
                         if (!type.shouldRender(blockPos)) continue
-                        val pos = relativeToCamera(blockPos.center).toVec3f()
+                        val pos = blockPos.center.subtract(camera.position()).toVec3f()
 
                         drawLine(eyeVector, pos, type.color.argb)
                     }
@@ -378,7 +378,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 val category = entity.categorize() ?: continue
                 if (!category.shouldRender(entity) || !category.tracers) continue
 
-                val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
                 val topPos = pos.add(0f, entity.bbHeight, 0f)
 
                 drawLines(category.color.argb, eyeVector, pos, pos, topPos)

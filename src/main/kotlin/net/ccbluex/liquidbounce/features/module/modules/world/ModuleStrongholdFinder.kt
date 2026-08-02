@@ -43,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.world.forEachSectionBlock
 import net.ccbluex.liquidbounce.utils.world.stronghold.EyeMeasurement
 import net.ccbluex.liquidbounce.utils.world.stronghold.PosteriorSnapshot
@@ -252,16 +251,17 @@ object ModuleStrongholdFinder : ClientModule(
 
             if (renderRays) {
                 val color = Color4b.WHITE.alpha(170).argb
-                for (measurement in measurements) {
-                    val start = measurement.throwPos
-                    val direction = Vec3.directionFromRotation(0f, measurement.angleDeg)
-                    val end = measurement.throwPos.add(direction.scale(RAY_RENDER_LENGTH))
+                withPositionRelativeToCamera {
+                    for ((start, angleDeg) in measurements) {
+                        val direction = Vec3.directionFromRotation(0f, angleDeg)
+                        val end = start.add(direction.scale(RAY_RENDER_LENGTH))
 
-                    drawLine(
-                        relativeToCamera(start).toVec3f(),
-                        relativeToCamera(end).toVec3f(),
-                        color,
-                    )
+                        drawLine(
+                            start,
+                            end,
+                            color,
+                        )
+                    }
                 }
             }
 
@@ -435,20 +435,20 @@ object ModuleStrongholdFinder : ClientModule(
         val target = closestPortalPos.center
 
         val lineColor = Color4b(255, 80, 80, 220).argb
-        val startRelative = relativeToCamera(start).toVec3f()
+        withPositionRelativeToCamera {
+            drawLine(start, target, lineColor)
 
-        drawLine(startRelative, relativeToCamera(target).toVec3f(), lineColor)
-
-        val deltaX = target.x - start.x
-        val deltaZ = target.z - start.z
-        val horizontalLength = hypot(deltaX, deltaZ)
-        if (horizontalLength > 1e-6) {
-            val markerEnd = Vec3(
-                start.x + deltaX / horizontalLength * 2.0,
-                start.y,
-                start.z + deltaZ / horizontalLength * 2.0
-            )
-            drawLine(startRelative, relativeToCamera(markerEnd).toVec3f(), lineColor)
+            val deltaX = target.x - start.x
+            val deltaZ = target.z - start.z
+            val horizontalLength = hypot(deltaX, deltaZ)
+            if (horizontalLength > 1e-6) {
+                val markerEnd = Vec3(
+                    start.x + deltaX / horizontalLength * 2.0,
+                    start.y,
+                    start.z + deltaZ / horizontalLength * 2.0
+                )
+                drawLine(start, markerEnd, lineColor)
+            }
         }
     }
 

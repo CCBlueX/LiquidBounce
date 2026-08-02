@@ -97,7 +97,7 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(
 }
 
 /**
- * Shorthand for `withPosition(relativeToCamera(pos))`
+ * Positions the render origin at the camera-relative coordinates of [pos] before drawing.
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) =
     withPositionRelativeToCamera(pos.x, pos.y, pos.z, draw)
@@ -168,6 +168,15 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
  * Draws a line with endpoint [p1] and [p2] and color [argb].
  */
 fun WorldRenderEnvironment.drawLine(p1: Vec3f, p2: Vec3f, argb: Int) =
+    drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
+        addVertex(pose, p1).setColor(argb)
+        addVertex(pose, p2).setColor(argb)
+    }
+
+/**
+ * Draws a line with endpoint [p1] and [p2] and color [argb].
+ */
+fun WorldRenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
     drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
         addVertex(pose, p1).setColor(argb)
         addVertex(pose, p2).setColor(argb)

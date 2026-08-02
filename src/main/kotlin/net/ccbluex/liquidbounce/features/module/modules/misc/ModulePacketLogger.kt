@@ -44,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.isNotRoot
 import net.ccbluex.liquidbounce.utils.kotlin.toFullString
 import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.ccbluex.liquidbounce.utils.text.buildText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.protocol.Packet
@@ -240,7 +241,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
 
     private fun MutableComponent.appendFields(clazz: Class<out Packet<*>>, packet: Packet<*>) {
         val fieldTexts = collectFields(clazz, packet).mapToArray { (name, type, value) ->
-            buildList {
+            buildText {
                 add("- ".asPlainText(ChatFormatting.GRAY))
                 add(name.asText().withStyle(ChatFormatting.AQUA).copyable(copyContent = name))
                 if (showFieldType) {
@@ -251,7 +252,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
                 add(" = ".asPlainText(ChatFormatting.GRAY))
                 val valueString = value.toString()
                 add(valueString.asText().withStyle(ChatFormatting.WHITE).copyable(copyContent = valueString))
-            }.asText()
+            }
         }
 
         if (fieldTexts.isNotEmpty()) {

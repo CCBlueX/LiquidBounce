@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.text.buildText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
@@ -72,7 +73,7 @@ object CommandHelp : Command.Factory {
             )
     }
 
-    private fun buildAliasesText(cmd: Command): Component = buildList {
+    private fun buildAliasesText(cmd: Command): Component = buildText {
         if (cmd.aliases.isNotEmpty()) {
             cmd.aliases.forEach { alias ->
                 this += ", ".asPlainText(ChatFormatting.DARK_GRAY)
@@ -80,6 +81,6 @@ object CommandHelp : Command.Factory {
                     .onClick(ClickEvent.SuggestCommand(CommandManager.GlobalSettings.prefix + alias))
             }
         }
-    }.asText()
+    }
 
 }

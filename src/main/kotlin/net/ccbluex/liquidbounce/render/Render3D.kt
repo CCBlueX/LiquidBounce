@@ -26,7 +26,6 @@ import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.render.engine.RenderDrawKey
-import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.ccbluex.liquidbounce.render.mesh.MeshBuildScope
 import net.ccbluex.liquidbounce.utils.collection.Pools
@@ -36,12 +35,9 @@ import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.TextFeatureRenderer
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.util.FormattedCharSequence
-import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
-import org.joml.Vector3fc
 
 inline fun <T> usePoseStack(block: PoseStack.() -> T): T {
     val matrices = Pools.MatStack.borrow()
@@ -90,42 +86,6 @@ class WorldRenderEnvironment internal constructor(
     val camera: Camera,
     private val batchCollector: BatchCollector,
 ) {
-    /**
-     * Converts a world-space position to the camera-relative coordinate system.
-     */
-    fun relativeToCamera(pos: Vec3f): Vec3 = Vec3(
-        pos.x - camera.position().x,
-        pos.y - camera.position().y,
-        pos.z - camera.position().z,
-    )
-
-    /**
-     * Converts a world-space position to the camera-relative coordinate system.
-     */
-    fun relativeToCamera(pos: Position): Vec3 = Vec3(
-        pos.x() - camera.position().x,
-        pos.y() - camera.position().y,
-        pos.z() - camera.position().z,
-    )
-
-    /**
-     * Converts a world-space position to the camera-relative coordinate system.
-     */
-    fun relativeToCamera(pos: Vec3i): Vec3 = Vec3(
-        pos.x.toDouble() - camera.position().x,
-        pos.y.toDouble() - camera.position().y,
-        pos.z.toDouble() - camera.position().z,
-    )
-
-    /**
-     * Converts a world-space position to the camera-relative coordinate system.
-     */
-    fun relativeToCamera(pos: Vector3fc): Vec3 = Vec3(
-        pos.x() - camera.position().x,
-        pos.y() - camera.position().y,
-        pos.z() - camera.position().z,
-    )
-
     /**
      * Low-level draw entrypoint.
      *

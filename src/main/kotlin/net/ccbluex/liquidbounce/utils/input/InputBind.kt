@@ -29,13 +29,13 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTab
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.utils.text.asPlainText
-import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.buildText
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.util.Util
@@ -317,7 +317,7 @@ fun Value<InputBind>.bind(key: InputConstants.Key, action: InputBind.BindAction,
  */
 fun Value<InputBind>.unbind() = set(InputBind.UNBOUND)
 
-fun InputBind.renderText(): Component = buildList {
+fun InputBind.renderText(): Component = buildText {
     add(
         inputByName(keyName).let { key ->
             variable(key.displayName.copy()).bold(true)
@@ -335,4 +335,4 @@ fun InputBind.renderText(): Component = buildList {
     add(regular(" ("))
     add(variable(action.tag))
     add(regular(")"))
-}.asText()
+}
