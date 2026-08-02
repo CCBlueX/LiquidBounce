@@ -31,11 +31,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(MobEffectFogEnvironment.class)
-public abstract class MobEffectFogEnvironmentMixin {
+public abstract class MixinMobEffectFogEnvironment {
 
     @Shadow
     public abstract Holder<MobEffect> getMobEffect();
-
 
     @ModifyReturnValue(method = "isApplicable", at = @At("RETURN"))
     private boolean onIsApplicable(boolean original) {

@@ -155,7 +155,7 @@
     "minecraft.render.entity.feature.MixinItemInHandLayer",
     "minecraft.render.entity.feature.MixinRenderLayer",
     "minecraft.render.fog.MixinFogRenderer",
-    "minecraft.render.fog.environment.MobEffectFogEnvironmentMixin",
+    "minecraft.render.fog.environment.MixinMobEffectFogEnvironment",
     "minecraft.render.special.MixinShieldSpecialRenderer",
     "minecraft.text.MixinGuiMessage",
     "minecraft.text.MixinGuiMessageLineVisible",
