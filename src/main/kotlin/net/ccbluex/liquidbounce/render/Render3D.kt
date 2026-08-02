@@ -31,11 +31,16 @@ import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.ccbluex.liquidbounce.render.mesh.MeshBuildScope
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.client.Camera
+import net.minecraft.client.gui.Font
+import net.minecraft.client.renderer.SubmitNodeStorage
+import net.minecraft.client.renderer.feature.TextFeatureRenderer
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
+import net.minecraft.util.FormattedCharSequence
 import net.minecraft.world.phys.Vec3
+import org.joml.Matrix4f
 import org.joml.Vector3fc
 
 inline fun <T> usePoseStack(block: PoseStack.() -> T): T {
@@ -141,3 +146,32 @@ class WorldRenderEnvironment internal constructor(
         return batchCollector.start(key)
     }
 }
+
+/**
+ * @see SubmitNodeStorage.submitText
+ */
+fun SubmitNodeStorage.submitTextAlwaysOnTop(
+    poseStack: PoseStack,
+    x: Float,
+    y: Float,
+    string: FormattedCharSequence,
+    dropShadow: Boolean,
+    displayMode: Font.DisplayMode,
+    lightCoords: Int,
+    color: Int,
+    backgroundColor: Int,
+    outlineColor: Int,
+) = this.order(0).alwaysOnTop.submit(
+    TextFeatureRenderer.Submit(
+        Matrix4f(poseStack.last().pose()),
+        x,
+        y,
+        string,
+        dropShadow,
+        displayMode,
+        lightCoords,
+        color,
+        backgroundColor,
+        outlineColor,
+    )
+)

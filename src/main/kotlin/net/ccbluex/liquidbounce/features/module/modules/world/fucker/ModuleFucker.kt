@@ -58,6 +58,8 @@ import net.ccbluex.liquidbounce.utils.math.samplePointOnSide
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.render.BreakingProgress
+import net.ccbluex.liquidbounce.utils.render.BreakingProgressRenderer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
@@ -80,7 +82,11 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
-object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = listOf("BedBreaker", "IdNuker")) {
+object ModuleFucker : ClientModule(
+    "Fucker",
+    ModuleCategories.WORLD,
+    aliases = listOf("BedBreaker", "IdNuker"),
+), BreakingProgress.Provider {
 
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -126,6 +132,9 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             defaultColor = Color4b(255, 0, 0, 90)
         )
     )
+    private val progressRenderer = targetRenderer.tree(
+        BreakingProgressRenderer(targetRenderer, this)
+    )
 
     private val availableToolSlots
         get() = if (ModuleAutoTool.isInventoryConsidered) Slots.HotbarAndInventory else Slots.Hotbar
@@ -137,6 +146,19 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
     private var currentTarget: DestroyerTarget? = null
     private var oldTarget: DestroyerTarget? = null
+
+    override fun breakingProgress(): BreakingProgress? {
+        val target = currentTarget?.takeIf { it.action == DestroyAction.DESTROY } ?: return null
+        if (ModulePacketMine.running) {
+            return null
+        }
+
+        if (forceImmediateBreak) {
+            return BreakingProgress(target.pos, 1f)
+        }
+
+        return BreakingProgress.Provider.Default.breakingProgress(target.pos)
+    }
 
     private val targetPointProportions = doubleArrayOf(0.1, 0.3, 0.5, 0.7, 0.9)
     private const val MAX_SURROUNDING_PATH_BLOCKS = 8

@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.render.BreakingProgress
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.HitResult
@@ -57,9 +58,22 @@ object LegitNukerMode : Mode("Legit") {
         minOf(it, range)
     }
 
-    private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
+    internal val forceImmediateBreak by boolean("ForceImmediateBreak", false)
     private val rotations = tree(RotationsValueGroup(this))
     private val switchDelay by int("SwitchDelay", 0, 0..20, "ticks")
+
+    internal fun breakingProgress(): BreakingProgress? {
+        if (ModulePacketMine.running) {
+            return null
+        }
+
+        val target = currentTarget ?: return null
+        if (forceImmediateBreak) {
+            return wasTarget?.takeIf { it == target }?.let { BreakingProgress(it, 1f) }
+        }
+
+        return BreakingProgress.Provider.Default.breakingProgress(target)
+    }
 
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {

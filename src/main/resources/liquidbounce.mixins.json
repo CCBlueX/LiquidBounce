@@ -106,6 +106,7 @@
     "minecraft.network.MixinConnection",
     "minecraft.network.MixinFriendlyByteBuf",
     "minecraft.network.MixinMultiPlayerGameMode",
+    "minecraft.network.MixinMultiPlayerGameModeAccessor",
     "minecraft.network.MixinMultiplayerServerListPinger",
     "minecraft.network.MixinPacketType",
     "minecraft.network.MixinPlayerInfo",

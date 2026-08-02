@@ -47,6 +47,8 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.render.BreakingProgress
+import net.ccbluex.liquidbounce.utils.render.BreakingProgressRenderer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
@@ -66,7 +68,7 @@ import kotlin.math.max
  * @author ccetl
  */
 @Suppress("TooManyFunctions")
-object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
+object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), BreakingProgress.Provider {
 
     val mode = modes(
         this,
@@ -118,6 +120,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
             clump = false
         )
     )
+    private val progressRenderer = targetRenderer.tree(BreakingProgressRenderer(targetRenderer, this))
 
     private val chronometer = Chronometer()
     private var rotation: Rotation? = null
@@ -320,6 +323,18 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
                 lengthZ * (f - 0.5f),
             )
         )
+    }
+
+    override fun breakingProgress(): BreakingProgress? {
+        val target = _target?.takeIf { it.started } ?: return null
+        val damage = breakDamage
+        val progress = if (damage > 0f) {
+            target.progress / damage
+        } else {
+            1f
+        }
+
+        return BreakingProgress(target.targetPos, progress.coerceIn(0f, 1f))
     }
 
     fun switch(slot: HotbarItemSlot?, mineTarget: MineTarget) {

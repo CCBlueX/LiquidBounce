@@ -28,6 +28,8 @@ import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.minecraft.client.Camera
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.renderer.SubmitNodeStorage
+import org.joml.Matrix4fc
 
 @Tag("gameRender")
 object GameRenderEvent : Event()
@@ -60,6 +62,16 @@ class WorldRenderEvent(
     }
 
 }
+
+/**
+ * Fired before vanilla collects level features into its [SubmitNodeStorage].
+ */
+@Tag("worldFeatureSubmit")
+class WorldFeatureSubmitEvent(
+    val camera: Camera,
+    val submitNodeStorage: SubmitNodeStorage,
+    val modelViewMatrix: Matrix4fc,
+) : Event()
 
 /**
  * Sometimes, modules might want to contribute something to the glow framebuffer. They can hook this event
