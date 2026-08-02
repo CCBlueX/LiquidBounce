@@ -231,11 +231,18 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
-    @JvmField
-    val Lines = newPipeline("lines") {
+    private val Lines = newPipeline("lines") {
         posColorSnippet(PrimitiveTopology.DEBUG_LINES)
         forWorldRender()
     }
+
+    private val LinesDepthTested = newPipeline("lines_depth_tested") {
+        posColorSnippet(PrimitiveTopology.DEBUG_LINES)
+        forWorldRender(noDepthTest = false)
+    }
+
+    @JvmStatic
+    fun lines(noDepthTest: Boolean) = if (noDepthTest) Lines else LinesDepthTested
 
     private val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
@@ -262,11 +269,18 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
-    @JvmField
-    val Triangles = newPipeline("triangles") {
+    private val Triangles = newPipeline("triangles") {
         posColorSnippet(PrimitiveTopology.TRIANGLES)
         forWorldRender()
     }
+
+    private val TrianglesDepthTested = newPipeline("triangles_depth_tested") {
+        posColorSnippet(PrimitiveTopology.TRIANGLES)
+        forWorldRender(noDepthTest = false)
+    }
+
+    @JvmStatic
+    fun triangles(noDepthTest: Boolean) = if (noDepthTest) Triangles else TrianglesDepthTested
 
     private val TriangleStrip = newPipeline("triangle_strip") {
         posColorSnippet(PrimitiveTopology.TRIANGLE_STRIP)
@@ -281,11 +295,18 @@ object ClientRenderPipelines {
     @JvmStatic
     fun triangleStrip(noDepthTest: Boolean) = if (noDepthTest) TriangleStripNoDepthTest else TriangleStrip
 
-    @JvmField
-    val Quads = newPipeline("quads") {
+    private val Quads = newPipeline("quads") {
         posColorSnippet(PrimitiveTopology.QUADS)
         forWorldRender()
     }
+
+    private val QuadsDepthTested = newPipeline("quads_depth_tested") {
+        posColorSnippet(PrimitiveTopology.QUADS)
+        forWorldRender(noDepthTest = false)
+    }
+
+    @JvmStatic
+    fun quads(noDepthTest: Boolean) = if (noDepthTest) Quads else QuadsDepthTested
 
     private val QuadsRelativeToCamera = newPipeline("quads_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
