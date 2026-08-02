@@ -270,11 +270,9 @@ object CommandManager : Collection<Command> by commandSet {
                     } else {
                         textOf(
                             command.nameAsText(),
-                            command.aliases.joinToText(
-                                separator = ", ".asPlainText(ChatFormatting.DARK_GRAY),
-                                prefix = " (".asPlainText(ChatFormatting.DARK_GRAY),
-                                postfix = ")".asPlainText(ChatFormatting.DARK_GRAY),
-                            ) { it.asPlainText() },
+                            " (".asPlainText(ChatFormatting.DARK_GRAY),
+                            command.aliases.joinToText(", ".asPlainText(ChatFormatting.DARK_GRAY)),
+                            ")".asPlainText(ChatFormatting.DARK_GRAY),
                         )
                     }
                 }
