@@ -37,6 +37,20 @@ import java.io.File
 import java.io.Reader
 import java.io.Writer
 
+@Volatile
+internal var loadingAllConfigs = false
+    private set
+
+internal fun <T> withLoadingAllConfigs(block: () -> T): T {
+    val wasLoading = loadingAllConfigs
+    loadingAllConfigs = true
+    return try {
+        block()
+    } finally {
+        loadingAllConfigs = wasLoading
+    }
+}
+
 /**
  * A hierarchy config system
  */
@@ -166,7 +180,7 @@ object ConfigSystem {
     /**
      * Loads all registered configs.
      */
-    fun loadAll() {
+    fun loadAll() = withLoadingAllConfigs {
         for (valueGroup in configs) { // Make a new .json file to save our root config
             load(valueGroup)
         }

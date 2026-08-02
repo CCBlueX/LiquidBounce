@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.loadingNow
+import net.ccbluex.liquidbounce.config.loadingAllConfigs
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
@@ -153,7 +154,9 @@ open class ClientModule(
 
     final override fun onToggled(state: Boolean): Boolean {
         if (!inGame) {
-            EventManager.callEvent(ModuleToggleEvent(name, hidden, state))
+            if (!loadingAllConfigs) {
+                EventManager.callEvent(ModuleToggleEvent(name, hidden, state))
+            }
             return state
         }
         calledSinceStartup = true
