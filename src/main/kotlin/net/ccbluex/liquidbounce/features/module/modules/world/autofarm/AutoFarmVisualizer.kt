@@ -46,11 +46,13 @@ object AutoFarmVisualizer : ToggleableValueGroup(ModuleAutoFarm, "Visualize", tr
         private val renderHandler = handler<WorldRenderEvent> { event ->
             event.renderEnvironment {
                 AutoFarmAutoWalk.walkTarget?.let { target ->
-                    drawLine(
-                        relativeToCamera(player.interpolateCurrentPosition(event.partialTicks)).toVec3f(),
-                        relativeToCamera(target).toVec3f(),
-                        color.argb,
-                    )
+                    withPositionRelativeToCamera {
+                        drawLine(
+                            player.interpolateCurrentPosition(event.partialTicks).toVec3f(),
+                            target.toVec3f(),
+                            color.argb,
+                        )
+                    }
                 }
             }
         }

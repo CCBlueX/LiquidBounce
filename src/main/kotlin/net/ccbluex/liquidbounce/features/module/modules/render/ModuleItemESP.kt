@@ -114,7 +114,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                 val color = getColor()
 
                 // Interpolating the position (motion smoothing)
-                val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
 
                 drawLine(
                     argb = color.argb,
