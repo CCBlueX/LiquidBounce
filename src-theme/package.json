@@ -14,7 +14,7 @@
     "@tsconfig/svelte": "^5.0.8",
     "@types/dateformat": "^5.0.3",
     "sass": "^1.100.0",
-    "svelte": "^5.33.9",
+    "svelte": "^5.56.3",
     "svelte-check": "^4.6.0",
     "tslib": "^2.8.1",
     "typescript": "~5.6.2",
