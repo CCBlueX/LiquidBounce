@@ -11,12 +11,13 @@ import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import java.util.SequencedSet
+import java.util.TreeSet
 
 class EntitySelectorValueGroup(name: String) : ValueGroup(name, valueType = ValueType.ENTITY_SELECTOR) {
 
     private val entityTypes by entityTypes(name = "EntityTypes", default = defaultEntityTypes())
     private val playerMode by enumChoice("PlayerMode", PlayerMode.ALLOW_ALL)
-    private val usernames by textList("Usernames", mutableListOf<String>())
+    private val usernames by textList("Usernames", TreeSet(String.CASE_INSENSITIVE_ORDER))
 
     fun matches(entity: LivingEntity): Boolean {
         if (entity.type !in entityTypes) {
@@ -56,11 +57,11 @@ internal fun matchesPlayer(
     mode: EntitySelectorValueGroup.PlayerMode,
     name: String,
     isFriend: Boolean,
-    usernames: Collection<String>,
+    usernames: Set<String>,
 ): Boolean = when (mode) {
     EntitySelectorValueGroup.PlayerMode.ALLOW_ALL -> true
-    EntitySelectorValueGroup.PlayerMode.WHITELIST -> usernames.any { it.equals(name, ignoreCase = true) }
-    EntitySelectorValueGroup.PlayerMode.BLACKLIST -> usernames.none { it.equals(name, ignoreCase = true) }
+    EntitySelectorValueGroup.PlayerMode.WHITELIST -> name in usernames
+    EntitySelectorValueGroup.PlayerMode.BLACKLIST -> name !in usernames
     EntitySelectorValueGroup.PlayerMode.FRIENDS_ONLY -> isFriend
     EntitySelectorValueGroup.PlayerMode.NON_FRIENDS_ONLY -> !isFriend
 }
