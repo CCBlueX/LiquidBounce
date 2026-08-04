@@ -97,7 +97,7 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(
 }
 
 /**
- * Shorthand for `withPosition(relativeToCamera(pos))`
+ * Positions the render origin at the camera-relative coordinates of [pos] before drawing.
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) =
     withPositionRelativeToCamera(pos.x, pos.y, pos.z, draw)
@@ -168,7 +168,16 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
  * Draws a line with endpoint [p1] and [p2] and color [argb].
  */
 fun WorldRenderEnvironment.drawLine(p1: Vec3f, p2: Vec3f, argb: Int) =
-    drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+    drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
+        addVertex(pose, p1).setColor(argb)
+        addVertex(pose, p2).setColor(argb)
+    }
+
+/**
+ * Draws a line with endpoint [p1] and [p2] and color [argb].
+ */
+fun WorldRenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
+    drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
         addVertex(pose, p1).setColor(argb)
         addVertex(pose, p2).setColor(argb)
     }
@@ -232,7 +241,7 @@ fun WorldRenderEnvironment.drawLines(argb: Int, vararg positions: Vec3f) {
     if (positions.isEmpty()) return
     require(positions.size and 1 == 0)
 
-    drawCustomMesh(pipeline = ClientRenderPipelines.Lines) { pose ->
+    drawCustomMesh(pipeline = ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
         for (pos in positions) {
             addVertex(pose, pos).setColor(argb)
         }
@@ -243,7 +252,7 @@ fun WorldRenderEnvironment.drawLines(argb: Int, positions: VertexList) {
     if (positions.size == 0) return
     require(positions.size and 1 == 0)
 
-    drawCustomMesh(pipeline = ClientRenderPipelines.Lines) { pose ->
+    drawCustomMesh(pipeline = ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
         positions.forEachVertex { x, y, z ->
             addVertex(pose, x, y, z).setColor(argb)
         }
@@ -309,8 +318,9 @@ fun WorldRenderEnvironment.drawSquareTexture(
         .setColor(argb)
 }
 
-fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: Int) {
-    drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+@JvmOverloads
+fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: Int, noDepthTest: Boolean = true) {
+    drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest)) { matrix ->
         addVertex(matrix, p1).setColor(argb)
         addVertex(matrix, p2).setColor(argb)
         addVertex(matrix, p3).setColor(argb)
@@ -326,15 +336,16 @@ fun WorldRenderEnvironment.drawBox(
     outlineColor: Color4b? = Color4b.TRANSPARENT,
     faceVertices: Int = -1,
     outlineVertices: Int = -1,
+    noDepthTest: Boolean = true,
 ) {
     if (faceColor != null && !faceColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest)) { pose ->
             addBoxFaces(pose.pose(), box, color = faceColor, verticesToUse = faceVertices)
         }
     }
 
     if (outlineColor != null && !outlineColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+        drawCustomMesh(ClientRenderPipelines.lines(noDepthTest)) { pose ->
             addBoxOutlines(pose.pose(), box, outlineColor, outlineVertices)
         }
     }
@@ -346,13 +357,13 @@ fun WorldRenderEnvironment.drawShape(
     outlineColor: Color4b? = Color4b.TRANSPARENT,
 ) {
     if (faceColor != null && !faceColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { pose ->
             addShapeFaces(pose.pose(), shape, color = faceColor)
         }
     }
 
     if (outlineColor != null && !outlineColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+        drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
             addShapeOutlines(pose.pose(), shape, outlineColor)
         }
     }
@@ -366,13 +377,13 @@ fun WorldRenderEnvironment.drawShapeSide(
     outlineColor: Color4b? = Color4b.TRANSPARENT,
 ) {
     if (faceColor != null && !faceColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { pose ->
             addShapeSideFaces(pose.pose(), shape, side, hitPos, color = faceColor)
         }
     }
 
     if (outlineColor != null && !outlineColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+        drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
             addShapeSideOutlines(pose.pose(), shape, side, hitPos, outlineColor)
         }
     }
@@ -421,7 +432,7 @@ fun WorldRenderEnvironment.drawPlane(
 ) {
     if (fillColor != null && !fillColor.isTransparent) {
         val argb = fillColor.argb
-        drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { matrix ->
             addVertex(matrix, 0f, 0f, 0f).setColor(argb)
             addVertex(matrix, 0f, 0f, sizeZ).setColor(argb)
             addVertex(matrix, sizeX, 0f, sizeZ).setColor(argb)
@@ -431,7 +442,7 @@ fun WorldRenderEnvironment.drawPlane(
 
     if (outlineColor != null && !outlineColor.isTransparent) {
         val argb = outlineColor.argb
-        drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { matrix ->
             addVertex(matrix, 0f, 0f, 0f).setColor(argb)
             addVertex(matrix, 0f, 0f, sizeZ).setColor(argb)
 
@@ -593,7 +604,7 @@ fun WorldRenderEnvironment.drawGradientSides(
         return
     }
 
-    drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+    drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { pose ->
         addVertex(pose, box.minX, 0.0, box.minZ).setColor(baseColor)
         addVertex(pose, box.minX, height, box.minZ).setColor(topColor)
         addVertex(pose, box.maxX, height, box.minZ).setColor(topColor)

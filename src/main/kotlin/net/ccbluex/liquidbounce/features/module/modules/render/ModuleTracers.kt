@@ -89,7 +89,7 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                     EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)
                 }
 
-                val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
                 val topPos = pos.add(0f, entity.bbHeight, 0f)
 
                 if (lineWidth == 1.0f) {

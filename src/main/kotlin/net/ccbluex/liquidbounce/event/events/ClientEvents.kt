@@ -55,7 +55,9 @@ class ThemeColorChangeEvent(val themeId: String, val name: String, val value: Co
 class ClickGuiScaleChangeEvent(val value: Float) : Event(), WebSocketEvent
 
 @Tag("clickGuiValueChange")
-class ClickGuiValueChangeEvent(val configurable: ValueGroup) : Event(), WebSocketEvent
+class ClickGuiValueChangeEvent(val configurable: ValueGroup) : Event(), WebSocketEvent {
+    override val serializeAsync get() = false
+}
 
 @Tag("spaceSeperatedNamesChange")
 class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
@@ -200,6 +202,8 @@ class ComponentsUpdateEvent(
     }
 
     override val serializer get() = accessibleInteropGson
+
+    override val serializeAsync get() = false
 }
 
 @Tag("rotationUpdate")

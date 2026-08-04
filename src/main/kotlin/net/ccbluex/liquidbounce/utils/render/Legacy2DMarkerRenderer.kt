@@ -48,7 +48,7 @@ fun WorldRenderEnvironment.drawLegacy2DMarker(
 }
 
 private fun WorldRenderEnvironment.drawLegacy2DRects(color: Int, rects: Array<Rect>) {
-    drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+    drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { pose ->
         for (rect in rects) {
             addVertex(pose, rect.x2, rect.y1, 0.0f).setColor(color)
             addVertex(pose, rect.x1, rect.y1, 0.0f).setColor(color)

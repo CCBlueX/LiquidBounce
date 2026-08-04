@@ -77,6 +77,9 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val Blit = "blit"("shaders/blit.frag")
 
         @JvmField
+        val Chams = "chams"("shaders/chams.frag")
+
+        @JvmField
         val Blend = "blend"("shaders/blend.frag")
 
         @JvmField

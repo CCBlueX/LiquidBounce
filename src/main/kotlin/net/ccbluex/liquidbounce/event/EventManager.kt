@@ -139,6 +139,7 @@ import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
+import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
@@ -159,6 +160,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ChunkUnloadEvent::class.java,
     DisconnectEvent::class.java,
     GameRenderEvent::class.java,
+    WorldFeatureSubmitEvent::class.java,
     WorldRenderEvent::class.java,
     OverlayRenderEvent::class.java,
     ScreenRenderEvent::class.java,

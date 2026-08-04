@@ -22,7 +22,7 @@ import ai.djl.ndarray.NDList
 import ai.djl.translate.Translator
 import ai.djl.translate.TranslatorContext
 
-class FloatArrayInAndOutTranslator : Translator<FloatArray, FloatArray> {
+object FloatArrayInAndOutTranslator : Translator<FloatArray, FloatArray> {
 
     override fun processInput(ctx: TranslatorContext, input: FloatArray): NDList {
         return NDList(ctx.ndManager.create(input))

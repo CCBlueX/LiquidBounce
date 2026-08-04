@@ -137,9 +137,6 @@ dependencies {
     jij(libs.ktor.server.status.pages)
     jij(libs.ktor.serialization.gson)
 
-    // Discord RPC Support
-    jij(libs.discordIpc)
-
     // ScriptAPI
     jij(libs.polyglot)
     jij(libs.polyglot.js)
@@ -164,6 +161,7 @@ dependencies {
     // External utils
     compileOnlyApi(libs.fastutil4k.extensionsOnly)
     jij(libs.fastutil4k.moreCollections)
+    jij(libs.discord.ipc)
 
     // Test libraries
     testImplementation(kotlin("test"))
@@ -303,15 +301,11 @@ tasks.test {
         ).joinToString(","),
     )
     // Let Knot delegate Kotlin Test and the Kotlin runtime to JUnit's parent class loader.
-    // Resolve the classpath at execution time so dependency-report tasks can configure normally.
-    doFirst {
-        systemProperty(
-            "fabric.systemLibraries",
-            configurations.testRuntimeClasspath.get()
-                .filter { it.name.startsWith("kotlin-") }
-                .joinToString(File.pathSeparator),
-        )
-    }
+    jvmArgumentProviders.add(
+        objects.newInstance<FabricSystemLibrariesArgumentProvider>().apply {
+            runtimeClasspath.from(configurations.testRuntimeClasspath)
+        }
+    )
 }
 
 // Detekt check
