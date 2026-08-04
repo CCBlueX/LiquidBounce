@@ -96,7 +96,7 @@
                 {:else if c.name === "TabGui"}
                     <TabGui/>
                 {:else if c.name === "Notifications"}
-                    <Notifications/>
+                    <Notifications settings={c.settings}/>
                 {:else if c.name === "TargetHud"}
                     <TargetHud/>
                 {:else if c.name === "BlockCounter"}
