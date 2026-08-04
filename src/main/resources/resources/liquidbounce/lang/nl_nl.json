@@ -277,6 +277,7 @@
     "liquidbounce.liquidchat.states.loggedIn": "Geauthenticeerd!",
     "liquidbounce.liquidchat.writeMessage": "Om een bericht te verzenden: %s",
     "liquidbounce.liquidchat.writePrivateMessage": "Om een privébericht te sturen: %s",
+    "liquidbounce.module.Wings.description": "Rendert vleugels achter de speler.",
     "liquidbounce.module.packetLogger.description": "Print alle pakketten en hun velden.",
     "liquidbounce.module.packetLogger.messages.send": "Versturen",
     "liquidbounce.module.packetLogger.messages.receive": "Ontvangen",
