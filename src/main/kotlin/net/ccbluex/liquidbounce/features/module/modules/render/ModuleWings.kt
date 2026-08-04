@@ -43,11 +43,11 @@ object ModuleWings : ClientModule("Wings", ModuleCategories.RENDER) {
     private val color by color("color", Color4b.LIQUID_BOUNCE)
     private object WingsOptions : ValueGroup("wingsVisual") {
         val wingsLength by float("wingsLength", 1f, 0.1f..2f)
-        val wingsHeight by float("wingsHeight", 0.425f, 0.1f..1f)
-        val fadeStartRatio by float("fadeStartRatio", 0.6f, 0f..1f)
+        val wingsHeight by float("wingsHeight", 0.3f, 0.1f..1f)
+        val fadeStartRatio by float("fadeStartRatio", 0.5f, 0f..1f)
     }
     private object WingsPosition : ValueGroup("wingsPosition") {
-        val wingsHeight by float("wingsHeight", 0f, -1f..1f)
+        val wingsHeight by float("wingsHeight", 0.2f, -1f..1f)
         val behindScale by float("behindScale", 0.25f, 0f..1f)
     }
 
