@@ -419,7 +419,7 @@
   "liquidbounce.liquidchat.states.loggedIn": "身份验证成功！",
   "liquidbounce.liquidchat.writeMessage": "发送消息: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "发送私信: %s",
-  "liquidbounce.module.Wings.description": "在玩家身后渲染翅膀。",
+  "liquidbounce.module.wings.description": "在玩家身后渲染翅膀。",
   "liquidbounce.module.packetLogger.description": "输出所有的网络包以及它们的字段。",
   "liquidbounce.module.packetLogger.messages.send": "发送",
   "liquidbounce.module.packetLogger.messages.receive": "接收",
