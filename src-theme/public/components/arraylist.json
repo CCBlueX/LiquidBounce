@@ -1,5 +1,6 @@
 {
   "name": "ArrayList",
+  "description": "Shows currently enabled modules.",
   "enabled": true,
   "singleton": true,
   "alignment": {

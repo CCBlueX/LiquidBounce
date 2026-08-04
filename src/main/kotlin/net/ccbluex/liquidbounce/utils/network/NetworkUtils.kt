@@ -186,6 +186,10 @@ fun MultiPlayerGameMode.releaseUsingItemInTickLoop() = TickLoopTaskExecutor.exec
 
 /**
  * [MultiPlayerGameMode.useItem] but with custom rotations.
+ *
+ * Vanilla [net.minecraft.world.item.BucketItem.use] ray traces through
+ * [net.minecraft.world.item.Item.getPlayerPOVHitResult], which reads the player's current rotation.
+ * Keep that local prediction aligned with the rotation carried by [ServerboundUseItemPacket].
  */
 fun MultiPlayerGameMode.useItem(
     player: Player,
@@ -207,7 +211,16 @@ fun MultiPlayerGameMode.useItem(
             return@startPrediction playerInteractItemC2SPacket
         }
 
-        val useResult = itemStack.use(world, player, hand)
+        val previousYRot = player.yRot
+        val previousXRot = player.xRot
+        val useResult = try {
+            player.yRot = yRot
+            player.xRot = xRot
+            itemStack.use(world, player, hand)
+        } finally {
+            player.yRot = previousYRot
+            player.xRot = previousXRot
+        }
         val result = if (useResult is InteractionResult.Success) {
             useResult.heldItemTransformedTo() ?: player.getItemInHand(hand)
         } else {

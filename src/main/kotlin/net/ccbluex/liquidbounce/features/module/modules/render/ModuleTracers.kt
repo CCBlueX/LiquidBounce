@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.drawLinesWithWidth
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
@@ -73,9 +73,7 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
             return@handler
         }
 
-        val matrixStack = event.matrixStack
-
-        renderEnvironmentForWorld(matrixStack) {
+        event.renderEnvironment {
             val eyeVector = Vec3f.eyeVector(camera)
 
             val maxDistanceSq = maximumDistance.sq()
@@ -91,7 +89,7 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                     EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)
                 }
 
-                val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
                 val topPos = pos.add(0f, entity.bbHeight, 0f)
 
                 if (lineWidth == 1.0f) {

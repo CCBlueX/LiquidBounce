@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.action
 
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.utils.network.sendChatOrCommand
+import kotlin.time.Duration.Companion.milliseconds
 
 object AutoQueueActionChat : AutoQueueAction("Chat") {
     private val startDelay by intRange("StartDelay", 0..0, 0..5000, "ms")
@@ -34,12 +35,12 @@ object AutoQueueActionChat : AutoQueueAction("Chat") {
         for (message in messages) {
             val delayMs = if (flag) {
                 flag = false
-                startDelay.random().toLong()
+                startDelay.random()
             } else {
-                messageDelay.random().toLong()
+                messageDelay.random()
             }
 
-            delay(delayMs)
+            delay(delayMs.milliseconds)
 
             network.sendChatOrCommand(message)
         }

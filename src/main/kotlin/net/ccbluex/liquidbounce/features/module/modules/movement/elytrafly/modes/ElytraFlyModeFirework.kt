@@ -28,7 +28,9 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.minecraft.world.entity.projectile.FireworkRocketEntity
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.none
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.item.Items
 
 internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
@@ -47,12 +49,10 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
     private val slotsToSearch get() = if (ConsiderInventory.enabled) ALL_WITHOUT_ARMOR else Slots.OffhandWithHotbar
 
     private fun shouldUseFirework(): Boolean {
-        return if (!player.isFallFlying or player.isUsingItem) {
+        return if (!player.isFallFlying || player.isUsingItem) {
             false
         } else {
-            world.entitiesForRendering().none {
-                it is FireworkRocketEntity && it.shooter === player
-            }
+            world.entityGetter.none(EntityTypes.FIREWORK_ROCKET) { it.shooter === player }
         }
     }
 

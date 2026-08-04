@@ -74,20 +74,21 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
         val color = style.color?.let { Color4b.fullAlpha(it.value) } ?: defaultColor
         val obfuscated = style.isObfuscated
 
-        result.chars.ensureCapacity(textAsString.length)
+        val codepointCount = textAsString.codePointCount(0, textAsString.length)
+        val start = result.chars.size
+        result.chars.ensureCapacity(start + codepointCount)
         var rng: Random? = null
-        for (char in textAsString) {
-            val actualChar = if (obfuscated) {
+        textAsString.codePoints().forEach { codepoint ->
+            val actualCodepoint = if (obfuscated) {
                 if (rng == null) rng = Random(defaultRng.nextLong())
                 generateObfuscatedChar(rng)
             } else {
-                char
+                codepoint
             }
 
-            result.chars.add(ProcessedText.ProcessedChar(actualChar, font, obfuscated, color))
+            result.chars.add(ProcessedText.ProcessedChar(actualCodepoint, font, obfuscated, color))
         }
 
-        val start = result.chars.size - textAsString.length
         val end = result.chars.size
 
         if (style.isUnderlined) {

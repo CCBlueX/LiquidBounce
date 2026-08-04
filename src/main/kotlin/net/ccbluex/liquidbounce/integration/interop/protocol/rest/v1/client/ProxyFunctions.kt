@@ -22,15 +22,23 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
+import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.routing.Routing
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -38,16 +46,16 @@ import org.lwjgl.glfw.GLFW
  */
 
 // GET /api/v1/client/proxy
-private fun Routing.getProxyInfo() = get {
+private fun Route.getProxyInfo() = get {
     ProxyManager.currentProxy?.let { proxy ->
         call.respond(interopGson.toJsonTree(proxy).asJsonObject.apply {
             addProperty("id", ProxyManager.proxies.indexOf(proxy))
         })
-    } ?: call.respondNoContent()
+    } ?: call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxy
-private fun Routing.postProxy() = post {
+private fun Route.postProxy() = post {
     data class ProxyRequest(val id: Int)
 
     val body = call.receive<ProxyRequest>()
@@ -57,17 +65,17 @@ private fun Routing.postProxy() = post {
     }
 
     ProxyManager.proxy = ProxyManager.proxies[body.id]
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/proxy
-private fun Routing.deleteProxy() = delete {
+private fun Route.deleteProxy() = delete {
     ProxyManager.proxy = Proxy.NONE
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/proxies
-private fun Routing.getProxies() = get {
+private fun Route.getProxies() = get {
     call.respond(JsonArray().apply {
         ProxyManager.proxies.forEachIndexed { index, proxy ->
             add(interopGson.toJsonTree(proxy).asJsonObject.apply {
@@ -80,7 +88,7 @@ private fun Routing.getProxies() = get {
 
 // POST /api/v1/client/proxies/add
 @Suppress("DestructuringDeclarationWithTooManyEntries")
-private fun Routing.postAddProxy() = post {
+private fun Route.postAddProxy() = post {
     data class ProxyRequest(
         val host: String,
         val port: Int,
@@ -100,11 +108,11 @@ private fun Routing.postAddProxy() = post {
     }
 
     ProxyManager.validateProxy(Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication))
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxies/add/clipboard
-private fun Routing.postClipboardProxy() = post("/clipboard") {
+private fun Route.postClipboardProxy() = post("/clipboard") {
     mc.execute {
         try {
             val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle())
@@ -128,12 +136,12 @@ private fun Routing.postClipboardProxy() = post("/clipboard") {
         }
     }
 
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxies/edit
 @Suppress("DestructuringDeclarationWithTooManyEntries")
-private fun Routing.postEditProxy() = post("/edit") {
+private fun Route.postEditProxy() = post("/edit") {
     data class ProxyRequest(
         val id: Int,
         val host: String,
@@ -155,11 +163,11 @@ private fun Routing.postEditProxy() = post("/edit") {
 
     val proxy = Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication)
     ProxyManager.validateProxy(proxy, index = id)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxies/check
-private fun Routing.postCheckProxy() = post("/check") {
+private fun Route.postCheckProxy() = post("/check") {
     data class ProxyRequest(val id: Int)
 
     val body = call.receive<ProxyRequest>()
@@ -169,11 +177,11 @@ private fun Routing.postCheckProxy() = post("/check") {
     }
 
     ProxyManager.validateProxy(ProxyManager.proxies[body.id], checkOnly = true)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/proxies/remove
-private fun Routing.deleteRemoveProxy() = delete("/remove") {
+private fun Route.deleteRemoveProxy() = delete("/remove") {
     data class ProxyRequest(val id: Int)
 
     val body = call.receive<ProxyRequest>()
@@ -185,11 +193,11 @@ private fun Routing.deleteRemoveProxy() = delete("/remove") {
     if (ProxyManager.proxies.removeAt(body.id) == ProxyManager.proxy) {
         ProxyManager.proxy = Proxy.NONE
     }
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // PUT /api/v1/client/proxies/favorite
-private fun Routing.putFavoriteProxy() = put {
+private fun Route.putFavoriteProxy() = put {
     data class ProxyRequest(val id: Int)
 
     val body = call.receive<ProxyRequest>()
@@ -200,11 +208,11 @@ private fun Routing.putFavoriteProxy() = put {
 
     ProxyManager.proxies[body.id].favorite = true
     ConfigSystem.store(ProxyManager)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/proxies/favorite
-private fun Routing.deleteFavoriteProxy() = delete {
+private fun Route.deleteFavoriteProxy() = delete {
     data class ProxyRequest(val id: Int)
 
     val body = call.receive<ProxyRequest>()
@@ -215,10 +223,10 @@ private fun Routing.deleteFavoriteProxy() = delete {
 
     ProxyManager.proxies[body.id].favorite = false
     ConfigSystem.store(ProxyManager)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-internal fun Routing.proxyRoutes() {
+internal fun Route.proxyRoutes() {
     route("/proxy") {
         getProxyInfo()
         postProxy()

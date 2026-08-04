@@ -46,7 +46,7 @@ internal class TimedPickupTracker @JvmOverloads constructor(
         val timestamp: Long,
     )
 
-    private val trackedPositions = ArrayDeque<TrackedPos>(capacity.coerceAtLeast(0))
+    private val trackedPositions = ArrayDeque<TrackedPos>(capacity)
 
     /**
      * Removes all tracked entries.
@@ -97,13 +97,13 @@ internal class TimedPickupTracker @JvmOverloads constructor(
         WATER {
             override fun test(pos: BlockPos): Boolean {
                 val state = pos.state ?: return false
-                return state.fluidState.`is`(Fluids.WATER) && state.fluidState.isSource
+                return state.fluidState.isSourceOfType(Fluids.WATER)
             }
         },
         LAVA {
             override fun test(pos: BlockPos): Boolean {
                 val state = pos.state ?: return false
-                return state.fluidState.`is`(Fluids.LAVA) && state.fluidState.isSource
+                return state.fluidState.isSourceOfType(Fluids.LAVA)
             }
         },
     }

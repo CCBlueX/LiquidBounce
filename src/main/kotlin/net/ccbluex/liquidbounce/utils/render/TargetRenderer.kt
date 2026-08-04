@@ -22,10 +22,12 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.mapReadOnly
 import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -44,7 +46,7 @@ import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.AnimatedValueGroup
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -68,13 +70,13 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import org.joml.Vector2f
 import org.joml.Vector3f
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.random.Random
 
 /**
  * A target tracker to choose the best enemy to attack
@@ -110,7 +112,7 @@ class TargetRenderer(
         val target = target() ?: return@handler
 
         with(mode) {
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 render(target, event.partialTicks)
             }
         }
@@ -405,17 +407,18 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 }
 
                 heartLayout.ensureCapacity(requiredCount)
-                val minAngleDistance = size * 115.0
+                val minAngleDistance = size * 115f
                 val minHeightDistance = size * 2.0f
                 val attemptLimit = max(64, requiredCount * 24)
                 var attempts = 0
 
+                val random = ThreadLocalRandom.current()
                 while (heartLayout.size < requiredCount && attempts < attemptLimit) {
                     attempts++
 
                     val candidate = HeartPlacement(
-                        baseOrbitAngle = Random.nextDouble(0.0, 360.0),
-                        heightFactor = Random.nextFloat(),
+                        baseOrbitAngle = random.nextFloat(0f, 360f),
+                        heightFactor = random.nextFloat(),
                     )
 
                     if (heartLayout.none { it.overlaps(candidate, minAngleDistance, minHeightDistance) }) {
@@ -425,8 +428,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                 while (heartLayout.size < requiredCount) {
                     heartLayout += HeartPlacement(
-                        baseOrbitAngle = Random.nextDouble(0.0, 360.0),
-                        heightFactor = Random.nextFloat(),
+                        baseOrbitAngle = random.nextFloat(0f, 360f),
+                        heightFactor = random.nextFloat(),
                     )
                 }
             }
@@ -448,8 +451,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                     val orbitAngle = orbitAngleDegrees.toRadians()
                     val orbitDistance =
-                        (orbit.radius.toDouble() - damageSqueezeStrength)
-                            .coerceIn(0.05, orbit.radius.toDouble())
+                        (orbit.radius - damageSqueezeStrength).coerceIn(0.05f, orbit.radius)
 
                     val localOffset = Vec3(
                         cos(orbitAngle) * orbitDistance,
@@ -511,12 +513,12 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     val targetYaw = atan2(directionToTarget.x, directionToTarget.z).toDegrees().toFloat()
                     poseStack.mulPose(Axis.YP.rotationDegrees(targetYaw))
 
-                    drawHeartSDF(color.alpha((color.a * 0.25f).toInt()), size)
+                    drawHeartSDF(color.alpha((color.a * 0.25f).toInt()), size, fill = 1f)
                     drawHeartSDF(color, size, fill)
                 }
             }
 
-            private fun WorldRenderEnvironment.drawHeartSDF(color: Color4b, size: Float, fill: Float = 1f) {
+            private fun WorldRenderEnvironment.drawHeartSDF(color: Color4b, size: Float, fill: Float) {
                 val clampedFill = fill.coerceIn(0f, 1f)
                 if (clampedFill <= 0f) {
                     return
@@ -562,6 +564,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 }
             }
 
+            @ValueClassCandidate
             private data class HeartSlot(
                 val type: HeartType,
                 val fill: Float,
@@ -572,13 +575,14 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 Absorption,
             }
 
+            @ValueClassCandidate
             private data class HeartPlacement(
-                val baseOrbitAngle: Double,
+                val baseOrbitAngle: Float,
                 val heightFactor: Float,
             ) {
-                fun overlaps(other: HeartPlacement, minAngleDistance: Double, minHeightDistance: Float): Boolean {
+                fun overlaps(other: HeartPlacement, minAngleDistance: Float, minHeightDistance: Float): Boolean {
                     val angleDiff = abs(baseOrbitAngle - other.baseOrbitAngle)
-                    val wrappedAngleDiff = min(angleDiff, 360.0 - angleDiff)
+                    val wrappedAngleDiff = min(angleDiff, 360f - angleDiff)
 
                     return wrappedAngleDiff < minAngleDistance &&
                         abs(heightFactor - other.heightFactor) < minHeightDistance
@@ -594,7 +598,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
             private val textScale by float("Scale", 1f, 0.01f..10f)
             private val textShadow by boolean("Shadow", true)
-            private val color by color("Color", Color4b.RED)
+            private val style by color("Color", Color4b.RED).mapReadOnly { Style.EMPTY + it }
 
             private val texts by textList("Text", mutableListOf("TARGET"))
 
@@ -616,7 +620,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val screenPos = calculateScreenPos(pos) ?: return
 
                 texts.forEachIndexed { i, text ->
-                    fontRenderer.draw(text.asPlainText(Style.EMPTY + color)) {
+                    fontRenderer.draw(text.asPlainText(style)) {
                         horizontalAnchor = HorizontalAnchor.CENTER
                         verticalAnchor = VerticalAnchor.MIDDLE
                         x = screenPos.x
