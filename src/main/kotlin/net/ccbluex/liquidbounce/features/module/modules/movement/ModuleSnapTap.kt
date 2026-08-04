@@ -96,7 +96,7 @@ object ModuleSnapTap : ClientModule("SnapTap", ModuleCategories.MOVEMENT, aliase
 
     @Suppress("unused")
     val onMovementInput = handler<MovementInputEvent> { event ->
-        if (mc.gui.screen() != null && !ModuleInventoryMove.enabled) return@handler
+        if (mc.gui.screen() != null && !ModuleInventoryMove.allowsMovementOverride()) return@handler
 
         var isKeyLeftHeld = event.directionalInput.left
         var isKeyRightHeld = event.directionalInput.right

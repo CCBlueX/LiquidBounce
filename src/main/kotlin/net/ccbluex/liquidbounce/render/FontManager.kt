@@ -19,11 +19,14 @@
 package net.ccbluex.liquidbounce.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ObjectImmutableList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.createFont
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.util.Util
 import net.minecraft.util.Util.OS.LINUX
 import net.minecraft.util.Util.OS.OSX
@@ -82,8 +85,10 @@ object FontManager {
         put(COMMON_FONT.name, COMMON_FONT)
     }
 
-    private fun addFontFace(fontFace: FontFace) = mc.execute {
-        fontFaces[fontFace.name] = fontFace
+    private suspend fun addFontFace(fontFace: FontFace) = withContext(Dispatchers.Minecraft) {
+        if (fontFaces.put(fontFace.name, fontFace) != null) {
+            logger.warn("FontFace ${fontFace.name} already exists, previous one has been replaced")
+        }
     }
 
     /**
@@ -92,7 +97,10 @@ object FontManager {
      * TODO: Replaces this with Module-based Font Selection
      */
     val FONT_RENDERER
-        get() = (fontFace("Inter Regular") ?: COMMON_FONT).renderer
+        get() = defaultFontFace.renderer
+
+    private val defaultFontFace
+        get() = fontFace("Inter Regular") ?: COMMON_FONT
 
     /**
      * Since our font renderer does not support dynamic font size changes,
@@ -113,10 +121,17 @@ object FontManager {
     fun fontFace(name: String) = fontFaces[name]
 
     internal fun createGlyphManager() {
+        _glyphManager?.close()
         _glyphManager = FontGlyphPageManager(
-            baseFonts = fontFaces.values,
-            additionalFonts = setOfNotNull(CJK_FONT)
+            registeredFaces = ObjectImmutableList(fontFaces.values),
+            primaryFace = defaultFontFace,
+            fallbackFonts = listOfNotNull(COMMON_FONT, CJK_FONT),
         )
+    }
+
+    internal fun closeGlyphManager() {
+        _glyphManager?.close()
+        _glyphManager = null
     }
 
     internal suspend fun queueFontFromFile(file: File) {
@@ -126,7 +141,7 @@ object FontManager {
                 return
             }
 
-            if (file.extension.equals("ttf", ignoreCase = true)) {
+            if (!file.extension.equals("ttf", ignoreCase = true)) {
                 logger.warn("Font file ${file.absolutePath} is not a TrueType font.")
                 return
             }
@@ -141,8 +156,7 @@ object FontManager {
             // Name will consist of the font name and family. This makes it possible
             // to select the different styles of the font.
             val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file)
-            // In this case, we have only one style available, which is the plain style.
-            fontFace.fillStyle(font, Font.PLAIN)
+            fontFace.fillDerivedStyles(font)
             addFontFace(fontFace)
         } catch (e: Exception) {
             logger.warn("Failed to load font from file ${file.absolutePath}", e)
@@ -152,7 +166,7 @@ object FontManager {
     suspend fun queueFontFromStream(stream: InputStream) {
         val font = stream.createFont().deriveFont(DEFAULT_FONT_SIZE)
         val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file = null)
-        fontFace.fillStyle(font, Font.PLAIN)
+        fontFace.fillDerivedStyles(font)
         addFontFace(fontFace)
     }
 

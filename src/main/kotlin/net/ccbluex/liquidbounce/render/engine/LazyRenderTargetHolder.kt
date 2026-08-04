@@ -25,16 +25,25 @@ import com.mojang.blaze3d.pipeline.TextureTarget
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
+import java.util.function.Supplier
 
 /**
  * A holder for a RenderTarget that initializes it lazily and handles resizing.
  */
-class LazyRenderTargetHolder(
+class LazyRenderTargetHolder private constructor(
     val name: String,
-    @JvmField val useDepth: Boolean
-) : AutoCloseable {
-    var raw: RenderTarget? = null
-        private set
+    val colorFormat: GpuFormat = GpuFormat.RGBA8_UNORM,
+    val depthFormat: GpuFormat? = GpuFormat.D32_FLOAT,
+) : Supplier<RenderTarget?>, AutoCloseable {
+
+    constructor(name: String, useDepth: Boolean) :
+        this(name, GpuFormat.RGBA8_UNORM, if (useDepth) GpuFormat.D32_FLOAT else null)
+
+    private var raw: RenderTarget? = null
+
+    override fun get(): RenderTarget? {
+        return this.raw
+    }
 
     /**
      * Destroys the buffers and releases the RenderTarget.
@@ -47,23 +56,25 @@ class LazyRenderTargetHolder(
     /**
      * Initializes the RenderTarget if needed, or resizes/clears it if it already exists, then returns it.
      */
-    fun initAndGet(): RenderTarget {
-        val width = mc.window.width
-        val height = mc.window.height
+    fun initAndGet(): RenderTarget = initAndGet(mc.window.width, mc.window.height)
+
+    /**
+     * Initializes the RenderTarget with the requested size.
+     */
+    fun initAndGet(width: Int, height: Int): RenderTarget {
+        require(width > 0 && height > 0) { "RenderTarget dimensions must be positive: ${width}x$height" }
 
         val current = this.raw
 
         if (current == null) {
-            val new = TextureTarget(name, width, height, useDepth, GpuFormat.RGBA8_UNORM)
+            val new = TextureTarget(name, width, height, depthFormat != null, colorFormat)
             this.raw = new
             return new
         } else {
             if (width != current.width || height != current.height) {
                 current.resize(width, height) // Resizing includes clearing the framebuffer
-            } else if (useDepth) {
-                current.clearColorAndDepth()
             } else {
-                current.colorTexture!!.clearColor()
+                current.clearColorAndDepth()
             }
             return current
         }

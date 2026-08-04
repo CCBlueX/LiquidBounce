@@ -60,7 +60,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Suppress("TooManyFunctions")
 object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
 
-    private var shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {
+    private val shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {
         loadAutoShopConfig(it)
     }
 
@@ -274,9 +274,8 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     private fun hasItemCategoryChanged(prevShopStacks: List<String>): Boolean {
         val currentShopStacks = (mc.gui.screen() as ContainerScreen).stacks()
 
-        val difference = currentShopStacks
-            .filter { !prevShopStacks.contains(it) }
-            .union(prevShopStacks.filter { !currentShopStacks.contains(it) })
+        val difference = (currentShopStacks - prevShopStacks)
+            .union(prevShopStacks - currentShopStacks)
 
         return difference.size > 1
     }

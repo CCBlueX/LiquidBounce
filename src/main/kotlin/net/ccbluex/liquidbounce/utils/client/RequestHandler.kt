@@ -33,6 +33,11 @@ class RequestHandler<T> {
         currentTick += deltaTime
     }
 
+    fun clear() {
+        activeRequests.clear()
+        currentTick = 0
+    }
+
     fun request(request: Request<T>) {
         // we remove all requests provided by module on new request
         activeRequests.removeIf { it.provider === request.provider }

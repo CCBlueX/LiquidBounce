@@ -39,6 +39,8 @@ interface HudBlockCounterSettings {
 
 interface HudScoreboardSettings {
     show: ("Header" | "Name" | "Score")[];
+    replaceRegex: string;
+    replaceWith: string;
 }
 
 interface HudTextSettings {

@@ -70,7 +70,7 @@ abstract class OverlayShaderRenderer(
 
         preRender()
 
-        val colorTexture = this.renderTargetHolder.raw?.colorTextureView
+        val colorTexture = this.renderTargetHolder.get()?.colorTextureView
         requireNotNull(colorTexture) { "Overlay shader $name FBO color texture view is null" }
 
         target.createRenderPass({ "Overlay Shader $name blit pass" }).use { pass ->

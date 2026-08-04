@@ -19,31 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import net.ccbluex.liquidbounce.utils.math.high32
-import net.ccbluex.liquidbounce.utils.math.longFrom32
-import net.ccbluex.liquidbounce.utils.math.low32
-
 @JvmRecord
-data class GlyphIdentifier(val codepoint: Char, val style: @FontStyle Int) {
-    constructor(fontGlyph: FontGlyph) : this(fontGlyph.codepoint, fontGlyph.font.style)
-    constructor(longValue: Long) : this(
-        codepoint = unpackCodepoint(longValue),
-        style = unpackStyle(longValue),
-    )
-
-    fun asLong(): Long = asLong(codepoint, style)
-
-    companion object {
-        @JvmStatic
-        fun asLong(codepoint: Char, style: @FontStyle Int) = longFrom32(style, codepoint.code)
-
-        @JvmStatic
-        fun asLong(fontGlyph: FontGlyph) = asLong(fontGlyph.codepoint, fontGlyph.font.style)
-
-        @JvmStatic
-        fun unpackCodepoint(longValue: Long): Char = longValue.low32().toChar()
-
-        @JvmStatic
-        fun unpackStyle(longValue: Long): @FontStyle Int = longValue.high32()
-    }
+data class GlyphIdentifier(val codepoint: Int, val font: FontId) {
+    constructor(fontGlyph: FontGlyph) : this(fontGlyph.codepoint, fontGlyph.font)
 }

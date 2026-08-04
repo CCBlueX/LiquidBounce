@@ -155,7 +155,7 @@ class CheckScreenTitleValueGroup(
         enumSetOf(
             ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
             ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
-            ContainerTitle.CHEST_MINECART,
+            ContainerTitle.CHEST_MINECART, ContainerTitle.CHEST_BOAT,
         ),
     )
     private val customTitles by textList("Custom", ObjectRBTreeSet())
@@ -165,9 +165,7 @@ class CheckScreenTitleValueGroup(
         if (!running) return true
 
         val titleString = screen.title.string
-        val matches = titles.any {
-            Component.translatable(it.translatableKey).string == titleString
-        } || titleString in customTitles
+        val matches = titles.any { it.matches(titleString) } || titleString in customTitles
 
         return when (filter) {
             Filter.WHITELIST -> matches
@@ -176,7 +174,10 @@ class CheckScreenTitleValueGroup(
     }
 
     @Suppress("unused")
-    private enum class ContainerTitle(override val tag: String, val translatableKey: String) : Tagged {
+    private enum class ContainerTitle(
+        override val tag: String,
+        private vararg val translatableKeys: String,
+    ) : Tagged {
         BARREL("Barrel", "container.barrel"),
         BEACON("Beacon", "container.beacon"),
         BLAST_FURNACE("BlastFurnace", "container.blast_furnace"),
@@ -191,7 +192,33 @@ class CheckScreenTitleValueGroup(
         SHULKER_BOX("ShulkerBox", "container.shulkerBox"),
         SMOKER("Smoker", "container.smoker"),
         CHEST_MINECART("ChestMinecart", "entity.minecraft.chest_minecart"),
+        /**
+         * Chest boats use their entity display name as the container title.
+         *
+         * @see net.minecraft.world.entity.Entity.getDisplayName
+         * @see net.minecraft.world.entity.vehicle.boat.AbstractChestBoat.createMenu
+         */
+        CHEST_BOAT(
+            "ChestBoat",
+            "entity.minecraft.chest_boat",
+            "entity.minecraft.acacia_chest_boat",
+            "entity.minecraft.bamboo_chest_raft",
+            "entity.minecraft.birch_chest_boat",
+            "entity.minecraft.cherry_chest_boat",
+            "entity.minecraft.dark_oak_chest_boat",
+            "entity.minecraft.jungle_chest_boat",
+            "entity.minecraft.mangrove_chest_boat",
+            "entity.minecraft.oak_chest_boat",
+            "entity.minecraft.pale_oak_chest_boat",
+            "entity.minecraft.poplar_chest_boat",
+            "entity.minecraft.spruce_chest_boat",
+        ),
         HOPPER_MINECART("HopperMinecart", "entity.minecraft.hopper_minecart"),
+        ;
+
+        fun matches(title: String): Boolean = translatableKeys.any {
+            Component.translatable(it).string == title
+        }
     }
 }
 

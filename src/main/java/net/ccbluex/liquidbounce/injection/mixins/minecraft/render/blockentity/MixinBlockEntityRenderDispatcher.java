@@ -23,6 +23,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.common.StorageEspOutlineContext;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
+import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -48,7 +49,7 @@ public abstract class MixinBlockEntityRenderDispatcher {
         BlockEntityRenderer<?, S> renderer, S state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector,
         CameraRenderState camera, Operation<Void> original
     ) {
-        int outlineColor = 0;
+        Color4b outlineColor = Color4b.TRANSPARENT;
         var client = Minecraft.getInstance();
         if (ModuleStorageESP.GlowMode.INSTANCE.getRunning() && client.level != null) {
             var type = ModuleStorageESP.categorize(client.level.getBlockEntity(state.blockPos));
@@ -57,12 +58,16 @@ public abstract class MixinBlockEntityRenderDispatcher {
                 var color = type.getColor();
 
                 if (!color.isTransparent()) {
-                    outlineColor = color.argb();
+                    outlineColor = color;
                 }
             }
         }
 
-        StorageEspOutlineContext.render(outlineColor, () -> original.call(renderer, state, poseStack, submitNodeCollector, camera));
+        if (outlineColor.isTransparent()) {
+            original.call(renderer, state, poseStack, submitNodeCollector, camera);
+        } else {
+            StorageEspOutlineContext.render(outlineColor.argb(), () -> original.call(renderer, state, poseStack, submitNodeCollector, camera));
+        }
     }
 
 }

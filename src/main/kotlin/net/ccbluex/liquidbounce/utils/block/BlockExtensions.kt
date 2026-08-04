@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
@@ -509,6 +510,10 @@ val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.
 /**
  * Simulated [net.minecraft.world.phys.HitResult.Type.BLOCK] branch in vanilla
  *
+ * This function does not perform the surrounding checks from [net.minecraft.client.Minecraft.startUseItem],
+ * such as whether the game mode is destroying a block, the player's hands are busy, or the held item is enabled.
+ * Callers should perform the applicable checks before calling this function.
+ *
  * @see net.minecraft.client.Minecraft.startUseItem
  */
 fun doPlacement(
@@ -524,23 +529,27 @@ fun doPlacement(
     val useItemOnResult = interaction.useItemOn(player, hand, hitResult)
 
     when {
-        useItemOnResult == InteractionResult.FAIL -> {
+        useItemOnResult is InteractionResult.Fail -> {
             return
         }
 
-        useItemOnResult == InteractionResult.PASS -> {
+        useItemOnResult is InteractionResult.Pass -> {
             // Ok, we cannot place on the block, so let's just use the item in the direction
             // without targeting a block (for buckets, etc.)
             if (!stack.isEmpty) {
                 val useItemResult = interaction.useItem(player, hand)
-                if (useItemResult.consumesAction()) {
-                    handleActionsOnAccept(hand, useItemResult, true, onItemUseSuccess, swingMode)
+                if (useItemResult is Success) {
+                    if (useItemResult.swingSource == SwingSource.CLIENT && onItemUseSuccess()) {
+                        swingMode.swing(hand)
+                    }
+
+                    mc.gameRenderer.itemInHandRenderer.itemUsed(hand) // <- no condition on this
                 }
             }
         }
 
         useItemOnResult.consumesAction() -> {
-            val wasStackUsed = !stack.isEmpty && (stack.count != count || player.isCreative)
+            val wasStackUsed = !stack.isEmpty && (stack.count != count || player.hasInfiniteMaterials())
 
             handleActionsOnAccept(hand, useItemOnResult, wasStackUsed, onPlacementSuccess, swingMode)
         }
@@ -620,16 +629,19 @@ fun BlockState.isBreakable(pos: BlockPos): Boolean {
     return !isAir && (player.isCreative || getDestroySpeed(world, pos) >= 0f)
 }
 
-private val FALL_DAMAGE_BLOCKING_BLOCKS = arrayOf(
-    Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
-)
-
-fun BlockPos?.isFallDamageBlocking(): Boolean {
+fun BlockPos?.fallDamageMultiplier(entity: Entity = player): Float {
     if (this == null) {
-        return false
+        return 1f
     }
 
-    return getBlock() in FALL_DAMAGE_BLOCKING_BLOCKS
+    val block = getBlock()
+    return when (block) {
+        Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW -> 0f
+        Blocks.HAY_BLOCK, Blocks.HONEY_BLOCK -> 0.2f
+        Blocks.SLIME_BLOCK -> if (!entity.isSuppressingBounce && isOlderThan1_21_2) 0f else 1f
+        is BedBlock -> 0.5f
+        else -> 1f
+    }
 }
 
 fun BlockPos.isBlastResistant(): Boolean {

@@ -36,7 +36,7 @@ public abstract class MixinBlock {
     private static boolean injectXRay(boolean original, BlockState state, BlockState otherState, Direction side) {
         var xRay = ModuleXRay.INSTANCE;
         if (xRay.getRunning()) {
-            return xRay.shouldRender(state, otherState, side);
+            return xRay.modifyShouldRenderFace(original, state, otherState, side);
         }
 
         return original;

@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -152,16 +151,6 @@ public abstract class MixinEntity {
         }
     }
 
-    @ModifyReturnValue(method = "getEyePosition()Lnet/minecraft/world/phys/Vec3;", at = @At("RETURN"))
-    private Vec3 hookFreeCamModifiedRaycast(Vec3 original) {
-        return ModuleFreeCam.INSTANCE.modifyRaycast(original, (Entity) (Object) this, 1.0F);
-    }
-
-    @ModifyReturnValue(method = "getEyePosition(F)Lnet/minecraft/world/phys/Vec3;", at = @At("RETURN"))
-    private Vec3 hookFreeCamModifiedRaycast(Vec3 original, float tickDelta) {
-        return ModuleFreeCam.INSTANCE.modifyRaycast(original, (Entity) (Object) this, tickDelta);
-    }
-
     /**
      * When modules that modify player's velocity are enabled while on a vehicle, the game essentially gets screwed up, making the player unable to move.
      * <p>
@@ -217,5 +206,15 @@ public abstract class MixinEntity {
         /* Cancel pose if needed */
         if (liquid_bounce$isClientPlayer() && ModuleNoPose.INSTANCE.shouldCancelPose(pose))
             ci.cancel();
+    }
+
+    @Inject(method = "turn", at = @At("HEAD"), cancellable = true)
+    private void hookFreeCamRotation(double xo, double yo, CallbackInfo ci) {
+        if ((Object) this != Minecraft.getInstance().player) return;
+
+        if (ModuleFreeCam.PositionState.INSTANCE.getAvailable()) {
+            ModuleFreeCam.PositionState.INSTANCE.rotation(xo * 0.15f, yo * 0.15f);
+            ci.cancel();
+        }
     }
 }

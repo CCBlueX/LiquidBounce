@@ -49,6 +49,7 @@ import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.WebBlock
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.AABB
@@ -296,7 +297,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         pickupPos: BlockPos,
         pickupCenter: Vec3,
     ): BlockHitResult {
-        val fluidTraceResult = traceFromPlayer(includeFluids = true)
+        val fluidTraceResult = traceFromPlayer(fluid = ClipContext.Fluid.SOURCE_ONLY)
         return when {
             // Prefer fluid-inclusive trace so we can hit source blocks hidden behind web geometry.
             fluidTraceResult.type == HitResult.Type.BLOCK && fluidTraceResult.blockPos == pickupPos -> {
@@ -325,8 +326,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             .filter { side ->
                 val adjacentState = webPos.relative(side).getState() ?: return@filter false
                 // Find a replaceable side to place water
-                adjacentState.isAir ||
-                    (adjacentState.fluidState.`is`(Fluids.LAVA) && adjacentState.fluidState.isSource)
+                adjacentState.isAir || adjacentState.fluidState.isSourceOfType(Fluids.LAVA)
             }
             .maxByOrNull { side ->
                 player.lookAngle.dot(side.unitVec3)

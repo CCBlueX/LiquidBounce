@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.Modul
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.dummyPlayer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
@@ -82,6 +83,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
              * @see EntityLookup.add
              */
             clone.setUUID(UUID.randomUUID())
+            clone.id = world.nextLocalEntityId()
             world.addEntity(clone)
 
             dummyPlayer = clone

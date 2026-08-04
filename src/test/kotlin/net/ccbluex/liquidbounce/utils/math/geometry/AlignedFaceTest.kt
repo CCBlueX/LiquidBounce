@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 import net.minecraft.world.phys.Vec3
 
 class AlignedFaceTest {

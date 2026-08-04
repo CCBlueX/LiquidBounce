@@ -36,20 +36,21 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.firstOrNull
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.entity.decoration.ArmorStand
-import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.item.Items
 
 object AutoQueueGommeDuels : Mode("GommeDuels") {
 
     private var inMatch = false
 
-    private var winMessage by text("WinMessage", "GG, nice try")
-    private var loseMessage by text("LoseMessage", "GG, bist wohl besser als ich!")
+    private val winMessage by text("WinMessage", "GG, nice try")
+    private val loseMessage by text("LoseMessage", "GG, bist wohl besser als ich!")
 
-    private var controlKillAura by boolean("ControlKillAura", true)
+    private val controlKillAura by boolean("ControlKillAura", true)
 
     override val parent: ModeValueGroup<*>
         get() = presets
@@ -132,11 +133,11 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
     private suspend fun handleLobbySituation() {
         inMatch = false
 
-        val duelsEntity = world.entitiesForRendering().find {
-            it is ArmorStand && it.boxedDistanceTo(player) < 5 && it.displayName?.string?.contains("Duels") == true
+        val duelsEntity = world.entityGetter.firstOrNull(EntityTypes.ARMOR_STAND) {
+            it.boxedDistanceTo(player) < 5 && it.displayName?.string?.contains("Duels") == true
         }?.let { armorStand ->
-            world.entitiesForRendering().find {
-                it is Player && it.boxedDistanceTo(player) < 5 &&
+            world.players().find {
+                it.boxedDistanceTo(player) < 5 &&
                     it.position() == armorStand.position().subtract(0.0, 2.0, 0.0)
             }
         }
