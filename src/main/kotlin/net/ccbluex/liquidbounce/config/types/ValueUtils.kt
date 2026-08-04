@@ -37,8 +37,22 @@ import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.ChatFormatting
 import net.minecraft.client.renderer.texture.DynamicTexture
 import kotlin.properties.ReadOnlyProperty
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 import kotlin.time.Duration.Companion.seconds
 
+private data class MutableProperty<T>(var value: T) : ReadWriteProperty<Any?, T> {
+    override fun getValue(thisRef: Any?, property: KProperty<*>): T = this.value
+    override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+        this.value = value
+    }
+}
+
+fun <T : Any, R> Value<T>.mapReadOnly(transform: (T) -> R): ReadOnlyProperty<Any?, R> {
+    val property = MutableProperty(transform(this.get()))
+    this.onChanged { property.value = transform(it) }
+    return property
+}
 
 /**
  * Convert the [FileValue] to a [ReadOnlyProperty] of [DynamicTexture].
@@ -47,7 +61,7 @@ fun <V> FileValue.toTextureProperty(
     owner: V,
     printErrorToChat: Boolean = true,
 ): ReadOnlyProperty<Any?, DynamicTexture?> where V : EventListener, V : Value<*> {
-    var texture: DynamicTexture? = null
+    val texture = MutableProperty<DynamicTexture?>(null)
     ioScope.launch {
         asStateFlow().filter { it.isFile }.collectLatest { file ->
             while (!inGame || !owner.running) {
@@ -57,7 +71,7 @@ fun <V> FileValue.toTextureProperty(
             try {
                 val nativeImage = file.readNativeImage()
                 withContext(Dispatchers.Minecraft) {
-                    texture = nativeImage.asTexture("(${owner.name}) File texture: ${file.name}")
+                    texture.value = nativeImage.asTexture("(${owner.name}) File texture: ${file.name}")
                 }
             } catch (e: Exception) {
                 val message = "Failed to load texture from '${file.name}' for ${owner.name}"
@@ -69,5 +83,5 @@ fun <V> FileValue.toTextureProperty(
         }
     }
 
-    return ReadOnlyProperty { _, _ -> texture }
+    return texture
 }

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.BowItem
@@ -67,7 +68,11 @@ object HeldItemTrajectoryResolver {
                 }
 
                 val trajectoryInfo = TrajectoryInfo.bowWithUsageDuration(useTime) ?: return null
-                singleShot(stack, TrajectoryDescriptor(trajectoryInfo, TrajectoryType.Arrow))
+                singleShot(
+                    icon = stack,
+                    trajectoryDescriptor = TrajectoryDescriptor(trajectoryInfo, TrajectoryType.Arrow),
+                    colorSource = player.getProjectile(stack),
+                )
             }
             is CrossbowItem -> {
                 val chargedProjectiles = stack[DataComponents.CHARGED_PROJECTILES]
@@ -79,6 +84,7 @@ object HeldItemTrajectoryResolver {
                     isMultiShot -> 3
                     else -> 1
                 }.coerceAtLeast(1)
+                val chargedProjectile: DataComponentGetter = chargedProjectiles?.items?.firstOrNull() ?: ItemStack.EMPTY
 
                 val trajectoryDescriptor = if (isCrossbowFirework(chargedProjectiles)) {
                     TrajectoryDescriptor.FIREWORK_ROCKET
@@ -89,7 +95,8 @@ object HeldItemTrajectoryResolver {
                 getShotYawOffsets(shotCount).map { yawOffsetDegrees ->
                     trajectoryDescriptor.toShotDescriptor(
                         yawOffsetDegrees = yawOffsetDegrees,
-                        icon = stack
+                        icon = stack,
+                        colorSource = chargedProjectile,
                     )
                 }
             }
@@ -122,10 +129,11 @@ object HeldItemTrajectoryResolver {
     }
 
     private fun singleShot(
-        stack: ItemStack,
+        icon: ItemStack,
         trajectoryDescriptor: TrajectoryDescriptor,
+        colorSource: ItemStack = icon,
     ): List<TrajectoryShotDescriptor> {
-        return listOf(trajectoryDescriptor.toShotDescriptor(icon = stack))
+        return listOf(trajectoryDescriptor.toShotDescriptor(icon = icon, colorSource = colorSource))
     }
 
     /**

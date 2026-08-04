@@ -52,7 +52,7 @@ internal object HatsCone : HatsMode("Cone") {
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
-        drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->
             val segments = 128
             for (i in 0 until segments) {
                 val angle = getAngle(i, segments)

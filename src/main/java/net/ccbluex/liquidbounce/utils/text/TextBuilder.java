@@ -42,7 +42,7 @@ public final class TextBuilder {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public TextBuilder append(@Nullable Component component) {
+    public TextBuilder add(@Nullable Component component) {
         if (component == null) return this;
 
         switch (this.size) {
@@ -69,6 +69,10 @@ public final class TextBuilder {
         this.size++;
 
         return this;
+    }
+
+    public void plusAssign(@Nullable Component component) {
+        this.add(component);
     }
 
     @SuppressWarnings("unchecked")

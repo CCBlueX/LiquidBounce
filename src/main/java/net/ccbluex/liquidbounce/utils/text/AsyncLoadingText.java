@@ -35,14 +35,14 @@ import java.util.function.Supplier;
  * @param onException The component to display when an exception occurs.
  */
 public record AsyncLoadingText(
-    Deferred<Component> delegate,
-    Supplier<Component> onLoading,
-    Function<Throwable, Component> onException
+    Deferred<? extends Component> delegate,
+    Supplier<? extends Component> onLoading,
+    Function<? super Throwable, ? extends Component> onException
 ) implements DelegatedComponent {
 
-    public static final Supplier<Component> DEFAULT_ON_LOADING =
+    public static final Supplier<? extends Component> DEFAULT_ON_LOADING =
         Suppliers.ofInstance(PlainText.of("Loading...", ChatFormatting.GRAY));
-    public static final Function<Throwable, Component> DEFAULT_ON_EXCEPTION =
+    public static final Function<? super Throwable, ? extends Component> DEFAULT_ON_EXCEPTION =
         throwable -> {
             String message = throwable.getMessage();
 
@@ -51,7 +51,7 @@ public record AsyncLoadingText(
                 message, ChatFormatting.RED);
         };
 
-    public AsyncLoadingText(Deferred<Component> delegate) {
+    public AsyncLoadingText(Deferred<? extends Component> delegate) {
         this(delegate, DEFAULT_ON_LOADING, DEFAULT_ON_EXCEPTION);
     }
 

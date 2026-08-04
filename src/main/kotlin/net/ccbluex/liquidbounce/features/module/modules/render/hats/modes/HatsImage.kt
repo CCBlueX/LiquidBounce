@@ -25,13 +25,15 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.io.PNG_AND_JPG
 import net.minecraft.util.Mth
 import org.joml.Quaternionf
 import org.joml.Vector2f
 
 internal object HatsImage : HatsMode("Image") {
 
-    private val image by file("Image").toTextureProperty(this, printErrorToChat = true)
+    private val image by file("Image", supportedExtensions = PNG_AND_JPG)
+        .toTextureProperty(this, printErrorToChat = true)
     private val colorModulator by color("ColorModulator", Color4b.WHITE)
     private val scale by vec2f("Scale", Vector2f(1f, 1f))
     private val spinSpeed by float("SpinSpeed", 1f, -10f..10f)

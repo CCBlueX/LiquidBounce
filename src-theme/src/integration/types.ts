@@ -304,6 +304,7 @@ export interface Server {
     version: string;
     ping: number;
     resourcePackPolicy: string;
+    lan?: boolean;
 }
 
 export interface TextComponent {
@@ -390,8 +391,19 @@ export interface Theme {
 
 export interface HudComponent {
     name: string;
+    description: string;
     id: string;
     settings: { [name: string]: any };
+    width?: number;
+    height?: number;
+}
+
+export interface HudComponentCatalogEntry {
+    name: string;
+    description: string;
+    id: string;
+    singleton: boolean;
+    canAdd: boolean;
 }
 
 export interface Alignment {

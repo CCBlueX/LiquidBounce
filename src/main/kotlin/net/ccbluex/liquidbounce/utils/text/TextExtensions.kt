@@ -98,7 +98,7 @@ fun <T> Collection<T>.joinToText(
     separator: Component,
     prefix: Component? = null,
     postfix: Component? = null,
-    transform: Function<T, Component>,
+    transform: Function<in T, out Component>,
 ): Component {
     if (isEmpty()) {
         return PlainText.EMPTY
@@ -121,6 +121,13 @@ fun <T> Collection<T>.joinToText(
 }
 
 /**
+ * Joins a list of [String] into a single [Component] with the given [separator].
+ */
+@JvmName("stringsJoinToText")
+fun Collection<String>.joinToText(separator: Component): Component =
+    joinToText(separator, transform = Function(PlainText::of))
+
+/**
  * Joins a list of [Component] into a single [Component] with the given [separator].
  */
 fun Collection<Component>.joinToText(separator: Component): Component =
@@ -129,7 +136,7 @@ fun Collection<Component>.joinToText(separator: Component): Component =
 fun FormattedCharSequence.toText(): Component {
     if (this is Component) return this
 
-    val parts = mutableListOf<Component>()
+    val parts = TextBuilder()
 
     var currentStyle = Style.EMPTY
     val currentText = Pools.StringBuilder.borrow()
@@ -156,7 +163,7 @@ fun FormattedCharSequence.toText(): Component {
 
     Pools.StringBuilder.recycle(currentText)
 
-    return parts.asText()
+    return parts.build()
 }
 
 fun Component.translated(): Component {

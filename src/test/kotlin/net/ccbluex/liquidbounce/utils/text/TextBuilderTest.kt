@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.utils.text
 
 import net.minecraft.ChatFormatting
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class TextBuilderTest {
 
@@ -42,10 +42,10 @@ class TextBuilderTest {
     @Test
     fun `test null append is ignored`() {
         val text = TextBuilder()
-            .append(null)
-            .append("Hello".asPlainText())
-            .append(null)
-            .append(" World".asPlainText())
+            .add(null)
+            .add("Hello".asPlainText())
+            .add(null)
+            .add(" World".asPlainText())
             .build()
 
         assertEquals("Hello World", text.string)
@@ -54,9 +54,9 @@ class TextBuilderTest {
     @Test
     fun `test multiple appends keep order`() {
         val text = TextBuilder()
-            .append("Liquid".asPlainText(ChatFormatting.BLUE))
-            .append("Bounce".asPlainText(ChatFormatting.AQUA))
-            .append(" Client".asPlainText(ChatFormatting.GRAY))
+            .add("Liquid".asPlainText(ChatFormatting.BLUE))
+            .add("Bounce".asPlainText(ChatFormatting.AQUA))
+            .add(" Client".asPlainText(ChatFormatting.GRAY))
             .build()
 
         assertEquals("LiquidBounce Client", text.string)

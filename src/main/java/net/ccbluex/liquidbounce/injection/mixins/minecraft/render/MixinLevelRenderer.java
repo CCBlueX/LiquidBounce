@@ -20,19 +20,24 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
+import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
+import org.joml.Matrix4fc;
 import org.jspecify.annotations.Nullable;
 import org.joml.Vector4fc;
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -46,12 +51,31 @@ import java.util.List;
 @Mixin(LevelRenderer.class)
 public abstract class MixinLevelRenderer {
 
+    @Final
+    @Shadow
+    private SubmitNodeStorage submitNodeStorage;
+
     @Shadow
     @Nullable
     public abstract RenderTarget entityOutlineTarget();
 
     @Unique
     private boolean liquid_bounce$hasCustomOutlineMesh = false;
+
+    @Inject(
+        method = "render",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/LevelRenderer;submitFeatures(Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/SubmitNodeCollector;Z)V"
+        )
+    )
+    private void hookWorldFeatureSubmit(CallbackInfo ci, @Local(argsOnly = true, name = "modelViewMatrix") Matrix4fc modelViewMatrix) {
+        EventManager.INSTANCE.callEvent(new WorldFeatureSubmitEvent(
+            Minecraft.getInstance().gameRenderer.mainCamera(),
+            this.submitNodeStorage,
+            modelViewMatrix
+        ));
+    }
 
     // TODO: removed because of vanilla changes
 //    // After ModelViewMatrix setup
@@ -110,6 +134,16 @@ public abstract class MixinLevelRenderer {
         EventManager.INSTANCE.callEvent(event);
         liquid_bounce$hasCustomOutlineMesh = event.getDirtyFlag();
         Pools.MatStack.recycle(matrixStack);
+    }
+
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeSolid()V", shift = At.Shift.BEFORE))
+    private void prepareChamsRenderTarget(CallbackInfo ci) {
+        ModuleChams.INSTANCE.beginFrameIfNeeded();
+    }
+
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeTranslucentAfterTerrain()V", shift = At.Shift.AFTER))
+    private void blitChams(CallbackInfo ci) {
+        ModuleChams.INSTANCE.compositeIfNeeded(Minecraft.getInstance().gameRenderer.mainRenderTarget());
     }
 
     @ModifyExpressionValue(

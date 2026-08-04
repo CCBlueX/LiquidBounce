@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.aiming.point.features
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
@@ -53,7 +54,7 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
 
     private val yawFactor by floatRange("YawOffset", 0f..0f, 0.0f..1.0f)
     private val pitchFactor by floatRange("PitchOffset", 0f..0f, 0.0f..1.0f)
-    private val chance by int("Chance", 100, 0..100, "%")
+    private val chance = percentageChance("Chance", 100f) { random }
     private val speed by floatRange("Speed", 0.1f..0.2f, 0.01f..1f)
     private val tolerance by float("Tolerance", 0.05f, 0.01f..0.1f)
 
@@ -90,7 +91,7 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
                 if (dynamicCheck) dynamic.tolerance.toDouble() else tolerance.toDouble()
             )
         ) {
-            if (random.nextInt(100) <= chance) {
+            if (chance.asBoolean) {
                 targetOffset = Vec3(
                     random.nextGaussian(MEAN_X, STDDEV_X) * yawFactor,
                     random.nextGaussian(MEAN_Y, STDDEV_Y) * pitchFactor,
@@ -119,7 +120,7 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
     }
 
     override fun process(point: PointInsideBox): PointInsideBox {
-        if (yawFactor.random() > 0.0f && pitchFactor.random() > 0.0f && chance > 0) {
+        if (yawFactor.random() > 0.0f && pitchFactor.random() > 0.0f && chance.isEnabled) {
             updateGaussianOffset(point)
         }
 

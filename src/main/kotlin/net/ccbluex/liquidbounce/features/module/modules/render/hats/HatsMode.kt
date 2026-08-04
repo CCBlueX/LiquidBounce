@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -79,7 +79,7 @@ abstract class HatsMode(name: String) : Mode(name) {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val player = mc.player ?: return@handler
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             for (entity in world.players()) {
                 val isMe = entity == player
                 val isFriend = FriendManager.isFriend(entity)

@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards
 
 import net.minecraft.core.Direction
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class LadderClimbStateTest {
 

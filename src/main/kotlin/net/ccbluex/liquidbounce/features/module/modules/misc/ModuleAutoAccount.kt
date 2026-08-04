@@ -56,6 +56,8 @@ object ModuleAutoAccount : ClientModule(
 
     private val loginRegex by regex("LoginRegex", Regex("/login"))
 
+    private val repeatPasswordOnRegister by boolean("RepeatPasswordOnRegister", true)
+
     private val messageSources by multiEnumChoice("MessageSource", MessageSource.entries, canBeNone = false)
 
     private enum class MessageSource(override val tag: String) : Tagged {
@@ -90,7 +92,9 @@ object ModuleAutoAccount : ClientModule(
 
     fun register() {
         chat("register")
-        network.sendCommand("$registerCommand $password $password")
+        network.sendCommand(
+            if (repeatPasswordOnRegister) "$registerCommand $password $password" else "$registerCommand $password",
+        )
     }
 
     private inline fun <reified T : Event> createMessageHandler(

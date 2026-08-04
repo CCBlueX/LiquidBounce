@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.utils.math
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.minecraft.world.phys.AABB
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 import kotlin.random.Random
 
 class AabbMergeUtilTest {

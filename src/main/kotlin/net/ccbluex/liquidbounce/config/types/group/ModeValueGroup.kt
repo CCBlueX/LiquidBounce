@@ -33,7 +33,7 @@ import java.util.function.ToIntFunction
  * Allows configuring and manage modes
  */
 class ModeValueGroup<T : Mode>(
-    @Exclude @ProtocolExclude val eventListener: EventListener,
+    @Exclude @ProtocolExclude val eventListener: EventListener?,
     name: String,
     activeModeIndexCallback: ToIntFunction<List<T>>,
     modesCallback: (ModeValueGroup<T>) -> Array<T>

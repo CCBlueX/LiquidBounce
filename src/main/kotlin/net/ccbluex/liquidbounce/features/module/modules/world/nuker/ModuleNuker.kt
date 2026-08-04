@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode.LegitNu
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.render.BreakingProgress
+import net.ccbluex.liquidbounce.utils.render.BreakingProgressRenderer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.state.BlockState
@@ -36,7 +38,7 @@ import net.minecraft.world.level.block.state.BlockState
  *
  * Destroys blocks around you.
  */
-object ModuleNuker : ClientModule("Nuker", ModuleCategories.WORLD, disableOnQuit = true) {
+object ModuleNuker : ClientModule("Nuker", ModuleCategories.WORLD, disableOnQuit = true), BreakingProgress.Provider {
 
     val mode =
         choices("Mode", LegitNukerMode, arrayOf(LegitNukerMode, InstantNukerMode))
@@ -54,6 +56,15 @@ object ModuleNuker : ClientModule("Nuker", ModuleCategories.WORLD, disableOnQuit
     private val targetRenderer = tree(
         PlacementRenderer("TargetRendering", true, this, keep = false)
     )
+    private val progressRenderer = targetRenderer.tree(
+        BreakingProgressRenderer(targetRenderer, this)
+    )
+
+    override fun breakingProgress(): BreakingProgress? = when (mode.activeMode) {
+        LegitNukerMode -> LegitNukerMode.breakingProgress()
+        InstantNukerMode -> wasTarget?.let { BreakingProgress(it, 1f) }
+        else -> null
+    }
 
     /**
      * The last target block that was hit. Does not mean it was destroyed.

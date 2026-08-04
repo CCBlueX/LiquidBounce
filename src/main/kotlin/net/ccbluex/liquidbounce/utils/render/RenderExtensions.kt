@@ -53,10 +53,14 @@ import net.minecraft.util.ARGB
 import okio.BufferedSource
 import okio.buffer
 import okio.source
+import org.lwjgl.system.MemoryUtil
 import java.awt.image.BufferedImage
+import java.awt.image.DataBufferInt
+import java.awt.image.SinglePixelPackedSampleModel
 import java.io.File
 import java.io.InputStream
 import java.nio.ByteBuffer
+import java.nio.IntBuffer
 import java.util.concurrent.CompletableFuture
 import java.util.function.Supplier
 
@@ -95,10 +99,10 @@ inline fun withOutputTextureOverride(
 inline fun GpuTexture.clearColor(color: Color4b = Color4b.TRANSPARENT) =
     gpuDevice.createCommandEncoder().clearColorTexture(this, color.toVector4f())
 
-inline fun GpuTexture.clearDepth(depth: Double = 1.0) =
+inline fun GpuTexture.clearDepth(depth: Double = 0.0) =
     gpuDevice.createCommandEncoder().clearDepthTexture(this, depth)
 
-fun RenderTarget.clearColorAndDepth(color: Color4b = Color4b.TRANSPARENT, depth: Double = 1.0) {
+fun RenderTarget.clearColorAndDepth(color: Color4b = Color4b.TRANSPARENT, depth: Double = 0.0) {
     val colorAttachment = colorTexture
     val depthAttachment = depthTexture.takeIf { useDepth }
 
@@ -135,7 +139,7 @@ inline fun GpuTexture.write(
     destX: Int = 0,
     destY: Int = 0,
     width: Int = getWidth(mipLevel),
-    height: Int = getWidth(mipLevel),
+    height: Int = getHeight(mipLevel),
     sourceX: Int = 0,
     sourceY: Int = 0,
 ) {
@@ -155,8 +159,8 @@ inline fun GpuTexture.copyTo(
     mipLevel: Int = 0,
     x: Int = 0,
     y: Int = 0,
-    width: Int = getWidth(0),
-    height: Int = getHeight(0),
+    width: Int = getWidth(mipLevel),
+    height: Int = getHeight(mipLevel),
     callback: Runnable = Runnables.doNothing(),
 ) = gpuDevice.createCommandEncoder().copyTextureToBuffer(
     this, destination, offset, callback, mipLevel,
@@ -169,8 +173,8 @@ fun GpuTexture.asyncCopyTo(
     mipLevel: Int = 0,
     x: Int = 0,
     y: Int = 0,
-    width: Int = getWidth(0),
-    height: Int = getHeight(0),
+    width: Int = getWidth(mipLevel),
+    height: Int = getHeight(mipLevel),
 ): CompletableFuture<*> {
     val future = CompletableFuture<Any?>()
     copyTo(destination, offset, mipLevel, x, y, width, height) { future.complete(null) }
@@ -317,13 +321,95 @@ fun NativeImage.toBufferedImage(): BufferedImage {
 fun BufferedImage.toNativeImage(): NativeImage {
     val nativeImage = NativeImage(NativeImage.Format.RGBA, this.width, this.height, false)
 
-    for (x in 0 until this.width) {
-        for (y in 0 until this.height) {
-            nativeImage.setPixel(x, y, this.getRGB(x, y))
-        }
+    try {
+        copyToNativeImage(nativeImage, width = width, height = height)
+    } catch (throwable: Throwable) {
+        nativeImage.close()
+        throw throwable
     }
 
     return nativeImage
+}
+
+@Suppress("LongParameterList")
+fun BufferedImage.copyToNativeImage(
+    target: NativeImage,
+    sourceX: Int = 0,
+    sourceY: Int = 0,
+    targetX: Int = 0,
+    targetY: Int = 0,
+    width: Int = this.width,
+    height: Int = this.height,
+    scratchBuffer: IntArray = IntArray(0),
+): IntArray {
+    require(!target.isClosed) { "Target image is closed" }
+    require(target.format() == NativeImage.Format.RGBA) { "Target image must use RGBA format" }
+    require(width >= 0 && height >= 0) { "Copy dimensions must not be negative" }
+    require(sourceX >= 0 && sourceY >= 0 && width <= this.width - sourceX && height <= this.height - sourceY) {
+        "Source rectangle is outside the BufferedImage"
+    }
+    require(targetX >= 0 && targetY >= 0 && width <= target.width - targetX && height <= target.height - targetY) {
+        "Target rectangle is outside the NativeImage"
+    }
+
+    val targetPixels = MemoryUtil.memIntBuffer(target.pointer, target.width * target.height)
+    val dataBuffer = raster.dataBuffer
+    val sampleModel = raster.sampleModel
+
+    if (type == BufferedImage.TYPE_INT_ARGB &&
+        dataBuffer is DataBufferInt && sampleModel is SinglePixelPackedSampleModel
+    ) {
+        val sourcePixels = dataBuffer.data
+        val sourceOffset = dataBuffer.offset +
+            (sourceY - raster.sampleModelTranslateY) * sampleModel.scanlineStride +
+            sourceX - raster.sampleModelTranslateX
+
+        copyArgbRows(
+            sourcePixels,
+            sourceOffset,
+            sampleModel.scanlineStride,
+            targetPixels,
+            targetX + targetY * target.width,
+            target.width,
+            width,
+            height,
+        )
+        return scratchBuffer
+    }
+
+    val requiredSize = width * height
+    val argbPixels = scratchBuffer.takeIf { it.size >= requiredSize } ?: IntArray(requiredSize)
+    getRGB(sourceX, sourceY, width, height, argbPixels, 0, width)
+    copyArgbRows(
+        argbPixels,
+        0,
+        width,
+        targetPixels,
+        targetX + targetY * target.width,
+        target.width,
+        width,
+        height,
+    )
+    return argbPixels
+}
+
+private fun copyArgbRows(
+    source: IntArray,
+    sourceOffset: Int,
+    sourceStride: Int,
+    target: IntBuffer,
+    targetOffset: Int,
+    targetStride: Int,
+    width: Int,
+    height: Int,
+) {
+    for (y in 0 until height) {
+        val sourceRow = sourceOffset + y * sourceStride
+        val targetRow = targetOffset + y * targetStride
+        for (x in 0 until width) {
+            target.put(targetRow + x, ARGB.toABGR(source[sourceRow + x]))
+        }
+    }
 }
 
 /**
@@ -401,6 +487,10 @@ value class KStd140SizeCalculator(val j: Std140SizeCalculator) {
             j.putIVec3()
         }
     inline val vec4: Unit
+        get() {
+            j.putVec4()
+        }
+    inline val ivec4: Unit
         get() {
             j.putIVec4()
         }

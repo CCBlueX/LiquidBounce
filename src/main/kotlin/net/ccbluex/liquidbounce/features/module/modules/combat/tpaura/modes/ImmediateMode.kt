@@ -31,12 +31,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAu
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraMode
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.phys.Vec3
@@ -63,15 +63,15 @@ object ImmediateMode : TpAuraMode("Immediate") {
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
-        renderEnvironmentForWorld(matrixStack) {
+        event.renderEnvironment {
             desyncPlayerPosition?.let { playerPosition ->
-                drawLine(
-                    relativeToCamera(player.position().add(0.0, 1.0, 0.0)).toVec3f(),
-                    relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3f(),
-                    Color4b.WHITE.argb,
-                )
+                withPositionRelativeToCamera {
+                    drawLine(
+                        player.position().add(0.0, 1.0, 0.0),
+                        playerPosition.add(0.0, 1.0, 0.0),
+                        Color4b.WHITE.argb,
+                    )
+                }
             }
         }
     }
