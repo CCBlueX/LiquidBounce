@@ -30,13 +30,12 @@ import net.minecraft.world.entity.HumanoidArm
 
 object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations", false) {
 
-    val mode by enumChoice("Mode", Mode.Fourteen)
+    val mode by enumChoice("Mode", Mode.Spin)
 
     enum class Mode(override val tag: String) : Tagged {
-        One("Jump"), Two("Swipe"), Three("Bounce"), Four("Tilt"),
-        Five("Pulse"), Six("Spin"), Seven("Hook"), Eight("Dash"), Nine("Tap"),
-        Ten("Inject"), Eleven("Slap"), Twelve("Akrien"),
-        Thirteen("Smooth"), Fourteen("Power"), Fifteen("Feast")
+        Swipe("Swipe"), Spin("Spin"), Hook("Hook"), Dash("Dash"),
+        Tap("Tap"), Inject("Inject"), Slap("Slap"), Akrien("Akrien"),
+        Smooth("Smooth"), Power("Power"), Feast("Feast")
     }
 
     private fun fSin(v: Float) = Mth.sin(v.toDouble())
@@ -46,19 +45,17 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
     fun onRenderItem(player: AbstractClientPlayer,
                      hand: InteractionHand,
                      swingProgress: Float,
-                     equipProgress: Float,
                      poseStack: PoseStack
     ) {
         val isMainHand = hand == InteractionHand.MAIN_HAND
         val arm = if (isMainHand) player.mainArm else player.mainArm.opposite
 
-        applySwing(poseStack, swingProgress, equipProgress, arm)
+        applySwing(poseStack, swingProgress, arm)
     }
 
     @Suppress("LongMethod")
     private fun applySwing(poseStack: PoseStack,
                            swing: Float,
-                           equip: Float,
                            arm: HumanoidArm
     ) {
         val i = if (arm == HumanoidArm.RIGHT) 1 else -1
@@ -70,62 +67,40 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
         val sinSmooth = (fSin(swing * PI) * 0.5f)
 
         when (mode) {
-            Mode.One -> applyEquipOffset(poseStack, arm, 0.2f * fSin(fSqrt * PI * 2f))
-            Mode.Two -> {
-                applyEquipOffset(poseStack, arm, n)
+            Mode.Swipe -> {
                 poseStack.mulPose(Axis.YP.rotationDegrees(i * (45.0f + swing * -20.0f)))
                 poseStack.mulPose(Axis.ZP.rotationDegrees(i * g * -70.0f))
                 poseStack.mulPose(Axis.XP.rotationDegrees(-70f))
                 poseStack.mulPose(Axis.YP.rotationDegrees(i * -45.0f))
             }
-            Mode.Three -> {
-                applyEquipOffset(poseStack, arm, 0f)
-                if (swing > 0) poseStack.mulPose(Axis.XP.rotationDegrees(-fSin(swing * 13f) * 37f))
-            }
-            Mode.Four -> {
-                applyEquipOffset(poseStack, arm, 0f)
-                poseStack.mulPose(Axis.ZP.rotationDegrees(i * g * -20.0f))
-            }
-            Mode.Five -> {
-                applyEquipOffset(poseStack, arm, 0f)
-                val scale = -fSin(swing * 3f) / 2f + 1f
-                poseStack.scale(scale, scale, scale)
-            }
-            Mode.Six -> {
-                applyEquipOffset(poseStack, arm, 0f)
+            Mode.Spin -> {
                 poseStack.mulPose(Axis.XP.rotationDegrees(swing * -360f))
             }
-            Mode.Seven -> {
-                applyEquipOffset(poseStack, arm, 0f)
+            Mode.Hook -> {
                 poseStack.mulPose(Axis.XP.rotationDegrees(50f))
                 poseStack.mulPose(Axis.YP.rotationDegrees(i * (-30f * (1f - g) - 30f)))
                 poseStack.mulPose(Axis.ZP.rotationDegrees(i * 110f))
             }
-            Mode.Eight -> {
-                applyEquipOffset(poseStack, arm, 0f)
+            Mode.Dash -> {
                 poseStack.mulPose(Axis.XP.rotationDegrees(50f))
                 poseStack.mulPose(Axis.YP.rotationDegrees(i * (-60f * g - 50f)))
                 poseStack.mulPose(Axis.ZP.rotationDegrees(i * 110f))
             }
-            Mode.Nine -> {
-                applyEquipOffset(poseStack, arm, 0f)
+            Mode.Tap -> {
                 poseStack.mulPose(Axis.XP.rotationDegrees(50f))
                 poseStack.mulPose(Axis.YP.rotationDegrees(i * -60f))
                 poseStack.mulPose(Axis.ZP.rotationDegrees(i * (110f + 20f * g)))
             }
-            Mode.Ten -> {
-                applyEquipOffset(poseStack, arm, 0f)
+            Mode.Inject -> {
                 poseStack.translate(0.0, 0.0, (-g / 4.0))
                 poseStack.mulPose(Axis.XP.rotationDegrees(-120f))
             }
-            Mode.Eleven -> {
-                applyEquipOffset(poseStack, arm, 0f)
+            Mode.Slap -> {
                 poseStack.mulPose(Axis.XP.rotationDegrees(-fSin(swing * 3f) * 60f))
                 poseStack.mulPose(Axis.ZP.rotationDegrees(i * -60f * g))
             }
-            Mode.Twelve -> {
+            Mode.Akrien -> {
                 if (swing > 0) {
-                    poseStack.translate(i * 0.56, (equip * -0.2f) - 0.5, -0.7)
                     poseStack.mulPose(Axis.YP.rotationDegrees(i * 45f))
                     poseStack.mulPose(Axis.XP.rotationDegrees(g * -85.0f))
                     poseStack.translate(i * -0.1, 0.28, 0.2)
@@ -134,13 +109,11 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
                     val m = 0.2f * fSin(fSqrt * PI * 2f)
                     val f2 = -0.2f * fSin(swing * PI)
                     poseStack.translate(i * n.toDouble(), m.toDouble(), f2.toDouble())
-                    applyEquipOffset(poseStack, arm, 0f)
                     applySwingOffset(poseStack, arm, swing)
                 }
             }
 
-            Mode.Thirteen -> {
-                poseStack.translate(i * 0.56, -0.42, -0.72)
+            Mode.Smooth -> {
                 poseStack.mulPose(Axis.YP.rotationDegrees(i * (45.0f + sin1 * -20.0f)))
                 poseStack.mulPose(Axis.ZP.rotationDegrees(i * sin2 * -20.0f))
                 poseStack.mulPose(Axis.XP.rotationDegrees(sin2 * -80.0f))
@@ -148,8 +121,7 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
                 poseStack.translate(0.0, -0.1, 0.0)
             }
 
-            Mode.Fourteen -> {
-                poseStack.translate(i * 0.56, -0.32, -0.72)
+            Mode.Power -> {
                 poseStack.translate((-sinSmooth * sinSmooth * sin1 * i).toDouble(), 0.0, 0.0)
                 poseStack.mulPose(Axis.YP.rotationDegrees(i * 61f))
                 poseStack.mulPose(Axis.ZP.rotationDegrees(sin2))
@@ -159,8 +131,7 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
                 poseStack.mulPose(Axis.XP.rotationDegrees(sinSmooth * -60.0f))
             }
 
-            Mode.Fifteen -> {
-                poseStack.translate(i * 0.56, -0.32, -0.72)
+            Mode.Feast -> {
                 poseStack.mulPose(Axis.YP.rotationDegrees(i * 30f))
                 poseStack.mulPose(Axis.YP.rotationDegrees(sin2 * 75.0f * i))
                 poseStack.mulPose(Axis.XP.rotationDegrees(sin2 * -45.0f))
@@ -169,11 +140,6 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
                 poseStack.mulPose(Axis.YP.rotationDegrees(i * 35f))
             }
         }
-    }
-
-    private fun applyEquipOffset(poseStack: PoseStack, arm: HumanoidArm, equip: Float) {
-        val i = if (arm == HumanoidArm.RIGHT) 1 else -1
-        poseStack.translate(i * 0.56, -0.52 + equip * -0.6, -0.72)
     }
 
     private fun applySwingOffset(poseStack: PoseStack, arm: HumanoidArm, swing: Float) {
