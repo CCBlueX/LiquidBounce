@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.modes.JumpEffectImage
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.modes.JumpEffectStandard
-import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.modes.JumpEffectStandard.circles
 
 object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
 
@@ -34,7 +33,9 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
     }.apply { tagBy(this) }
 
     override fun onDisabled() {
-        circles.clear()
+        modes.modes.forEach { mode ->
+            mode.circles.clear()
+        }
     }
 
 }
