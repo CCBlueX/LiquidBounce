@@ -48,7 +48,7 @@ abstract class WingsMode(name: String) : Mode(name) {
         val distance by int("Distance", 64, 8..512, "blocks")
     }
 
-    protected abstract fun WorldRenderEnvironment.drawWings(isHurt: Boolean, bodyRot: Float)
+    protected abstract fun WorldRenderEnvironment.drawWings(isHurt: Boolean, bodyRot: Float, shifting: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -80,13 +80,21 @@ abstract class WingsMode(name: String) : Mode(name) {
                 }
 
                 val hurtMarked = entity.hurtTime != 0 && showDamage
+                val shifting = when (player.isShiftKeyDown) {
+                    true -> 0.1f
+                    false -> 0f
+                }
 
                 val behind = WingsPosition.behindScale.toDouble() + equipmentOffset
                 val pos = entity.getPosition(event.partialTicks).subtract(look.scale(behind))
 
-                withPositionRelativeToCamera(pos.add(0.0, (entity.bbHeight / 2.0) + WingsPosition.wingsHeight, 0.0)) {
+                withPositionRelativeToCamera(pos.add(
+                    0.0,
+                    (entity.bbHeight / 2.0) + WingsPosition.wingsHeight - shifting,
+                    0.0
+                )) {
                     poseStack.withPush {
-                        drawWings(hurtMarked, bodyRot)
+                        drawWings(hurtMarked, bodyRot, shifting)
                     }
                 }
             }

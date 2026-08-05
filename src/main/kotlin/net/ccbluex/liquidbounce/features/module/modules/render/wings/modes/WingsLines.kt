@@ -50,7 +50,7 @@ object WingsLines : WingsMode("Lines") {
         tree(colors)
     }
 
-    override fun WorldRenderEnvironment.drawWings(isHurt: Boolean, bodyRot: Float) {
+    override fun WorldRenderEnvironment.drawWings(isHurt: Boolean, bodyRot: Float, shifting: Float) {
 
         val currentColor = when (isHurt) {
             true -> Color4b.RED.alpha(colors.color.a)
@@ -97,10 +97,14 @@ object WingsLines : WingsMode("Lines") {
         }
 
         val step = if (linesCount > 1) (angles.last - angles.first).toFloat() / (linesCount - 1) else 0f
-
+        val shiftOffset = when (shifting) {
+            0f -> 0f
+            else -> 27.5f
+        }
         poseStack.withPush {
             mulPose(Axis.XP.rotationDegrees(90f))
             mulPose(Axis.ZP.rotationDegrees(bodyRot))
+            mulPose(Axis.XP.rotationDegrees(shiftOffset))
 
             poseStack.withPush {
                 translate(0.0, 0.0, -0.085)
