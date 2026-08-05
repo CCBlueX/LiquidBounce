@@ -16,65 +16,61 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
 
+package net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect
+
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.render.drawGradientCircle
+import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.modes
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.world.phys.Vec3
 
-object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
+abstract class JumpEffectMode(name: String) : Mode(name) {
+    final override val parent: ModeValueGroup<*>
+        get() = modes
 
-    private val endRadius by floatRange("EndRadius", 0.15F..0.8F, 0F..3F)
+    val endRadius by floatRange("EndRadius", 0.15F..0.8F, 0F..3F)
 
-    private val innerColor by color("InnerColor", Color4b(0, 255, 4, 0))
-    private val outerColor by color("OuterColor", Color4b(0, 255, 4, 89))
+    val animCurve by easing("AnimCurve", Easing.QUAD_OUT)
 
-    private val animCurve by easing("AnimCurve", Easing.QUAD_OUT)
+    val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
 
-    private val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
+    val animtime by int("AnimationTime", 15, 1..120)
+    val lifetime by int("Lifetime", 20, 1..120)
+    val canBeCovered by boolean("CanBeCovered", false)
 
-    private val lifetime by int("Lifetime", 15, 1..30)
-    private val canBeCovered by boolean("CanBeCovered", false)
+    val circles = ExpiringList<Vec3>()
 
-    private val circles = ExpiringList<Vec3>()
-
-    override fun onDisabled() {
-        circles.clear()
-    }
+    protected abstract fun WorldRenderEnvironment.drawJumpEffect(progress: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
             circles.forEach {
                 val progress = animCurve
-                    .transform((lifetime - circles.timeToDie(it) + event.partialTicks) / lifetime)
+                    .transform((lifetime - circles.timeToDie(it) + event.partialTicks) / animtime)
                     .coerceIn(0f, 1f)
 
                 withPositionRelativeToCamera(it.value) {
-                    drawGradientCircle(
-                        endRadius.endInclusive * progress,
-                        endRadius.start * progress,
-                        animateColor(outerColor, progress),
-                        animateColor(innerColor, progress),
-                        noDepthTest = !canBeCovered
-                    )
+                    poseStack.withPush {
+                        drawJumpEffect(progress)
+                    }
                 }
             }
         }
-
     }
 
-    private fun animateColor(baseColor: Color4b, progress: Float): Color4b {
+    fun animateColor(baseColor: Color4b, progress: Float): Color4b {
         val color = baseColor.fade(1.0F - progress)
 
         if (hueOffsetAnim == 0){
@@ -84,7 +80,8 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
         return shiftHue(color, (hueOffsetAnim * progress).toInt())
     }
 
-    private val playerJumpHandler = handler<PlayerJumpEvent> { _ ->
+    @Suppress("unused")
+    val playerJumpHandler = handler<PlayerJumpEvent> { _ ->
         // Adds new circle when the player jumps
         circles.add(player.position(), lifetime)
     }

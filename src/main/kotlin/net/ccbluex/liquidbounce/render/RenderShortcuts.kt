@@ -45,6 +45,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Vector3f
 import org.joml.Vector3fc
+import javax.swing.border.TitledBorder.DEFAULT_POSITION
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -296,26 +297,40 @@ fun WorldRenderEnvironment.drawTexQuad(
     }
 }
 
+@Suppress("unused")
+enum class AnchorPoint(val xFactor: Float, val yFactor: Float) {
+    TOP_LEFT(-1.0f, 0.0f),    TOP_CENTER(-0.5f, 0.0f),    TOP_RIGHT(0.0f, 0.0f),
+    CENTER_LEFT(-1.0f, -0.5f), CENTER(-0.5f, -0.5f),      CENTER_RIGHT(0.0f, -0.5f),
+    BOTTOM_LEFT(-1.0f, -1.0f), BOTTOM_CENTER(-0.5f, -1.0f), BOTTOM_RIGHT(0.0f, -1.0f)
+}
+
 fun WorldRenderEnvironment.drawSquareTexture(
     sampler0: AbstractTexture,
     size: Float,
     argb: Int,
+    anchor: AnchorPoint = AnchorPoint.TOP_LEFT,
 ) = drawCustomMeshTextured(sampler0) { matrix ->
-    addVertex(matrix, 0.0f, -size, 0.0f)
+    val minX = size * anchor.xFactor
+    val maxX = minX + size
+    val minY = size * anchor.yFactor
+    val maxY = minY + size
+
+    addVertex(matrix, minX, maxY, 0.0f)
         .setUv(0.0f, 0.0f)
         .setColor(argb)
 
-    addVertex(matrix, -size, -size, 0.0f)
+    addVertex(matrix, minX, minY, 0.0f)
         .setUv(0.0f, 1.0f)
         .setColor(argb)
 
-    addVertex(matrix, -size, 0.0f, 0.0f)
+    addVertex(matrix, maxX, minY, 0.0f)
         .setUv(1.0f, 1.0f)
         .setColor(argb)
 
-    addVertex(matrix, 0.0f, 0.0f, 0.0f)
+    addVertex(matrix, maxX, maxY, 0.0f)
         .setUv(1.0f, 0.0f)
         .setColor(argb)
+
 }
 
 @JvmOverloads
