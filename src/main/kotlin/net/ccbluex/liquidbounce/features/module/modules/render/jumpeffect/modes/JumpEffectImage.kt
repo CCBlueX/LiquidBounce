@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.JumpEf
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.JumpEffectMode
 import net.ccbluex.liquidbounce.render.AnchorPoint
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.drawSquareTexture
+import net.ccbluex.liquidbounce.render.drawSquareTextureGradient
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.render.readNativeImage
 internal object JumpEffectImage : JumpEffectMode("Image") {
 
     private val colors = JumpEffectColorSettings()
+    private val rotationSpeed by int("RotationSpeed", 10, -360..360)
 
     private val textureMode = modes("Source", 0) {
         arrayOf(
@@ -47,16 +48,28 @@ internal object JumpEffectImage : JumpEffectMode("Image") {
         tree(colors)
     }
 
-    override fun WorldRenderEnvironment.drawJumpEffect(progress: Float) {
+    override fun WorldRenderEnvironment.drawJumpEffect(progress: Float, age: Float) {
         val texture = textureMode.activeMode.texture ?: return
         poseStack.withPush {
-            mulPose(Axis.XP.rotationDegrees(-90f))
-            drawSquareTexture(texture, endRadius.endInclusive * progress, colors.innerColor.argb, AnchorPoint.CENTER)
+            val currentRotation = rotationSpeed * age
+
+            mulPose(Axis.XP.rotationDegrees(90f))
+            mulPose(Axis.ZP.rotationDegrees(currentRotation))
+            drawSquareTextureGradient(
+                sampler0 = texture,
+                outerRadius = endRadius.endInclusive * progress,
+                innerRadius = endRadius.start * progress,
+                animateColor(colors.outerColor, age),
+                animateColor(colors.innerColor, age),
+                anchor = AnchorPoint.CENTER,
+                startOffset = 0.8f
+            )
         }
     }
 
     private enum class PresetTexture(override val tag: String, val path: String) : TextureMode.Builtin.Preset {
-        LIQUIDBOUNCE("LiquidBounce", "jump_effect/liquidbounce.png");
+        LIQUIDBOUNCE("Liquidbounce", "jump_effect/liquidbounce.png"),
+        LIQUIDBOUNCELOGO("LiquidbounceWithLogo", "jump_effect/liquidbounce_with_logo.png");
 
         override val texture = LiquidBounce.resource(this.path)
             .readNativeImage().asTexture { "JumpEffect Image $tag" }

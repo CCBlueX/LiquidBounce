@@ -45,7 +45,6 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Vector3f
 import org.joml.Vector3fc
-import javax.swing.border.TitledBorder.DEFAULT_POSITION
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -331,6 +330,81 @@ fun WorldRenderEnvironment.drawSquareTexture(
         .setUv(1.0f, 0.0f)
         .setColor(argb)
 
+}
+
+fun WorldRenderEnvironment.drawSquareTextureGradient(
+    sampler0: AbstractTexture,
+    outerRadius: Float,
+    innerRadius: Float,
+    outerColor: Color4b,
+    innerColor: Color4b,
+    anchor: AnchorPoint = AnchorPoint.TOP_LEFT,
+    subdivisions: Int = 16,
+    startOffset: Float = 0.5f
+) {
+    if (outerRadius <= 0f || (outerColor.isTransparent && innerColor.isTransparent)) {
+        return
+    }
+
+    val size = outerRadius * 2f
+    val minX = size * anchor.xFactor
+    val minY = size * anchor.yFactor
+
+    val step = size / subdivisions
+    val centerX = minX + outerRadius
+    val centerY = minY + outerRadius
+
+    val baseRatio = (innerRadius / outerRadius).coerceIn(0f, 1f)
+    val effectiveRatio = maxOf(baseRatio, startOffset.coerceIn(0f, 0.99f))
+
+    fun lerpColor(c1: Color4b, c2: Color4b, factor: Float): Int {
+        val f = factor.coerceIn(0f, 1f)
+        val a = (c1.a + (c2.a - c1.a) * f).toInt()
+        val r = (c1.r + (c2.r - c1.r) * f).toInt()
+        val g = (c1.g + (c2.g - c1.g) * f).toInt()
+        val b = (c1.b + (c2.b - c1.b) * f).toInt()
+        return (a shl 24) or (r shl 16) or (g shl 8) or b
+    }
+
+    fun getColorForPos(x: Float, y: Float): Int {
+        val dx = x - centerX
+        val dy = y - centerY
+        val distRatio = (kotlin.math.sqrt(dx * dx + dy * dy) / outerRadius).coerceIn(0f, 1f)
+
+        val t = if (distRatio <= effectiveRatio) {
+            0f
+        } else {
+            ((distRatio - effectiveRatio) / (1f - effectiveRatio)).coerceIn(0f, 1f)
+        }
+
+        return lerpColor(innerColor, outerColor, t)
+    }
+
+    drawCustomMeshTextured(sampler0) { matrix ->
+        for (row in 0 until subdivisions) {
+            for (col in 0 until subdivisions) {
+                val x1 = minX + col * step
+                val x2 = x1 + step
+                val y1 = minY + row * step
+                val y2 = y1 + step
+
+                val u1 = col.toFloat() / subdivisions
+                val u2 = (col + 1).toFloat() / subdivisions
+                val v1 = row.toFloat() / subdivisions
+                val v2 = (row + 1).toFloat() / subdivisions
+
+                val c11 = getColorForPos(x1, y1)
+                val c12 = getColorForPos(x1, y2)
+                val c22 = getColorForPos(x2, y2)
+                val c21 = getColorForPos(x2, y1)
+
+                addVertex(matrix, x1, y2, 0.0f).setUv(u1, v2).setColor(c12)
+                addVertex(matrix, x1, y1, 0.0f).setUv(u1, v1).setColor(c11)
+                addVertex(matrix, x2, y1, 0.0f).setUv(u2, v1).setColor(c21)
+                addVertex(matrix, x2, y2, 0.0f).setUv(u2, v2).setColor(c22)
+            }
+        }
+    }
 }
 
 @JvmOverloads

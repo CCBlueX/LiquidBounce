@@ -32,12 +32,12 @@ internal object JumpEffectStandard : JumpEffectMode("Standard") {
         tree(colors)
     }
 
-    override fun WorldRenderEnvironment.drawJumpEffect(progress: Float) {
+    override fun WorldRenderEnvironment.drawJumpEffect(progress: Float, age: Float) {
         drawGradientCircle(
             endRadius.endInclusive * progress,
             endRadius.start * progress,
-            animateColor(colors.outerColor, progress),
-            animateColor(colors.innerColor, progress),
+            animateColor(colors.outerColor, age),
+            animateColor(colors.innerColor, age),
             noDepthTest = !canBeCovered
         )
     }

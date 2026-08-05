@@ -45,45 +45,55 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
 
     val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
 
-    val animtime by int("AnimationTime", 15, 1..120)
-    val lifetime by int("Lifetime", 20, 1..120)
+    val lifetime by intRange("Lifetime", 15..15, 1..120, "anim/life")
     val canBeCovered by boolean("CanBeCovered", false)
 
     val circles = ExpiringList<Vec3>()
 
-    protected abstract fun WorldRenderEnvironment.drawJumpEffect(progress: Float)
+    protected abstract fun WorldRenderEnvironment.drawJumpEffect(progress: Float, age: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
             circles.forEach {
+
+                val age = lifetime.last - circles.timeToDie(it) + event.partialTicks
+
                 val progress = animCurve
-                    .transform((lifetime - circles.timeToDie(it) + event.partialTicks) / animtime)
+                    .transform(age / lifetime.first)
                     .coerceIn(0f, 1f)
 
                 withPositionRelativeToCamera(it.value) {
                     poseStack.withPush {
-                        drawJumpEffect(progress)
+                        drawJumpEffect(progress, age)
                     }
                 }
             }
         }
     }
 
-    fun animateColor(baseColor: Color4b, progress: Float): Color4b {
-        val color = baseColor.fade(1.0F - progress)
+    fun animateColor(baseColor: Color4b, age: Float): Color4b {
+        val fadeProgress = when {
+            lifetime.last > lifetime.first ->
+                ((age - lifetime.first) / (lifetime.last - lifetime.first).toFloat()).coerceIn(0f, 1f)
+            else -> (age / lifetime.last.toFloat()).coerceIn(0f, 1f)
 
-        if (hueOffsetAnim == 0){
+        }
+
+        val color = baseColor.fade(1.0f - fadeProgress)
+
+        if (hueOffsetAnim == 0) {
             return color
         }
 
-        return shiftHue(color, (hueOffsetAnim * progress).toInt())
+        val lifeProgress = (age / lifetime.last.toFloat()).coerceIn(0f, 1f)
+        return shiftHue(color, (hueOffsetAnim * lifeProgress).toInt())
     }
 
     @Suppress("unused")
     val playerJumpHandler = handler<PlayerJumpEvent> { _ ->
         // Adds new circle when the player jumps
-        circles.add(player.position(), lifetime)
+        circles.add(player.position(), lifetime.last)
     }
 
 }
