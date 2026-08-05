@@ -75,16 +75,16 @@ abstract class WingsMode(name: String) : Mode(name) {
                 val rot = entity.interpolateCurrentRotation(event.partialTicks)
                 val look = Vec3.directionFromRotation(0f, rot.yRot)
                 val equipmentOffset = when (!entity.getItemBySlot(EquipmentSlot.CHEST).isEmpty) {
-                    true -> WingsPosition().equipmentOffset.toDouble()
+                    true -> WingsPosition.equipmentOffset.toDouble()
                     else -> 0.0
                 }
 
                 val hurtMarked = entity.hurtTime != 0 && showDamage
 
-                val behind = WingsPosition().behindScale.toDouble() + equipmentOffset
+                val behind = WingsPosition.behindScale.toDouble() + equipmentOffset
                 val pos = entity.getPosition(event.partialTicks).subtract(look.scale(behind))
 
-                withPositionRelativeToCamera(pos.add(0.0, entity.bbHeight / 2.0 + 0.2 + WingsPosition().wingsHeight, 0.0)) {
+                withPositionRelativeToCamera(pos.add(0.0, (entity.bbHeight / 2.0) + WingsPosition.wingsHeight, 0.0)) {
                     poseStack.withPush {
                         drawWings(hurtMarked, bodyRot)
                     }
