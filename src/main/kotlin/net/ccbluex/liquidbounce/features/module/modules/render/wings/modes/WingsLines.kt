@@ -106,11 +106,6 @@ object WingsLines : WingsMode("Lines") {
             mulPose(Axis.ZP.rotationDegrees(bodyRot))
             mulPose(Axis.XP.rotationDegrees(shiftOffset))
 
-            poseStack.withPush {
-                translate(0.0, 0.0, -0.085)
-                drawWingPair(WingsOptions.wingsLength - 0.125f, WingsOptions.wingsWidth)
-            }
-
             for (i in (0 until linesCount)) {
                 val angle = angles.first.toFloat() + (i * step)
 
