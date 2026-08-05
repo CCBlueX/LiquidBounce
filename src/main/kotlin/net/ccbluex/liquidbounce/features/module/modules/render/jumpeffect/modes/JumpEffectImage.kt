@@ -50,7 +50,7 @@ internal object JumpEffectImage : JumpEffectMode("Image") {
     override fun WorldRenderEnvironment.drawJumpEffect(progress: Float) {
         val texture = textureMode.activeMode.texture ?: return
         poseStack.withPush {
-            mulPose(Axis.XP.rotationDegrees(90f))
+            mulPose(Axis.XP.rotationDegrees(-90f))
             drawSquareTexture(texture, endRadius.endInclusive * progress, colors.innerColor.argb, AnchorPoint.CENTER)
         }
     }
