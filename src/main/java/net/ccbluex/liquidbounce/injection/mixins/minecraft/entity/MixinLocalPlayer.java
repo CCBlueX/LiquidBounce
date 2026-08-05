@@ -262,11 +262,11 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         var cameraRotation = new Rotation(camera.getViewYRot(tickDelta), camera.getViewXRot(tickDelta), true);
 
         Rotation rotation;
-        if (RotationManager.INSTANCE.getCurrentRotation() != null) {
-            rotation = RotationManager.INSTANCE.getCurrentRotation();
-        } else if (ModuleFreeCam.INSTANCE.getRunning()) {
+        if (ModuleFreeCam.INSTANCE.getRunning()) {
             var serverRotation = RotationManager.INSTANCE.getServerRotation();
             rotation = ModuleFreeCam.INSTANCE.shouldDisableCameraInteract() ? serverRotation : cameraRotation;
+        } else if (RotationManager.INSTANCE.getCurrentRotation() != null) {
+            rotation = RotationManager.INSTANCE.getCurrentRotation();
         } else {
             rotation = cameraRotation;
         }
@@ -289,7 +289,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
             rotation,
             Math.max(blockInteractionRange, entityInteractionRange),
             ClipContext.Block.OUTLINE,
-            ModuleLiquidPlace.INSTANCE.getRunning(),
+            ModuleLiquidPlace.INSTANCE.getRunning() ? ClipContext.Fluid.ANY : ClipContext.Fluid.NONE,
             tickDelta
         );
     }

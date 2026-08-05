@@ -1,0 +1,13 @@
+{
+  "name": "ClosedCaptions",
+  "description": "Displays Minecraft's closed captions (Settings -> Accessibility Settings -> Closed Captions).",
+  "enabled": false,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Right",
+    "horizontalOffset": 2,
+    "verticalAlignment": "Bottom",
+    "verticalOffset": 40
+  },
+  "tweaks": ["DISABLE_SUBTITLE_OVERLAY"]
+}

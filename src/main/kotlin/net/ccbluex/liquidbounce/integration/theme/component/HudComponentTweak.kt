@@ -42,7 +42,8 @@ enum class HudComponentTweak(override val tag: String) : Tagged {
     DISABLE_HELD_ITEM_TOOL_TIP("disableHeldItemToolTip"),
     DISABLE_OVERLAY_MESSAGE("disableOverlayMessage"),
     DISABLE_STATUS_EFFECT_OVERLAY("disableStatusEffectOverlay"),
-    DISABLE_LOCATOR_BAR("disableLocatorBar");
+    DISABLE_LOCATOR_BAR("disableLocatorBar"),
+    DISABLE_SUBTITLE_OVERLAY("disableSubtitleOverlay");
 
 
 }

@@ -71,6 +71,9 @@ open class ClientModule(
     override val debugDisplayName: Component
         get() = this.name.asPlainText(Style.EMPTY + ChatFormatting.GOLD + ChatFormatting.BOLD)
 
+    override val debugOwnerId: String
+        get() = "Module$name"
+
     /**
      * If a module is running or not is separated from the enabled state. A module can be paused even when
      * it is enabled, or it can be running when it is not enabled.

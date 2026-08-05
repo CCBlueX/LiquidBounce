@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -44,20 +47,23 @@ import net.ccbluex.liquidbounce.utils.network.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.network.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interactBlock
 import net.ccbluex.liquidbounce.utils.entity.interactBlockLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.interactEntityLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
+import net.ccbluex.liquidbounce.utils.entity.isSlowDueToUsingItem
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.useItemStrict
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isSword
+import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
-import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
+import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.client.renderer.ItemInHandRenderer
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
@@ -67,7 +73,7 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.phys.HitResult
-import kotlin.random.Random
+import kotlin.jvm.optionals.getOrNull
 
 object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", false) {
 
@@ -94,12 +100,42 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     var reblockTicks: Int = reblockTicksRange.random()
     var pauseOnUnblockTicks: Int = pauseOnUnblockTicksRange.random()
 
-    val chance by float("Chance", 100f, 0f..100f, "%")
+    private val chance = percentageChance("Chance", 100f)
     val blink by int("Blink", 0, 0..10, "ticks")
 
     private val prioritizeBlocking by boolean("PrioritizeBlocking", true)
     val onScanRange by boolean("OnScanRange", true)
-    private val onlyWhenInDanger by boolean("OnlyWhenInDanger", false)
+
+    /**
+     * Check if we are in danger by going through all possible targets and checking if they are looking at us.
+     */
+    private object OnlyWhenInDanger : ToggleableValueGroup(this, "OnlyWhenInDanger", false) {
+        private val tolerance by float("Tolerance", 0.3f, 0f..1f, "blocks")
+        private val forceActiveRange by floatRange("ForceActiveRange", 0f..1f, 0f..6f)
+
+        fun isInDanger(): Boolean {
+            return this.enabled && targetTracker.targets().any { target ->
+                val interactionRange = range.interactionRange.toDouble()
+                if (player.squaredBoxedDistanceTo(target) > interactionRange.sq()) {
+                    return@any false
+                }
+
+                val eyes = target.eyePosition
+                val lookEnd = eyes.add(target.rotation.directionVector.scale(interactionRange))
+                val toleratedBox = player.box.inflate(tolerance.toDouble())
+                val hitPosition = toleratedBox.firstHit(eyes, lookEnd) ?: return@any false
+                val distance = eyes.distanceTo(hitPosition)
+
+                distance in forceActiveRange ||
+                    distance <= range.interactionThroughWallsRange ||
+                    distance <= interactionRange && hasLineOfSight(eyes, hitPosition, target)
+            }
+        }
+    }
+
+    init {
+        tree(OnlyWhenInDanger)
+    }
 
     /** For 1.9~1.21.4 protocol on 1.8 server, server will send a shield to your offhand on using item */
     private val assumeShield by boolean("AssumeShield", false)
@@ -128,7 +164,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      * Visual blocking shows a blocking state, while not actually blocking.
      * This is useful to make the blocking animation become much smoother.
      *
-     * @see ItemInHandRenderer.renderArmWithItem
+     * @see ItemInHandRenderer.renderPlayerArm
      */
     var blockVisual = false
         get() = field && running &&
@@ -142,7 +178,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     var hasBlockedSinceAttack = false
 
-    var isInDanger = false
+    private var isInDanger = false
 
     /**
      * This will decrease our CPS and prioritize blocking.
@@ -160,7 +196,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             }
 
             // If we haven't blocked, and we are in danger, prioritize blocking
-            return !hasBlockedSinceAttack && (!onlyWhenInDanger || isInDanger)
+            return !hasBlockedSinceAttack && (!OnlyWhenInDanger.enabled || isInDanger)
         }
 
     override fun onDisabled() {
@@ -186,17 +222,21 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     @Suppress("ReturnCount", "CognitiveComplexMethod")
     fun startBlocking(): Boolean {
-        if (!running || Random.nextInt(100) > chance) {
+        if (!running) {
             return false
         }
 
-        if (onlyWhenInDanger && !isInDanger) {
+        if (OnlyWhenInDanger.enabled && !isInDanger) {
             this.stopBlocking()
             return false
         }
 
         if (player.isUsingItem) {
             hasBlockedSinceAttack = true
+            return false
+        }
+
+        if (!chance.asBoolean) {
             return false
         }
 
@@ -240,17 +280,13 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             blockingTicks++
         }
 
-        // Check if we are in danger by going through all possible targets and checking if they are looking at us.
-        isInDanger = targetTracker.targets().any { target ->
-            player.squaredBoxedDistanceTo(target) <= KillAuraRange.interactionRange.sq() && isLookingAtEntity(
-                fromEntity = target,
-                toEntity = player,
-                rotation = target.rotation,
-                range = range.interactionRange.toDouble(),
-                throughWallsRange = range.interactionThroughWallsRange.toDouble()
-            ) != null
-        }
+        isInDanger = OnlyWhenInDanger.isInDanger()
         debugParameter("IsInDanger") { isInDanger }
+        debugParameter("blockingTicks") { blockingTicks }
+        debugParameter("isBlocking") { player.isBlocking }
+        debugParameter("isUsingItem") { player.isUsingItem }
+        debugParameter("isSlowDueToUsingItem") { player.isSlowDueToUsingItem }
+        debugParameter("isBlockingServerside") { player.isBlockingServerside }
     }
 
     @Suppress("unused")
@@ -294,8 +330,9 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             }
         }
 
-        // We do not want the player to stop eating or else. Only when he blocks.
-        if (!player.isBlockingServerside) {
+        // We do not want the player to stop eating or else.
+        // Only when he blocks or AutoBlock owns the use action.
+        if (enforcedBlockingHand == null && !player.isBlockingServerside) {
             return false
         }
 

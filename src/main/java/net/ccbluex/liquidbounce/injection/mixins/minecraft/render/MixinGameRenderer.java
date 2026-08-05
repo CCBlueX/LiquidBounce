@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
-import net.ccbluex.liquidbounce.render.WorldRenderEnvironment;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen;
 import net.minecraft.client.Camera;
@@ -85,6 +85,14 @@ public abstract class MixinGameRenderer {
         EventManager.INSTANCE.callEvent(GameRenderEvent.INSTANCE);
     }
 
+    /**
+     * Apply change-look rotations before vanilla updates and extracts the camera state.
+     */
+    @Inject(method = "update", at = @At("HEAD"))
+    private void applyChangeLookRotation(DeltaTracker deltaTracker, CallbackInfo ci) {
+        RotationManager.INSTANCE.applyChangeLookRotation(deltaTracker.getGameTimeDeltaPartialTick(false));
+    }
+
     @Inject(method = "extractCamera", at = @At("TAIL"))
     private void hookWorldToScreenMatricesInExtract(
         DeltaTracker deltaTracker,
@@ -109,12 +117,15 @@ public abstract class MixinGameRenderer {
         var newMatStack = Pools.MatStack.borrow();
         try {
             newMatStack.mulPose(modelViewMatrix);
-            WorldRenderEnvironment.beginWorldFrame(this.mainRenderTarget, newMatStack, this.mainCamera);
-            EventManager.INSTANCE.callEvent(
-                new WorldRenderEvent(newMatStack, this.mainCamera, deltaTracker.getGameTimeDeltaPartialTick(false))
-            );
+            try (var event = new WorldRenderEvent(
+                newMatStack,
+                this.mainCamera,
+                deltaTracker.getGameTimeDeltaPartialTick(false),
+                this.mainRenderTarget
+            )) {
+                EventManager.INSTANCE.callEvent(event);
+            }
         } finally {
-            WorldRenderEnvironment.endWorldFrame();
             Pools.MatStack.recycle(newMatStack);
         }
     }

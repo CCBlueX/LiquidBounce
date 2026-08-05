@@ -31,7 +31,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
+import net.ccbluex.liquidbounce.utils.netty.clientChannelAndGroup
 import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress
 import net.minecraft.client.multiplayer.resolver.ServerAddress
 import net.minecraft.client.multiplayer.resolver.ServerNameResolver

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
+import com.mojang.util.UndashedUuid
 import org.apache.commons.codec.digest.DigestUtils
 import java.nio.ByteBuffer
 import java.util.UUID
@@ -39,3 +40,6 @@ fun UUID.toByteArray(): ByteArray {
  * Compatible with Rust equivalent of hex::encode(*md5::compute(id.as_bytes()))
  */
 fun UUID.toMD5(): String = DigestUtils.md5Hex(toByteArray())
+
+inline fun UUID.toUndashedString(): String = UndashedUuid.toString(this)
+

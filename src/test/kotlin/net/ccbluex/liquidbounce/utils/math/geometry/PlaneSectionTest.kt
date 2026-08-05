@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.minecraft.world.phys.Vec3
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class PlaneSectionTest {
 

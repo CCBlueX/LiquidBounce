@@ -56,6 +56,7 @@ import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerInventoryEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
+import net.ccbluex.liquidbounce.event.events.ClosedCaptionsEvent
 import net.ccbluex.liquidbounce.event.events.ComponentsUpdateEvent
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -138,6 +139,7 @@ import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
+import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
@@ -158,6 +160,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ChunkUnloadEvent::class.java,
     DisconnectEvent::class.java,
     GameRenderEvent::class.java,
+    WorldFeatureSubmitEvent::class.java,
     WorldRenderEvent::class.java,
     OverlayRenderEvent::class.java,
     ScreenRenderEvent::class.java,
@@ -268,6 +271,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     TitleEvent.Subtitle::class.java,
     TitleEvent.Fade::class.java,
     TitleEvent.Clear::class.java,
+    ClosedCaptionsEvent::class.java,
     UserLoggedInEvent::class.java,
     UserLoggedOutEvent::class.java,
 )

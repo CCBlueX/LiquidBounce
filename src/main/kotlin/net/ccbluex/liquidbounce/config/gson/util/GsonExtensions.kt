@@ -137,3 +137,9 @@ inline fun jsonObject(
 
 inline fun JsonArray.getOrNull(index: Int): JsonElement? =
     if (index in 0 until this.size()) this[index] else null
+
+inline fun <T> Iterable<T>.mapToJsonArray(transform: (T) -> JsonElement?): JsonArray {
+    val a = if (this is Collection) JsonArray(this.size) else JsonArray()
+    forEach { a.add(transform(it)) }
+    return a
+}

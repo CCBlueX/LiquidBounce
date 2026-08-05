@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.test
 
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 fun <E> assertIn(collection: Collection<E>, element: E) {
     assertTrue(collection.contains(element))

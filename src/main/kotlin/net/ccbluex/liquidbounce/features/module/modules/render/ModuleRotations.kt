@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
@@ -100,9 +100,6 @@ object ModuleRotations : ClientModule("Rotations", ModuleCategories.RENDER) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val partialTicks = event.partialTicks
-
         val drawVectorLine = vectorLine.a > 0
         val drawVectorDot = vectorDot.a > 0
 
@@ -111,12 +108,12 @@ object ModuleRotations : ClientModule("Rotations", ModuleCategories.RENDER) {
             val previousRotation = RotationManager.previousRotation ?: currentRotation
 
             val interpolatedRotationVec = previousRotation.directionVector
-                .lerp(currentRotation.directionVector, partialTicks.toDouble())
+                .lerp(currentRotation.directionVector, event.partialTicks.toDouble())
                 .toVec3f()
 
             val eyeVector = Vec3f.eyeVector(event.camera)
 
-            renderEnvironmentForWorld(matrixStack) {
+            event.renderEnvironment {
                 val vector = eyeVector.fma(100f, interpolatedRotationVec)
                 if (drawVectorLine) {
                     drawLine(eyeVector, vector, vectorLine.argb)

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.theme.component.components
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.config.types.group.json
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentTweak
 import net.ccbluex.liquidbounce.utils.render.Alignment
@@ -29,8 +30,9 @@ class WebHudComponent(
     enabled: Boolean,
     alignment: Alignment,
     tweaks: Array<HudComponentTweak> = emptyArray(),
-    val values: Array<JsonObject> = emptyArray()
-) : HudComponent(name, enabled, alignment, tweaks) {
+    val values: Array<JsonObject> = emptyArray(),
+    description: String = "",
+) : HudComponent(name, enabled, alignment, tweaks, description) {
 
     override fun walkInit() {
         for (value in values) {
@@ -41,4 +43,3 @@ class WebHudComponent(
     }
 
 }
-

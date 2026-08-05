@@ -59,7 +59,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.firstOrNull
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.projectile.FishingHook
 import net.minecraft.world.item.Items
@@ -123,9 +126,9 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         priority = FIRST_PRIORITY,
         initialValue = null,
     ) { _, _ ->
-        world.entitiesForRendering().firstOrNull { entity ->
-            entity is FishingHook && entity.playerOwner === player
-        } as FishingHook?
+        world.entityGetter.firstOrNull(EntityTypes.FISHING_BOBBER) {
+            it.playerOwner === player
+        }
     }
 
     private var availableRodSlot by computedOn<GameTickEvent, HotbarItemSlot?>(
@@ -173,7 +176,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         val target = targetTracker.target ?: return@tickHandler
 
         val rotation = gravityType.apply(target) ?: return@tickHandler
-        val rotationDifference = RotationManager.serverRotation.angleTo(rotation)
+        val rotationDifference = RotationManager.serverRotation.directionAngleTo(rotation)
         if (rotationDifference > aimOffThreshold) return@tickHandler
 
         // If the player used rod manually, skip use

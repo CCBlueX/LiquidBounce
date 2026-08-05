@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.event.events
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
@@ -137,6 +138,7 @@ class ChatReceiveEvent(
     val message: String,
     val textData: Component,
     val type: ChatType,
+    @ProtocolExclude
     val applyChatDecoration: UnaryOperator<Component>,
 ) : CancellableEvent(), WebSocketEvent {
     enum class ChatType(override val tag: String) : Tagged {
