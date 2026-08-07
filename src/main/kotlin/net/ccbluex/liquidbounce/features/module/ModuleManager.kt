@@ -114,7 +114,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTextFieldProt
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleTrainDataCollector
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.reporthelper.ModuleReportHelper
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump
@@ -548,7 +547,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleDebugRecorder,
             ModuleAntiCheatDetect,
             ModuleEasyPearl,
-            ModuleTrainDataCollector,
 
             // Movement
             ModuleAirJump,

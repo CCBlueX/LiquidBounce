@@ -28,9 +28,6 @@ discordIpc = "0.6.0-SNAPSHOT"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
 fastutil4k = "0.2.7"
-parquet = "1.13.1"
-hadoop = "3.3.6"
-zstd = "1.5.5-1"
 
 # Recommended mods
 modmenu = "17.0.0-beta.2"
@@ -85,11 +82,6 @@ semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j"
 ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
 fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }
 fastutil4k-moreCollections = { group = "net.ccbluex", name = "fastutil4k-more-collections", version.ref = "fastutil4k" }
-parquet-hadoop = { group = "org.apache.parquet", name = "parquet-hadoop", version.ref = "parquet" }
-parquet-avro = { group = "org.apache.parquet", name = "parquet-avro", version.ref = "parquet" }
-hadoop-client = { group = "org.apache.hadoop", name = "hadoop-client", version.ref = "hadoop" }
-hadoop-common = { group = "org.apache.hadoop", name = "hadoop-common", version.ref = "hadoop" }
-zstd-jni = { group = "com.github.luben", name = "zstd-jni", version.ref = "zstd" }
 
 polyglot = { group = "org.graalvm.polyglot", name = "polyglot", version.ref = "polyglot" }
 polyglot-tools = { group = "org.graalvm.polyglot", name = "tools-community", version.ref = "polyglot" }

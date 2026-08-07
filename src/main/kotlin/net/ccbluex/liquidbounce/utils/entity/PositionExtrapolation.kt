@@ -19,14 +19,12 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.traindata.InferenceUtility
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
-import java.util.UUID
 import kotlin.math.max
 import kotlin.math.round
 
@@ -40,8 +38,7 @@ fun interface PositionExtrapolation {
         @JvmStatic
         fun getBestForEntity(target: Entity): PositionExtrapolation {
             return when (target) {
-//                is Player -> PlayerSimulationExtrapolation(target)
-                is Player -> AIPositionExtrapolation(target)
+                is Player -> PlayerSimulationExtrapolation(target)
                 else -> LinearPositionExtrapolation(target)
             }
         }
@@ -72,17 +69,5 @@ class PlayerSimulationExtrapolation(private val simulation: SimulatedPlayerCache
     override fun getPositionInTicks(ticks: Double): Vec3 {
         val ticks = max(0, round(ticks.coerceAtMost(30.0)).toInt())
         return this.simulation.getSnapshotAt(ticks).pos
-    }
-}
-
-class AIPositionExtrapolation(private val uuid: UUID) : PositionExtrapolation {
-    constructor(player: Player) : this(player.uuid)
-
-    override fun getPositionInTicks(ticks: Double): Vec3 {
-        val Y = (ticks / 4.0).toInt().coerceIn(1, 15)
-
-        val positions = InferenceUtility.getPredictionCached(this.uuid, Y)
-
-        return positions.maxByOrNull { it.probability }?.worldPos!!
     }
 }
