@@ -184,7 +184,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.Modu
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations
+import net.ccbluex.liquidbounce.features.module.modules.render.animations.ModuleAnimations
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAspect
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAutoF5
