@@ -74,6 +74,22 @@
             name: "Weapon"
         },
         {
+            item: { type: "GROUP", group: "SPEAR" },
+            name: "Spear"
+        },
+        {
+            item: { type: "GROUP", group: "MACE" },
+            name: "Mace"
+        },
+        {
+            item: { type: "GROUP", group: "SHIELD" },
+            name: "Shield"
+        },
+        {
+            item: { type: "GROUP", group: "ROD" },
+            name: "Fishing Rod"
+        },
+        {
             item: { type: "GROUP", group: "FOOD" },
             name: "Food"
         },

@@ -107,7 +107,15 @@ sealed class FrontendSlotPreference {
             @SerializedName("BLOCK")
             BLOCK(CleanupPlanTemplate.SlotContentPreference(GenericItemType.BLOCK)),
             @SerializedName("THROWABLE")
-            THROWABLE(CleanupPlanTemplate.SlotContentPreference(GenericItemType.THROWABLE))
+            THROWABLE(CleanupPlanTemplate.SlotContentPreference(GenericItemType.THROWABLE)),
+            @SerializedName("SPEAR")
+            SPEAR(CleanupPlanTemplate.SlotContentPreference(GenericItemType.SPEAR)),
+            @SerializedName("MACE")
+            MACE(CleanupPlanTemplate.SlotContentPreference(GenericItemType.MACE)),
+            @SerializedName("SHIELD")
+            SHIELD(CleanupPlanTemplate.SlotContentPreference(GenericItemType.SHIELD)),
+            @SerializedName("ROD")
+            ROD(CleanupPlanTemplate.SlotContentPreference(GenericItemType.ROD))
         }
 
         override fun serialize(context: JsonSerializationContext) = JsonObject().apply {

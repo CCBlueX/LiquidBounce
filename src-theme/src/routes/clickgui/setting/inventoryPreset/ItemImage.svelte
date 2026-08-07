@@ -9,6 +9,14 @@
             case "SWORD":
             case "WEAPON":
                 return "sword.png";
+            case "SPEAR":
+                return "spear.svg";
+            case "MACE":
+                return "mace.svg";
+            case "SHIELD":
+                return "shield.svg";
+            case "ROD":
+                return "rod.svg";
             case "AXE":
                 return "axe.png";
             case "HOE":

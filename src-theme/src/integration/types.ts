@@ -61,7 +61,7 @@ export interface SingleItemPreference {
 
 export interface GroupItemPreference {
     type: "GROUP";
-    group: "ARROWS" | "SWORD" | "WEAPON" | "AXE" | "HOE" | "SHOVEL" | "PICKAXE" | "FOOD" | "POTION" | "BLOCK" | "THROWABLE";
+    group: "ARROWS" | "SWORD" | "WEAPON" | "AXE" | "HOE" | "SHOVEL" | "PICKAXE" | "FOOD" | "POTION" | "BLOCK" | "THROWABLE" | "SPEAR" | "MACE" | "SHIELD" | "ROD";
 }
 
 export interface IgnoreItemPreference {
