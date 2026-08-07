@@ -25,13 +25,34 @@ import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorApi
 import net.ccbluex.liquidbounce.api.thirdparty.translator.providers.GoogleTranslateApi
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.utils.collection.LruCache
+
+private data class TranslationKey(val sourceLanguage: String, val targetLanguage: String, val text: String)
 
 object GlobalSettingsAutoTranslate : ValueGroup(name = "AutoTranslate"), TranslatorApi, EventListener {
 
+    private val cache = LruCache<TranslationKey, TranslationResult>(10_000)
     private val providers = modes(this, "Provider", 0) {
         arrayOf(
             GoogleTranslateApi(it)
         )
+    }
+
+    override suspend fun translate(
+        sourceLanguage: TranslateLanguage,
+        targetLanguage: TranslateLanguage,
+        text: String
+    ): TranslationResult {
+        val key = TranslationKey(sourceLanguage.literal, targetLanguage.literal, text)
+        cache[key]?.let { return it }
+
+        val result = super.translate(sourceLanguage, targetLanguage, text)
+
+        if (result.isValid) {
+            cache.put(key, result)
+        }
+
+        return result
     }
 
     override suspend fun translateInternal(
