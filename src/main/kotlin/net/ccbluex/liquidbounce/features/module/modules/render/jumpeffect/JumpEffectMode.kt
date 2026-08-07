@@ -39,14 +39,14 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
     final override val parent: ModeValueGroup<*>
         get() = modes
 
-    val endRadius by floatRange("EndRadius", 0.15F..0.8F, 0F..3F)
+    protected val endRadius by floatRange("EndRadius", 0.15F..0.8F, 0F..3F)
 
-    val animCurve by easing("AnimCurve", Easing.QUAD_OUT)
+    protected val animCurve by easing("AnimCurve", Easing.QUAD_OUT)
 
-    val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
+    protected val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
 
-    val lifetime by intRange("Lifetime", 15..15, 1..120, "anim/life")
-    val canBeCovered by boolean("CanBeCovered", false)
+    protected val lifetime by intRange("Lifetime", 15..15, 1..120, "anim/life")
+    protected val canBeCovered by boolean("CanBeCovered", false)
 
     val circles = ExpiringList<Vec3>()
 

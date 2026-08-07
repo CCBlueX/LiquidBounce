@@ -296,12 +296,6 @@ fun WorldRenderEnvironment.drawTexQuad(
     }
 }
 
-@Suppress("unused")
-enum class AnchorPoint(val xFactor: Float, val yFactor: Float) {
-    TOP_LEFT(-1.0f, 0.0f),    TOP_CENTER(-0.5f, 0.0f),    TOP_RIGHT(0.0f, 0.0f),
-    CENTER_LEFT(-1.0f, -0.5f), CENTER(-0.5f, -0.5f),      CENTER_RIGHT(0.0f, -0.5f),
-    BOTTOM_LEFT(-1.0f, -1.0f), BOTTOM_CENTER(-0.5f, -1.0f), BOTTOM_RIGHT(0.0f, -1.0f)
-}
 
 fun WorldRenderEnvironment.drawSquareTexture(
     sampler0: AbstractTexture,
@@ -357,27 +351,17 @@ fun WorldRenderEnvironment.drawSquareTextureGradient(
     val baseRatio = (innerRadius / outerRadius).coerceIn(0f, 1f)
     val effectiveRatio = maxOf(baseRatio, startOffset.coerceIn(0f, 0.99f))
 
-    fun lerpColor(c1: Color4b, c2: Color4b, factor: Float): Int {
-        val f = factor.coerceIn(0f, 1f)
-        val a = (c1.a + (c2.a - c1.a) * f).toInt()
-        val r = (c1.r + (c2.r - c1.r) * f).toInt()
-        val g = (c1.g + (c2.g - c1.g) * f).toInt()
-        val b = (c1.b + (c2.b - c1.b) * f).toInt()
-        return (a shl 24) or (r shl 16) or (g shl 8) or b
-    }
-
     fun getColorForPos(x: Float, y: Float): Int {
         val dx = x - centerX
         val dy = y - centerY
         val distRatio = (kotlin.math.sqrt(dx * dx + dy * dy) / outerRadius).coerceIn(0f, 1f)
 
-        val t = if (distRatio <= effectiveRatio) {
-            0f
-        } else {
-            ((distRatio - effectiveRatio) / (1f - effectiveRatio)).coerceIn(0f, 1f)
+        val t = when (distRatio <= effectiveRatio ) {
+            true -> 0.0
+            else -> ((distRatio - effectiveRatio) / (1.0 - effectiveRatio)).coerceIn(0.0, 1.0)
         }
 
-        return lerpColor(innerColor, outerColor, t)
+        return innerColor.interpolateTo(outerColor, t).argb
     }
 
     drawCustomMeshTextured(sampler0) { matrix ->
@@ -714,4 +698,11 @@ fun WorldRenderEnvironment.drawGradientSides(
         addVertex(pose, box.minX, height, box.minZ).setColor(topColor)
         addVertex(pose, box.minX, 0.0, box.minZ).setColor(baseColor)
     }
+}
+
+@Suppress("unused")
+enum class AnchorPoint(val xFactor: Float, val yFactor: Float) {
+    TOP_LEFT(-1.0f, 0.0f),    TOP_CENTER(-0.5f, 0.0f),    TOP_RIGHT(0.0f, 0.0f),
+    CENTER_LEFT(-1.0f, -0.5f), CENTER(-0.5f, -0.5f),      CENTER_RIGHT(0.0f, -0.5f),
+    BOTTOM_LEFT(-1.0f, -1.0f), BOTTOM_CENTER(-0.5f, -1.0f), BOTTOM_RIGHT(0.0f, -1.0f)
 }

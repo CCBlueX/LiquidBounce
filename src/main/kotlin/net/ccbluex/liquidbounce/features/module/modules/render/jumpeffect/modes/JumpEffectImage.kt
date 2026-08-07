@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.modes
 
 import com.mojang.math.Axis
-import net.ccbluex.fastutil.toEnumSet
+import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.JumpEffectColorSettings
@@ -39,7 +39,7 @@ internal object JumpEffectImage : JumpEffectMode("Image") {
 
     private val textureMode = modes("Source", 0) {
         arrayOf(
-            TextureMode.Builtin(it, PresetTexture.LIQUIDBOUNCE, PresetTexture.entries.toEnumSet()),
+            TextureMode.Builtin(it, PresetTexture.LIQUIDBOUNCE, enumSetAllOf<PresetTexture>()),
             TextureMode.Custom(it),
         )
     }
