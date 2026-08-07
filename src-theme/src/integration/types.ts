@@ -51,7 +51,46 @@ export type ModuleSetting =
     | Vec3Setting
     | KeySetting
     | FileSetting
-    | CurveSetting;
+    | CurveSetting
+    | InventoryPresetValue;
+
+export interface SingleItemPreference {
+    type: "SINGLE";
+    item: string;
+}
+
+export interface GroupItemPreference {
+    type: "GROUP";
+    group: "ARROWS" | "SWORD" | "WEAPON" | "AXE" | "HOE" | "SHOVEL" | "PICKAXE" | "FOOD" | "POTION" | "BLOCK" | "THROWABLE";
+}
+
+export interface IgnoreItemPreference {
+    type: "IGNORE";
+}
+
+export interface AnyPresetItem {
+    type: "ANY";
+}
+
+export type PresetItem =
+    SingleItemPreference
+    | GroupItemPreference
+    | IgnoreItemPreference
+    | AnyPresetItem;
+
+export interface MaxStacksGroup {
+    itemCount: number;
+    items: PresetItem[];
+}
+
+export type PresetItemGroup = PresetItem[];
+
+export interface InventoryPreset {
+    items: PresetItemGroup[];
+    maxStacks: MaxStacksGroup[];
+}
+
+export interface InventoryPresetValue extends Setting<InventoryPreset> {}
 
 export type File = string;
 

@@ -26,9 +26,11 @@ import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.gson.adapter.AlignmentAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.CodecBasedAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.ColorAdapter
+import net.ccbluex.liquidbounce.config.gson.adapter.FrontendSlotPreferenceAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.IdentifierWithRegistryAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.InputBindAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.IntRangeAdapter
+import net.ccbluex.liquidbounce.config.gson.adapter.InventoryPresetAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.LocalDateAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.LocalDateTimeAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.MinecraftAccountAdapter
@@ -57,6 +59,8 @@ import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExcludeStrategy
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.inventoryPreset.FrontendSlotPreference
+import net.ccbluex.liquidbounce.features.inventoryPreset.InventoryPreset
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -152,6 +156,8 @@ private fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(EntityType::class.java, IdentifierWithRegistryAdapter.ENTITY_TYPE)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, IdentifierWithRegistryAdapter.ITEM)
         .registerTypeAdapter(DataComponentPatch::class.java, CodecBasedAdapter.DATA_COMPONENT_PATCH)
+        .registerTypeHierarchyAdapter(InventoryPreset::class.java, InventoryPresetAdapter)
+        .registerTypeHierarchyAdapter(FrontendSlotPreference::class.java, FrontendSlotPreferenceAdapter)
         .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, IdentifierWithRegistryAdapter.SOUND_EVENT)
         .registerTypeHierarchyAdapter(MobEffect::class.javaObjectType, IdentifierWithRegistryAdapter.STATUS_EFFECT)
         .registerTypeHierarchyAdapter(MenuType::class.java, IdentifierWithRegistryAdapter.SCREEN_HANDLER)

@@ -1,8 +1,5 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.traindata
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSortChoice
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PotionItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PrimitiveItemFacet
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects

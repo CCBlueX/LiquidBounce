@@ -297,7 +297,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         } else {
             val availableItems = findNonEmptySlotsInInventory() + screen.findItemsInContainer()
 
-            CleanupPlanGenerator(ModuleInventoryCleaner.cleanupTemplateFromSettings, availableItems).generatePlan()
+            CleanupPlanGenerator(ModuleInventoryCleaner.cleanupTemplateFromSettings, availableItems).plan
         }
 
         return cleanupPlan

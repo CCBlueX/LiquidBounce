@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.config.types.list.RegistryListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.asTagged
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.inventoryPreset.InventoryPreset
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -595,6 +596,17 @@ open class ValueGroup(
     ) = modes(eventListener, name, { activeIndex }, choicesCallback)
 
     fun <V : Value<*>> value(value: V) = value.apply { this@ValueGroup.inner.add(this) }
+
+    /**
+     * Adds an inventory preset value to this value group.
+     * The preset is represented by a [InventoryPreset] and serialized through the dedicated gson adapters.
+     */
+    @Suppress("unused")
+    fun inventoryPreset(): Value<InventoryPreset> = value(
+        name = "InventoryPreset",
+        defaultValue = InventoryPreset(),
+        valueType = ValueType.INVENTORY_PRESET,
+    )
 
     /**
      * Assigns the value of the settings to the component
