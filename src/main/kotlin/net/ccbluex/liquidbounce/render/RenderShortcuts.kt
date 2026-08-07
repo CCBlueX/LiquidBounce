@@ -428,11 +428,12 @@ fun WorldRenderEnvironment.drawPlane(
     sizeX: Float,
     sizeZ: Float,
     fillColor: Color4b? = Color4b.TRANSPARENT,
-    outlineColor: Color4b? = Color4b.TRANSPARENT
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+    noDepthTest: Boolean = true
 ) {
     if (fillColor != null && !fillColor.isTransparent) {
         val argb = fillColor.argb
-        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = noDepthTest)) { matrix ->
             addVertex(matrix, 0f, 0f, 0f).setColor(argb)
             addVertex(matrix, 0f, 0f, sizeZ).setColor(argb)
             addVertex(matrix, sizeX, 0f, sizeZ).setColor(argb)
@@ -442,7 +443,7 @@ fun WorldRenderEnvironment.drawPlane(
 
     if (outlineColor != null && !outlineColor.isTransparent) {
         val argb = outlineColor.argb
-        drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = noDepthTest)) { matrix ->
             addVertex(matrix, 0f, 0f, 0f).setColor(argb)
             addVertex(matrix, 0f, 0f, sizeZ).setColor(argb)
 

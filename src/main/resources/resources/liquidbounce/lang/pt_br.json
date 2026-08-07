@@ -150,6 +150,7 @@
   "liquidbounce.liquidchat.jwtTokenReceived": "Received JWT token! Relogging...",
   "liquidbounce.liquidchat.writeMessage": "Para mandar uma mensagem: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "Para mandar uma mensagem privada: %s",
+  "liquidbounce.module.wings.description": "Renderiza asas atrás do jogador.",
   "liquidbounce.module.autoArmor.description": "Automaticamente equipa a melhor armadura.",
   "liquidbounce.module.autoArmor.value.delay.description": "O tempo de esperar entre equipar itens.",
   "liquidbounce.module.autoArmor.value.inv_open.description": "Se deve abrir o inventario.",
