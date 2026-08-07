@@ -45,17 +45,27 @@ enum class HitFXRegistry(
         "boykisser-5",
         "boykisser-6"
     )),
+    APPLEPAY("ApplePay", customSoundIds = arrayOf("applepay")),
+    AIMBOOSTER("Aimbooster", customSoundIds = arrayOf("aimbooster")),
     BRING("Bring", customSoundIds = arrayOf("bring")),
+    BRICK("Brick", customSoundIds = arrayOf("brick")),
+    BUMP("Bump", customSoundIds = arrayOf("bump")),
     GLASS("Glass", customSoundIds = arrayOf("glass-1", "glass-2", "glass-3")),
     CLICK("Click", customSoundIds = arrayOf("click-1", "click-2", "click-3")),
+    COIN("Coin", customSoundIds = arrayOf("coin")),
     MEOW("Meow", customSoundIds = arrayOf("meow")),
     MOAN("Moan", customSoundIds = arrayOf("moan-1", "moan-2", "moan-3", "moan-4")),
     MAGIC_SQUASH("MagicSquash", customSoundIds = arrayOf("magic_squash")),
     NYA("NYA", customSoundIds = arrayOf("nya")),
+    OSU("OSU", customSoundIds = arrayOf("osu")),
     POP("Pop", customSoundIds = arrayOf("pop")),
     SOFT("Soft", customSoundIds = arrayOf("soft")),
+    SCHOOLBOY("Schoolboy", customSoundIds = arrayOf("schoolboy")),
+    SKEET("Skeet", customSoundIds = arrayOf("skeet")),
+    SLAP("Slap", customSoundIds = arrayOf("slap")),
     SQUASH("Squash", customSoundIds = arrayOf("squash")),
     TUNG("Tung", customSoundIds = arrayOf("tung")),
+    TF2CRIT("TF2 Crit", customSoundIds = arrayOf("tf2-crit")),
     UWU("UWU", customSoundIds = arrayOf("uwu"));
 
     var sounds: Array<SoundEvent> = vanillaSounds
