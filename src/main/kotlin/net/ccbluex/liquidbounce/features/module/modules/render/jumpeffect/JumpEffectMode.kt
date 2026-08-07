@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.circles
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.modes
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -45,10 +46,8 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
 
     protected val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
 
-    protected val lifetime by intRange("Lifetime", 15..15, 1..120, "anim/life")
+    val lifetime by intRange("Lifetime", 15..15, 1..120, "anim/life")
     protected val canBeCovered by boolean("CanBeCovered", false)
-
-    val circles = ExpiringList<Vec3>()
 
     protected abstract fun WorldRenderEnvironment.drawJumpEffect(progress: Float, age: Float)
 
@@ -63,7 +62,8 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
                     .transform(age / lifetime.first)
                     .coerceIn(0f, 1f)
 
-                withPositionRelativeToCamera(it.value) {
+                // small offset to exclude artifacts
+                withPositionRelativeToCamera(it.value.add(0.0, 0.01, 0.0)) {
                     poseStack.withPush {
                         drawJumpEffect(progress, age)
                     }
@@ -82,18 +82,10 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
 
         val color = baseColor.fade(1.0f - fadeProgress)
 
-        if (hueOffsetAnim == 0) {
-            return color
-        }
+        if (hueOffsetAnim == 0) return color
 
         val lifeProgress = (age / lifetime.last.toFloat()).coerceIn(0f, 1f)
         return shiftHue(color, (hueOffsetAnim * lifeProgress).toInt())
-    }
-
-    @Suppress("unused")
-    val playerJumpHandler = handler<PlayerJumpEvent> { _ ->
-        // Adds new circle when the player jumps
-        circles.add(player.position(), lifetime.last)
     }
 
 }

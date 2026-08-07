@@ -81,7 +81,10 @@ object ClientRenderPipelines {
     private inline fun RenderPipeline.Builder.forWorldRender(noDepthTest: Boolean = true) {
         withCull(false)
         withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
-        if (noDepthTest) withDepthStencilState(optional())
+        when {
+            noDepthTest -> withDepthStencilState(optional())
+            else -> withDepthStencilState(DepthStencilState.DEFAULT)
+        }
     }
 
     inline fun RenderPipeline.Builder.screenQuadSnippet() = apply {
@@ -362,6 +365,17 @@ object ClientRenderPipelines {
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
     }
+
+    @JvmField
+    val TexQuadsDepthTested = newPipeline("tex_quads_depth_tested") {
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
+        forWorldRender(noDepthTest = false)
+    }
+
+    @JvmStatic
+    fun texQuads(noDepthTest: Boolean) = if (noDepthTest) TexQuads else TexQuadsDepthTested
 
     @JvmField
     val FontMaskQuads = newPipeline("font_mask_quads") {

@@ -62,7 +62,8 @@ internal object JumpEffectImage : JumpEffectMode("Image") {
                 animateColor(colors.outerColor, age),
                 animateColor(colors.innerColor, age),
                 anchor = AnchorPoint.CENTER,
-                startOffset = 0.8f
+                startOffset = 0.8f,
+                noDepthTest = !canBeCovered
             )
         }
     }

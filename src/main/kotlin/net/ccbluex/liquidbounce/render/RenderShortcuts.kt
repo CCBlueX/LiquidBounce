@@ -334,7 +334,8 @@ fun WorldRenderEnvironment.drawSquareTextureGradient(
     innerColor: Color4b,
     anchor: AnchorPoint = AnchorPoint.TOP_LEFT,
     subdivisions: Int = 16,
-    startOffset: Float = 0.5f
+    startOffset: Float = 0.5f,
+    noDepthTest: Boolean = true,
 ) {
     if (outerRadius <= 0f || (outerColor.isTransparent && innerColor.isTransparent)) {
         return
@@ -364,7 +365,7 @@ fun WorldRenderEnvironment.drawSquareTextureGradient(
         return innerColor.interpolateTo(outerColor, t).argb
     }
 
-    drawCustomMeshTextured(sampler0) { matrix ->
+    drawCustomMeshTextured(sampler0, ClientRenderPipelines.texQuads(noDepthTest)) { matrix ->
         for (row in 0 until subdivisions) {
             for (col in 0 until subdivisions) {
                 val x1 = minX + col * step
