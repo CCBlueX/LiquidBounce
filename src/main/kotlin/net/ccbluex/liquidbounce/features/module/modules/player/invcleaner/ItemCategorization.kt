@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.*
+import net.minecraft.world.item.enchantment.Enchantments
 
 val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareByCondition(ItemFacet::isInHotbar)
 val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
@@ -170,6 +171,14 @@ class ItemCategorization(
             item is ShieldItem -> arrayOf(ShieldItemFacet(slot))
             slot.itemStack.isSpear -> arrayOf(SpearItemFacet(slot))
             item is MaceItem -> arrayOf(MaceItemFacet(slot))
+            item is AxeItem -> {
+                val sharpnessLevel = slot.itemStack.getEnchantment(Enchantments.SHARPNESS)
+                when {
+                    sharpnessLevel >= 100 -> arrayOf(GodAxeFacet(slot))
+                    sharpnessLevel >= 5 -> arrayOf(SharpAxeFacet(slot))
+                    else -> arrayOf(MiningToolItemFacet(slot))
+                }
+            }
             slot.itemStack.isMiningTool -> arrayOf(MiningToolItemFacet(slot))
             item is BlockItem -> {
                 val isUsableBlock = (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
