@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.item.armor.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.*
 
@@ -40,6 +41,10 @@ val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
 
 val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = Comparator.comparingInt {
     it.itemStack.maxDamage - it.itemStack.damageValue
+}
+
+val PREFER_ENCHANTABLE: Comparator<ItemFacet> = Comparator.comparingInt {
+    it.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0
 }
 
 val DEFAULT_TIE_BREAK: Array<Comparator<ItemFacet>> = arrayOf(
@@ -65,11 +70,15 @@ enum class GenericItemType(
 ) {
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
     SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3),
+    SPEAR(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3),
+    MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
     WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
     TOOL(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
+    ROD(true),
+    SHIELD(true),
     THROWABLE(false),
     FOOD(false),
     POTION(false),
@@ -156,7 +165,11 @@ class ItemCategorization(
             slot.itemStack.isSword -> arrayOf(SwordItemFacet(slot))
             item is BowItem -> arrayOf(BowItemFacet(slot))
             item is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
-            item is ArrowItem -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.ARROW)))
+            item is ArrowItem -> arrayOf(ArrowItemFacet(slot))
+            item is FishingRodItem -> arrayOf(RodItemFacet(slot))
+            item is ShieldItem -> arrayOf(ShieldItemFacet(slot))
+            slot.itemStack.isSpear -> arrayOf(SpearItemFacet(slot))
+            item is MaceItem -> arrayOf(MaceItemFacet(slot))
             slot.itemStack.isMiningTool -> arrayOf(MiningToolItemFacet(slot))
             item is BlockItem -> {
                 val isUsableBlock = (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)

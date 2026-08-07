@@ -4,18 +4,16 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Generi
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.item.ItemStackHolder
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.world.item.ItemStack
 
-open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
+open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackHolder by itemSlot {
     open val category: ItemCategory
         get() = ItemCategory(GenericItemType.ANY_ITEM, itemSlot.itemStack.item)
 
     open val providedItemFunctions: List<ProvidedFunction>
         get() = emptyList()
-
-    val itemStack: ItemStack
-        get() = this.itemSlot.itemStack
 
     val isInHotbar: Boolean
         get() = this.itemSlot.slotType == ItemSlot.Type.HOTBAR || this.itemSlot.slotType == ItemSlot.Type.OFFHAND
