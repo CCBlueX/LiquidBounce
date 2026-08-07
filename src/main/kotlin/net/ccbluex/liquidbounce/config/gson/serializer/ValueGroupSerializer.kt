@@ -23,10 +23,12 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import java.lang.reflect.Type
 
@@ -74,6 +76,10 @@ class ValueGroupSerializer(
             for (v in valueGroup.inner) {
                 add(v.name.toLowerCamelCase(), when (v) {
                     is Alignment -> context.serialize(v, Alignment::class.java)
+                    is ModeValueGroup<*> -> JsonObject().apply {
+                        addProperty("active", v.activeMode.name)
+                        add("value", serializeReadOnly(v.activeMode, context))
+                    }
                     is ValueGroup -> serializeReadOnly(v, context)
                     else -> context.serialize(v.inner)
                 })
@@ -98,7 +104,7 @@ class ValueGroupSerializer(
                 )
             )
         } catch (e: Exception) {
-            println("failed to serialize config for ${src.name}")
+            logger.error("failed to serialize config for ${src.name}")
             throw e
         }
         if (withValueType) {
@@ -114,7 +120,7 @@ class ValueGroupSerializer(
          * Do not include values that are not supposed to be shared
          * with other users
          */
-        if (value.doNotInclude()) {
+        if (value.doNotInclude.asBoolean) {
             return false
         }
 

@@ -19,10 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import kotlinx.coroutines.CancellationException
+import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.withScope
-import net.ccbluex.liquidbounce.api.thirdparty.MojangApi
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.kotlin.toUndashedString
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
@@ -83,12 +84,9 @@ object ModuleMobOwners : ClientModule("MobOwners", ModuleCategories.RENDER) {
             // The job will still run even if the module is disabled
             withScope {
                 uuidNameCache[ownerId] = try {
-                    val uuidAsString = ownerId.toString().replace("-", "")
-                    val response = MojangApi.getNames(uuidAsString)
-
-                    val entityName = response.first { it.changedToAt == null }.name
-
-                    FormattedCharSequence.forward(entityName, Style.EMPTY)
+                    val profile = HttpClient.mojangApiClient.mcServicesApi
+                        .lookupNameByUuid(ownerId.toUndashedString())
+                    FormattedCharSequence.forward(profile.name, Style.EMPTY)
                 } catch (e: CancellationException) {
                     CANCELED_TEXT
                 } catch (e: Exception) {

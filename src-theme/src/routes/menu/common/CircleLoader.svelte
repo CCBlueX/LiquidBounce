@@ -12,7 +12,6 @@
     Taken from https://loading.io/css/
    */
 
-  @use "../../../colors.scss" as *;
 
   .loader-wrapper {
     position: absolute;
@@ -27,7 +26,7 @@
   .lds-ring div {
     box-sizing: border-box;
     position: relative;
-    color: $menu-button-loader-color;
+    color: var(--menu-button-loader-color);
   }
 
   .lds-ring {

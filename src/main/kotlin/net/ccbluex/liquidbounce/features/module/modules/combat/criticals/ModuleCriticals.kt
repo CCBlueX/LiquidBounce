@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
-import net.ccbluex.liquidbounce.utils.client.sendStopSprinting
+import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
@@ -75,7 +75,7 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
         override val running: Boolean
             get() = super.running && wouldDoCriticalHit(true)
-                && world.findEnemy(0.0f..enemyInRange) != null
+                && world.findEnemy(0.0f, enemyInRange) != null
 
         val stopSprinting by enumChoice("StopSprinting", StopSprintingMode.LEGIT)
         private val enemyInRange by float("Range", 4.0f, 0.0f..10.0f)
@@ -193,14 +193,14 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
         else -> CriticalsJump.shouldWaitForCrit(target, ignoreState)
     }
 
-    fun allowsCriticalHit(ignoreOnGround: Boolean = false): Boolean {
-        val blockingEffects = arrayOf(LEVITATION, BLINDNESS, SLOW_FALLING)
+    private val blockingEffects = arrayOf(LEVITATION, BLINDNESS, SLOW_FALLING)
 
+    fun allowsCriticalHit(ignoreOnGround: Boolean = false): Boolean {
         val blockingConditions = booleanArrayOf(
             // Modules
             ModuleFly.running,
             ModuleLiquidWalk.running && ModuleLiquidWalk.standingOnWater(),
-            player.isInLava, player.isInWater, player.isPassenger,
+            player.isInLiquid, player.isPassenger,
             // Cobwebs
             player.box.collideBlockIntersects(checkCollisionShape = false) { it is WebBlock },
             // Effects

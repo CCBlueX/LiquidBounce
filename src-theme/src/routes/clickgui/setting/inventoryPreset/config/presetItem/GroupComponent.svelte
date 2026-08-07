@@ -89,7 +89,7 @@
   }
 
   .active {
-    outline: 1px solid $accent-color !important;
+    outline: 1px solid var(--accent-color) !important;
 
     & > .image-wrapper {
       filter: opacity(0.5);
@@ -110,7 +110,7 @@
     left: 0;
     top: 0;
     padding: 0 5px;
-    outline: 1px solid color.adjust($clickgui-text-color, $lightness: -85%);
+    outline: 1px solid color-mix(in srgb, var(--clickgui-text-color) 15%, black);
     min-width: 20px;
     height: 20px;
     display: flex;

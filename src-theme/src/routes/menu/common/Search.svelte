@@ -12,16 +12,15 @@
        on:input={() => dispatch("search", {query: value})} spellcheck="false">
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .search {
-    background-color: rgba($menu-base-color, .36);
+    background-color: var(--menu-search-background-color);
     border: none;
-    color: $menu-text-color;
+    color: var(--menu-text-color);
     font-family: "Inter", sans-serif;
     font-size: 20px;
     border-radius: 5px;
-    border-bottom: solid 4px $accent-color;
+    border-bottom: solid 4px var(--menu-search-border-color);
     background-image: url("/img/menu/icon-search.svg");
     background-repeat: no-repeat;
     background-position: 20px center;

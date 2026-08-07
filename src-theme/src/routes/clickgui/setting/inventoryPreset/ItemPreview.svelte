@@ -27,7 +27,7 @@
   .preset-item {
     width: 20px;
     height: 20px;
-    outline: 1px solid color.adjust($clickgui-text-color, $lightness: -90%);
+    outline: 1px solid color-mix(in srgb, var(--clickgui-text-color) 10%, black);
     border-radius: 3px;
     display: flex;
     justify-content: center;

@@ -25,14 +25,13 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinGuiAccessor
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
-import net.minecraft.client.gui.Gui
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.component.DataComponents
@@ -50,12 +49,12 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
             final override val parent: ModeValueGroup<*>
                 get() = mode
 
-            abstract fun drawHighlightSlot(context: GuiGraphics, slot: Slot)
+            abstract fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot)
 
             object Border : Mode("Border") {
                 val color by color("Color", Color4b.GREEN)
 
-                override fun drawHighlightSlot(context: GuiGraphics, slot: Slot) {
+                override fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot) {
                     context.drawBorder(
                         slot.x,
                         slot.y,
@@ -68,12 +67,12 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
 
             object Texture : Mode("Texture") {
                 /**
-                 * @see Gui.renderItemHotbar
+                 * @see net.minecraft.client.gui.Hud.extractItemHotbar
                  */
-                override fun drawHighlightSlot(context: GuiGraphics, slot: Slot) {
+                override fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot) {
                     context.blitSprite(
                         RenderPipelines.GUI_TEXTURED,
-                        MixinGuiAccessor.getHotbarSelectionTexture(),
+                        MixinHudAccessor.getHotbarSelectionTexture(),
                         slot.x - 3,
                         slot.y - 3,
                         22,
@@ -118,7 +117,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         tree(ContainerItemView)
     }
 
-    fun GuiGraphics.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
+    fun GuiGraphicsExtractor.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
         if (!running || stack.isEmpty || !TextCooldownProgress.enabled) return
 
         val player = mc.player ?: return
@@ -141,7 +140,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
                     if (seconds > 1) "${seconds.toInt()}s" else "${seconds.toFixed(1)}s"
                 }
             }
-            this.drawCenteredString(
+            this.centeredText(
                 mc.font,
                 text,
                 x + GuiRenderer.DEFAULT_ITEM_SIZE / 2,
@@ -152,13 +151,13 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         }
     }
 
-    fun GuiGraphics.drawHighlightSlot(slot: Slot) {
+    fun GuiGraphicsExtractor.drawHighlightSlot(slot: Slot) {
         if (!running || !HighlightClicked.enabled || slot.index != InventoryManager.lastClickedSlot) return
 
         HighlightClicked.mode.activeMode.drawHighlightSlot(this, slot)
     }
 
-    fun GuiGraphics.drawContainerItemView(
+    fun GuiGraphicsExtractor.drawContainerItemView(
         stack: ItemStack,
         x: Int,
         y: Int,
@@ -170,9 +169,9 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         val containerComponent = stack[DataComponents.CONTAINER] ?: return false
 
         val stacks = if (ContainerItemView.skipEmptyStack) {
-            containerComponent.nonEmptyStream()
+            containerComponent.nonEmptyItemCopyStream()
         } else {
-            containerComponent.stream()
+            containerComponent.allItemsCopyStream()
         }.toList()
 
         if (stacks.isEmpty()) return false

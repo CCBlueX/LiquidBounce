@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.f
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSprintControlFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveTimerFeature
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
-import net.ccbluex.liquidbounce.utils.client.sendCloseInventory
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
+import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
@@ -61,6 +61,13 @@ import org.lwjgl.glfw.GLFW
 object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVEMENT) {
 
     private val behavior by enumChoice("Behavior", Behaviour.NORMAL).also(::tagBy)
+
+    /**
+     * Whether SnapTap (and similar movement modules) should allow their input
+     * overrides when a screen is open. True only when InventoryMove is enabled
+     * and in NORMAL mode (free movement in inventory).
+     */
+    fun allowsMovementOverride() = enabled && behavior == Behaviour.NORMAL
 
     @Suppress("unused")
     enum class Behaviour(override val tag: String) : Tagged {
@@ -99,7 +106,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     }
 
     fun shouldHandleInputs(keyBinding: KeyMapping): Boolean {
-        val screen = mc.screen ?: return true
+        val screen = mc.gui.screen() ?: return true
 
         if (!running || screen is ChatScreen || screen.isInCreativeSearchField() || ModuleClickGui.isInSearchBar) {
             return false

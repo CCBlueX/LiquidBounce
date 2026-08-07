@@ -7,20 +7,22 @@
     import {getPlayerInventory} from "../../../../integration/rest";
 
     export let rowLength: number;
-    export let backgroundColor: string = "rgba(0,0,0,0.5)";
+    export let backgroundColor: string = "var(--inventory-background-color)";
     export let gap: string = "0.5rem";
     export let getRenderedStacks: (inventory: PlayerInventory) => ItemStack[];
 
+    let inventory: PlayerInventory | undefined;
     let stacks: ItemStack[] = [];
 
     listen("clientPlayerInventory", (data: ClientPlayerInventoryEvent) => {
-        stacks = getRenderedStacks(data.inventory);
+        inventory = data.inventory;
     });
 
     onMount(async () => {
-        const inventory = await getPlayerInventory();
-        stacks = getRenderedStacks(inventory);
+        inventory = await getPlayerInventory();
     });
+
+    $: stacks = inventory ? getRenderedStacks(inventory) : [];
 </script>
 
 <div class="inventory" style="

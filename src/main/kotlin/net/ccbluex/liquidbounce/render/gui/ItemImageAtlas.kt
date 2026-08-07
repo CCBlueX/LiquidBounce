@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.gui
 
+import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.platform.Lighting
@@ -33,7 +34,7 @@ import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
+import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.collection.Pools
@@ -41,12 +42,13 @@ import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.gui.render.GuiRenderer
-import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer
+import net.minecraft.client.renderer.Projection
+import net.minecraft.client.renderer.ProjectionMatrixBuffer
+import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import net.minecraft.client.renderer.item.TrackingItemStackRenderState
-import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
@@ -54,6 +56,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.Items
+import org.apache.commons.lang3.function.Consumers
 import java.awt.image.BufferedImage
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
@@ -107,6 +110,9 @@ object ItemImageAtlas : EventListener {
     }
 }
 
+/**
+ * @see net.minecraft.client.gui.render.GuiItemAtlas
+ */
 private class ItemTextureRenderer(
     val items: Registry<Item>,
     val count: Int,
@@ -121,27 +127,26 @@ private class ItemTextureRenderer(
         textureSize,
         textureSize,
         true,
+        GpuFormat.RGBA8_UNORM,
     )
     private val submitNodeCollector = SubmitNodeStorage()
-    private val bufferSource = mc.gameRenderer.renderBuffers.bufferSource()
 
     // Note: no operation -> use shared one or skip it
     private val featureRenderDispatcher = FeatureRenderDispatcher(
-        this.submitNodeCollector,
-        mc.blockRenderer, // No operation
-        bufferSource,
+        mc.gameRenderer.renderBuffers,
+        mc.modelManager, // No operation
         mc.atlasManager, // No operation
-        mc.gameRenderer.renderBuffers.outlineBufferSource(), // No operation
-        mc.gameRenderer.renderBuffers.crumblingBufferSource(), // No operation
         mc.font, // No operation
+        mc.gameRenderer.gameRenderState(), // No operation
     )
 
-    private val itemsProjectionMatrix = CachedOrthoProjectionMatrixBuffer("items", -1000.0F, 1000.0F, true)
+    private val projection = Projection()
+    private val projectionMatrixBuffer = ProjectionMatrixBuffer("items")
 
     private fun close() {
-        itemsProjectionMatrix.close()
+        projectionMatrixBuffer.close()
         itemAtlasFramebuffer.destroyBuffers()
-        submitNodeCollector.clear()
+        submitNodeCollector.drainPhases(Consumers.nop())
         featureRenderDispatcher.close()
     }
 
@@ -152,8 +157,9 @@ private class ItemTextureRenderer(
     fun render(): CompletableFuture<Atlas> {
         itemAtlasFramebuffer.clearColorAndDepth()
         RenderSystem.backupProjectionMatrix()
+        this.projection.setupOrtho(-1000.0F, 1000.0F, this.textureSize.toFloat(), this.textureSize.toFloat(), true)
         RenderSystem.setProjectionMatrix(
-            this.itemsProjectionMatrix.getBuffer(textureSize.toFloat(), textureSize.toFloat()),
+            this.projectionMatrixBuffer.getBuffer(this.projection),
             ProjectionType.ORTHOGRAPHIC,
         )
         val itemMap = Reference2ObjectOpenHashMap<Item, Rect2i>(count)
@@ -201,7 +207,7 @@ private class ItemTextureRenderer(
     }
 
     /**
-     * @see GuiRenderer.renderItemToAtlas
+     * @see net.minecraft.client.gui.render.GuiItemAtlas.drawToSlot
      */
     private fun renderItemToAtlas(
         state: TrackingItemStackRenderState,
@@ -217,7 +223,7 @@ private class ItemTextureRenderer(
             0.0f,
         )
         matrices.scale(itemPixelSize.toFloat(), -itemPixelSize.toFloat(), itemPixelSize.toFloat())
-        mc.gameRenderer.lighting.setupFor(
+        mc.gameRenderer.lighting().setupFor(
             if (state.usesBlockLight()) Lighting.Entry.ITEMS_3D else Lighting.Entry.ITEMS_FLAT
         )
 
@@ -225,8 +231,7 @@ private class ItemTextureRenderer(
             scaledX, textureSize - scaledY - itemPixelSize, itemPixelSize, itemPixelSize
         )
         state.submit(matrices, this.submitNodeCollector, 0xf000f0, OverlayTexture.NO_OVERLAY, 0)
-        featureRenderDispatcher.renderAllFeatures()
-        bufferSource.endBatch()
+        featureRenderDispatcher.renderAllFeatures(this.submitNodeCollector)
         RenderSystem.disableScissorForRenderTypeDraws()
         matrices.popPose()
     }

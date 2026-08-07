@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.playerName
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
@@ -53,7 +53,7 @@ object CommandCoordinates : Command.Factory {
                     )
                     .handler {
                         val name = args[0] as String
-                        network.sendChat("/msg $name ${getCoordinates(fancy = true)}")
+                        network.sendCommand("msg $name ${getCoordinates(fancy = true)}")
                     }
                     .build()
             )

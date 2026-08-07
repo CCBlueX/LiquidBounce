@@ -20,21 +20,26 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.io.toJsonObject
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.world.getEntitiesInCube
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 
 object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim") {
 
-    val repeatable = tickHandler {
+    private const val RANGE = 10.0
+
+    val repeatable = handler<GameTickEvent> {
         val playerRotation = player.rotation
         val playerLastRotation = player.lastRotation
 
@@ -51,31 +56,19 @@ object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim
             addProperty("turn_speed_h", turnSpeed.deltaYaw)
             addProperty("turn_speed_v", turnSpeed.deltaPitch)
 
-            add("velocity", JsonObject().apply {
-                addProperty("x", player.deltaMovement.x)
-                addProperty("y", player.deltaMovement.y)
-                addProperty("z", player.deltaMovement.z)
-            })
+            add("velocity", player.deltaMovement.toJsonObject())
 
-            world.entitiesForRendering().filter {
-                it.shouldBeAttacked() && it.distanceTo(player) < 10.0f
+            world.getEntitiesInCube<LivingEntity>(player.position(), RANGE) {
+                it.shouldBeAttacked() && it.distanceToSqr(player) < RANGE * RANGE
             }.minByOrNull {
                 it.distanceTo(player)
             }?.let {
                 val vector = it.position() - player.position()
-                add("vec", JsonObject().apply {
-                    addProperty("x", vector.x)
-                    addProperty("y", vector.y)
-                    addProperty("z", vector.z)
-                })
+                add("vec", vector.toJsonObject())
                 val velocity = it.position() - it.lastPos
-                add("velocity", JsonObject().apply {
-                    addProperty("x", velocity.x)
-                    addProperty("y", velocity.y)
-                    addProperty("z", velocity.z)
-                })
+                add("velocity", velocity.toJsonObject())
                 addProperty("distance", player.distanceTo(it))
-                val rotation = Rotation.lookingAt(point = it.box.center, from = player.eyePosition)
+                val rotation = Rotation.lookingAt(point = it.boundingBox.center, from = player.eyePosition)
 
                 val delta = rotation.rotationDeltaTo(playerRotation)
 

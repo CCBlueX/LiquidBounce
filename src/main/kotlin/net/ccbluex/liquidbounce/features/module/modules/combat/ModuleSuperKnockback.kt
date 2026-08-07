@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -33,8 +34,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.utils.client.sendStartSprinting
-import net.ccbluex.liquidbounce.utils.client.sendStopSprinting
+import net.ccbluex.liquidbounce.utils.network.sendStartSprinting
+import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.entity.isInsideWaterOrBubbleColumn
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
@@ -56,7 +57,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
 
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap)).apply(::tagBy)
     val hurtTime by int("HurtTime", 10, 0..10)
-    val chance by int("Chance", 100, 0..100, "%")
+    val chance = percentageChance("Chance", 100f)
     private val conditions by multiEnumChoice("Conditions", Conditions.NOT_IN_WATER)
 
     @Suppress("unused")
@@ -96,7 +97,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
             }
 
             if (enemy is LivingEntity
-                && enemy.hurtTime <= hurtTime && chance >= (0..100).random()
+                && enemy.hurtTime <= hurtTime && chance.asBoolean
                 && !ModuleCriticals.wouldDoCriticalHit()
             ) {
                 if (player.isSprinting) {
@@ -220,7 +221,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
             return false
         }
 
-        return enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance >= (0..100).random()
+        return enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance.asBoolean
             && !ModuleCriticals.wouldDoCriticalHit()
     }
 

@@ -29,6 +29,7 @@ import net.minecraft.client.renderer.texture.TextureContents;
 import net.minecraft.client.resources.metadata.texture.TextureMetadataSection;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -38,6 +39,7 @@ import java.util.Objects;
  * <p>
  * Should be drawn using [CustomRenderPhase::getTextureBilinear] to make it look smoother.
  */
+@NullMarked
 @Environment(EnvType.CLIENT)
 public final class ClientLogoTexture extends ReloadableTexture {
 

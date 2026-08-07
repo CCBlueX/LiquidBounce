@@ -19,22 +19,22 @@
 
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 import net.minecraft.world.phys.Vec3
 
 class AlignedFaceTest {
 
     @Test
     fun `area matches single xy face area`() {
-        val face = AlignedFace(Vec3(0.0, 0.0, 0.0), Vec3(2.0, 3.0, 0.0))
+        val face = AlignedFace(Vec3.ZERO, Vec3(2.0, 3.0, 0.0))
 
         assertEquals(6.0, face.area, 1e-9)
     }
 
     @Test
     fun `area matches single yz face area`() {
-        val face = AlignedFace(Vec3(1.0, 0.0, 0.0), Vec3(1.0, 2.0, 4.0))
+        val face = AlignedFace(Vec3.X_AXIS, Vec3(1.0, 2.0, 4.0))
 
         assertEquals(8.0, face.area, 1e-9)
     }

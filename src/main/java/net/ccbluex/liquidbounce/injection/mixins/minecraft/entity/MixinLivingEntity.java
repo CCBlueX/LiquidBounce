@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
 import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
+import net.ccbluex.liquidbounce.features.module.modules.render.animations.ModuleAnimations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
@@ -53,6 +53,8 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -83,7 +85,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     public abstract void tick();
 
     @Shadow
-    public abstract void swing(InteractionHand hand, boolean fromServerPlayer);
+    public abstract void swing(InteractionHand hand, boolean sendToSwingingEntity);
 
     @Shadow
     public abstract void setHealth(float health);
@@ -123,9 +125,13 @@ public abstract class MixinLivingEntity extends MixinEntity {
             require = 1,
             allow = 1
     )
-    public MobEffectInstance hookTravelStatusEffect(MobEffectInstance original) {
-        // If we get anyting other than levitation, the injection went wrong
-        assert original != MobEffects.LEVITATION;
+    public @Nullable MobEffectInstance hookTravelStatusEffect(@Nullable MobEffectInstance original) {
+        if (original == null) {
+            return null;
+        }
+
+        // If we get anything other than levitation, the injection went wrong
+        assert original.getEffect() == MobEffects.LEVITATION;
 
         if (ModuleAntiLevitation.INSTANCE.getRunning()) {
             return null;
@@ -160,7 +166,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "jumpFromGround", at = @At("HEAD"), cancellable = true)
     private void hookJumpEvent(CallbackInfo ci) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return;
         }
 
@@ -194,7 +200,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     private void hookAfterJumpEvent(CallbackInfo ci) {
         jumpEvent = null;
 
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return;
         }
 
@@ -211,7 +217,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         var rotation = RotationManager.INSTANCE.getCurrentRotation();
         var rotationTarget = RotationManager.INSTANCE.getActiveRotationTarget();
 
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return original;
         }
 
@@ -222,13 +228,6 @@ public abstract class MixinLivingEntity extends MixinEntity {
         float yaw = rotation.yaw() * Mth.DEG_TO_RAD;
 
         return new Vec3(-Mth.sin(yaw) * 0.2F, 0.0, Mth.cos(yaw) * 0.2F);
-    }
-
-    @Inject(method = "push", at = @At("HEAD"), cancellable = true)
-    private void hookNoPush(CallbackInfo callbackInfo) {
-        if (!ModuleNoPush.canPush(NoPushBy.ENTITIES)) {
-            callbackInfo.cancel();
-        }
     }
 
     @Inject(method = "aiStep", at = @At("HEAD"))
@@ -246,7 +245,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
     }
 
-    @Inject(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;jumping:Z"))
+    @Inject(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;jumping:Z", opcode = Opcodes.GETFIELD))
     private void hookAirJump(CallbackInfo callbackInfo) {
         if (ModuleAirJump.INSTANCE.getAllowJump() && jumping && noJumpDelay == 0) {
             this.jumpFromGround();
@@ -259,7 +258,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "updateFallFlying", at = @At("TAIL"))
     public void recastIfLanded(CallbackInfo callbackInfo) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return;
         }
 
@@ -279,7 +278,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
      */
     @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot()F"))
     private float hookModifyFallFlyingPitch(float original) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return original;
         }
 
@@ -294,8 +293,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
     }
 
     @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
-    private void hookEatParticles(ItemStack stack, int count, CallbackInfo ci) {
-        if (stack.getComponents().has(DataComponents.FOOD) && !ModuleAntiBlind.canRender(DoRender.EAT_PARTICLES)) {
+    private void hookEatParticles(ItemStack itemStack, int count, CallbackInfo ci) {
+        if (itemStack.getComponents().has(DataComponents.FOOD) && !ModuleAntiBlind.canRender(DoRender.EAT_PARTICLES)) {
             ci.cancel();
         }
     }
@@ -305,7 +304,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
      */
     @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 hookModifyFallFlyingRotationVector(Vec3 original) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return original;
         }
 
@@ -324,7 +323,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "isFallFlying", at = @At("RETURN"), cancellable = true)
     private void hookIsGliding(CallbackInfoReturnable<Boolean> cir) {
-        if ((Object) this != Minecraft.getInstance().player) {
+        if (!liquid_bounce$isClientPlayer()) {
             return;
         }
 
@@ -356,19 +355,19 @@ public abstract class MixinLivingEntity extends MixinEntity {
     }
 
     @Inject(method = "setItemSlot", at = @At("HEAD"))
-    private void hookEquipmentChange(EquipmentSlot slot, ItemStack stack, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, stack));
+    private void hookEquipmentChange(EquipmentSlot slot, ItemStack itemStack, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, itemStack));
     }
 
     @ModifyExpressionValue(method = "getCurrentSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)
     private int hookSwingSpeed(int duration) {
         var animations = ModuleAnimations.INSTANCE;
-        return animations.getRunning() && Minecraft.getInstance().player == (Object) this ? animations.getSwingDuration() : duration;
+        return animations.getRunning() && liquid_bounce$isClientPlayer() ? animations.getSwingDuration() : duration;
     }
 
     @ModifyExpressionValue(method = "handleDamageEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getHurtSound(Lnet/minecraft/world/damagesource/DamageSource;)Lnet/minecraft/sounds/SoundEvent;"))
     private SoundEvent hookHitFxSound(SoundEvent original) {
-        if ((Object) this == Minecraft.getInstance().player && ModuleHitFX.INSTANCE.getRunning()) {
+        if (liquid_bounce$isClientPlayer() && ModuleHitFX.INSTANCE.getRunning()) {
             var hitFxSound = ModuleHitFX.INSTANCE.getSelfSound();
             if (hitFxSound != null) {
                 return hitFxSound;

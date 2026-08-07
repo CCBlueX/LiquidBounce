@@ -19,135 +19,170 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.FileDialogMode
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.integration.interop.badRequest
+import net.ccbluex.liquidbounce.integration.interop.forbidden
+import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpBadRequest
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpNotFound
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.util.Util
 import java.io.File
 import java.net.URI
 import java.util.Properties
 
 // GET /api/v1/client/info
-@Suppress("UNUSED_PARAMETER")
-fun getClientInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("os", Util.getPlatform().telemetryName())
-    addProperty("gameVersion", mc.launchedVersion)
-    addProperty("clientVersion", LiquidBounce.clientVersion)
-    addProperty("clientName", LiquidBounce.CLIENT_NAME)
-    addProperty("development", LiquidBounce.IN_DEVELOPMENT)
-    addProperty("fps", mc.fps)
-    addProperty("gameDir", mc.gameDirectory.path)
-    addProperty("clientDir", ConfigSystem.rootFolder.path)
-    addProperty("inGame", inGame)
-    addProperty("viaFabricPlus", usesViaFabricPlus)
-    addProperty("hasProtocolHack", usesViaFabricPlus)
-})
+private fun Route.getClientInfo() = get("/info") {
+    call.respond(JsonObject().apply {
+        addProperty("os", Util.getPlatform().telemetryName())
+        addProperty("gameVersion", mc.launchedVersion)
+        addProperty("clientVersion", LiquidBounce.clientVersion)
+        addProperty("clientName", LiquidBounce.CLIENT_NAME)
+        addProperty("development", LiquidBounce.IN_DEVELOPMENT)
+        addProperty("fps", mc.fps)
+        addProperty("gameDir", mc.gameDirectory.path)
+        addProperty("clientDir", ConfigSystem.rootFolder.path)
+        addProperty("inGame", inGame)
+        addProperty("viaFabricPlus", usesViaFabricPlus)
+        addProperty("hasProtocolHack", usesViaFabricPlus)
+    })
+}
 
 // GET /api/v1/client/update
-@Suppress("UNUSED_PARAMETER")
-fun getUpdateInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("development", LiquidBounce.IN_DEVELOPMENT)
-    addProperty("commit", LiquidBounce.clientCommit)
+@Suppress("ReturnCount")
+private fun Route.getUpdateInfo() = get("/update") {
+    call.respond(JsonObject().apply {
+        addProperty("development", LiquidBounce.IN_DEVELOPMENT)
+        addProperty("commit", LiquidBounce.clientCommit)
 
-    val updateInfo = update ?: return@apply
-    add("update", JsonObject().apply {
-        addProperty("buildId", updateInfo.buildId)
-        addProperty("commitId", updateInfo.commitId.substring(0, 7))
-        addProperty("branch", updateInfo.branch)
-        addProperty("clientVersion", updateInfo.lbVersion)
-        addProperty("minecraftVersion", updateInfo.mcVersion)
-        addProperty("release", updateInfo.release)
+        val updateInfo = update.await() ?: return@apply
+        add("update", JsonObject().apply {
+            addProperty("buildId", updateInfo.buildId)
+            addProperty("commitId", updateInfo.commitId.substring(0, 7))
+            addProperty("branch", updateInfo.branch)
+            addProperty("clientVersion", updateInfo.lbVersion)
+            addProperty("minecraftVersion", updateInfo.mcVersion)
+            addProperty("release", updateInfo.release)
 
-        addProperty("date", updateInfo.date.toString())
-        addProperty("message", updateInfo.message)
+            addProperty("date", updateInfo.date.toString())
+            addProperty("message", updateInfo.message)
 
-        addProperty("url", updateInfo.url)
+            addProperty("url", updateInfo.url)
+        })
     })
-})
+}
 
 // POST /api/v1/client/exit
-@Suppress("UNUSED_PARAMETER")
-fun postExit(requestObject: RequestObject): FullHttpResponse {
+private fun Route.postExit() = post("/exit") {
     mc.stop()
-    return httpNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+}
+
+// PUT /api/v1/client/hud-editor
+private fun Route.putHudEditorState() = put("/hud-editor") {
+    data class Request(val selected: Boolean)
+    val selected = call.receive<Request>().selected
+
+    withContext(Dispatchers.Minecraft) {
+        ModuleHud.hudEditorSelected = selected
+    }
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/window
-@Suppress("UNUSED_PARAMETER")
-fun getWindowInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("width", mc.window.screenWidth)
-    addProperty("height", mc.window.screenHeight)
-    addProperty("scaledWidth", mc.window.guiScaledWidth)
-    addProperty("scaledHeight", mc.window.guiScaledHeight)
-    addProperty("scaleFactor", mc.window.guiScale)
-    addProperty("guiScale", mc.options.guiScale().get())
-})
+private fun Route.getWindowInfo() = get("/window") {
+    call.respond(JsonObject().apply {
+        addProperty("width", mc.window.screenWidth)
+        addProperty("height", mc.window.screenHeight)
+        addProperty("scaledWidth", mc.window.guiScaledWidth)
+        addProperty("scaledHeight", mc.window.guiScaledHeight)
+        addProperty("scaleFactor", mc.window.guiScale)
+        addProperty("guiScale", mc.options.guiScale().get())
+    })
+}
 
 // POST /api/v1/client/browse
-fun postBrowse(requestObject: RequestObject): FullHttpResponse {
-    val jsonObj = requestObject.asJson<JsonObject>()
-    val target = jsonObj["target"]?.asString ?: return httpForbidden("No target specified")
+private fun Route.postBrowse() = post("/browse") {
+    val jsonObj = call.receive<JsonObject>()
+    val target = jsonObj["target"]?.asString ?: call.forbidden("No target specified")
 
-    val url = POSSIBLE_URL_TARGETS[target] ?: return httpForbidden("Unknown target")
+    val url = POSSIBLE_URL_TARGETS[target] ?: call.forbidden("Unknown target")
 
     Util.getPlatform().openUri(url)
-    return httpNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browsePath
 @Suppress("ReturnCount")
-fun postBrowsePath(requestObject: RequestObject): FullHttpResponse {
-    val jsonObj = requestObject.asJson<JsonObject>()
-    val path = jsonObj["path"]?.asString ?: return httpBadRequest("No file specified")
+private fun Route.postBrowsePath() = post("/browsePath") {
+    val jsonObj = call.receive<JsonObject>()
+    val path = jsonObj["path"]?.asString ?: call.badRequest("No file specified")
 
     val file = File(path).let { file ->
         if (file.isAbsolute) file else ConfigSystem.rootFolder.resolve(file)
     }
 
     if (!file.exists()) {
-        return httpNotFound(path, "File not exists")
+        call.notFound(path, "File not exists")
     }
 
     // Ensures we open a directory, not a file
     val directoryToOpen = when {
         file.isDirectory -> file
-        file.isFile -> file.parentFile ?: return httpForbidden("Cannot access root directory")
-        else -> return httpForbidden("Invalid file type")
+        file.isFile -> file.parentFile ?: call.forbidden("Cannot access root directory")
+        else -> call.forbidden("Invalid file type")
     }
 
     Util.getPlatform().openFile(directoryToOpen)
-    return httpNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/fileDialog
-fun postFileDialog(requestObject: RequestObject): FullHttpResponse {
+private fun Route.postFileDialog() = post("/fileDialog") {
     data class RequestBody(val mode: FileDialogMode, val supportedExtensions: List<String>? = null)
     val (mode, supportedExtensions) = runCatching {
-        requestObject.asJson<RequestBody>()
-    }.getOrNull() ?: return httpBadRequest("No dialog mode provided")
+        call.receive<RequestBody>()
+    }.getOrNull() ?: call.badRequest("No dialog mode provided")
 
-    val files = mode.selectFiles(supportedExtensions)
+    val files = withContext(Dispatchers.IO) {
+        mode.selectFiles(supportedExtensions)
+    }
 
-    return httpOk(JsonObject().apply {
+    call.respond(JsonObject().apply {
         files.firstOrNull()?.let { addProperty("file", it) }
     })
 }
 
-private val POSSIBLE_URL_TARGETS: Map<String, URI> = run {
+private val POSSIBLE_URL_TARGETS: Map<String, URI> = buildMap {
     val properties = Properties()
 
     properties.load(LiquidBounce::class.java.getResourceAsStream("/resources/liquidbounce/client_urls.properties"))
 
-    properties.stringPropertyNames().associateWith { URI(properties.getProperty(it)) }
+    properties.forEach { (k, v) ->
+        this[k as String] = URI(v as String)
+    }
+}
+
+internal fun Route.clientRoutes() {
+    getClientInfo()
+    getUpdateInfo()
+    postExit()
+    putHudEditorState()
+    getWindowInfo()
+    postBrowse()
+    postBrowsePath()
+    postFileDialog()
 }

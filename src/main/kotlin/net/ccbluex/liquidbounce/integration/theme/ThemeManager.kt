@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.integration.theme
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.renderScope
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -35,18 +34,17 @@ import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
 object ThemeManager : Config("theme") {
 
-    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ThemeManager")
+    private val logger = clientLogger("ThemeManager")
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
 
@@ -91,7 +89,7 @@ object ThemeManager : Config("theme") {
     val isThemeExternal: Boolean
         get() = theme?.origin?.external == true
 
-    private val takesInputHandler = InputAcceptor { mc.screen != null && mc.screen !is ChatScreen }
+    private val takesInputHandler = InputAcceptor { mc.gui.screen() != null && mc.gui.screen() !is ChatScreen }
 
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
@@ -116,7 +114,7 @@ object ThemeManager : Config("theme") {
 
     suspend fun init() {
         // Load default theme
-        includedTheme = Theme.load(Theme.Origin.RESOURCE, File("liquidbounce"))
+        includedTheme = Theme.load(Theme.Origin.RESOURCE, File(LiquidBounce.CLIENT_NAME.lowercase()))
     }
 
     suspend fun load() {
@@ -234,15 +232,31 @@ object ThemeManager : Config("theme") {
     }
 
     @Suppress("LongParameterList")
-    fun drawBackground(context: GuiGraphics, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
+    fun drawBackground(
+        context: GuiGraphicsExtractor,
+        width: Int, height: Int,
+        mouseX: Int, mouseY: Int,
+        delta: Float,
+    ): Boolean {
         val background = if (shaderEnabled) {
             theme?.backgroundShader
         } else {
             theme?.backgroundImage
         } ?: return false
 
-        background.draw(context, width, height, mouseX, mouseY, delta)
-        return true
+        try {
+            background.draw(context, width, height, mouseX, mouseY, delta)
+            return true
+        } catch (e: Exception) {
+            if (shaderEnabled) {
+                logger.warn("Failed to draw theme background, " +
+                    "the shader may be invalid, disabling...", e)
+                shaderEnabled = false
+            } else {
+                logger.warn("Failed to draw theme background", e)
+            }
+            return false
+        }
     }
 
     data class ScreenLocation(val theme: Theme, val url: String)

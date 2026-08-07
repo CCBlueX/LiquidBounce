@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.config.types.group
 
 import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
@@ -26,6 +27,7 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachIsInstance
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.publicGson
@@ -38,6 +40,7 @@ import net.ccbluex.liquidbounce.config.types.FileValue
 import net.ccbluex.liquidbounce.config.types.RangedValue
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.features.inventoryPreset.InventoryPreset
 import net.ccbluex.liquidbounce.config.types.Vec3Value
 import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
 import net.ccbluex.liquidbounce.config.types.list.ItemListValue
@@ -45,13 +48,13 @@ import net.ccbluex.liquidbounce.config.types.list.ListValue
 import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
 import net.ccbluex.liquidbounce.config.types.list.MutableListValue
 import net.ccbluex.liquidbounce.config.types.list.RegistryListValue
+import net.ccbluex.liquidbounce.config.types.list.RegistryMutableListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.asTagged
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.inventoryPreset.InventoryPreset
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputBind
@@ -98,6 +101,11 @@ open class ValueGroup(
     valueType,
     independentDescription = independentDescription
 ) {
+
+    /**
+     * Allows dynamic groups to create their children before stored values are applied.
+     */
+    open fun prepareDeserialize(jsonObject: JsonObject) = Unit
 
     /**
      * Stores the [ValueGroup] in which
@@ -327,6 +335,17 @@ open class ValueGroup(
         this@ValueGroup.inner.add(this)
     }
 
+    /**
+     * Adds an inventory preset value to this value group.
+     * The preset is represented by a [InventoryPreset] and serialized through the dedicated gson adapters.
+     */
+    @Suppress("unused")
+    fun inventoryPreset(): Value<InventoryPreset> = value(
+        name = "InventoryPreset",
+        defaultValue = InventoryPreset(),
+        valueType = ValueType.INVENTORY_PRESET,
+    )
+
     internal inline fun <T : MutableCollection<E>, reified E> list(
         name: String,
         defaultValue: T,
@@ -357,6 +376,14 @@ open class ValueGroup(
         defaultValue: T,
         valueType: ValueType,
     ) = RegistryListValue(name, defaultValue, valueType, E::class.java).apply {
+        this@ValueGroup.inner.add(this)
+    }
+
+    internal inline fun <T : MutableList<E>, reified E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = RegistryMutableListValue(name, defaultValue, valueType, E::class.java).apply {
         this@ValueGroup.inner.add(this)
     }
 
@@ -474,6 +501,9 @@ open class ValueGroup(
     fun <C : SequencedSet<Item>> items(name: String, default: C) =
         registryList(name, default, ValueType.ITEM)
 
+    fun <C : MutableList<Item>> itemList(name: String, default: C) =
+        registryMutableList(name, default, ValueType.ITEM)
+
     fun <C : SequencedSet<SoundEvent>> sounds(name: String, default: C) =
         registryList(name, default, ValueType.SOUND_EVENT)
 
@@ -555,29 +585,45 @@ open class ValueGroup(
         this@ValueGroup.inner.add(this)
     }
 
-    inline fun <reified T> enumChoice(name: String, default: T): ChoiceListValue<T>
-        where T : Enum<T>, T : Tagged = enumChoice(name, default, enumSetAllOf())
+    inline fun <reified T> enumChoice(
+        name: String,
+        default: T,
+        aliases: List<String> = emptyList(),
+    ): ChoiceListValue<T> where T : Enum<T>, T : Tagged = enumChoice(name, default, enumSetAllOf(), aliases)
 
-    fun <T : Tagged> enumChoice(name: String, default: T, choices: Set<T>): ChoiceListValue<T> =
-        ChoiceListValue(name, defaultValue = default, choices = choices).apply { this@ValueGroup.inner.add(this) }
+    fun <T : Tagged> enumChoice(
+        name: String,
+        default: T,
+        choices: Set<T>,
+        aliases: List<String> = emptyList(),
+    ): ChoiceListValue<T> = ChoiceListValue(name, defaultValue = default, choices = choices, aliases = aliases).apply {
+        this@ValueGroup.inner.add(this)
+    }
+
+    fun interface ModeBuilder {
+        fun ValueGroup.build()
+    }
 
     protected fun <T : Mode> modes(
-        eventListener: EventListener,
+        eventListener: EventListener?,
         name: String,
         active: T,
         modes: Array<T>,
     ): ModeValueGroup<T> {
-        return modes(eventListener, name, {
+        return modes(eventListener, name, { modes ->
             val idx = modes.indexOf(active)
 
-            check(idx != -1) { "The active choice $active is not contained within the choice array ($it)" }
+            check(idx != -1) {
+                "The active choice $active is not contained within the choice array" +
+                    " (${modes.joinToString { it.name }})"
+            }
 
             idx
         }) { modes }
     }
 
-    protected fun <T : Mode> modes(
-        eventListener: EventListener,
+    fun <T : Mode> modes(
+        eventListener: EventListener?,
         name: String,
         activeCallback: ToIntFunction<List<T>>,
         modesCallback: (ModeValueGroup<T>) -> Array<T>,
@@ -596,171 +642,5 @@ open class ValueGroup(
     ) = modes(eventListener, name, { activeIndex }, choicesCallback)
 
     fun <V : Value<*>> value(value: V) = value.apply { this@ValueGroup.inner.add(this) }
-
-    /**
-     * Adds an inventory preset value to this value group.
-     * The preset is represented by a [InventoryPreset] and serialized through the dedicated gson adapters.
-     */
-    @Suppress("unused")
-    fun inventoryPreset(): Value<InventoryPreset> = value(
-        name = "InventoryPreset",
-        defaultValue = InventoryPreset(),
-        valueType = ValueType.INVENTORY_PRESET,
-    )
-
-    /**
-     * Assigns the value of the settings to the component
-     *
-     * A component can have dynamic settings which can be assigned through the JSON file
-     * These have to be interpreted and assigned to the value group
-     *
-     * An example:
-     * {
-     *     "type": "INT",
-     *     "name": "Size",
-     *     "value": 14,
-     *     "range": {
-     *         "min": 1,
-     *         "max": 100
-     *     },
-     *     "suffix": "px"
-     * }
-     *
-     * TODO: Replace with proper deserialization
-     *
-     * @param valueObject JsonObject
-     */
-    @Suppress("LongMethod")
-    fun json(valueObject: JsonObject) {
-        val type = enumValueOf<ValueType>(valueObject["type"].asString)
-        val name = valueObject["name"].asString
-
-        // todo: replace this with serious deserialization
-        when (type) {
-            ValueType.BOOLEAN -> {
-                val value = valueObject["value"].asBoolean
-                boolean(name, value)
-            }
-
-            ValueType.INT -> {
-                val value = valueObject["value"].asInt
-                val min = valueObject["range"].asJsonObject["min"].asInt
-                val max = valueObject["range"].asJsonObject["max"].asInt
-                val suffix = valueObject["suffix"]?.asString ?: ""
-                int(name, value, min..max, suffix)
-            }
-
-            ValueType.INT_RANGE -> {
-                val valueMin = valueObject["value"].asJsonObject["min"].asInt
-                val valueMax = valueObject["value"].asJsonObject["max"].asInt
-                val min = valueObject["range"].asJsonObject["min"].asInt
-                val max = valueObject["range"].asJsonObject["max"].asInt
-                val suffix = valueObject["suffix"]?.asString ?: ""
-                intRange(name, valueMin..valueMax, min..max, suffix)
-            }
-
-            ValueType.FLOAT -> {
-                val value = valueObject["value"].asFloat
-                val min = valueObject["range"].asJsonObject["min"].asFloat
-                val max = valueObject["range"].asJsonObject["max"].asFloat
-                val suffix = valueObject["suffix"]?.asString ?: ""
-                float(name, value, min..max, suffix)
-            }
-
-            ValueType.FLOAT_RANGE -> {
-                val valueMin = valueObject["value"].asJsonObject["min"].asFloat
-                val valueMax = valueObject["value"].asJsonObject["max"].asFloat
-                val min = valueObject["range"].asJsonObject["min"].asFloat
-                val max = valueObject["range"].asJsonObject["max"].asFloat
-                val suffix = valueObject["suffix"]?.asString ?: ""
-                floatRange(name, valueMin..valueMax, min..max, suffix)
-            }
-
-            ValueType.TEXT -> {
-                val value = valueObject["value"].asString
-                text(name, value)
-            }
-
-            ValueType.COLOR -> {
-                val value = valueObject["value"].asInt
-                color(name, Color4b(value))
-            }
-
-            ValueType.CONFIGURABLE -> {
-                val subValueGroup = ValueGroup(name)
-                val values = valueObject["values"].asJsonArray
-                for (value in values) {
-                    subValueGroup.json(value.asJsonObject)
-                }
-                tree(subValueGroup)
-            }
-            // same as value group but it is [ToggleableValueGroup]
-            ValueType.TOGGLEABLE -> {
-                val value = valueObject["value"].asBoolean
-                // Parent is NULL in that case because we are not dealing with Listenable anyway and only use it
-                // as toggleable ValueGroup
-                val subValueGroup = object : ToggleableValueGroup(null, name, value) {}
-                val settings = valueObject["values"].asJsonArray
-                for (setting in settings) {
-                    subValueGroup.json(setting.asJsonObject)
-                }
-                tree(subValueGroup)
-            }
-
-            ValueType.CHOOSE -> {
-                val value = valueObject["value"].asString.asTagged()
-                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asTagged() }
-
-                enumChoice(name, value, choices)
-            }
-
-            ValueType.MULTI_CHOOSE -> {
-                fun parseBoolean(key: String, default: Boolean) = when (val json = valueObject[key]) {
-                    null, is JsonNull -> default
-                    is JsonPrimitive, is JsonArray -> json.asBoolean
-                    else -> error("Unexpected JSON value (${json.javaClass}): $json, should be boolean")
-                }
-
-                val canBeNone = parseBoolean(key = "canBeNone", default = true)
-                val isOrderSensitive = parseBoolean(key = "isOrderSensitive", default = false)
-
-                val value = valueObject["value"].asJsonArray.mapTo(
-                    if (isOrderSensitive) sortedSetOf() else linkedSetOf()
-                ) { it.asString.asTagged() }
-                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asTagged() }
-
-                multiEnumChoice(name, default = value, choices, canBeNone, isOrderSensitive)
-            }
-
-            ValueType.REGISTRY_LIST -> {
-                val innerValueType = enumValueOf<ValueType>(valueObject["innerValueType"].asString)
-                val normalizedValue = when (val value = valueObject["value"]) {
-                    is JsonArray -> value
-                    is JsonPrimitive -> listOf(value)
-                    null, is JsonNull -> emptyList()
-                    else -> error("Unexpected JSON value (${value.javaClass}): $value, should be Identifier list")
-                }
-
-                when (innerValueType) {
-                    ValueType.BLOCK -> {
-                        blocks(name, normalizedValue.mapTo(blockSortedSetOf()) {
-                            publicGson.fromJson(it, Block::class.java)
-                        })
-                    }
-
-                    ValueType.ITEM -> {
-                        items(name, normalizedValue.mapTo(itemSortedSetOf()) {
-                            publicGson.fromJson(it, Item::class.java)
-                        })
-                    }
-
-                    else -> error("Unsupported inner value type for ${ValueType.REGISTRY_LIST}: $innerValueType")
-                }
-            }
-
-            else -> error("Unsupported type: $type")
-        }
-    }
-
 
 }

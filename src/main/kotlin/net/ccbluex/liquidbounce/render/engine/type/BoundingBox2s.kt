@@ -19,16 +19,20 @@
 
 package net.ccbluex.liquidbounce.render.engine.type
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
+
+@ValueClassCandidate
 @JvmRecord
 data class BoundingBox2s(val min: UV2f, val max: UV2f) {
     constructor(rect: BoundingBox2f) : this(
-        UV2f(
-            rect.xMin,
-            rect.yMin
-        ),
-        UV2f(
-            rect.xMax,
-            rect.yMax
-        )
+        rect.xMin,
+        rect.yMin,
+        rect.xMax,
+        rect.yMax,
+    )
+
+    constructor(xMin: Float, yMin: Float, xMax: Float, yMax: Float) : this(
+        UV2f(xMin, yMin),
+        UV2f(xMax, yMax)
     )
 }

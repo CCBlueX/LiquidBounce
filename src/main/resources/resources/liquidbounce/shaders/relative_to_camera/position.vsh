@@ -29,6 +29,10 @@ layout(std140) uniform Globals {
     int UseRgss;
 };
 
+layout(std140) uniform u_MeshBaseBlockPos {
+    ivec3 BaseBlockPos;
+};
+
 layout(std140) uniform u_DistanceFade {
     // x = nearStart
     // y = nearEnd
@@ -42,8 +46,7 @@ in vec3 Position;
 out float alphaFactor;
 
 void main() {
-    vec3 cameraPos = vec3(CameraBlockPos) - CameraOffset;
-    vec3 relativePos = Position - cameraPos;
+    vec3 relativePos = Position + vec3(BaseBlockPos - CameraBlockPos) + CameraOffset;
     gl_Position = ProjMat * ModelViewMat * vec4(relativePos, 1.0);
 
     float dist = length(relativePos);

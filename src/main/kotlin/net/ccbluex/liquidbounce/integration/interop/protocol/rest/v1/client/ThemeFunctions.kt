@@ -18,62 +18,72 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondFile
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.integration.interop.badRequest
+import net.ccbluex.liquidbounce.integration.interop.forbidden
+import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpBadRequest
-import net.ccbluex.netty.http.util.httpFile
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpNotFound
-import net.ccbluex.netty.http.util.httpOk
 
-// GET /api/v1/client/theme/:id
-@Suppress("UNUSED_PARAMETER")
-fun getTheme(requestObject: RequestObject): FullHttpResponse {
-    val id = requestObject.params["id"]
-    val theme = if (id != null) {
-        ThemeManager.themes.find { it.metadata.id == id } ?: return httpNotFound(id, "Theme not found")
-    } else {
-        ThemeManager.theme
-    }
+// GET /api/v1/client/theme
+private fun Route.getCurrentTheme() = get {
+    call.respond(accessibleInteropGson.toJsonTree(ThemeManager.theme))
+}
 
-    return httpOk(accessibleInteropGson.toJsonTree(theme))
+// GET /api/v1/client/theme/{id}
+private fun Route.getTheme() = get("/{id}") {
+    val id = call.parameters["id"] ?: call.forbidden("No id")
+    val theme = ThemeManager.themes.find { it.metadata.id == id } ?: call.notFound(id, "Theme not found")
+
+    call.respond(accessibleInteropGson.toJsonTree(theme))
 }
 
 // GET /api/v1/client/shader
-@Suppress("UNUSED_PARAMETER")
-fun getToggleShaderInfo(requestObject: RequestObject): FullHttpResponse = httpOk(JsonObject().apply {
-    addProperty("shaderEnabled", ThemeManager.shaderEnabled)
-})
+private fun Route.getToggleShaderInfo() = get {
+    call.respond(JsonObject().apply {
+        addProperty("shaderEnabled", ThemeManager.shaderEnabled)
+    })
+}
 
 // POST /api/v1/client/shader
-@Suppress("UNUSED_PARAMETER")
-fun postToggleShader(requestObject: RequestObject): FullHttpResponse {
+private fun Route.postToggleShader() = post {
     ThemeManager.shaderEnabled = !ThemeManager.shaderEnabled
     ConfigSystem.store(ThemeManager)
-    return httpNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
 
 // GET /api/v1/client/fonts
-@Suppress("UNUSED_PARAMETER")
-fun getFonts(requestObject: RequestObject): FullHttpResponse = httpOk(JsonArray().apply {
-    FontManager.fontFaces.forEach { (name, _) ->
-        add(name)
+private fun Route.getFonts() = get { call.respond(FontManager.fontFaces.keys) }
+
+// GET /api/v1/client/fonts/{name}
+private fun Route.getFont() = get("/{name}") {
+    val name = call.parameters["name"] ?: call.badRequest("Missing font name")
+    val font = FontManager.fontFace(name) ?: call.notFound(name, "Font not found")
+    val file = font.file ?: run {
+        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        return@get
     }
-})
 
-// GET /api/v1/client/fonts/:name
-@Suppress("UNUSED_PARAMETER")
-fun getFont(requestObject: RequestObject): FullHttpResponse {
-    val name = requestObject.params["name"] ?: return httpBadRequest("Missing font name")
-    val font = FontManager.fontFace(name) ?: return httpNotFound(name, "Font not found")
-    val file = font.file ?: return httpNoContent()
+    call.respondFile(file)
+}
 
-    return httpFile(file)
+internal fun Route.themeRoutes() {
+    route("/theme") {
+        getCurrentTheme()
+        getTheme()
+    }
+    route("/shader") {
+        getToggleShaderInfo()
+        postToggleShader()
+    }
 }

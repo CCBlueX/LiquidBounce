@@ -60,6 +60,8 @@ object PostRotationExecutor : EventListener {
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
+        priorityAction = null
+        priorityActionPostMove = false
         postMoveTasks.clear()
         normalTasks.clear()
     }

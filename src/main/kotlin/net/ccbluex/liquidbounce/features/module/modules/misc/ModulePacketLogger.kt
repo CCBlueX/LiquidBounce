@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
@@ -43,8 +43,8 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.isNotRoot
 import net.ccbluex.liquidbounce.utils.kotlin.toFullString
-import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.ccbluex.liquidbounce.utils.text.buildText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.protocol.Packet
@@ -133,8 +133,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
             override fun handle(origin: TransferOrigin, packet: Packet<*>, canceled: Boolean, packetId: Identifier) {
                 val clazz = packet.javaClass
 
-                val packetClassName = classNames.computeIfAbsent(clazz, EnvironmentRemapper::remapClass)
-                    .substringAfterLast('.')
+                val packetClassName = clazz.name.substringAfterLast('.')
 
                 val text = "".asText()
                 if (origin == TransferOrigin.INCOMING) {
@@ -175,8 +174,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
 
                 val clazz = packet.javaClass
 
-                val packetClassName = classNames.computeIfAbsent(clazz, EnvironmentRemapper::remapClass)
-                    .substringAfterLast('.')
+                val packetClassName = clazz.name.substringAfterLast('.')
 
                 file.appendingSink().buffer().use {
                     it.writeUtf8(System.currentTimeMillis().toString())
@@ -224,9 +222,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
 
                 field.isAccessible = true
 
-                val name = fieldNames.computeIfAbsent(field) {
-                    EnvironmentRemapper.remapField(currentClass!!.name, field.name)
-                }
+                val name = field.name
 
                 val value = try {
                     field.get(packet)?.toString()
@@ -245,7 +241,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
 
     private fun MutableComponent.appendFields(clazz: Class<out Packet<*>>, packet: Packet<*>) {
         val fieldTexts = collectFields(clazz, packet).mapToArray { (name, type, value) ->
-            buildList {
+            buildText {
                 add("- ".asPlainText(ChatFormatting.GRAY))
                 add(name.asText().withStyle(ChatFormatting.AQUA).copyable(copyContent = name))
                 if (showFieldType) {
@@ -256,7 +252,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
                 add(" = ".asPlainText(ChatFormatting.GRAY))
                 val valueString = value.toString()
                 add(valueString.asText().withStyle(ChatFormatting.WHITE).copyable(copyContent = valueString))
-            }.asText()
+            }
         }
 
         if (fieldTexts.isNotEmpty()) {

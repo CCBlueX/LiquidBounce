@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.getBlockingEntities
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
@@ -25,6 +26,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.level.block.Blocks
+import java.util.SequencedSet
 
 class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direction, rotated: Direction)
     : MinecraftShortcuts {
@@ -110,8 +112,8 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
     /**
      * Returns a list with all the positions that should be obsidian but aren't.
      */
-    fun confirmPlacements(): List<BlockPos> {
-        return frameBlocks.filter {
+    fun confirmPlacements(): SequencedSet<BlockPos> {
+        return frameBlocks.filterTo(ObjectLinkedOpenHashSet()) {
             val blockState = world.getBlockState(it)
             blockState.block != Blocks.OBSIDIAN && blockState.canBeReplaced()
         }

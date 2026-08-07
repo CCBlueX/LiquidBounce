@@ -25,7 +25,8 @@ import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -33,10 +34,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleB
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
-import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -48,12 +49,15 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
+import net.ccbluex.liquidbounce.utils.client.RequestHandler
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.Relative
 
 /**
  * A rotation manager
@@ -67,6 +71,11 @@ object RotationManager : EventListener {
         get() = rotationTargetHandler.getActiveRequestValue()
     private val rotationTargetHandler = RequestHandler<RotationTarget>()
 
+    @Suppress("unused")
+    private val lifecycleListener = object : EventListener {
+        private val worldChangeHandler = handler<WorldChangeEvent> { reset() }
+    }
+
     val activeRotationTarget: RotationTarget?
         get() = rotationTarget ?: previousRotationTarget
     internal var previousRotationTarget: RotationTarget? = null
@@ -76,7 +85,7 @@ object RotationManager : EventListener {
      * The rotation we want to aim at. This DOES NOT mean that the server already received this rotation.
      */
     var currentRotation: Rotation? = null
-        set(value) {
+        private set(value) {
             previousRotation = if (value == null) {
                 null
             } else {
@@ -88,7 +97,9 @@ object RotationManager : EventListener {
 
     // Used for rotation interpolation
     var playerRotation: Rotation? = null
+        private set
     var previousRotation: Rotation? = null
+        private set
 
     private val fakeLagging
         get() = BlinkManager.isLagging || ModuleBacktrack.isLagging()
@@ -108,6 +119,46 @@ object RotationManager : EventListener {
         private set
 
     private var theoreticalServerRotation = Rotation.ZERO
+
+    private fun reset() {
+        rotationTargetHandler.clear()
+        previousRotationTarget = null
+        currentRotation = null
+        playerRotation = null
+        previousRotation = null
+        actualServerRotation = Rotation.ZERO
+        theoreticalServerRotation = Rotation.ZERO
+    }
+
+    /**
+     * Applies the rotation normalization performed by the vanilla server for rotation-bearing
+     * movement and item-use packets.
+     *
+     * @see net.minecraft.server.network.ServerGamePacketListenerImpl.handleMovePlayer
+     * @see net.minecraft.server.network.ServerGamePacketListenerImpl.handleUseItem
+     */
+    private fun serverboundRotation(yaw: Float, pitch: Float) = Rotation(
+        yaw = Mth.wrapDegrees(yaw),
+        pitch = Mth.wrapDegrees(pitch).coerceIn(-90f, 90f),
+        isNormalized = true
+    )
+
+    /**
+     * Resolves the relative rotation flags used by vanilla player position and rotation updates.
+     *
+     * @see net.minecraft.world.entity.PositionMoveRotation.calculateAbsolute
+     * @see net.minecraft.world.entity.Entity.forceSetRotation
+     */
+    private fun clientboundRotation(
+        yaw: Float,
+        pitch: Float,
+        relativeYaw: Boolean,
+        relativePitch: Boolean
+    ) = Rotation(
+        yaw = yaw + if (relativeYaw) actualServerRotation.yaw else 0f,
+        pitch = (pitch + if (relativePitch) actualServerRotation.pitch else 0f).coerceIn(-90f, 90f),
+        isNormalized = true
+    )
 
     @Suppress("LongParameterList")
     fun setRotationTarget(
@@ -147,7 +198,7 @@ object RotationManager : EventListener {
         }
 
         if (rotationTarget.considerInventory) {
-            if (InventoryManager.isInventoryOpen || mc.screen is ContainerScreen) {
+            if (InventoryManager.isInventoryOpen || mc.gui.screen() is ContainerScreen) {
                 return false
             }
         }
@@ -171,7 +222,7 @@ object RotationManager : EventListener {
                 // After generating the next rotation, we need to normalize it
                 .normalize()
 
-            val diff = rotation.angleTo(playerRotation)
+            val diff = rotation.rotationDeltaLengthTo(playerRotation)
 
             if (rotationTarget == null && (activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK
                     || activeRotationTarget.processors.isEmpty()
@@ -196,29 +247,20 @@ object RotationManager : EventListener {
         rotationTargetHandler.tick()
     }
 
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> { event ->
-        val activeRotationTarget = this.activeRotationTarget ?: return@handler
-
-        val matrixStack = event.matrixStack
-        val partialTicks = event.partialTicks
+    fun applyChangeLookRotation(partialTicks: Float) {
+        val activeRotationTarget = this.activeRotationTarget ?: return
 
         if (isRotatingAllowed(activeRotationTarget)
             && activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
-            val playerRotation = playerRotation ?: return@handler
-            val currentRotation = currentRotation ?: return@handler
-            val timerSpeed = Timer.timerSpeed
+            val playerRotation = playerRotation ?: return
+            val currentRotation = currentRotation ?: return
 
-            val yaw = playerRotation.yaw + (currentRotation.yaw - playerRotation.yaw) * (timerSpeed * partialTicks)
-            val pitch =
-                playerRotation.pitch + (currentRotation.pitch - playerRotation.pitch) * (timerSpeed * partialTicks)
-
-            val interpolated = Rotation(yaw = yaw, pitch = pitch)
+            val interpolated = playerRotation.interpolateTo(currentRotation, partialTicks)
             player.setRotation(interpolated)
         }
     }
 
-    @Suppress("unused", "MagicNumber")
+    @Suppress("unused")
     private val mouseMovement = handler<MouseRotationEvent> { event ->
         val activeRotationTarget = this.activeRotationTarget ?: return@handler
         if (!isRotatingAllowed(activeRotationTarget) ||
@@ -226,11 +268,8 @@ object RotationManager : EventListener {
             return@handler
         }
 
-        val f = event.cursorDeltaY.toFloat() * 0.15f
-        val g = event.cursorDeltaX.toFloat() * 0.15f
-
         fun adjustRotation(rotation: Rotation): Rotation =
-            Rotation(yaw = rotation.yaw + g, pitch = (rotation.pitch + f).coerceIn(-90f, 90f))
+            RotationUtil.applyMouseTurnDelta(rotation, event.cursorDeltaX, event.cursorDeltaY)
 
         playerRotation?.let { rotation ->
             playerRotation = adjustRotation(rotation)
@@ -295,16 +334,27 @@ object RotationManager : EventListener {
                     return@handler
                 }
 
-                // We trust that we have sent a normalized rotation, if not, ... why?
-                Rotation(packet.yRot, packet.xRot, isNormalized = true)
+                serverboundRotation(packet.yRot, packet.xRot)
             }
-            is ClientboundPlayerPositionPacket -> Rotation(packet.change.yRot, packet.change.xRot, isNormalized = true)
-            is ServerboundUseItemPacket -> Rotation(packet.yRot, packet.xRot, isNormalized = true)
+            is ClientboundPlayerPositionPacket -> clientboundRotation(
+                packet.change.yRot,
+                packet.change.xRot,
+                Relative.Y_ROT in packet.relatives,
+                Relative.X_ROT in packet.relatives,
+            )
+            is ClientboundPlayerRotationPacket -> clientboundRotation(
+                packet.yRot,
+                packet.xRot,
+                packet.relativeY,
+                packet.relativeX,
+            )
+            is ServerboundUseItemPacket -> serverboundRotation(packet.yRot, packet.xRot)
             else -> return@handler
         }
 
-        // This normally applies to Modules like Blink, BadWifi, etc.
-        if (!event.isCancelled) {
+        // Incoming corrections already changed the server-side player before they were sent. For
+        // outgoing packets, only packets that pass the event pipeline can affect the server.
+        if (event.origin == TransferOrigin.INCOMING || !event.isCancelled) {
             actualServerRotation = rotation
         }
         theoreticalServerRotation = rotation

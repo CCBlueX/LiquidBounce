@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
@@ -44,6 +44,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
     private val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
 
     private val lifetime by int("Lifetime", 15, 1..30)
+    private val canBeCovered by boolean("CanBeCovered", false)
 
     private val circles = ExpiringList<Vec3>()
 
@@ -53,20 +54,19 @@ object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
-        renderEnvironmentForWorld(matrixStack) {
+        event.renderEnvironment {
             circles.forEach {
                 val progress = animCurve
                     .transform((lifetime - circles.timeToDie(it) + event.partialTicks) / lifetime)
-                    .coerceIn(0f..1f)
+                    .coerceIn(0f, 1f)
 
                 withPositionRelativeToCamera(it.value) {
                     drawGradientCircle(
                         endRadius.endInclusive * progress,
                         endRadius.start * progress,
                         animateColor(outerColor, progress),
-                        animateColor(innerColor, progress)
+                        animateColor(innerColor, progress),
+                        noDepthTest = !canBeCovered
                     )
                 }
             }

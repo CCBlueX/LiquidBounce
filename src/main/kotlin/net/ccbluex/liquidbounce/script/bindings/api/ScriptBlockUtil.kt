@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.state.BlockState
 
@@ -36,6 +36,6 @@ object ScriptBlockUtil {
     fun getBlock(blockPos: BlockPos) = blockPos.getBlock()
 
     @JvmName("getState")
-    fun getState(blockPos: BlockPos): BlockState? = blockPos.getState()
+    fun getState(blockPos: BlockPos): BlockState? = blockPos.state
 
 }

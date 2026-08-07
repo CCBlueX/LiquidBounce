@@ -19,48 +19,45 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
-import io.netty.handler.codec.http.FullHttpResponse
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.utils.client.defaultProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersions
 import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
 
-// GET /api/v1/protocols
-@Suppress("UNUSED_PARAMETER")
-fun getProtocols(requestObject: RequestObject) = httpOk(JsonArray().apply {
-    for (protocol in protocolVersions) {
-        add(JsonObject().apply {
-            addProperty("name", protocol.name)
-            addProperty("version", protocol.version)
-        })
-    }
-})
+// GET /api/v1/client/protocols
+private fun Route.getProtocols() = get { call.respond(protocolVersions) }
 
-// GET /api/v1/protocols/protocol
-@Suppress("UNUSED_PARAMETER")
-fun getProtocol(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("name", protocolVersion.name)
-    addProperty("version", protocolVersion.version)
-})
+// GET /api/v1/client/protocols/protocol
+private fun Route.getProtocol() = get { call.respond(protocolVersion) }
 
-// PUT /api/v1/protocols/protocol
-fun putProtocol(requestObject: RequestObject): FullHttpResponse {
+// PUT /api/v1/client/protocols/protocol
+private fun Route.putProtocol() = put {
     data class ProtocolRequest(val version: Int)
 
-    val protocolRequest = requestObject.asJson<ProtocolRequest>()
+    val protocolRequest = call.receive<ProtocolRequest>()
 
     selectProtocolVersion(protocolRequest.version)
-    return httpNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// DELETE /api/v1/protocols/protocol
-@Suppress("UNUSED_PARAMETER")
-fun deleteProtocol(requestObject: RequestObject): FullHttpResponse {
+// DELETE /api/v1/client/protocols/protocol
+private fun Route.deleteProtocol() = delete {
     selectProtocolVersion(defaultProtocolVersion.version)
-    return httpNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+}
+
+internal fun Route.protocolRoutes() = route("/protocols") {
+    getProtocols()
+    route("/protocol") {
+        getProtocol()
+        putProtocol()
+        deleteProtocol()
+    }
 }

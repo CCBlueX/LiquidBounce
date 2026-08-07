@@ -126,12 +126,12 @@
   .text {
     position: absolute;
     z-index: 99999;
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     width: 150px;
     border-radius: 3px;
     padding: 2px;
-    background-color: rgba($clickgui-base-color, 0.85);
-    outline: 1px solid color.adjust($clickgui-text-color, $lightness: -85%);
+    background-color: color-mix(in srgb, var(--clickgui-base-color) 85%, transparent);
+    outline: 1px solid color-mix(in srgb, var(--clickgui-text-color) 15%, black);
     font-size: 12px;
   }
 </style>

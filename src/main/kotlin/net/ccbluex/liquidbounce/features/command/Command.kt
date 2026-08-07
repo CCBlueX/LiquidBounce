@@ -23,16 +23,19 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.joinToText
+import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
@@ -49,10 +52,18 @@ class Command(
     val handler: Handler?,
     val requiresIngame: Boolean,
 ) : MinecraftShortcuts, DebuggedOwner {
+    val logger = clientLogger("Command/$name")
+
     var parentCommand: Command? = null
         private set
     var index: Int = -1
         internal set
+
+    override val debugDisplayName: Component
+        get() = "Command$name".asPlainText(Style.EMPTY + ChatFormatting.GOLD + ChatFormatting.UNDERLINE)
+
+    override val debugOwnerId: String
+        get() = "Command$name"
 
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
@@ -199,11 +210,11 @@ class Command(
 
     fun autoComplete(
         builder: SuggestionsBuilder,
-        tokenizationResult: Pair<List<String>, List<Int>>,
+        tokenizationResult: CommandManager.TokenizationResult,
         commandIdx: Int,
         isNewParameter: Boolean
     ) {
-        val args = tokenizationResult.first
+        val args = tokenizationResult.tokens
 
         val offset = args.size - commandIdx - 1
 
@@ -257,7 +268,9 @@ class Command(
     fun interface Handler {
         operator fun Context.invoke()
 
-        class Context(@JvmField val command: Command, @JvmField val args: Array<out Any>)
+        class Context(@JvmField val command: Command, @JvmField val args: Array<out Any>) {
+            inline val logger get() = command.logger
+        }
 
         fun interface Suspend {
             suspend operator fun Context.invoke()

@@ -34,11 +34,9 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.longLines
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.render.drawLegacy2DMarker
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
@@ -47,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.KeyedAabb
 import net.ccbluex.liquidbounce.utils.math.mergeIntersectingAabbsSweep
 import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.ccbluex.liquidbounce.utils.math.worldToLocal
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow.Pickup
@@ -105,30 +104,23 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         // Check if the tracer option is enabled
         if (!showTracers) return@handler
 
-        renderEnvironmentForWorld(event.matrixStack) {
-            // We calculate the gaze vector (where the camera is looking)
-            val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotateX(-camera.xRot().toRadians())
-                .rotateY(-camera.yRot().toRadians())
+        event.renderEnvironment {
+            val eyeVector = Vec3f.eyeVector(camera)
 
-            longLines {
-                // Using entitiesForRendering() to get a list of entities around
-                val entities = world.entitiesForRendering()
-                for (entity in entities) {
-                    // Using the existing filtering logic (distance, type, etc.)
-                    if (!shouldRender(entity)) continue
+            val entities = world.entitiesForRendering()
+            for (entity in entities) {
+                if (!shouldRender(entity)) continue
 
-                    val color = getColor()
+                val color = getColor()
 
-                    // Interpolating the position (motion smoothing)
-                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
+                // Interpolating the position (motion smoothing)
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
 
-                    drawLine(
-                        argb = color.argb,
-                        p1 = eyeVector,
-                        p2 = pos,
-                    )
-                }
+                drawLine(
+                    argb = color.argb,
+                    p1 = eyeVector,
+                    p2 = pos,
+                )
             }
         }
     }
@@ -158,13 +150,11 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         private val renderHandler = handler<WorldRenderEvent> { event ->
             if (entities.isEmpty()) return@handler
 
-            val matrixStack = event.matrixStack
-
             val color = getColor()
             val faceColor = color.with(a = 50)
             val outlineColor = color.with(a = 100)
 
-            renderEnvironmentForWorld(matrixStack) {
+            event.renderEnvironment {
                 if (!mergeIntersecting) {
                     for (entity in entities) {
                         val pos = entity.interpolateCurrentPosition(event.partialTicks)
@@ -173,7 +163,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                             drawBox(box, faceColor, outlineColor)
                         }
                     }
-                    return@renderEnvironmentForWorld
+                    return@renderEnvironment
                 }
 
                 val mergedBoxes = mergeIntersectingAabbsSweep(
@@ -183,9 +173,10 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                     }.asList()
                 )
 
-                withPositionRelativeToCamera {
-                    for ((mergedBox, _) in mergedBoxes) {
-                        drawBox(mergedBox, faceColor, outlineColor)
+                for ((mergedBox, _) in mergedBoxes) {
+                    val (origin, localBox) = mergedBox.worldToLocal()
+                    withPositionRelativeToCamera(origin) {
+                        drawBox(localBox, faceColor, outlineColor)
                     }
                 }
             }
@@ -220,7 +211,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
             val color = getColor().argb
             val backgroundColor = Color4b.BLACK.with(a = backgroundAlpha).argb
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 for (entity in entities) {
                     val pos = entity.interpolateCurrentPosition(event.partialTicks).add(0.0, yOffset.toDouble(), 0.0)
 

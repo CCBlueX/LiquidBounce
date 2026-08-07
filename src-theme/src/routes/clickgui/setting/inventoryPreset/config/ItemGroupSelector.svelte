@@ -129,11 +129,11 @@
     border-radius: 6px;
     overflow-y: scroll;
     flex-shrink: 0;
-    background-color: rgba($clickgui-base-color, 0.85);
-    outline: 1px solid color.adjust($clickgui-text-color, $lightness: -85%);
+    background-color: color-mix(in srgb, var(--clickgui-base-color) 85%, transparent);
+    outline: 1px solid color-mix(in srgb, var(--clickgui-text-color) 15%, black);
 
     &.accentColorOutline {
-      outline-color: rgba($accent-color, 0.3);
+      outline-color: color-mix(in srgb, var(--accent-color) 30%, transparent);
     }
   }
 
@@ -160,7 +160,7 @@
     transition: background-color 0.3s ease;
 
     &:hover {
-      background-color: color.adjust($menu-error-color, $lightness: -30%);
+      background-color: color-mix(in srgb, var(--menu-error-color) 70%, black);
     }
 
     & > .item {
@@ -170,12 +170,12 @@
   }
 
   .add {
-    background: $accent-color;
+    background: var(--accent-color);
     position: relative;
     outline: none;
 
     &:hover {
-      background-color: color.adjust(color.adjust($accent-color, $saturation: -30%), $lightness: -10%);
+      background-color: color-mix(in srgb, var(--accent-color) 90%, black);
     }
 
     & > img {

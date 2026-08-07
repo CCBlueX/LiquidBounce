@@ -73,7 +73,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
         && !ModuleBlink.running
         && !ModuleMurderMystery.disallowsArrowDodge()
         && !(Ignore.OPEN_INVENTORY !in ignore
-            && (InventoryManager.isInventoryOpen || mc.screen is ContainerScreen))
+            && (InventoryManager.isInventoryOpen || mc.gui.screen() is ContainerScreen))
         && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
         && !(Ignore.USING_SCAFFOLD !in ignore && ModuleScaffold.running)
 

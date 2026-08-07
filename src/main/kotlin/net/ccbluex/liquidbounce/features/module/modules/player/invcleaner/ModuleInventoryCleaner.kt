@@ -75,7 +75,7 @@ object ModuleInventoryCleaner : ClientModule(
 
             if (ModuleOffhand.isOperating()) {
                 // Disallow tampering with off-hand slot when AutoTotem is active
-                currentRestrictionMap[OffHandSlot] = RestrictionType.FORBID_REPLACING
+                currentRestrictionMap[HotbarItemSlot.OFFHAND] = RestrictionType.FORBID_REPLACING
             }
 
             val desiredItemCounts = this.inventoryPresets.itemLimitRules.map { rule ->

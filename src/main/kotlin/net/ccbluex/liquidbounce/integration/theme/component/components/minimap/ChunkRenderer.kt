@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.math.similarity
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.ChunkPos.pack
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.level.material.MapColor.Brightness
@@ -85,10 +86,10 @@ object ChunkRenderer {
             for (posToUpdate in positionsToUpdate) {
                 val color = getColor(posToUpdate.x, posToUpdate.z)
 
-                textureAtlasManager.editChunk(ChunkPos.asLong(posToUpdate)) { texture, atlasPosition ->
+                textureAtlasManager.editChunk(pack(posToUpdate)) { texture, atlasPosition ->
                     val (x, y) = atlasPosition.getPosOnAtlas(posToUpdate.x and 15, posToUpdate.z and 15)
 
-                    texture.pixels!!.setPixel(x, y, color)
+                    texture.pixels.setPixel(x, y, color)
                 }
             }
         }
@@ -183,27 +184,27 @@ object ChunkRenderer {
 
             heightmapManager.updateChunk(chunkPos)
 
-            textureAtlasManager.editChunk(chunkPos.toLong()) { texture, atlasPosition ->
+            textureAtlasManager.editChunk(chunkPos.pack()) { texture, atlasPosition ->
                 for (offX in 0..15) {
                     for (offZ in 0..15) {
                         val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)
 
                         val color = getColor(offX or (x shl 4), offZ or (z shl 4))
 
-                        texture.pixels!!.setPixel(texX, texY, color)
+                        texture.pixels.setPixel(texX, texY, color)
                     }
                 }
             }
 
             for ((otherPos, from, to) in chunkBordersToUpdate) {
-                textureAtlasManager.editChunk(otherPos.toLong()) { texture, atlasPosition ->
+                textureAtlasManager.editChunk(otherPos.pack()) { texture, atlasPosition ->
                     for (offX in from.x..to.x) {
                         for (offZ in from.y..to.y) {
                             val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)
 
                             val color = getColor(offX or otherPos.minBlockX, offZ or otherPos.minBlockZ)
 
-                            texture.pixels!!.setPixel(texX, texY, color)
+                            texture.pixels.setPixel(texX, texY, color)
                         }
                     }
                 }
@@ -212,7 +213,7 @@ object ChunkRenderer {
 
         override fun clearChunk(pos: ChunkPos) {
             heightmapManager.unloadChunk(pos)
-            textureAtlasManager.deallocate(pos.toLong())
+            textureAtlasManager.deallocate(pos.pack())
         }
 
         override fun clearAllChunks() {

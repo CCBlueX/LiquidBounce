@@ -21,13 +21,12 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
-import net.ccbluex.liquidbounce.interfaces.ChatComponentAddition;
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition;
-import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.util.ArrayListDeque;
 import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.*;
@@ -38,7 +37,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(ChatComponent.class)
-public abstract class MixinChatComponent implements ChatComponentAddition {
+public abstract class MixinChatComponent {
 
     @Shadow
     @Final
@@ -66,11 +65,8 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
     @Shadow
     public abstract void scrollChat(int scroll);
 
-    @Unique
-    private int chatY = -1;
-
     @Inject(method = "<init>", at = @At(value = "TAIL"))
-    public void hookNewArrayList2(Minecraft client, CallbackInfo ci) {
+    public void hookNewArrayList2(Minecraft minecraft, CallbackInfo ci) {
         allMessages = new ArrayListDeque<>(100);
         // ArrayDeque for addFirst operations
         trimmedMessages = new ArrayListDeque<>(100);
@@ -84,7 +80,7 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
      * }
      * </pre>
      */
-    @ModifyExpressionValue(method = "addMessageToQueue(Lnet/minecraft/client/GuiMessage;)V", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", ordinal = 0, remap = false))
+    @ModifyExpressionValue(method = "addMessageToQueue", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", ordinal = 0, remap = false))
     public int hookGetSize2(int original) {
         var betterChat = ModuleBetterChat.INSTANCE;
         if (betterChat.getRunning() && betterChat.getInfiniteLength()) {
@@ -110,22 +106,22 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
      * forwarded and if {@link ModuleBetterChat} is enabled, older lines won't be removed.
      */
     @Inject(method = "addMessageToDisplayQueue", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;isChatFocused()Z", shift = At.Shift.BEFORE), cancellable = true)
-    public void hookAddVisibleMessage(GuiMessage message, CallbackInfo ci, @Local List<FormattedCharSequence> list) {
+    public void hookAddVisibleMessage(GuiMessage message, CallbackInfo ci, @Local(name = "lines") List<FormattedCharSequence> lines) {
         var focused = isChatFocused();
-        var removable = GuiMessageLineAddition.class.cast(message);
+        var removable = ((GuiMessageLineAddition) (Object) message);
         //noinspection DataFlowIssue
         var id = removable.liquid_bounce$getId();
 
-        for(int j = 0; j < list.size(); ++j) {
-            FormattedCharSequence orderedText = list.get(j);
+        for (int j = 0; j < lines.size(); ++j) {
+            FormattedCharSequence orderedText = lines.get(j);
             if (focused && chatScrollbarPos > 0) {
                 newMessageSinceScroll = true;
                 scrollChat(1);
             }
 
-            boolean last = j == list.size() - 1;
+            boolean last = j == lines.size() - 1;
+            var visible = new GuiMessage.Line(message, orderedText, last);
             //noinspection DataFlowIssue
-            var visible = new GuiMessage.Line(message.addedTime(), orderedText, message.tag(), last);
             ((GuiMessageLineAddition) (Object) visible).liquid_bounce$setId(id);
             trimmedMessages.addFirst(visible);
         }
@@ -140,18 +136,18 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
         ci.cancel();
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;IIIZZ)V", at = @At("TAIL"))
+    @Inject(method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;IIILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;Z)V", at = @At("TAIL"))
     private void hookRenderCopyHighlight(
-        GuiGraphics graphics,
+        GuiGraphicsExtractor graphics,
         Font font,
         int tickCount,
         int globalMouseX,
         int globalMouseY,
-        boolean focused,
+        ChatComponent.DisplayMode displayMode,
         boolean changeCursorOnInsertions,
         CallbackInfo ci
     ) {
-        if (!focused) {
+        if (!displayMode.foreground) {
             return;
         }
 
@@ -217,8 +213,4 @@ public abstract class MixinChatComponent implements ChatComponentAddition {
         graphics.fill(left, top, right, bottom, 0x4422AAFF);
     }
 
-    @Override
-    public int liquidbounce_getChatY() {
-        return chatY;
-    }
 }

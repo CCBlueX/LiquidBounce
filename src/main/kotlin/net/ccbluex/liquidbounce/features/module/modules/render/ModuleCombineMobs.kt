@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -50,24 +51,36 @@ object ModuleCombineMobs : ClientModule("CombineMobs", ModuleCategories.RENDER) 
     private val renderTracker = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
     private val nametagTracker = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
 
+    private val mapPool = Pool(::Long2IntOpenHashMap, Long2IntOpenHashMap::clear)
+
     private val combineArmorStands by boolean("CombineArmorStands", false)
     private val combineMinecarts by boolean("CombineMinecarts", false)
 
+    private fun clearRenderTracker() {
+        mapPool.recycleAll(renderTracker.values)
+        renderTracker.clear()
+    }
+
+    private fun clearNametagTracker() {
+        mapPool.recycleAll(nametagTracker.values)
+        nametagTracker.clear()
+    }
+
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
-        RenderedEntities.onUpdated(nametagTracker::clear)
+        RenderedEntities.onUpdated(::clearNametagTracker)
         super.onEnabled()
     }
 
     override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
-        renderTracker.clear()
-        nametagTracker.clear()
+        clearRenderTracker()
+        clearNametagTracker()
     }
 
     @Suppress("unused")
     private val renderGameHandler = handler<GameRenderEvent> {
-        renderTracker.clear()
+        clearRenderTracker()
     }
 
     private fun keyFor(mob: Entity): CombineKey {
@@ -86,7 +99,7 @@ object ModuleCombineMobs : ClientModule("CombineMobs", ModuleCategories.RENDER) 
         if (!canCombine) return false
 
         return (if (forNametag) nametagTracker else renderTracker)
-            .getOrPut(keyFor(entity), ::Long2IntOpenHashMap)
+            .getOrPut(keyFor(entity), mapPool::borrow)
             .addTo(entity.blockPosition().asLong(), 1) > 0
     }
 

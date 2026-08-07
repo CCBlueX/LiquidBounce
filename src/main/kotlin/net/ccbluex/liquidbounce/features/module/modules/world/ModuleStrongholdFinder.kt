@@ -29,20 +29,18 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.addVertex
-import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.longLines
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.toDegrees
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.world.forEachSectionBlock
@@ -58,19 +56,15 @@ import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.resources.ResourceKey
-import net.minecraft.util.Mth
 import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.EyeOfEnder
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
-import kotlin.math.atan2
-import kotlin.math.cos
 import kotlin.math.hypot
-import kotlin.math.sin
 
 private const val RAY_RENDER_LENGTH = 2048.0
 
@@ -223,7 +217,7 @@ object ModuleStrongholdFinder : ClientModule(
 
             val throwPos = trackedEye.throwPosition
             val eyePos = eye.position()
-            val yaw = vectorToYaw(eyePos.x - throwPos.x, eyePos.z - throwPos.z)
+            val yaw = eyePos.subtract(throwPos).yaw
 
             measurements += EyeMeasurement(
                 throwPos,
@@ -249,31 +243,29 @@ object ModuleStrongholdFinder : ClientModule(
             return@handler
         }
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             if (detectedPortalBlocks.isNotEmpty()) {
                 renderDetectedPortalBlocks(event)
-                return@renderEnvironmentForWorld
+                return@renderEnvironment
             }
 
             if (renderRays) {
+                val color = Color4b.WHITE.alpha(170).argb
                 withPositionRelativeToCamera {
-                    longLines {
-                        val color = Color4b.WHITE.alpha(170).argb
-                        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
-                            for (measurement in measurements) {
-                                val start = measurement.throwPos
-                                val yawRad = measurement.angleDeg.toDouble().toRadians()
-                                val direction = Vec3(-sin(yawRad), 0.0, cos(yawRad))
-                                val end = measurement.throwPos.add(direction.scale(RAY_RENDER_LENGTH))
-                                addVertex(pose, start).setColor(color)
-                                addVertex(pose, end).setColor(color)
-                            }
-                        }
+                    for ((start, angleDeg) in measurements) {
+                        val direction = Vec3.directionFromRotation(0f, angleDeg)
+                        val end = start.add(direction.scale(RAY_RENDER_LENGTH))
+
+                        drawLine(
+                            start,
+                            end,
+                            color,
+                        )
                     }
                 }
             }
 
-            val snapshot = posterior ?: return@renderEnvironmentForWorld
+            val snapshot = posterior ?: return@renderEnvironment
             val drawY = player.interpolateCurrentPosition(event.partialTicks).y
             val candidates = snapshot.candidates.take(showTopCandidates)
             candidates.forEachIndexed { index, candidate ->
@@ -289,7 +281,7 @@ object ModuleStrongholdFinder : ClientModule(
                 }
 
                 if ((index == 0 && renderBestChunk) || (index > 0 && renderTopChunks)) {
-                    withPositionRelativeToCamera(Vec3(minX.toDouble(), drawY, minZ.toDouble())) {
+                    withPositionRelativeToCamera(minX.toDouble(), drawY, minZ.toDouble()) {
                         drawPlane(16f, 16f, color, color.darker())
                     }
                 }
@@ -323,7 +315,7 @@ object ModuleStrongholdFinder : ClientModule(
 
         lines.forEachIndexed { index, line ->
             val lineX = centerX - mc.font.width(line) / 2
-            event.context.drawString(
+            event.context.text(
                 mc.font,
                 line,
                 lineX,
@@ -376,7 +368,7 @@ object ModuleStrongholdFinder : ClientModule(
     }
 
     private fun handleEyeSpawnPacket(packet: ClientboundAddEntityPacket) {
-        if (packet.type != EntityType.EYE_OF_ENDER) {
+        if (packet.type != EntityTypes.EYE_OF_ENDER) {
             return
         }
 
@@ -387,10 +379,8 @@ object ModuleStrongholdFinder : ClientModule(
             .filter { it.dimension == world.dimension() && nowTick - it.tick in 0..maxSampleAgeTicks }
             .minWithOrNull(
                 compareBy<PendingThrow> { nowTick - it.tick }
-                    .thenBy {
-                        val dx = it.throwPosition.x - packet.x
-                        val dz = it.throwPosition.z - packet.z
-                        dx * dx + dz * dz
+                    .thenComparingDouble {
+                        it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z)
                     }
             ) ?: return
 
@@ -426,9 +416,7 @@ object ModuleStrongholdFinder : ClientModule(
     }
 
     private fun removePortalBlocksInChunk(chunkPos: ChunkPos) {
-        detectedPortalBlocks.entries.removeIf { (pos, _) ->
-            chunkPos.contains(pos)
-        }
+        detectedPortalBlocks.keys.removeIf(chunkPos::contains)
     }
 
     private fun WorldRenderEnvironment.renderDetectedPortalBlocks(event: WorldRenderEvent) {
@@ -446,26 +434,20 @@ object ModuleStrongholdFinder : ClientModule(
         val start = playerPos.add(0.0, 0.05, 0.0)
         val target = closestPortalPos.center
 
+        val lineColor = Color4b(255, 80, 80, 220).argb
         withPositionRelativeToCamera {
-            longLines {
-                drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
-                    val lineColor = Color4b(255, 80, 80, 220).argb
-                    addVertex(pose, start).setColor(lineColor)
-                    addVertex(pose, target).setColor(lineColor)
+            drawLine(start, target, lineColor)
 
-                    val deltaX = target.x - start.x
-                    val deltaZ = target.z - start.z
-                    val horizontalLength = hypot(deltaX, deltaZ)
-                    if (horizontalLength > 1e-6) {
-                        val markerEnd = Vec3(
-                            start.x + deltaX / horizontalLength * 2.0,
-                            start.y,
-                            start.z + deltaZ / horizontalLength * 2.0
-                        )
-                        addVertex(pose, start).setColor(lineColor)
-                        addVertex(pose, markerEnd).setColor(lineColor)
-                    }
-                }
+            val deltaX = target.x - start.x
+            val deltaZ = target.z - start.z
+            val horizontalLength = hypot(deltaX, deltaZ)
+            if (horizontalLength > 1e-6) {
+                val markerEnd = Vec3(
+                    start.x + deltaX / horizontalLength * 2.0,
+                    start.y,
+                    start.z + deltaZ / horizontalLength * 2.0
+                )
+                drawLine(start, markerEnd, lineColor)
             }
         }
     }
@@ -481,10 +463,6 @@ object ModuleStrongholdFinder : ClientModule(
 
     private fun isOverworld(): Boolean {
         return world.dimension() == Level.OVERWORLD
-    }
-
-    private fun vectorToYaw(dx: Double, dz: Double): Float {
-        return Mth.wrapDegrees(atan2(dz, dx).toDegrees().toFloat() - 90f)
     }
 
     private data class PendingThrow(

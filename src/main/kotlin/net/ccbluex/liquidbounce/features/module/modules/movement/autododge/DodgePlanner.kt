@@ -23,7 +23,6 @@ import net.ccbluex.fastutil.mapToDoubleArray
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -34,8 +33,6 @@ import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.ccbluex.liquidbounce.utils.raytracing.rayTraceCollidingBlocks
 import net.minecraft.world.phys.Vec3
-import kotlin.math.cos
-import kotlin.math.sin
 
 data class DodgePlan(
     val directionalInput: DirectionalInput,
@@ -181,7 +178,7 @@ class DodgePlanner(
 
     private fun getEffectiveLossByInoptimalAngle(actualAngle: Float): Double {
         // This vector represents the angle that we are currently moving in
-        val angleVec = Vec3(-sin(actualAngle.toRadians().toDouble()), 0.0, cos(actualAngle.toRadians().toDouble()))
+        val angleVec = Vec3.directionFromRotation(0f, actualAngle)
 
         // Here we project the optimal dodge position onto the angle vector. This gives us the effective loss
         return similarity(angleVec, optimalDodgePosRelativeToPlayer)
@@ -270,7 +267,7 @@ private fun getDangerZoneBorders(
     baseLine: Line,
     distanceFromBaseLine: Double,
 ): Array<Line> {
-    val orthoVecToBaseLine = baseLine.direction.cross(Vec3(0.0, 1.0, 0.0)).normalize()
+    val orthoVecToBaseLine = baseLine.direction.cross(Vec3.Y_AXIS).normalize()
 
     val orthoOffsetVec = orthoVecToBaseLine.scale(distanceFromBaseLine)
 

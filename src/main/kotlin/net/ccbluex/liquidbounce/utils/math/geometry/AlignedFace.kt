@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -51,11 +52,7 @@ class AlignedFace(from: Vec3, to: Vec3) {
         }
 
     val center: Vec3
-        get() = Vec3(
-            (to.x + from.x) * 0.5,
-            (to.y + from.y) * 0.5,
-            (to.z + from.z) * 0.5
-        )
+        get() = from.lerp(to, 0.5)
 
     val dimensions: Vec3
         get() = Vec3(
@@ -64,47 +61,20 @@ class AlignedFace(from: Vec3, to: Vec3) {
             to.z - from.z,
         )
 
-    fun requireNonEmpty(): AlignedFace? {
-        if (Mth.equal(area, 0.0)) {
-            return null
-        }
+    fun requireNonEmpty(): AlignedFace? =
+        takeUnless { Mth.equal(area, 0.0) }
 
-        return this
-    }
-
-    fun truncateY(minY: Double): AlignedFace {
-        return AlignedFace(
+    fun truncateY(minY: Double): AlignedFace =
+        AlignedFace(
             Vec3(from.x, from.y.coerceAtLeast(minY), from.z),
             Vec3(to.x, to.y.coerceAtLeast(minY), to.z)
         )
-    }
 
-    fun clamp(box: AABB): AlignedFace {
-        val xRange = box.minX..box.maxX
-        val yRange = box.minY..box.maxY
-        val zRange = box.minZ..box.maxZ
+    fun clamp(box: AABB): AlignedFace = AlignedFace(box.getNearestPoint(from), box.getNearestPoint(to))
 
-        return AlignedFace(
-            Vec3(
-                from.x.coerceIn(xRange),
-                from.y.coerceIn(yRange),
-                from.z.coerceIn(zRange)
-            ),
-            Vec3(
-                to.x.coerceIn(xRange),
-                to.y.coerceIn(yRange),
-                to.z.coerceIn(zRange)
-            )
-        )
-    }
+    fun offset(vec: Vec3): AlignedFace = AlignedFace(from + vec, to + vec)
 
-    fun offset(vec: Vec3): AlignedFace {
-        return AlignedFace(from + vec, to + vec)
-    }
-
-    fun offset(vec: Vec3i): AlignedFace {
-        return AlignedFace(from + vec, to + vec)
-    }
+    fun offset(vec: Vec3i): AlignedFace = AlignedFace(from + vec, to + vec)
 
     fun randomPointOnFace(): Vec3 {
         return Vec3(
@@ -134,21 +104,8 @@ class AlignedFace(from: Vec3, to: Vec3) {
     }
 
     fun toPlane(): NormalizedPlane {
-        val dims = dimensions
-
-        val xy = Vec3(
-            dims.x,
-            dims.y,
-            0.0
-        )
-
-        val zy = Vec3(
-            0.0,
-            dims.y,
-            dims.z
-        )
-
-        return NormalizedPlane.fromParams(from, xy, zy)
+        val (directionA, directionB) = getDirectionVectors()
+        return NormalizedPlane.fromParams(from, directionA, directionB)
     }
 
     fun nearestPointTo(otherLine: LinearGeometry3): Vec3 {
@@ -156,11 +113,12 @@ class AlignedFace(from: Vec3, to: Vec3) {
         val plane = NormalizedPlane.fromParams(from, d1, d2)
         val edges = getEdges()
         val intersection = plane.intersection(otherLine)
+        val faceCenter = center
 
         if (intersection != null) {
             val isIntersectionInFace = edges.all {
                 val lineCenter = it.pointAt(0.5)
-                val lineCenterToFaceCenter = lineCenter.subtract(center)
+                val lineCenterToFaceCenter = lineCenter.subtract(faceCenter)
                 val lineCenterToIntersection = lineCenter.subtract(intersection)
                 lineCenterToIntersection.dot(lineCenterToFaceCenter) > 0.0
             }
@@ -175,7 +133,7 @@ class AlignedFace(from: Vec3, to: Vec3) {
             p1.distanceToSqr(p2) to p1
         }.minByOrNull { it.first }
 
-        return minDistanceToBorder?.second ?: intersection ?: center
+        return minDistanceToBorder?.second ?: intersection ?: faceCenter
     }
 
     private fun getEdges(): List<LineSegment> = buildList(4) {

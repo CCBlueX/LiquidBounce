@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -29,10 +30,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
 import net.ccbluex.liquidbounce.utils.render.entity
+import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import java.time.Instant
@@ -45,6 +47,8 @@ import java.util.UUID
  */
 object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
 
+    private val enableSendInChat by boolean("SendInChat", default = true)
+
     @JvmRecord
     private data class LoggedOffPlayer(
         val time: Instant,
@@ -56,7 +60,9 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
     @Suppress("unused")
     private val entityRemoveHandler = handler<WorldEntityRemoveEvent> { event ->
         val entity = event.entity
-        if (entity !is Player || isLogoffEntity(entity.id)) {
+        if (entity !is Player
+            || isLogoffEntity(entity.id)
+            || ModuleBlink.isDummyPlayer(entity.id)) {
             return@handler
         }
 
@@ -66,13 +72,16 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
         clone.yHeadRot = entity.yHeadRot
         clone.copyPosition(entity)
         clone.setUUID(UUID.randomUUID())
+        clone.id = world.nextLocalEntityId()
         clone.inventory.replaceWith(entity.inventory)
         clone.health = entity.getActualHealth()
         world.addEntity(clone)
         lastSeenPlayers[entity.uuid] = LoggedOffPlayer(Instant.now(), clone)
 
         val blockPos = entity.blockPosition()
-        chat(regular(message("disappeared", entity.scoreboardName, blockPos.x, blockPos.y, blockPos.z)))
+        if (enableSendInChat) {
+            chat(regular(message("disappeared", entity.scoreboardName, blockPos.x, blockPos.y, blockPos.z)))
+        }
     }
 
     @Suppress("unused")
@@ -82,11 +91,11 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
             val blockPos = playerEntity.blockPosition()
 
             if (!world.isLoaded(blockPos)) {
-                chat(regular(message("unloaded", playerEntity.scoreboardName)))
+                if (enableSendInChat) chat(regular(message("unloaded", playerEntity.scoreboardName)))
                 world.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
                 true
             } else if (world.getPlayerByUUID(id) != null) {
-                chat(regular(message("reappeared", playerEntity.scoreboardName)))
+                if (enableSendInChat) chat(regular(message("reappeared", playerEntity.scoreboardName)))
                 world.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_WITH_PLAYER)
                 true
             } else {
@@ -104,16 +113,13 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is ServerboundInteractPacket) {
-            if (isLogoffEntity(packet.entityId)) {
-                event.cancelEvent()
-            }
+        if (isLogoffEntity(packet.entityIdC2SInteractOrAttack ?: return@handler)) {
+            event.cancelEvent()
         }
     }
 
     override fun onDisabled() {
-        for (loggedOffPlayer in lastSeenPlayers.values) {
-            val playerEntity = loggedOffPlayer.entity
+        for ((_, playerEntity) in lastSeenPlayers.values) {
             // Use [mc.world] instead of [world] to prevent NPE when the module is disabled
             // outside the game
             mc.level?.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
@@ -128,6 +134,6 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
     }
 
     fun isLogoffEntity(entityId: Int) = this.running
-        && lastSeenPlayers.any { (_, logOffPlayer) -> logOffPlayer.entity.id == entityId }
+        && lastSeenPlayers.values.any { (_, playerEntity) -> playerEntity.id == entityId }
 
 }

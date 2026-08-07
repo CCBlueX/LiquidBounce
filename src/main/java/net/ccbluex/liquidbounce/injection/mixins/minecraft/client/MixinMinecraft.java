@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.platform.Window;
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -37,22 +39,22 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAc
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
-import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityAccessor;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
+import net.ccbluex.liquidbounce.render.ClientTesselator;
+import net.ccbluex.liquidbounce.render.buffers.StaticGpuBufferPool;
+import net.ccbluex.liquidbounce.render.mesh.MeshDraw;
+import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.MouseHandler;
 import net.minecraft.client.Options;
 import net.minecraft.client.User;
-import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
-import net.minecraft.client.gui.screens.Overlay;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -61,19 +63,20 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.component.AttackRange;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -101,29 +104,15 @@ public abstract class MixinMinecraft {
     @Nullable
     public MultiPlayerGameMode gameMode;
 
-    @Inject(method = "useAmbientOcclusion()Z", at = @At("HEAD"), cancellable = true)
-    private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
-        ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning() || !module.getFullBright()) {
-            return;
-        }
-
-        callback.setReturnValue(false);
-        callback.cancel();
-    }
-
     @Shadow
     @Nullable
     public abstract ClientPacketListener getConnection();
 
     @Shadow
-    public abstract @org.jetbrains.annotations.Nullable ServerData getCurrentServer();
+    public abstract @Nullable ServerData getCurrentServer();
 
     @Shadow
     public abstract Window getWindow();
-
-    @Shadow
-    public abstract void setScreen(@org.jetbrains.annotations.Nullable Screen screen);
 
     @Shadow
     public abstract int getFps();
@@ -132,42 +121,36 @@ public abstract class MixinMinecraft {
     public abstract User getUser();
 
     @Shadow
-    @org.jetbrains.annotations.Nullable
-    public Screen screen;
-
-    @Shadow
     protected abstract void continueAttack(boolean breaking);
 
     @Shadow
-    private @org.jetbrains.annotations.Nullable Overlay overlay;
-
-    @Shadow
-    @org.jetbrains.annotations.Nullable
+    @Nullable
     public ClientLevel level;
 
+    @Shadow
+    @Final
+    public Gui gui;
+
     /**
-     * Entry point of our hacked client
-     *
-     * @param callback not needed
+     * Entry point
      */
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;resizeDisplay()V"))
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;resizeGui()V"))
     private void startClient(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(ClientStartEvent.INSTANCE);
     }
 
     /**
-     * Exit point of our hacked client
-     *
-     * @param callback not needed
+     * Exit point
      */
-    @Inject(method = "destroy", at = @At("HEAD"))
+    @Inject(method = "close", at = @At("HEAD"))
     private void stopClient(CallbackInfo callback) {
+        MeshDraw.DefaultUploader.close();
         EventManager.INSTANCE.callEvent(ClientShutdownEvent.INSTANCE);
     }
 
     @Inject(method = "<init>", at = @At(value = "FIELD",
-            target = "Lnet/minecraft/client/Minecraft;profileKeyPairManager:Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;",
-            ordinal = 0, shift = At.Shift.AFTER))
+        target = "Lnet/minecraft/client/Minecraft;profileKeyPairManager:Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;",
+        ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void onSessionInit(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(new SessionEvent(getUser()));
     }
@@ -251,57 +234,11 @@ public abstract class MixinMinecraft {
     }
 
     /**
-     * Fixes recursive screen opening,
-     * this is usually caused by another mod such as Lunar Client.
-     * Can also happen when opening a screen during [ScreenEvent].
-     */
-    @Unique
-    private boolean recursiveScreenOpening = false;
-
-    /**
-     * Handle opening screens
-     *
-     * @param screen       to be opened (null = no screen at all)
-     * @param callbackInfo callback
-     */
-    @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
-    private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
-        if (recursiveScreenOpening) {
-            return;
-        }
-
-        try {
-            recursiveScreenOpening = true;
-
-            var event = EventManager.INSTANCE.callEvent(new ScreenEvent(screen));
-            if (event.isCancelled()) {
-                callbackInfo.cancel();
-            }
-        } finally {
-            recursiveScreenOpening = false;
-        }
-
-        // Who need this GUI?
-        if (screen instanceof AccessibilityOnboardingScreen) {
-            callbackInfo.cancel();
-            this.setScreen(new TitleScreen(true));
-        }
-    }
-
-    @Redirect(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MouseHandler;releaseMouse()V"))
-    private void cancelScreenMouseForChestStealer(MouseHandler instance) {
-        // Allows rotation.
-        if (!LiquidBounce.INSTANCE.isInitialized() ||
-            !FeatureSilentScreen.INSTANCE.getShouldHide() || FeatureSilentScreen.INSTANCE.getUnlockCursor()) {
-            instance.releaseMouse();
-        }
-    }
-
-    /**
      * Hook game tick event at HEAD
      */
     @Inject(method = "tick", at = @At("HEAD"))
     private void hookTickEvent(CallbackInfo callbackInfo) {
+        CoroutineTicker.INSTANCE.beginMinecraftTick();
         TickLoopTaskExecutor.INSTANCE.onTickLoopStart();
         CoroutineTicker.INSTANCE.tick();
         EventManager.INSTANCE.callEvent(GameTickEvent.INSTANCE);
@@ -321,6 +258,8 @@ public abstract class MixinMinecraft {
         if (TickLoopTaskExecutor.INSTANCE.isInTickLoop()) {
             TickLoopTaskExecutor.INSTANCE.onTickLoopCompleted();
         }
+
+        CoroutineTicker.INSTANCE.endMinecraftTick();
     }
 
     /**
@@ -347,14 +286,14 @@ public abstract class MixinMinecraft {
     /**
      * Hook item use cooldown
      */
-    @Inject(method = "startUseItem", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelay:I", shift = At.Shift.AFTER))
+    @Inject(method = "startUseItem", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelay:I", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void hookItemUseCooldown(CallbackInfo callbackInfo) {
         UseCooldownEvent useCooldownEvent = new UseCooldownEvent(rightClickDelay);
         EventManager.INSTANCE.callEvent(useCooldownEvent);
         rightClickDelay = useCooldownEvent.getCooldown();
     }
 
-    @Inject(method = "pickBlock", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "pickBlockOrEntity", at = @At("HEAD"), cancellable = true)
     private void hookItemPick(CallbackInfo ci) {
         if (ModuleMiddleClickAction.Pearl.INSTANCE.cancelPick()) {
             ci.cancel();
@@ -362,7 +301,7 @@ public abstract class MixinMinecraft {
     }
 
     @ModifyExpressionValue(method = "startAttack",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0))
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0, opcode = Opcodes.GETFIELD))
     private int injectNoMissCooldown(int original) {
         if (ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown()) {
             return 0;
@@ -394,7 +333,7 @@ public abstract class MixinMinecraft {
     }
 
     @WrapWithCondition(method = "startAttack", at = @At(value = "FIELD",
-            target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 1))
+        target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 1, opcode = Opcodes.PUTFIELD))
     private boolean disableAttackCooldown(Minecraft instance, int value) {
         return !(ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown());
     }
@@ -419,8 +358,8 @@ public abstract class MixinMinecraft {
         EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
     }
 
-    @Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I",
-            ordinal = 0, shift = At.Shift.AFTER))
+    @Inject(method = "renderFrame", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I",
+        ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTSTATIC))
     private void hookFpsChange(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new FpsChangeEvent(this.getFps()));
     }
@@ -443,10 +382,10 @@ public abstract class MixinMinecraft {
     /**
      * Alternative input handler of [handleInputEvents] while being inside a client-side screen.
      */
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 4, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
-    private void passthroughInputHandler(CallbackInfo ci, @Local ProfilerFiller profiler) {
-        if (this.overlay == null && this.player != null && this.level
-            != null && ScreenManager.isClientScreen(this.screen)) {
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;screen()Lnet/minecraft/client/gui/screens/Screen;", ordinal = 1, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
+    private void passthroughInputHandler(CallbackInfo ci, @Local(name = "profiler") ProfilerFiller profiler) {
+        if (this.gui.overlay() == null && this.player != null && this.level
+            != null && ScreenManager.isClientScreen(this.gui.screen())) {
             profiler.popPush("Keybindings");
 
             if (ModuleAutoBreak.INSTANCE.getEnabled()) {
@@ -473,11 +412,11 @@ public abstract class MixinMinecraft {
         return false;
     }
 
-    @WrapWithCondition(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0))
+    @WrapWithCondition(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0, opcode = Opcodes.PUTFIELD))
     private boolean injectFixAttackCooldownOnVirtualBrowserScreen(Minecraft instance, int value) {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.
-        return !ScreenManager.isClientScreen(this.screen);
+        return !ScreenManager.isClientScreen(this.gui.screen());
     }
 
     @Inject(method = "clearDownloadedResourcePacks", at = @At("HEAD"))
@@ -496,5 +435,60 @@ public abstract class MixinMinecraft {
             ModuleNoBlockInteract.INSTANCE.startSneaking();
             ci.cancel();
         }
+    }
+
+    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;submit()V", shift = At.Shift.BEFORE))
+    private void endDynamicGpuBufferFrame(boolean advanceGameTime, CallbackInfo ci) {
+        MeshDraw.DefaultUploader.endFrame();
+    }
+
+    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;endFrame()V", shift = At.Shift.AFTER))
+    private void onFlipFrame(boolean advanceGameTime, CallbackInfo ci) {
+        RenderingDebug.flipFrame();
+        ClientTesselator.Shared.clear();
+        StaticGpuBufferPool.cleanup();
+    }
+
+    @WrapOperation(method = "pick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;raycastHitResult(FLnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/phys/HitResult;"))
+    private HitResult updateTargetedEntityInvoke(LocalPlayer instance, float a, Entity cameraEntity, Operation<HitResult> original) {
+        HitResult result;
+        if (cameraEntity == instance && ModuleFreeCam.shouldCameraInteractActive()) {
+            final Vec3 position = cameraEntity.position();
+            final AABB boundingBox = cameraEntity.getBoundingBox();
+            final Vec3 lastPosition = new Vec3(cameraEntity.xo, cameraEntity.yo, cameraEntity.zo);
+            final float yRot = cameraEntity.getYRot();
+            final float xRot = cameraEntity.getXRot();
+            final float yRot0 = cameraEntity.yRotO;
+            final float xRot0 = cameraEntity.xRotO;
+
+            final Vec3 cameraPosition = ModuleFreeCam.PositionState.pos.subtract(0.0, cameraEntity.getEyeHeight(), 0.0);
+            ((MixinEntityAccessor) cameraEntity).position(cameraPosition);
+            cameraEntity.setBoundingBox(boundingBox.move(cameraPosition.subtract(position)));
+            cameraEntity.xo = ModuleFreeCam.PositionState.lastPos.x;
+            cameraEntity.yo = ModuleFreeCam.PositionState.lastPos.y - cameraEntity.getEyeHeight();
+            cameraEntity.zo = ModuleFreeCam.PositionState.lastPos.z;
+            ((MixinEntityAccessor) cameraEntity).yRot(ModuleFreeCam.PositionState.rot.yRot());
+            ((MixinEntityAccessor) cameraEntity).xRot(ModuleFreeCam.PositionState.rot.xRot());
+            cameraEntity.yRotO = ModuleFreeCam.PositionState.lastRot.yRot();
+            cameraEntity.xRotO = ModuleFreeCam.PositionState.lastRot.xRot();
+
+            try {
+                result = original.call(instance, a, cameraEntity);
+            } finally {
+                ((MixinEntityAccessor) cameraEntity).position(position);
+                cameraEntity.setBoundingBox(boundingBox);
+                cameraEntity.xo = lastPosition.x;
+                cameraEntity.yo = lastPosition.y;
+                cameraEntity.zo = lastPosition.z;
+                ((MixinEntityAccessor) cameraEntity).yRot(yRot);
+                ((MixinEntityAccessor) cameraEntity).xRot(xRot);
+                cameraEntity.yRotO = yRot0;
+                cameraEntity.xRotO = xRot0;
+            }
+        } else {
+            result = original.call(instance, a, cameraEntity);
+        }
+
+        return result;
     }
 }

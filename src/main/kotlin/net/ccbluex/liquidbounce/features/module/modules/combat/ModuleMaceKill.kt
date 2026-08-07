@@ -22,12 +22,9 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.warp
-import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.math.allEmpty
 import net.minecraft.world.item.Items
-import net.minecraft.world.phys.shapes.Shapes
 import kotlin.math.abs
 import kotlin.math.ceil
 
@@ -80,7 +77,7 @@ object ModuleMaceKill : ClientModule("MaceKill", ModuleCategories.COMBAT) {
             val newBoundingBox = boundingBox.move(0.0, i.toDouble(), 0.0)
 
             // Check if the player would collide with a block
-            if (world.getBlockCollisions(player, newBoundingBox).all(Shapes.empty()::equals)) {
+            if (world.getBlockCollisions(player, newBoundingBox).allEmpty()) {
                 return i
             }
         }

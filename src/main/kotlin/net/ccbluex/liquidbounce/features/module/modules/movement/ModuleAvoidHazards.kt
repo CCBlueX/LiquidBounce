@@ -88,7 +88,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent>(priority = SAFETY_FEATURE) { event ->
-        if (mode != AvoidMode.MOVEMENT || !event.directionalInput.isMoving) {
+        if (mode != AvoidMode.INPUT || !event.directionalInput.isMoving) {
             return@handler
         }
 
@@ -216,9 +216,12 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         }
     }
 
-    private enum class AvoidMode(override val tag: String) : Tagged {
+    private enum class AvoidMode(
+        override val tag: String,
+        override val tagAliases: List<String> = emptyList(),
+    ) : Tagged {
         SHAPE("Shape"),
-        MOVEMENT("Movement"),
+        INPUT("Input", listOf("Movement")),
     }
 
     private enum class Avoid(

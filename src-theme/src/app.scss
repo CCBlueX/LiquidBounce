@@ -1,4 +1,4 @@
-@use "colors.scss" as *;
+@use "colors.scss";
 
 @font-face {
     font-family: "Inter";
@@ -54,6 +54,6 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: $accent-color;
+    background-color: var(--accent-color);
     border-radius: 10px;
 }

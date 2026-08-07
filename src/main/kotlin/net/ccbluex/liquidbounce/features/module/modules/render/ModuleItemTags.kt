@@ -47,9 +47,11 @@ import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.core.component.DataComponentPatch
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.filter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -131,7 +133,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
         }),
 
         /**
-         * [ItemStack]s with same [Item] and same [DataComponentPatch] will be merged.
+         * [ItemStack]s with same [Item] and same [net.minecraft.core.component.DataComponentPatch] will be merged.
          */
         BY_COMPONENTS("ByComponents", { stacks ->
             val map = Object2IntOpenHashMap<ItemAndComponents>()
@@ -154,9 +156,9 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
         initialValue = ObjectArrayList()
     ) { _, groups ->
         @Suppress("UNCHECKED_CAST")
-        val entities = world.entitiesForRendering().filter {
-            it is ItemEntity && filter(it.item.item, items)
-        } as List<ItemEntity>
+        val entities = world.entityGetter.filter(EntityTypes.ITEM) {
+            filter(it.item.item, items)
+        }
 
         groups.clear()
         val visited = ReferenceOpenHashSet<ItemEntity>()
@@ -211,7 +213,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
             if (Shulker.enabled) {
                 result.stacks.forEach { stack ->
                     val containerComponent = stack[DataComponents.CONTAINER] ?: return@forEach
-                    val stacks = containerComponent.nonEmptyStream().toTypedArray()
+                    val stacks = containerComponent.nonEmptyItemCopyStream().toTypedArray()
                     if (stacks.isEmpty()) {
                         return@forEach
                     }

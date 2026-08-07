@@ -28,11 +28,12 @@ import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
-import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
+import net.ccbluex.liquidbounce.api.services.client.ClientUpdate
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
@@ -86,13 +87,13 @@ import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
 import java.io.InputStream
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
 
 /**
@@ -195,11 +196,11 @@ object LiquidBounce : EventListener {
     private fun initializeClient(
         workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
-    ): CompletableFuture<Unit> = CoroutineScope(
+    ): CompletableFuture<Void?> = CoroutineScope(
         renderThreadDispatcher + CoroutineName("$CLIENT_NAME Initializer")
-    ).future {
+    ).future<Void?> {
         if (isInitialized) {
-            return@future
+            return@future null
         }
 
         // Ensure we are on the render thread
@@ -236,6 +237,7 @@ object LiquidBounce : EventListener {
 
         isInitialized = true
         logger.info("$CLIENT_NAME has been successfully initialized.")
+        null
     }.exceptionally { throwable ->
         ErrorHandler.fatal(throwable, additionalMessage = "$CLIENT_NAME initializer")
     }
@@ -249,7 +251,6 @@ object LiquidBounce : EventListener {
     ) = withContext(renderThreadDispatcher) {
         // Script system
         val scriptEngineJob = launch(workerDispatcher) {
-            EnvironmentRemapper
             runCatching(ScriptManager::initializeEngine).onFailure { error ->
                 logger.error("[ScriptAPI] Failed to initialize script engine.", error)
             }
@@ -321,7 +322,7 @@ object LiquidBounce : EventListener {
                 LanguageManager.loadDefault()
             }
             launch {
-                val update = update ?: return@launch
+                val update = withTimeoutOrNull(8.seconds) { ClientUpdate.update.await() } ?: return@launch
                 logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
             }
             launch {
@@ -363,7 +364,6 @@ object LiquidBounce : EventListener {
         }
 
         logger.info("API initialization done.")
-
     }
 
     /**
@@ -399,8 +399,10 @@ object LiquidBounce : EventListener {
                 runCatching {
                     DeepLearningEngine.init(task)
                     ModelManager.load()
+                    DeepLearningEngine.markInitialized()
                 }.onFailure { exception ->
                     task.subTasks.clear()
+                    DeepLearningEngine.markUnavailable()
 
                     // LiquidBounce can still run without deep learning,
                     // and we don't want to crash the client if it fails.
@@ -439,7 +441,13 @@ object LiquidBounce : EventListener {
 
         // Unregister all event listener and stop all running tasks
         ChunkScanner.stopThread()
+        FontManager.closeGlyphManager()
         EventManager.unregisterAll()
+
+        // Shutdown HTTP server
+        ioScope.launch {
+            ClientInteropServer.stop()
+        }
 
         // Save all configurations
         ConfigSystem.storeAll()
@@ -493,7 +501,7 @@ object LiquidBounce : EventListener {
 
         if (!taskManager.isCompleted && event.screen !is TaskProgressScreen) {
             event.cancelEvent()
-            mc.setScreen(TaskProgressScreen("Loading Required Libraries", taskManager))
+            mc.gui.setScreen(TaskProgressScreen("Loading Required Libraries", taskManager))
         }
     }
 
@@ -503,7 +511,7 @@ object LiquidBounce : EventListener {
      *
      * For now this is only used to check for updates and request additional information from the internet.
      *
-     * @see net.fabricmc.fabric.api.resource.v1.reloader.SimpleResourceReloader
+     * @see net.fabricmc.fabric.api.resource.v1.reloader.SimpleReloadListener
      * @see PreparableReloadListener
      */
     private object ClientResourceReloader : PreparableReloadListener {
@@ -517,11 +525,10 @@ object LiquidBounce : EventListener {
                 .thenCompose {
                     val prepareDispatcher = prepareExecutor.asCoroutineDispatcher()
                     val applyDispatcher = applyExecutor.asCoroutineDispatcher()
-                    @Suppress("UNCHECKED_CAST") // Kotlin Unit to Java Void
                     initializeClient(
                         workerDispatcher = prepareDispatcher,
                         renderThreadDispatcher = applyDispatcher,
-                    ) as CompletableFuture<Void>
+                    )
                 }
         }
 

@@ -83,7 +83,7 @@
   .divider::after {
     content: '';
     position: absolute;
-    background-color: color.adjust($clickgui-text-color, $lightness: -85%);
+    background-color: color-mix(in srgb, var(--clickgui-text-color) 15%, black);
     left: 0;
     top: 7px;
     bottom: 7px;

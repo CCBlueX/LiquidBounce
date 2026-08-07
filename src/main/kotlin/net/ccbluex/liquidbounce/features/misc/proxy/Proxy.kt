@@ -95,7 +95,7 @@ data class Proxy(
                 proxyText.count { it == ':' } == 3 -> {
                     val parts = proxyText.split(":", limit = 4)
 
-                    return when {
+                    when {
                         // host:port:username:password
                         parts[1].isValidPort() -> Proxy(
                             parts[0],

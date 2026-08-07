@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.mcef.MCEFAccelerationSupport
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.QuickFix
 import net.ccbluex.liquidbounce.utils.client.error.errors.JcefIsntCompatible
-import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
+import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
@@ -129,20 +129,18 @@ class CefBrowserBackend : BrowserBackend, EventListener {
     fun cleanup() {
         if (cacheFolder.exists()) {
             runCatching {
-                cacheFolder.listFiles()
-                    ?.filter { file ->
-                        file.isDirectory && System.currentTimeMillis() - file.lastModified() > CACHE_CLEANUP_THRESHOLD
+                cacheFolder.listFiles { file ->
+                    file.isDirectory && System.currentTimeMillis() - file.lastModified() > CACHE_CLEANUP_THRESHOLD
+                }?.sumOf { file ->
+                    try {
+                        val fileSize = file.walkTopDown().sumOf { uFile -> uFile.length() }
+                        file.deleteRecursively()
+                        fileSize
+                    } catch (e: Exception) {
+                        logger.error("Failed to clean up old cache directory", e)
+                        0
                     }
-                    ?.sumOf { file ->
-                        try {
-                            val fileSize = file.walkTopDown().sumOf { uFile -> uFile.length() }
-                            file.deleteRecursively()
-                            fileSize
-                        } catch (e: Exception) {
-                            logger.error("Failed to clean up old cache directory", e)
-                            0
-                        }
-                    } ?: 0
+                } ?: 0
             }.onFailure {
                 // Not a big deal, not fatal.
                 logger.error("Failed to clean up old JCEF cache directories", it)

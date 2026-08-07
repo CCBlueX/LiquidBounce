@@ -56,7 +56,7 @@
 
   .setting {
     padding: 7px 0;
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
   }
 
   .head {
@@ -72,7 +72,7 @@
   }
 
   .title {
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     font-size: 12px;
     font-weight: 600;
   }

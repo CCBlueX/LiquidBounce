@@ -2,9 +2,6 @@
   "bonk": {
     "sounds": ["liquidbounce:bonk"]
   },
-  "click": {
-    "sounds": ["liquidbounce:click"]
-  },
   "pop": {
     "sounds": ["liquidbounce:pop"]
   },
@@ -74,10 +71,40 @@
   "soft": {
     "sounds": ["liquidbounce:soft"]
   },
-  "magicsquash": {
-    "sounds": ["liquidbounce:magicsquash"]
+  "magic_squash": {
+    "sounds": ["liquidbounce:magic_squash"]
   },
   "squash": {
     "sounds": ["liquidbounce:squash"]
+  },
+  "aimbooster": {
+    "sounds": ["liquidbounce:aimbooster"]
+  },
+  "schoolboy": {
+    "sounds": ["liquidbounce:schoolboy"]
+  },
+  "bump": {
+    "sounds": ["liquidbounce:bump"]
+  },
+  "brick": {
+    "sounds": ["liquidbounce:brick"]
+  },
+  "applepay": {
+    "sounds": ["liquidbounce:applepay"]
+  },
+  "coin": {
+    "sounds": ["liquidbounce:coin"]
+  },
+  "osu": {
+    "sounds": ["liquidbounce:osu"]
+  },
+  "skeet": {
+    "sounds": ["liquidbounce:skeet"]
+  },
+  "slap": {
+    "sounds": ["liquidbounce:slap"]
+  },
+  "tf2-crit": {
+    "sounds": ["liquidbounce:tf2-crit"]
   }
 }

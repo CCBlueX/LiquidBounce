@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
-import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_HORIZONTAL
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.immutable
@@ -50,6 +49,7 @@ import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.WebBlock
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.AABB
@@ -176,7 +176,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             // Eye above web => standard "place on top" path is most reliable.
             eyes.y > webBox.maxY -> buildTopPlaceAction(webPos, waterSlot)
             // Otherwise keep side-only fallback to avoid clicking through the lower half.
-            else -> buildDirectionalPlaceAction(webPos, waterSlot, DIRECTIONS_HORIZONTAL)
+            else -> buildDirectionalPlaceAction(webPos, waterSlot, Direction.BY_2D_DATA)
         }
     }
 
@@ -297,7 +297,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         pickupPos: BlockPos,
         pickupCenter: Vec3,
     ): BlockHitResult {
-        val fluidTraceResult = traceFromPlayer(includeFluids = true)
+        val fluidTraceResult = traceFromPlayer(fluid = ClipContext.Fluid.SOURCE_ONLY)
         return when {
             // Prefer fluid-inclusive trace so we can hit source blocks hidden behind web geometry.
             fluidTraceResult.type == HitResult.Type.BLOCK && fluidTraceResult.blockPos == pickupPos -> {
@@ -326,8 +326,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             .filter { side ->
                 val adjacentState = webPos.relative(side).getState() ?: return@filter false
                 // Find a replaceable side to place water
-                adjacentState.isAir ||
-                    (adjacentState.fluidState.`is`(Fluids.LAVA) && adjacentState.fluidState.isSource)
+                adjacentState.isAir || adjacentState.fluidState.isSourceOfType(Fluids.LAVA)
             }
             .maxByOrNull { side ->
                 player.lookAngle.dot(side.unitVec3)

@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
@@ -33,8 +32,12 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputListener
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
-import org.apache.logging.log4j.LogManager
+import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.minecraft.client.input.InputQuirks
 import org.apache.logging.log4j.Logger
+import org.joml.component1
+import org.joml.component2
+import org.lwjgl.glfw.GLFW
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -71,7 +74,7 @@ class CefBrowser(
             }
         }
 
-        logger = LogManager.getLogger("$CLIENT_NAME/CefBrowser/${browserApi.hashCode()}")
+        logger = clientLogger("CefBrowser/${browserApi.hashCode()}")
         logger.info("Initializing Browser API (url='$url')")
     }
 
@@ -166,8 +169,8 @@ class CefBrowser(
 
             return BrowserTexture(
                 browserApi.renderer.textureSetup!!,
-                viewport.height,
                 viewport.width,
+                viewport.height,
                 browserApi.renderer.isBGRA,
             )
         }
@@ -239,6 +242,11 @@ class CefBrowser(
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {
         browserApi.setFocus(true)
+
+        if (InputQuirks.REPLACE_CTRL_KEY_WITH_CMD_KEY && handleMacClipboardShortcut(keyCode, modifiers)) {
+            return
+        }
+
         browserApi.sendKeyPress(keyCode, scanCode.toLong(), modifiers)
     }
 
@@ -247,9 +255,38 @@ class CefBrowser(
         browserApi.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
     }
 
-    override fun charTyped(char: Char, modifiers: Int) {
+    override fun charTyped(codepoint: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyTyped(char, modifiers)
+        browserApi.sendKeyTyped(codepoint.toChar(), 0) // TODO: GLFW update removed modifiers here
+    }
+
+    // TODO: Temporary fix. Should be removed after fix in JCEF
+    private fun handleMacClipboardShortcut(keyCode: Int, modifiers: Int): Boolean {
+        val isCommandPressed = modifiers and GLFW.GLFW_MOD_SUPER != 0
+        if (!isCommandPressed) {
+            return false
+        }
+
+        val frame = browserApi.focusedFrame
+        return when (keyCode) {
+            GLFW.GLFW_KEY_C -> {
+                frame.copy()
+                true
+            }
+            GLFW.GLFW_KEY_V -> {
+                frame.paste()
+                true
+            }
+            GLFW.GLFW_KEY_X -> {
+                frame.cut()
+                true
+            }
+            GLFW.GLFW_KEY_A -> {
+                frame.selectAll()
+                true
+            }
+            else -> false
+        }
     }
 
     private fun comparePaintWithViewpoint(width: Int, height: Int) {

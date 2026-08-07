@@ -19,22 +19,30 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import io.netty.handler.codec.http.FullHttpResponse
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
 
-@Suppress("UNUSED_PARAMETER")
-fun getSpooferConfig(request: RequestObject): FullHttpResponse {
+// GET /api/v1/client/spoofer
+private fun Route.getSpooferConfig() = get {
     // Serialize MultiplayerConfigurable to JSON
-    return httpOk(ConfigSystem.serializeValueGroup(SpooferManager, gson = interopGson))
+    call.respond(ConfigSystem.serializeValueGroup(SpooferManager, gson = interopGson))
 }
 
-fun putSpooferConfig(request: RequestObject): FullHttpResponse {
-    ConfigSystem.deserializeValueGroup(SpooferManager, request.body.reader())
+// PUT /api/v1/client/spoofer
+private fun Route.putSpooferConfig() = put {
+    ConfigSystem.deserializeValueGroup(SpooferManager, call.receiveText().reader())
     ConfigSystem.store(SpooferManager)
-    return httpNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+}
+
+internal fun Route.spooferRoutes() = route("/spoofer") {
+    getSpooferConfig()
+    putSpooferConfig()
 }

@@ -304,7 +304,7 @@
     }
 
     & > span {
-      color: $clickgui-text-dimmed-color;
+      color: var(--clickgui-text-dimmed-color);
       display: flex;
       font-size: 15px;
       transition: color 0.3s ease;
@@ -316,7 +316,7 @@
       }
 
       & > span {
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
       }
     }
   }

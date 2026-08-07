@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
+import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
-import net.ccbluex.liquidbounce.api.thirdparty.translator.asLanguage
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
@@ -71,7 +71,9 @@ object CommandTranslate : Command.Factory {
 
             val text = texts.joinToString(" ")
             val result = GlobalSettingsAutoTranslate.translate(
-                sourceLanguage.asLanguage(), targetLanguage.asLanguage(), text
+                TranslateLanguage.of(sourceLanguage),
+                TranslateLanguage.of(targetLanguage),
+                text,
             )
 
             if (result is TranslationResult.Success) {

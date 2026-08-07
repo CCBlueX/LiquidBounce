@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Test
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.Test
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 
@@ -29,8 +29,8 @@ class NormalizedPlaneTest {
 
     @Test
     fun `yz aligned planes still intersect in a line`() {
-        val yPlane = NormalizedPlane(Vec3(0.0, 2.0, 0.0), Vec3(0.0, 1.0, 0.0))
-        val zPlane = NormalizedPlane(Vec3(0.0, 0.0, 3.0), Vec3(0.0, 0.0, 1.0))
+        val yPlane = NormalizedPlane(Vec3(0.0, 2.0, 0.0), Vec3.Y_AXIS)
+        val zPlane = NormalizedPlane(Vec3(0.0, 0.0, 3.0), Vec3.Z_AXIS)
 
         val intersection = yPlane.intersection(zPlane)
 
@@ -41,7 +41,7 @@ class NormalizedPlaneTest {
 
     @Test
     fun `plane intersection anchor lies on both planes in xz branch`() {
-        val yPlane = NormalizedPlane(Vec3(0.0, 2.0, 0.0), Vec3(0.0, 1.0, 0.0))
+        val yPlane = NormalizedPlane(Vec3(0.0, 2.0, 0.0), Vec3.Y_AXIS)
         val tiltedPlane = NormalizedPlane(Vec3(3.0, 2.0, 0.0), Vec3(1.0, 2.0, 0.0))
 
         val intersection = yPlane.intersection(tiltedPlane)
@@ -53,8 +53,8 @@ class NormalizedPlaneTest {
 
     @Test
     fun `parallel planes do not intersect in a line`() {
-        val first = NormalizedPlane(Vec3(0.0, 2.0, 0.0), Vec3(0.0, 1.0, 0.0))
-        val second = NormalizedPlane(Vec3(0.0, 4.0, 0.0), Vec3(0.0, 1.0, 0.0))
+        val first = NormalizedPlane(Vec3(0.0, 2.0, 0.0), Vec3.Y_AXIS)
+        val second = NormalizedPlane(Vec3(0.0, 4.0, 0.0), Vec3.Y_AXIS)
 
         assertNull(first.intersection(second))
     }
@@ -65,7 +65,7 @@ class NormalizedPlaneTest {
         for (parameter in doubleArrayOf(-1.0, 0.0, 1.0)) {
             val point = line.pointAt(parameter)
             val signedDistance = point.dot(plane.normalVec) - plane.pos.dot(plane.normalVec)
-            org.junit.jupiter.api.Assertions.assertTrue(
+            kotlin.test.assertTrue(
                 abs(signedDistance) <= tolerance,
                 "Expected point $point on plane ${plane.normalVec} @ ${plane.pos}, got signed distance $signedDistance",
             )

@@ -30,11 +30,12 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.getBlock
+import net.ccbluex.liquidbounce.utils.math.center
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
@@ -241,7 +242,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         val zones = computeZones(centers, world)
         val highlightIndex = findHighlightIndex(zones, playerPos = player.position())
 
-        renderEnvironmentForWorld(e.matrixStack) {
+        e.renderEnvironment {
             val camOffset = mc.entityRenderDispatcher.camera?.position()?.reverse() ?: return@handler
             drawZones(zones, centers, highlightIndex, camOffset)
             if (holdingProt) {

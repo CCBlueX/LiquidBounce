@@ -2,10 +2,10 @@
 @use "../../../../../colors.scss" as *;
 
 .item-background {
-  background-color: rgba($clickgui-base-color, 0.85);
-  outline: 1px solid color.adjust($clickgui-text-color, $lightness: -85%);
+  background-color: color-mix(in srgb, var(--clickgui-base-color) 85%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--clickgui-text-color) 15%, black);
 
   &:hover {
-    outline: 1px solid color.adjust($clickgui-text-color, $lightness: -70%);
+    outline: 1px solid color-mix(in srgb, var(--clickgui-text-color) 30%, black);
   }
 }

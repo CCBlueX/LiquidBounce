@@ -3,10 +3,9 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
 
     .button-container {
-      background-color: rgba($menu-base-color, 0.68);
+      background-color: var(--menu-button-container-background-color);
       padding: 15px 30px;
       width: max-content;
       border-radius: 5px;

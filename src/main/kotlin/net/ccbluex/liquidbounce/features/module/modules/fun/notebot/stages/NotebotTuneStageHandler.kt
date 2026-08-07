@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.stages
 
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NoteBlockTracker
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NotebotEngine
@@ -61,11 +62,11 @@ class NotebotTuneStageHandler(engine: NotebotEngine) : ModuleNotebot.NotebotStag
         val blocksAndRequirements = engine.blocksAndRequirements
 
         val requiredNotesByInstrument = blocksAndRequirements.requirements
-            .entries
+            .object2IntEntrySet()
             .flatMap { (note, requiredTimes) ->
                 List(requiredTimes) { note }
             }
-            .groupBy { it.instrumentEnum }
+            .groupByTo(enumMapOf()) { it.instrumentEnum }
 
         return buildMap<InstrumentNote, MutableList<NoteBlockTracker>> {
             for ((instrument, notesOfInstrument) in requiredNotesByInstrument) {
@@ -79,7 +80,11 @@ class NotebotTuneStageHandler(engine: NotebotEngine) : ModuleNotebot.NotebotStag
         blocksForInstrument: List<NoteBlockTracker>,
         notesOfInstrument: List<InstrumentNote>
     ) {
-        val availableBlocksSortedByPitch = blocksForInstrument.sortedBy { it.currentNote!! }
+        val availableBlocksSortedByPitch = blocksForInstrument.sortedBy { tracker ->
+            requireNotNull(tracker.currentNote) {
+                "Cannot assign note block at ${tracker.pos} because its current note is still unknown."
+            }
+        }
         val notesToAssignSortedByPitch = notesOfInstrument.sortedBy { it.noteValue }
 
         val availableBlocksQueue = ArrayDeque(availableBlocksSortedByPitch)
@@ -98,7 +103,7 @@ class NotebotTuneStageHandler(engine: NotebotEngine) : ModuleNotebot.NotebotStag
                 else -> availableBlocksQueue.removeLast()
             }
 
-            output.computeIfAbsent(note) { ArrayList() }.add(bestBlock)
+            output.getOrPut(note) { ArrayList() }.add(bestBlock)
         }
     }
 

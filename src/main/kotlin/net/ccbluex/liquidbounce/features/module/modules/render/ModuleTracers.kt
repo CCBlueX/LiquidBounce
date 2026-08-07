@@ -31,9 +31,7 @@ import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.drawLinesWithWidth
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.longLines
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
@@ -75,35 +73,29 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
             return@handler
         }
 
-        val matrixStack = event.matrixStack
+        event.renderEnvironment {
+            val eyeVector = Vec3f.eyeVector(camera)
 
-        renderEnvironmentForWorld(matrixStack) {
-            val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotateX(-camera.xRot().toRadians())
-                .rotateY(-camera.yRot().toRadians())
+            val maxDistanceSq = maximumDistance.sq()
+            for (entity in RenderedEntities) {
+                val distanceSq = entity.position().cameraDistanceSq().toFloat()
+                if (distanceSq > maxDistanceSq) {
+                    continue
+                }
 
-            longLines {
-                val maxDistanceSq = maximumDistance.sq()
-                for (entity in RenderedEntities) {
-                    val distanceSq = entity.position().cameraDistanceSq().toFloat()
-                    if (distanceSq > maxDistanceSq) {
-                        continue
-                    }
+                val color = if (FriendManager.isFriend(entity)) {
+                    Color4b.BLUE
+                } else {
+                    EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)
+                }
 
-                    val color = if (FriendManager.isFriend(entity)) {
-                        Color4b.BLUE
-                    } else {
-                        EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)
-                    }
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
+                val topPos = pos.add(0f, entity.bbHeight, 0f)
 
-                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
-                    val topPos = pos.add(0f, entity.bbHeight, 0f)
-
-                    if (lineWidth == 1.0f) {
-                        drawLines(color.argb, eyeVector, pos, pos, topPos)
-                    } else {
-                        drawLinesWithWidth(color.argb, lineWidth, eyeVector, pos, pos, topPos)
-                    }
+                if (lineWidth == 1.0f) {
+                    drawLines(color.argb, eyeVector, pos, pos, topPos)
+                } else {
+                    drawLinesWithWidth(color.argb, lineWidth, eyeVector, pos, pos, topPos)
                 }
             }
         }

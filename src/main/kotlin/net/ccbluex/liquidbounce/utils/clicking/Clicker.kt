@@ -114,7 +114,7 @@ open class Clicker<T>(
     var clickAmount: Int? = null
         private set
 
-    val isClickTick: Boolean
+    open val isClickTick: Boolean
         get() = willClickAt(0)
 
     val ticksUntilClick: Int

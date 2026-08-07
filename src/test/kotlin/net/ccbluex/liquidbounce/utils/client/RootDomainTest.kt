@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import net.ccbluex.liquidbounce.utils.text.dropPort
+import net.ccbluex.liquidbounce.utils.text.rootDomain
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class RootDomainTest {
 

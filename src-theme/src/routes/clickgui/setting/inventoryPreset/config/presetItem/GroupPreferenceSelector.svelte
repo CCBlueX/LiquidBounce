@@ -95,27 +95,27 @@
     margin-top: 20px;
     display: flex;
     gap: 2px;
-    outline: 1px solid rgba($accent-color, 0.3);
+    outline: 1px solid color-mix(in srgb, var(--accent-color) 30%, transparent);
     border-radius: 3px;
     padding: 2px;
 
     & > button {
       width: 100%;
       border: none;
-      background-color: rgba($clickgui-base-color, 0.3);
-      color: $clickgui-text-dimmed-color;
+      background-color: color-mix(in srgb, var(--clickgui-base-color) 30%, transparent);
+      color: var(--clickgui-text-dimmed-color);
       height: 25px;
       border-radius: 3px;
       cursor: pointer;
       transition: background-color 0.3s ease;
 
       &:hover {
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
       }
 
       &.active {
-        background-color: rgba($accent-color, 0.2);
-        color: $accent-color;
+        background-color: color-mix(in srgb, var(--accent-color) 20%, transparent);
+        color: var(--accent-color);
       }
 
       & > span {

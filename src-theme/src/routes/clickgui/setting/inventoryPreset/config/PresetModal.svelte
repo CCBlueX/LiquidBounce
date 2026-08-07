@@ -77,7 +77,7 @@
 
   .createMaxStacksRule {
     color: white;
-    background-color: $accent-color;
+    background-color: var(--accent-color);
     padding: 2px;
     font-size: 8px;
     border-radius: 3px;
@@ -86,7 +86,7 @@
     margin-left: 10px;
 
     &:hover {
-      background-color: color.adjust(color.adjust($accent-color, $saturation: -30%), $lightness: -10%);
+      background-color: color-mix(in srgb, var(--accent-color) 90%, black);
     }
   }
 
@@ -96,8 +96,8 @@
     border-radius: 3px;
     width: 700px;
     min-width: 700px;
-    box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
-    background-color: rgba($clickgui-base-color, 0.9);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--clickgui-base-color) 50%, transparent);
+    background-color: color-mix(in srgb, var(--clickgui-base-color) 90%, transparent);
     left: 50%;
     top: 20px;
   }
@@ -109,9 +109,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba($clickgui-base-color, 0.3);
+    background-color: color-mix(in srgb, var(--clickgui-base-color) 30%, transparent);
     backdrop-filter: blur(5px);
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
   }
 
   .disabled {
@@ -142,22 +142,22 @@
     font-size: 16px;
     font-weight: 600;
     text-transform: uppercase;
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     display: flex;
     align-items: center;
   }
 
   .muted {
-    color: rgba($clickgui-text-dimmed-color, 0.6);
+    color: color-mix(in srgb, var(--clickgui-text-dimmed-color) 60%, transparent);
   }
 
   .title {
     padding: 0 20px;
     height: 60px;
     position: relative;
-    border-bottom: $accent-color solid 1px;
-    background-color: rgba($clickgui-base-color, 0.5);
-    color: $menu-text-color;
+    border-bottom: var(--accent-color) solid 1px;
+    background-color: color-mix(in srgb, var(--clickgui-base-color) 50%, transparent);
+    color: var(--menu-text-color);
     border-radius: 3px 3px 0 0;
 
     display: flex;

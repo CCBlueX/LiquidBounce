@@ -27,10 +27,9 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.ccbluex.liquidbounce.utils.render.isCustom
 import net.ccbluex.liquidbounce.utils.render.scaleLightCoords
@@ -69,7 +68,7 @@ class BlinkEspBox(
 
         val box = AABB(-d, 0.0, -d, d, dimensions.height.toDouble(), d).inflate(0.05)
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             withPositionRelativeToCamera(pos) {
                 drawBox(box, color, outlineColor)
             }
@@ -116,7 +115,7 @@ class BlinkEspModel(
             rs.setRotation(rotation)
         }
 
-        val cameraState = mc.gameRenderer.levelRenderState.cameraRenderState
+        val cameraState = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
         mc.entityRenderDispatcher.submit(
             rs,
             cameraState,
@@ -124,7 +123,7 @@ class BlinkEspModel(
             rs.y - cameraState.pos.y,
             rs.z - cameraState.pos.z,
             poseStack,
-            mc.gameRenderer.submitNodeStorage,
+            mc.levelRenderer.submitNodeStorage,
         )
     }
 }

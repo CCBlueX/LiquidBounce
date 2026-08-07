@@ -26,9 +26,15 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.utils.math.forAllFaces
+import net.ccbluex.liquidbounce.utils.math.forAllSideFaces
+import net.ccbluex.liquidbounce.utils.math.forAllSideOutlineEdges
 import net.ccbluex.liquidbounce.utils.render.begin
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Matrix4fc
 import org.joml.Vector3fc
 
@@ -97,24 +103,148 @@ fun VertexConsumer.addBoxFaces(
     }
 }
 
+fun VertexConsumer.addShapeFaces(
+    pose: Matrix4fc,
+    shape: VoxelShape,
+    color: Color4b? = null,
+) {
+    shape.forAllFaces { direction, minX, minY, minZ, maxX, maxY, maxZ ->
+        addFaceVertices(pose, direction, minX, minY, minZ, maxX, maxY, maxZ, color)
+    }
+}
+
+fun VertexConsumer.addShapeOutlines(
+    pose: Matrix4fc,
+    shape: VoxelShape,
+    color: Color4b? = null,
+) {
+    shape.forAllEdges { startX, startY, startZ, endX, endY, endZ ->
+        addVertex(pose, startX, startY, startZ)
+        if (color != null) setColor(color.argb)
+
+        addVertex(pose, endX, endY, endZ)
+        if (color != null) setColor(color.argb)
+    }
+}
+
+fun VertexConsumer.addShapeSideFaces(
+    pose: Matrix4fc,
+    shape: VoxelShape,
+    side: Direction,
+    hitPos: Vec3,
+    color: Color4b? = null,
+) {
+    shape.forAllSideFaces(side, hitPos) { direction, minX, minY, minZ, maxX, maxY, maxZ ->
+        addFaceVertices(pose, direction, minX, minY, minZ, maxX, maxY, maxZ, color)
+    }
+}
+
+fun VertexConsumer.addShapeSideOutlines(
+    pose: Matrix4fc,
+    shape: VoxelShape,
+    side: Direction,
+    hitPos: Vec3,
+    color: Color4b? = null,
+) {
+    shape.forAllSideOutlineEdges(side, hitPos) { startX, startY, startZ, endX, endY, endZ ->
+        addVertex(pose, startX, startY, startZ)
+        if (color != null) setColor(color.argb)
+
+        addVertex(pose, endX, endY, endZ)
+        if (color != null) setColor(color.argb)
+    }
+}
+
+private fun VertexConsumer.addFaceVertices(
+    pose: Matrix4fc,
+    direction: Direction,
+    minX: Double,
+    minY: Double,
+    minZ: Double,
+    maxX: Double,
+    maxY: Double,
+    maxZ: Double,
+    color: Color4b?,
+) {
+    when (direction) {
+        Direction.DOWN -> {
+            addColoredVertex(pose, minX, minY, minZ, color)
+            addColoredVertex(pose, maxX, minY, minZ, color)
+            addColoredVertex(pose, maxX, minY, maxZ, color)
+            addColoredVertex(pose, minX, minY, maxZ, color)
+        }
+
+        Direction.UP -> {
+            addColoredVertex(pose, minX, maxY, minZ, color)
+            addColoredVertex(pose, minX, maxY, maxZ, color)
+            addColoredVertex(pose, maxX, maxY, maxZ, color)
+            addColoredVertex(pose, maxX, maxY, minZ, color)
+        }
+
+        Direction.NORTH -> {
+            addColoredVertex(pose, minX, minY, minZ, color)
+            addColoredVertex(pose, minX, maxY, minZ, color)
+            addColoredVertex(pose, maxX, maxY, minZ, color)
+            addColoredVertex(pose, maxX, minY, minZ, color)
+        }
+
+        Direction.EAST -> {
+            addColoredVertex(pose, maxX, minY, minZ, color)
+            addColoredVertex(pose, maxX, maxY, minZ, color)
+            addColoredVertex(pose, maxX, maxY, maxZ, color)
+            addColoredVertex(pose, maxX, minY, maxZ, color)
+        }
+
+        Direction.SOUTH -> {
+            addColoredVertex(pose, minX, minY, maxZ, color)
+            addColoredVertex(pose, maxX, minY, maxZ, color)
+            addColoredVertex(pose, maxX, maxY, maxZ, color)
+            addColoredVertex(pose, minX, maxY, maxZ, color)
+        }
+
+        Direction.WEST -> {
+            addColoredVertex(pose, minX, minY, minZ, color)
+            addColoredVertex(pose, minX, minY, maxZ, color)
+            addColoredVertex(pose, minX, maxY, maxZ, color)
+            addColoredVertex(pose, minX, maxY, minZ, color)
+        }
+    }
+}
+
+private fun VertexConsumer.addColoredVertex(
+    pose: Matrix4fc,
+    x: Double,
+    y: Double,
+    z: Double,
+    color: Color4b?,
+) {
+    addVertex(pose, x, y, z)
+    if (color != null) {
+        setColor(color.argb)
+    }
+}
+
 /**
  * Build new mesh data and upload it.
- * This method is designed for lazy building so [rotate] defaults to true.
+ *
+ * @param origin a preferred origin; the lambda receives the resolved origin that must be used
+ * for relative vertex positions.
  */
-inline fun StaticMeshStorage.buildMesh(
+inline fun CachedMeshStorage.buildMesh(
     pipeline: RenderPipeline,
-    rotate: Boolean = true,
-    block: VertexConsumer.(pose: PoseStack) -> Unit,
+    origin: BlockPos = BlockPos.ZERO,
+    block: VertexConsumer.(pose: PoseStack, origin: BlockPos) -> Unit,
 ) {
     clearStates()
+    val resolvedOrigin = this.resolveBaseBlockPos(origin)
 
     val bufferBuilder = this.byteBufferBuilder.begin(pipeline)
     usePoseStack {
-        bufferBuilder.block(this)
+        bufferBuilder.block(this, resolvedOrigin)
     }
 
     bufferBuilder.build()?.use { meshData ->
-        this.uploadAndSet(meshData, pipeline, rotate)
+        this.uploadAndSet(meshData, pipeline)
     }
 
     this.byteBufferBuilder.clear()

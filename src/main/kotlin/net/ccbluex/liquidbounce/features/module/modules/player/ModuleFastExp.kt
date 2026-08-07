@@ -36,13 +36,15 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.world.any
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
@@ -191,8 +193,8 @@ object ModuleFastExp : ClientModule(
     }
 
     private fun anyExpOrbMovingToPlayer(): Boolean =
-        world.entitiesForRendering().any {
-            (it is MixinExperienceOrbAccessor) && it.followingPlayer === player
+        world.entityGetter.any(EntityTypes.EXPERIENCE_ORB) {
+            (it as MixinExperienceOrbAccessor).followingPlayer === player
                 && it.deltaMovement.lengthSqr() > player.deltaMovement.lengthSqr()
         }
 
@@ -256,7 +258,7 @@ object ModuleFastExp : ClientModule(
             player.getItemBySlot(EquipmentSlot.LEGS),
             player.getItemBySlot(EquipmentSlot.FEET),
             // an item in the other hand, not holding the exp bottle could also get repaired
-            if (slot == OffHandSlot) {
+            if (slot.isOffHand) {
                 player.getItemBySlot(EquipmentSlot.MAINHAND)
             } else {
                 player.getItemBySlot(EquipmentSlot.OFFHAND)

@@ -18,7 +18,6 @@
 </button>
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
 
     .icon-text-button {
       display: flex;
@@ -27,7 +26,7 @@
       border-radius: 5px;
       align-items: center;
       overflow: hidden;
-      background: linear-gradient(to left, rgba($menu-base-color, .36) 50%, $accent-color 50%);
+      background: linear-gradient(to left, var(--menu-icon-text-button-background-color) 50%, var(--menu-icon-text-button-accent-color) 50%);
       background-size: 200% 100%;
       background-position: right bottom;
       will-change: background-position;
@@ -48,7 +47,7 @@
     .icon {
       height: 58px;
       width: 58px;
-      background-color: $accent-color;
+      background-color: var(--menu-icon-text-button-icon-background-color);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -57,7 +56,7 @@
     .title {
       font-size: 20px;
       font-weight: 500;
-      color: $menu-text-color;
+      color: var(--menu-text-color);
       padding: 0 30px;
     }
 </style>

@@ -18,9 +18,10 @@
  */
 
 import com.github.gradle.node.npm.task.NpmTask
-import com.github.gradle.node.task.NodeTask
 import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 plugins {
@@ -39,7 +40,7 @@ base {
 }
 
 /** Includes dependency recursively in the JAR file */
-val jij: Configuration by configurations.creating
+val jij = configurations.create("jij")
 
 jij.excludeProvidedLibs()
 
@@ -64,10 +65,6 @@ allprojects {
             url = uri("https://jitpack.io")
         }
         maven {
-            name = "TerraformersMC"
-            url = uri("https://maven.terraformersmc.com/")
-        }
-        maven {
             name = "ViaVersion"
             url = uri("https://repo.viaversion.com/")
         }
@@ -84,8 +81,7 @@ allprojects {
             url = uri("https://maven.lenni0451.net/everything")
         }
         maven {
-            name = "ParchmentMC"
-            url = uri("https://maven.parchmentmc.org")
+            url = uri("https://maven.shedaniel.me/")
         }
     }
 }
@@ -97,51 +93,51 @@ loom {
 dependencies {
     // Minecraft
     minecraft(libs.minecraft)
-    mappings(loom.layered {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${libs.versions.minecraft.get()}:2025.12.20@zip")
-    })
 
     // Fabric
-    modApi(libs.fabric.loader)
-    modApi(libs.fabric.api)
-    modApi(libs.fabric.kotlin)
+    api(libs.fabric.loader)
+    api(libs.fabric.api)
+    api(libs.fabric.kotlin)
 
     // Mod menu
-    modApi(libs.modmenu)
+    api(libs.modmenu)
 
     // Recommended mods (on IDE)
-    modApi(libs.sodium)
-    modApi(libs.lithium)
-    modRuntimeOnly(libs.immediatelyFast)
-    modRuntimeOnly(libs.iris)
+    api(libs.sodium)
+    api(libs.lithium)
+    runtimeOnly(libs.immediatelyFast)
+    runtimeOnly(libs.iris)
 
     // ViaFabricPlus
-    modApi(libs.vfp.api)
-    modRuntimeOnly(libs.vfp)
+    api(libs.vfp.api)
+    runtimeOnly(libs.vfp)
 
     // Exploit Preventer
-    modApi(libs.exploitPreventer.api)
-    modRuntimeOnly(libs.exploitPreventer)
+    api(libs.exploitPreventer.api)
+    runtimeOnly(libs.exploitPreventer)
 
     // Minecraft Authlib
     jij(libs.mcAuthlib)
 
-    // LWJGL EGL and WayGL mod for Linux accelerated paint
+    // LWJGL EGL
     jij(libs.lwjgl.egl)
-    modApi(libs.waygl)
-    modRuntimeOnly(libs.cloth.config)
 
     // JCEF Support
-    modApi(libs.mcef)
+    api(libs.mcef)
     include(libs.mcef)
-    jij(libs.httpServer)
 
-    // Discord RPC Support
-    jij(libs.discordIpc)
+    // Ktor Server
+    jij(libs.ktor.server.core)
+    jij(libs.ktor.server.netty)
+    jij(libs.ktor.server.websockets)
+    jij(libs.ktor.server.sse)
+    jij(libs.ktor.server.cors)
+    jij(libs.ktor.server.compression)
+    jij(libs.ktor.server.content.negotiation)
+    jij(libs.ktor.server.status.pages)
+    jij(libs.ktor.serialization.gson)
 
     // ScriptAPI
-    jij("net.fabricmc:tiny-mappings-parser:0.3.0+build.17")
     jij(libs.polyglot)
     jij(libs.polyglot.js)
     jij(libs.polyglot.tools)
@@ -165,21 +161,25 @@ dependencies {
     // External utils
     compileOnlyApi(libs.fastutil4k.extensionsOnly)
     jij(libs.fastutil4k.moreCollections)
+    jij(libs.discord.ipc)
 
     // Test libraries
-    // testImplementation(kotlin("test"))
-    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(kotlin("test"))
     testImplementation(libs.fabric.loader.junit)
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 addResolvedDependencies(jij, "compileOnly", "include", "api")
 
 tasks.processResources {
-    dependsOn("bundleTheme")
+    dependsOn("buildTheme")
+
+    from("src-theme/dist") {
+        into("resources/liquidbounce/themes/liquidbounce")
+    }
 
     val modVersion = providers.gradleProperty("mod_version")
-    val minecraftVersion = libs.versions.minecraft
+    val minecraftVersion = providers.gradleProperty("mod_mc_version")
     val fabricVersion = libs.versions.fabric.api
     val loaderVersion = libs.versions.fabric.loader
     val minLoaderVersion = libs.versions.fabric.loaderMin
@@ -228,62 +228,47 @@ tasks.processResources {
 
 // The following code will include the theme into the build
 
+// The plugin uses global tools when download=false, so include their actual versions in the cache key.
+val nodeVersion = providers.exec {
+    commandLine("node", "--version")
+}.standardOutput.asText.map(String::trim)
+val npmVersion = providers.exec {
+    // On Windows, CreateProcess cannot launch bare "npm" (a .cmd shim); node-gradle uses npm.cmd as well.
+    val npmExecutable = if (System.getProperty("os.name").lowercase().contains("windows")) "npm.cmd" else "npm"
+    commandLine(npmExecutable, "--version")
+}.standardOutput.asText.map(String::trim)
+
 tasks.register<NpmTask>("npmInstallTheme") {
+    description = "Installs the locked dependencies for the web theme"
     workingDir = file("src-theme")
-    args.set(listOf("i"))
-    doLast {
-        logger.info("Successfully installed dependencies for theme")
-    }
+    args.set(listOf("ci"))
+
     inputs.files("src-theme/package.json", "src-theme/package-lock.json")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
     outputs.dir("src-theme/node_modules")
 }
 
 tasks.register<NpmTask>("buildTheme") {
+    description = "Builds the distributable web theme assets"
     dependsOn("npmInstallTheme")
     workingDir = file("src-theme")
     args.set(listOf("run", "build"))
-    doLast {
-        logger.info("Successfully build theme")
-    }
 
+    inputs.property("nodeVersion", nodeVersion)
+    inputs.property("npmVersion", npmVersion)
     inputs.files(
         "src-theme/package.json",
         "src-theme/package-lock.json",
-        "src-theme/bundle.cjs",
-        "src-theme/rollup.config.js"
-    )
-    inputs.dir("src-theme/src")
-    inputs.dir("src-theme/public")
+        "src-theme/index.html",
+        "src-theme/svelte.config.js",
+        "src-theme/tsconfig.json",
+        "src-theme/tsconfig.node.json",
+        "src-theme/vite.config.ts",
+    ).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir("src-theme/src").withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir("src-theme/public").withPathSensitivity(PathSensitivity.RELATIVE)
     outputs.dir("src-theme/dist")
-}
-
-tasks.register<NodeTask>("bundleTheme") {
-    dependsOn("buildTheme")
-    workingDir = file("src-theme")
-    script = file("src-theme/bundle.cjs")
-    doLast {
-        logger.info("Successfully attached theme to build")
-    }
-
-    // Incremental stuff
-    inputs.files(
-        "src-theme/package.json",
-        "src-theme/package-lock.json",
-        "src-theme/bundle.cjs",
-        "src-theme/rollup.config.js"
-    )
-    inputs.dir("src-theme/src")
-    inputs.dir("src-theme/public")
-    inputs.dir("src-theme/dist")
-    outputs.files("src-theme/resources/assets/liquidbounce/themes/liquidbounce.zip")
-}
-
-sourceSets {
-    main {
-        resources {
-            srcDirs("src-theme/resources")
-        }
-    }
+    outputs.cacheIf("Theme output is reproducible for locked dependencies and tool versions") { true }
 }
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
@@ -301,6 +286,26 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
+    // Prevent macOS AWT from starting a native window session during font tests.
+    systemProperty("java.awt.headless", "true")
+    systemProperty(
+        "fabric.debug.disableModIds",
+        arrayOf(
+            // ImmediatelyFast's platform service requires a fully initialized Fabric game process.
+            "immediatelyfast",
+            // Avoid loading Fabric Language Kotlin's nested Kotlin runtime alongside Gradle's test runtime.
+            "org_jetbrains_kotlin_kotlin-reflect",
+            "org_jetbrains_kotlin_kotlin-stdlib",
+            "org_jetbrains_kotlin_kotlin-stdlib-jdk7",
+            "org_jetbrains_kotlin_kotlin-stdlib-jdk8",
+        ).joinToString(","),
+    )
+    // Let Knot delegate Kotlin Test and the Kotlin runtime to JUnit's parent class loader.
+    jvmArgumentProviders.add(
+        objects.newInstance<FabricSystemLibrariesArgumentProvider>().apply {
+            runtimeClasspath.from(configurations.testRuntimeClasspath)
+        }
+    )
 }
 
 // Detekt check
@@ -319,10 +324,8 @@ tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
     setSource(files(rootDir))
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     baseline.set(file("$rootDir/config/detekt/baseline.xml"))
-    include("**/*.kt")
-    include("**/*.kts")
-    exclude("**/resources/**")
-    exclude("**/build/**")
+    include("**/*.kt", "**/*.kts")
+    exclude("**/resources/**", "**/build/**")
 }
 
 // i18n check
@@ -362,8 +365,6 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(libs.versions.jdk.get().toInt())
-        freeCompilerArgs.add("-Xexplicit-backing-fields")
-        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 
@@ -371,14 +372,10 @@ tasks.jar {
     val archivesBaseName = providers.gradleProperty("archives_base_name")
     val modVersion = providers.gradleProperty("mod_version")
     val mavenGroup = providers.gradleProperty("maven_group")
-    val mappingFiles = provider {
-        rootProject.configurations.mappings.get().map(::zipTree)
-    }
 
     inputs.property("archives_base_name", archivesBaseName)
     inputs.property("mod_version", modVersion)
     inputs.property("maven_group", mavenGroup)
-    inputs.files(mappingFiles).withPropertyName("mappingFiles")
 
     manifest {
         attributes["Main-Class"] = "net.ccbluex.liquidbounce.LiquidInstruction"
@@ -393,10 +390,6 @@ tasks.jar {
             "${it}_${archivesBaseName.get()}"
         }
     }
-
-    from(files(mappingFiles.get())) {
-        include("mappings/mappings.tiny")
-    }
 }
 
 tasks.register<Copy>("copyZipInclude") {
@@ -404,8 +397,11 @@ tasks.register<Copy>("copyZipInclude") {
     into("build/libs/zip")
 }
 
-tasks.named("sourcesJar") {
-    dependsOn("bundleTheme")
+tasks.named<Jar>("sourcesJar") {
+    dependsOn("buildTheme", "generateGitProperties")
+    from("src-theme/dist") {
+        into("resources/liquidbounce/themes/liquidbounce")
+    }
 }
 
 tasks.named("build") {

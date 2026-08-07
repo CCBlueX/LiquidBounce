@@ -36,8 +36,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.Modul
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.dummyPlayer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.entity.EntityLookup
 import java.util.UUID
@@ -45,10 +48,12 @@ import java.util.UUID
 /**
  * Blink module
  *
- * Makes it look as if you were teleporting to other players.
+ * Suspends packets before they are sent to/received from the server.
  */
 
 object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
+
+    private val directions by multiEnumChoice("Directions", TransferOrigin.OUTGOING, canBeNone = false)
 
     private val dummy by boolean("Dummy", false)
     private val ambush by boolean("Ambush", false)
@@ -60,12 +65,14 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     }
 
     private var dummyPlayer: RemotePlayer? = null
+    private var tickCounter = 0
 
     init {
         tree(AutoResetOption)
     }
 
     override fun onEnabled() {
+        tickCounter = 0
         if (dummy) {
             val clone = RemotePlayer(world, player.gameProfile)
 
@@ -76,6 +83,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
              * @see EntityLookup.add
              */
             clone.setUUID(UUID.randomUUID())
+            clone.id = world.nextLocalEntityId()
             world.addEntity(clone)
 
             dummyPlayer = clone
@@ -83,7 +91,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     }
 
     override fun onDisabled() {
-        BlinkManager.flush(TransferOrigin.OUTGOING)
+        directions.forEach { BlinkManager.flush(it) }
         removeClone()
     }
 
@@ -97,11 +105,14 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         val packet = event.packet
 
-        if (event.isCancelled || event.origin != TransferOrigin.OUTGOING) {
+        if (event.isCancelled || !directions.contains(event.origin)) {
             return@handler
         }
 
-        if (ambush && packet is ServerboundInteractPacket) {
+        if (ambush &&
+            (packet is ServerboundInteractPacket
+                || packet is ServerboundAttackPacket
+                || packet is ServerboundSpectatorActionPacket)) {
             enabled = false
             return@handler
         }
@@ -138,11 +149,14 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
     @Suppress("unused")
     private val playerMoveHandler = handler<PlayerMovementTickEvent> {
-        if (AutoResetOption.enabled && positions.count() > AutoResetOption.resetAfter) {
+        tickCounter++
+
+        if (AutoResetOption.enabled && tickCounter > AutoResetOption.resetAfter) {
+            tickCounter = 0
             when (AutoResetOption.action) {
                 ResetAction.RESET -> BlinkManager.cancel()
                 ResetAction.BLINK -> {
-                    BlinkManager.flush(TransferOrigin.OUTGOING)
+                    directions.forEach { BlinkManager.flush(it) }
                     dummyPlayer?.copyPosition(player)
                 }
             }
@@ -156,7 +170,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
-        if (event.origin == TransferOrigin.OUTGOING) {
+        if (directions.contains(event.origin)) {
             event.action = Action.QUEUE
         }
     }
@@ -164,5 +178,9 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     enum class ResetAction(override val tag: String) : Tagged {
         RESET("Reset"),
         BLINK("Blink");
+    }
+
+    fun isDummyPlayer(entityId: Int): Boolean {
+        return entityId == dummyPlayer?.id
     }
 }

@@ -49,7 +49,7 @@ public abstract class MixinBlockCollisions {
             value = "INVOKE",
             target = "Lnet/minecraft/world/phys/shapes/CollisionContext;getCollisionShape(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/CollisionGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/shapes/VoxelShape;"
     ))
-    private VoxelShape hookCollisionShape(VoxelShape original, @Local BlockState blockState) {
+    private VoxelShape hookCollisionShape(VoxelShape original, @Local(name = "blockState") BlockState blockState) {
         if (this.pos == null || ShapeFlag.noShapeChange) {
             return original;
         }

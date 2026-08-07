@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.blink
 import com.google.common.collect.Queues
 import net.ccbluex.fastutil.filterIsInstance
 import net.ccbluex.fastutil.forEachIsInstance
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -41,13 +40,13 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.ccbluex.liquidbounce.utils.network.handlePacket
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.network.position
 import net.minecraft.client.CameraType
@@ -199,26 +198,18 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
         }
     }
 
-    private fun getEspData(): BlinkEspData? {
-        val pos = positions.firstOrNull() ?: return null
-        val rotation = RotationManager.actualServerRotation
-
-        val perspectiveEvent = EventManager.callEvent(PerspectiveEvent(mc.options.cameraType))
-        if (perspectiveEvent.perspective == CameraType.FIRST_PERSON) {
-            return null
-        }
-
-        return BlinkEspData(player, pos, rotation)
-    }
+    private fun getEspData() = positions
+        .firstOrNull()
+        ?.takeUnless { PerspectiveEvent.perspective == CameraType.FIRST_PERSON }
+        ?.let { BlinkEspData(player, it, RotationManager.actualServerRotation) }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
         if (lineColor.a > 0) {
-            renderEnvironmentForWorld(matrixStack) {
+            event.renderEnvironment {
                 drawLineStrip(
                     argb = lineColor.argb,
-                    positions = positions.mapToArray { vec3d -> Vec3f(relativeToCamera(vec3d)) },
+                    positions = MutableVertexList(positions.size).addAllRelativeToCamera(positions, camera),
                 )
             }
         }

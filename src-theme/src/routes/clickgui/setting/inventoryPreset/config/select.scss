@@ -8,8 +8,8 @@
   max-height: 450px;
   min-height: 0;
   padding: 20px;
-  background-color: rgba($clickgui-base-color, 0.95);
-  outline: 1px solid color.adjust($clickgui-text-color, $lightness: -85%);
+  background-color: color-mix(in srgb, var(--clickgui-base-color) 95%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--clickgui-text-color) 15%, black);
   border-radius: 3px;
 }
 
@@ -21,7 +21,7 @@
   justify-content: center;
   font-weight: 500;
   font-size: 16px;
-  color: $clickgui-text-color;
+  color: var(--clickgui-text-color);
 }
 
 .select-selector {
@@ -33,8 +33,8 @@
 
 .icon-wrapper {
   transition: background-color 0.3s ease;
-  background-color: rgba($clickgui-base-color, 0.85);
-  border: 1px solid color.adjust($clickgui-text-color, $lightness: -85%);
+  background-color: color-mix(in srgb, var(--clickgui-base-color) 85%, transparent);
+  border: 1px solid color-mix(in srgb, var(--clickgui-text-color) 15%, black);
   border-radius: 3px;
   min-width: 30px;
   min-height: 30px;
@@ -53,11 +53,11 @@
 
   &:hover {
     .name {
-      color: $clickgui-text-color;
+      color: var(--clickgui-text-color);
     }
 
     .icon-wrapper {
-      background-color: color.adjust($clickgui-text-color, $lightness: -80%);
+      background-color: color-mix(in srgb, var(--clickgui-text-color) 20%, black);
     }
   }
 }
@@ -72,7 +72,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: $clickgui-text-dimmed-color;
+  color: var(--clickgui-text-dimmed-color);
 }
 
 .search {
@@ -86,7 +86,7 @@
   border: none;
   background: transparent;
   padding-left: 35px;
-  outline: solid 1px color.adjust($clickgui-text-color, $lightness: -90%);
+  outline: solid 1px color-mix(in srgb, var(--clickgui-text-color) 10%, black);
   color: white;
 }
 
@@ -114,7 +114,7 @@
 
 .items-group-title {
   font-size: 12px;
-  color: rgba($clickgui-text-dimmed-color, 0.6);
+  color: color-mix(in srgb, var(--clickgui-text-dimmed-color) 60%, transparent);
   font-weight: 600;
   margin-left: 5px;
   text-transform: uppercase;

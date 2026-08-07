@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
@@ -64,7 +64,7 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
         val entityToColor: (Entity) -> Int?,
     ) : Tagged {
         TEAM("Team", { entity ->
-            entity.team?.color?.color
+            entity.team?.color?.orElse(null)?.rgb()
         }),
         ARMOR("Armor", { entity ->
             val armorColorSlots = armorColorSlots

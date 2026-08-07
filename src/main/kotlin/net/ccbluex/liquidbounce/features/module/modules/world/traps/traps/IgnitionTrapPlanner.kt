@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeI
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.IntentTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -88,7 +88,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
     ): BlockPlacementTarget? {
         val blockPos = targetPos.toBlockPos()
 
-        if (blockPos.getState()?.block in trapWorthyBlocks) {
+        if (blockPos.state?.block in trapWorthyBlocks) {
             return null
         }
 
@@ -98,17 +98,18 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
             target.position().subtract(target.lastPos),
             slot.itemStack.item == Items.FLINT_AND_STEEL
         )
+        val placementLocation = PlayerLocationOnPlacement(position = player.position())
 
         val options = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
                 offsetsForTargets,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                targetOverlapComparator(blockPos, offsetsForTargets, placementLocation.eyePos),
             ),
             FaceHandlingOptions(
-                NearestRotationTargetPositionFactory(PositionFactoryConfiguration(player.eyePosition, 0.5))
+                NearestRotationTargetPositionFactory(PositionFactoryConfiguration(placementLocation.eyePos, 0.5))
             ),
             stackToPlaceWith = slot.itemStack,
-            PlayerLocationOnPlacement(position = player.position()),
+            placementLocation,
         )
 
         return findBestBlockPlacementTarget(blockPos, options)

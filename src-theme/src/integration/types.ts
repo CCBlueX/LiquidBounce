@@ -1,9 +1,12 @@
-
 export interface Metadata {
     id: string;
     name: string;
     version: string;
     authors: string[];
+    colors: {
+        Accent: string;
+        Tint: string;
+    }
     screens: string[];
     overlays: string[];
     components: string[];
@@ -42,6 +45,7 @@ export type ModuleSetting =
     | ListSetting
     | RegistryListSetting
     | ItemListSetting
+    | RegistryMutableListSetting
     | ConfigurableSetting
     | TogglableSetting
     | ColorSetting
@@ -199,6 +203,10 @@ export interface RegistryListSetting extends ListSetting {
     registry: string;
 }
 
+export interface RegistryMutableListSetting extends Setting<string[]> {
+    registry: string;
+}
+
 export interface ItemListSetting extends ListSetting {
     items: NamedItem[];
 }
@@ -335,6 +343,7 @@ export interface Server {
     version: string;
     ping: number;
     resourcePackPolicy: string;
+    lan?: boolean;
 }
 
 export interface TextComponent {
@@ -412,13 +421,28 @@ export interface GameWindow {
 export interface Theme {
     name: string;
     id: string;
+    colors: {
+        accent: number;
+        tint: number;
+    };
     settings: { [name: string]: any };
 }
 
 export interface HudComponent {
     name: string;
+    description: string;
     id: string;
     settings: { [name: string]: any };
+    width?: number;
+    height?: number;
+}
+
+export interface HudComponentCatalogEntry {
+    name: string;
+    description: string;
+    id: string;
+    singleton: boolean;
+    canAdd: boolean;
 }
 
 export interface Alignment {

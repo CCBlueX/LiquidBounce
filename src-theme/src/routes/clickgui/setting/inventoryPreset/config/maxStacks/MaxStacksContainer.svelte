@@ -45,7 +45,7 @@
 
   .container {
     border-radius: 6px;
-    outline: 1px solid rgba(color.adjust($clickgui-text-color, $lightness: -85%), 0.3);
+    outline: 1px solid color-mix(in srgb, color-mix(in srgb, var(--clickgui-text-color) 15%, black) 30%, transparent);
     padding: 5px;
     max-height: 300px;
     overflow-y: scroll;

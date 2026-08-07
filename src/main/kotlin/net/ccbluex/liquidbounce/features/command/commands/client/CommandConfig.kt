@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -46,15 +46,14 @@ import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
-import net.ccbluex.liquidbounce.utils.client.plus
+import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.textOf
+import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.text.AsyncLoadingText
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Style
 import org.apache.commons.io.input.CharSequenceReader
@@ -147,12 +146,11 @@ object CommandConfig : Command.Factory {
                         regular(" | "),
                         variable(it.dateFormatted),
                         regular(" | "),
-                        Component.literal(it.statusType.displayName)
-                            .withStyle(it.statusType.formatting)
-                            .onHover(
+                        it.statusType.displayName.asPlainText(
+                            Style.EMPTY +
+                                it.statusType.formatting +
                                 HoverEvent.ShowText(it.statusDateFormatted.asPlainText())
-                            )
-                        ,
+                        ),
                         regular(" | ${it.serverAddress ?: "Global"}"),
                         metadata = MessageMetadata(prefix = false)
                     )

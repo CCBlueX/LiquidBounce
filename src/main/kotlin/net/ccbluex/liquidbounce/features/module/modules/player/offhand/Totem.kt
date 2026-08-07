@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.utils.block.getPotentialSecondBedBlock
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isCharged
-import net.ccbluex.liquidbounce.utils.block.isFallDamageBlocking
+import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
@@ -33,10 +33,10 @@ import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
 import net.ccbluex.liquidbounce.utils.entity.getExplosionDamageFromEntity
 import net.ccbluex.liquidbounce.utils.entity.isBurrowed
 import net.ccbluex.liquidbounce.utils.entity.isInHole
+import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.world.bedRule
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
 import net.minecraft.core.BlockPos
@@ -119,10 +119,11 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
                 }
 
                 val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
-                if (collision != null && !collision.isFallDamageBlocking()) {
+                val fallDamageMultiplier = collision.fallDamageMultiplier(player)
+                if (fallDamageMultiplier > 0f) {
                     return player.getEffectiveDamage(
                         player.damageSources().fall(),
-                        player.calculateFallDamage(player.fallDistance, 1f).toFloat()
+                        player.calculateFallDamage(player.fallDistance, fallDamageMultiplier).toFloat()
                     )
                 }
 
@@ -147,7 +148,7 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
                 return true
             }
 
-            if (missingArmor && Slots.Armor.any { it.itemStack.isEmpty }) {
+            if (missingArmor && ArmorItemSlot.entries.any { it.itemStack.isEmpty }) {
                 return true
             }
 
@@ -232,14 +233,21 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
                 // exclude the block as it gets removed before the explosion happens
                 val exclude = if (noBedExplosion) {
                     // the anchor is just the block itself
-                    arrayOf(pos)
+                    listOf(pos)
                 } else {
                     // a bed consists of two blocks
-                    arrayOf(pos, block.getPotentialSecondBedBlock(state, pos))
+                    listOf(pos, block.getPotentialSecondBedBlock(state, pos))
                 }
 
                 maxDamage = maxDamage.coerceAtLeast(
-                    player.getDamageFromExplosion(pos.toVec3d(), 5f, 10f, 100f, exclude)
+                    player.getDamageFromExplosion(
+                        pos = pos.center,
+                        power = 5f,
+                        explosionRange = 10f,
+                        damageDistance = 100f,
+                        exclude = exclude,
+                        damageSource = player.damageSources().badRespawnPointExplosion(pos.center)
+                    )
                 )
 
                 if (maxDamage >= allowedDamage) {

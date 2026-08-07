@@ -49,7 +49,7 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
         @Suppress("unused")
         val onScroll = handler<MouseScrollInHotbarEvent> {
             previousFov = getFov(true)
-            targetFov = (targetFov - round(it.speed * this.speed).toInt()).coerceIn(1..179)
+            targetFov = (targetFov - round(it.speed * this.speed).toInt()).coerceIn(1, 179)
             reset()
             it.cancelEvent()
         }

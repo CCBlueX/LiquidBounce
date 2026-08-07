@@ -43,6 +43,7 @@ import net.minecraft.SharedConstants
 import org.lwjgl.glfw.GLFW
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
+import kotlin.io.path.deleteIfExists
 
 private val modMenuPresent = runCatching {
     Class.forName("com.terraformersmc.modmenu.ModMenu")
@@ -132,7 +133,7 @@ object HideAppearance : EventListener {
         isHidingNow = true
         isDestructed = true
 
-        mc.gui.chat.recentChat.removeIf {
+        mc.gui.hud.chat.recentChat.removeIf {
             it.startsWith(CommandManager.GlobalSettings.prefix)
         }
 
@@ -176,7 +177,7 @@ object HideAppearance : EventListener {
 
                 for (path in origin.paths) {
                     runCatching {
-                        path.toFile().delete()
+                        path.deleteIfExists()
                     }
                 }
             }
@@ -188,7 +189,7 @@ object HideAppearance : EventListener {
         }
 
         // History clear
-        mc.gui.chat.clearMessages(true)
+        mc.gui.hud.chat.clearMessages(true)
     }
 
 }

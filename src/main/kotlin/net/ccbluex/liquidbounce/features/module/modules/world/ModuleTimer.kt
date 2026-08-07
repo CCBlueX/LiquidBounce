@@ -145,7 +145,7 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
             }
 
             if (!player.moving) {
-                if (mc.screen is InventoryScreen || mc.screen is ContainerScreen) {
+                if (mc.gui.screen() is InventoryScreen || mc.gui.screen() is ContainerScreen) {
                     boostCapable = 0
                     return@tickHandler
                 }

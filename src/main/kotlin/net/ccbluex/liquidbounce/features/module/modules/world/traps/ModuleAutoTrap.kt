@@ -32,12 +32,12 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTra
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
 /**
  * Ignite & AutoWeb module
@@ -60,13 +60,22 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
     private var timeout = false
 
+    private var pendingCombatWaitTicks = 0
+
     override fun onEnabled() {
-        timeout = false
+        resetState()
     }
 
     override fun onDisabled() {
-        timeout = false
+        resetState()
         SilentHotbar.resetSlot(this)
+    }
+
+    private fun resetState() {
+        timeout = false
+        currentPlan = null
+        pendingCombatWaitTicks = 0
+        targetTracker.reset()
     }
 
     @Suppress("unused")
@@ -75,13 +84,28 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             return@handler
         }
 
+        if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
+            return@handler
+        }
+
+        targetTracker.validate()
+
         val enemies = targetTracker.targets()
         TrapPlayerSimulation.runSimulations(enemies)
 
-        currentPlan = webTrapPlanner.plan(enemies) ?: ignitionTrapPlanner.plan(enemies)
+        val newPlan = webTrapPlanner.plan(enemies) ?: ignitionTrapPlanner.plan(enemies)
+        if (newPlan != null) {
+            currentPlan = newPlan
+        }
         currentPlan?.let { intent ->
+            val blockChangeInfo = intent.blockChangeInfo
+            if (blockChangeInfo !is BlockChangeInfo.PlaceBlock) {
+                currentPlan = null
+                return@handler
+            }
+
             RotationManager.setRotationTarget(
-                (intent.blockChangeInfo as BlockChangeInfo.PlaceBlock).blockPlacementTarget.rotation,
+                blockChangeInfo.blockPlacementTarget.rotation,
                 considerInventory = !ignoreOpenInventory,
                 valueGroup = rotations,
                 Priority.IMPORTANT_FOR_PLAYER_LIFE,
@@ -92,7 +116,15 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
     @Suppress("unused")
     private val placementHandler = tickHandler {
+        if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
+            return@tickHandler
+        }
+
         val plan = currentPlan ?: return@tickHandler
+        if (plan.blockChangeInfo !is BlockChangeInfo.PlaceBlock) {
+            currentPlan = null
+            return@tickHandler
+        }
 
         if (shouldWaitForTiming(plan)) {
             return@tickHandler
@@ -105,22 +137,52 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
         CombatManager.pauseCombatForAtLeast(1)
         SilentHotbar.selectSlotSilently(this, plan.slot, 1)
-        doPlacement(raycast, hand = plan.slot.useHand)
+
+        var successful = false
+        val onSuccess = {
+            plan.onIntentFulfilled()
+            successful = true
+            true
+        }
+
+        doPlacement(
+            raycast,
+            hand = plan.slot.useHand,
+            onPlacementSuccess = onSuccess,
+            onItemUseSuccess = onSuccess
+        )
+
+        if (!successful) {
+            return@tickHandler
+        }
+
         timeout = true
-        plan.onIntentFulfilled()
-        waitTicks(delay)
-        timeout = false
+        pendingCombatWaitTicks = 0
+        try {
+            waitTicks(delay)
+        } finally {
+            timeout = false
+        }
     }
 
     private fun shouldWaitForTiming(plan: BlockChangeIntent<*>): Boolean {
         return when (plan.timing) {
             IntentTiming.INSTANT -> false
 
-            // Let ongoing combat modules consume the current hit window first, then place during recovery.
-            IntentTiming.NEXT_PROPITIOUS_MOMENT -> hasPendingCombatAction() && (
-                player.getAttackStrengthScale(0.5f) > 0.9f
-                    || ModuleCriticals.wouldDoCriticalHit(ignoreSprint = true)
-                )
+            IntentTiming.NEXT_PROPITIOUS_MOMENT -> {
+                val shouldWait = hasPendingCombatAction() && (
+                    player.getAttackStrengthScale(0.5f) > 0.9f
+                        || ModuleCriticals.wouldDoCriticalHit(ignoreSprint = true)
+                    )
+
+                if (!shouldWait) {
+                    pendingCombatWaitTicks = 0
+                } else {
+                    pendingCombatWaitTicks++
+                }
+
+                pendingCombatWaitTicks < 40 && shouldWait
+            }
         }
     }
 

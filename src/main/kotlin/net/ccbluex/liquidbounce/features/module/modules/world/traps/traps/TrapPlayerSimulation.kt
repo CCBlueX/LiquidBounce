@@ -95,19 +95,24 @@ object TrapPlayerSimulation {
 
         val simulationCache = this.predictedPlayerStatesCache[target] ?: return null
 
+        val lastEntry = simulationCache.last()
+
+        if (lastEntry.isStationary && !isTargetLocked) {
+            return lastEntry.currPos
+        }
+
         val positions = simulationCache.mapNotNull { it.nextOnGround }
 
-        // Don't stop targeting if we already started
-        val canLayTrapInTime = (simulationCache.last().ticksToGround ?: 0) >= 8
+        val canLayTrapInTime = (lastEntry.ticksToGround ?: 0) >= 8
         val sufficientEvidence = positions.size >= 5
 
         if (!sufficientEvidence || !canLayTrapInTime && !isTargetLocked) {
-            return null
+            return if (isTargetLocked) lastEntry.currPos else null
         }
 
         val avg = positions.average()
         val std = positions
-            .fold(0.0) { acc, vec -> acc + vec.subtract(avg).lengthSqr() }
+            .sumOf { vec -> vec.subtract(avg).lengthSqr() }
             .let { sqrt(it / positions.size) }
 
         ModuleDebug.debugGeometry(

@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
+import com.google.common.base.Predicates
 import net.ccbluex.fastutil.weightedFilterSortedByAtMost
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntLongPair
@@ -30,24 +31,29 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.math.boundsOrNull
 import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.core.TypedInstance
 import net.minecraft.core.Vec3i
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.tags.BlockTags
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionResult.Success
 import net.minecraft.world.InteractionResult.SwingSource
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntitySelector
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.BlockPlaceContext
@@ -111,23 +117,40 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.Consumer
+import java.util.function.Predicate
 import kotlin.math.ceil
 import kotlin.math.floor
 
 fun Vec3i.toBlockPos() = BlockPos(this)
 
-fun BlockPos.getState() = mc.level?.getBlockState(this)
+val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
 
-fun BlockPos.getBlock() = getState()?.block
+@Deprecated(
+    "Use BlockPos.state or BlockPos.stateOrEmpty instead",
+    replaceWith = ReplaceWith("this.state", imports = ["net.ccbluex.liquidbounce.utils.block.state"])
+)
+@JvmName("getState-deprecated")
+inline fun BlockPos.getState() = state
 
-fun BlockPos.getCenterDistanceSquared() = player.distanceToSqr(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+val BlockPos.stateOrEmpty: BlockState get() = state ?: Blocks.VOID_AIR.defaultBlockState()
 
-fun BlockPos.getCenterDistanceSquaredEyes() = player.eyePosition.distanceToSqr(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+fun BlockPos.getBlock(): Block? = state?.block
+
+fun BlockPos.getCenterDistanceSquared() = this.distToCenterSqr(player.position())
+
+fun BlockPos.getCenterDistanceSquaredEyes() = this.distToCenterSqr(player.eyePosition)
 
 val BlockState.isBed: Boolean
     get() = block is BedBlock
+
+val TypedInstance<Block>.isAnyChest: Boolean
+    get() = this.`is`(Blocks.CHEST)
+        || this.`is`(Blocks.TRAPPED_CHEST)
+        || this.`is`(Blocks.ENDER_CHEST)
+        || this.`is`(BlockTags.COPPER_CHESTS)
 
 /**
  * Converts this [BlockPos] to an immutable one if needed.
@@ -142,36 +165,25 @@ val BlockPos.immutable: BlockPos get() = if (this is BlockPos.MutableBlockPos) t
  */
 val BlockPos.outlineBox: AABB
     get() {
-        val blockState = getState() ?: return FULL_BOX
+        val blockState = state ?: return FULL_BOX
         if (blockState.isAir) {
             return FULL_BOX
         }
 
         val outlineShape = blockState.getShape(world, this)
-        return if (outlineShape.isEmpty) {
-            FULL_BOX
-        } else {
-            outlineShape.bounds()
-        }
+        return outlineShape.boundsOrNull() ?: FULL_BOX
     }
 
 val BlockPos.collisionShape: VoxelShape
-    get() = this.getState()!!.getCollisionShape(world, this)
+    get() = state?.getCollisionShape(world, this) ?: Shapes.empty()
 
-/**
- * Outline shape
- */
-val BlockPos.shape: VoxelShape
-    get() = this.getState()!!.getShape(world, this)
+val BlockPos.outlineShape: VoxelShape
+    get() = state?.getShape(world, this) ?: Shapes.empty()
 
 fun BlockState.outlineBox(blockPos: BlockPos): AABB {
     val outlineShape = this.getShape(world, blockPos)
 
-    return if (outlineShape.isEmpty) {
-        FULL_BOX
-    } else {
-        outlineShape.bounds()
-    }
+    return outlineShape.boundsOrNull() ?: FULL_BOX
 }
 
 
@@ -201,7 +213,7 @@ inline fun Vec3.searchBlocksInCuboid(
     crossinline filter: (BlockPos, BlockState) -> Boolean
 ): Sequence<Pair<BlockPos, BlockState>> =
     searchBlocksInCuboid(radius).iterator().asSequence().mapNotNull {
-        val state = it.getState() ?: return@mapNotNull null
+        val state = it.state ?: return@mapNotNull null
 
         if (filter(it, state)) {
             it.immutable() to state
@@ -303,7 +315,7 @@ fun BlockPos.getSortedSphere(radius: Float): Array<BlockPos> {
 @Suppress("SpellCheckingInspection", "CognitiveComplexMethod")
 fun BlockGetter.raycast(
     context: ClipContext,
-    exclude: Array<BlockPos>?,
+    exclude: Collection<BlockPos>?,
     include: BlockPos?,
     maxBlastResistance: Float?
 ): BlockHitResult {
@@ -367,7 +379,7 @@ fun BlockGetter.raycast(
 }
 
 fun BlockPos.canStandOn(): Boolean {
-    return this.getState()!!.isFaceSturdy(world, this, Direction.UP, SupportType.CENTER)
+    return this.state?.isFaceSturdy(world, this, Direction.UP, SupportType.CENTER) ?: false
 }
 
 fun BlockState?.anotherChestPartDirection(): Direction? {
@@ -423,7 +435,7 @@ inline fun AABB.collideBlockIntersects(
     isCorrectBlock: (Block) -> Boolean
 ): Boolean {
     for (blockPos in collidingRegion) {
-        val blockState = blockPos.getState()
+        val blockState = blockPos.state
 
         if (blockState == null || !isCorrectBlock(blockState.block)) {
             continue
@@ -449,7 +461,7 @@ inline fun AABB.collideBlockIntersects(
 
 val AABB.collidingRegion: BoundingBox
     get() = BoundingBox(
-        this.minX.toInt(), this.minY.toInt(), this.minZ.toInt(),
+        floor(this.minX).toInt(), floor(this.minY).toInt(), floor(this.minZ).toInt(),
         ceil(this.maxX).toInt(), ceil(this.maxY).toInt(), ceil(this.maxZ).toInt(),
     )
 
@@ -498,6 +510,10 @@ val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.
 /**
  * Simulated [net.minecraft.world.phys.HitResult.Type.BLOCK] branch in vanilla
  *
+ * This function does not perform the surrounding checks from [net.minecraft.client.Minecraft.startUseItem],
+ * such as whether the game mode is destroying a block, the player's hands are busy, or the held item is enabled.
+ * Callers should perform the applicable checks before calling this function.
+ *
  * @see net.minecraft.client.Minecraft.startUseItem
  */
 fun doPlacement(
@@ -513,23 +529,27 @@ fun doPlacement(
     val useItemOnResult = interaction.useItemOn(player, hand, hitResult)
 
     when {
-        useItemOnResult == InteractionResult.FAIL -> {
+        useItemOnResult is InteractionResult.Fail -> {
             return
         }
 
-        useItemOnResult == InteractionResult.PASS -> {
+        useItemOnResult is InteractionResult.Pass -> {
             // Ok, we cannot place on the block, so let's just use the item in the direction
             // without targeting a block (for buckets, etc.)
             if (!stack.isEmpty) {
                 val useItemResult = interaction.useItem(player, hand)
-                if (useItemResult.consumesAction()) {
-                    handleActionsOnAccept(hand, useItemResult, true, onItemUseSuccess, swingMode)
+                if (useItemResult is Success) {
+                    if (useItemResult.swingSource == SwingSource.CLIENT && onItemUseSuccess()) {
+                        swingMode.swing(hand)
+                    }
+
+                    mc.gameRenderer.itemInHandRenderer.itemUsed(hand) // <- no condition on this
                 }
             }
         }
 
         useItemOnResult.consumesAction() -> {
-            val wasStackUsed = !stack.isEmpty && (stack.count != count || player.isCreative)
+            val wasStackUsed = !stack.isEmpty && (stack.count != count || player.hasInfiniteMaterials())
 
             handleActionsOnAccept(hand, useItemOnResult, wasStackUsed, onPlacementSuccess, swingMode)
         }
@@ -609,16 +629,19 @@ fun BlockState.isBreakable(pos: BlockPos): Boolean {
     return !isAir && (player.isCreative || getDestroySpeed(world, pos) >= 0f)
 }
 
-val FALL_DAMAGE_BLOCKING_BLOCKS = arrayOf(
-    Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
-)
-
-fun BlockPos?.isFallDamageBlocking(): Boolean {
+fun BlockPos?.fallDamageMultiplier(entity: Entity = player): Float {
     if (this == null) {
-        return false
+        return 1f
     }
 
-    return getBlock() in FALL_DAMAGE_BLOCKING_BLOCKS
+    val block = getBlock()
+    return when (block) {
+        Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW -> 0f
+        Blocks.HAY_BLOCK, Blocks.HONEY_BLOCK -> 0.2f
+        Blocks.SLIME_BLOCK -> if (!entity.isSuppressingBounce && isOlderThan1_21_2) 0f else 1f
+        is BedBlock -> 0.5f
+        else -> 1f
+    }
 }
 
 fun BlockPos.isBlastResistant(): Boolean {
@@ -676,39 +699,52 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
 
 val BlockState?.isInteractable: Boolean get() = this?.block?.isInteractable(this) ?: false
 
-fun BlockPos.isBlockedByEntities(): Boolean {
-    val posBox = FULL_BOX + this
-    return world.entitiesForRendering().any {
-        it.boundingBox.intersects(posBox)
+fun BlockPos.hasAnySolidPlacementNeighbor(): Boolean {
+    val cache = BlockPos.MutableBlockPos()
+    return Direction.entries.any {
+        !cache.setWithOffset(this, it).stateOrEmpty.canBeReplaced()
     }
 }
 
-inline fun BlockPos.getBlockingEntities(include: (Entity) -> Boolean = { true }): List<Entity> {
-    val posBox = FULL_BOX + this
-    return world.entitiesForRendering().filter {
-        it.boundingBox.intersects(posBox) &&
-            include.invoke(it)
-    }
+fun BlockPos.isBlockedByEntities(
+    except: Entity? = null,
+    box: AABB = FULL_BOX,
+    predicate: Predicate<Entity> = Predicates.alwaysTrue(),
+): Boolean {
+    val posBox = box + this
+    return world.getEntities(except, posBox, EntitySelector.NO_SPECTATORS.and(predicate))
+        .isNotEmpty() // TODO: optimize this
+}
+
+fun BlockPos.getBlockingEntities(
+    except: Entity? = null,
+    box: AABB = FULL_BOX,
+    predicate: Predicate<Entity> = Predicates.alwaysTrue(),
+): List<Entity> {
+    val posBox = box + this
+    return world.getEntities(except, posBox, EntitySelector.NO_SPECTATORS.and(predicate))
 }
 
 /**
  * Like [isBlockedByEntities] but it returns a blocking end crystal if present.
  */
 fun BlockPos.isBlockedByEntitiesReturnCrystal(
+    except: Entity? = null,
     box: AABB = FULL_BOX,
     excludeIds: IntArray? = null
 ): BooleanObjectPair<EndCrystal?> {
     var blocked = false
 
     val posBox = box + this
-    world.entitiesForRendering().forEach {
-        if (it.boundingBox.intersects(posBox) && (excludeIds == null || it.id !in excludeIds)) {
-            if (it is EndCrystal) {
-                return BooleanObjectPair.of(true, it)
-            }
-
-            blocked = true
+    val selector = Predicate<Entity> {
+        EntitySelector.NO_SPECTATORS.test(it) && (excludeIds == null || it.id !in excludeIds)
+    }
+    world.getEntities(except, posBox, selector).forEach {
+        if (it is EndCrystal) {
+            return BooleanObjectPair.of(true, it)
         }
+
+        blocked = true
     }
 
     return BooleanObjectPair.of(blocked, null)

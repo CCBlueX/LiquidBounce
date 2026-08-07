@@ -22,6 +22,7 @@
     import RegistryListSetting from "../list/RegistryListSetting.svelte";
     import CurveSetting from "../CurveSetting.svelte";
     import InventoryPresetValue from "../inventoryPreset/InventoryPresetValue.svelte";
+    import RegistryMutableListSetting from "../list/RegistryMutableListSetting.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -61,6 +62,8 @@
         <ItemListSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "REGISTRY_LIST" }
         <RegistryListSetting {path} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "REGISTRY_MUTABLE_LIST" }
+        <RegistryMutableListSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "BIND"}
         <BindSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "VECTOR3_I" }
@@ -76,6 +79,6 @@
     {:else if setting.valueType === "INVENTORY_PRESET"}
         <InventoryPresetValue bind:setting={setting} on:change/>
     {:else}
-        <div style="color: white">Unsupported setting {setting.valueType}</div>
+        <div style="color: var(--clickgui-text-color)">Unsupported setting {setting.valueType}</div>
     {/if}
 </div>

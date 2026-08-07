@@ -28,14 +28,14 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.buildText
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.util.Util
@@ -185,7 +185,7 @@ data class InputBind(
 
         val eventAction = event.action
         return when (eventAction) {
-            GLFW.GLFW_PRESS if mc.screen == null -> when (action) {
+            GLFW.GLFW_PRESS if mc.gui.screen() == null -> when (action) {
                 BindAction.TOGGLE -> !currentState
                 BindAction.HOLD, BindAction.SMART -> true
             }
@@ -317,7 +317,7 @@ fun Value<InputBind>.bind(key: InputConstants.Key, action: InputBind.BindAction,
  */
 fun Value<InputBind>.unbind() = set(InputBind.UNBOUND)
 
-fun InputBind.renderText(): Component = buildList {
+fun InputBind.renderText(): Component = buildText {
     add(
         inputByName(keyName).let { key ->
             variable(key.displayName.copy()).bold(true)
@@ -335,4 +335,4 @@ fun InputBind.renderText(): Component = buildList {
     add(regular(" ("))
     add(variable(action.tag))
     add(regular(")"))
-}.asText()
+}

@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
-import net.ccbluex.fastutil.objectObjectArrayMapOf
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import net.ccbluex.fastutil.swap
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -39,12 +42,15 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findItemsInContainer
+import net.ccbluex.liquidbounce.utils.inventory.mergeableCapacityFor
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.item.isMergeable
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.world.item.ItemStack
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.ceil
 
 /**
@@ -58,7 +64,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     private val inventoryConstrains = tree(InventoryConstraints())
     private val autoClose by boolean("AutoClose", true)
 
-    private val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE)
+    private val selectionMode = choices("SelectionMode", Distance, arrayOf(Distance, Index, Random)).apply(::tagBy)
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
@@ -78,28 +84,26 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         tree(FeatureSilentScreen)
     }
 
-    private val mainInventory = Slots.Inventory + Slots.Hotbar
-
     @Suppress("unused")
     private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
         // Check if we are in a chest screen
         val screen = getChestScreen() ?: return@handler
 
         val cleanupPlan = createCleanupPlan(screen)
-        val itemsToCollect = cleanupPlan.usefulItems.filterIsInstance<ContainerItemSlot>()
-
         // Quick swap items in hotbar (i.e. swords), some servers hate them
-        if (quickSwaps && performQuickSwaps(event, cleanupPlan, screen) != null) {
+        if (quickSwaps && performQuickSwaps(event, cleanupPlan, screen)) {
             return@handler
         }
 
+        val itemsToCollect = cleanupPlan.usefulItems.filterIsInstanceTo(ArrayList<ContainerItemSlot>())
+
         val stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
-        val sortedItemsToCollect = selectionMode.processor(itemsToCollect)
+        selectionMode.activeMode.process(itemsToCollect)
 
-        val targetBlacklist = hashSetOf<ItemSlot>()
+        val targetBlacklist = ObjectOpenHashSet<ItemSlot>()
 
-        for (slot in sortedItemsToCollect) {
-            val moveActions = mainInventory.findPossiblePickActions(screen, slot, targetBlacklist)
+        for (slot in itemsToCollect) {
+            val moveActions = Slots.HotbarAndInventory.findPossiblePickActions(screen, slot, targetBlacklist)
 
             if (moveActions != null) {
                 event.schedule(
@@ -120,24 +124,10 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         }
 
         // Check if stealing the chest was completed
-        if (autoClose && sortedItemsToCollect.isEmpty()) {
+        if (autoClose && itemsToCollect.isEmpty()) {
             event.schedule(inventoryConstrains, InventoryAction.CloseScreen(screen))
         }
     }
-
-    /**
-     * Calculates the mergeable count.
-     */
-    private fun Iterable<ItemSlot>.mergeableCountFor(itemStack: ItemStack, blacklist: Set<ItemSlot>?): Int =
-        sumOf {
-            val targetStack = it.itemStack
-            when {
-                blacklist != null && it in blacklist -> 0
-                targetStack.isEmpty -> itemStack.maxStackSize
-                targetStack.isMergeable(itemStack) -> targetStack.maxStackSize - targetStack.count
-                else -> 0
-            }
-        }
 
     /**
      * Gets the clicks from mergeable or empty slots, or null if impossible to pick
@@ -149,7 +139,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         targetBlacklist: MutableSet<ItemSlot>? = null,
     ): List<InventoryAction.Click>? {
         val fromStack = from.itemStack
-        val remaining = mergeableCountFor(fromStack, blacklist = targetBlacklist)
+        val remaining = mergeableCapacityFor(fromStack, blacklist = targetBlacklist)
 
         // Impossible to pick any item into inventory
         if (remaining == 0) return null
@@ -228,7 +218,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         cleanupPlan: InventoryCleanupPlan,
         slotsToCollect: Int,
     ): Int {
-        val freeSlotsInInv = mainInventory.count { it.itemStack.isEmpty }
+        val freeSlotsInInv = Slots.HotbarAndInventory.count { it.itemStack.isEmpty }
 
         val spaceGainedThroughMerge = cleanupPlan.mergeableItems.entries.sumOf { (id, slots) ->
             val slotsInChest = slots.count { it.slotType == ItemSlot.Type.CONTAINER }
@@ -243,29 +233,59 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     }
 
     /**
-     * WARNING: Due to the remap the hotbar swaps are not valid anymore after this function.
-     *
-     * @return true if the chest stealer should wait for the next tick to continue. null if we didn't do anything
+     * @return true if a quick swap transaction was scheduled and the plan should be regenerated next tick
      */
+    @Suppress("CognitiveComplexMethod")
     private fun performQuickSwaps(
         event: ScheduleInventoryActionEvent,
         cleanupPlan: InventoryCleanupPlan,
         screen: AbstractContainerScreen<*>
-    ): Boolean? {
-        for (i in cleanupPlan.swaps.indices) {
-            val hotbarSwap = cleanupPlan.swaps[i]
+    ): Boolean {
+        cleanupPlan.swaps.forEach { hotbarSwap ->
             // We only care about swaps from the chest to the hotbar
             if (hotbarSwap.from.slotType != ItemSlot.Type.CONTAINER) {
-                continue
+                return@forEach
             }
 
-            if (hotbarSwap.to !is HotbarItemSlot) {
-                continue
+            val hotbarSlot = hotbarSwap.to as? HotbarItemSlot ?: return@forEach
+            if (!hotbarSlot.canBeSwapTarget) {
+                return@forEach
+            }
+
+            val actions = when {
+                // Target slot is empty, swap
+                hotbarSlot.itemStack.isEmpty -> listOf(
+                    InventoryAction.Click.performSwap(screen, hotbarSwap.from, hotbarSlot)
+                )
+
+                // Target slot item is useful, swap it with another empty slot
+                hotbarSlot in cleanupPlan.usefulItems ->
+                    Slots.Inventory.firstOrNull { it.itemStack.isEmpty }?.let { emptyInventorySlot ->
+                        listOf(
+                            InventoryAction.Click.performSwap(screen, emptyInventorySlot, hotbarSlot),
+                            InventoryAction.Click.performSwap(screen, hotbarSwap.from, hotbarSlot),
+                        )
+                    } ?: return@forEach
+
+                // Target slot item is useless, throw and swap
+                else -> if (hotbarSlot.isOffHand) {
+                    // Throwing offhand item inside container looks not legit
+                    listOf(InventoryAction.Click.performSwap(screen, hotbarSwap.from, hotbarSlot))
+                } else {
+                    listOf(
+                        InventoryAction.Click.performThrow(screen, hotbarSlot),
+                        InventoryAction.Click.performSwap(screen, hotbarSwap.from, hotbarSlot),
+                    )
+                }
+            }
+
+            if (actions.any { it.slot.getIdForServer(screen) == null }) {
+                return@forEach
             }
 
             event.schedule(
                 inventoryConstrains,
-                InventoryAction.Click.performSwap(screen, hotbarSwap.from, hotbarSwap.to),
+                actions,
                 /**
                  * we prioritize item based on how important it is
                  * for example we should prioritize armor over apples
@@ -273,17 +293,10 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
                 hotbarSwap.priority
             )
 
-            // todo: hook to schedule and check if swap was successful
-            cleanupPlan.remapSlots(
-                objectObjectArrayMapOf(
-                    hotbarSwap.from, hotbarSwap.to,
-                    hotbarSwap.to, hotbarSwap.from,
-                )
-            )
-
+            return true
         }
 
-        return null
+        return false
     }
 
     /**
@@ -293,7 +306,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = screen.findItemsInContainer()
 
-            InventoryCleanupPlan(HashSet(usefulItems), mutableListOf(), hashMapOf())
+            InventoryCleanupPlan(ObjectOpenHashSet(usefulItems), mutableListOf(), hashMapOf())
         } else {
             val availableItems = findNonEmptySlotsInInventory() + screen.findItemsInContainer()
 
@@ -303,21 +316,104 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         return cleanupPlan
     }
 
-    @Suppress("unused")
-    private enum class SelectionMode(
-        override val tag: String,
-        val processor: (List<ContainerItemSlot>) -> List<ContainerItemSlot>
-    ) : Tagged {
-        DISTANCE("Distance", { it.sortedWith(Comparator(ContainerItemSlot::distance)) }),
-        INDEX("Index", { list -> list.sortedBy { it.slotInContainer } }),
-        RANDOM("Random", List<ContainerItemSlot>::shuffled),
+    private sealed class SelectionMode(name: String) : Mode(name) {
+        final override val parent: ModeValueGroup<*>
+            get() = selectionMode
+
+        abstract fun process(slots: ArrayList<ContainerItemSlot>)
+    }
+
+    private object Distance : SelectionMode("Distance") {
+        private val startItem by enumChoice("StartItem", StartItem.DEFAULT)
+        private val randomFactor by floatRange("RandomFactor", 1.0f..1.0f, 0.25f..2f)
+
+        override fun process(slots: ArrayList<ContainerItemSlot>) {
+            val n = slots.size
+            if (n <= 1) return
+
+            val startIndex = startItem.getStartIndex(slots)
+            if (startIndex != 0) {
+                slots.swap(0, startIndex)
+            }
+
+            if (n <= 2) return
+
+            for (i in 0..<n - 1) {
+                var bestIdx = i + 1
+                var bestDist = Float.POSITIVE_INFINITY
+
+                val current = slots[i]
+
+                for (j in i + 1..<n) {
+                    val candidate = slots[j]
+                    val distance = current.distance(candidate).toFloat()
+                    val factor = if (randomFactor.isEmpty()) 1F else randomFactor.random()
+                    val effectiveDistance = distance * factor
+
+                    if (effectiveDistance < bestDist) {
+                        bestDist = effectiveDistance
+                        bestIdx = j
+                    }
+                }
+
+                slots.swap(i + 1, bestIdx)
+            }
+        }
+
+        private enum class StartItem(override val tag: String) : Tagged {
+            DEFAULT("Default") {
+                override fun getStartIndex(slots: List<ContainerItemSlot>): Int = 0
+            },
+            RANDOM("Random") {
+                override fun getStartIndex(slots: List<ContainerItemSlot>): Int {
+                    return ThreadLocalRandom.current().nextInt(slots.size)
+                }
+            },
+            MAX_SLOT("MaxSlot") {
+                override fun getStartIndex(slots: List<ContainerItemSlot>): Int {
+                    return slots.indices.maxBy { slots[it].slotInContainer }
+                }
+            },
+            MIN_SLOT("MinSlot") {
+                override fun getStartIndex(slots: List<ContainerItemSlot>): Int {
+                    return slots.indices.minBy { slots[it].slotInContainer }
+                }
+            };
+
+            abstract fun getStartIndex(slots: List<ContainerItemSlot>): Int
+        }
+    }
+
+    private object Index : SelectionMode("Index") {
+        private val order by enumChoice("Order", Order.ASCENDING)
+
+        override fun process(slots: ArrayList<ContainerItemSlot>) {
+            slots.sortWith(order)
+        }
+
+        private enum class Order(override val tag: String) : Tagged, Comparator<ContainerItemSlot> {
+            ASCENDING("Ascending") {
+                override fun compare(o1: ContainerItemSlot, o2: ContainerItemSlot): Int {
+                    return o1.slotInContainer.compareTo(o2.slotInContainer)
+                }
+            },
+            DESCENDING("Descending") {
+                override fun compare(o1: ContainerItemSlot, o2: ContainerItemSlot): Int {
+                    return o2.slotInContainer.compareTo(o1.slotInContainer)
+                }
+            },
+        }
+    }
+
+    private object Random : SelectionMode("Random") {
+        override fun process(slots: ArrayList<ContainerItemSlot>) = slots.shuffle()
     }
 
     /**
      * @return the chest screen if it is open and the title matches the chest title
      */
     private fun getChestScreen(): AbstractContainerScreen<*>? {
-        return mc.screen?.takeIf { it.canBeStolen() } as AbstractContainerScreen<*>?
+        return mc.gui.screen()?.takeIf { it.canBeStolen() } as AbstractContainerScreen<*>?
     }
 
     fun Screen.canBeStolen(): Boolean {
