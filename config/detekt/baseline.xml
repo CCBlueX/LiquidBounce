@@ -2,14 +2,16 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CognitiveComplexMethod:AStarPathBuilder.kt:AStarPathBuilder$fun findPath: List&lt;Vec3i></ID>
     <ID>CognitiveComplexMethod:BlockExtensions.kt:fun Block?.isInteractable: Boolean</ID>
     <ID>CognitiveComplexMethod:CommandManager.kt:CommandManager$@ScriptApiRequired @JvmName("execute") fun execute</ID>
     <ID>CognitiveComplexMethod:PlacementRenderHandler.kt:PlacementRenderHandler$fun render</ID>
+    <ID>CognitiveComplexMethod:extensions.kt:fun Task.getContributors: List&lt;String></ID>
     <ID>LongMethod:CommandManager.kt:CommandManager$@ScriptApiRequired @JvmName("execute") fun execute</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt:ModuleProjectilePuncher$for</ID>
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt:for</ID>
+    <ID>MatchingDeclarationName:tasks.kt:CompareJsonKeysTask : DefaultTask</ID>
     <ID>MaxLineLength:ModuleBookBot.kt:ModuleBookBot.BookBuilder$*</ID>
+    <ID>MaxLineLength:SurroundingsMapper.kt:SurroundingsMapper$private</ID>
     <ID>ThrowsCount:CommandManager.kt:CommandManager$@ScriptApiRequired @JvmName("execute") fun execute</ID>
   </CurrentIssues>
 </SmellBaseline>

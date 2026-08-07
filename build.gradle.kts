@@ -165,6 +165,11 @@ dependencies {
     // External utils
     compileOnlyApi(libs.fastutil4k.extensionsOnly)
     jij(libs.fastutil4k.moreCollections)
+    jij(libs.parquet.hadoop)
+    jij(libs.parquet.avro)
+    jij(libs.hadoop.client)
+    jij(libs.hadoop.common)
+    jij(libs.zstd.jni)
 
     // Test libraries
     // testImplementation(kotlin("test"))

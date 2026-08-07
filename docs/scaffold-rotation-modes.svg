@@ -1,0 +1,190 @@
+<svg width="1520" height="1020" viewBox="0 0 1520 1020" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#161a22"/>
+      <stop offset="1" stop-color="#0e1117"/>
+    </linearGradient>
+    <radialGradient id="block" cx="0.5" cy="0.5" r="0.75">
+      <stop offset="0" stop-color="#2e3646"/>
+      <stop offset="1" stop-color="#1d222e"/>
+    </radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+
+  <rect width="1520" height="1020" fill="url(#bg)"/>
+
+  <!-- Title -->
+  <text x="40" y="54" font-size="34" font-weight="700" fill="#eef2f8">Scaffold Rotation Modes</text>
+  <text x="40" y="84" font-size="16" fill="#8b96a8">LiquidBounce · <tspan fill="#7aa2ff">RotationMode (AimMode)</tspan> — where your crosshair aims on the block face · <tspan fill="#7dffa2">RotationTiming</tspan> — when the server sees that aim</text>
+
+  <!-- =========================================================== -->
+  <!-- LEFT PANEL: ROTATION MODE (block face top-down)              -->
+  <!-- =========================================================== -->
+  <g>
+    <!-- panel bg -->
+    <rect x="40" y="110" width="870" height="860" rx="18" fill="#11151d" stroke="#242b3a"/>
+
+    <text x="70" y="152" font-size="22" font-weight="700" fill="#7aa2ff">Rotation Mode — where you aim on the block face</text>
+    <text x="70" y="176" font-size="13" fill="#7b8595">Top-down view of the face of the block being placed. Player at the bottom, yaw = forward (up).</text>
+
+    <!-- the block face (targeted upper face shown as this square being placed) -->
+    <g transform="translate(140,205)">
+      <rect x="0" y="240" width="560" height="560" rx="6" fill="url(#block)" stroke="#3a4ed1" stroke-width="3"/>
+      <!-- face grid -->
+      <g stroke="#2a3242" stroke-width="1">
+        <line x1="140" y1="240" x2="140" y2="800"/>
+        <line x1="280" y1="240" x2="280" y2="800"/>
+        <line x1="420" y1="240" x2="420" y2="800"/>
+        <line x1="0" y1="380" x2="560" y2="380"/>
+        <line x1="0" y1="520" x2="560" y2="520"/>
+        <line x1="0" y1="660" x2="560" y2="660"/>
+      </g>
+      <text x="8" y="232" font-size="12" fill="#586275">FAR (opposite of movement / 180°)</text>
+      <text x="300" y="832" font-size="12" fill="#586275">NEAR (movement direction)</text>
+
+      <!-- optimal movement line (dashed) -->
+      <line x1="280" y1="240" x2="280" y2="800" stroke="#7aa2ff" stroke-width="2" stroke-dasharray="7 6" opacity="0.35"/>
+
+      <!-- Mode markers -->
+      <!-- 1 CENTER -->
+      <circle cx="280" cy="520" r="16" fill="#ffd166" filter="url(#glow)"/>
+      <text x="280" y="526" text-anchor="middle" font-size="15" font-weight="700" fill="#111">1</text>
+
+      <!-- 2 RANDOM (scatter) -->
+      <g fill="#ff6b6b" opacity="0.9">
+        <circle cx="250" cy="470" r="6"/>
+        <circle cx="320" cy="560" r="6"/>
+        <circle cx="215" cy="600" r="6"/>
+        <circle cx="340" cy="440" r="6"/>
+        <circle cx="300" cy="610" r="6"/>
+        <circle cx="230" cy="510" r="6"/>
+        <circle cx="365" cy="520" r="6"/>
+      </g>
+
+      <!-- 3 STABILIZED (small clamped region near optimal line) -->
+      <rect x="248" y="610" width="64" height="40" rx="8" fill="#7dffa2" opacity="0.25" stroke="#7dffa2" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <circle cx="280" cy="630" r="13" fill="#7dffa2" filter="url(#glow)"/>
+      <text x="280" y="636" text-anchor="middle" font-size="13" font-weight="700" fill="#111">3</text>
+
+      <!-- 4 NEAREST ROTATION (nearest to current look line) -->
+      <circle cx="280" cy="440" r="13" fill="#ff9f43"/>
+      <text x="280" y="446" text-anchor="middle" font-size="13" font-weight="700" fill="#111">4</text>
+
+      <!-- 5 REVERSE YAW (180°: far edge) -->
+      <rect x="248" y="236" width="64" height="42" rx="3" fill="#c780ff" opacity="0.18" stroke="#c780ff" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <circle cx="280" cy="262" r="13" fill="#c780ff" filter="url(#glow)"/>
+      <text x="280" y="268" text-anchor="middle" font-size="13" font-weight="700" fill="#111">5</text>
+
+      <!-- 6 DIAGONAL YAW (75°) upper-left region -->
+      <circle cx="120" cy="300" r="13" fill="#4dd0e1"/>
+      <text x="120" y="306" text-anchor="middle" font-size="13" font-weight="700" fill="#111">6</text>
+
+      <!-- 7 ANGLE YAW (45°) upper corner -->
+      <circle cx="86" cy="262" r="13" fill="#f78fb3"/>
+      <text x="86" y="268" text-anchor="middle" font-size="13" font-weight="700" fill="#111">7</text>
+
+      <!-- 8 EDGE POINT (furthest corner from player) -->
+      <circle cx="448" cy="610" r="13" fill="#74c0fc" filter="url(#glow)"/>
+      <text x="448" y="616" text-anchor="middle" font-size="13" font-weight="700" fill="#111">8</text>
+
+      <!-- player indicator at bottom -->
+      <g transform="translate(280,850)">
+        <circle r="20" fill="#3a4ed1"/>
+        <path d="M-9,-14 L0,-26 L9,-14" fill="#3a4ed1"/>
+        <circle r="7" fill="#eef2f8"/>
+      </g>
+      <text x="280" y="896" text-anchor="middle" font-size="13" fill="#8b96a8">▼ player (eye) — yaw up</text>
+    </g>
+  </g>
+
+  <!-- =========================================================== -->
+  <!-- RIGHT PANEL: LEGEND + TIMING                                 -->
+  <!-- =========================================================== -->
+  <g>
+    <rect x="940" y="110" width="540" height="390" rx="18" fill="#11151d" stroke="#242b3a"/>
+    <text x="970" y="150" font-size="20" font-weight="700" fill="#7aa2ff">Rotation Mode legend</text>
+
+    <!-- legend rows -->
+    <g transform="translate(970,185)">
+      <g font-size="13.5">
+        <circle cx="12" cy="0" r="8" fill="#ffd166"/><text x="6" y="5" font-weight="700" font-size="11" fill="#111">1</text>
+        <text x="34" y="5" font-weight="700" fill="#eef2f8">Center</text>
+        <text x="190" y="5" fill="#7b8595">aim at exact center of the face</text>
+
+        <circle cx="12" cy="34" r="8" fill="#ff6b6b"/><text x="34" y="39" font-weight="700" fill="#eef2f8">Random</text>
+        <text x="190" y="39" fill="#7b8595">random point on the face each placement</text>
+
+        <rect x="4" y="60" width="16" height="16" rx="4" fill="#7dffa2" opacity="0.5" stroke="#7dffa2"/>
+        <text x="34" y="73" font-weight="700" fill="#eef2f8">Stabilized <tspan fill="#7dffa2">(default)</tspan></text>
+        <text x="190" y="73" fill="#7b8595">nearest point to look line, clamped to a</text>
+        <text x="190" y="90" fill="#7b8595">small stable region along the optimal path</text>
+
+        <circle cx="12" cy="112" r="8" fill="#ff9f43"/><text x="34" y="117" font-weight="700" fill="#eef2f8">NearestRotation</text>
+        <text x="190" y="117" fill="#7b8595">point on face nearest current look angle</text>
+
+        <rect x="4" y="138" width="16" height="16" rx="4" fill="#c780ff" opacity="0.5" stroke="#c780ff"/>
+        <text x="34" y="151" font-weight="700" fill="#eef2f8">ReverseYaw</text>
+        <text x="190" y="151" fill="#7b8595">point ~180° opposite your yaw (far edge)</text>
+
+        <circle cx="12" cy="176" r="8" fill="#4dd0e1"/><text x="34" y="181" font-weight="700" fill="#eef2f8">DiagonalYaw</text>
+        <text x="190" y="181" fill="#7b8595">point ~75° off your yaw (near-diagonal)</text>
+
+        <circle cx="12" cy="210" r="8" fill="#f78fb3"/><text x="34" y="215" font-weight="700" fill="#eef2f8">AngleYaw</text>
+        <text x="190" y="215" fill="#7b8595">point ~45° off your yaw (corner-ish)</text>
+
+        <circle cx="12" cy="244" r="8" fill="#74c0fc"/><text x="34" y="249" font-weight="700" fill="#eef2f8">EdgePoint</text>
+        <text x="190" y="249" fill="#7b8595">furthest edge point of the face from you</text>
+      </g>
+    </g>
+
+    <text x="970" y="478" font-size="12.5" fill="#586275">EdgePoint, ReverseYaw, DiagonalYaw &amp; AngleYaw fall back to NearestRotation when standing still.</text>
+  </g>
+
+  <!-- RIGHT LOWER: TIMING -->
+  <g>
+    <rect x="940" y="520" width="540" height="450" rx="18" fill="#11151d" stroke="#242b3a"/>
+    <text x="970" y="558" font-size="20" font-weight="700" fill="#7dffa2">RotationTiming — when the server sees your aim</text>
+
+    <!-- timeline -->
+    <g transform="translate(970,600)">
+      <text x="0" y="0" font-size="12" fill="#586275">tick t</text>
+      <line x1="0" y1="8" x2="440" y2="8" stroke="#3a4ed1" stroke-width="2"/>
+    </g>
+
+    <!-- Normal -->
+    <g transform="translate(970,640)">
+      <text x="0" y="0" font-size="14" font-weight="700" fill="#eef2f8">Normal</text>
+      <text x="96" y="0" font-size="12" fill="#7b8595">rotate early → place at target ✦</text>
+      <circle cx="26" cy="34" r="9" fill="#7aa2ff"/><text x="26" y="38" text-anchor="middle" font-size="10" fill="#111">A</text>
+      <rect x="60" y="27" width="58" height="14" rx="3" fill="#2a3242"/><text x="89" y="37" text-anchor="middle" font-size="10" fill="#cdd6e4">look</text>
+      <circle cx="150" cy="34" r="9" fill="#7dffa2"/><text x="150" y="38" text-anchor="middle" font-size="10" fill="#111">B</text>
+      <rect x="180" y="27" width="58" height="14" rx="3" fill="#3a4ed1"/><text x="209" y="37" text-anchor="middle" font-size="10" fill="#fff">place</text>
+      <text x="260" y="38" font-size="12" fill="#c780ff">slightly visible look-ahead; most vanilla-feeling</text>
+    </g>
+
+    <!-- OnTick -->
+    <g transform="translate(970,730)">
+      <text x="0" y="0" font-size="14" font-weight="700" fill="#eef2f8">OnTick</text>
+      <text x="96" y="0" font-size="12" fill="#7b8595">rotate on the exact placement tick ✦</text>
+      <circle cx="26" cy="34" r="9" fill="#7aa2ff"/><text x="26" y="38" text-anchor="middle" font-size="10" fill="#111">A</text>
+      <rect x="60" y="27" width="58" height="14" rx="3" fill="#3a4ed1"/><text x="89" y="37" text-anchor="middle" font-size="10" fill="#fff">place</text>
+      <circle cx="150" cy="34" r="9" fill="#7dffa2"/><text x="150" y="38" text-anchor="middle" font-size="10" fill="#111">B</text>
+      <rect x="180" y="27" width="58" height="14" rx="3" fill="#2a3242"/><text x="209" y="37" text-anchor="middle" font-size="10" fill="#cdd6e4">look</text>
+      <text x="260" y="38" font-size="12" fill="#c780ff">rotation sent the same tick as the block</text>
+    </g>
+
+    <!-- OnTickSnap -->
+    <g transform="translate(970,820)">
+      <text x="0" y="0" font-size="14" font-weight="700" fill="#eef2f8">OnTickSnap</text>
+      <text x="120" y="0" font-size="12" fill="#7b8595">rotate on the tick, then keep/snap ✦</text>
+      <circle cx="26" cy="34" r="9" fill="#7aa2ff"/><text x="26" y="38" text-anchor="middle" font-size="10" fill="#111">A</text>
+      <rect x="60" y="27" width="58" height="14" rx="3" fill="#3a4ed1"/><text x="89" y="37" text-anchor="middle" font-size="10" fill="#fff">place</text>
+      <circle cx="150" cy="34" r="9" fill="#7dffa2"/><text x="150" y="38" text-anchor="middle" font-size="10" fill="#111">B</text>
+      <rect x="180" y="27" width="58" height="14" rx="3" fill="#7dffa2"/><text x="209" y="37" text-anchor="middle" font-size="10" fill="#111">snap</text>
+      <text x="260" y="38" font-size="12" fill="#c780ff">keeps rotation held after placing</text>
+    </g>
+  </g>
+
+  <!-- footer -->
+  <text x="940" y="995" font-size="12" fill="#3f4757">Source: src/main/kotlin/net/ccbluex/liquidbounce/utils/block/targetfinding/ · FaceTargetPositionFactory.kt · ScaffoldNormalTechnique (RotationMode) · ModuleScaffold (RotationTiming)</text>
+</svg>
