@@ -21,12 +21,13 @@ package net.ccbluex.liquidbounce.render.gui
 
 import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.ProjectionType
+import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.platform.Lighting
+import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
@@ -39,7 +40,8 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
-import net.ccbluex.liquidbounce.utils.render.toBufferedImage
+import net.ccbluex.liquidbounce.utils.render.copyTo
+import net.ccbluex.liquidbounce.utils.render.mapBuffer
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.Projection
@@ -55,17 +57,19 @@ import net.minecraft.resources.Identifier
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.Items
+import okio.Buffer
 import org.apache.commons.lang3.function.Consumers
-import java.awt.image.BufferedImage
+import org.lwjgl.system.MemoryUtil
+import java.nio.ByteBuffer
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.sqrt
 
 private const val NATIVE_ITEM_SIZE: Int = GuiRenderer.DEFAULT_ITEM_SIZE
 
 private class Atlas(
-    val map: Map<Item, Rect2i>,
-    val image: BufferedImage,
+    val images: Map<Identifier, ByteArray>,
     /**
      * Contains aliases. For example `minecraft:blue_wall_banner` -> `minecraft:wall_banner` which is necessary since
      * `minecraft:blue_wall_banner` has no texture.
@@ -90,23 +94,13 @@ object ItemImageAtlas : EventListener {
         atlas = ItemTextureRenderer(items = items, count = items.size(), scale = 4).render().await()
     }
 
-    val isAtlasAvailable
+    val isAtlasAvailable: Boolean
         get() = this.atlas != null
 
-    fun resolveAliasIfPresent(name: Identifier): Identifier {
-        return atlas!!.aliasMap[name] ?: return name
-    }
-
-    fun getItemImage(item: Item): BufferedImage? {
-        val atlas = requireNotNull(this.atlas) { "Atlas is not available yet" }
-        val rect = atlas.map[item] ?: return null
-
-        return atlas.image.getSubimage(
-            rect.x,
-            rect.y,
-            rect.width,
-            rect.height,
-        )!!
+    fun getItemImage(name: Identifier): ByteArray? {
+        val atlas = this.atlas ?: return null
+        val resolvedName = atlas.aliasMap[name] ?: name
+        return atlas.images[resolvedName]
     }
 }
 
@@ -142,8 +136,13 @@ private class ItemTextureRenderer(
 
     private val projection = Projection()
     private val projectionMatrixBuffer = ProjectionMatrixBuffer("items")
+    private val closed = AtomicBoolean()
 
     private fun close() {
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
+
         projectionMatrixBuffer.close()
         itemAtlasFramebuffer.destroyBuffers()
         submitNodeCollector.drainPhases(Consumers.nop())
@@ -155,55 +154,130 @@ private class ItemTextureRenderer(
      * From 1.21.5 DrawContext code
      */
     fun render(): CompletableFuture<Atlas> {
-        itemAtlasFramebuffer.clearColorAndDepth()
-        RenderSystem.backupProjectionMatrix()
-        this.projection.setupOrtho(-1000.0F, 1000.0F, this.textureSize.toFloat(), this.textureSize.toFloat(), true)
-        RenderSystem.setProjectionMatrix(
-            this.projectionMatrixBuffer.getBuffer(this.projection),
-            ProjectionType.ORTHOGRAPHIC,
-        )
-        val itemMap = Reference2ObjectOpenHashMap<Item, Rect2i>(count)
+        val result = CompletableFuture<Atlas>()
 
-        withOutputTextureOverride(itemAtlasFramebuffer.colorTextureView, itemAtlasFramebuffer.depthTextureView) {
-            val matrixStack = Pools.MatStack.borrow()
-            val keyedItemRenderState = TrackingItemStackRenderState()
-            for ((idx, item) in items.withIndex()) {
-                val x = (idx % itemsPerDimension) * itemPixelSize
-                val y = (idx / itemsPerDimension) * itemPixelSize
-                if (item !== Items.AIR) {
-                    val stack = item.defaultInstance
-                    mc.itemModelResolver.updateForTopItem(
-                        keyedItemRenderState,
-                        stack,
-                        ItemDisplayContext.GUI,
-                        world,
-                        player,
-                        0
-                    )
+        try {
+            itemAtlasFramebuffer.clearColorAndDepth()
+            val itemMap = Object2ObjectOpenHashMap<Identifier, Rect2i>(count)
 
-                    this.renderItemToAtlas(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
+            RenderSystem.backupProjectionMatrix()
+            try {
+                this.projection.setupOrtho(
+                    -1000.0F,
+                    1000.0F,
+                    this.textureSize.toFloat(),
+                    this.textureSize.toFloat(),
+                    true,
+                )
+                RenderSystem.setProjectionMatrix(
+                    this.projectionMatrixBuffer.getBuffer(this.projection),
+                    ProjectionType.ORTHOGRAPHIC,
+                )
+
+                withOutputTextureOverride(
+                    itemAtlasFramebuffer.colorTextureView,
+                    itemAtlasFramebuffer.depthTextureView,
+                ) {
+                    val matrixStack = Pools.MatStack.borrow()
+                    val keyedItemRenderState = TrackingItemStackRenderState()
+                    try {
+                        for ((idx, item) in items.withIndex()) {
+                            val x = (idx % itemsPerDimension) * itemPixelSize
+                            val y = (idx / itemsPerDimension) * itemPixelSize
+                            if (item !== Items.AIR) {
+                                val stack = item.defaultInstance
+                                mc.itemModelResolver.updateForTopItem(
+                                    keyedItemRenderState,
+                                    stack,
+                                    ItemDisplayContext.GUI,
+                                    world,
+                                    player,
+                                    0,
+                                )
+
+                                this.renderItemToAtlas(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
+                            }
+                            itemMap[BuiltInRegistries.ITEM.getKey(item)] =
+                                Rect2i(x, y, itemPixelSize, itemPixelSize)
+                        }
+                    } finally {
+                        keyedItemRenderState.clear()
+                        Pools.MatStack.recycle(matrixStack)
+                    }
                 }
-                itemMap[item] = Rect2i(x, y, itemPixelSize, itemPixelSize)
+            } finally {
+                RenderSystem.restoreProjectionMatrix()
             }
-            keyedItemRenderState.clear()
-            Pools.MatStack.recycle(matrixStack)
+
+            val aliasMap = findBlockToItemAliases()
+            val colorTexture = requireNotNull(itemAtlasFramebuffer.colorTexture) {
+                "Item atlas framebuffer has no color texture"
+            }
+            val readbackBuffer = gpuDevice.createBuffer(
+                { "ItemImageAtlas readback" },
+                GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
+                textureSize.toLong() * textureSize * GpuFormat.RGBA8_UNORM.blockSize(),
+            )
+            colorTexture.copyTo(readbackBuffer) {
+                try {
+                    if (result.isCancelled) {
+                        return@copyTo
+                    }
+
+                    val images = readbackBuffer.mapBuffer(read = true).use { mappedView ->
+                        encodeItemImages(mappedView.data(), itemMap)
+                    }
+                    logger.info("Loaded $textureSize x $textureSize item atlas with ${images.size} PNGs")
+                    result.complete(Atlas(images, aliasMap))
+                } catch (throwable: Throwable) {
+                    if (throwable !is CancellationException) {
+                        logger.error("Failed to load item atlas", throwable)
+                    }
+                    result.completeExceptionally(throwable)
+                } finally {
+                    readbackBuffer.close()
+                    close()
+                }
+            }
+        } catch (throwable: Throwable) {
+            close()
+            result.completeExceptionally(throwable)
         }
 
-        RenderSystem.restoreProjectionMatrix()
+        return result
+    }
 
-        return itemAtlasFramebuffer.colorTexture!!.toBufferedImage()
-            .thenApply { image ->
-                logger.info("Loaded ${image.width} x ${image.height} item atlas")
-
-                this.close()
-//                ImageIO.write(image, "png", java.io.File("Debug_ItemAtlas.png"))
-
-                Atlas(itemMap, image, findBlockToItemAliases())
-            }.whenComplete { _, throwable ->
-                if (throwable != null && throwable !is CancellationException) {
-                    logger.error("Failed to load item atlas", throwable)
-                }
+    private fun encodeItemImages(
+        atlasPixels: ByteBuffer,
+        itemMap: Map<Identifier, Rect2i>,
+    ) = buildMap(itemMap.size) {
+        NativeImage(itemPixelSize, itemPixelSize, false).use { itemImage ->
+            val buffer = Buffer()
+            for ((identifier, rect) in itemMap) {
+                atlasPixels.copyRectTo(itemImage, rect)
+                check(itemImage.writeToChannel(buffer)) { "Failed to encode item texture $identifier" }
+                val encoded = buffer.readByteArray()
+                buffer.clear()
+                this[identifier] = encoded
             }
+        }
+    }
+
+    private fun ByteBuffer.copyRectTo(target: NativeImage, rect: Rect2i) {
+        require(target.format() == NativeImage.Format.RGBA)
+        require(rect.width == target.width && rect.height == target.height)
+        require(rect.x >= 0 && rect.y >= 0 && rect.x + rect.width <= textureSize && rect.y + rect.height <= textureSize)
+
+        val bytesPerPixel = NativeImage.Format.RGBA.components()
+        val rowBytes = rect.width * bytesPerPixel.toLong()
+        val sourcePixels = MemoryUtil.memAddress(this)
+        for (row in 0 until rect.height) {
+            // GPU readback rows are bottom-up while atlas rectangles use top-down coordinates.
+            val sourceY = textureSize - rect.y - row - 1
+            val sourceOffset = (sourceY * textureSize + rect.x) * bytesPerPixel.toLong()
+            val targetOffset = row * rowBytes
+            MemoryUtil.memCopy(sourcePixels + sourceOffset, target.pointer + targetOffset, rowBytes)
+        }
     }
 
     /**
@@ -236,9 +310,7 @@ private class ItemTextureRenderer(
         matrices.popPose()
     }
 
-    private fun findBlockToItemAliases(): Map<Identifier, Identifier> {
-        val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
-
+    private fun findBlockToItemAliases() = buildMap {
         BuiltInRegistries.BLOCK.forEach { block ->
             val blockId = BuiltInRegistries.BLOCK.getKey(block)
             val itemId = findItemIdForBlock(blockId, block.asItem()) ?: return@forEach
@@ -246,11 +318,9 @@ private class ItemTextureRenderer(
             // Only keep aliases where the identifier differs. Blocks whose item has
             // the same id are resolved by the regular item lookup path.
             if (itemId != blockId) {
-                map[blockId] = itemId
+                this[blockId] = itemId
             }
         }
-
-        return map
     }
 
     /**

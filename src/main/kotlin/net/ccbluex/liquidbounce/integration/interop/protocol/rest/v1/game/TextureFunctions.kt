@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import io.ktor.http.ContentType
+import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
@@ -32,10 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.resources.DefaultPlayerSkin
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
-import net.minecraft.resources.ResourceKey
 import java.util.UUID
 import kotlin.jvm.optionals.getOrNull
 
@@ -61,14 +59,10 @@ private fun Route.getItemTexture() = get("/itemTexture") {
     val minecraftIdentifier = Identifier.tryParse(identifier)
         ?: call.badRequest("Invalid identifier $identifier")
 
-    val alternativeIdentifier = ItemImageAtlas.resolveAliasIfPresent(minecraftIdentifier)
-
-    val of = ResourceKey.create(Registries.ITEM, alternativeIdentifier)
-
-    val image = BuiltInRegistries.ITEM.getValue(of)?.let(ItemImageAtlas::getItemImage)
+    val image = ItemImageAtlas.getItemImage(minecraftIdentifier)
         ?: call.badRequest("Item image not found")
 
-    call.respondImage(image)
+    call.respondBytes(image, ContentType.Image.PNG)
 }
 
 // GET /api/v1/client/resource/effectTexture
