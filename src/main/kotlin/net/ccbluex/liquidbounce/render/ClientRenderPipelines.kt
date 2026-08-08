@@ -27,7 +27,6 @@ import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.ColorTargetState
 import com.mojang.blaze3d.pipeline.DepthStencilState
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.CompareOp
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
@@ -227,15 +226,21 @@ object ClientRenderPipelines {
     @JvmField
     val LinesWithWidth = newPipeline("lines_with_width") {
         withSnippet(RenderPipelines.LINES_SNIPPET)
-        withDepthStencilState(DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
         forWorldRender()
     }
 
-    @JvmField
-    val Lines = newPipeline("lines") {
+    private val Lines = newPipeline("lines") {
         posColorSnippet(PrimitiveTopology.DEBUG_LINES)
         forWorldRender()
     }
+
+    private val LinesDepthTested = newPipeline("lines_depth_tested") {
+        posColorSnippet(PrimitiveTopology.DEBUG_LINES)
+        forWorldRender(noDepthTest = false)
+    }
+
+    @JvmStatic
+    fun lines(noDepthTest: Boolean) = if (noDepthTest) Lines else LinesDepthTested
 
     private val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
@@ -262,11 +267,18 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
-    @JvmField
-    val Triangles = newPipeline("triangles") {
+    private val Triangles = newPipeline("triangles") {
         posColorSnippet(PrimitiveTopology.TRIANGLES)
         forWorldRender()
     }
+
+    private val TrianglesDepthTested = newPipeline("triangles_depth_tested") {
+        posColorSnippet(PrimitiveTopology.TRIANGLES)
+        forWorldRender(noDepthTest = false)
+    }
+
+    @JvmStatic
+    fun triangles(noDepthTest: Boolean) = if (noDepthTest) Triangles else TrianglesDepthTested
 
     private val TriangleStrip = newPipeline("triangle_strip") {
         posColorSnippet(PrimitiveTopology.TRIANGLE_STRIP)
@@ -281,11 +293,18 @@ object ClientRenderPipelines {
     @JvmStatic
     fun triangleStrip(noDepthTest: Boolean) = if (noDepthTest) TriangleStripNoDepthTest else TriangleStrip
 
-    @JvmField
-    val Quads = newPipeline("quads") {
+    private val Quads = newPipeline("quads") {
         posColorSnippet(PrimitiveTopology.QUADS)
         forWorldRender()
     }
+
+    private val QuadsDepthTested = newPipeline("quads_depth_tested") {
+        posColorSnippet(PrimitiveTopology.QUADS)
+        forWorldRender(noDepthTest = false)
+    }
+
+    @JvmStatic
+    fun quads(noDepthTest: Boolean) = if (noDepthTest) Quads else QuadsDepthTested
 
     private val QuadsRelativeToCamera = newPipeline("quads_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
@@ -334,13 +353,23 @@ object ClientRenderPipelines {
     @JvmStatic
     fun outlineQuads(useColor: Boolean) = if (useColor) OutlineQuads else OutlineQuadsNoColor
 
-    @JvmField
-    val TexQuads = newPipeline("tex_quads") {
+    private val TexQuads = newPipeline("tex_quads") {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
     }
+
+    private val TexQuadsDepthTested = newPipeline("tex_quads_depth_tested") {
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
+        forWorldRender(noDepthTest = false)
+        withDepthStencilState(DepthStencilState.DEFAULT)
+    }
+
+    @JvmStatic
+    fun texQuads(noDepthTest: Boolean) = if (noDepthTest) TexQuads else TexQuadsDepthTested
 
     @JvmField
     val FontMaskQuads = newPipeline("font_mask_quads") {

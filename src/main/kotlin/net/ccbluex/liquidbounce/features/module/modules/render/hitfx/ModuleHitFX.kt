@@ -100,7 +100,7 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         }
 
         val distanceToSq = lastTarget.distanceToSqr(packet.x, packet.y, packet.z)
-        if (distanceToSq > 8.0) {
+        if (distanceToSq > 16.0) {
             return@handler
         }
 
