@@ -1,12 +1,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_BETTER_DURABILITY
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ENCHANTABLE
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.enchantment.Enchantments
 import kotlin.math.ceil
@@ -40,9 +44,9 @@ class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
             )
 
         private val COMPARATOR =
-            ComparatorChain<MaceItemFacet>(
+            ComparatorChain(
                 Comparator.comparingDouble(this::estimateDamage),
-                compareByCondition { it.itemStack.item is MaceItem },
+                compareBy { it.itemStack.item is MaceItem },
                 PREFER_BETTER_DURABILITY,
                 PREFER_ENCHANTABLE,
                 PREFER_ITEMS_IN_HOTBAR,

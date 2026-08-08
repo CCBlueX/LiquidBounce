@@ -29,13 +29,12 @@ import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.*
 import net.minecraft.world.item.enchantment.Enchantments
 
-val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareByCondition(ItemFacet::isInHotbar)
+val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareBy(ItemFacet::isInHotbar)
 val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
     it.itemStack.hashCode()
 }
@@ -104,9 +103,6 @@ class ItemCategorization(
     availableItems: List<ItemSlot>,
 ) {
     companion object {
-        @JvmField
-        val Default = ItemCategorization(emptyList())
-
         @JvmStatic
         private fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
             return ArmorPiece(VirtualItemSlot(ItemStack(item, 1), Type.ARMOR, id))
@@ -122,6 +118,15 @@ class ItemCategorization(
             EquipmentSlot.LEGS to constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
             EquipmentSlot.FEET to constructArmorPiece(Items.DIAMOND_BOOTS, 3),
         )
+
+        /**
+         * Note: this must be initialized AFTER [diamondArmorPieces], because the [ItemCategorization] constructor
+         * reads [diamondArmorPieces] during initialization. Companion-object properties are initialized in
+         * declaration order, so declaring this first would pass a null map to
+         * [ArmorKitParameters.getParametersForSlots] and crash the whole class's static initialization.
+         */
+        @JvmField
+        val Default = ItemCategorization(emptyList())
     }
 
     /**
@@ -201,7 +206,9 @@ class ItemCategorization(
                     emptyArray()
                 }
             }
-            item == Items.SNOWBALL || item == Items.EGG || item == Items.WIND_CHARGE -> arrayOf(ThrowableItemFacet(slot))
+            item == Items.SNOWBALL || item == Items.EGG || item == Items.WIND_CHARGE -> {
+                arrayOf(ThrowableItemFacet(slot))
+            }
             else -> {
                 if (slot.itemStack.isFood) {
                     arrayOf(FoodItemFacet(slot))

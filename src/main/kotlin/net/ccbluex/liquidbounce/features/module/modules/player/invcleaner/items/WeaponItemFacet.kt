@@ -32,19 +32,18 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, 0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING_EDGE, 0.2f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.25f),
             )
-
-        @Suppress("SpreadOperator")
         private val COMPARATOR =
             ComparatorChain<WeaponItemFacet>(
                 compareBy { estimateDamage(it.itemStack) },
                 compareBy { SECONDARY_VALUE_ESTIMATOR.estimateValue(it.itemStack) },
                 compareBy { it.itemStack.isSword },
                 PREFER_BETTER_DURABILITY,
-                compareBy { it.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
+                PREFER_ENCHANTABLE,
                 *DEFAULT_TIE_BREAK
             )
 

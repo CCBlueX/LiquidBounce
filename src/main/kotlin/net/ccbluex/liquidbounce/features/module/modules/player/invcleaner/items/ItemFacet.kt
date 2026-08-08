@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.ItemStackHolder
-import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.world.item.ItemStack
 
 open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackHolder by itemSlot {
@@ -23,7 +22,7 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackH
      */
     open fun shouldKeep(): Boolean = false
 
-    override fun compareTo(other: ItemFacet): Int = compareValueByCondition(this, other, ItemFacet::isInHotbar)
+    override fun compareTo(other: ItemFacet): Int = compareValuesBy<ItemFacet>(this, other, ItemFacet::isInHotbar)
 
     /**
      * Example:

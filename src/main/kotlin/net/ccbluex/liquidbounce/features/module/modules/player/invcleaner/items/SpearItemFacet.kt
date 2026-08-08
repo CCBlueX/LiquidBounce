@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.item.enchantment.Enchantments
 
 /**
- * Specialization of weapon type. Used in order to allow the user to specify that they want a spear and not an axe
+ * Specialization of weapon type. Used in order to allow the user to specify that they want a sword and not an axe
  * or something.
  */
 class SpearItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
