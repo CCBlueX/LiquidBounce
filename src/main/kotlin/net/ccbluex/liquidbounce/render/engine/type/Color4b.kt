@@ -235,7 +235,7 @@ data class Color4b(val argb: Int) {
         val r = this.r
         val g = this.g
         val b = this.b
-        return DyeColor.entries.minBy {
+        return DyeColor.VALUES.minBy {
             val rgb = toRgb.applyAsInt(it)
             (ARGB.red(rgb) - r).sq() +
                 (ARGB.green(rgb) - g).sq() +

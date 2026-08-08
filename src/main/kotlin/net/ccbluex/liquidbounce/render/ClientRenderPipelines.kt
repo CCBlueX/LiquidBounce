@@ -27,7 +27,6 @@ import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.ColorTargetState
 import com.mojang.blaze3d.pipeline.DepthStencilState
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.CompareOp
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
@@ -227,7 +226,6 @@ object ClientRenderPipelines {
     @JvmField
     val LinesWithWidth = newPipeline("lines_with_width") {
         withSnippet(RenderPipelines.LINES_SNIPPET)
-        withDepthStencilState(DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
         forWorldRender()
     }
 
@@ -355,13 +353,23 @@ object ClientRenderPipelines {
     @JvmStatic
     fun outlineQuads(useColor: Boolean) = if (useColor) OutlineQuads else OutlineQuadsNoColor
 
-    @JvmField
-    val TexQuads = newPipeline("tex_quads") {
+    private val TexQuads = newPipeline("tex_quads") {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
     }
+
+    private val TexQuadsDepthTested = newPipeline("tex_quads_depth_tested") {
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
+        forWorldRender(noDepthTest = false)
+        withDepthStencilState(DepthStencilState.DEFAULT)
+    }
+
+    @JvmStatic
+    fun texQuads(noDepthTest: Boolean) = if (noDepthTest) TexQuads else TexQuadsDepthTested
 
     @JvmField
     val FontMaskQuads = newPipeline("font_mask_quads") {
