@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
@@ -37,9 +36,10 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
 import net.ccbluex.liquidbounce.utils.block.isInteractable
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -60,7 +60,6 @@ import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
@@ -83,7 +82,7 @@ class BlockPlacer(
     val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
 
     /**
-     * Construct a center hit result when the raytrace result is invalid.
+     * Construct a hit result at the point selected by target finding when the raytrace result is invalid.
      * This can make the module rotations wrong as well as place a bit outside the range,
      * but it makes the placements a lot more reliable and works on most servers.
      */
@@ -278,7 +277,7 @@ class BlockPlacer(
             }
 
             // sneak when placing on interactable block to not trigger their action
-            if (placementTarget.interactedBlockPos.getState().isInteractable) {
+            if (placementTarget.interactedBlockPos.state.isInteractable) {
                 sneakTimes = sneak.random()
             }
 
@@ -294,7 +293,7 @@ class BlockPlacer(
 
     private fun isBlocked(posAsLong: Long): Boolean {
         val pos = blockPosCache.set(posAsLong)
-        if (!pos.getState()!!.canBeReplaced()) {
+        if (!pos.stateOrEmpty.canBeReplaced()) {
             inaccessible.add(posAsLong)
             return true
         }
@@ -330,38 +329,44 @@ class BlockPlacer(
         }
 
         // get the block hit result needed for the placement
-        val blockHitResult = raytraceTarget(
-            placementTarget.interactedBlockPos,
-            verificationRotation,
-            placementTarget.direction
-        ) ?: return
+        val blockHitResult = raytraceTarget(placementTarget, verificationRotation) ?: return
 
-        SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())
+        if (!SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())) {
+            return
+        }
 
-        if (slot.itemStack.item !is BlockItem || pos.getState()!!.canBeReplaced()) {
-            blocks.remove(pos.asLong())
+        if (slot.itemStack.item !is BlockItem || pos.stateOrEmpty.canBeReplaced()) {
+            val onSuccess = {
+                removeFromQueue(pos)
+                placedRenderer.addBlock(pos)
+                true
+            }
 
-            // place the block
-            doPlacement(blockHitResult, hand = slot.useHand, swingMode = swingMode)
-            placedRenderer.addBlock(pos)
-            targetRenderer.removeBlock(pos)
+            doPlacement(
+                blockHitResult,
+                hand = slot.useHand,
+                onPlacementSuccess = onSuccess,
+                onItemUseSuccess = onSuccess,
+                swingMode = swingMode,
+            )
         }
     }
 
-    private fun raytraceTarget(pos: BlockPos, providedRotation: Rotation, direction: Direction): BlockHitResult? {
+    private fun raytraceTarget(placementTarget: BlockPlacementTarget, providedRotation: Rotation): BlockHitResult? {
+        val pos = placementTarget.interactedBlockPos
         val blockHitResult = raytraceBlock(
             range = max(range, wallRange).toDouble(),
             rotation = providedRotation,
             pos = pos,
-            state = pos.getState()!!
+            state = pos.stateOrEmpty
         )
 
-        if (blockHitResult != null && blockHitResult.type == HitResult.Type.BLOCK && blockHitResult.blockPos == pos) {
-            return blockHitResult.withDirection(direction)
+        if (blockHitResult != null && placementTarget.doesCrosshairTargetMatchRequirements(blockHitResult)) {
+            return blockHitResult
         }
 
         if (constructFailResult) {
-            return BlockHitResult(pos.center, direction, pos, false)
+            return placementTarget.blockHitResult
         }
 
         return null
@@ -433,7 +438,7 @@ class BlockPlacer(
     }
 
     /**
-     * THis should be called when the module using this placer is disabled.
+     * This should be called when the module using this placer is disabled.
      */
     fun disable() {
         reset()
