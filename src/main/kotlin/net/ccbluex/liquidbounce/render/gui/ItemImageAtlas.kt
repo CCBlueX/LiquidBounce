@@ -49,7 +49,6 @@ import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import net.minecraft.client.renderer.item.TrackingItemStackRenderState
-import net.minecraft.core.BlockPos
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
@@ -79,6 +78,7 @@ private class Atlas(
  */
 object ItemImageAtlas : EventListener {
 
+    @Volatile
     private var atlas: Atlas? = null
 
     @Suppress("unused")
@@ -237,26 +237,44 @@ private class ItemTextureRenderer(
     }
 
     private fun findBlockToItemAliases(): Map<Identifier, Identifier> {
-        val world = mc.level ?: return emptyMap()
         val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
 
-        BuiltInRegistries.BLOCK.forEach {
-            val pickUpState = it.getCloneItemStack(
-                world,
-                BlockPos.ZERO,
-                it.defaultBlockState(),
-                false
-            )
+        BuiltInRegistries.BLOCK.forEach { block ->
+            val blockId = BuiltInRegistries.BLOCK.getKey(block)
+            val itemId = findItemIdForBlock(blockId, block.asItem()) ?: return@forEach
 
-            if (pickUpState.item !== it.asItem()) {
-                val blockId = BuiltInRegistries.BLOCK.getKey(it)
-                val itemId = BuiltInRegistries.ITEM.getKey(pickUpState.item)
-
+            // Only keep aliases where the identifier differs. Blocks whose item has
+            // the same id are resolved by the regular item lookup path.
+            if (itemId != blockId) {
                 map[blockId] = itemId
             }
         }
 
         return map
+    }
+
+    /**
+     * Resolve a block id to the item used for its icon. Most blocks expose this
+     * directly through [net.minecraft.world.level.block.Block.asItem]. Wall variants do not have their own
+     * BlockItem, so their item id is the corresponding non-wall variant.
+     */
+    private fun findItemIdForBlock(blockId: Identifier, blockItem: Item): Identifier? {
+        if (blockItem !== Items.AIR) {
+            return BuiltInRegistries.ITEM.getKey(blockItem)
+        }
+
+        val path = blockId.path
+        val candidatePath = when {
+            path.startsWith("wall_") -> path.removePrefix("wall_")
+            "_wall_" in path -> path.replace("_wall_", "_")
+            else -> path
+        }
+        if (candidatePath == path) {
+            return null
+        }
+
+        val candidateId = Identifier.fromNamespaceAndPath(blockId.namespace, candidatePath)
+        return candidateId.takeIf { BuiltInRegistries.ITEM.containsKey(it) }
     }
 
 }
