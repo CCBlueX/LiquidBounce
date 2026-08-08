@@ -78,18 +78,18 @@ inline fun ByteBufferBuilder.begin(pipeline: RenderPipeline): BufferBuilder =
         },
     )
 
-inline fun withOutputTextureOverride(
+inline fun <T> withOutputTextureOverride(
     color: GpuTextureView? = null,
     depth: GpuTextureView? = null,
-    block: () -> Unit,
-) {
+    block: () -> T,
+): T {
     val oldColor = RenderSystem.outputColorTextureOverride
     val oldDepth = RenderSystem.outputDepthTextureOverride
 
     try {
         RenderSystem.outputColorTextureOverride = color
         RenderSystem.outputDepthTextureOverride = depth
-        block()
+        return block()
     } finally {
         RenderSystem.outputColorTextureOverride = oldColor
         RenderSystem.outputDepthTextureOverride = oldDepth
@@ -124,6 +124,28 @@ inline fun GpuBuffer.mapBuffer(read: Boolean = false, write: Boolean = false): G
 
 inline fun GpuBufferSlice.mapBuffer(read: Boolean = false, write: Boolean = false): GpuBufferSlice.MappedView =
     this.map(read, write)
+
+fun GpuBuffer.readFully(): ByteBuffer = read(0L, this.size())
+
+/**
+ * @receiver Should have flag [GpuBuffer.USAGE_MAP_READ]
+ * @return A [ByteBuffer] allocated with [MemoryUtil]
+ */
+fun GpuBuffer.read(offset: Long, length: Long): ByteBuffer = this.map(offset, length, true, false).use {
+    val source = it.data
+    val result = MemoryUtil.memAlloc(source.remaining())
+    try {
+        MemoryUtil.memCopy(
+            MemoryUtil.memAddress(source),
+            MemoryUtil.memAddress(result),
+            result.remaining().toLong(),
+        )
+        result
+    } catch (t: Throwable) {
+        MemoryUtil.memFree(result)
+        throw t
+    }
+}
 
 inline fun GpuBufferSlice.write(byteBuffer: ByteBuffer) =
     gpuDevice.createCommandEncoder().writeToBuffer(this, byteBuffer)
