@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.gui
+package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.ProjectionType
@@ -150,7 +150,7 @@ private class ItemTextureRenderer(
     }
 
     /**
-     * @see net.minecraft.client.gui.render.GuiRenderer.prepareItemElements
+     * @see GuiRenderer.prepareItemElements
      * From 1.21.5 DrawContext code
      */
     fun render(): CompletableFuture<Atlas> = try {

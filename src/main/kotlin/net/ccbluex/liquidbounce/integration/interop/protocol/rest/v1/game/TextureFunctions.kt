@@ -31,14 +31,17 @@ import net.ccbluex.liquidbounce.integration.interop.internalServerError
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondImage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondResource
 import net.ccbluex.liquidbounce.integration.interop.serviceUnavailable
-import net.ccbluex.liquidbounce.render.gui.AtlasLookup
-import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
-import net.ccbluex.liquidbounce.render.gui.EntityImageAtlas
+import net.ccbluex.liquidbounce.render.atlas.AtlasLookup
+import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
+import net.ccbluex.liquidbounce.render.atlas.EntityImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.resources.DefaultPlayerSkin
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceKey
 import java.util.UUID
 import kotlin.jvm.optionals.getOrNull
 

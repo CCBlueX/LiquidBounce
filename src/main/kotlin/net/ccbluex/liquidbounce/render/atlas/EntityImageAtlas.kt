@@ -1,10 +1,30 @@
-package net.ccbluex.liquidbounce.render.gui
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.authlib.GameProfile
 import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
@@ -20,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
+import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.Projection
 import net.minecraft.client.renderer.ProjectionMatrixBuffer
@@ -42,13 +63,14 @@ import kotlin.math.sqrt
 
 private const val ENTITY_TILE_SIZE = 96
 
-private data class EntityAtlas(
+private class EntityAtlas(
     val map: Map<EntityType<*>, Rect2i>,
     val image: BufferedImage,
 )
 
 object EntityImageAtlas : EventListener {
 
+    @Volatile
     private var atlas: EntityAtlas? = null
 
     @Suppress("unused")
@@ -96,7 +118,7 @@ private class EntityTextureRenderer : MinecraftShortcuts {
         true,
         GpuFormat.RGBA8_UNORM,
     )
-    private val submitNodeCollector = SubmitNodeStorage()
+    private val submitNodeStorage = SubmitNodeStorage()
     private val featureRenderDispatcher = FeatureRenderDispatcher(
         mc.gameRenderer.renderBuffers,
         mc.modelManager,
@@ -117,14 +139,14 @@ private class EntityTextureRenderer : MinecraftShortcuts {
         val failedRects = mutableListOf<Rect2i>()
 
         withOutputTextureOverride(framebuffer.colorTextureView, framebuffer.depthTextureView) {
-            val matrices = Pools.MatStack.borrow()
+            val poseStack = Pools.MatStack.borrow()
             entities.forEachIndexed { index, (type, entity) ->
                 val x = (index % itemsPerDimension) * ENTITY_TILE_SIZE
                 val y = (index / itemsPerDimension) * ENTITY_TILE_SIZE
                 val rect = Rect2i(x, y, ENTITY_TILE_SIZE, ENTITY_TILE_SIZE)
                 entityMap[type] = rect
 
-                runCatching { renderEntity(entity, matrices, x, y) }
+                runCatching { renderEntity(entity, poseStack, x, y) }
                     .onFailure {
                         failedRects += rect
                         logger.warn(
@@ -133,7 +155,7 @@ private class EntityTextureRenderer : MinecraftShortcuts {
                         )
                     }
             }
-            Pools.MatStack.recycle(matrices)
+            Pools.MatStack.recycle(poseStack)
         }
 
         RenderSystem.restoreProjectionMatrix()
@@ -151,7 +173,7 @@ private class EntityTextureRenderer : MinecraftShortcuts {
             }
     }
 
-    private fun renderEntity(entity: LivingEntity, matrices: com.mojang.blaze3d.vertex.PoseStack, x: Int, y: Int) {
+    private fun renderEntity(entity: LivingEntity, matrices: PoseStack, x: Int, y: Int) {
         entity.yRot = 25F
         entity.yHeadRot = 25F
         entity.yBodyRot = 25F
@@ -174,8 +196,8 @@ private class EntityTextureRenderer : MinecraftShortcuts {
                 ENTITY_TILE_SIZE,
             )
             val cameraState = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
-            mc.entityRenderDispatcher.submit(state, cameraState, 0.0, 0.0, 0.0, matrices, submitNodeCollector)
-            featureRenderDispatcher.renderAllFeatures(submitNodeCollector)
+            mc.entityRenderDispatcher.submit(state, cameraState, 0.0, 0.0, 0.0, matrices, submitNodeStorage)
+            featureRenderDispatcher.renderAllFeatures(submitNodeStorage)
         } finally {
             RenderSystem.disableScissorForRenderTypeDraws()
             matrices.popPose()
@@ -194,14 +216,14 @@ private class EntityTextureRenderer : MinecraftShortcuts {
             type.create(level, EntitySpawnReason.COMMAND) as? LivingEntity
         }
 
-        entity?.id = BuiltInRegistries.ENTITY_TYPE.getId(type) + 1
+        entity?.id = level.nextLocalEntityId()
         return entity
     }
 
     private fun close() {
         projectionMatrixBuffer.close()
         framebuffer.destroyBuffers()
-        submitNodeCollector.drainPhases(Consumers.nop())
+        submitNodeStorage.drainPhases(Consumers.nop())
         featureRenderDispatcher.close()
     }
 

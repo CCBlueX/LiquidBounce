@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
 import net.ccbluex.liquidbounce.utils.item.getOrNull
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
-import net.ccbluex.liquidbounce.render.gui.EntityImageAtlas
+import net.ccbluex.liquidbounce.render.atlas.EntityImageAtlas
 import net.minecraft.core.BlockPos
 import net.minecraft.core.DefaultedRegistry
 import net.minecraft.core.Registry
