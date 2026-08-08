@@ -29,6 +29,7 @@ import com.mojang.blaze3d.pipeline.DepthStencilState
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.CompareOp
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
+import io.ktor.http.DEFAULT_PORT
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -81,10 +82,7 @@ object ClientRenderPipelines {
     private inline fun RenderPipeline.Builder.forWorldRender(noDepthTest: Boolean = true) {
         withCull(false)
         withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
-        when {
-            noDepthTest -> withDepthStencilState(optional())
-            else -> withDepthStencilState(DepthStencilState.DEFAULT)
-        }
+        if (noDepthTest) withDepthStencilState(optional())
     }
 
     inline fun RenderPipeline.Builder.screenQuadSnippet() = apply {
@@ -369,7 +367,8 @@ object ClientRenderPipelines {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
-        forWorldRender(noDepthTest = false)
+        forWorldRender(false)
+        withDepthStencilState(DepthStencilState.DEFAULT)
     }
 
     @JvmStatic
