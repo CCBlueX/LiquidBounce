@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.f
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSprintControlFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveStopOnActionFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveTimerFeature
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.components.EditBox
 import net.minecraft.client.gui.components.MultiLineEditBox
@@ -55,7 +56,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
         fun shouldHandle(screen: Screen) = when (screen) {
             is InventoryScreen, is CreativeModeInventoryScreen -> inventory
             is AbstractContainerScreen<*> -> container
-            else -> gui && !screen.isInEditBox()
+            else -> gui && !screen.isInEditBox() && !ModuleClickGui.isInSearchBar
         }
 
         private fun Screen.isInEditBox() = when (this.focused) {
