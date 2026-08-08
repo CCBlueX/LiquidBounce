@@ -209,7 +209,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemTags
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleJumpEffect
+import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleLogoffSpot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNewChunks
