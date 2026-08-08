@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.circles
@@ -32,9 +31,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.world.phys.Vec3
 
 abstract class JumpEffectMode(name: String) : Mode(name) {
     final override val parent: ModeValueGroup<*>
@@ -55,7 +52,6 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
             circles.forEach {
-
                 val age = lifetime.last - circles.timeToDie(it) + event.partialTicks
 
                 val progress = animCurve
@@ -77,7 +73,6 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
             lifetime.last > lifetime.first ->
                 ((age - lifetime.first) / (lifetime.last - lifetime.first).toFloat()).coerceIn(0f, 1f)
             else -> (age / lifetime.last.toFloat()).coerceIn(0f, 1f)
-
         }
 
         val color = baseColor.fade(1.0f - fadeProgress)

@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.modes
 import com.mojang.math.Axis
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.JumpEffectColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.JumpEffectMode
@@ -69,8 +70,8 @@ internal object JumpEffectImage : JumpEffectMode("Image") {
     }
 
     private enum class PresetTexture(override val tag: String, val path: String) : TextureMode.Builtin.Preset {
-        LIQUIDBOUNCE("Liquidbounce", "jump_effect/liquidbounce.png"),
-        LIQUIDBOUNCELOGO("LiquidbounceWithLogo", "jump_effect/liquidbounce_with_logo.png");
+        LIQUIDBOUNCE(CLIENT_NAME, "jump_effect/liquidbounce.png"),
+        LIQUIDBOUNCE_LOGO(CLIENT_NAME + "WithLogo", "jump_effect/liquidbounce_with_logo.png");
 
         override val texture = LiquidBounce.resource(this.path)
             .readNativeImage().asTexture { "JumpEffect Image $tag" }

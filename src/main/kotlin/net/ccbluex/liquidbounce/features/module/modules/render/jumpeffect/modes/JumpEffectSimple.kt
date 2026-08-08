@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.JumpEf
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 
-internal object JumpEffectStandard : JumpEffectMode("Standard") {
+internal object JumpEffectSimple : JumpEffectMode("Simple") {
 
     private val colors = JumpEffectColorSettings()
 
