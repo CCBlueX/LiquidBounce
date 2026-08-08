@@ -136,7 +136,7 @@ internal inline fun RenderTarget.drawGenericBlockESP(
  */
 inline fun WorldRenderEnvironment.drawCustomMeshTextured(
     sampler0: AbstractTexture,
-    pipeline: RenderPipeline = ClientRenderPipelines.TexQuads,
+    pipeline: RenderPipeline = ClientRenderPipelines.texQuads(noDepthTest = true),
     uniforms: Map<String, GpuBufferSlice> = emptyMap(),
     drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) = drawCustomMesh(
@@ -357,7 +357,7 @@ fun WorldRenderEnvironment.drawSquareTextureGradient(
         val dy = y - centerY
         val distRatio = (kotlin.math.sqrt(dx * dx + dy * dy) / outerRadius).coerceIn(0f, 1f)
 
-        val t = when (distRatio <= effectiveRatio ) {
+        val t = when (distRatio <= effectiveRatio) {
             true -> 0.0
             else -> ((distRatio - effectiveRatio) / (1.0 - effectiveRatio)).coerceIn(0.0, 1.0)
         }

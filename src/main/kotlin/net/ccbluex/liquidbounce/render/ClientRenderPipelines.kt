@@ -358,16 +358,14 @@ object ClientRenderPipelines {
     @JvmStatic
     fun outlineQuads(useColor: Boolean) = if (useColor) OutlineQuads else OutlineQuadsNoColor
 
-    @JvmField
-    val TexQuads = newPipeline("tex_quads") {
+    private val TexQuads = newPipeline("tex_quads") {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
     }
 
-    @JvmField
-    val TexQuadsDepthTested = newPipeline("tex_quads_depth_tested") {
+    private val TexQuadsDepthTested = newPipeline("tex_quads_depth_tested") {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
