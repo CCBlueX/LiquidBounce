@@ -316,6 +316,7 @@
   "liquidbounce.liquidchat.writeMessage": "Отправлено сообщение: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "Отправляет приватное сообщение: %s",
   "liquidbounce.module.autoTpa.description": "Автоматически принимает запросы на телепортацию",
+  "liquidbounce.module.wings.description": "Рендерит крылья сзади игрока",
   "liquidbounce.module.ESP.description": "Позволяет видеть цели через стены.",
   "liquidbounce.module.abortBreaking.description": "Позволяет прервать ломание, сохраняя прогресс.",
   "liquidbounce.module.aimbot.description": "Автоматически наводится на выбранные сущности вокруг вас.",

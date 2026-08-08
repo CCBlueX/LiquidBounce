@@ -254,6 +254,7 @@
   "liquidbounce.liquidchat.states.disconnected": "Verbindung zum Chatserver getrennt!",
   "liquidbounce.liquidchat.states.loggedIn": "Authentifiziert!",
   "liquidbounce.liquidchat.writeMessage": "So sendest du eine Nachricht: %s",
+  "liquidbounce.module.wings.description": "Rendert Flügel hinter dem Spieler.",
   "liquidbounce.liquidchat.writePrivateMessage": "So sendest du eine private Nachricht: %s",
   "liquidbounce.module.ESP.description": "Ermöglicht das Sehen von Zielen durch Wände.",
   "liquidbounce.module.abortBreaking.description": "Ermöglicht dir, das Abbauen eines Blocks abzubrechen, ohne den Fortschritt zu verlieren.",

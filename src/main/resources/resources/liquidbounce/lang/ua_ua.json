@@ -165,6 +165,7 @@
   "liquidbounce.command.chat.description": "Відправити повідомлення в LiquidChat.",
   "liquidbounce.command.chat.parameter.message.description": "Повідомлення для відправки.",
   "liquidbounce.module.autoTpa.description": "Автоматично приймає запити на телепортацію",
+  "liquidbounce.module.wings.description": "Відображає крила позаду гравця.",
   "liquidbounce.module.aimbot.description": "Автоматично наводиться на вибрані сутності навколо вас.",
   "liquidbounce.module.autoArmor.description": "Автоматично одягає найкращу броню.",
   "liquidbounce.module.autoArmor.value.delay.description": "Час затримки між надяганням кількох предметів.",

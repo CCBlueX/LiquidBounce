@@ -114,6 +114,7 @@
   "liquidbounce.liquidchat.writeMessage": "Wwite mwessage: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "Wwite pwivate mwessage: %s",
   "liquidbounce.module.autoTpa.description": "Autwomaticawwy accepts teweportation wequests (・`ω´・)",
+  "liquidbounce.module.wings.description": "Render wings behind the cap'n's back.",
   "liquidbounce.module.autoArmor.description": "Autwomaticawwy put on teh best awmwow",
   "liquidbounce.module.autoArmor.value.delay.description": "Teh tim two wait between equipping an awmwow item",
   "liquidbounce.module.autoArmor.value.inv_open.description": "Whethew teh inwentwowwy shwouwd be openyed",
