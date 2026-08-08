@@ -144,10 +144,12 @@ export interface OverlayMessageEvent {
     tinted: boolean;
 }
 
+export type NotificationSeverity = "INFO" | "SUCCESS" | "ERROR" | "ENABLED" | "DISABLED";
+
 export interface NotificationEvent {
     title: string;
     message: string;
-    severity: "INFO" | "SUCCESS" | "ERROR" | "ENABLED" | "DISABLED";
+    severity: NotificationSeverity;
 }
 
 export interface KeyEvent {
