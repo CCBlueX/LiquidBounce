@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.server.response.header
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -28,6 +30,8 @@ import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.internalServerError
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondImage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondResource
+import net.ccbluex.liquidbounce.integration.interop.serviceUnavailable
+import net.ccbluex.liquidbounce.render.gui.AtlasLookup
 import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
@@ -50,19 +54,19 @@ private fun Route.getResource() = get {
 
 // GET /api/v1/client/resource/itemTexture
 private fun Route.getItemTexture() = get("/itemTexture") {
-    if (!ItemImageAtlas.isAtlasAvailable) {
-        call.internalServerError("Item atlas not available yet")
-    }
-
     val identifier = call.queryParameters["id"]
         ?: call.badRequest("Missing identifier parameter")
     val minecraftIdentifier = Identifier.tryParse(identifier)
         ?: call.badRequest("Invalid identifier $identifier")
 
-    val image = ItemImageAtlas.getItemImage(minecraftIdentifier)
-        ?: call.badRequest("Item image not found")
-
-    call.respondBytes(image, ContentType.Image.PNG)
+    when (val result = ItemImageAtlas.getItemImage(minecraftIdentifier)) {
+        is AtlasLookup.Found -> call.respondBytes(result.bytes, ContentType.Image.PNG)
+        AtlasLookup.Missing -> call.badRequest("Item image not found")
+        AtlasLookup.NotReady -> {
+            call.response.header(HttpHeaders.RetryAfter, 5)
+            call.serviceUnavailable("Item atlas not available yet")
+        }
+    }
 }
 
 // GET /api/v1/client/resource/effectTexture

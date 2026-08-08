@@ -27,7 +27,6 @@ import com.mojang.blaze3d.platform.Lighting
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.PoseStack
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
@@ -35,13 +34,13 @@ import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.copyTo
-import net.ccbluex.liquidbounce.utils.render.mapBuffer
+import net.ccbluex.liquidbounce.utils.render.readFully
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.Projection
@@ -54,6 +53,8 @@ import net.minecraft.client.renderer.item.TrackingItemStackRenderState
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
+import net.minecraft.util.LightCoordsUtil
+import net.minecraft.util.Util
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.Items
@@ -91,28 +92,26 @@ object ItemImageAtlas : EventListener {
     ) {
         tickUntil { inGame }
         val items = BuiltInRegistries.ITEM
-        atlas = ItemTextureRenderer(items = items, count = items.size(), scale = 4).render().await()
+        atlas = ItemTextureRenderer(items = items, scale = 4).render().await()
     }
 
-    val isAtlasAvailable: Boolean
-        get() = this.atlas != null
-
-    fun getItemImage(name: Identifier): ByteArray? {
-        val atlas = this.atlas ?: return null
+    fun getItemImage(name: Identifier): AtlasLookup {
+        val atlas = this.atlas ?: return AtlasLookup.NotReady
         val resolvedName = atlas.aliasMap[name] ?: name
-        return atlas.images[resolvedName]
+        val bytes = atlas.images[resolvedName]
+        return if (bytes == null) AtlasLookup.Missing else AtlasLookup.Found(bytes)
     }
 }
 
 /**
  * @see net.minecraft.client.gui.render.GuiItemAtlas
  */
+@Suppress("TooManyFunctions")
 private class ItemTextureRenderer(
     val items: Registry<Item>,
-    val count: Int,
     val scale: Int,
 ) : MinecraftShortcuts {
-    private val itemsPerDimension = sqrt(count.toDouble()).ceilToInt()
+    private val itemsPerDimension = sqrt(items.size().toDouble()).ceilToInt()
     private val itemPixelSize = NATIVE_ITEM_SIZE * scale
     private val textureSize = itemPixelSize * itemsPerDimension
 
@@ -123,7 +122,7 @@ private class ItemTextureRenderer(
         true,
         GpuFormat.RGBA8_UNORM,
     )
-    private val submitNodeCollector = SubmitNodeStorage()
+    private val submitNodeStorage = SubmitNodeStorage()
 
     // Note: no operation -> use shared one or skip it
     private val featureRenderDispatcher = FeatureRenderDispatcher(
@@ -134,6 +133,7 @@ private class ItemTextureRenderer(
         mc.gameRenderer.gameRenderState(), // No operation
     )
 
+    private val poseStack = PoseStack()
     private val projection = Projection()
     private val projectionMatrixBuffer = ProjectionMatrixBuffer("items")
     private val closed = AtomicBoolean()
@@ -145,7 +145,7 @@ private class ItemTextureRenderer(
 
         projectionMatrixBuffer.close()
         itemAtlasFramebuffer.destroyBuffers()
-        submitNodeCollector.drainPhases(Consumers.nop())
+        submitNodeStorage.drainPhases(Consumers.nop())
         featureRenderDispatcher.close()
     }
 
@@ -153,111 +153,162 @@ private class ItemTextureRenderer(
      * @see net.minecraft.client.gui.render.GuiRenderer.prepareItemElements
      * From 1.21.5 DrawContext code
      */
-    fun render(): CompletableFuture<Atlas> {
-        val result = CompletableFuture<Atlas>()
+    fun render(): CompletableFuture<Atlas> = try {
+        val itemMap = renderItems()
+        val aliasMap = findBlockToItemAliases()
+        submitReadback(itemMap, aliasMap)
+    } catch (throwable: Throwable) {
+        close()
+        CompletableFuture.failedFuture(throwable)
+    }
 
+    private fun renderItems(): Map<Identifier, Rect2i> {
+        itemAtlasFramebuffer.clearColorAndDepth()
+        RenderSystem.backupProjectionMatrix()
         try {
-            itemAtlasFramebuffer.clearColorAndDepth()
-            val itemMap = Object2ObjectOpenHashMap<Identifier, Rect2i>(count)
+            projection.setupOrtho(
+                -1000.0F,
+                1000.0F,
+                textureSize.toFloat(),
+                textureSize.toFloat(),
+                true,
+            )
+            RenderSystem.setProjectionMatrix(
+                projectionMatrixBuffer.getBuffer(projection),
+                ProjectionType.ORTHOGRAPHIC,
+            )
 
-            RenderSystem.backupProjectionMatrix()
-            try {
-                this.projection.setupOrtho(
-                    -1000.0F,
-                    1000.0F,
-                    this.textureSize.toFloat(),
-                    this.textureSize.toFloat(),
-                    true,
-                )
-                RenderSystem.setProjectionMatrix(
-                    this.projectionMatrixBuffer.getBuffer(this.projection),
-                    ProjectionType.ORTHOGRAPHIC,
-                )
-
-                withOutputTextureOverride(
-                    itemAtlasFramebuffer.colorTextureView,
-                    itemAtlasFramebuffer.depthTextureView,
-                ) {
-                    val matrixStack = Pools.MatStack.borrow()
+            withOutputTextureOverride(
+                itemAtlasFramebuffer.colorTextureView,
+                itemAtlasFramebuffer.depthTextureView,
+            ) {
+                 return buildMap(items.size()) {
                     val keyedItemRenderState = TrackingItemStackRenderState()
-                    try {
-                        for ((idx, item) in items.withIndex()) {
-                            val x = (idx % itemsPerDimension) * itemPixelSize
-                            val y = (idx / itemsPerDimension) * itemPixelSize
-                            if (item !== Items.AIR) {
-                                val stack = item.defaultInstance
-                                mc.itemModelResolver.updateForTopItem(
-                                    keyedItemRenderState,
-                                    stack,
-                                    ItemDisplayContext.GUI,
-                                    world,
-                                    player,
-                                    0,
-                                )
-
-                                this.renderItemToAtlas(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
-                            }
-                            itemMap[BuiltInRegistries.ITEM.getKey(item)] =
-                                Rect2i(x, y, itemPixelSize, itemPixelSize)
+                    for ((idx, item) in items.withIndex()) {
+                        val x = (idx % itemsPerDimension) * itemPixelSize
+                        val y = (idx / itemsPerDimension) * itemPixelSize
+                        if (item !== Items.AIR) {
+                            mc.itemModelResolver.updateForTopItem(
+                                keyedItemRenderState,
+                                item.defaultInstance, // TODO: support dynamic rendered ItemStack
+                                ItemDisplayContext.GUI,
+                                world,
+                                player,
+                                0,
+                            )
+                            renderItemToAtlas(keyedItemRenderState, x, y, itemPixelSize)
                         }
-                    } finally {
-                        keyedItemRenderState.clear()
-                        Pools.MatStack.recycle(matrixStack)
+                        this[BuiltInRegistries.ITEM.getKey(item)] = Rect2i(x, y, itemPixelSize, itemPixelSize)
                     }
                 }
-            } finally {
-                RenderSystem.restoreProjectionMatrix()
             }
+        } finally {
+            RenderSystem.restoreProjectionMatrix()
+        }
+    }
 
-            val aliasMap = findBlockToItemAliases()
-            val colorTexture = requireNotNull(itemAtlasFramebuffer.colorTexture) {
-                "Item atlas framebuffer has no color texture"
-            }
-            val readbackBuffer = gpuDevice.createBuffer(
-                { "ItemImageAtlas readback" },
-                GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
-                textureSize.toLong() * textureSize * GpuFormat.RGBA8_UNORM.blockSize(),
-            )
+    private fun submitReadback(
+        itemMap: Map<Identifier, Rect2i>,
+        aliasMap: Map<Identifier, Identifier>,
+    ): CompletableFuture<Atlas> {
+        val colorTexture = requireNotNull(itemAtlasFramebuffer.colorTexture) {
+            "Item atlas framebuffer has no color texture"
+        }
+        val readbackBuffer = gpuDevice.createBuffer(
+            { "ItemImageAtlas readback" },
+            GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
+            textureSize.toLong() * textureSize * GpuFormat.RGBA8_UNORM.blockSize(),
+        )
+
+        val result = CompletableFuture<Atlas>()
+        try {
             colorTexture.copyTo(readbackBuffer) {
-                try {
-                    if (result.isCancelled) {
-                        return@copyTo
-                    }
+                processReadback(readbackBuffer, itemMap, aliasMap, result)
+            }
+        } catch (t: Throwable) {
+            readbackBuffer.close()
+            throw t
+        }
+        return result
+    }
 
-                    val images = readbackBuffer.mapBuffer(read = true).use { mappedView ->
-                        encodeItemImages(mappedView.data(), itemMap)
+    private fun processReadback(
+        readbackBuffer: GpuBuffer,
+        itemMap: Map<Identifier, Rect2i>,
+        aliasMap: Map<Identifier, Identifier>,
+        result: CompletableFuture<Atlas>,
+    ) {
+        val atlasPixels = try {
+            if (result.isCancelled) {
+                return
+            }
+
+            readbackBuffer.readFully()
+        } catch (throwable: Throwable) {
+            completeExceptionally(result, throwable)
+            return
+        } finally {
+            readbackBuffer.close()
+            close()
+        }
+
+        encodeAsync(atlasPixels, itemMap, aliasMap, result)
+    }
+
+    private fun encodeAsync(
+        atlasPixels: ByteBuffer,
+        itemMap: Map<Identifier, Rect2i>,
+        aliasMap: Map<Identifier, Identifier>,
+        result: CompletableFuture<Atlas>,
+    ) {
+        try {
+            Util.backgroundExecutor().execute {
+                try {
+                    if (result.isCancelled) return@execute
+
+                    val atlas = Atlas(
+                        encodeItemImages(atlasPixels, itemMap, result),
+                        aliasMap,
+                    )
+
+                    if (!result.isCancelled) {
+                        logger.info("Loaded $textureSize x $textureSize item atlas with ${atlas.images.size} PNGs")
+                        result.complete(atlas)
                     }
-                    logger.info("Loaded $textureSize x $textureSize item atlas with ${images.size} PNGs")
-                    result.complete(Atlas(images, aliasMap))
                 } catch (throwable: Throwable) {
-                    if (throwable !is CancellationException) {
-                        logger.error("Failed to load item atlas", throwable)
-                    }
-                    result.completeExceptionally(throwable)
+                    completeExceptionally(result, throwable)
                 } finally {
-                    readbackBuffer.close()
-                    close()
+                    MemoryUtil.memFree(atlasPixels)
                 }
             }
         } catch (throwable: Throwable) {
-            close()
-            result.completeExceptionally(throwable)
+            MemoryUtil.memFree(atlasPixels)
+            completeExceptionally(result, throwable)
         }
+    }
 
-        return result
+    private fun completeExceptionally(result: CompletableFuture<*>, throwable: Throwable) {
+        if (throwable !is CancellationException) {
+            logger.error("Failed to load item atlas", throwable)
+        }
+        result.completeExceptionally(throwable)
     }
 
     private fun encodeItemImages(
         atlasPixels: ByteBuffer,
         itemMap: Map<Identifier, Rect2i>,
+        result: CompletableFuture<Atlas>,
     ) = buildMap(itemMap.size) {
         NativeImage(itemPixelSize, itemPixelSize, false).use { itemImage ->
             val buffer = Buffer()
             for ((identifier, rect) in itemMap) {
+                if (result.isCancelled) {
+                    throw CancellationException("Item atlas generation was cancelled")
+                }
+
                 atlasPixels.copyRectTo(itemImage, rect)
                 check(itemImage.writeToChannel(buffer)) { "Failed to encode item texture $identifier" }
                 val encoded = buffer.readByteArray()
-                buffer.clear()
                 this[identifier] = encoded
             }
         }
@@ -285,29 +336,31 @@ private class ItemTextureRenderer(
      */
     private fun renderItemToAtlas(
         state: TrackingItemStackRenderState,
-        matrices: PoseStack,
         scaledX: Int,
         scaledY: Int,
         itemPixelSize: Int,
     ) {
-        matrices.pushPose()
-        matrices.translate(
-            scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F,
-            scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F,
-            0.0f,
-        )
-        matrices.scale(itemPixelSize.toFloat(), -itemPixelSize.toFloat(), itemPixelSize.toFloat())
-        mc.gameRenderer.lighting().setupFor(
-            if (state.usesBlockLight()) Lighting.Entry.ITEMS_3D else Lighting.Entry.ITEMS_FLAT
-        )
+        poseStack.withPush {
+            poseStack.translate(
+                scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F,
+                scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F,
+                0.0f,
+            )
+            poseStack.scale(itemPixelSize.toFloat(), -itemPixelSize.toFloat(), itemPixelSize.toFloat())
+            mc.gameRenderer.lighting().setupFor(
+                if (state.usesBlockLight()) Lighting.Entry.ITEMS_3D else Lighting.Entry.ITEMS_FLAT
+            )
 
-        RenderSystem.enableScissorForRenderTypeDraws(
-            scaledX, textureSize - scaledY - itemPixelSize, itemPixelSize, itemPixelSize
-        )
-        state.submit(matrices, this.submitNodeCollector, 0xf000f0, OverlayTexture.NO_OVERLAY, 0)
-        featureRenderDispatcher.renderAllFeatures(this.submitNodeCollector)
-        RenderSystem.disableScissorForRenderTypeDraws()
-        matrices.popPose()
+            RenderSystem.enableScissorForRenderTypeDraws(
+                scaledX, textureSize - scaledY - itemPixelSize, itemPixelSize, itemPixelSize
+            )
+            try {
+                state.submit(poseStack, submitNodeStorage, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0)
+                featureRenderDispatcher.renderAllFeatures(submitNodeStorage)
+            } finally {
+                RenderSystem.disableScissorForRenderTypeDraws()
+            }
+        }
     }
 
     private fun findBlockToItemAliases() = buildMap {
