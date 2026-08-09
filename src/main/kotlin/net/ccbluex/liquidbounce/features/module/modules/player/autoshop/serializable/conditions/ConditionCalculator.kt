@@ -29,7 +29,7 @@ class ConditionCalculator(
     private val items: Object2IntMap<String>,
 ) {
     private val stack = mutableListOf<Pair<ConditionNode, Boolean>>()
-    private val results = mutableMapOf<ConditionNode, Boolean>()
+    private val results = hashMapOf<ConditionNode, Boolean>()
 
     fun process(currentItem: String, root: ConditionNode?) : Boolean {
         if (currentItem.isItemWithTiers() && hasBetterTierItem(currentItem, items)) {

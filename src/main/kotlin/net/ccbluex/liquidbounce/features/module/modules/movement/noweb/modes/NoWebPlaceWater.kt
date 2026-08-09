@@ -32,10 +32,10 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -118,7 +118,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             return@handler
         }
 
-        trackedWebs.removeIf { trackedPos -> trackedPos.getState()?.block !is WebBlock }
+        trackedWebs.removeIf { trackedPos -> trackedPos.state?.block !is WebBlock }
 
         val now = System.currentTimeMillis()
         val placeAction = Slots.OffhandWithHotbar.findClosestSlot(Items.WATER_BUCKET)?.let { waterSlot ->
@@ -324,7 +324,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     ): Direction? {
         return directions
             .filter { side ->
-                val adjacentState = webPos.relative(side).getState() ?: return@filter false
+                val adjacentState = webPos.relative(side).state ?: return@filter false
                 // Find a replaceable side to place water
                 adjacentState.isAir || adjacentState.fluidState.isSourceOfType(Fluids.LAVA)
             }

@@ -99,6 +99,7 @@ object ModuleStrongholdFinder : ClientModule(
     private val sampleDelayTicks by int("SampleDelayTicks", 2, 0..10)
     private val minEyeHorizontalSpeed by float("MinEyeHorizontalSpeed", 0.02f, 0.001f..0.2f)
     private val maxSampleAgeTicks by int("MaxSampleAgeTicks", 20, 5..100)
+    private val maxEyeSpawnDistance by float("MaxEyeSpawnDistance", 8f, 1f..32f)
 
     private val showTopCandidates by int("ShowTopCandidates", 3, 1..10).onChanged {
         onEstimatorSettingsChanged()
@@ -115,7 +116,7 @@ object ModuleStrongholdFinder : ClientModule(
     private val measurements = mutableListOf<EyeMeasurement>()
     private var posterior: PosteriorSnapshot? = null
     private var lastAnnouncedCandidate: ChunkPos? = null
-    private val detectedPortalBlocks = linkedMapOf<BlockPos, PortalBlockType>()
+    private val detectedPortalBlocks = hashMapOf<BlockPos, PortalBlockType>()
 
     private var hypothesisCache: List<StrongholdHypothesis> = emptyList()
     private var cachedHypothesisCount = -1
@@ -375,13 +376,16 @@ object ModuleStrongholdFinder : ClientModule(
         val nowTick = player.tickCount
         trimPendingThrows(nowTick)
 
+        val maxSpawnDistanceSqr = maxEyeSpawnDistance * maxEyeSpawnDistance
         val pending = pendingThrows
-            .filter { it.dimension == world.dimension() && nowTick - it.tick in 0..maxSampleAgeTicks }
+            .filter {
+                it.dimension == world.dimension()
+                    && nowTick - it.tick in 0..maxSampleAgeTicks
+                    && it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) <= maxSpawnDistanceSqr
+            }
             .minWithOrNull(
-                compareBy<PendingThrow> { nowTick - it.tick }
-                    .thenComparingDouble {
-                        it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z)
-                    }
+                compareBy<PendingThrow> { it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) }
+                    .thenComparingInt { nowTick - it.tick }
             ) ?: return
 
         pendingThrows.remove(pending)

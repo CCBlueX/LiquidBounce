@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.minecraft.client.KeyMapping
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
@@ -40,7 +40,7 @@ object ModuleAutoBreak : ClientModule("AutoBreak", ModuleCategories.PLAYER) {
             val crosshairTarget = mc.hitResult
 
             if (crosshairTarget is BlockHitResult && crosshairTarget.type == HitResult.Type.BLOCK) {
-                val blockState = crosshairTarget.blockPos.getState() ?: return@handler
+                val blockState = crosshairTarget.blockPos.state ?: return@handler
                 if (blockState.isAir) {
                     return@handler
                 }
