@@ -23,14 +23,16 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 
 class WishOrganizer(template: CleanupPlanTemplate) {
-    val organizedWishes = ArrayList<OrganizedWish>()
-    val itemCategoryWishGroupMap = HashMap<ItemCategory, ArrayList<WishItemGroupId>>()
+    val organizedWishes: List<OrganizedWish>
+        field = ArrayList()
+    val itemCategoryWishGroupMap: Map<ItemCategory, ArrayList<WishItemGroupId>>
+        field = HashMap()
 
     companion object {
         /**
-         * Decides which whish should come first. If wishA > wishB, wishA should be fulfilled first.
+         * Decides which wish should come first. If wishA > wishB, wishA should be fulfilled first.
          */
-        val wishComparator = ComparatorChain<OrganizedWish>(
+        private val wishComparator = ComparatorChain<OrganizedWish>(
             compareByDescending { it.slotPriority },
             compareByDescending { it.indexInSlot },
             // Fill in specific items first.
