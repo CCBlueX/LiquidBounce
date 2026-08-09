@@ -139,7 +139,7 @@ internal sealed class AbstractAtlasRenderer<A : Any>(
         tileSize,
     )
 
-    protected fun withTile(rect: Rect2i, block: PoseStack.() -> Unit) {
+    protected inline fun withTile(rect: Rect2i, block: PoseStack.() -> Unit) {
         poseStack.pushPose()
         try {
             RenderSystem.enableScissorForRenderTypeDraws(
@@ -175,7 +175,7 @@ internal sealed class AbstractAtlasRenderer<A : Any>(
             }
         } catch (throwable: Throwable) {
             closeReadbackResources(readbackBuffer)?.let(throwable::addSuppressed)
-            completeExceptionally(label, result, throwable)
+            result.completeExceptionally(label, throwable)
         }
 
         return result
@@ -193,7 +193,7 @@ internal sealed class AbstractAtlasRenderer<A : Any>(
                 readbackBuffer.readFully()
             } catch (throwable: Throwable) {
                 closeReadbackResources(readbackBuffer)?.let(throwable::addSuppressed)
-                completeExceptionally(label, result, throwable)
+                result.completeExceptionally(label, throwable)
                 return
             }
         }
@@ -201,7 +201,7 @@ internal sealed class AbstractAtlasRenderer<A : Any>(
         val closeFailure = closeReadbackResources(readbackBuffer)
         if (closeFailure != null) {
             MemoryUtil.memFree(atlasPixels)
-            completeExceptionally(label, result, closeFailure)
+            result.completeExceptionally(label, closeFailure)
             return
         }
         if (atlasPixels == null) {
@@ -234,14 +234,14 @@ internal sealed class AbstractAtlasRenderer<A : Any>(
                         }
                     }
                 } catch (throwable: Throwable) {
-                    completeExceptionally(label, result, throwable)
+                    result.completeExceptionally(label, throwable)
                 } finally {
                     MemoryUtil.memFree(atlasPixels)
                 }
             }
         } catch (throwable: Throwable) {
             MemoryUtil.memFree(atlasPixels)
-            completeExceptionally(label, result, throwable)
+            result.completeExceptionally(label, throwable)
         }
     }
 
@@ -303,15 +303,14 @@ private fun encodePngTiles(
     }
 }
 
-private fun completeExceptionally(
+private fun CompletableFuture<*>.completeExceptionally(
     label: String,
-    result: CompletableFuture<*>,
     throwable: Throwable,
 ) {
     if (throwable !is CancellationException) {
         logger.error("Failed to load $label atlas", throwable)
     }
-    result.completeExceptionally(throwable)
+    this.completeExceptionally(throwable)
 }
 
 private fun ByteBuffer.copyRectTo(target: NativeImage, rect: Rect2i, atlasSize: Int) {
