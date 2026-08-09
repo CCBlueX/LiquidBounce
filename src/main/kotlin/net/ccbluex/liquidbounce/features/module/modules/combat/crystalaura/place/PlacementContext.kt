@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.LivingEntity
@@ -42,7 +42,7 @@ class PlacementContext(
 class CandidateCache(private val candidate: BlockPos) {
 
     val state by lazy {
-        candidate.getState()!!
+        candidate.stateOrEmpty
     }
 
     val canPlace by lazy {

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
 import net.ccbluex.liquidbounce.utils.aiming.utils.findClosestPointOnBlockInLineWithCrystal
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.network.clickBlockWithSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -141,7 +141,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
                 getMaxRange().toDouble(),
                 rotation.rotation,
                 targetPos,
-                targetPos.getState()!!
+                targetPos.stateOrEmpty
             ) ?: return
         }
 
@@ -156,7 +156,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
                 getMaxRange().toDouble(),
                 RotationManager.serverRotation,
                 targetPos,
-                targetPos.getState()!!
+                targetPos.stateOrEmpty
             ) ?: return@rotate false
 
             return@rotate blockHitResult!!.type == HitResult.Type.BLOCK && blockHitResult!!.blockPos == targetPos

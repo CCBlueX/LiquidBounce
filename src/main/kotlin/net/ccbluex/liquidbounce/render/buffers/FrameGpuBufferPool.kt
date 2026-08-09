@@ -57,7 +57,7 @@ internal class FrameGpuBufferPool(
 
     fun retireCurrentFrame(buffer: GpuBuffer) {
         check(!closed) { "$label pool is closed" }
-        check(!buffer.isClosed()) { "Cannot retire a closed GPU buffer" }
+        check(!buffer.isClosed) { "Cannot retire a closed GPU buffer" }
         usedThisFrame += buffer
     }
 

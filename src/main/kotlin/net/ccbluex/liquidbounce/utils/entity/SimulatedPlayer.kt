@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityFluidInteractionAccessor
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityFluidInteractionTrackerAccessor
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.math.fastCos
 import net.ccbluex.liquidbounce.utils.math.fastSin
 import net.ccbluex.liquidbounce.utils.client.player
@@ -409,7 +409,7 @@ class SimulatedPlayer(
 
         var vec3d = this.deltaMovement
         if ((horizontalCollision || this.jumping) && (
-                this.isClimbing() || pos.toBlockPos().getState()
+                this.isClimbing() || pos.toBlockPos().state
                     ?.`is`(Blocks.POWDER_SNOW) == true && PowderSnowBlock.canEntityWalkOnPowderSnow(player)
                 )
         ) {
@@ -592,7 +592,7 @@ class SimulatedPlayer(
         val clampedX = Mth.clamp(motion.x, -0.15000000596046448, 0.15000000596046448)
         val clampedZ = Mth.clamp(motion.z, -0.15000000596046448, 0.15000000596046448)
         var clampedY = max(motion.y, -0.15000000596046448)
-        if (clampedY < 0.0 && !pos.toBlockPos().getState()!!
+        if (clampedY < 0.0 && !pos.toBlockPos().state!!
                 .`is`(Blocks.SCAFFOLDING) && player.isSuppressingSlidingDownLadder
         ) {
             clampedY = 0.0
@@ -616,7 +616,7 @@ class SimulatedPlayer(
 
     private fun isClimbing(): Boolean {
         val blockPos = pos.toBlockPos()
-        val blockState = blockPos.getState()!!
+        val blockState = blockPos.state!!
         return if (blockState.`is`(BlockTags.CLIMBABLE)) {
             true
         } else if (blockState.block is TrapDoorBlock && this.trapdoorUsableAsLadder(blockPos, blockState)) {

@@ -22,8 +22,11 @@ import net.ccbluex.liquidbounce.utils.kotlin.FloatFloatValuePair
 
 @JvmInline
 value class UV2f private constructor(private val pair: FloatFloatValuePair) {
-    val u: Float get() = pair.left
-    val v: Float get() = pair.right
+    val u: Float inline get() = component1()
+    val v: Float inline get() = component2()
 
     constructor(u: Float, v: Float) : this(FloatFloatValuePair(u, v))
+
+    operator fun component1(): Float = pair.left
+    operator fun component2(): Float = pair.right
 }

@@ -40,9 +40,9 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockTargetPlan
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -179,7 +179,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             return@tickHandler
         }
 
-        val state = blockPos.getState() ?: return@tickHandler
+        val state = blockPos.state ?: return@tickHandler
         if (blockPos.readyForHarvest(state)) {
             when (state.block.harvestAction) {
                 HarvestAction.BREAK -> {

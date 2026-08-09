@@ -46,7 +46,7 @@ class PlayerTickEvent : CancellableEvent()
 object PlayerPostTickEvent : Event()
 
 @Tag("playerMovementTick")
-object PlayerMovementTickEvent : Event()
+class PlayerMovementTickEvent : CancellableEvent()
 
 @Tag("playerNetworkMovementTick")
 class PlayerNetworkMovementTickEvent(

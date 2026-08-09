@@ -130,7 +130,8 @@ val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
 
 @Deprecated(
     "Use BlockPos.state or BlockPos.stateOrEmpty instead",
-    replaceWith = ReplaceWith("this.state", imports = ["net.ccbluex.liquidbounce.utils.block.state"])
+    replaceWith = ReplaceWith("this.state", imports = ["net.ccbluex.liquidbounce.utils.block.state"]),
+    level = DeprecationLevel.ERROR,
 )
 @JvmName("getState-deprecated")
 inline fun BlockPos.getState() = state
@@ -212,7 +213,7 @@ inline fun Vec3.searchBlocksInCuboid(
     radius: Float,
     crossinline filter: (BlockPos, BlockState) -> Boolean
 ): Sequence<Pair<BlockPos, BlockState>> =
-    searchBlocksInCuboid(radius).iterator().asSequence().mapNotNull {
+    searchBlocksInCuboid(radius).asSequence().mapNotNull {
         val state = it.state ?: return@mapNotNull null
 
         if (filter(it, state)) {

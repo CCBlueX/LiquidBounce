@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.AvoidHazardInputPlanner
 import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.isLadderClimbState
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
@@ -163,8 +163,8 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
     }
 
     private fun isLadderClimbStateAt(pos: BlockPos): Boolean {
-        val currentState = pos.getState() ?: return false
-        return isLadderClimbState(currentState, pos.below().getState())
+        val currentState = pos.state ?: return false
+        return isLadderClimbState(currentState, pos.below().state)
     }
 
     @Suppress("CognitiveComplexMethod")
@@ -178,7 +178,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         }
 
         return boundingBox.iterateBlockPos().any { pos ->
-            val blockState = pos.getState() ?: return@any false
+            val blockState = pos.state ?: return@any false
             val fluidState = blockState.fluidState
             val block = blockState.block
 

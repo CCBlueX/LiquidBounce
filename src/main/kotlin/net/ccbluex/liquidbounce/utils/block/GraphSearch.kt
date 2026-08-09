@@ -84,24 +84,24 @@ fun <T> aStarShortestPath(
             return ShortestPath(reconstructPath(start, current.node, previous), current.gScore)
         }
 
-        for (edge in neighbors(current.node)) {
-            require(edge.cost >= 0.0) { "Path search edge costs must be non-negative." }
+        for ((node, cost) in neighbors(current.node)) {
+            require(cost >= 0.0) { "Path search edge costs must be non-negative." }
 
-            val candidateG = current.gScore + edge.cost
+            val candidateG = current.gScore + cost
             if (candidateG > maxCost) {
                 continue
             }
 
-            val knownG = gScores.getDouble(edge.node)
+            val knownG = gScores.getDouble(node)
             if (candidateG >= knownG) {
                 continue
             }
 
-            gScores.put(edge.node, candidateG)
-            previous.put(edge.node, current.node)
+            gScores.put(node, candidateG)
+            previous.put(node, current.node)
 
-            val fScore = candidateG + heuristic.applyAsDouble(edge.node)
-            queue.add(QueueEntry(edge.node, candidateG, fScore))
+            val fScore = candidateG + heuristic.applyAsDouble(node)
+            queue.add(QueueEntry(node, candidateG, fScore))
         }
     }
 

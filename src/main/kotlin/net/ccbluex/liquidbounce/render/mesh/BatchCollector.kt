@@ -89,13 +89,13 @@ internal class BatchCollector {
                 return
             }
 
-            for (draw in drawOrder) {
-                if (draw.readyToBuild) {
-                    draw.builder.build()?.use { meshData ->
+            for ((key, builder, order, readyToBuild) in drawOrder) {
+                if (readyToBuild) {
+                    builder.build()?.use { meshData ->
                         builtBuffers += BuiltDraw(
-                            draw.key,
-                            meshData.toMeshDraw(draw.key.pipeline),
-                            draw.order,
+                            key,
+                            meshData.toMeshDraw(key.pipeline),
+                            order,
                         )
                     }
                 }

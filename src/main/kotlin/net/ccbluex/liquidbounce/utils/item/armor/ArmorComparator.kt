@@ -19,15 +19,14 @@
 package net.ccbluex.liquidbounce.utils.item.armor
 
 import net.ccbluex.fastutil.enumMapOf
-import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.item.armorToughness
 import net.ccbluex.liquidbounce.utils.item.armorValue
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.equipmentSlot
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
+import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.core.component.DataComponents
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.entity.EquipmentSlot
@@ -128,8 +127,8 @@ class ArmorComparator(
         compareBy { getEnchantmentThreshold(it.itemSlot.itemStack).roundToDecimalPlaces(3) },
         compareBy { it.itemSlot.itemStack.getEnchantmentCount() },
         compareBy { it.itemSlot.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
-        compareByCondition(ArmorPiece::isAlreadyEquipped),
-        compareByCondition(ArmorPiece::isReachableByHand)
+        compareBy(ArmorPiece::isAlreadyEquipped),
+        compareBy(ArmorPiece::isReachableByHand)
     )
 
     override fun compare(o1: ArmorPiece, o2: ArmorPiece): Int {

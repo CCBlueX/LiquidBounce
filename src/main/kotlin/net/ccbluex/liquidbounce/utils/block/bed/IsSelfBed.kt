@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.anotherBedPartDirection
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -135,7 +135,7 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
         override fun isSelfBed(
             block: BedBlock,
             pos: BlockPos,
-        ): Boolean = pos == trackedPos || pos.relative(pos.getState().anotherBedPartDirection()!!) == trackedPos
+        ): Boolean = pos == trackedPos || pos.relative(pos.state.anotherBedPartDirection()!!) == trackedPos
 
         @Suppress("unused")
         private val keyHandler = handler<KeyboardKeyEvent> { event ->

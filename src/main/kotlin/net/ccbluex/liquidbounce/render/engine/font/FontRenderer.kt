@@ -99,8 +99,8 @@ class FontRenderer(
         parameters: DrawParameters,
     ): Float = commonDraw(text, parameters)
 
-    context(ctx: Any)
     @Suppress("CognitiveComplexMethod")
+    context(ctx: Any)
     private fun commonDraw(
         text: MinecraftTextProcessor.RecyclingProcessedText,
         parameters: DrawParameters,
@@ -145,8 +145,8 @@ class FontRenderer(
      * @param posZ if it's [Float.NaN], then use 2D rendering; or else use 3D rendering
      *
      */
-    context(ctx: Any)
     @Suppress("CognitiveComplexMethod")
+    context(ctx: Any)
     private fun drawInternal(
         text: ProcessedText,
         posX: Float,
@@ -290,15 +290,15 @@ class FontRenderer(
             val y0 = y + renderInfo.glyphBounds.yMin * scale
             val x1 = x + (renderInfo.glyphBounds.xMin + renderInfo.atlasLocation.atlasWidth) * scale
             val y1 = y + (renderInfo.glyphBounds.yMin + renderInfo.atlasLocation.atlasHeight) * scale
-            val uv1 = renderInfo.atlasLocation.uvCoordinatesOnTexture.min
-            val uv2 = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
+            val (u1, v1) = renderInfo.atlasLocation.uvCoordinatesOnTexture.min
+            val (u2, v2) = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
             val argb = color.argb
 
             if (z.isNaN()) {
                 (ctx as GuiGraphicsExtractor).drawGlyphOnCurrentLayer(
                     glyph.page.texture.textureSetup,
                     x0 = x0, y0 = y0, x1 = x1, y1 = y1,
-                    u1 = uv1.u, v1 = uv1.v, u2 = uv2.u, v2 = uv2.v, argb = argb,
+                    u1 = u1, v1 = v1, u2 = u2, v2 = v2, argb = argb,
                     pipeline = ClientRenderPipelines.GUI.FontMask,
                 )
             } else {
@@ -307,16 +307,16 @@ class FontRenderer(
                     pipeline = ClientRenderPipelines.FontMaskQuads,
                 ) { matrix ->
                     addVertex(matrix, x0, y0, z)
-                        .setUv(uv1.u, uv1.v)
+                        .setUv(u1, v1)
                         .setColor(argb)
                     addVertex(matrix, x0, y1, z)
-                        .setUv(uv1.u, uv2.v)
+                        .setUv(u1, v2)
                         .setColor(argb)
                     addVertex(matrix, x1, y1, z)
-                        .setUv(uv2.u, uv2.v)
+                        .setUv(u2, v2)
                         .setColor(argb)
                     addVertex(matrix, x1, y0, z)
-                        .setUv(uv2.u, uv1.v)
+                        .setUv(u2, v1)
                         .setColor(argb)
                 }
             }

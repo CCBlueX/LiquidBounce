@@ -36,8 +36,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.doBreak
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.BreakingProgress
@@ -103,7 +103,7 @@ object LegitNukerMode : Mode("Legit") {
     @Suppress("unused")
     private val tickHandler = tickHandler {
         val currentTarget = currentTarget ?: return@tickHandler
-        val state = currentTarget.getState() ?: return@tickHandler
+        val state = currentTarget.state ?: return@tickHandler
 
         if (ModulePacketMine.running) {
             return@tickHandler
@@ -144,7 +144,7 @@ object LegitNukerMode : Mode("Legit") {
 
         // Check if the current target is still valid
         currentTarget?.let { pos ->
-            val blockState = pos.getState() ?: return@let
+            val blockState = pos.state ?: return@let
 
             if (blockState.isNotBreakable(pos) || !ModuleNuker.isValid(blockState)) {
                 return@let

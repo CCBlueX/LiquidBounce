@@ -23,6 +23,7 @@ import net.minecraft.client.renderer.rendertype.OutputTarget
 import net.minecraft.client.renderer.rendertype.RenderSetup
 
 fun RenderSetup.withOutputTarget(outputTarget: OutputTarget): RenderSetup {
+    @Suppress("CAST_NEVER_SUCCEEDS")
     this as MixinRenderSetupAccessor
 
     return MixinRenderSetupAccessor.`liquid_bounce$invokeInit`(

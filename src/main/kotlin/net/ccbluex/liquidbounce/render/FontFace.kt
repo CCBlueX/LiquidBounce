@@ -134,7 +134,7 @@ class FontFace(
         if (h == 0) {
             var result = size.hashCode() // size != 0
             result = 31 * result + name.hashCode()
-            result = 31 * result + (file?.absolutePath?.hashCode() ?: 0)
+            result = 31 * result + file?.absolutePath.hashCode()
             result = 31 * result + styles.contentHashCode()
             h = result
             cachedHash = h

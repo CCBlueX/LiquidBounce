@@ -7,6 +7,18 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+
+      # nixpkgs freetype 2.14.2 compiles the harfbuzz shaper in by default
+      # (FT_CONFIG_OPTION_USE_HARFBUZZ) and dlopens libharfbuzz.so.0 at runtime.
+      # The modern harfbuzz (12/13) pulled in by pango/cairo/gtk3 is ABI-
+      # incompatible with that 2023-era shaper, which segfaults the JVM in
+      # sun.font (FT_Load_Glyph -> af_shaper_get_coverage_hb) while rendering
+      # LiquidBounce's font atlas, crashing runClient. Rebuild freetype with
+      # the harfbuzz shaper disabled so it never touches harfbuzz.
+      freetype = pkgs.freetype.overrideAttrs (o: {
+        configureFlags = (o.configureFlags or [ ]) ++ [ "--without-harfbuzz" ];
+      });
+
       jcef_src = pkgs.fetchFromGitHub {
         owner = "CCBlueX";
         repo = "java-cef";
@@ -22,7 +34,9 @@
         libGL
         glfw
         openal
-        # stdenv.cc.cc.lib
+        # Provides libstdc++.so.6 / libgcc_s.so.1 needed by LWJGL's bundled
+        # libopenal.so at runtime (without it runClient crashes on startup).
+        stdenv.cc.cc.lib
         git
         libX11
         libXcursor
@@ -59,13 +73,17 @@
 
         wayland
       ];
+      # Must come BEFORE the JDK on the library path so the JDK's libfontmanager
+      # resolves libfreetype.so to the harfbuzz-free build above instead of the
+      # bundled/stock one (which crashes on modern harfbuzz).
+      libraryPath = pkgs.lib.makeLibraryPath ([ freetype ] ++ libs);
 
     in {
       devShells.${system}.default = pkgs.mkShell {
-        packages = libs;
+        packages = [ freetype ] ++ libs;
         buildInputs = libs;
 
-        LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libs;
+        LD_LIBRARY_PATH = "${freetype}/lib:${libraryPath}";
         PROVIDED_JCEF_PATH = "${jcef}";
       };
     };

@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
@@ -205,7 +205,7 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
             interactionRange.toDouble(),
             currentPlayerRotation,
             targetBlockPos,
-            targetBlockPos.getState() ?: return@tickHandler
+            targetBlockPos.state ?: return@tickHandler
         )
 
         // Verify if the block is hit and is the correct target
@@ -255,7 +255,7 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
         }
 
         interactedBlocksSet += blockPos
-        blockPos.recordAnotherChestPart(blockPos.getState())
+        blockPos.recordAnotherChestPart(blockPos.state)
     }
 
 }

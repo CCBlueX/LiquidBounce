@@ -20,10 +20,10 @@
 package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
 import net.ccbluex.liquidbounce.utils.block.isInteractable
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
@@ -70,7 +70,7 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
         return
     }
 
-    if (placementTarget.interactedBlockPos.getState().isInteractable) {
+    if (placementTarget.interactedBlockPos.state.isInteractable) {
         return
     }
 
