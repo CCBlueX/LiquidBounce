@@ -22,18 +22,15 @@ package net.ccbluex.liquidbounce.render.atlas
 import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.buffers.GpuBuffer
-import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.platform.Lighting
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.PoseStack
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -43,14 +40,9 @@ import net.ccbluex.liquidbounce.utils.render.copyTo
 import net.ccbluex.liquidbounce.utils.render.readFully
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.gui.render.GuiRenderer
-import net.minecraft.client.renderer.Projection
-import net.minecraft.client.renderer.ProjectionMatrixBuffer
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.client.renderer.Rect2i
-import net.minecraft.client.renderer.SubmitNodeStorage
-import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import net.minecraft.client.renderer.item.TrackingItemStackRenderState
-import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
 import net.minecraft.util.LightCoordsUtil
@@ -59,12 +51,10 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.Items
 import okio.Buffer
-import org.apache.commons.lang3.function.Consumers
 import org.lwjgl.system.MemoryUtil
 import java.nio.ByteBuffer
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.sqrt
 
 private const val NATIVE_ITEM_SIZE: Int = GuiRenderer.DEFAULT_ITEM_SIZE
@@ -91,8 +81,7 @@ object ItemImageAtlas : EventListener {
         behavior = SuspendHandlerBehavior.CancelPrevious,
     ) {
         tickUntil { inGame }
-        val items = BuiltInRegistries.ITEM
-        atlas = ItemTextureRenderer(items = items, scale = 4).render().await()
+        atlas = ItemTextureRenderer(scale = 4).render().await()
     }
 
     fun getItemImage(name: Identifier): AtlasLookup {
@@ -107,53 +96,19 @@ object ItemImageAtlas : EventListener {
  * @see net.minecraft.client.gui.render.GuiItemAtlas
  */
 @Suppress("TooManyFunctions")
-private class ItemTextureRenderer(
-    val items: Registry<Item>,
-    val scale: Int,
-) : MinecraftShortcuts {
+private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRenderer<Atlas>("Items") {
+
+    private val items = BuiltInRegistries.ITEM
+
     private val itemsPerDimension = sqrt(items.size().toDouble()).ceilToInt()
     private val itemPixelSize = NATIVE_ITEM_SIZE * scale
-    private val textureSize = itemPixelSize * itemsPerDimension
-
-    private val itemAtlasFramebuffer = TextureTarget(
-        "ItemImageAtlas Framebuffer",
-        textureSize,
-        textureSize,
-        true,
-        GpuFormat.RGBA8_UNORM,
-    )
-    private val submitNodeStorage = SubmitNodeStorage()
-
-    // Note: no operation -> use shared one or skip it
-    private val featureRenderDispatcher = FeatureRenderDispatcher(
-        mc.gameRenderer.renderBuffers,
-        mc.modelManager, // No operation
-        mc.atlasManager, // No operation
-        mc.font, // No operation
-        mc.gameRenderer.gameRenderState(), // No operation
-    )
-
-    private val poseStack = PoseStack()
-    private val projection = Projection()
-    private val projectionMatrixBuffer = ProjectionMatrixBuffer("items")
-    private val closed = AtomicBoolean()
-
-    private fun close() {
-        if (!closed.compareAndSet(false, true)) {
-            return
-        }
-
-        projectionMatrixBuffer.close()
-        itemAtlasFramebuffer.destroyBuffers()
-        submitNodeStorage.drainPhases(Consumers.nop())
-        featureRenderDispatcher.close()
-    }
+    override val textureSize = itemPixelSize * itemsPerDimension
 
     /**
      * @see GuiRenderer.prepareItemElements
      * From 1.21.5 DrawContext code
      */
-    fun render(): CompletableFuture<Atlas> = try {
+    override fun render(): CompletableFuture<Atlas> = try {
         val itemMap = renderItems()
         val aliasMap = findBlockToItemAliases()
         submitReadback(itemMap, aliasMap)
@@ -163,7 +118,7 @@ private class ItemTextureRenderer(
     }
 
     private fun renderItems(): Map<Identifier, Rect2i> {
-        itemAtlasFramebuffer.clearColorAndDepth()
+        framebuffer.clearColorAndDepth()
         RenderSystem.backupProjectionMatrix()
         try {
             projection.setupOrtho(
@@ -179,8 +134,8 @@ private class ItemTextureRenderer(
             )
 
             withOutputTextureOverride(
-                itemAtlasFramebuffer.colorTextureView,
-                itemAtlasFramebuffer.depthTextureView,
+                framebuffer.colorTextureView,
+                framebuffer.depthTextureView,
             ) {
                  return buildMap(items.size()) {
                     val keyedItemRenderState = TrackingItemStackRenderState()
@@ -211,7 +166,7 @@ private class ItemTextureRenderer(
         itemMap: Map<Identifier, Rect2i>,
         aliasMap: Map<Identifier, Identifier>,
     ): CompletableFuture<Atlas> {
-        val colorTexture = requireNotNull(itemAtlasFramebuffer.colorTexture) {
+        val colorTexture = requireNotNull(framebuffer.colorTexture) {
             "Item atlas framebuffer has no color texture"
         }
         val readbackBuffer = gpuDevice.createBuffer(

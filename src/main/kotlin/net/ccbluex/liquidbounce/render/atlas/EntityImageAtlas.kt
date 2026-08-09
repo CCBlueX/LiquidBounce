@@ -20,11 +20,8 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.authlib.GameProfile
-import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.ProjectionType
-import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
@@ -32,27 +29,20 @@ import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
-import net.minecraft.client.renderer.Projection
-import net.minecraft.client.renderer.ProjectionMatrixBuffer
 import net.minecraft.client.renderer.Rect2i
-import net.minecraft.client.renderer.SubmitNodeStorage
-import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.EntitySpawnReason
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.LivingEntity
-import org.apache.commons.lang3.function.Consumers
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.util.UUID
@@ -95,7 +85,7 @@ object EntityImageAtlas : EventListener {
     }
 }
 
-private class EntityTextureRenderer : MinecraftShortcuts {
+private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entities") {
 
     private val entities = BuiltInRegistries.ENTITY_TYPE.mapNotNull { type ->
         runCatching { type to createLivingEntity(type) }
@@ -110,26 +100,9 @@ private class EntityTextureRenderer : MinecraftShortcuts {
             ?.let { it.first to requireNotNull(it.second) }
     }
     private val itemsPerDimension = sqrt(entities.size.toDouble()).ceilToInt()
-    private val textureSize = ENTITY_TILE_SIZE * itemsPerDimension
-    private val framebuffer = TextureTarget(
-        "EntityImageAtlas Framebuffer",
-        textureSize,
-        textureSize,
-        true,
-        GpuFormat.RGBA8_UNORM,
-    )
-    private val submitNodeStorage = SubmitNodeStorage()
-    private val featureRenderDispatcher = FeatureRenderDispatcher(
-        mc.gameRenderer.renderBuffers,
-        mc.modelManager,
-        mc.atlasManager,
-        mc.font,
-        mc.gameRenderer.gameRenderState(),
-    )
-    private val projection = Projection()
-    private val projectionMatrixBuffer = ProjectionMatrixBuffer("entities")
+    override val textureSize = ENTITY_TILE_SIZE * itemsPerDimension
 
-    fun render(): CompletableFuture<EntityAtlas> {
+    override fun render(): CompletableFuture<EntityAtlas> {
         framebuffer.clearColorAndDepth()
         RenderSystem.backupProjectionMatrix()
         projection.setupOrtho(-1000.0F, 1000.0F, textureSize.toFloat(), textureSize.toFloat(), true)
@@ -139,14 +112,13 @@ private class EntityTextureRenderer : MinecraftShortcuts {
         val failedRects = mutableListOf<Rect2i>()
 
         withOutputTextureOverride(framebuffer.colorTextureView, framebuffer.depthTextureView) {
-            val poseStack = Pools.MatStack.borrow()
             entities.forEachIndexed { index, (type, entity) ->
                 val x = (index % itemsPerDimension) * ENTITY_TILE_SIZE
                 val y = (index / itemsPerDimension) * ENTITY_TILE_SIZE
                 val rect = Rect2i(x, y, ENTITY_TILE_SIZE, ENTITY_TILE_SIZE)
                 entityMap[type] = rect
 
-                runCatching { renderEntity(entity, poseStack, x, y) }
+                runCatching { renderEntity(entity, x, y) }
                     .onFailure {
                         failedRects += rect
                         logger.warn(
@@ -155,7 +127,6 @@ private class EntityTextureRenderer : MinecraftShortcuts {
                         )
                     }
             }
-            Pools.MatStack.recycle(poseStack)
         }
 
         RenderSystem.restoreProjectionMatrix()
@@ -173,7 +144,7 @@ private class EntityTextureRenderer : MinecraftShortcuts {
             }
     }
 
-    private fun renderEntity(entity: LivingEntity, matrices: PoseStack, x: Int, y: Int) {
+    private fun renderEntity(entity: LivingEntity, x: Int, y: Int) {
         entity.yRot = 25F
         entity.yHeadRot = 25F
         entity.yBodyRot = 25F
@@ -184,10 +155,10 @@ private class EntityTextureRenderer : MinecraftShortcuts {
         state.outlineColor = 0
         val scale = ENTITY_TILE_SIZE * 0.72F / max(entity.bbHeight, entity.bbWidth * 1.5F)
 
-        matrices.pushPose()
+        poseStack.pushPose()
         try {
-            matrices.translate(x + ENTITY_TILE_SIZE * 0.5F, y + ENTITY_TILE_SIZE * 0.88F, 0F)
-            matrices.scale(scale, -scale, scale)
+            poseStack.translate(x + ENTITY_TILE_SIZE * 0.5F, y + ENTITY_TILE_SIZE * 0.88F, 0F)
+            poseStack.scale(scale, -scale, scale)
 
             RenderSystem.enableScissorForRenderTypeDraws(
                 x,
@@ -196,11 +167,11 @@ private class EntityTextureRenderer : MinecraftShortcuts {
                 ENTITY_TILE_SIZE,
             )
             val cameraState = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
-            mc.entityRenderDispatcher.submit(state, cameraState, 0.0, 0.0, 0.0, matrices, submitNodeStorage)
+            mc.entityRenderDispatcher.submit(state, cameraState, 0.0, 0.0, 0.0, poseStack, submitNodeStorage)
             featureRenderDispatcher.renderAllFeatures(submitNodeStorage)
         } finally {
             RenderSystem.disableScissorForRenderTypeDraws()
-            matrices.popPose()
+            poseStack.popPose()
         }
     }
 
@@ -218,13 +189,6 @@ private class EntityTextureRenderer : MinecraftShortcuts {
 
         entity?.id = level.nextLocalEntityId()
         return entity
-    }
-
-    private fun close() {
-        projectionMatrixBuffer.close()
-        framebuffer.destroyBuffers()
-        submitNodeStorage.drainPhases(Consumers.nop())
-        featureRenderDispatcher.close()
     }
 
     private fun drawFallbacks(image: BufferedImage, rects: Collection<Rect2i>) {
