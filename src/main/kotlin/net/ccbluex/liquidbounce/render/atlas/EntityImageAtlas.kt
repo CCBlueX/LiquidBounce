@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.authlib.GameProfile
+import com.mojang.blaze3d.GpuFormat
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
@@ -30,19 +31,19 @@ import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
-import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.util.ARGB
 import net.minecraft.world.entity.EntitySpawnReason
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.LivingEntity
 import java.awt.Color
 import java.awt.image.BufferedImage
+import java.nio.ByteBuffer
 import java.util.UUID
-import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -98,7 +99,7 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
     override val tileSize = ENTITY_TILE_SIZE
     override val tilesPerRow = sqrt(entities.size.toDouble()).ceilToInt()
 
-    override fun render(): CompletableFuture<EntityAtlas> {
+    override fun render(): CompletableFuture<EntityAtlas> = try {
         val entityMap = Reference2ObjectOpenHashMap<EntityType<*>, Rect2i>(entities.size)
         val failedRects = mutableListOf<Rect2i>()
 
@@ -118,17 +119,15 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
             }
         }
 
-        return framebuffer.colorTexture!!.toBufferedImage()
-            .thenApply { image ->
-                drawFallbacks(image, failedRects)
-                logger.info("Loaded ${image.width} x ${image.height} entity atlas")
-                EntityAtlas(entityMap, image)
-            }.whenComplete { _, throwable ->
-                close()
-                if (throwable != null && throwable !is CancellationException) {
-                    logger.error("Failed to load entity atlas", throwable)
-                }
-            }
+        return readbackAsync { atlasPixels, _ ->
+            val image = atlasPixels.toBufferedImage()
+            drawFallbacks(image, failedRects)
+            logger.info("Loaded ${image.width} x ${image.height} entity atlas")
+            EntityAtlas(entityMap, image)
+        }
+    } catch (throwable: Throwable) {
+        close()
+        CompletableFuture.failedFuture(throwable)
     }
 
     private fun renderEntity(entity: LivingEntity, rect: Rect2i) {
@@ -170,6 +169,18 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
 
         entity?.id = level.nextLocalEntityId()
         return entity
+    }
+
+    private fun ByteBuffer.toBufferedImage(): BufferedImage {
+        val image = BufferedImage(textureSize, textureSize, BufferedImage.TYPE_INT_ARGB)
+        val pixelSize = GpuFormat.RGBA8_UNORM.blockSize()
+        for (y in 0 until textureSize) {
+            for (x in 0 until textureSize) {
+                val abgr = getInt((x + y * textureSize) * pixelSize)
+                image.setRGB(x, textureSize - y - 1, ARGB.fromABGR(abgr))
+            }
+        }
+        return image
     }
 
     private fun drawFallbacks(image: BufferedImage, rects: Collection<Rect2i>) {

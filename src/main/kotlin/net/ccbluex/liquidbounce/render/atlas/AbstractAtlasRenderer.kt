@@ -21,18 +21,26 @@ package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.ProjectionType
+import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
+import net.ccbluex.liquidbounce.utils.render.copyTo
+import net.ccbluex.liquidbounce.utils.render.readFully
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.renderer.Projection
 import net.minecraft.client.renderer.ProjectionMatrixBuffer
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
+import net.minecraft.util.Util
 import org.apache.commons.lang3.function.Consumers
+import org.lwjgl.system.MemoryUtil
+import java.nio.ByteBuffer
+import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.LazyThreadSafetyMode.NONE
@@ -133,6 +141,110 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
         } finally {
             RenderSystem.restoreProjectionMatrix()
         }
+    }
+
+    protected fun readbackAsync(
+        buildAtlas: (ByteBuffer, CompletableFuture<A>) -> A,
+    ): CompletableFuture<A> {
+        val colorTexture = requireNotNull(framebuffer.colorTexture) {
+            "$label atlas framebuffer has no color texture"
+        }
+        val readbackBuffer = gpuDevice.createBuffer(
+            { "$label atlas readback" },
+            GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
+            textureSize.toLong() * textureSize * GpuFormat.RGBA8_UNORM.blockSize(),
+        )
+        val result = CompletableFuture<A>()
+
+        try {
+            colorTexture.copyTo(readbackBuffer) {
+                processReadback(readbackBuffer, result, buildAtlas)
+            }
+        } catch (throwable: Throwable) {
+            closeReadbackResources(readbackBuffer)?.let(throwable::addSuppressed)
+            completeExceptionally(result, throwable)
+        }
+
+        return result
+    }
+
+    private fun processReadback(
+        readbackBuffer: GpuBuffer,
+        result: CompletableFuture<A>,
+        buildAtlas: (ByteBuffer, CompletableFuture<A>) -> A,
+    ) {
+        val atlasPixels = if (result.isCancelled) {
+            null
+        } else {
+            try {
+                readbackBuffer.readFully()
+            } catch (throwable: Throwable) {
+                closeReadbackResources(readbackBuffer)?.let(throwable::addSuppressed)
+                completeExceptionally(result, throwable)
+                return
+            }
+        }
+
+        val closeFailure = closeReadbackResources(readbackBuffer)
+        if (closeFailure != null) {
+            MemoryUtil.memFree(atlasPixels)
+            completeExceptionally(result, closeFailure)
+            return
+        }
+        if (atlasPixels == null) {
+            return
+        }
+
+        encodeAsync(atlasPixels, result, buildAtlas)
+    }
+
+    private fun encodeAsync(
+        atlasPixels: ByteBuffer,
+        result: CompletableFuture<A>,
+        buildAtlas: (ByteBuffer, CompletableFuture<A>) -> A,
+    ) {
+        try {
+            Util.backgroundExecutor().execute {
+                try {
+                    if (!result.isCancelled) {
+                        val atlas = buildAtlas(atlasPixels, result)
+                        if (!result.isCancelled) {
+                            result.complete(atlas)
+                        }
+                    }
+                } catch (throwable: Throwable) {
+                    completeExceptionally(result, throwable)
+                } finally {
+                    MemoryUtil.memFree(atlasPixels)
+                }
+            }
+        } catch (throwable: Throwable) {
+            MemoryUtil.memFree(atlasPixels)
+            completeExceptionally(result, throwable)
+        }
+    }
+
+    private fun closeReadbackResources(readbackBuffer: GpuBuffer): Throwable? {
+        var failure: Throwable? = null
+        try {
+            readbackBuffer.close()
+        } catch (throwable: Throwable) {
+            failure = throwable
+        }
+
+        try {
+            close()
+        } catch (throwable: Throwable) {
+            failure?.addSuppressed(throwable) ?: run { failure = throwable }
+        }
+        return failure
+    }
+
+    private fun completeExceptionally(result: CompletableFuture<*>, throwable: Throwable) {
+        if (throwable !is CancellationException) {
+            logger.error("Failed to load $label atlas", throwable)
+        }
+        result.completeExceptionally(throwable)
     }
 
     protected fun close() {

@@ -19,8 +19,6 @@
 
 package net.ccbluex.liquidbounce.render.atlas
 
-import com.mojang.blaze3d.GpuFormat
-import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.platform.Lighting
 import com.mojang.blaze3d.platform.NativeImage
 import kotlinx.coroutines.future.await
@@ -32,8 +30,6 @@ import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.render.copyTo
-import net.ccbluex.liquidbounce.utils.render.readFully
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.client.renderer.Rect2i
@@ -41,7 +37,6 @@ import net.minecraft.client.renderer.item.TrackingItemStackRenderState
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
 import net.minecraft.util.LightCoordsUtil
-import net.minecraft.util.Util
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.Items
@@ -105,7 +100,14 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
     override fun render(): CompletableFuture<Atlas> = try {
         val itemMap = renderItems()
         val aliasMap = findBlockToItemAliases()
-        submitReadback(itemMap, aliasMap)
+        readbackAsync { atlasPixels, result ->
+            val atlas = Atlas(
+                encodeItemImages(atlasPixels, itemMap, result),
+                aliasMap,
+            )
+            logger.info("Loaded $textureSize x $textureSize item atlas with ${atlas.images.size} PNGs")
+            atlas
+        }
     } catch (throwable: Throwable) {
         close()
         CompletableFuture.failedFuture(throwable)
@@ -130,93 +132,6 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
                 this[BuiltInRegistries.ITEM.getKey(item)] = rect
             }
         }
-    }
-
-    private fun submitReadback(
-        itemMap: Map<Identifier, Rect2i>,
-        aliasMap: Map<Identifier, Identifier>,
-    ): CompletableFuture<Atlas> {
-        val colorTexture = requireNotNull(framebuffer.colorTexture) {
-            "Item atlas framebuffer has no color texture"
-        }
-        val readbackBuffer = gpuDevice.createBuffer(
-            { "ItemImageAtlas readback" },
-            GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
-            textureSize.toLong() * textureSize * GpuFormat.RGBA8_UNORM.blockSize(),
-        )
-
-        val result = CompletableFuture<Atlas>()
-        try {
-            colorTexture.copyTo(readbackBuffer) {
-                processReadback(readbackBuffer, itemMap, aliasMap, result)
-            }
-        } catch (t: Throwable) {
-            readbackBuffer.close()
-            throw t
-        }
-        return result
-    }
-
-    private fun processReadback(
-        readbackBuffer: GpuBuffer,
-        itemMap: Map<Identifier, Rect2i>,
-        aliasMap: Map<Identifier, Identifier>,
-        result: CompletableFuture<Atlas>,
-    ) {
-        val atlasPixels = try {
-            if (result.isCancelled) {
-                return
-            }
-
-            readbackBuffer.readFully()
-        } catch (throwable: Throwable) {
-            completeExceptionally(result, throwable)
-            return
-        } finally {
-            readbackBuffer.close()
-            close()
-        }
-
-        encodeAsync(atlasPixels, itemMap, aliasMap, result)
-    }
-
-    private fun encodeAsync(
-        atlasPixels: ByteBuffer,
-        itemMap: Map<Identifier, Rect2i>,
-        aliasMap: Map<Identifier, Identifier>,
-        result: CompletableFuture<Atlas>,
-    ) {
-        try {
-            Util.backgroundExecutor().execute {
-                try {
-                    if (result.isCancelled) return@execute
-
-                    val atlas = Atlas(
-                        encodeItemImages(atlasPixels, itemMap, result),
-                        aliasMap,
-                    )
-
-                    if (!result.isCancelled) {
-                        logger.info("Loaded $textureSize x $textureSize item atlas with ${atlas.images.size} PNGs")
-                        result.complete(atlas)
-                    }
-                } catch (throwable: Throwable) {
-                    completeExceptionally(result, throwable)
-                } finally {
-                    MemoryUtil.memFree(atlasPixels)
-                }
-            }
-        } catch (throwable: Throwable) {
-            MemoryUtil.memFree(atlasPixels)
-            completeExceptionally(result, throwable)
-        }
-    }
-
-    private fun completeExceptionally(result: CompletableFuture<*>, throwable: Throwable) {
-        if (throwable !is CancellationException) {
-            logger.error("Failed to load item atlas", throwable)
-        }
-        result.completeExceptionally(throwable)
     }
 
     private fun encodeItemImages(
