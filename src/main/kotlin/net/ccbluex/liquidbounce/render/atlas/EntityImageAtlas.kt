@@ -74,7 +74,13 @@ object EntityImageAtlas : EventListener {
 
 private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entity") {
 
+    private fun EntityType<*>.isDisallowed(): Boolean =
+        // Camera aware
+        this === EntityTypes.BLOCK_DISPLAY || this === EntityTypes.ITEM_DISPLAY || this === EntityTypes.TEXT_DISPLAY
+
     private val entities = BuiltInRegistries.ENTITY_TYPE.mapNotNull { type ->
+        if (type.isDisallowed()) return@mapNotNull null
+
         val identifier = BuiltInRegistries.ENTITY_TYPE.getKey(type)
         try {
             identifier to (createEntity(type) ?: return@mapNotNull null)
