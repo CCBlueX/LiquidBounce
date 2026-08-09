@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.renderer.Projection
 import net.minecraft.client.renderer.ProjectionMatrixBuffer
+import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import org.apache.commons.lang3.function.Consumers
@@ -40,7 +41,11 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
     private val label: String,
 ) : MinecraftShortcuts {
 
-    protected abstract val textureSize: Int
+    protected abstract val tileSize: Int
+    protected abstract val tilesPerRow: Int
+
+    protected val textureSize: Int
+        get() = tileSize * tilesPerRow
 
     private val framebufferLazy = lazy(NONE) {
         TextureTarget(
@@ -78,6 +83,32 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
     private val closed = AtomicBoolean()
 
     abstract fun render(): CompletableFuture<A>
+
+    protected fun tileRect(index: Int) = Rect2i(
+        (index % tilesPerRow) * tileSize,
+        (index / tilesPerRow) * tileSize,
+        tileSize,
+        tileSize,
+    )
+
+    protected fun withTile(rect: Rect2i, block: PoseStack.() -> Unit) {
+        poseStack.pushPose()
+        try {
+            RenderSystem.enableScissorForRenderTypeDraws(
+                rect.x,
+                textureSize - rect.y - rect.height,
+                rect.width,
+                rect.height,
+            )
+            try {
+                poseStack.block()
+            } finally {
+                RenderSystem.disableScissorForRenderTypeDraws()
+            }
+        } finally {
+            poseStack.popPose()
+        }
+    }
 
     protected fun <T> withAtlasTarget(block: () -> T): T {
         framebuffer.clearColorAndDepth()

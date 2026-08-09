@@ -23,14 +23,12 @@ import com.mojang.blaze3d.GpuFormat
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.platform.Lighting
 import com.mojang.blaze3d.platform.NativeImage
-import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -97,9 +95,8 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
 
     private val items = BuiltInRegistries.ITEM
 
-    private val itemsPerDimension = sqrt(items.size().toDouble()).ceilToInt()
-    private val itemPixelSize = NATIVE_ITEM_SIZE * scale
-    override val textureSize = itemPixelSize * itemsPerDimension
+    override val tileSize = NATIVE_ITEM_SIZE * scale
+    override val tilesPerRow = sqrt(items.size().toDouble()).ceilToInt()
 
     /**
      * @see GuiRenderer.prepareItemElements
@@ -118,8 +115,7 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
         buildMap(items.size()) {
             val keyedItemRenderState = TrackingItemStackRenderState()
             for ((idx, item) in items.withIndex()) {
-                val x = (idx % itemsPerDimension) * itemPixelSize
-                val y = (idx / itemsPerDimension) * itemPixelSize
+                val rect = tileRect(idx)
                 if (item !== Items.AIR) {
                     mc.itemModelResolver.updateForTopItem(
                         keyedItemRenderState,
@@ -129,14 +125,9 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
                         player,
                         0,
                     )
-                    renderItemToAtlas(keyedItemRenderState, x, y, itemPixelSize)
+                    renderItemToAtlas(keyedItemRenderState, rect)
                 }
-                this[BuiltInRegistries.ITEM.getKey(item)] = Rect2i(
-                    x,
-                    y,
-                    itemPixelSize,
-                    itemPixelSize,
-                )
+                this[BuiltInRegistries.ITEM.getKey(item)] = rect
             }
         }
     }
@@ -233,7 +224,7 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
         itemMap: Map<Identifier, Rect2i>,
         result: CompletableFuture<Atlas>,
     ) = buildMap(itemMap.size) {
-        NativeImage(itemPixelSize, itemPixelSize, false).use { itemImage ->
+        NativeImage(tileSize, tileSize, false).use { itemImage ->
             val buffer = Buffer()
             for ((identifier, rect) in itemMap) {
                 if (result.isCancelled) {
@@ -270,30 +261,21 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
      */
     private fun renderItemToAtlas(
         state: TrackingItemStackRenderState,
-        scaledX: Int,
-        scaledY: Int,
-        itemPixelSize: Int,
+        rect: Rect2i,
     ) {
-        poseStack.withPush {
-            poseStack.translate(
-                scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F,
-                scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F,
+        withTile(rect) {
+            translate(
+                rect.x.toFloat() + rect.width.toFloat() * 0.5F,
+                rect.y.toFloat() + rect.height.toFloat() * 0.5F,
                 0.0f,
             )
-            poseStack.scale(itemPixelSize.toFloat(), -itemPixelSize.toFloat(), itemPixelSize.toFloat())
+            scale(rect.width.toFloat(), -rect.height.toFloat(), rect.width.toFloat())
             mc.gameRenderer.lighting().setupFor(
                 if (state.usesBlockLight()) Lighting.Entry.ITEMS_3D else Lighting.Entry.ITEMS_FLAT
             )
 
-            RenderSystem.enableScissorForRenderTypeDraws(
-                scaledX, textureSize - scaledY - itemPixelSize, itemPixelSize, itemPixelSize
-            )
-            try {
-                state.submit(poseStack, submitNodeStorage, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0)
-                featureRenderDispatcher.renderAllFeatures(submitNodeStorage)
-            } finally {
-                RenderSystem.disableScissorForRenderTypeDraws()
-            }
+            state.submit(this, submitNodeStorage, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0)
+            featureRenderDispatcher.renderAllFeatures(submitNodeStorage)
         }
     }
 

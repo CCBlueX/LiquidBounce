@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.authlib.GameProfile
-import com.mojang.blaze3d.systems.RenderSystem
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
@@ -96,8 +95,8 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
             ?.takeIf { it.second != null }
             ?.let { it.first to requireNotNull(it.second) }
     }
-    private val itemsPerDimension = sqrt(entities.size.toDouble()).ceilToInt()
-    override val textureSize = ENTITY_TILE_SIZE * itemsPerDimension
+    override val tileSize = ENTITY_TILE_SIZE
+    override val tilesPerRow = sqrt(entities.size.toDouble()).ceilToInt()
 
     override fun render(): CompletableFuture<EntityAtlas> {
         val entityMap = Reference2ObjectOpenHashMap<EntityType<*>, Rect2i>(entities.size)
@@ -105,12 +104,10 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
 
         withAtlasTarget {
             entities.forEachIndexed { index, (type, entity) ->
-                val x = (index % itemsPerDimension) * ENTITY_TILE_SIZE
-                val y = (index / itemsPerDimension) * ENTITY_TILE_SIZE
-                val rect = Rect2i(x, y, ENTITY_TILE_SIZE, ENTITY_TILE_SIZE)
+                val rect = tileRect(index)
                 entityMap[type] = rect
 
-                runCatching { renderEntity(entity, x, y) }
+                runCatching { renderEntity(entity, rect) }
                     .onFailure {
                         failedRects += rect
                         logger.warn(
@@ -134,7 +131,7 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
             }
     }
 
-    private fun renderEntity(entity: LivingEntity, x: Int, y: Int) {
+    private fun renderEntity(entity: LivingEntity, rect: Rect2i) {
         entity.yRot = 25F
         entity.yHeadRot = 25F
         entity.yBodyRot = 25F
@@ -143,25 +140,19 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
         state.nameTag = null
         state.shadowPieces.clear()
         state.outlineColor = 0
-        val scale = ENTITY_TILE_SIZE * 0.72F / max(entity.bbHeight, entity.bbWidth * 1.5F)
+        val scale = rect.height * 0.72F / max(entity.bbHeight, entity.bbWidth * 1.5F)
 
-        poseStack.pushPose()
-        try {
-            poseStack.translate(x + ENTITY_TILE_SIZE * 0.5F, y + ENTITY_TILE_SIZE * 0.88F, 0F)
-            poseStack.scale(scale, -scale, scale)
-
-            RenderSystem.enableScissorForRenderTypeDraws(
-                x,
-                textureSize - y - ENTITY_TILE_SIZE,
-                ENTITY_TILE_SIZE,
-                ENTITY_TILE_SIZE,
+        withTile(rect) {
+            translate(
+                rect.x + rect.width * 0.5F,
+                rect.y + rect.height * 0.88F,
+                0F,
             )
+            scale(scale, -scale, scale)
+
             val cameraState = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
-            mc.entityRenderDispatcher.submit(state, cameraState, 0.0, 0.0, 0.0, poseStack, submitNodeStorage)
+            mc.entityRenderDispatcher.submit(state, cameraState, 0.0, 0.0, 0.0, this, submitNodeStorage)
             featureRenderDispatcher.renderAllFeatures(submitNodeStorage)
-        } finally {
-            RenderSystem.disableScissorForRenderTypeDraws()
-            poseStack.popPose()
         }
     }
 
