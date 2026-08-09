@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.blaze3d.platform.Lighting
-import com.mojang.blaze3d.platform.NativeImage
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
@@ -40,10 +39,6 @@ import net.minecraft.util.LightCoordsUtil
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.Items
-import okio.Buffer
-import org.lwjgl.system.MemoryUtil
-import java.nio.ByteBuffer
-import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import kotlin.math.sqrt
 
@@ -102,7 +97,7 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
         val aliasMap = findBlockToItemAliases()
         readbackAsync { atlasPixels, result ->
             val atlas = Atlas(
-                encodeItemImages(atlasPixels, itemMap, result),
+                encodePngTiles(atlasPixels, itemMap, result),
                 aliasMap,
             )
             logger.info("Loaded $textureSize x $textureSize item atlas with ${atlas.images.size} PNGs")
@@ -131,43 +126,6 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
                 }
                 this[BuiltInRegistries.ITEM.getKey(item)] = rect
             }
-        }
-    }
-
-    private fun encodeItemImages(
-        atlasPixels: ByteBuffer,
-        itemMap: Map<Identifier, Rect2i>,
-        result: CompletableFuture<Atlas>,
-    ) = buildMap(itemMap.size) {
-        NativeImage(tileSize, tileSize, false).use { itemImage ->
-            val buffer = Buffer()
-            for ((identifier, rect) in itemMap) {
-                if (result.isCancelled) {
-                    throw CancellationException("Item atlas generation was cancelled")
-                }
-
-                atlasPixels.copyRectTo(itemImage, rect)
-                check(itemImage.writeToChannel(buffer)) { "Failed to encode item texture $identifier" }
-                val encoded = buffer.readByteArray()
-                this[identifier] = encoded
-            }
-        }
-    }
-
-    private fun ByteBuffer.copyRectTo(target: NativeImage, rect: Rect2i) {
-        require(target.format() == NativeImage.Format.RGBA)
-        require(rect.width == target.width && rect.height == target.height)
-        require(rect.x >= 0 && rect.y >= 0 && rect.x + rect.width <= textureSize && rect.y + rect.height <= textureSize)
-
-        val bytesPerPixel = NativeImage.Format.RGBA.components()
-        val rowBytes = rect.width * bytesPerPixel.toLong()
-        val sourcePixels = MemoryUtil.memAddress(this)
-        for (row in 0 until rect.height) {
-            // GPU readback rows are bottom-up while atlas rectangles use top-down coordinates.
-            val sourceY = textureSize - rect.y - row - 1
-            val sourceOffset = (sourceY * textureSize + rect.x) * bytesPerPixel.toLong()
-            val targetOffset = row * rowBytes
-            MemoryUtil.memCopy(sourcePixels + sourceOffset, target.pointer + targetOffset, rowBytes)
         }
     }
 

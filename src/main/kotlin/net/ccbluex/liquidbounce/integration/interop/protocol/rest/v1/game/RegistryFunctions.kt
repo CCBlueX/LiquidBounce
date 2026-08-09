@@ -231,13 +231,13 @@ private fun Route.getRegistry() = get {
             val icon = itemIconUrl(soundDiscId)
 
             BuiltInRegistries.SOUND_EVENT.buildOutput(
-                name =  { _, id -> id.location.toName() },
+                name = { _, id -> id.location.toName() },
             ) { icon }
         }
 
         "mob_effect" -> {
             BuiltInRegistries.MOB_EFFECT.buildOutput(
-                name =  { _, id -> id.displayName.string },
+                name = { _, id -> id.displayName.string },
                 iconUrl = ::effectTextureUrl,
             )
         }
@@ -264,11 +264,11 @@ private fun Route.getRegistry() = get {
             BuiltInRegistries.ENTITY_TYPE.buildOutput(
                 name = { _, id -> id.description.string },
                 iconUrl = { id ->
-                    BuiltInRegistries.ENTITY_TYPE.getValue(id)?.takeIf {
+                    BuiltInRegistries.ENTITY_TYPE.getValue(id).takeIf {
                         it in EntityImageAtlas.supportedEntityTypes
                     }?.let { entityTextureUrl(id) }
                 },
-            ).filterValues { it.icon != null }
+            )
         }
 
         "screen_handler", "menu" -> {

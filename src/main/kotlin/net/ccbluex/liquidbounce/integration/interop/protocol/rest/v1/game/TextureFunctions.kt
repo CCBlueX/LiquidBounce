@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondImag
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondResource
 import net.ccbluex.liquidbounce.integration.interop.serviceUnavailable
 import net.ccbluex.liquidbounce.render.atlas.AtlasLookup
-import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.render.atlas.EntityImageAtlas
+import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.client.renderer.texture.DynamicTexture
@@ -90,10 +90,6 @@ private fun Route.getEffectTexture() = get("/effectTexture") {
 
 // GET /api/v1/client/resource/entityTexture
 private fun Route.getEntityTexture() = get("/entityTexture") {
-    if (!EntityImageAtlas.isAtlasAvailable) {
-        call.internalServerError("Entity atlas not available yet")
-    }
-
     val identifier = call.queryParameters["id"]
         ?: call.badRequest("Missing identifier parameter")
     val minecraftIdentifier = Identifier.tryParse(identifier)
@@ -101,10 +97,15 @@ private fun Route.getEntityTexture() = get("/entityTexture") {
     val key = ResourceKey.create(Registries.ENTITY_TYPE, minecraftIdentifier)
     val type = BuiltInRegistries.ENTITY_TYPE.getValue(key)
         ?: call.badRequest("Entity type not found")
-    val image = EntityImageAtlas.getEntityImage(type)
-        ?: call.badRequest("Entity image not found")
 
-    call.respondImage(image)
+    when (val result = EntityImageAtlas.getEntityImage(type)) {
+        is AtlasLookup.Found -> call.respondBytes(result.bytes, ContentType.Image.PNG)
+        AtlasLookup.Missing -> call.badRequest("Entity image not found")
+        AtlasLookup.NotReady -> {
+            call.response.header(HttpHeaders.RetryAfter, 5)
+            call.serviceUnavailable("Entity atlas not available yet")
+        }
+    }
 }
 
 // GET /api/v1/client/resource/skin

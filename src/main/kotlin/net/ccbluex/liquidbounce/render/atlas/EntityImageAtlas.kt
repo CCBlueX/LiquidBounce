@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.authlib.GameProfile
-import com.mojang.blaze3d.GpuFormat
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import kotlinx.coroutines.future.await
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
@@ -35,14 +35,10 @@ import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.util.ARGB
 import net.minecraft.world.entity.EntitySpawnReason
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.LivingEntity
-import java.awt.Color
-import java.awt.image.BufferedImage
-import java.nio.ByteBuffer
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import kotlin.math.max
@@ -51,8 +47,7 @@ import kotlin.math.sqrt
 private const val ENTITY_TILE_SIZE = 96
 
 private class EntityAtlas(
-    val map: Map<EntityType<*>, Rect2i>,
-    val image: BufferedImage,
+    val images: Map<EntityType<*>, ByteArray>,
 )
 
 object EntityImageAtlas : EventListener {
@@ -68,40 +63,34 @@ object EntityImageAtlas : EventListener {
         atlas = EntityTextureRenderer().render().await()
     }
 
-    val isAtlasAvailable: Boolean
-        get() = atlas != null
-
     val supportedEntityTypes: Set<EntityType<*>>
-        get() = atlas?.map?.keys ?: emptySet()
+        get() = atlas?.images?.keys ?: emptySet()
 
-    fun getEntityImage(type: EntityType<*>): BufferedImage? {
-        val currentAtlas = requireNotNull(atlas) { "Entity atlas is not available yet" }
-        val rect = currentAtlas.map[type] ?: return null
-
-        return currentAtlas.image.getSubimage(rect.x, rect.y, rect.width, rect.height)
+    fun getEntityImage(type: EntityType<*>): AtlasLookup {
+        val atlas = this.atlas ?: return AtlasLookup.NotReady
+        val bytes = atlas.images[type]
+        return if (bytes == null) AtlasLookup.Missing else AtlasLookup.Found(bytes)
     }
 }
 
 private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entities") {
 
     private val entities = BuiltInRegistries.ENTITY_TYPE.mapNotNull { type ->
-        runCatching { type to createLivingEntity(type) }
-            .onFailure {
-                logger.warn(
-                    "Unable to create entity preview for ${BuiltInRegistries.ENTITY_TYPE.getKey(type)}",
-                    it,
-                )
-            }
-            .getOrNull()
-            ?.takeIf { it.second != null }
-            ?.let { it.first to requireNotNull(it.second) }
+        try {
+            type to (createLivingEntity(type) ?: return@mapNotNull null)
+        } catch (e: Exception) {
+            logger.warn(
+                "Unable to create entity preview for ${BuiltInRegistries.ENTITY_TYPE.getKey(type)}",
+                e,
+            )
+            null
+        }
     }
     override val tileSize = ENTITY_TILE_SIZE
     override val tilesPerRow = sqrt(entities.size.toDouble()).ceilToInt()
 
     override fun render(): CompletableFuture<EntityAtlas> = try {
         val entityMap = Reference2ObjectOpenHashMap<EntityType<*>, Rect2i>(entities.size)
-        val failedRects = mutableListOf<Rect2i>()
 
         withAtlasTarget {
             entities.forEachIndexed { index, (type, entity) ->
@@ -110,7 +99,6 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
 
                 runCatching { renderEntity(entity, rect) }
                     .onFailure {
-                        failedRects += rect
                         logger.warn(
                             "Unable to render entity preview for ${BuiltInRegistries.ENTITY_TYPE.getKey(type)}",
                             it,
@@ -119,11 +107,10 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
             }
         }
 
-        return readbackAsync { atlasPixels, _ ->
-            val image = atlasPixels.toBufferedImage()
-            drawFallbacks(image, failedRects)
-            logger.info("Loaded ${image.width} x ${image.height} entity atlas")
-            EntityAtlas(entityMap, image)
+        return readbackAsync { atlasPixels, result ->
+            val atlas = EntityAtlas(encodePngTiles(atlasPixels, entityMap, result))
+            logger.info("Loaded $textureSize x $textureSize entity atlas with ${atlas.images.size} PNGs")
+            atlas
         }
     } catch (throwable: Throwable) {
         close()
@@ -159,7 +146,7 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
         val level = requireNotNull(mc.level)
         val entity = if (type === EntityTypes.PLAYER) {
             val profile = GameProfile(
-                UUID.nameUUIDFromBytes("LiquidBounce Preview".toByteArray()),
+                UUID.nameUUIDFromBytes("$CLIENT_NAME Preview".toByteArray()),
                 "Player",
             )
             RemotePlayer(level, profile)
@@ -171,43 +158,4 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
         return entity
     }
 
-    private fun ByteBuffer.toBufferedImage(): BufferedImage {
-        val image = BufferedImage(textureSize, textureSize, BufferedImage.TYPE_INT_ARGB)
-        val pixelSize = GpuFormat.RGBA8_UNORM.blockSize()
-        for (y in 0 until textureSize) {
-            for (x in 0 until textureSize) {
-                val abgr = getInt((x + y * textureSize) * pixelSize)
-                image.setRGB(x, textureSize - y - 1, ARGB.fromABGR(abgr))
-            }
-        }
-        return image
-    }
-
-    private fun drawFallbacks(image: BufferedImage, rects: Collection<Rect2i>) {
-        if (rects.isEmpty()) {
-            return
-        }
-
-        val graphics = image.createGraphics()
-        try {
-            graphics.color = Color(70, 70, 70, 180)
-            rects.forEach { rect ->
-                val inset = ENTITY_TILE_SIZE / 4
-                graphics.fillOval(
-                    rect.x + inset,
-                    rect.y + inset,
-                    ENTITY_TILE_SIZE - inset * 2,
-                    ENTITY_TILE_SIZE - inset * 2,
-                )
-            }
-            graphics.color = Color.WHITE
-            graphics.font = graphics.font.deriveFont(ENTITY_TILE_SIZE * 0.35F)
-            rects.forEach { rect ->
-                val width = graphics.fontMetrics.stringWidth("?")
-                graphics.drawString("?", rect.x + (ENTITY_TILE_SIZE - width) / 2, rect.y + ENTITY_TILE_SIZE * 2 / 3)
-            }
-        } finally {
-            graphics.dispose()
-        }
-    }
 }
