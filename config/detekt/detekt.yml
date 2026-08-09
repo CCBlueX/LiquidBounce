@@ -55,7 +55,7 @@ style:
   #  UnusedImports:
   #    active: true
   WildcardImport:
-    active: true
+    active: false
   ForbiddenComment:
     active: false
   UnusedPrivateProperty:
