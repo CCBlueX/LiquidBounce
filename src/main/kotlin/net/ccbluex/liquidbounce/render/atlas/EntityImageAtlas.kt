@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.Rect2i
@@ -44,7 +43,6 @@ import net.minecraft.world.entity.LivingEntity
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import kotlin.math.max
-import kotlin.math.sqrt
 
 private const val ENTITY_TILE_SIZE = 96
 
@@ -89,8 +87,9 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
             null
         }
     }
+
     override val tileSize = ENTITY_TILE_SIZE
-    override val tilesPerRow = sqrt(entities.size.toDouble()).ceilToInt()
+    override val tileCount = entities.size
 
     override fun render(): CompletableFuture<EntityAtlas> = try {
         val entityMap = withAtlasTarget {

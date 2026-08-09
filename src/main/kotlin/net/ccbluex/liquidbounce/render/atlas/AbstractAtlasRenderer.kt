@@ -38,6 +38,7 @@ import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import net.minecraft.util.Util
+import net.minecraft.util.Mth
 import okio.Buffer
 import org.apache.commons.lang3.function.Consumers
 import org.lwjgl.system.MemoryUtil
@@ -52,7 +53,10 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
 ) : MinecraftShortcuts {
 
     protected abstract val tileSize: Int
-    protected abstract val tilesPerRow: Int
+    protected abstract val tileCount: Int
+
+    private val tilesPerRow: Int
+        get() = Mth.smallestSquareSide(tileCount)
 
     protected val textureSize: Int
         get() = tileSize * tilesPerRow

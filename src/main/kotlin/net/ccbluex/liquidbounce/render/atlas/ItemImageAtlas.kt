@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.gui.render.GuiRenderer
@@ -40,7 +39,6 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.Items
 import java.util.concurrent.CompletableFuture
-import kotlin.math.sqrt
 
 private const val NATIVE_ITEM_SIZE: Int = GuiRenderer.DEFAULT_ITEM_SIZE
 
@@ -80,13 +78,12 @@ object ItemImageAtlas : EventListener {
 /**
  * @see net.minecraft.client.gui.render.GuiItemAtlas
  */
-@Suppress("TooManyFunctions")
 private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRenderer<Atlas>("Items") {
 
     private val items = BuiltInRegistries.ITEM
 
     override val tileSize = NATIVE_ITEM_SIZE * scale
-    override val tilesPerRow = sqrt(items.size().toDouble()).ceilToInt()
+    override val tileCount = items.size()
 
     /**
      * @see GuiRenderer.prepareItemElements
