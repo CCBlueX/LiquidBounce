@@ -30,14 +30,13 @@ import net.ccbluex.liquidbounce.utils.client.browseUrl
 class ExternalSystemBrowser(
     private val backend: ExternalSystemBrowserBackend,
     url: String,
-    viewport: BrowserViewport,
+    override var viewport: BrowserViewport,
     val settings: BrowserSettings,
     override var priority: Short = 0
 ) : Browser, MinecraftShortcuts {
 
     override val isInitialized = true
     override val state: BrowserState = BrowserState.Stateless
-    override var viewport: BrowserViewport = viewport
     override var visible = true
 
     init {

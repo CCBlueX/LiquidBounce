@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFa
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getPotentialSecondBedBlock
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isCharged
 import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
@@ -222,7 +222,7 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
             sphere!!.forEach {
                 val pos = it.offset(playerPos)
                 val block = pos.getBlock()
-                val state = pos.getState()!!
+                val state = pos.stateOrEmpty
 
                 val noBedExplosion = overworld || block !is BedBlock
                 val noAnchorExplosion = nether || block !is RespawnAnchorBlock || !block.isCharged(state)

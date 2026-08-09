@@ -141,9 +141,14 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     /**
      * Hook entity movement tick event
      */
-    @Inject(method = "aiStep", at = @At("HEAD"))
+    @Inject(method = "aiStep", at = @At("HEAD"), cancellable = true)
     private void hookMovementTickEvent(CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(PlayerMovementTickEvent.INSTANCE);
+        var movementTickEvent = new PlayerMovementTickEvent();
+        EventManager.INSTANCE.callEvent(movementTickEvent);
+
+        if (movementTickEvent.isCancelled()) {
+            callbackInfo.cancel();
+        }
     }
 
     /**
