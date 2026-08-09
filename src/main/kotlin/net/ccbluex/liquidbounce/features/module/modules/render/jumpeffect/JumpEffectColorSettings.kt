@@ -16,17 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.render.engine.type
 
-import net.ccbluex.liquidbounce.utils.kotlin.FloatFloatValuePair
+package net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect
 
-@JvmInline
-value class UV2f private constructor(private val pair: FloatFloatValuePair) {
-    val u: Float inline get() = component1()
-    val v: Float inline get() = component2()
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 
-    constructor(u: Float, v: Float) : this(FloatFloatValuePair(u, v))
+class JumpEffectColorSettings : ValueGroup("Colors") {
 
-    operator fun component1(): Float = pair.left
-    operator fun component2(): Float = pair.right
+    val innerColor by color("InnerColor", Color4b.LIQUID_BOUNCE.alpha(50))
+    val outerColor by color("OuterColor", Color4b.LIQUID_BOUNCE.alpha(150))
+
 }

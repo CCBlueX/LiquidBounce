@@ -16,17 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.render.engine.type
 
-import net.ccbluex.liquidbounce.utils.kotlin.FloatFloatValuePair
+package net.ccbluex.liquidbounce.render.gui
 
-@JvmInline
-value class UV2f private constructor(private val pair: FloatFloatValuePair) {
-    val u: Float inline get() = component1()
-    val v: Float inline get() = component2()
-
-    constructor(u: Float, v: Float) : this(FloatFloatValuePair(u, v))
-
-    operator fun component1(): Float = pair.left
-    operator fun component2(): Float = pair.right
+sealed interface AtlasLookup {
+    data object NotReady : AtlasLookup
+    data object Missing : AtlasLookup
+    data class Found(val bytes: ByteArray) : AtlasLookup
 }

@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.render.AnchorPoint
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -193,7 +194,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     val alpha = Mth.clamp(color.a - (i * alphaFactor), 0, color.a)
                     val renderColor = color.alpha(alpha)
 
-                    drawSquareTexture(ghostModeTexture, size, renderColor.argb)
+                    drawSquareTexture(ghostModeTexture, size, renderColor.argb, AnchorPoint.CENTER_LEFT)
 
                     with(poseStack) {
                         translate(-size / 2.0, -size / 2.0, 0.0)
