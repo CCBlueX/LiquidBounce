@@ -73,21 +73,20 @@ abstract class WingsMode(name: String) : Mode(name) {
 
                 if (!shouldRender) continue
 
-                val rot = when (ModuleRotations.enabled) {
-                    false -> entity.interpolateCurrentRotation(event.partialTicks)
-                    true -> RotationManager.currentRotation ?: entity.interpolateCurrentRotation(event.partialTicks)
-                }
 
                 val modelRot = ModuleRotations.modelRotation?.yRot
                 val prevModelRot = ModuleRotations.prevModelRotation?.yRot
 
-                val bodyRot = when (ModuleRotations.enabled) {
-                    false -> rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot)
-                    true -> rotLerp(
-                        event.partialTicks,
-                        prevModelRot ?: entity.yBodyRotO,
-                        modelRot ?: entity.yBodyRot)
+                val rot = when (ModuleRotations.enabled) {
+                    false -> entity.interpolateCurrentRotation(event.partialTicks)
+                    true ->  RotationManager.currentRotation ?: entity.interpolateCurrentRotation(event.partialTicks)
                 }
+
+                val bodyRot = rotLerp(
+                    event.partialTicks,
+                    prevModelRot ?: entity.yBodyRotO,
+                    modelRot ?: entity.yBodyRot
+                )
 
                 val look = Vec3.directionFromRotation(0f, rot.yRot)
                 val equipmentOffset = when (!entity.getItemBySlot(EquipmentSlot.CHEST).isEmpty) {
