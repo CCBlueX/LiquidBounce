@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -44,7 +44,7 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
             chat(markAsError(ModuleAutoBuild.message("noPosition")), ModuleAutoBuild)
             ModuleAutoBuild.enabled = false
         }
-        placer.update(portal!!.frameBlocks.filter { it.getState()!!.block != Blocks.OBSIDIAN })
+        placer.update(portal!!.frameBlocks.filter { it.stateOrEmpty.block !== Blocks.OBSIDIAN })
         placer.support.blockedPositions.addAll(portal!!.enclosedBlocks)
     }
 

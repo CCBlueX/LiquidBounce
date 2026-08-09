@@ -22,7 +22,7 @@ import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.kotlin.addAll
@@ -267,7 +267,7 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
         exposedOnly -> Pools.MutableBlockPos.use { pos ->
             Direction.entries.any {
-                pos.set(blockPos).move(it.unitVec3i).getState()?.isRedstoneConductor(world, pos) == false
+                pos.set(blockPos).move(it.unitVec3i).state?.isRedstoneConductor(world, pos) == false
             }
         }
 
