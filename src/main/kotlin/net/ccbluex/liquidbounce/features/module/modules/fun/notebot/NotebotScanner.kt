@@ -25,7 +25,8 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.InstrumentNote
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
@@ -46,12 +47,12 @@ object NotebotScanner : MinecraftShortcuts {
 
         val surroundings = player.eyePosition.toBlockPos().getSortedSphere(ModuleNotebot.range)
         val noteBlocks = surroundings.filter { pos ->
-            pos.getState()?.block == Blocks.NOTE_BLOCK && pos.above().getState()!!.isAir
+            pos.state?.block === Blocks.NOTE_BLOCK && pos.above().stateOrEmpty.isAir
         }
 
         val requiredInstruments = ModuleNotebot.getRequiredInstruments(songData)
         noteBlocks.forEach { pos ->
-            val instrument = pos.below().getState()!!.instrument()
+            val instrument = pos.below().stateOrEmpty.instrument()
             if (instrument in requiredInstruments) {
                 result.getOrPut(instrument) { ArrayDeque() }.add(NoteBlockTracker(pos))
             }
