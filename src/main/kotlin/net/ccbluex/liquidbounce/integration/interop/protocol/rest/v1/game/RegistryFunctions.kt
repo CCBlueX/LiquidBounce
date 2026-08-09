@@ -264,9 +264,8 @@ private fun Route.getRegistry() = get {
             BuiltInRegistries.ENTITY_TYPE.buildOutput(
                 name = { _, id -> id.description.string },
                 iconUrl = { id ->
-                    BuiltInRegistries.ENTITY_TYPE.getValue(id).takeIf {
-                        it in EntityImageAtlas.supportedEntityTypes
-                    }?.let { entityTextureUrl(id) }
+                    id.takeIf { it in EntityImageAtlas.supportedEntityIds }
+                        ?.let { entityTextureUrl(it) }
                 },
             )
         }

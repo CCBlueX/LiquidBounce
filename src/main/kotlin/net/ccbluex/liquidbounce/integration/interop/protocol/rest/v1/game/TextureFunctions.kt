@@ -38,10 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.resources.DefaultPlayerSkin
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
-import net.minecraft.resources.ResourceKey
 import java.util.UUID
 import kotlin.jvm.optionals.getOrNull
 
@@ -94,11 +91,8 @@ private fun Route.getEntityTexture() = get("/entityTexture") {
         ?: call.badRequest("Missing identifier parameter")
     val minecraftIdentifier = Identifier.tryParse(identifier)
         ?: call.badRequest("Invalid identifier $identifier")
-    val key = ResourceKey.create(Registries.ENTITY_TYPE, minecraftIdentifier)
-    val type = BuiltInRegistries.ENTITY_TYPE.getValue(key)
-        ?: call.badRequest("Entity type not found")
 
-    when (val result = EntityImageAtlas.getEntityImage(type)) {
+    when (val result = EntityImageAtlas.getEntityImage(minecraftIdentifier)) {
         is AtlasLookup.Found -> call.respondBytes(result.bytes, ContentType.Image.PNG)
         AtlasLookup.Missing -> call.badRequest("Entity image not found")
         AtlasLookup.NotReady -> {

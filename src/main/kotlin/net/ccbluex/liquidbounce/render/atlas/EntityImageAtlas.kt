@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.authlib.GameProfile
-import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventListener
@@ -35,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.Identifier
 import net.minecraft.world.entity.EntitySpawnReason
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EntityTypes
@@ -47,7 +47,7 @@ import kotlin.math.sqrt
 private const val ENTITY_TILE_SIZE = 96
 
 private class EntityAtlas(
-    val images: Map<EntityType<*>, ByteArray>,
+    val images: Map<Identifier, ByteArray>,
 )
 
 object EntityImageAtlas : EventListener {
@@ -63,12 +63,12 @@ object EntityImageAtlas : EventListener {
         atlas = EntityTextureRenderer().render().await()
     }
 
-    val supportedEntityTypes: Set<EntityType<*>>
+    val supportedEntityIds: Set<Identifier>
         get() = atlas?.images?.keys ?: emptySet()
 
-    fun getEntityImage(type: EntityType<*>): AtlasLookup {
+    fun getEntityImage(name: Identifier): AtlasLookup {
         val atlas = this.atlas ?: return AtlasLookup.NotReady
-        val bytes = atlas.images[type]
+        val bytes = atlas.images[name]
         return if (bytes == null) AtlasLookup.Missing else AtlasLookup.Found(bytes)
     }
 }
@@ -76,11 +76,12 @@ object EntityImageAtlas : EventListener {
 private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entities") {
 
     private val entities = BuiltInRegistries.ENTITY_TYPE.mapNotNull { type ->
+        val identifier = BuiltInRegistries.ENTITY_TYPE.getKey(type)
         try {
-            type to (createLivingEntity(type) ?: return@mapNotNull null)
+            identifier to (createLivingEntity(type) ?: return@mapNotNull null)
         } catch (e: Exception) {
             logger.warn(
-                "Unable to create entity preview for ${BuiltInRegistries.ENTITY_TYPE.getKey(type)}",
+                "Unable to create entity preview for $identifier",
                 e,
             )
             null
@@ -90,20 +91,21 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
     override val tilesPerRow = sqrt(entities.size.toDouble()).ceilToInt()
 
     override fun render(): CompletableFuture<EntityAtlas> = try {
-        val entityMap = Reference2ObjectOpenHashMap<EntityType<*>, Rect2i>(entities.size)
+        val entityMap = withAtlasTarget {
+            buildMap(entities.size) {
+                entities.forEachIndexed { index, (identifier, entity) ->
+                    val rect = tileRect(index)
+                    this[identifier] = rect
 
-        withAtlasTarget {
-            entities.forEachIndexed { index, (type, entity) ->
-                val rect = tileRect(index)
-                entityMap[type] = rect
-
-                runCatching { renderEntity(entity, rect) }
-                    .onFailure {
+                    try {
+                        renderEntity(entity, rect)
+                    } catch (t: Throwable) {
                         logger.warn(
-                            "Unable to render entity preview for ${BuiltInRegistries.ENTITY_TYPE.getKey(type)}",
-                            it,
+                            "Unable to render entity preview for $identifier",
+                            t,
                         )
                     }
+                }
             }
         }
 
