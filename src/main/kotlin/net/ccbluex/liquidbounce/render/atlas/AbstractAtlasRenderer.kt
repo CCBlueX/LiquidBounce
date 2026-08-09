@@ -20,9 +20,13 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.blaze3d.GpuFormat
+import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.pipeline.TextureTarget
+import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
+import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.renderer.Projection
 import net.minecraft.client.renderer.ProjectionMatrixBuffer
 import net.minecraft.client.renderer.SubmitNodeStorage
@@ -74,6 +78,31 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
     private val closed = AtomicBoolean()
 
     abstract fun render(): CompletableFuture<A>
+
+    protected fun <T> withAtlasTarget(block: () -> T): T {
+        framebuffer.clearColorAndDepth()
+        RenderSystem.backupProjectionMatrix()
+        try {
+            projection.setupOrtho(
+                -1000.0F,
+                1000.0F,
+                textureSize.toFloat(),
+                textureSize.toFloat(),
+                true,
+            )
+            RenderSystem.setProjectionMatrix(
+                projectionMatrixBuffer.getBuffer(projection),
+                ProjectionType.ORTHOGRAPHIC,
+            )
+            return withOutputTextureOverride(
+                framebuffer.colorTextureView,
+                framebuffer.depthTextureView,
+                block,
+            )
+        } finally {
+            RenderSystem.restoreProjectionMatrix()
+        }
+    }
 
     protected fun close() {
         if (!closed.compareAndSet(false, true)) {

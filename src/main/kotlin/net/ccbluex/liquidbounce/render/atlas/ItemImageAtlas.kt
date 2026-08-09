@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.blaze3d.GpuFormat
-import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.platform.Lighting
 import com.mojang.blaze3d.platform.NativeImage
@@ -35,10 +34,8 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.copyTo
 import net.ccbluex.liquidbounce.utils.render.readFully
-import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.client.renderer.Rect2i
@@ -117,48 +114,30 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
         CompletableFuture.failedFuture(throwable)
     }
 
-    private fun renderItems(): Map<Identifier, Rect2i> {
-        framebuffer.clearColorAndDepth()
-        RenderSystem.backupProjectionMatrix()
-        try {
-            projection.setupOrtho(
-                -1000.0F,
-                1000.0F,
-                textureSize.toFloat(),
-                textureSize.toFloat(),
-                true,
-            )
-            RenderSystem.setProjectionMatrix(
-                projectionMatrixBuffer.getBuffer(projection),
-                ProjectionType.ORTHOGRAPHIC,
-            )
-
-            withOutputTextureOverride(
-                framebuffer.colorTextureView,
-                framebuffer.depthTextureView,
-            ) {
-                 return buildMap(items.size()) {
-                    val keyedItemRenderState = TrackingItemStackRenderState()
-                    for ((idx, item) in items.withIndex()) {
-                        val x = (idx % itemsPerDimension) * itemPixelSize
-                        val y = (idx / itemsPerDimension) * itemPixelSize
-                        if (item !== Items.AIR) {
-                            mc.itemModelResolver.updateForTopItem(
-                                keyedItemRenderState,
-                                item.defaultInstance, // TODO: support dynamic rendered ItemStack
-                                ItemDisplayContext.GUI,
-                                world,
-                                player,
-                                0,
-                            )
-                            renderItemToAtlas(keyedItemRenderState, x, y, itemPixelSize)
-                        }
-                        this[BuiltInRegistries.ITEM.getKey(item)] = Rect2i(x, y, itemPixelSize, itemPixelSize)
-                    }
+    private fun renderItems(): Map<Identifier, Rect2i> = withAtlasTarget {
+        buildMap(items.size()) {
+            val keyedItemRenderState = TrackingItemStackRenderState()
+            for ((idx, item) in items.withIndex()) {
+                val x = (idx % itemsPerDimension) * itemPixelSize
+                val y = (idx / itemsPerDimension) * itemPixelSize
+                if (item !== Items.AIR) {
+                    mc.itemModelResolver.updateForTopItem(
+                        keyedItemRenderState,
+                        item.defaultInstance, // TODO: support dynamic rendered ItemStack
+                        ItemDisplayContext.GUI,
+                        world,
+                        player,
+                        0,
+                    )
+                    renderItemToAtlas(keyedItemRenderState, x, y, itemPixelSize)
                 }
+                this[BuiltInRegistries.ITEM.getKey(item)] = Rect2i(
+                    x,
+                    y,
+                    itemPixelSize,
+                    itemPixelSize,
+                )
             }
-        } finally {
-            RenderSystem.restoreProjectionMatrix()
         }
     }
 

@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.authlib.GameProfile
-import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import kotlinx.coroutines.future.await
@@ -32,9 +31,7 @@ import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
-import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
-import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.Rect2i
@@ -103,15 +100,10 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
     override val textureSize = ENTITY_TILE_SIZE * itemsPerDimension
 
     override fun render(): CompletableFuture<EntityAtlas> {
-        framebuffer.clearColorAndDepth()
-        RenderSystem.backupProjectionMatrix()
-        projection.setupOrtho(-1000.0F, 1000.0F, textureSize.toFloat(), textureSize.toFloat(), true)
-        RenderSystem.setProjectionMatrix(projectionMatrixBuffer.getBuffer(projection), ProjectionType.ORTHOGRAPHIC)
-
         val entityMap = Reference2ObjectOpenHashMap<EntityType<*>, Rect2i>(entities.size)
         val failedRects = mutableListOf<Rect2i>()
 
-        withOutputTextureOverride(framebuffer.colorTextureView, framebuffer.depthTextureView) {
+        withAtlasTarget {
             entities.forEachIndexed { index, (type, entity) ->
                 val x = (index % itemsPerDimension) * ENTITY_TILE_SIZE
                 val y = (index / itemsPerDimension) * ENTITY_TILE_SIZE
@@ -128,8 +120,6 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
                     }
             }
         }
-
-        RenderSystem.restoreProjectionMatrix()
 
         return framebuffer.colorTexture!!.toBufferedImage()
             .thenApply { image ->
