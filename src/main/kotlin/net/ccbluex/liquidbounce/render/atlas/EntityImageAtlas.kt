@@ -36,6 +36,7 @@ import net.minecraft.client.renderer.Rect2i
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
 import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.EntitySpawnRequest
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.LivingEntity
@@ -153,7 +154,7 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
             )
             RemotePlayer(level, profile)
         } else {
-            type.create(level, EntitySpawnReason.COMMAND) as? LivingEntity
+            type.create(level, EntitySpawnRequest(EntitySpawnReason.COMMAND, true)) as? LivingEntity
         }
 
         entity?.id = level.nextLocalEntityId()
