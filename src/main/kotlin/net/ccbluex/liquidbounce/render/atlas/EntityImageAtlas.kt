@@ -35,6 +35,7 @@ import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntitySpawnReason
 import net.minecraft.world.entity.EntitySpawnRequest
 import net.minecraft.world.entity.EntityType
@@ -79,7 +80,7 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
     private val entities = BuiltInRegistries.ENTITY_TYPE.mapNotNull { type ->
         val identifier = BuiltInRegistries.ENTITY_TYPE.getKey(type)
         try {
-            identifier to (createLivingEntity(type) ?: return@mapNotNull null)
+            identifier to (createEntity(type) ?: return@mapNotNull null)
         } catch (e: Exception) {
             logger.warn(
                 "Unable to create entity preview for $identifier",
@@ -120,10 +121,12 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
         CompletableFuture.failedFuture(throwable)
     }
 
-    private fun renderEntity(entity: LivingEntity, rect: Rect2i) {
+    private fun renderEntity(entity: Entity, rect: Rect2i) {
         entity.yRot = 25F
         entity.yHeadRot = 25F
-        entity.yBodyRot = 25F
+        if (entity is LivingEntity) {
+            entity.yBodyRot = 25F
+        }
 
         val state = mc.entityRenderDispatcher.extractEntity(entity, 1F)
         state.nameTag = null
@@ -145,7 +148,7 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
         }
     }
 
-    private fun createLivingEntity(type: EntityType<*>): LivingEntity? {
+    private fun createEntity(type: EntityType<*>): Entity? {
         val level = requireNotNull(mc.level)
         val entity = if (type === EntityTypes.PLAYER) {
             val profile = GameProfile(
@@ -154,7 +157,7 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
             )
             RemotePlayer(level, profile)
         } else {
-            type.create(level, EntitySpawnRequest(EntitySpawnReason.COMMAND, true)) as? LivingEntity
+            type.create(level, EntitySpawnRequest(EntitySpawnReason.COMMAND, true))
         }
 
         entity?.id = level.nextLocalEntityId()
