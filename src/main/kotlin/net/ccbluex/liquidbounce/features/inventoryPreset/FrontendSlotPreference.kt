@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.inventoryPreset
 
 import com.google.gson.JsonObject
@@ -68,10 +87,13 @@ sealed class FrontendSlotPreference {
         enum class ItemGroupType(val preference: CleanupPlanTemplate.SlotContentPreference) {
             @SerializedName("ARROWS")
             ARROWS(CleanupPlanTemplate.SlotContentPreference(GenericItemType.ARROW)),
+
             @SerializedName("SWORD")
             SWORD(CleanupPlanTemplate.SlotContentPreference(GenericItemType.SWORD)),
+
             @SerializedName("WEAPON")
             WEAPON(CleanupPlanTemplate.SlotContentPreference(GenericItemType.WEAPON)),
+
             @SerializedName("AXE")
             AXE_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
@@ -79,6 +101,7 @@ sealed class FrontendSlotPreference {
                     setOf(MiningToolItemFacet.ItemToolType.AXE)
                 )
             ),
+
             @SerializedName("HOE")
             HOE_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
@@ -86,6 +109,7 @@ sealed class FrontendSlotPreference {
                     setOf(MiningToolItemFacet.ItemToolType.HOE)
                 )
             ),
+
             @SerializedName("SHOVEL")
             SHOVEL_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
@@ -93,6 +117,7 @@ sealed class FrontendSlotPreference {
                     setOf(MiningToolItemFacet.ItemToolType.SHOVEL)
                 )
             ),
+
             @SerializedName("PICKAXE")
             PICKAXE_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
@@ -100,20 +125,28 @@ sealed class FrontendSlotPreference {
                     setOf(MiningToolItemFacet.ItemToolType.PICKAXE)
                 )
             ),
+
             @SerializedName("FOOD")
             FOOD(CleanupPlanTemplate.SlotContentPreference(GenericItemType.FOOD)),
+
             @SerializedName("POTION")
             POTION(CleanupPlanTemplate.SlotContentPreference(GenericItemType.POTION)),
+
             @SerializedName("BLOCK")
             BLOCK(CleanupPlanTemplate.SlotContentPreference(GenericItemType.BLOCK)),
+
             @SerializedName("THROWABLE")
             THROWABLE(CleanupPlanTemplate.SlotContentPreference(GenericItemType.THROWABLE)),
+
             @SerializedName("SPEAR")
             SPEAR(CleanupPlanTemplate.SlotContentPreference(GenericItemType.SPEAR)),
+
             @SerializedName("MACE")
             MACE(CleanupPlanTemplate.SlotContentPreference(GenericItemType.MACE)),
+
             @SerializedName("SHIELD")
             SHIELD(CleanupPlanTemplate.SlotContentPreference(GenericItemType.SHIELD)),
+
             @SerializedName("ROD")
             ROD(CleanupPlanTemplate.SlotContentPreference(GenericItemType.ROD))
         }
