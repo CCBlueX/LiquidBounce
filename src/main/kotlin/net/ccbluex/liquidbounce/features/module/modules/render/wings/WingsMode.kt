@@ -26,11 +26,13 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations
 import net.ccbluex.liquidbounce.features.module.modules.render.wings.ModuleWings.WingsPosition
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.minecraft.util.Mth.rotLerp
 import net.minecraft.world.entity.EquipmentSlot
@@ -71,8 +73,22 @@ abstract class WingsMode(name: String) : Mode(name) {
 
                 if (!shouldRender) continue
 
-                val bodyRot = rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot)
-                val rot = entity.interpolateCurrentRotation(event.partialTicks)
+                val rot = when (ModuleRotations.enabled) {
+                    false -> entity.interpolateCurrentRotation(event.partialTicks)
+                    true -> RotationManager.currentRotation ?: entity.interpolateCurrentRotation(event.partialTicks)
+                }
+
+                val modelRot = ModuleRotations.modelRotation?.yRot
+                val prevModelRot = ModuleRotations.prevModelRotation?.yRot
+
+                val bodyRot = when (ModuleRotations.enabled) {
+                    false -> rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot)
+                    true -> rotLerp(
+                        event.partialTicks,
+                        prevModelRot ?: entity.yBodyRotO,
+                        modelRot ?: entity.yBodyRot)
+                }
+
                 val look = Vec3.directionFromRotation(0f, rot.yRot)
                 val equipmentOffset = when (!entity.getItemBySlot(EquipmentSlot.CHEST).isEmpty) {
                     true -> WingsPosition.equipmentOffset.toDouble()
