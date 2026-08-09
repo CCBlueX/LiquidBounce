@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.world.item.FishingRodItem
 
 class ThrowableItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
