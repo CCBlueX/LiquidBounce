@@ -37,6 +37,7 @@ import net.minecraft.client.renderer.ProjectionMatrixBuffer
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
+import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
 import net.minecraft.util.Mth
 import okio.Buffer
@@ -48,7 +49,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.LazyThreadSafetyMode.NONE
 
-internal abstract class AbstractAtlasRenderer<A : Any>(
+internal sealed class AbstractAtlasRenderer<A : Any>(
     private val label: String,
 ) : MinecraftShortcuts {
 
@@ -58,7 +59,7 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
     private val tilesPerRow: Int
         get() = Mth.smallestSquareSide(tileCount)
 
-    protected val textureSize: Int
+    private val textureSize: Int
         get() = tileSize * tilesPerRow
 
     private val framebufferLazy = lazy(NONE) {
@@ -70,7 +71,7 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
             GpuFormat.RGBA8_UNORM,
         )
     }
-    protected val framebuffer by framebufferLazy
+    private val framebuffer by framebufferLazy
 
     private val submitNodeStorageLazy = lazy(NONE, ::SubmitNodeStorage)
     protected val submitNodeStorage by submitNodeStorageLazy
@@ -86,17 +87,50 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
     }
     protected val featureRenderDispatcher by featureRenderDispatcherLazy
 
-    protected val poseStack = PoseStack()
-    protected val projection = Projection()
+    private val poseStack = PoseStack()
+    private val projection = Projection()
 
     private val projectionMatrixBufferLazy = lazy(NONE) {
         ProjectionMatrixBuffer("$label atlas")
     }
-    protected val projectionMatrixBuffer by projectionMatrixBufferLazy
+    private val projectionMatrixBuffer by projectionMatrixBufferLazy
 
     private val closed = AtomicBoolean()
 
-    abstract fun render(): CompletableFuture<A>
+    protected abstract fun renderTiles(): Map<Identifier, Rect2i>
+
+    /** Called on [Util.backgroundExecutor]. */
+    protected abstract fun buildAtlas(images: Map<Identifier, ByteArray>): A
+
+    fun render(): CompletableFuture<A> = try {
+        framebuffer.clearColorAndDepth()
+        RenderSystem.backupProjectionMatrix()
+        val tileRects = try {
+            projection.setupOrtho(
+                -1000.0F,
+                1000.0F,
+                textureSize.toFloat(),
+                textureSize.toFloat(),
+                true,
+            )
+            RenderSystem.setProjectionMatrix(
+                projectionMatrixBuffer.getBuffer(projection),
+                ProjectionType.ORTHOGRAPHIC,
+            )
+            withOutputTextureOverride(
+                framebuffer.colorTextureView,
+                framebuffer.depthTextureView,
+                ::renderTiles,
+            )
+        } finally {
+            RenderSystem.restoreProjectionMatrix()
+        }
+
+        readbackAsync(tileRects)
+    } catch (throwable: Throwable) {
+        close()
+        CompletableFuture.failedFuture(throwable)
+    }
 
     protected fun tileRect(index: Int) = Rect2i(
         (index % tilesPerRow) * tileSize,
@@ -124,34 +158,7 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
         }
     }
 
-    protected fun <T> withAtlasTarget(block: () -> T): T {
-        framebuffer.clearColorAndDepth()
-        RenderSystem.backupProjectionMatrix()
-        try {
-            projection.setupOrtho(
-                -1000.0F,
-                1000.0F,
-                textureSize.toFloat(),
-                textureSize.toFloat(),
-                true,
-            )
-            RenderSystem.setProjectionMatrix(
-                projectionMatrixBuffer.getBuffer(projection),
-                ProjectionType.ORTHOGRAPHIC,
-            )
-            return withOutputTextureOverride(
-                framebuffer.colorTextureView,
-                framebuffer.depthTextureView,
-                block,
-            )
-        } finally {
-            RenderSystem.restoreProjectionMatrix()
-        }
-    }
-
-    protected fun readbackAsync(
-        buildAtlas: (ByteBuffer, CompletableFuture<A>) -> A,
-    ): CompletableFuture<A> {
+    private fun readbackAsync(tileRects: Map<Identifier, Rect2i>): CompletableFuture<A> {
         val colorTexture = requireNotNull(framebuffer.colorTexture) {
             "$label atlas framebuffer has no color texture"
         }
@@ -164,39 +171,20 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
 
         try {
             colorTexture.copyTo(readbackBuffer) {
-                processReadback(readbackBuffer, result, buildAtlas)
+                processReadback(readbackBuffer, tileRects, result)
             }
         } catch (throwable: Throwable) {
             closeReadbackResources(readbackBuffer)?.let(throwable::addSuppressed)
-            completeExceptionally(result, throwable)
+            completeExceptionally(label, result, throwable)
         }
 
         return result
     }
 
-    protected fun <K> encodePngTiles(
-        atlasPixels: ByteBuffer,
-        tileRects: Map<K, Rect2i>,
-        result: CompletableFuture<A>,
-    ): Map<K, ByteArray> = buildMap(tileRects.size) {
-        NativeImage(tileSize, tileSize, false).use { tileImage ->
-            val buffer = Buffer()
-            for ((key, rect) in tileRects) {
-                if (result.isCancelled) {
-                    throw CancellationException("$label atlas generation was cancelled")
-                }
-
-                atlasPixels.copyRectTo(tileImage, rect, textureSize)
-                check(tileImage.writeToChannel(buffer)) { "Failed to encode $label atlas tile $key" }
-                this[key] = buffer.readByteArray()
-            }
-        }
-    }
-
     private fun processReadback(
         readbackBuffer: GpuBuffer,
+        tileRects: Map<Identifier, Rect2i>,
         result: CompletableFuture<A>,
-        buildAtlas: (ByteBuffer, CompletableFuture<A>) -> A,
     ) {
         val atlasPixels = if (result.isCancelled) {
             null
@@ -205,7 +193,7 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
                 readbackBuffer.readFully()
             } catch (throwable: Throwable) {
                 closeReadbackResources(readbackBuffer)?.let(throwable::addSuppressed)
-                completeExceptionally(result, throwable)
+                completeExceptionally(label, result, throwable)
                 return
             }
         }
@@ -213,39 +201,47 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
         val closeFailure = closeReadbackResources(readbackBuffer)
         if (closeFailure != null) {
             MemoryUtil.memFree(atlasPixels)
-            completeExceptionally(result, closeFailure)
+            completeExceptionally(label, result, closeFailure)
             return
         }
         if (atlasPixels == null) {
             return
         }
 
-        encodeAsync(atlasPixels, result, buildAtlas)
+        encodeAsync(atlasPixels, tileRects, result)
     }
 
     private fun encodeAsync(
         atlasPixels: ByteBuffer,
+        tileRects: Map<Identifier, Rect2i>,
         result: CompletableFuture<A>,
-        buildAtlas: (ByteBuffer, CompletableFuture<A>) -> A,
     ) {
         try {
             Util.backgroundExecutor().execute {
                 try {
                     if (!result.isCancelled) {
-                        val atlas = buildAtlas(atlasPixels, result)
-                        if (!result.isCancelled) {
-                            result.complete(atlas)
+                        val images = encodePngTiles(
+                            label,
+                            tileSize,
+                            textureSize,
+                            atlasPixels,
+                            tileRects,
+                            result,
+                        )
+                        val atlas = buildAtlas(images)
+                        if (!result.isCancelled && result.complete(atlas)) {
+                            logger.info("Loaded $textureSize x $textureSize $label atlas with ${images.size} PNGs")
                         }
                     }
                 } catch (throwable: Throwable) {
-                    completeExceptionally(result, throwable)
+                    completeExceptionally(label, result, throwable)
                 } finally {
                     MemoryUtil.memFree(atlasPixels)
                 }
             }
         } catch (throwable: Throwable) {
             MemoryUtil.memFree(atlasPixels)
-            completeExceptionally(result, throwable)
+            completeExceptionally(label, result, throwable)
         }
     }
 
@@ -265,14 +261,7 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
         return failure
     }
 
-    private fun completeExceptionally(result: CompletableFuture<*>, throwable: Throwable) {
-        if (throwable !is CancellationException) {
-            logger.error("Failed to load $label atlas", throwable)
-        }
-        result.completeExceptionally(throwable)
-    }
-
-    protected fun close() {
+    private fun close() {
         if (!closed.compareAndSet(false, true)) {
             return
         }
@@ -290,6 +279,39 @@ internal abstract class AbstractAtlasRenderer<A : Any>(
             featureRenderDispatcher.close()
         }
     }
+}
+
+private fun encodePngTiles(
+    label: String,
+    tileSize: Int,
+    textureSize: Int,
+    atlasPixels: ByteBuffer,
+    tileRects: Map<Identifier, Rect2i>,
+    result: CompletableFuture<*>,
+): Map<Identifier, ByteArray> = buildMap(tileRects.size) {
+    NativeImage(tileSize, tileSize, false).use { tileImage ->
+        val buffer = Buffer()
+        for ((key, rect) in tileRects) {
+            if (result.isCancelled) {
+                throw CancellationException("$label atlas generation was cancelled")
+            }
+
+            atlasPixels.copyRectTo(tileImage, rect, textureSize)
+            check(tileImage.writeToChannel(buffer)) { "Failed to encode $label atlas tile $key" }
+            this[key] = buffer.readByteArray()
+        }
+    }
+}
+
+private fun completeExceptionally(
+    label: String,
+    result: CompletableFuture<*>,
+    throwable: Throwable,
+) {
+    if (throwable !is CancellationException) {
+        logger.error("Failed to load $label atlas", throwable)
+    }
+    result.completeExceptionally(throwable)
 }
 
 private fun ByteBuffer.copyRectTo(target: NativeImage, rect: Rect2i, atlasSize: Int) {

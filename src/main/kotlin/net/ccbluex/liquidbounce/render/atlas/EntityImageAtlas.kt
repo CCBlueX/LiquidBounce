@@ -41,7 +41,6 @@ import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.LivingEntity
 import java.util.UUID
-import java.util.concurrent.CompletableFuture
 import kotlin.math.max
 
 private const val ENTITY_TILE_SIZE = 96
@@ -73,7 +72,7 @@ object EntityImageAtlas : EventListener {
     }
 }
 
-private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entities") {
+private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entity") {
 
     private val entities = BuiltInRegistries.ENTITY_TYPE.mapNotNull { type ->
         val identifier = BuiltInRegistries.ENTITY_TYPE.getKey(type)
@@ -88,36 +87,25 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entiti
         }
     }
 
-    override val tileSize = ENTITY_TILE_SIZE
-    override val tileCount = entities.size
+    override val tileSize get() = ENTITY_TILE_SIZE
+    override val tileCount get() = entities.size
 
-    override fun render(): CompletableFuture<EntityAtlas> = try {
-        val entityMap = withAtlasTarget {
-            buildMap(entities.size) {
-                entities.forEachIndexed { index, (identifier, entity) ->
-                    val rect = tileRect(index)
-                    this[identifier] = rect
+    override fun buildAtlas(images: Map<Identifier, ByteArray>) = EntityAtlas(images)
 
-                    try {
-                        renderEntity(entity, rect)
-                    } catch (t: Throwable) {
-                        logger.warn(
-                            "Unable to render entity preview for $identifier",
-                            t,
-                        )
-                    }
-                }
+    override fun renderTiles() = buildMap(entities.size) {
+        entities.forEachIndexed { index, (identifier, entity) ->
+            val rect = tileRect(index)
+            this[identifier] = rect
+
+            try {
+                renderEntity(entity, rect)
+            } catch (t: Throwable) {
+                logger.warn(
+                    "Unable to render entity preview for $identifier",
+                    t,
+                )
             }
         }
-
-        return readbackAsync { atlasPixels, result ->
-            val atlas = EntityAtlas(encodePngTiles(atlasPixels, entityMap, result))
-            logger.info("Loaded $textureSize x $textureSize entity atlas with ${atlas.images.size} PNGs")
-            atlas
-        }
-    } catch (throwable: Throwable) {
-        close()
-        CompletableFuture.failedFuture(throwable)
     }
 
     private fun renderEntity(entity: Entity, rect: Rect2i) {

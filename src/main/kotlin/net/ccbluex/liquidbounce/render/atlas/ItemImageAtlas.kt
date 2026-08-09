@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.client.renderer.Rect2i
@@ -38,7 +37,6 @@ import net.minecraft.util.LightCoordsUtil
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.Items
-import java.util.concurrent.CompletableFuture
 
 private const val NATIVE_ITEM_SIZE: Int = GuiRenderer.DEFAULT_ITEM_SIZE
 
@@ -78,51 +76,35 @@ object ItemImageAtlas : EventListener {
 /**
  * @see net.minecraft.client.gui.render.GuiItemAtlas
  */
-private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRenderer<Atlas>("Items") {
+private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRenderer<Atlas>("Item") {
 
     private val items = BuiltInRegistries.ITEM
 
-    override val tileSize = NATIVE_ITEM_SIZE * scale
-    override val tileCount = items.size()
+    override val tileSize get() = NATIVE_ITEM_SIZE * scale
+    override val tileCount get() = items.size()
+
+    override fun buildAtlas(images: Map<Identifier, ByteArray>) = Atlas(images, findBlockToItemAliases())
 
     /**
      * @see GuiRenderer.prepareItemElements
      * From 1.21.5 DrawContext code
      */
-    override fun render(): CompletableFuture<Atlas> = try {
-        val itemMap = renderItems()
-        val aliasMap = findBlockToItemAliases()
-        readbackAsync { atlasPixels, result ->
-            val atlas = Atlas(
-                encodePngTiles(atlasPixels, itemMap, result),
-                aliasMap,
-            )
-            logger.info("Loaded $textureSize x $textureSize item atlas with ${atlas.images.size} PNGs")
-            atlas
-        }
-    } catch (throwable: Throwable) {
-        close()
-        CompletableFuture.failedFuture(throwable)
-    }
-
-    private fun renderItems(): Map<Identifier, Rect2i> = withAtlasTarget {
-        buildMap(items.size()) {
-            val keyedItemRenderState = TrackingItemStackRenderState()
-            for ((idx, item) in items.withIndex()) {
-                val rect = tileRect(idx)
-                if (item !== Items.AIR) {
-                    mc.itemModelResolver.updateForTopItem(
-                        keyedItemRenderState,
-                        item.defaultInstance, // TODO: support dynamic rendered ItemStack
-                        ItemDisplayContext.GUI,
-                        world,
-                        player,
-                        0,
-                    )
-                    renderItemToAtlas(keyedItemRenderState, rect)
-                }
-                this[BuiltInRegistries.ITEM.getKey(item)] = rect
+    override fun renderTiles() = buildMap(items.size()) {
+        val keyedItemRenderState = TrackingItemStackRenderState()
+        for ((idx, item) in items.withIndex()) {
+            val rect = tileRect(idx)
+            if (item !== Items.AIR) {
+                mc.itemModelResolver.updateForTopItem(
+                    keyedItemRenderState,
+                    item.defaultInstance, // TODO: support dynamic rendered ItemStack
+                    ItemDisplayContext.GUI,
+                    world,
+                    player,
+                    0,
+                )
+                renderItemToAtlas(keyedItemRenderState, rect)
             }
+            this[BuiltInRegistries.ITEM.getKey(item)] = rect
         }
     }
 
