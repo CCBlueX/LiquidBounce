@@ -350,6 +350,10 @@ tasks.register<JavaExec>("liquidInstruction") {
     mainClass.set("net.ccbluex.liquidbounce.LiquidInstruction")
 }
 
+tasks.runClient {
+    jvmArgs("-XX:+UseZGC")
+}
+
 java {
     // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     // if it is present.

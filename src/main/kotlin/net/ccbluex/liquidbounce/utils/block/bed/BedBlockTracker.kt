@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.BedBlock
@@ -72,7 +72,7 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
 
         val pos = CACHE.get()
         for ((layer, longValue) in searchBedLayer(blockState, maxLayers)) {
-            val state = pos.set(longValue).getState()
+            val state = pos.set(longValue).state
 
             // Ignore empty positions
             if (state == null || state.isAir) {
@@ -130,7 +130,7 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
                     return@forEach
                 }
 
-                val bedState = bedPos.getState()
+                val bedState = bedPos.state
                 if (bedState == null || !bedState.isBed) {
                     // The tracked block is not a bed anymore, remove it
                     untrack(bedPos)
