@@ -801,5 +801,8 @@
   "liquidbounce.module.reportHelper.description": "Automatically starts a report and confirms it for you.",
   "liquidbounce.module.protectionZones.description": "Allows you to see areas protected by protection blocks and suggests optimal placement spots.",
   "liquidbounce.module.macros.description": "Lets you execute chat messages or item actions using custom keybinds.",
-  "liquidbounce.module.newChunks.description": "Highlights chunks that are likely newly generated."
+  "liquidbounce.module.newChunks.description": "Highlights chunks that are likely newly generated.",
+  "liquidbounce.module.longJump.messages.lagModeTip": "This LongJump continuously collects multiple velocity packets. When you receive first velocity packet, it starts collecting. Double-tap the jump key to release a velocity packet.",
+  "liquidbounce.module.longJump.messages.lagModeReceivePacket": "Received a velocity packet, Current velocity amount: %s",
+  "liquidbounce.module.longJump.messages.lagModeReleasePacket": "Release a velocity packet. Current velocity amount: %s"
 }
