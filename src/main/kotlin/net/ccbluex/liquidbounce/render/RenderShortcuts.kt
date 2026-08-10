@@ -303,10 +303,7 @@ fun WorldRenderEnvironment.drawSquareTexture(
     argb: Int,
     anchor: AnchorPoint = AnchorPoint.TOP_LEFT,
     noDepthTest: Boolean = false,
-) = drawCustomMeshTextured(
-    sampler0,
-    pipeline = ClientRenderPipelines.texQuads(noDepthTest)
-) { matrix ->
+) = drawCustomMeshTextured(sampler0, pipeline = ClientRenderPipelines.texQuads(noDepthTest) ) { matrix ->
     val minX = size * anchor.xFactor
     val maxX = minX + size
     val minY = size * anchor.yFactor

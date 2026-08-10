@@ -39,7 +39,7 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
         tree(color)
     }
 
-    override fun WorldRenderEnvironment.drawWorldEffect(progress: Float, age: Float) {
+    override fun WorldRenderEnvironment.drawWorldParticle(progress: Float, age: Float) {
         drawSquareTexture(
             builtinEffects.random().texture,
             size * progress,

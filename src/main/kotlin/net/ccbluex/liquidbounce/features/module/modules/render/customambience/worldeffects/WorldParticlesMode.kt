@@ -50,24 +50,21 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
 
     private var lastSpawnTime = 0L
 
-    protected abstract fun WorldRenderEnvironment.drawWorldEffect(progress: Float, age: Float)
+    protected abstract fun WorldRenderEnvironment.drawWorldParticle(progress: Float, age: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val player = mc.player ?: return@handler
 
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastSpawnTime >= spawnTime) {
-            createParticleCoord(currentTime)
-        }
+        if (currentTime - lastSpawnTime >= spawnTime) createParticleCoord(currentTime)
 
         event.renderEnvironment {
 
-            val camera = mc.gameRenderer.mainCamera()
-            val rot = camera.rotation()
+            val rot = mc.gameRenderer.mainCamera().rotation()
 
-            WorldParticles.tempCoords.forEach {
-                val age = lifetime.last - WorldParticles.tempCoords.timeToDie(it) + event.partialTicks
+            WorldParticles.coords.forEach {
+                val age = lifetime.last - WorldParticles.coords.timeToDie(it) + event.partialTicks
 
                 val progress = animCurve
                     .transform(age / lifetime.first)
@@ -76,7 +73,7 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
                 withPositionRelativeToCamera(it.value) {
                     poseStack.withPush {
                         mulPose(rot)
-                        drawWorldEffect(progress, age)
+                        drawWorldParticle(progress, age)
                     }
                 }
             }
@@ -84,22 +81,20 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
     }
 
     fun createParticleCoord(currentTime: Long) {
-        if (WorldParticles.modes.activeMode != WorldParticlesSimple || WorldParticles.tempCoords.size >= count) return
+        if (WorldParticles.modes.activeMode != WorldParticlesSimple || WorldParticles.coords.size >= count) return
 
         lastSpawnTime = currentTime
 
-        val inner = radius.first.toDouble()
-        val outer = radius.last.toDouble()
-
         val angle = Random.nextDouble(0.0, 2 * Math.PI)
+        val distance = sqrt(Random.nextDouble(radius.first.toDouble().sq(), radius.last.toDouble().sq()))
 
-        val distance = sqrt(Random.nextDouble(inner.sq(), outer.sq()))
-
-        val x = distance * cos(angle)
-        val z = distance * sin(angle)
-
-        WorldParticles.tempCoords.add(
-            player.position().add(x, Random.nextDouble(0.25, outer), z), lifetime.last
+        WorldParticles.coords.add(
+            player.position().add(
+                distance * cos(angle),
+                Random.nextDouble(0.25, radius.last.toDouble()),
+                distance * sin(angle)
+            ),
+            lifetime.last
         )
     }
 }

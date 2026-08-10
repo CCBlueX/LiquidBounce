@@ -27,14 +27,14 @@ import net.minecraft.world.phys.Vec3
 
 object WorldParticles : ToggleableValueGroup(ModuleCustomAmbience ,"WorldParticles", false) {
 
-    val tempCoords = ExpiringList<Vec3>()
+    val coords = ExpiringList<Vec3>()
 
     val modes = choices("Mode", 0) {
         arrayOf(
             WorldParticlesSimple,
         )
-    }.apply { onChanged { tempCoords.clear() } }
+    }.apply { onChanged { coords.clear() } }
 
-    override fun onDisabled() = tempCoords.clear()
+    override fun onDisabled() = coords.clear()
 
 }
