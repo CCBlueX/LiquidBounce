@@ -37,7 +37,7 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
 
     private val color = WorldParticlesColorSettings()
     private val builtinEffects by enumChoice("Particle", BuiltinEffect.SPARK)
-    private object Ymotion : ToggleableValueGroup(this, "YMotion", false) {
+    object Ymotion : ToggleableValueGroup(this, "YMotion", false) {
         val motion by float("Motion", 2f, -10f..10f)
         val animBy by enumChoice("AnimBy", AnimBy.AGE)
     }
@@ -49,13 +49,6 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
 
     override fun WorldRenderEnvironment.drawWorldParticle(progress: Float, age: Float) {
         poseStack.withPush {
-            if (Ymotion.enabled) {
-                val anim = when (Ymotion.animBy) {
-                    AnimBy.PROGRESS -> progress
-                    AnimBy.AGE -> age
-                }
-                translate(0F, Ymotion.motion * anim, 0F)
-            }
             drawSquareTexture(
                 builtinEffects.texture,
                 size * progress,
