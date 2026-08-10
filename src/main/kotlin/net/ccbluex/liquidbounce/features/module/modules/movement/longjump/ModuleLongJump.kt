@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.LagLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.Matrix7145FlagLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.VulcanLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.NoCheatPlusBoost
@@ -37,7 +38,8 @@ object ModuleLongJump : ClientModule("LongJump", ModuleCategories.MOVEMENT) {
             NoCheatPlusBoost,
             NoCheatPlusBow,
             VulcanLongJump,
-            Matrix7145FlagLongJump
+            Matrix7145FlagLongJump,
+            LagLongJump
         )
     ).apply { tagBy(this) }
     private val autoJump by boolean("AutoJump", false)
