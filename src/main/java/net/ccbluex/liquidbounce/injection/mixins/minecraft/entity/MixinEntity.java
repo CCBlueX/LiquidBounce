@@ -220,12 +220,5 @@ public abstract class MixinEntity {
             ci.cancel();
         }
     }
-
-    /*@Inject(method = "extractEntity", at = @At("RETURN"))
-    private void applySoulAlpha(RemotePlayer entity, float partialTicks, CallbackInfoReturnable<EntityRenderState> cir) {
-        if (ModuleTotemEffect.INSTANCE.isDummyPlayer(entity.getId())) {
-            // Записываем альфу в renderState
-            ((IAlphaState) cir.getReturnValue()).setAlpha(entity.getAlphaOverride());
-        }
-    }*/
+    
 }
