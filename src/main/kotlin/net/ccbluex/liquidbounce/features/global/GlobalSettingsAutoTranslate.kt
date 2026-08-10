@@ -40,7 +40,7 @@ object GlobalSettingsAutoTranslate : ValueGroup(name = "AutoTranslate"), Transla
     private val translationLazyCache = lazy<Cache<TranslationCacheKey, TranslationResult.Success>> {
         CacheBuilder.newBuilder()
             .maximumSize(512)
-            .expireAfterWrite(Duration.ofMinutes(5))
+            .expireAfterWrite(Duration.ofMinutes(15))
             .build()
     }
 
