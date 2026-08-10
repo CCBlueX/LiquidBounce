@@ -62,7 +62,7 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
             poseStack.withPush {
 
                 // Pasted from HatsHalo.kt
-                drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->
+                drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = !canBeCovered)) { matrix ->
                     val outerSegments = 144
                     val innerSegments = 12
 
