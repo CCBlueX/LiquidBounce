@@ -115,7 +115,7 @@ abstract class HatsMode(name: String) : Mode(name) {
         }
     }
 
-    protected fun VertexConsumer.addTorusQuad(
+    fun VertexConsumer.addTorusQuad(
         pose: PoseStack.Pose,
         innerSegments: Int,
         outerCurAngle: Float,
@@ -178,8 +178,8 @@ abstract class HatsMode(name: String) : Mode(name) {
 
     // Math functions
 
-    protected fun getAngle(i: Int, segments: Int) = i * Mth.TWO_PI / segments
-    protected fun getNextAngle(i: Int, segments: Int) = (i + 1) * Mth.TWO_PI / segments
+    fun getAngle(i: Int, segments: Int) = i * Mth.TWO_PI / segments
+    fun getNextAngle(i: Int, segments: Int) = (i + 1) * Mth.TWO_PI / segments
 
     protected fun getRotationAngle(speed: Float): Float {
         return if (Mth.equal(speed, 0f)) {

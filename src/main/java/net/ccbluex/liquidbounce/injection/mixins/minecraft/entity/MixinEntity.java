@@ -30,7 +30,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounc
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slime.NoSlowSlime;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Pose;
@@ -217,4 +220,12 @@ public abstract class MixinEntity {
             ci.cancel();
         }
     }
+
+    /*@Inject(method = "extractEntity", at = @At("RETURN"))
+    private void applySoulAlpha(RemotePlayer entity, float partialTicks, CallbackInfoReturnable<EntityRenderState> cir) {
+        if (ModuleTotemEffect.INSTANCE.isDummyPlayer(entity.getId())) {
+            // Записываем альфу в renderState
+            ((IAlphaState) cir.getReturnValue()).setAlpha(entity.getAlphaOverride());
+        }
+    }*/
 }
