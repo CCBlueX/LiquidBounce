@@ -794,5 +794,6 @@
   "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect 将尝试在你下次加入任何服务器/游戏时，通过监测 ping 参数来检测服务器的反作弊系统。请注意，结果可能不准确，特别是当服务器上有多个反作弊系统时。",
   "liquidbounce.module.longJump.messages.lagModeTip": "这个LongJump连续收集多个velocity数据包。当你收到第一个数据包，模块开始收集。双击跳跃键以释放一个velocity数据包",
   "liquidbounce.module.longJump.messages.lagModeReceivePacket": "收到一个velocity数据包。当前velocity总数: %s",
-  "liquidbounce.module.longJump.messages.lagModeReleasePacket": "释放一个velocity数据包。 当前velocity总数: %s"
+  "liquidbounce.module.longJump.messages.lagModeReleasePacket": "释放一个velocity数据包。 当前velocity总数: %s",
+  "liquidbounce.module.longJump.messages.lagModeFlagged": "已关闭（被反作弊标记）"
 }
