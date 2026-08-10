@@ -35,7 +35,6 @@ abstract class TotemEffectMode(name:String) : Mode(name) {
     final override val parent: ModeValueGroup<*>
         get() = ModuleTotemEffect.modes
 
-    protected val radius by floatRange("size", 1f..1.2f, 0.1f..10f)
     val lifetime by int("lifetime", 20, 1..200)
     protected val fade by float("Fade", 0.7f, 0f..1f)
     protected val animCurve by easing("AnimCurve", Easing.EXPONENTIAL_OUT)

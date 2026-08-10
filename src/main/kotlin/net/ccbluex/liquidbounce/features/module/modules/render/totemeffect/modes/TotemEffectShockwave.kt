@@ -27,7 +27,8 @@ import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.minecraft.world.phys.Vec3
 
 internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
-
+    
+    private val radius by floatRange("radius", 1f..1.2f, 0.1f..10f)
     private val color = TotemEffectColorSettings()
 
     init {
