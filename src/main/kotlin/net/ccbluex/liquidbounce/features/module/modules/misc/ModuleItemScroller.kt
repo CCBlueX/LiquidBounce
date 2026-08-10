@@ -56,10 +56,10 @@ object ModuleItemScroller : ClientModule("ItemScroller", ModuleCategories.MISC) 
     }
 
     fun canPerformScroll(window: Window): Boolean {
-        return (InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT)
-                        || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT))
+        return (InputConstants.isKeyDown(window, InputConstants.KEY_LSHIFT)
+                        || InputConstants.isKeyDown(window, InputConstants.KEY_RSHIFT))
                 && this.running
-                && GLFW.glfwGetMouseButton(window.handle(), GLFW.GLFW_MOUSE_BUTTON_1) == GLFW.GLFW_PRESS
+                && GLFW.glfwGetMouseButton(window.handle(), InputConstants.MOUSE_BUTTON_LEFT) == InputConstants.PRESS
                 && chronometer.hasAtLeastElapsed(delay.random() * 50L)
     }
 }
@@ -70,6 +70,6 @@ enum class ClickMode(
     val action: ClickAction
 ) : Tagged {
     QUICK_MOVE("QuickMove", { _, slot, callback ->
-        callback(slot, slot.index, GLFW.GLFW_MOUSE_BUTTON_LEFT, ContainerInput.QUICK_MOVE)
+        callback(slot, slot.index, InputConstants.MOUSE_BUTTON_LEFT, ContainerInput.QUICK_MOVE)
     })
 }
