@@ -56,7 +56,7 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
         val targetPos = pos.add(0.0, (progress * soulYmotion).toDouble(), -0.1)
 
         wireframePlayer.pos = targetPos
-        wireframePlayer.render(event, color = inner, outlineColor = outer)
+        wireframePlayer.render(event, color = inner, outlineColor = outer, noDepthTest = !canBeCovered)
 
         withPositionRelativeToCamera(targetPos.add(0.0, 2.1, 0.125)) {
             poseStack.withPush {
