@@ -46,7 +46,7 @@ import org.joml.Vector2d
 import org.lwjgl.glfw.GLFW
 import kotlin.math.pow
 
-private const val DRAG_BUTTON = 0
+private const val DRAG_BUTTON = GLFW.GLFW_MOUSE_BUTTON_LEFT
 
 /**
  * Zoom by another 25% every mouse tick.
@@ -151,7 +151,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
             this.dragStartPos = null
         }
 
-        if (button != 1) {
+        if (button != GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             return true
         }
 

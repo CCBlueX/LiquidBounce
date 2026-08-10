@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.KeyMapping
-import org.lwjgl.glfw.GLFW
 
 /**
  * Singleton object that tracks the state of mouse buttons and key presses.
@@ -37,8 +36,8 @@ object InputTracker : EventListener {
     /**
      * Tracks the state of each mouse button.
      *
-     * [GLFW.GLFW_RELEASE], [GLFW.GLFW_PRESS] or [GLFW.GLFW_REPEAT]
-     * @see GLFW
+     * [InputConstants.RELEASE], [InputConstants.PRESS] or [InputConstants.REPEAT]
+     * @see InputConstants
      */
     private val mouseStates = IntArray(32)
 
@@ -116,7 +115,7 @@ object InputTracker : EventListener {
         mouseStates[event.button] = event.action
 
         // Track when the button was pressed
-        if (event.action == GLFW.GLFW_PRESS) {
+        if (event.isPressed) {
             mouseLastPressed[event.button] = System.currentTimeMillis()
         }
     }
@@ -127,7 +126,7 @@ object InputTracker : EventListener {
      * @param button The GLFW code of the mouse button.
      * @return True if the mouse button is pressed, false otherwise.
      */
-    fun isMouseButtonPressed(button: Int): Boolean = mouseStates[button] == GLFW.GLFW_PRESS
+    fun isMouseButtonPressed(button: Int): Boolean = mouseStates[button] == InputConstants.PRESS
 
     /**
      * Checks if the specified mouse button was pressed recently.

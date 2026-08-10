@@ -360,8 +360,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
 
     @Suppress("unused")
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
-        when (event.action) {
-            GLFW.GLFW_PRESS -> if (mc.gui.screen() == null) {
+        if (event.isPressed) {
+            if (mc.gui.screen() == null) {
                 for (m in modules) {
                     if (!m.bind.matchesMousePress(event)) {
                         continue
@@ -377,34 +377,32 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                     }
                 }
             }
+        } else if (event.isReleased) {
+            for (m in modules) {
+                if (!m.bind.matchesMouseRelease(event)) {
+                    continue
+                }
 
-            GLFW.GLFW_RELEASE -> {
-                for (m in modules) {
-                    if (!m.bind.matchesMouseRelease(event)) {
-                        continue
-                    }
+                when (m.bind.action) {
+                    InputBind.BindAction.HOLD -> m.enabled = false
 
-                    when (m.bind.action) {
-                        InputBind.BindAction.HOLD -> m.enabled = false
+                    InputBind.BindAction.SMART -> {
+                        val state = smartMouseStates.remove(m) ?: continue
 
-                        InputBind.BindAction.SMART -> {
-                            val state = smartMouseStates.remove(m) ?: continue
+                        // Mouse button events do not emit GLFW_REPEAT, so SMART falls back to:
+                        // - hold if the press was long enough
+                        // - toggle otherwise
+                        val shouldFallbackToHold =
+                            clientStartDurationMs - state.pressTimestamp >= SMART_MOUSE_HOLD_THRESHOLD_MS
 
-                            // Mouse button events do not emit GLFW_REPEAT, so SMART falls back to:
-                            // - hold if the press was long enough
-                            // - toggle otherwise
-                            val shouldFallbackToHold =
-                                clientStartDurationMs - state.pressTimestamp >= SMART_MOUSE_HOLD_THRESHOLD_MS
-
-                            if (shouldFallbackToHold) {
-                                m.enabled = false
-                            } else {
-                                m.enabled = !state.pendingEnabled
-                            }
+                        if (shouldFallbackToHold) {
+                            m.enabled = false
+                        } else {
+                            m.enabled = !state.pendingEnabled
                         }
-
-                        InputBind.BindAction.TOGGLE -> {}
                     }
+
+                    InputBind.BindAction.TOGGLE -> {}
                 }
             }
         }

@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.features.account.AccountManager
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.randomUsername
-import org.lwjgl.glfw.GLFW
 
 // GET /api/v1/client/accounts
 private fun Route.getAccounts() = get {
@@ -73,7 +72,7 @@ private fun Route.postNewMicrosoftAccount() = post {
 private fun Route.postClipboardMicrosoftAccount() = post("/clipboard") {
     AccountManager.newMicrosoftAccount {
         mc.execute {
-            GLFW.glfwSetClipboardString(mc.window.handle(), it)
+            mc.keyboardHandler.clipboard = it
             EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
         }
     }

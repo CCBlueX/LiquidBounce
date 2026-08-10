@@ -54,10 +54,10 @@ class InputListener(
             return@handler
         }
 
-        if (event.action == GLFW.GLFW_PRESS) {
+        if (event.isPressed) {
             val (transformedX, transformedY) = browser.viewport.transform(mouseX, mouseY)
             inputHandler.mouseClicked(transformedX, transformedY, event.button)
-        } else if (event.action == GLFW.GLFW_RELEASE) {
+        } else if (event.isReleased) {
             val (transformedX, transformedY) = browser.viewport.transform(mouseX, mouseY)
             inputHandler.mouseReleased(transformedX, transformedY, event.button)
         }
