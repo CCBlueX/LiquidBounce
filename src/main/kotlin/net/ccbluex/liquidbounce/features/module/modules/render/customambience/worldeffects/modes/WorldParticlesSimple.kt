@@ -43,6 +43,7 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
     }
 
     init {
+        tree(Ymotion)
         tree(color)
     }
 
