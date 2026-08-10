@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.fastIterable
 import net.ccbluex.fastutil.referenceBooleanArrayMapOf
@@ -122,5 +124,122 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     fun shouldHandleInputs(event: KeyEvent) = KeyMapping.MAP[InputConstants.getKey(event)]
         ?.any(::shouldHandleInputs)
         ?: false
+
+    override fun prepareDeserialize(jsonObject: JsonObject) {
+        jsonObject["value"].asJsonArray
+            .also { values ->
+                println(values)
+
+                values
+                    .map { it.asJsonObject }
+                    .map { it["name"].asString to it["value"] }
+                    .forEach { (name, value) ->
+                        when (name) {
+                            "Behavior" -> when(value.asString) {
+                                "Safe" -> {
+                                    values.add(
+                                        JsonObject()
+                                            .apply {
+                                                addProperty("name", "Screens")
+                                                add("value", JsonArray()
+                                                    .apply {
+                                                        add(
+                                                            JsonObject()
+                                                                .apply {
+                                                                    addProperty("name", "Container")
+                                                                    addProperty("value", false)
+                                                                }
+                                                        )
+                                                    }
+                                                )
+                                            }
+                                    )
+                                    values.add(
+                                        JsonObject()
+                                            .apply {
+                                                addProperty("name", "Safe")
+                                                add("value", JsonArray()
+                                                    .apply {
+                                                        add("value",  JsonObject()
+                                                            .apply {
+                                                                addProperty("name", "Enable")
+                                                                addProperty("value", true)
+                                                            }
+                                                        )
+                                                    }
+                                                )
+                                            }
+                                    )
+                                }
+                                "Undetectable" -> {
+                                    values.add(
+                                        JsonObject()
+                                            .apply {
+                                                addProperty("name", "Screens")
+                                                add("value", JsonArray()
+                                                    .apply {
+                                                        add(
+                                                            JsonObject()
+                                                                .apply {
+                                                                    addProperty("name", "Container")
+                                                                    addProperty("value", false)
+                                                                }
+                                                        )
+                                                        add(
+                                                            JsonObject()
+                                                                .apply {
+                                                                    addProperty("name", "Inventory")
+                                                                    addProperty("value", false)
+                                                                }
+                                                        )
+                                                    }
+                                                )
+                                            }
+                                    )
+                                }
+                                "StopOnAction" -> values.add(
+                                    JsonObject()
+                                        .apply {
+                                            addProperty("name", "StopOnAction")
+                                            add("value",  JsonArray()
+                                                .apply {
+                                                    add(
+                                                        JsonObject()
+                                                            .apply {
+                                                                addProperty("name", "Enable")
+                                                                addProperty("value", true)
+                                                            }
+                                                    )
+                                                }
+                                            )
+                                        }
+
+                                )
+                            }
+                            "PassthroughSneak" -> {
+                                values.add(
+                                    JsonObject()
+                                        .apply {
+                                            addProperty("name", "Passthrough")
+                                            add("value", JsonArray()
+                                                .apply {
+                                                    add(
+                                                        JsonObject()
+                                                            .apply {
+                                                                addProperty("name", "Sneak")
+                                                                addProperty("value", value.asBoolean)
+                                                            }
+                                                    )
+                                                }
+                                            )
+                                        }
+                                )
+                            }
+                        }
+                    }
+
+                println(values)
+            }
+    }
 
 }
