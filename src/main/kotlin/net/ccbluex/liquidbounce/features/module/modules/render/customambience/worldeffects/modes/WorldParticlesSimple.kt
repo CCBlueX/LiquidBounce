@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.render.readNativeImage
 object WorldParticlesSimple : WorldParticlesMode("Simple") {
 
     private val color = WorldParticlesColorSettings()
-    private val builtinEffects by multiEnumChoice("Particle", enumSetOf(BuiltinEffect.SPARK), canBeNone = false)
+    private val builtinEffects by enumChoice("Particle", BuiltinEffect.SPARK)
 
     init {
         tree(color)
@@ -41,7 +41,7 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
 
     override fun WorldRenderEnvironment.drawWorldParticle(progress: Float, age: Float) {
         drawSquareTexture(
-            builtinEffects.random().texture,
+            builtinEffects.texture,
             size * progress,
             color.color.argb,
             AnchorPoint.CENTER,
