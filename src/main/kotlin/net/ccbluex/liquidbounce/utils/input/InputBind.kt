@@ -98,7 +98,7 @@ data class InputBind(
     /**
      * Determines if the specified key matches the bound key.
      *
-     * @param keyCode The GLFW key code to check.
+     * @param keyCode The InputConstants key code to check.
      * @param scanCode The scan code to check.
      * @return True if the key code or scan code matches the bound key, false otherwise.
      */
@@ -124,7 +124,7 @@ data class InputBind(
      * Determines if the given modifiers match the required modifiers.
      *
      * @param mods The bits of modifiers.
-     * @see org.lwjgl.glfw.GLFW
+     * @see InputConstants
      */
     fun matchesModifiers(mods: Int): Boolean {
         return this.modifiers.all { it.isActive(mods) }

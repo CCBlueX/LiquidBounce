@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.client.CameraType
 import net.minecraft.util.Mth
-import org.lwjgl.glfw.GLFW
 
 /**
  * CameraClip module
@@ -81,7 +80,7 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
         true,
         { delta -> ScrollAdjust.scrolledDistance += delta },
         ScrollAdjustOptions(
-            modifierKeyDefault = GLFW.GLFW_KEY_LEFT_CONTROL,
+            modifierKeyDefault = InputConstants.KEY_LCONTROL,
             sensitivityDefault = 0.3f,
             sensitivityRange = 0.1f..2f
         )
