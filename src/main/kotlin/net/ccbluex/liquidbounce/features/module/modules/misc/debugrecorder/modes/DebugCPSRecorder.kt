@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
-import org.lwjgl.glfw.GLFW
 
 object DebugCPSRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("CPS") {
 
@@ -40,7 +39,7 @@ object DebugCPSRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("CPS
         })
     }
     val mouseHandler = handler<MouseButtonEvent> { event ->
-        if (event.button == 0 && event.action == GLFW.GLFW_PRESS) {
+        if (event.isLeftClick) {
             recordPacket(JsonObject().apply {
                 addProperty("type", "mousePress")
                 addProperty("time", System.currentTimeMillis())

@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.client.italic
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.underline
 import net.ccbluex.liquidbounce.utils.client.variable
-import org.lwjgl.glfw.GLFW
 
 /**
  * CommandUsername
@@ -50,7 +49,7 @@ object CommandUsername : Command.Factory, MinecraftShortcuts {
                     .underline(true)
 
                 chat(regular(command.result("username", formattedUsernameWithEvents)), command)
-                GLFW.glfwSetClipboardString(mc.window.handle(), username)
+                mc.keyboardHandler.clipboard = username
             }
             .build()
     }

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
@@ -37,7 +38,6 @@ import net.minecraft.client.input.InputQuirks
 import org.apache.logging.log4j.Logger
 import org.joml.component1
 import org.joml.component2
-import org.lwjgl.glfw.GLFW
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -262,26 +262,26 @@ class CefBrowser(
 
     // TODO: Temporary fix. Should be removed after fix in JCEF
     private fun handleMacClipboardShortcut(keyCode: Int, modifiers: Int): Boolean {
-        val isCommandPressed = modifiers and GLFW.GLFW_MOD_SUPER != 0
+        val isCommandPressed = modifiers and InputConstants.MOD_SUPER != 0
         if (!isCommandPressed) {
             return false
         }
 
         val frame = browserApi.focusedFrame
         return when (keyCode) {
-            GLFW.GLFW_KEY_C -> {
+            InputConstants.KEY_C -> {
                 frame.copy()
                 true
             }
-            GLFW.GLFW_KEY_V -> {
+            InputConstants.KEY_V -> {
                 frame.paste()
                 true
             }
-            GLFW.GLFW_KEY_X -> {
+            InputConstants.KEY_X -> {
                 frame.cut()
                 true
             }
-            GLFW.GLFW_KEY_A -> {
+            InputConstants.KEY_A -> {
                 frame.selectAll()
                 true
             }

@@ -39,7 +39,18 @@ class MouseButtonEvent(
     val action: Int,
     val mods: Int,
     val screen: Screen? = null
-) : Event(), WebSocketEvent
+) : Event(), WebSocketEvent {
+    val isPressed: Boolean get() = action == InputConstants.PRESS
+    val isReleased: Boolean get() = action == InputConstants.RELEASE
+
+    val isLeftButton: Boolean get() = button == InputConstants.MOUSE_BUTTON_LEFT
+    val isMiddleButton: Boolean get() = button == InputConstants.MOUSE_BUTTON_MIDDLE
+    val isRightButton: Boolean get() = button == InputConstants.MOUSE_BUTTON_RIGHT
+
+    val isLeftClick: Boolean get() = isPressed && isLeftButton
+    val isMiddleClick: Boolean get() = isPressed && isMiddleButton
+    val isRightClick: Boolean get() = isPressed && isRightButton
+}
 
 @Tag("mouseScroll")
 class MouseScrollEvent(val horizontal: Double, val vertical: Double) : Event()
@@ -58,7 +69,11 @@ class KeyboardKeyEvent(
     val action: Int,
     val mods: Int,
     val screen: Screen? = null
-) : Event(), WebSocketEvent
+) : Event(), WebSocketEvent {
+    val isPressed: Boolean get() = action == InputConstants.PRESS
+    val isReleased: Boolean get() = action == InputConstants.RELEASE
+    val isRepeat: Boolean get() = action == InputConstants.REPEAT
+}
 
 @Tag("keyboardChar")
 class KeyboardCharEvent(val codePoint: Int) : Event(), WebSocketEvent

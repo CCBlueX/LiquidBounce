@@ -50,7 +50,6 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.network.protocol.Packet
 import net.minecraft.world.entity.player.Input
 import net.minecraft.world.item.CreativeModeTabs
-import org.lwjgl.glfw.GLFW
 
 /**
  * InventoryMove module
@@ -164,7 +163,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     private val keyHandler = handler<KeyboardKeyEvent> { event ->
         val key = movementKeys.keys.find { it.matches(KeyEvent(event.keyCode, event.scanCode, event.mods)) }
             ?: return@handler
-        val pressed = shouldHandleInputs(key) && event.action != GLFW.GLFW_RELEASE
+        val pressed = shouldHandleInputs(key) && !event.isReleased
         movementKeys.put(key, pressed)
 
         if (behavior === Behaviour.SAFE && isInInventoryScreen && InventoryManager.isInventoryOpenServerSide

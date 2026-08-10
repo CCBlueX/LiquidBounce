@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import org.lwjgl.glfw.GLFW
 
 /**
  * Proxy endpoints
@@ -115,8 +114,8 @@ private fun Route.postAddProxy() = post {
 private fun Route.postClipboardProxy() = post("/clipboard") {
     mc.execute {
         try {
-            val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle())
-            if (clipboardText.isNullOrBlank()) {
+            val clipboardText = mc.keyboardHandler.clipboard
+            if (clipboardText.isBlank()) {
                 return@execute
             }
 
