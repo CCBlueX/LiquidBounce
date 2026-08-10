@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticles.coords
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple.AnimBy
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple.Ymotion
@@ -45,7 +46,7 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
     protected val radius by intRange("Radius", 8..16, 1..256)
     protected val count by int("Count", 256, 32..1024)
     protected val size by float("Size", 1f, 0.1f..10f)
-    protected val lifetime by intRange("Life", 20..30, 1..512, "anim/life")
+    protected val lifetime by intRange("Life", 20..30, 1..512, "anim/life").onChanged { coords.clear() }
     protected val spawnTime by int("SpawnTime", 25, 1..200, "ms")
     protected val animCurve by easing("AnimCurve", Easing.QUAD_IN_OUT)
     protected val canBeCovered by boolean("CanBeCovered", true)
@@ -65,8 +66,8 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
 
             val rot = mc.gameRenderer.mainCamera().rotation()
 
-            WorldParticles.coords.forEach {
-                val age = lifetime.last - WorldParticles.coords.timeToDie(it) + event.partialTicks
+            coords.forEach {
+                val age = lifetime.last - coords.timeToDie(it) + event.partialTicks
 
                 val progress = animCurve
                     .transform(age / lifetime.first)

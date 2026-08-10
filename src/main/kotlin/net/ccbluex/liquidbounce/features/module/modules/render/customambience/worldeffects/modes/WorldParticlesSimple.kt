@@ -19,9 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes
 
-import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticlesColorSettings
