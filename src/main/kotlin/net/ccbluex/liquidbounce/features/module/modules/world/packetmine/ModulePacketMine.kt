@@ -357,11 +357,10 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
             return@handler
         }
 
-        val isLeftClick = event.button == 0
         // without adding a little delay before being able to unselect / select again, selecting would be impossible
         val hasTimePassed = chronometer.hasElapsed(selectDelay.toLong())
         val hitResult = mc.hitResult
-        if (!isLeftClick || !hasTimePassed || hitResult == null || hitResult !is BlockHitResult) {
+        if (!event.isLeftButton || !hasTimePassed || hitResult == null || hitResult !is BlockHitResult) {
             return@handler
         }
 
