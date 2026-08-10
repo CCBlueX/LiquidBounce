@@ -65,7 +65,7 @@ public abstract class MixinChatComponent {
     @Shadow
     public abstract void scrollChat(int scroll);
 
-    @Inject(method = "<init>", at = @At(value = "TAIL"))
+    @Inject(method = "<init>(Lnet/minecraft/client/Minecraft;)V", at = @At(value = "TAIL"))
     public void hookNewArrayList2(Minecraft minecraft, CallbackInfo ci) {
         allMessages = new ArrayListDeque<>(100);
         // ArrayDeque for addFirst operations
