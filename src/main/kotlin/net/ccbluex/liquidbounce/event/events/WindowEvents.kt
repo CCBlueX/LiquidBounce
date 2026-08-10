@@ -69,7 +69,11 @@ class KeyboardKeyEvent(
     val action: Int,
     val mods: Int,
     val screen: Screen? = null
-) : Event(), WebSocketEvent
+) : Event(), WebSocketEvent {
+    val isPressed: Boolean get() = action == InputConstants.PRESS
+    val isReleased: Boolean get() = action == InputConstants.RELEASE
+    val isRepeat: Boolean get() = action == InputConstants.REPEAT
+}
 
 @Tag("keyboardChar")
 class KeyboardCharEvent(val codePoint: Int) : Event(), WebSocketEvent

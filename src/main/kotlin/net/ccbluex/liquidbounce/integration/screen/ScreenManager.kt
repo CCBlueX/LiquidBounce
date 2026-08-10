@@ -281,7 +281,7 @@ object ScreenManager : EventListener {
         }
 
         // F12 to toggle GPU acceleration
-        if (event.action == GLFW.GLFW_PRESS && keyCode == GLFW.GLFW_KEY_F12) {
+        if (event.isPressed && keyCode == GLFW.GLFW_KEY_F12) {
             val backend = BrowserBackendManager.backend ?: return@handler
             if (!backend.accelerationFlags.isSupported) {
                 logger.warn("GPU acceleration is not supported by the current browser backend.")

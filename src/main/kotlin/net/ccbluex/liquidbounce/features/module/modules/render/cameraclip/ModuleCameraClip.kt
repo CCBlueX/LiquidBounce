@@ -111,7 +111,7 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
 
         @Suppress("unused")
         private val releaseModifierHandler = handler<KeyboardKeyEvent> {
-            if (it.key == modifierKey && it.action == GLFW.GLFW_RELEASE) {
+            if (it.key == modifierKey && it.isReleased) {
                 reset()
             }
         }

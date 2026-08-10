@@ -139,7 +139,7 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
 
         @Suppress("unused")
         private val keyHandler = handler<KeyboardKeyEvent> { event ->
-            if (event.action != GLFW.GLFW_PRESS) return@handler
+            if (!event.isPressed) return@handler
 
             when (event.key) {
                 trackKey -> {

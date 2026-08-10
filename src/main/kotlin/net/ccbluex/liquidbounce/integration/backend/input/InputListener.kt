@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.utils.client.mc
 import org.joml.component1
 import org.joml.component2
-import org.lwjgl.glfw.GLFW
 import java.lang.AutoCloseable
 
 /**
@@ -100,14 +99,13 @@ class InputListener(
             return@handler
         }
 
-        val action = event.action
         val key = event.keyCode
         val scancode = event.scanCode
         val modifiers = event.mods
 
-        if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
+        if (event.isPressed || event.isRepeat) {
             inputHandler.keyPressed(key, scancode, modifiers)
-        } else if (action == GLFW.GLFW_RELEASE) {
+        } else if (event.isReleased) {
             inputHandler.keyReleased(key, scancode, modifiers)
         }
     }

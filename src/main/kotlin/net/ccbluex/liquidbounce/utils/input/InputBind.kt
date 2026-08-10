@@ -134,7 +134,7 @@ data class InputBind(
      * Determines if a keyboard press event matches this bind key and required modifiers.
      */
     fun matchesKeyPress(event: KeyboardKeyEvent): Boolean {
-        return event.action == InputConstants.PRESS
+        return event.isPressed
             && matchesKey(event.keyCode, event.scanCode)
             && matchesModifiers(event.mods)
     }
@@ -143,7 +143,7 @@ data class InputBind(
      * Determines if a keyboard release affects this bind key or one of its required modifiers.
      */
     fun matchesKeyRelease(event: KeyboardKeyEvent): Boolean {
-        if (event.action != InputConstants.RELEASE) return false
+        if (!event.isReleased) return false
         val keyReleased = matchesKey(event.keyCode, event.scanCode)
         val modifierReleased = event.key.toModifierOrNull().let { it in modifiers && !it!!.isAnyPressed }
 
@@ -182,13 +182,12 @@ data class InputBind(
             return currentState
         }
 
-        val eventAction = event.action
-        return when (eventAction) {
-            InputConstants.PRESS if mc.gui.screen() == null -> when (action) {
+        return when {
+            event.isPressed && mc.gui.screen() == null -> when (action) {
                 BindAction.TOGGLE -> !currentState
                 BindAction.HOLD, BindAction.SMART -> true
             }
-            InputConstants.RELEASE -> when (action) {
+            event.isReleased -> when (action) {
                 BindAction.HOLD -> false
                 BindAction.TOGGLE, BindAction.SMART -> currentState
             }
