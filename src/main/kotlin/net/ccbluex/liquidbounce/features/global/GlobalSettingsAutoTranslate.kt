@@ -19,40 +19,45 @@
 
 package net.ccbluex.liquidbounce.features.global
 
+import com.google.common.cache.Cache
+import com.google.common.cache.CacheBuilder
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorApi
 import net.ccbluex.liquidbounce.api.thirdparty.translator.providers.GoogleTranslateApi
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.utils.collection.LruCache
+import java.time.Duration
 
-private data class TranslationKey(val sourceLanguage: String, val targetLanguage: String, val text: String)
+private data class TranslationCacheKey(
+    val sourceLanguage: String,
+    val targetLanguage: String,
+    val text: String,
+)
 
 object GlobalSettingsAutoTranslate : ValueGroup(name = "AutoTranslate"), TranslatorApi, EventListener {
 
-    private val cache = LruCache<TranslationKey, TranslationResult>(10_000)
+    private val translationLazyCache = lazy<Cache<TranslationCacheKey, TranslationResult.Success>> {
+        CacheBuilder.newBuilder()
+            .maximumSize(512)
+            .expireAfterWrite(Duration.ofMinutes(5))
+            .build()
+    }
+
+    private val translationCache by translationLazyCache
+
     private val providers = modes(this, "Provider", 0) {
         arrayOf(
             GoogleTranslateApi(it)
         )
     }
 
-    override suspend fun translate(
-        sourceLanguage: TranslateLanguage,
-        targetLanguage: TranslateLanguage,
-        text: String
-    ): TranslationResult {
-        val key = TranslationKey(sourceLanguage.literal, targetLanguage.literal, text)
-        cache[key]?.let { return it }
-
-        val result = super.translate(sourceLanguage, targetLanguage, text)
-
-        if (result.isValid) {
-            cache.put(key, result)
+    init {
+        providers.onChanged {
+            if (translationLazyCache.isInitialized()) {
+                translationCache.invalidateAll()
+            }
         }
-
-        return result
     }
 
     override suspend fun translateInternal(
@@ -60,10 +65,20 @@ object GlobalSettingsAutoTranslate : ValueGroup(name = "AutoTranslate"), Transla
         targetLanguage: TranslateLanguage,
         text: String
     ): TranslationResult {
-        return providers.activeMode.translateInternal(
-            sourceLanguage,
-            targetLanguage,
-            text
+        val key = TranslationCacheKey(
+            sourceLanguage.literal,
+            targetLanguage.literal,
+            text,
         )
+
+        translationCache.getIfPresent(key)?.let { return it }
+
+        val result = providers.activeMode.translateInternal(sourceLanguage, targetLanguage, text)
+
+        if (result is TranslationResult.Success) {
+            translationCache.put(key, result)
+        }
+
+        return result
     }
 }
