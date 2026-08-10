@@ -21,12 +21,15 @@ package net.ccbluex.liquidbounce.features.module.modules.render.customambience.w
 
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticlesColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticlesMode
 import net.ccbluex.liquidbounce.render.AnchorPoint
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 
@@ -34,19 +37,32 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
 
     private val color = WorldParticlesColorSettings()
     private val builtinEffects by enumChoice("Particle", BuiltinEffect.SPARK)
+    private object Ymotion : ToggleableValueGroup(this, "YMotion", false) {
+        val motion by float("Motion", 2f, -10f..10f)
+        val animBy by enumChoice("AnimBy", AnimBy.AGE)
+    }
 
     init {
         tree(color)
     }
 
     override fun WorldRenderEnvironment.drawWorldParticle(progress: Float, age: Float) {
-        drawSquareTexture(
-            builtinEffects.texture,
-            size * progress,
-            color.color.argb,
-            AnchorPoint.CENTER,
-            !canBeCovered
-        )
+        poseStack.withPush {
+            if (Ymotion.enabled) {
+                val anim = when (Ymotion.animBy) {
+                    AnimBy.PROGRESS -> progress
+                    AnimBy.AGE -> age
+                }
+                translate(0F, Ymotion.motion * anim, 0F)
+            }
+            drawSquareTexture(
+                builtinEffects.texture,
+                size * progress,
+                color.color.argb,
+                AnchorPoint.CENTER,
+                !canBeCovered
+            )
+        }
     }
 
     // Pasted from ModuleParticles
@@ -69,6 +85,14 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
 
         val image = LiquidBounce.resource("particles/$fileName.png").readNativeImage()
         val texture = this.image.asTexture { "Builtin Effects $tag" }
+    }
+
+    @Suppress("unused")
+    enum class AnimBy(
+        override val tag: String,
+    ) : Tagged {
+        PROGRESS("Progress"),
+        AGE("Age");
     }
 
 }

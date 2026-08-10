@@ -32,6 +32,7 @@ object WorldParticles : ToggleableValueGroup(ModuleCustomAmbience ,"WorldParticl
     val modes = choices("Mode", 0) {
         arrayOf(
             WorldParticlesSimple,
+            // TODO: Create WireFrame mode
         )
     }.apply { onChanged { coords.clear() } }
 
