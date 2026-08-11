@@ -40,7 +40,8 @@ abstract class TotemEffectMode(name:String) : Mode(name) {
     protected val animCurve by easing("AnimCurve", Easing.EXPONENTIAL_OUT)
     protected val canBeCovered by boolean("CanBeCovered", false)
 
-    protected abstract fun WorldRenderEnvironment.drawTotemEffect(progress: Float, pos: Vec3, event: WorldRenderEvent)
+    protected abstract fun WorldRenderEnvironment
+        .drawTotemEffect(progress: Float, age: Float, pos: Vec3, event: WorldRenderEvent)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -54,7 +55,7 @@ abstract class TotemEffectMode(name:String) : Mode(name) {
                         .coerceIn(0f, 1f)
 
                     poseStack.withPush {
-                        drawTotemEffect(progress, it.value, event)
+                        drawTotemEffect(progress, age, it.value, event)
                     }
                 }
             }

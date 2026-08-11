@@ -35,7 +35,8 @@ internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
         tree(color)
     }
 
-    override fun WorldRenderEnvironment.drawTotemEffect(progress: Float, pos: Vec3, event: WorldRenderEvent) {
+    override fun WorldRenderEnvironment
+        .drawTotemEffect(progress: Float, age: Float, pos: Vec3, event: WorldRenderEvent) {
         val inner = color.innerColor
         val outer = if (color.sync) inner else color.outerColor
 

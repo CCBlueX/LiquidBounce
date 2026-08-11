@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.modes
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsHalo.addTorusQuad
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsHalo.getAngle
@@ -36,15 +38,20 @@ import net.minecraft.world.phys.Vec3
 internal object TotemEffectSoul : TotemEffectMode("Soul") {
 
     private val colors = TotemEffectColorSettings()
-    private val soulYmotion by float("SoulYMotion", 5f, 0.1f..10f)
+    private object Ymotion : ToggleableValueGroup(this, "YMotion", true){
+        val soulYmotion by float("SoulYMotion", 0.75f, 0.1f..10f)
+        val animBy by enumChoice("AnimBy", AnimBy.AGE)
+    }
 
     private val wireframePlayer = WireframePlayer()
 
     init {
+        tree(Ymotion)
         tree(colors)
     }
 
-    override fun WorldRenderEnvironment.drawTotemEffect(progress: Float, pos: Vec3, event: WorldRenderEvent) {
+    override fun WorldRenderEnvironment
+        .drawTotemEffect(progress: Float, age: Float, pos: Vec3, event: WorldRenderEvent) {
         val fadeProgress = if (progress >= fade) (progress - fade) / (1f - fade).coerceAtLeast(0.001f) else 0f
         val alpha = ((1f - fadeProgress).coerceIn(0f, 1f) * 255f).toInt()
 
@@ -53,7 +60,12 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
         val inner = colors.innerColor.alpha(alpha)
         val outer = if (colors.sync) inner else colors.outerColor.alpha(alpha)
 
-        val targetPos = pos.add(0.0, (progress * soulYmotion).toDouble(), -0.1)
+        val anim = when (Ymotion.animBy) {
+            AnimBy.PROGRESS -> progress
+            AnimBy.AGE -> age
+        }
+
+        val targetPos = pos.add(0.0, (anim * Ymotion.soulYmotion).toDouble(), -0.1)
 
         wireframePlayer.pos = targetPos
         wireframePlayer.render(event, color = inner, outlineColor = outer, noDepthTest = !canBeCovered)
@@ -88,5 +100,13 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
                 }
             }
         }
+    }
+
+    @Suppress("unused")
+    enum class AnimBy(
+        override val tag: String,
+    ) : Tagged {
+        PROGRESS("Progress"),
+        AGE("Age");
     }
 }
