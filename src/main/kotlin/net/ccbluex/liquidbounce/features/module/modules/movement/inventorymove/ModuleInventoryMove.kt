@@ -125,11 +125,10 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
         ?.any(::shouldHandleInputs)
         ?: false
 
+    @SuppressWarnings("all") // temp version
     override fun prepareDeserialize(jsonObject: JsonObject) {
         jsonObject["value"].asJsonArray
             .also { values ->
-                println(values)
-
                 values
                     .map { it.asJsonObject }
                     .map { it["name"].asString to it["value"] }
@@ -237,8 +236,6 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
                             }
                         }
                     }
-
-                println(values)
             }
     }
 
