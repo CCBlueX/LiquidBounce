@@ -36,7 +36,7 @@ object InventoryMoveSafeFeature : ToggleableValueGroup(ModuleInventoryMove, "Saf
     private val keyHandler = handler<KeyboardKeyEvent> { event ->
         val key = movementKeys.keys.find { it.matches(KeyEvent(event.keyCode, event.scanCode, event.mods)) }
             ?: return@handler
-        val pressed = shouldHandleInputs(key) && event.action != GLFW.GLFW_RELEASE
+        val pressed = shouldHandleInputs(key) && !event.isReleased
         movementKeys.put(key, pressed)
 
         if (isInInventoryScreen && InventoryManager.isInventoryOpenServerSide && pressed) {
