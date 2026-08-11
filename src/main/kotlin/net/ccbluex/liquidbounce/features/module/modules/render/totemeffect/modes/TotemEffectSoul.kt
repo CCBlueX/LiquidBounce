@@ -60,12 +60,15 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
         val inner = colors.innerColor.alpha(alpha)
         val outer = if (colors.sync) inner else colors.outerColor.alpha(alpha)
 
-        val anim = when (Ymotion.animBy) {
-            AnimBy.PROGRESS -> progress
-            AnimBy.AGE -> age
+        var anim = 0.0
+        if (Ymotion.enabled) {
+            anim = when (Ymotion.animBy) {
+                AnimBy.PROGRESS -> progress.toDouble()
+                AnimBy.AGE -> age.toDouble()
+            }
         }
 
-        val targetPos = pos.add(0.0, (anim * Ymotion.soulYmotion).toDouble(), -0.1)
+        val targetPos = pos.add(0.0, (anim * Ymotion.soulYmotion), -0.1)
 
         wireframePlayer.pos = targetPos
         wireframePlayer.render(event, color = inner, outlineColor = outer, noDepthTest = !canBeCovered)
