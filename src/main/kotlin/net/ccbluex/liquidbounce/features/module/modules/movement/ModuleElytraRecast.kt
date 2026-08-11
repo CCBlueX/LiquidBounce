@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
@@ -36,8 +34,6 @@ import net.minecraft.world.item.Items
  */
 object ModuleElytraRecast : ClientModule("ElytraRecast", ModuleCategories.MOVEMENT) {
 
-    private var wasFlying = false
-
     private val shouldRecast: Boolean
         get() {
             val itemStack = player.getItemBySlot(EquipmentSlot.CHEST)
@@ -46,15 +42,6 @@ object ModuleElytraRecast : ClientModule("ElytraRecast", ModuleCategories.MOVEME
                 !player.onClimbable() && !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) &&
                 itemStack.`is`(Items.ELYTRA) && !itemStack.nextDamageWillBreak() && mc.options.keyJump.isDown
         }
-
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        val isFlying = player.isFallFlying
-        if (wasFlying && !isFlying) {
-            recastElytra()
-        }
-        wasFlying = isFlying
-    }
 
     /**
      * Recast elytra when [shouldRecast] says it should

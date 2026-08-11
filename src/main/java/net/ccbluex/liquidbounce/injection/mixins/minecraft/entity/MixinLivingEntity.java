@@ -256,7 +256,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Unique
     private boolean previousElytra = false;
 
-    @Inject(method = "updateFallFlying", at = @At("TAIL"))
+    @Inject(method = "aiStep", at = @At("TAIL"))
     public void recastIfLanded(CallbackInfo callbackInfo) {
         if ((Object) this != Minecraft.getInstance().player) {
             return;
