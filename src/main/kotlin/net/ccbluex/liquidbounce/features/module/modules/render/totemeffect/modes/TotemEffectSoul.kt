@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.Totem
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
@@ -50,8 +51,13 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
         tree(colors)
     }
 
-    override fun WorldRenderEnvironment
-        .drawTotemEffect(progress: Float, age: Float, pos: Vec3, event: WorldRenderEvent) {
+    override fun WorldRenderEnvironment.drawTotemEffect(
+        progress: Float,
+        age: Float,
+        pos: Vec3,
+        event: WorldRenderEvent
+    ) {
+
         val fadeProgress = if (progress >= fade) (progress - fade) / (1f - fade).coerceAtLeast(0.001f) else 0f
         val alpha = ((1f - fadeProgress).coerceIn(0f, 1f) * 255f).toInt()
 
@@ -60,12 +66,13 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
         val inner = colors.innerColor.alpha(alpha)
         val outer = if (colors.sync) inner else colors.outerColor.alpha(alpha)
 
-        var anim = 0.0
-        if (Ymotion.enabled) {
-            anim = when (Ymotion.animBy) {
+        val anim = if (Ymotion.enabled) {
+            when (Ymotion.animBy) {
                 AnimBy.PROGRESS -> progress.toDouble()
                 AnimBy.AGE -> age.toDouble()
             }
+        } else {
+            0.0
         }
 
         val targetPos = pos.add(0.0, (anim * Ymotion.soulYmotion), -0.1)
@@ -73,8 +80,12 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
         wireframePlayer.pos = targetPos
         wireframePlayer.render(event, color = inner, outlineColor = outer, noDepthTest = !canBeCovered)
 
-        withPositionRelativeToCamera(targetPos.add(0.0, 2.1, 0.125)) {
-            poseStack.withPush {
+        drawHalo(targetPos, event, inner)
+    }
+
+    private fun drawHalo(targetPos: Vec3, event: WorldRenderEvent, color: Color4b) {
+        event.environment.withPositionRelativeToCamera(targetPos.add(0.0, 2.1, 0.125)) {
+            event.poseStack.withPush {
 
                 // Pasted from HatsHalo.kt
                 drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = !canBeCovered)) { matrix ->
@@ -96,7 +107,7 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
                                 0.3f,
                                 0.0375f,
                                 innerI,
-                                inner,
+                                color,
                             )
                         }
                     }
