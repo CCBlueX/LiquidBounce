@@ -18,29 +18,35 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.fastIterable
 import net.ccbluex.fastutil.referenceBooleanArrayMapOf
-import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveBlinkFeature
-import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSafeFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSneakControlFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSprintControlFeature
-import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveStopOnActionFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveTimerFeature
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
+import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
+import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.minecraft.client.KeyMapping
-import net.minecraft.client.gui.components.EditBox
-import net.minecraft.client.gui.components.MultiLineEditBox
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.client.input.KeyEvent
+import net.minecraft.network.protocol.Packet
+import net.minecraft.world.entity.player.Input
 
 /**
  * InventoryMove module
@@ -50,27 +56,17 @@ import net.minecraft.client.input.KeyEvent
 
 object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVEMENT) {
 
-    private object Screens: ValueGroup("Screens") {
-        val container by boolean("Container", true)
-        val inventory by boolean("Inventory", true)
-        val gui by boolean("Gui", true)
+    private val behavior by enumChoice("Behavior", Behaviour.NORMAL).also(::tagBy)
 
-        fun shouldHandle(screen: Screen) = when (screen) {
-            is InventoryScreen, is CreativeModeInventoryScreen -> inventory
-            is AbstractContainerScreen<*> -> container
-            else -> gui && !screen.isInEditBox() && !ModuleClickGui.isInSearchBar
-        }
-
-        private fun Screen.isInEditBox() = when (this.focused) {
-            is EditBox, is MultiLineEditBox -> true
-            else -> false
-        }
+    @Suppress("unused")
+    enum class Behaviour(override val tag: String, val handleScreens: (Screen) -> Boolean) : Tagged {
+        NORMAL("Normal", { true }),
+        SAFE("Safe", { it is InventoryScreen }), // disable clicks while moving
+        UNDETECTABLE("Undetectable", { it !is AbstractContainerScreen<*> }), // stop in inventory
+        STOP_ON_ACTION("StopOnAction", { true }), // stop input on inventory action
     }
 
-    private object Passthrough : ValueGroup("Passthrough") {
-        val sneak by boolean("Sneak", false)
-        val jump by boolean("Jump", true)
-    }
+    private val passthroughSneak by boolean("PassthroughSneak", false)
 
     // states of movement keys, using mc.options.<key>.isPressed doesn't work for some reason
     val movementKeys =
@@ -87,20 +83,15 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
      * Restricts user from clicking while moving or sprinting in inventory.
      */
     val doNotAllowClicking
-        get() = InventoryMoveSafeFeature.enabled && movementKeys.fastIterable().any {
+        get() = behavior == Behaviour.SAFE && movementKeys.fastIterable().any {
             it.booleanValue && shouldHandleInputs(it.key)
         }
 
     init {
-        tree(Screens)
-        tree(Passthrough)
-
         tree(InventoryMoveSprintControlFeature)
         tree(InventoryMoveSneakControlFeature)
         tree(InventoryMoveTimerFeature)
         tree(InventoryMoveBlinkFeature)
-        tree(InventoryMoveSafeFeature)
-        tree(InventoryMoveStopOnActionFeature)
     }
 
     @JvmStatic
@@ -110,14 +101,13 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
         val screen = screen ?: return true
 
         when (key) {
-            mc.options.keyShift -> Passthrough.sneak
-            mc.options.keyJump -> Passthrough.jump
-            mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight -> true
+            mc.options.keyShift -> passthroughSneak
+            mc.options.keyJump, mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight -> true
             else -> false
         }.also { if (!it) return false }
 
         // If we are in a handled screen, we should handle the inputs only if the undetectable option is not enabled
-        return Screens.shouldHandle(screen)
+        return behavior.handleScreens(screen)
     }
 
     @JvmStatic
@@ -125,118 +115,50 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
         ?.any(::shouldHandleInputs)
         ?: false
 
-    @SuppressWarnings("all") // temp version
-    override fun prepareDeserialize(jsonObject: JsonObject) {
-        jsonObject["value"].asJsonArray
-            .also { values ->
-                values
-                    .map { it.asJsonObject }
-                    .map { it["name"].asString to it["value"] }
-                    .forEach { (name, value) ->
-                        when (name) {
-                            "Behavior" -> when(value.asString) {
-                                "Safe" -> {
-                                    values.add(
-                                        JsonObject()
-                                            .apply {
-                                                addProperty("name", "Screens")
-                                                add("value", JsonArray()
-                                                    .apply {
-                                                        add(
-                                                            JsonObject()
-                                                                .apply {
-                                                                    addProperty("name", "Container")
-                                                                    addProperty("value", false)
-                                                                }
-                                                        )
-                                                    }
-                                                )
-                                            }
-                                    )
-                                    values.add(
-                                        JsonObject()
-                                            .apply {
-                                                addProperty("name", "Safe")
-                                                add("value", JsonArray()
-                                                    .apply {
-                                                        add("value",  JsonObject()
-                                                            .apply {
-                                                                addProperty("name", "Enable")
-                                                                addProperty("value", true)
-                                                            }
-                                                        )
-                                                    }
-                                                )
-                                            }
-                                    )
-                                }
-                                "Undetectable" -> {
-                                    values.add(
-                                        JsonObject()
-                                            .apply {
-                                                addProperty("name", "Screens")
-                                                add("value", JsonArray()
-                                                    .apply {
-                                                        add(
-                                                            JsonObject()
-                                                                .apply {
-                                                                    addProperty("name", "Container")
-                                                                    addProperty("value", false)
-                                                                }
-                                                        )
-                                                        add(
-                                                            JsonObject()
-                                                                .apply {
-                                                                    addProperty("name", "Inventory")
-                                                                    addProperty("value", false)
-                                                                }
-                                                        )
-                                                    }
-                                                )
-                                            }
-                                    )
-                                }
-                                "StopOnAction" -> values.add(
-                                    JsonObject()
-                                        .apply {
-                                            addProperty("name", "StopOnAction")
-                                            add("value",  JsonArray()
-                                                .apply {
-                                                    add(
-                                                        JsonObject()
-                                                            .apply {
-                                                                addProperty("name", "Enable")
-                                                                addProperty("value", true)
-                                                            }
-                                                    )
-                                                }
-                                            )
-                                        }
+    @Suppress("unused")
+    private val keyHandler = handler<KeyboardKeyEvent> { event ->
+        if (behavior !== Behaviour.SAFE) return@handler
 
-                                )
-                            }
-                            "PassthroughSneak" -> {
-                                values.add(
-                                    JsonObject()
-                                        .apply {
-                                            addProperty("name", "Passthrough")
-                                            add("value", JsonArray()
-                                                .apply {
-                                                    add(
-                                                        JsonObject()
-                                                            .apply {
-                                                                addProperty("name", "Sneak")
-                                                                addProperty("value", value.asBoolean)
-                                                            }
-                                                    )
-                                                }
-                                            )
-                                        }
-                                )
-                            }
-                        }
-                    }
-            }
+        val key = movementKeys.keys.find { it.matches(KeyEvent(event.keyCode, event.scanCode, event.mods)) }
+            ?: return@handler
+        val pressed = shouldHandleInputs(key) && !event.isReleased
+        movementKeys.put(key, pressed)
+
+        if (isInInventoryScreen && InventoryManager.isInventoryOpenServerSide && pressed) {
+            network.sendCloseInventory()
+        }
     }
+    
+    private val delayedContainerPackets = mutableListOf<Packet<*>>()
+
+    override fun onDisabled() {
+        delayedContainerPackets.clear()
+        super.onDisabled()
+    }
+
+    @Suppress("unused")
+    private val movementInputHandler = handler<MovementInputEvent>(FINAL_DECISION) {
+        if (delayedContainerPackets.isEmpty()) return@handler
+
+        val packetsSnapshot = delayedContainerPackets.toTypedArray()
+        delayedContainerPackets.clear()
+        it.sneak = false
+        it.jump = false
+        it.directionalInput = DirectionalInput.NONE
+        // `schedule` will force the Runnable to be run in next loop
+        mc.schedule { packetsSnapshot.forEach(::sendPacketSilently) }
+    }
+
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent>(FIRST_PRIORITY) { event ->
+        val packet = event.packet
+
+        if (packet.isC2SContainerPacket() && player.input.keyPresses != Input.EMPTY) {
+            event.cancelEvent()
+            // Here only be called from render thread because [packet] is c2s
+            delayedContainerPackets += packet
+        }
+    }
+
 
 }
