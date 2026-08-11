@@ -28,7 +28,7 @@ import net.minecraft.world.item.Items
 /**
  * Elytra recast module
  *
- * Recasts elytra when holding the jump key after landing
+ * Recasts elytra when holding the jump key
  *
  * @author Pivo1lovv
  */
@@ -38,8 +38,8 @@ object ModuleElytraRecast : ClientModule("ElytraRecast", ModuleCategories.MOVEME
         get() {
             val itemStack = player.getItemBySlot(EquipmentSlot.CHEST)
 
-            return !player.isFallFlying && !player.abilities.flying && !player.isPassenger &&
-                !player.onClimbable() && !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) &&
+            return !player.abilities.flying && !player.isPassenger && !player.onClimbable() &&
+                !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) && !player.isFallFlying
                 itemStack.`is`(Items.ELYTRA) && !itemStack.nextDamageWillBreak() && mc.options.keyJump.isDown
         }
 
