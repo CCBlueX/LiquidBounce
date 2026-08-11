@@ -68,7 +68,6 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector2f
 import org.joml.Vector2fc
-import org.lwjgl.glfw.GLFW
 import java.io.File
 import java.util.EnumSet
 import java.util.SequencedSet
@@ -433,7 +432,7 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = rangedValue(name, default, range, suffix, ValueType.INT_RANGE, aliases)
 
-    fun bind(name: String, default: Int = GLFW.GLFW_KEY_UNKNOWN) = bind(
+    fun bind(name: String, default: Int = InputConstants.UNKNOWN.value) = bind(
         name,
         InputBind(InputConstants.Type.KEYSYM, default, InputBind.BindAction.TOGGLE)
     )

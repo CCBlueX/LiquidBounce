@@ -59,7 +59,6 @@ import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
-import org.lwjgl.glfw.GLFW
 import java.util.function.Predicate
 import kotlin.math.abs
 
@@ -221,8 +220,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
     @Suppress("unused")
     private val mouseHandler = handler<MouseButtonEvent> { event ->
-        if (midClickCameraTeleport &&
-            event.action == GLFW.GLFW_PRESS && event.button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+        if (midClickCameraTeleport && event.isMiddleClick) {
             val target = getCameraLookingAt() ?: return@handler
 
             // interpolate to prevent tp into block

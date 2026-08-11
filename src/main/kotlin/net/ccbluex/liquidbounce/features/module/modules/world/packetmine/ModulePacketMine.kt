@@ -40,9 +40,10 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.outlineBox
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -356,16 +357,15 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
             return@handler
         }
 
-        val isLeftClick = event.button == 0
         // without adding a little delay before being able to unselect / select again, selecting would be impossible
         val hasTimePassed = chronometer.hasElapsed(selectDelay.toLong())
         val hitResult = mc.hitResult
-        if (!isLeftClick || !hasTimePassed || hitResult == null || hitResult !is BlockHitResult) {
+        if (!event.isLeftButton || !hasTimePassed || hitResult == null || hitResult !is BlockHitResult) {
             return@handler
         }
 
         val blockPos = hitResult.blockPos
-        val state = blockPos.getState()!!
+        val state = blockPos.stateOrEmpty
         val activeTarget = _target
 
         val shouldTargetBlock = mode.activeMode.shouldTarget(blockPos, state)
@@ -423,7 +423,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
     }
 
     fun setTarget(blockPos: BlockPos) {
-        val state = blockPos.getState()
+        val state = blockPos.state
         val shouldTargetBlock = state != null && mode.activeMode.shouldTarget(blockPos, state)
         if (!shouldTargetBlock || !world.worldBorder.isWithinBounds(blockPos)) {
             return

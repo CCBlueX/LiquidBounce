@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.BackgroundMode.
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -63,7 +63,7 @@ object FeatureSilentScreen : ToggleableValueGroup(ModuleChestStealer, "SilentScr
 
         private fun getRenderPos(): Vec3f? {
             val pos = lastInteractedBlock ?: return null
-            val state = pos.getState() ?: return null
+            val state = pos.state ?: return null
             val anotherPartDirection = state.anotherChestPartDirection()
 
             // Double chest

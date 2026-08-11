@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.input.KeyEvent
-import org.lwjgl.glfw.GLFW
 
 /**
  * Snaptap module
@@ -70,8 +69,8 @@ object ModuleSnapTap : ClientModule("SnapTap", ModuleCategories.MOVEMENT, aliase
         val keyboardBack = mc.options.keyDown
 
         val keyEvent = KeyEvent(event.keyCode, event.scanCode, event.mods)
-        val pressed = event.action == GLFW.GLFW_PRESS
-        val released = event.action == GLFW.GLFW_RELEASE
+        val pressed = event.isPressed
+        val released = event.isReleased
 
         when {
             keyboardLeft.matches(keyEvent) -> {
