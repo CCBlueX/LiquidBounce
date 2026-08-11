@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.customambience.wo
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.minecraft.world.phys.Vec3
 
-object WorldParticles : ToggleableValueGroup(ModuleCustomAmbience ,"WorldParticles", false) {
+object WorldParticles : ToggleableValueGroup(ModuleCustomAmbience, "WorldParticles", false) {
 
     val coords = ExpiringList<Vec3>()
 

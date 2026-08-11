@@ -93,14 +93,14 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
     }
 
     fun createParticleCoord(currentTime: Long) {
-        if (WorldParticles.modes.activeMode != WorldParticlesSimple || WorldParticles.coords.size >= count) return
+        if (WorldParticles.modes.activeMode != WorldParticlesSimple || coords.size >= count) return
 
         lastSpawnTime = currentTime
 
         val angle = Random.nextDouble(0.0, 2 * Math.PI)
         val distance = sqrt(Random.nextDouble(radius.first.toDouble().sq(), radius.last.toDouble().sq()))
 
-        WorldParticles.coords.add(
+        coords.add(
             player.position().add(
                 distance * cos(angle),
                 Random.nextDouble(0.25, radius.last.toDouble()),

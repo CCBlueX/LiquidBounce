@@ -19,22 +19,21 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticlesColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticlesMode
 import net.ccbluex.liquidbounce.render.AnchorPoint
+import net.ccbluex.liquidbounce.render.BuiltinParticle
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.readNativeImage
 
 object WorldParticlesSimple : WorldParticlesMode("Simple") {
 
     private val color = WorldParticlesColorSettings()
-    private val builtinEffects by enumChoice("Particle", BuiltinEffect.SPARK)
+    private val builtinParticles by enumChoice("Particle", BuiltinParticle.SPARK)
+
     object Ymotion : ToggleableValueGroup(this, "YMotion", false) {
         val motion by float("Motion", 2f, -10f..10f)
         val animBy by enumChoice("AnimBy", AnimBy.AGE)
@@ -48,35 +47,13 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
     override fun WorldRenderEnvironment.drawWorldParticle(progress: Float, age: Float) {
         poseStack.withPush {
             drawSquareTexture(
-                builtinEffects.texture,
+                builtinParticles.texture,
                 size * progress,
                 color.color.argb,
                 AnchorPoint.CENTER,
                 !canBeCovered
             )
         }
-    }
-
-    // Pasted from ModuleParticles
-    @Suppress("UNUSED")
-    private enum class BuiltinEffect(
-        override val tag: String,
-        fileName: String,
-    ) : Tagged {
-        ORBIZ("Orbiz", "glow"),
-        STAR("Star", "star"),
-        DOLLAR("Dollar", "dollar"),
-        CROWN("Crown", "crown"),
-        HEART("Heart", "heart"),
-        LIGHTNING("Lightning", "lightning"),
-        LINE("Line", "line"),
-        POINT("Point", "point"),
-        RHOMBUS("Rhombus", "rhombus"),
-        SNOWFLAKE("Snowflake", "snowflake"),
-        SPARK("Spark", "spark");
-
-        val image = LiquidBounce.resource("particles/$fileName.png").readNativeImage()
-        val texture = this.image.asTexture { "Builtin Effects $tag" }
     }
 
     @Suppress("unused")
