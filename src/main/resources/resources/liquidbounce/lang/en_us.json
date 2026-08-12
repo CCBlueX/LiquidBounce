@@ -805,5 +805,6 @@
   "liquidbounce.module.longJump.messages.lagModeTip": "This LongJump continuously collects multiple velocity packets. When you receive the first velocity packet, it starts collecting. Double-tap the jump key to release a velocity packet.",
   "liquidbounce.module.longJump.messages.lagModeReceivePacket": "Received a velocity packet, Current velocity amount: %s",
   "liquidbounce.module.longJump.messages.lagModeReleasePacket": "Release a velocity packet. Current velocity amount: %s",
-  "liquidbounce.module.longJump.messages.lagModeFlagged": "Disabled (flagged by anticheat)"
+  "liquidbounce.module.longJump.messages.lagModeFlagged": "Disabled (flagged by anticheat)",
+  "liquidbounce.module.longJump.messages.lagModeNoLocalPackets": "There's no local velocity packets unexpectedly. Disabled"
 }

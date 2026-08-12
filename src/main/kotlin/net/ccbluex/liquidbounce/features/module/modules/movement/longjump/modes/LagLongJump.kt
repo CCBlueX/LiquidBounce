@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.network.handlePacket
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -95,6 +96,11 @@ object LagLongJump : Mode("Lag") {
     private val tickPacketProcessHandler = sequenceHandler<TickPacketProcessEvent> { event ->
         if (shouldRelease) {
             var splitPacketQueue = splitByLocalVelocityPacket(BlinkManager.packetQueue)
+            if (splitPacketQueue.isEmpty()) {
+                shouldLag = false
+                ModuleLongJump.enabled = false
+                chat(warning(translation("liquidbounce.module.longJump.messages.lagModeNoLocalPackets")))
+            }
             BlinkManager.packetQueue.removeIf { packetSnapshot ->
                 if (splitPacketQueue.first().contains(packetSnapshot)
                     && packetSnapshot.origin == TransferOrigin.INCOMING) {
