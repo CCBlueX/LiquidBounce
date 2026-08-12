@@ -802,6 +802,5 @@
   "liquidbounce.module.longJump.messages.lagModeTip": "這個LongJump連續收集多個velocity數據包。當你收到第一個數據包，模塊開始收集。雙擊跳躍鍵以釋放一個velocity數據包",
   "liquidbounce.module.longJump.messages.lagModeReceivePacket": "收到一個velocity數據包。當前velocity總數: %s",
   "liquidbounce.module.longJump.messages.lagModeReleasePacket": "釋放一個velocity數據包。 當前velocity總數: %s",
-  "liquidbounce.module.longJump.messages.lagModeFlagged": "已關閉（被反作弊標記）",
-  "liquidbounce.module.longJump.messages.lagModeNoLocalPackets": "意外地沒有velocity數據包。已關閉"
+  "liquidbounce.module.longJump.messages.lagModeFlagged": "已關閉（被反作弊標記）"
 }
