@@ -517,6 +517,7 @@
   "liquidbounce.module.easyPearl.messages.noInReachWarning": "你瞄準的位置超出末影珍珠所能到達的位置，已幫你取消此次投擲",
   "liquidbounce.module.elytraRecast.description": "按住跳跃键時重新施放鞘翅。",
   "liquidbounce.module.elytraFly.description": "使鞘翅更加容易控制。",
+  "liquidbounce.module.interceptElytra.description": "向鞘翅滑翔的玩家發射風彈，將其攔截並擊落。",
   "liquidbounce.module.elytraFly.messages.altitudeTooLow": "警告：高度太低，無法獲得最佳效能。建議高度：%sY",
   "liquidbounce.module.elytraTarget.description": "鞘翅滑翔時跟隨目標。",
   "liquidbounce.module.targets.description": "允許你管理將哪些實體視為敵人。",

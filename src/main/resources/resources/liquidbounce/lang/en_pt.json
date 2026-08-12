@@ -245,6 +245,7 @@
   "liquidbounce.module.blockWalk.description": "Allows you to walk on non-fullblock blocks.",
   "liquidbounce.module.bugUp.description": "Automatically setbacks you after falling a certain distance.",
   "liquidbounce.module.elytraFly.description": "Makes you fly faster on Elytra.",
+  "liquidbounce.module.interceptElytra.description": "Shoots wind charges at elytra gliders to intercept and knock them out of the air.",
   "liquidbounce.module.inventoryMove.description": "Allows you to walk while an inventory is opened.",
   "liquidbounce.module.liquidWalk.description": "Allows you to walk on water.",
   "liquidbounce.module.noJumpDelay.description": "Removes the delay between jumps.",

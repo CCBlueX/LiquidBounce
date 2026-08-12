@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoShoot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
+import net.ccbluex.liquidbounce.features.module.modules.combat.interceptelytra.ModuleInterceptElytra
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleHitbox
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleMaceKill
@@ -462,6 +463,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleAutoRod,
             ModuleAutoWeapon,
             ModuleFakeLag,
+            ModuleInterceptElytra,
             ModuleCriticals,
             ModuleHitbox,
             ModuleKillAura,
