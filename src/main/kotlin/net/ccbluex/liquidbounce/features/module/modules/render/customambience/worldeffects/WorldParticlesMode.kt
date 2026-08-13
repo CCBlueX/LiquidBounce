@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticles.coords
-import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple.AnimBy
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple.Ymotion
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -51,9 +50,10 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
     protected val animCurve by easing("AnimCurve", Easing.QUAD_IN_OUT)
     protected val canBeCovered by boolean("CanBeCovered", true)
 
-    private var lastSpawnTime = 0L
+    protected var lastSpawnTime = 0L
 
     protected abstract fun WorldRenderEnvironment.drawWorldParticle(progress: Float, age: Float)
+    protected abstract fun createParticleCoord(currentTime: Long)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -92,8 +92,8 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
         }
     }
 
-    fun createParticleCoord(currentTime: Long) {
-        if (WorldParticles.modes.activeMode != WorldParticlesSimple || coords.size >= count) return
+    /*protected fun createParticleCoord(currentTime: Long) {
+        if (coords.size >= count) return
 
         lastSpawnTime = currentTime
 
@@ -108,5 +108,5 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
             ),
             lifetime.last
         )
-    }
+    }*/
 }
