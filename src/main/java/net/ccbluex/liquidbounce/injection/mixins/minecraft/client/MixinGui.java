@@ -23,6 +23,8 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ScreenEvent;
@@ -101,12 +103,9 @@ public abstract class MixinGui {
         EventManager.INSTANCE.callEvent(new ScreenRenderEvent(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)));
     }
 
-    @Unique
-    private Screen newScreen;
-
     @Inject(method = "setScreen", at = @At("HEAD"))
-    private void setScreen(Screen screen, CallbackInfo ci) {
-        newScreen = screen;
+    private void setScreen(Screen screen, CallbackInfo ci, @Share("arg") LocalRef<Screen> argScreen) {
+        argScreen.set(screen);
     }
 
     @WrapWithCondition(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;releaseAll()V"))
@@ -115,11 +114,11 @@ public abstract class MixinGui {
     }
 
     @WrapOperation(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V"))
-    private void injectSetScreenInventoryMoveUnpress(Screen instance, int width, int height, Operation<Void> original) {
+    private void injectSetScreenInventoryMoveUnpress(Screen instance, int width, int height, Operation<Void> original, @Share("arg") LocalRef<Screen> argScreen) {
         original.call(instance, width, height);
         if (ModuleInventoryMove.INSTANCE.getRunning()) {
             for (KeyMapping km : KeyMapping.ALL.values()) {
-                if (ModuleInventoryMove.shouldHandleInputs(km, newScreen)) continue;
+                if (ModuleInventoryMove.shouldHandleInputs(km, argScreen.get())) continue;
 
                 km.release();
             }

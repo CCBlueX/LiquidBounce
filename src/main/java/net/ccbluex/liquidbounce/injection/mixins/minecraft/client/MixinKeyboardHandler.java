@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.KeyEvent;
@@ -35,7 +37,6 @@ import net.minecraft.client.input.CharacterEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -74,17 +75,14 @@ public abstract class MixinKeyboardHandler {
         EventManager.INSTANCE.callEvent(new KeyboardCharEvent(input.codepoint()));
     }
 
-    @Unique
-    private net.minecraft.client.input.KeyEvent event;
-
     @Inject(method = "keyPress", at = @At("HEAD"))
-    private void keyPress(long handle, int action, net.minecraft.client.input.KeyEvent event, CallbackInfo ci) {
-        this.event = event;
+    private void keyPress(long handle, int action, net.minecraft.client.input.KeyEvent event, CallbackInfo ci, @Share("event") LocalRef<net.minecraft.client.input.KeyEvent> argEvent) {
+        argEvent.set(event);
     }
 
     @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;screen()Lnet/minecraft/client/gui/screens/Screen;",  ordinal = 2))
-    private Screen modifyHandlesGameInput(Gui instance, Operation<Screen> original) {
-        return ModuleInventoryMove.shouldHandleInputs(event) ? null : original.call(instance);
+    private Screen modifyHandlesGameInput(Gui instance, Operation<Screen> original, @Share("event") LocalRef<net.minecraft.client.input.KeyEvent> argEvent) {
+        return ModuleInventoryMove.shouldHandleInputs(argEvent.get()) ? null : original.call(instance);
     }
 
 }
