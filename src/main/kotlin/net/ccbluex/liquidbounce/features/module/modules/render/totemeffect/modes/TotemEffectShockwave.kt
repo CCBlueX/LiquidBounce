@@ -44,7 +44,8 @@ internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
         val inner = color.innerColor
         val outer = if (color.sync) inner else color.outerColor
 
-        val fadeProgress = if (progress >= fade) (progress - fade) / (1f - fade) else 0f
+        val fadeDiff = (1f - fade).coerceAtLeast(0.001f)
+        val fadeProgress = if (progress >= fade) ((progress - fade) / fadeDiff).coerceIn(0f, 1f) else 0f
         val alpha = ((1f - fadeProgress).coerceIn(0f, 1f) * 255f).toInt()
 
         drawGradientCircle(

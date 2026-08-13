@@ -28,6 +28,7 @@ import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.world.phys.Vec3
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.modes.TotemEffectShockwave
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.modes.TotemEffectSoul
+import net.ccbluex.liquidbounce.utils.network.isDeathProtection
 
 object ModuleTotemEffect : ClientModule("TotemEffect", ModuleCategories.RENDER) {
 
@@ -44,7 +45,8 @@ object ModuleTotemEffect : ClientModule("TotemEffect", ModuleCategories.RENDER) 
 
     @Suppress("unused")
     private val totemHandler = handler<PacketEvent> { event ->
-        if (event.packet !is ClientboundEntityEventPacket || event.packet.eventId != 35.toByte()) return@handler
+        val packet = event.packet as? ClientboundEntityEventPacket ?: return@handler
+        if (!packet.isDeathProtection) return@handler
 
         mc.execute {
             val entity = event.packet.getEntity(world) ?: return@execute
