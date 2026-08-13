@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.f
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSneakControlFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSprintControlFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveTimerFeature
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
@@ -41,6 +42,8 @@ import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
 import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.minecraft.client.KeyMapping
+import net.minecraft.client.gui.components.EditBox
+import net.minecraft.client.gui.components.MultiLineEditBox
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
@@ -60,10 +63,15 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
 
     @Suppress("unused")
     enum class Behaviour(override val tag: String, val handleScreens: (Screen) -> Boolean) : Tagged {
-        NORMAL("Normal", { true }),
-        SAFE("Safe", { it is InventoryScreen }), // disable clicks while moving
-        UNDETECTABLE("Undetectable", { it !is AbstractContainerScreen<*> }), // stop in inventory
-        STOP_ON_ACTION("StopOnAction", { true }), // stop input on inventory action
+        NORMAL("Normal", { !it.isInEditBox() && !ModuleClickGui.isInSearchBar }),
+        SAFE("Safe", { NORMAL.handleScreens(it) && (it !is AbstractContainerScreen<*> || it is InventoryScreen) }), // disable clicks while moving
+        UNDETECTABLE("Undetectable", { NORMAL.handleScreens(it) && it !is AbstractContainerScreen<*> }), // stop in inventory
+        STOP_ON_ACTION("StopOnAction", { NORMAL.handleScreens(it) }) // stop input on inventory action
+    }
+
+    private fun Screen.isInEditBox() = when (this.focused) {
+        is EditBox, is MultiLineEditBox -> true
+        else -> false
     }
 
     private val passthroughSneak by boolean("PassthroughSneak", false)
@@ -128,7 +136,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
             network.sendCloseInventory()
         }
     }
-    
+
     private val delayedContainerPackets = mutableListOf<Packet<*>>()
 
     override fun onDisabled() {
@@ -151,8 +159,9 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(FIRST_PRIORITY) { event ->
-        val packet = event.packet
+        if (behavior !== Behaviour.STOP_ON_ACTION) return@handler
 
+        val packet = event.packet
         if (packet.isC2SContainerPacket() && player.input.keyPresses != Input.EMPTY) {
             event.cancelEvent()
             // Here only be called from render thread because [packet] is c2s
