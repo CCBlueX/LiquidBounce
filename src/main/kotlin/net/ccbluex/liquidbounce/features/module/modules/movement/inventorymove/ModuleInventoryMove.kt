@@ -64,9 +64,12 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     @Suppress("unused")
     enum class Behaviour(override val tag: String, val handleScreens: (Screen) -> Boolean) : Tagged {
         NORMAL("Normal", { !it.isInEditBox() && !ModuleClickGui.isInSearchBar }),
-        SAFE("Safe", { NORMAL.handleScreens(it) && (it !is AbstractContainerScreen<*> || it is InventoryScreen) }), // disable clicks while moving
-        UNDETECTABLE("Undetectable", { NORMAL.handleScreens(it) && it !is AbstractContainerScreen<*> }), // stop in inventory
-        STOP_ON_ACTION("StopOnAction", { NORMAL.handleScreens(it) }) // stop input on inventory action
+        // disable clicks while moving
+        SAFE("Safe", { NORMAL.handleScreens(it) && (it !is AbstractContainerScreen<*> || it is InventoryScreen) }),
+        // stop in inventory
+        UNDETECTABLE("Undetectable", { NORMAL.handleScreens(it) && it !is AbstractContainerScreen<*> }),
+        // stop input on inventory action
+        STOP_ON_ACTION("StopOnAction", { NORMAL.handleScreens(it) })
     }
 
     private fun Screen.isInEditBox() = when (this.focused) {
