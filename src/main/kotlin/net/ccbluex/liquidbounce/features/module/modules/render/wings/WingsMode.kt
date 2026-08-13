@@ -32,8 +32,6 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.minecraft.util.Mth.rotLerp
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.phys.Vec3
@@ -74,15 +72,27 @@ abstract class WingsMode(name: String) : Mode(name) {
                 if (!shouldRender) continue
 
                 val modelRot = ModuleRotations.modelRotation?.yRot
-                val prevModelRot = ModuleRotations.prevModelRotation?.yRot
+                val partAllowed = ModuleRotations.isPartAllowed(ModuleRotations.BodyPart.BODY)
 
-                val rot = when (ModuleRotations.enabled) {
-                    false -> entity.interpolateCurrentRotation(event.partialTicks)
-                    true ->  RotationManager.currentRotation ?: entity.interpolateCurrentRotation(event.partialTicks)
+                val rot = when (isMe && ModuleRotations.running) {
+                    true -> {
+                        val modelRot = ModuleRotations.modelRotation?.yaw
+                        val prevModelRot = ModuleRotations.prevModelRotation?.yaw
+                        rotLerp(event.partialTicks, prevModelRot ?: entity.yRotO, modelRot ?: entity.yRot)
+                    }
+                    else -> rotLerp(event.partialTicks, entity.yRotO, entity.yRot)
                 }
-                val bodyRot = rotLerp(event.partialTicks, prevModelRot ?: entity.yBodyRotO, modelRot ?: entity.yBodyRot)
 
-                val look = Vec3.directionFromRotation(0f, rot.yRot)
+                val bodyRot = when (isMe && ModuleRotations.running && partAllowed) {
+                    true -> {
+                        val modelRot = ModuleRotations.modelRotation?.yaw
+                        val prevModelRot = ModuleRotations.prevModelRotation?.yaw
+                        rotLerp(event.partialTicks, prevModelRot ?: entity.yBodyRotO, modelRot ?: entity.yBodyRot)
+                    }
+                    else -> rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot)
+                }
+
+                val look = Vec3.directionFromRotation(0f, bodyRot)
                 val equipmentOffset = when (!entity.getItemBySlot(EquipmentSlot.CHEST).isEmpty) {
                     true -> WingsPosition.equipmentOffset.toDouble()
                     else -> 0.0
