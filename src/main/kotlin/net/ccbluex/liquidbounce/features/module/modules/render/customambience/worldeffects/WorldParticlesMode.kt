@@ -91,22 +91,4 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
             }
         }
     }
-
-    /*protected fun createParticleCoord(currentTime: Long) {
-        if (coords.size >= count) return
-
-        lastSpawnTime = currentTime
-
-        val angle = Random.nextDouble(0.0, 2 * Math.PI)
-        val distance = sqrt(Random.nextDouble(radius.first.toDouble().sq(), radius.last.toDouble().sq()))
-
-        coords.add(
-            player.position().add(
-                distance * cos(angle),
-                Random.nextDouble(0.25, radius.last.toDouble()),
-                distance * sin(angle)
-            ),
-            lifetime.last
-        )
-    }*/
 }
