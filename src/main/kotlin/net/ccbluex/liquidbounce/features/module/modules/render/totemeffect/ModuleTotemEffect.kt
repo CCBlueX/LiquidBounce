@@ -45,10 +45,13 @@ object ModuleTotemEffect : ClientModule("TotemEffect", ModuleCategories.RENDER) 
     @Suppress("unused")
     private val totemHandler = handler<PacketEvent> { event ->
         if (event.packet !is ClientboundEntityEventPacket || event.packet.eventId != 35.toByte()) return@handler
-        val entity = event.packet.getEntity(world) ?: return@handler
 
-        val lifetime = modes.activeMode.lifetime
-        coords.add(entity.position().add(0.0, entity.bbHeight / 2.0, 0.0), lifetime)
+        mc.execute {
+            val entity = event.packet.getEntity(world) ?: return@execute
+
+            val lifetime = modes.activeMode.lifetime
+            coords.add(entity.position().add(0.0, entity.bbHeight / 2.0, 0.0), lifetime)
+        }
     }
 
 }
