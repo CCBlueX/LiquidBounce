@@ -94,7 +94,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
      * Restricts user from clicking while moving or sprinting in inventory.
      */
     val doNotAllowClicking
-        get() = behavior == Behaviour.SAFE && movementKeys.fastIterable().any {
+        get() = behavior === Behaviour.SAFE && movementKeys.fastIterable().any {
             it.booleanValue && shouldHandleInputs(it.key)
         }
 
@@ -106,7 +106,6 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     }
 
     @JvmStatic
-    @JvmOverloads
     fun shouldHandleInputs(key: KeyMapping, screen: Screen? = mc.gui.screen()): Boolean {
         if (!running) return false
         val screen = screen ?: return true

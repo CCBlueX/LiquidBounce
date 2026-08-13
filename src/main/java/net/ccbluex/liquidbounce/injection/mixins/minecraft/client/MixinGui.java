@@ -20,18 +20,16 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.Share;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ScreenEvent;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
-import net.minecraft.client.*;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
@@ -108,9 +106,8 @@ public abstract class MixinGui {
         return !ModuleInventoryMove.INSTANCE.getRunning();
     }
 
-    @WrapOperation(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V"))
-    private void injectSetScreenInventoryMoveUnpress(Screen instance, int width, int height, Operation<Void> original, @Local(name = "screen", argsOnly = true) @Nullable Screen screen) {
-        original.call(instance, width, height);
+    @Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V", shift = At.Shift.AFTER))
+    private void injectSetScreenInventoryMoveUnpress(Screen screen, CallbackInfo ci) {
         if (ModuleInventoryMove.INSTANCE.getRunning()) {
             for (KeyMapping km : KeyMapping.ALL.values()) {
                 if (ModuleInventoryMove.shouldHandleInputs(km, screen)) continue;
