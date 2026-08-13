@@ -42,6 +42,7 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -53,6 +54,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @NullMarked
 @Mixin(LivingEntityRenderer.class)
@@ -191,5 +194,13 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     @ModifyExpressionValue(method = "shouldShowName(Lnet/minecraft/world/entity/LivingEntity;D)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getCameraEntity()Lnet/minecraft/world/entity/Entity;"))
     private @Nullable Entity hasLabelGetCameraEntityProxy(@Nullable Entity cameraEntity) {
         return ModuleFreeCam.INSTANCE.getRunning() ? null : cameraEntity;
+    }
+
+    // AntiBlind
+    @Inject(method = "submit", at = @At("HEAD"), cancellable = true)
+    private void hideInvisibleEntities(S state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, CallbackInfo ci) {
+        if (state.isInvisible && !ModuleAntiBlind.canRender(DoRender.INVISIBLE_ENTITIES)) {
+            ci.cancel();
+        }
     }
 }
