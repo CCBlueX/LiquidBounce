@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -118,7 +119,8 @@ internal object NoFallMLG : NoFallMode("MLG") {
     private val tickHandler = handler<GameTickEvent> {
         val target = currentTarget ?: return@handler
 
-        val rayTraceResult = traceFromPlayer()
+        val rotation = RotationManager.currentRotation ?: player.rotation
+        val rayTraceResult = traceFromPlayer(rotation)
 
         if (!target.doesCorrespondTo(rayTraceResult)) {
             return@handler
@@ -140,6 +142,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
         doPlacement(
             rayTraceResult,
+            rotation,
             hand = target.hotbarItemSlot.useHand,
             onItemUseSuccess = onSuccess,
             onPlacementSuccess = onSuccess,
