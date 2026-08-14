@@ -7,32 +7,40 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import net.ccbluex.liquidbounce.utils.block.liquid.canPlaceStandaloneFluid
+import net.ccbluex.liquidbounce.utils.block.liquid.requiresSneakForAdjacentFluidPlacement
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.SlabBlock
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
+import net.minecraft.world.level.material.Fluids
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class NoFallMlgPlacementTest {
 
     companion object {
-        @JvmStatic
-        @BeforeAll
-        fun bootstrapMinecraft() {
+        init {
             MinecraftBootstrap.ensureInitialized()
         }
     }
 
     @Test
     fun `water bucket only accepts a standalone source`() {
-        assertTrue(canPlaceExposedWater(Blocks.AIR.defaultBlockState()))
-        assertFalse(canPlaceExposedWater(waterloggedSlab()))
+        assertTrue(Blocks.AIR.defaultBlockState().canPlaceStandaloneFluid(Fluids.WATER))
+        assertFalse(waterloggedSlab().canPlaceStandaloneFluid(Fluids.WATER))
         assertFalse(
             wasMlgPlacementApplied(
                 MlgPlacementActionType.MLG,
@@ -73,8 +81,14 @@ class NoFallMlgPlacementTest {
 
     @Test
     fun `water bucket requires sneak for liquid containers`() {
-        assertTrue(shouldForceSneakForExposedWater(Items.WATER_BUCKET, Blocks.STONE_SLAB.defaultBlockState()))
-        assertFalse(shouldForceSneakForExposedWater(Items.WATER_BUCKET, Blocks.STONE.defaultBlockState()))
+        assertTrue(
+            Blocks.STONE_SLAB.defaultBlockState()
+                .requiresSneakForAdjacentFluidPlacement(Fluids.WATER),
+        )
+        assertFalse(
+            Blocks.STONE.defaultBlockState()
+                .requiresSneakForAdjacentFluidPlacement(Fluids.WATER),
+        )
     }
 
     private fun waterloggedSlab() = Blocks.STONE_SLAB.defaultBlockState()

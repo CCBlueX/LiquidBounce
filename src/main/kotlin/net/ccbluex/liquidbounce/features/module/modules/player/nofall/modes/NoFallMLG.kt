@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -178,7 +179,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             if (!action.wasApplied(targetStateBefore)) {
                 false
             } else {
-                if (action.type == MlgPlacementActionType.MLG && action.item == Items.WATER_BUCKET) {
+                if (action.type == MlgPlacementActionType.MLG && action.item === Items.WATER_BUCKET) {
                     pickupTracker.record(target.targetPos)
                 }
 
@@ -271,14 +272,15 @@ internal object NoFallMLG : NoFallMode("MLG") {
             val plan = planPlacementAtPos(targetPos, slot) ?: continue
             val item = slot.itemStack.item
 
-            if (item == Items.WATER_BUCKET && !plan.canPlaceExposedWaterAtTarget()) {
+            if (item === Items.WATER_BUCKET && !plan.canPlaceExposedWaterAtTarget()) {
                 continue
             }
 
-            val requiresSneak = item == Items.SCAFFOLDING || plan.interactedBlockIsInteractable ||
-                shouldForceSneakForExposedWater(item, plan.placementTarget.interactedBlockPos.state)
+            val requiresSneak = item === Items.SCAFFOLDING || plan.interactedBlockIsInteractable ||
+                item === Items.WATER_BUCKET && plan.placementTarget.interactedBlockPos.state
+                    ?.requiresSneakForAdjacentFluidPlacement(Fluids.WATER) == true
 
-            if (requiresSneak && !player.isShiftKeyDown && collision.tick == 0) {
+            if (requiresSneak && !player.isShiftKeyDown) {
                 continue
             }
 
@@ -286,15 +288,18 @@ internal object NoFallMLG : NoFallMode("MLG") {
                 continue
             }
 
-            if (item == Items.SCAFFOLDING && !canUseScaffoldingAt(targetPos)) {
+            if (item === Items.SCAFFOLDING && !canUseScaffoldingAt(targetPos)) {
                 continue
             }
 
-            if (item == Items.SLIME_BLOCK && (requiresSneak || player.isShiftKeyDown)) {
+            // On pre-1.21.2 servers, sneaking on slime still causes fall damage.
+            if (item === Items.SLIME_BLOCK && isOlderThan1_21_2 &&
+                (requiresSneak || player.isShiftKeyDown)
+            ) {
                 continue
             }
 
-            val type = if (item == Items.SCAFFOLDING) {
+            val type = if (item === Items.SCAFFOLDING) {
                 MlgPlacementActionType.SCAFFOLDING
             } else {
                 MlgPlacementActionType.MLG
@@ -306,7 +311,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
     }
 
     private fun canUseScaffoldingAt(targetPos: BlockPos): Boolean {
-        if (targetPos.state?.block == Blocks.SCAFFOLDING || ScaffoldingBlock.getDistance(world, targetPos) >= 7) {
+        if (targetPos.state?.block === Blocks.SCAFFOLDING || ScaffoldingBlock.getDistance(world, targetPos) >= 7) {
             return false
         }
 
@@ -359,7 +364,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
     private fun PlacementPlan.canPlaceExposedWaterAtTarget(): Boolean {
         val bucketTarget = placementTarget.interactedBlockPos.relative(placementTarget.direction)
-        return bucketTarget == targetPos && canPlaceExposedWater(targetPos.state)
+        return bucketTarget == targetPos && targetPos.state?.canPlaceStandaloneFluid(Fluids.WATER) == true
     }
 
     private fun PlacementAction.wasApplied(targetStateBefore: BlockState?): Boolean {
@@ -398,20 +403,11 @@ internal fun wasMlgPlacementApplied(
         MlgPlacementActionType.MLG -> when (item) {
             Items.WATER_BUCKET -> {
                 !before.fluidState.isSourceOfType(Fluids.WATER) &&
-                    after.fluidState.isSourceOfType(Fluids.WATER)
+                    after.block === Blocks.WATER && after.fluidState.isSourceOfType(Fluids.WATER)
             }
             Items.POWDER_SNOW_BUCKET -> before.block !== Blocks.POWDER_SNOW && after.block === Blocks.POWDER_SNOW
             is BlockItem -> before.block !== item.block && after.block === item.block
             else -> false
         }
     }
-}
-
-internal fun shouldForceSneakForExposedWater(item: Item, interactedState: BlockState?): Boolean {
-    return item == Items.WATER_BUCKET &&
-        interactedState?.requiresSneakForAdjacentFluidPlacement(Fluids.WATER) == true
-}
-
-internal fun canPlaceExposedWater(state: BlockState?): Boolean {
-    return state?.canPlaceStandaloneFluid(Fluids.WATER) == true
 }

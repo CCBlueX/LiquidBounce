@@ -634,20 +634,17 @@ fun BlockState.isBreakable(pos: BlockPos): Boolean {
     return !isAir && (player.isCreative || getDestroySpeed(world, pos) >= 0f)
 }
 
-fun BlockPos?.fallDamageMultiplier(entity: Entity = player): Float {
-    if (this == null) {
-        return 1f
-    }
+fun BlockPos?.fallDamageMultiplier(entity: Entity): Float =
+    this?.getBlock()?.fallDamageMultiplier(entity) ?: 1f
 
-    val block = getBlock()
-    return when (block) {
+fun Block?.fallDamageMultiplier(entity: Entity): Float =
+    when (this) {
         Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW -> 0f
         Blocks.HAY_BLOCK, Blocks.HONEY_BLOCK -> 0.2f
         Blocks.SLIME_BLOCK -> if (entity.isSuppressingBounce && isOlderThan1_21_2) 1f else 0f
         is BedBlock -> 0.5f
         else -> 1f
     }
-}
 
 fun BlockPos.isBlastResistant(): Boolean {
     return getBlock()!!.explosionResistance >= 600f
