@@ -198,7 +198,8 @@ internal object NoFallMLG : NoFallMode("MLG") {
             return null
         }
 
-        val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos ?: return null
+        val collision = FallingPlayer.fromPlayer(player, RotationManager.movementYaw)
+            .findCollision(20)?.pos ?: return null
 
         if (collision.fallDamageMultiplier(player) <= 0f) {
             return null
