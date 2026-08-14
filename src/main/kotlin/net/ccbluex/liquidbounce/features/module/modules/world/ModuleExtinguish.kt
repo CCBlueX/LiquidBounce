@@ -138,11 +138,10 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
         val rotation = RotationManager.currentRotation ?: player.rotation
         val rayTraceResult = traceFromPlayer(rotation)
 
-        if (!target.doesCorrespondTo(rayTraceResult)) {
+        if (!target.doesCorrespondTo(rayTraceResult) ||
+            !SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)) {
             return@handler
         }
-
-        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
 
         val successFunction = {
             cooldownTimer.waitForAtLeast((cooldown * 1000.0F).toLong())
