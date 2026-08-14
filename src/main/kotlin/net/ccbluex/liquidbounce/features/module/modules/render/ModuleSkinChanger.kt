@@ -281,7 +281,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
     }
 
     private fun canUploadSkin(): Boolean {
-        if (!uploadSkin.get() || mc.user.accountType == "legacy") {
+        if (!running || !uploadSkin.get() || mc.user.accountType == "legacy") {
             return false
         }
 
