@@ -251,6 +251,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
     /**
      * Find a way to prevent fall damage if we are falling.
      */
+    @Suppress("CognitiveComplexMethod", "LoopWithTooManyJumpStatements")
     private fun getCurrentMLGPlacementPlan(): PlacementAction? {
         if (player.fallDistance <= minFallDist) {
             return null
