@@ -84,13 +84,15 @@ internal object NoFallMLG : NoFallMode("MLG") {
      * We need to sneak for at least 3 ticks to eliminate
      * the fall damage.
      */
-    const val SCAFFOLDING_SNEAKING_TICKS = 3
+    private const val SCAFFOLDING_SNEAKING_TICKS = 3
 
     override val running: Boolean
         get() = super.running && !ModuleFreeze.running
 
     override fun disable() {
         SilentHotbar.resetSlot(this)
+        currentTarget = null
+        pickupTracker.clear()
     }
 
     @Suppress("unused")
