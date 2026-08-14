@@ -639,7 +639,7 @@ fun BlockPos?.fallDamageMultiplier(entity: Entity = player): Float {
     return when (block) {
         Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW -> 0f
         Blocks.HAY_BLOCK, Blocks.HONEY_BLOCK -> 0.2f
-        Blocks.SLIME_BLOCK -> if (!entity.isSuppressingBounce && isOlderThan1_21_2) 0f else 1f
+        Blocks.SLIME_BLOCK -> if (entity.isSuppressingBounce && isOlderThan1_21_2) 1f else 0f
         is BedBlock -> 0.5f
         else -> 1f
     }
