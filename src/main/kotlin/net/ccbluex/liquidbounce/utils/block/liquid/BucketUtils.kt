@@ -16,23 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.utils.block.liquid
 
-package net.ccbluex.liquidbounce.utils.client;
+import net.minecraft.world.level.block.LiquidBlockContainer
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
 
-import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation;
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+/** Matches the non-container branch of Minecraft 26.2 BucketItem.emptyContents(). */
+internal fun BlockState.canPlaceStandaloneFluid(fluid: Fluid): Boolean {
+    return block !is LiquidBlockContainer && (isAir || canBeReplaced(fluid))
+}
 
-public final class NullableBypass {
-    private NullableBypass() {
-    }
-
-    public static ServerboundUseItemPacket createWithNullHand(ServerboundUseItemPacket originalPacket) {
-        return UseItemPacketRotation.createExplicit(
-            null,
-            originalPacket.getSequence(),
-            originalPacket.getYRot(),
-            originalPacket.getXRot()
-        );
-    }
-
+/** Water buckets need sneak to skip LiquidBlockContainer.useItemOn and place adjacent water. */
+internal fun BlockState.requiresSneakForAdjacentFluidPlacement(fluid: Fluid): Boolean {
+    return fluid == Fluids.WATER && block is LiquidBlockContainer
 }

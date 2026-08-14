@@ -17,21 +17,34 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.client;
+package net.ccbluex.liquidbounce.utils.network;
 
-import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import org.jspecify.annotations.Nullable;
 
-public final class NullableBypass {
-    private NullableBypass() {
+/**
+ * Constructs use-item packets whose rotations must not be replaced by the current managed rotation.
+ */
+public final class UseItemPacketRotation {
+
+    private static final ScopedValue<Boolean> EXPLICIT_ROTATION = ScopedValue.newInstance();
+
+    private UseItemPacketRotation() {
     }
 
-    public static ServerboundUseItemPacket createWithNullHand(ServerboundUseItemPacket originalPacket) {
-        return UseItemPacketRotation.createExplicit(
-            null,
-            originalPacket.getSequence(),
-            originalPacket.getYRot(),
-            originalPacket.getXRot()
+    public static boolean shouldOverride() {
+        return !EXPLICIT_ROTATION.isBound();
+    }
+
+    public static ServerboundUseItemPacket createExplicit(
+        @Nullable InteractionHand hand,
+        int sequence,
+        float yRot,
+        float xRot
+    ) {
+        return ScopedValue.where(EXPLICIT_ROTATION, true).call(
+            () -> new ServerboundUseItemPacket(hand, sequence, yRot, xRot)
         );
     }
 

@@ -24,6 +24,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedInvalidHand;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
+import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.InteractionHand;
@@ -49,7 +50,11 @@ public abstract class MixinServerboundUseItemPacket {
     private float xRot;
 
     @Inject(method = "<init>(Lnet/minecraft/world/InteractionHand;IFF)V", at = @At("RETURN"))
-    private void modifyRotation(InteractionHand hand, int sequence, float yaw, float pitch, CallbackInfo ci) {
+    private void modifyRotation(InteractionHand hand, int sequence, float yRot, float xRot, CallbackInfo ci) {
+        if (!UseItemPacketRotation.shouldOverride()) {
+            return;
+        }
+
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
             return;
@@ -63,8 +68,8 @@ public abstract class MixinServerboundUseItemPacket {
      * @see NoSlowSharedInvalidHand
      */
     @WrapOperation(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/FriendlyByteBuf;writeEnum(Ljava/lang/Enum;)Lnet/minecraft/network/FriendlyByteBuf;"))
-    private static FriendlyByteBuf writeEnum(FriendlyByteBuf instance, Enum<?> enum_, Operation<FriendlyByteBuf> original) {
-        return enum_ == null ? instance.writeVarInt(-1) : original.call(instance, enum_);
+    private static FriendlyByteBuf writeEnum(FriendlyByteBuf instance, Enum<?> value, Operation<FriendlyByteBuf> original) {
+        return value == null ? instance.writeVarInt(-1) : original.call(instance, value);
     }
 
 }

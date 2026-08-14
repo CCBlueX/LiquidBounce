@@ -344,6 +344,7 @@ class BlockPlacer(
 
             doPlacement(
                 blockHitResult,
+                rotation = verificationRotation,
                 hand = slot.useHand,
                 onPlacementSuccess = onSuccess,
                 onItemUseSuccess = onSuccess,
