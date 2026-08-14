@@ -74,23 +74,17 @@ abstract class WingsMode(name: String) : Mode(name) {
                 val modelRot = ModuleRotations.modelRotation?.yRot
                 val partAllowed = ModuleRotations.isPartAllowed(ModuleRotations.BodyPart.BODY)
 
-                val rot = when (isMe && ModuleRotations.running) {
-                    true -> {
-                        val modelRot = ModuleRotations.modelRotation?.yaw
-                        val prevModelRot = ModuleRotations.prevModelRotation?.yaw
-                        rotLerp(event.partialTicks, prevModelRot ?: entity.yRotO, modelRot ?: entity.yRot)
-                    }
-                    else -> rotLerp(event.partialTicks, entity.yRotO, entity.yRot)
-                }
+                val rot = if (isMe && ModuleRotations.running) {
+                    val modelRot = ModuleRotations.modelRotation?.yaw
+                    val prevModelRot = ModuleRotations.prevModelRotation?.yaw
+                    rotLerp(event.partialTicks, prevModelRot ?: entity.yRotO, modelRot ?: entity.yRot)
+                } else { rotLerp(event.partialTicks, entity.yRotO, entity.yRot) }
 
-                val bodyRot = when (isMe && ModuleRotations.running && partAllowed) {
-                    true -> {
-                        val modelRot = ModuleRotations.modelRotation?.yaw
-                        val prevModelRot = ModuleRotations.prevModelRotation?.yaw
-                        rotLerp(event.partialTicks, prevModelRot ?: entity.yBodyRotO, modelRot ?: entity.yBodyRot)
-                    }
-                    else -> rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot)
-                }
+                val bodyRot = if (isMe && ModuleRotations.running && partAllowed) {
+                    val modelRot = ModuleRotations.modelRotation?.yaw
+                    val prevModelRot = ModuleRotations.prevModelRotation?.yaw
+                    rotLerp(event.partialTicks, prevModelRot ?: entity.yBodyRotO, modelRot ?: entity.yBodyRot)
+                } else { rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot) }
 
                 val look = Vec3.directionFromRotation(0f, bodyRot)
                 val equipmentOffset = when (!entity.getItemBySlot(EquipmentSlot.CHEST).isEmpty) {
