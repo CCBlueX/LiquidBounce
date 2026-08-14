@@ -39,7 +39,7 @@ object ModuleElytraRecast : ClientModule("ElytraRecast", ModuleCategories.MOVEME
             val itemStack = player.getItemBySlot(EquipmentSlot.CHEST)
 
             return !player.abilities.flying && !player.isPassenger && !player.onClimbable() &&
-                !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) && !player.isFallFlying
+                !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) && !player.isFallFlying &&
                 itemStack.`is`(Items.ELYTRA) && !itemStack.nextDamageWillBreak() && mc.options.keyJump.isDown
         }
 
