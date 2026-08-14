@@ -53,7 +53,8 @@ class FallingPlayer(
         private const val SUPPORT_EPSILON = 1.0E-6
 
         @JvmStatic
-        fun fromPlayer(player: LocalPlayer): FallingPlayer {
+        @JvmOverloads
+        fun fromPlayer(player: LocalPlayer, movementYaw: Float = player.yRot): FallingPlayer {
             return FallingPlayer(
                 player,
                 player.x,
@@ -62,7 +63,7 @@ class FallingPlayer(
                 player.deltaMovement.x,
                 player.deltaMovement.y,
                 player.deltaMovement.z,
-                player.yRot
+                movementYaw
             )
         }
     }
