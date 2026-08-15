@@ -18,22 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.marketplaceCreateItemCommand
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.marketplaceDeleteItemCommand
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.marketplaceEditItemCommand
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceCreateItemCommand
+import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceDeleteItemCommand
+import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceEditItemCommand
 
 /**
  * Manage marketplace items
  */
-object MarketplaceItemCommand : Command.Factory {
+object MarketplaceItemCommand {
 
-    override fun createCommand() = CommandBuilder.begin("item")
-        .hub()
-        .subcommand(marketplaceCreateItemCommand())
-        .subcommand(marketplaceEditItemCommand())
-        .subcommand(marketplaceDeleteItemCommand())
-        .build()
+    fun CmdLiteralScope.item() {
+        with(MarketplaceCreateItemCommand) { create() }
+        with(MarketplaceEditItemCommand) { edit() }
+        with(MarketplaceDeleteItemCommand) { delete() }
+    }
 
 }

@@ -20,51 +20,55 @@ package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
 import net.ccbluex.liquidbounce.features.global.GlobalManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 
 object CommandClientLanguageSubcommand {
-    fun languageCommand() = CommandBuilder.begin("language")
-        .hub()
-        .subcommand(listSubcommand())
-        .subcommand(setSubcommand())
-        .subcommand(unsetSubcommand())
-        .build()
-
-    private fun unsetSubcommand() = CommandBuilder.begin("unset")
-        .handler {
-            chat(regular("Unset override language..."))
-            LanguageManager.clientLanguage = LanguageManager.ClientLanguage.AUTO
-            ConfigSystem.store(GlobalManager)
-        }.build()
-
-    private fun setSubcommand() = CommandBuilder.begin("set")
-        .parameter(
-            ParameterBuilder.begin<String>("language")
-                .autocompletedFrom { LanguageManager.languageCodes }
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                .build()
-        ).handler {
-            val language = args[0] as String
-            val choice = LanguageManager.languageChoiceFromCode(language)
-            if (choice == null) {
-                chat(regular("Language not found."))
-                return@handler
+    fun CmdLiteralScope.language() {
+        literal("language") {
+            literal("list") {
+                exec {
+                    chat(regular("Available languages:"))
+                    chat(texts = LanguageManager.languageCodes.mapToArray { regular("-> $it") })
+                    1
+                }
             }
+            literal("set") {
+                argument(
+                    "language",
+                    ClientStringArgumentType.word(),
+                    suggestions(LanguageManager.languageCodes),
+                ) { language ->
+                    exec { ctx ->
+                        val code = ctx.get(language)
+                        val choice = LanguageManager.languageChoiceFromCode(code)
+                        if (choice == null) {
+                            chat(regular("Language not found."))
+                            return@exec 1
+                        }
 
-            chat(regular("Setting language to ${choice.tag}..."))
-            LanguageManager.clientLanguage = choice
+                        chat(regular("Setting language to ${choice.tag}..."))
+                        LanguageManager.clientLanguage = choice
 
-            ConfigSystem.store(GlobalManager)
-        }.build()
-
-    private fun listSubcommand() = CommandBuilder.begin("list")
-        .handler {
-            chat(regular("Available languages:"))
-            chat(texts = LanguageManager.languageCodes.mapToArray { regular("-> $it") })
-        }.build()
+                        ConfigSystem.store(GlobalManager)
+                        1
+                    }
+                }
+            }
+            literal("unset") {
+                exec {
+                    chat(regular("Unset override language..."))
+                    LanguageManager.clientLanguage = LanguageManager.ClientLanguage.AUTO
+                    ConfigSystem.store(GlobalManager)
+                    1
+                }
+            }
+        }
+    }
 }

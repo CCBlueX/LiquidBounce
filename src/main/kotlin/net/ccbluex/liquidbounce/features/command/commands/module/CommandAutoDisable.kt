@@ -18,22 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.module
 
-import net.ccbluex.liquidbounce.features.command.Command
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.modules
-import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.MultiSelectArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.command.preset.pagedList
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.minecraft.ChatFormatting
 
 /**
@@ -44,96 +48,91 @@ import net.minecraft.ChatFormatting
  *
  * Module: [ModuleAutoDisable]
  */
-object CommandAutoDisable : Command.Factory {
-
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("autodisable")
-            .hub()
-            .subcommand(addSubcommand())
-            .subcommand(removeSubcommand())
-            .subcommand(listSubcommand())
-            .subcommand(clearSubcommand())
-            .build()
+object CommandAutoDisable : CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("autodisable") {
+            literal("clear") {
+                exec {
+                    ModuleAutoDisable.clear()
+                    chat(
+                        t("clear.modulesCleared"),
+                        metadata = MessageMetadata(id = "CAutoDisable#global")
+                    )
+                    1
+                }
+            }
+            pagedList(
+                header = {
+                    t("list.modules")
+                        .withColor(ChatFormatting.RED)
+                        .bold(true)
+                },
+                items = {
+                    ModuleAutoDisable.modules
+                },
+                eachRow = { _, module ->
+                    "\u2B25 ".asText()
+                        .withStyle(ChatFormatting.BLUE)
+                        .append(variable(module.name).copyable())
+                }
+            )
+            literal("remove") {
+                argument(
+                    "modules",
+                    MultiSelectArgumentType("Module", ModuleManager, predicate = { true }, nameOf = ClientModule::name),
+                ) { modules ->
+                    exec { ctx ->
+                        removeModules(ctx.get(modules))
+                        1
+                    }
+                }
+            }
+            literal("add") {
+                argument(
+                    "modules",
+                    MultiSelectArgumentType("Module", ModuleManager, predicate = { true }, nameOf = ClientModule::name),
+                ) { modules ->
+                    exec { ctx ->
+                        addModules(ctx.get(modules))
+                        1
+                    }
+                }
+            }
+        }
     }
 
-    private fun clearSubcommand() = CommandBuilder
-        .begin("clear")
-        .handler {
-            ModuleAutoDisable.clear()
+    private fun CmdI18n.addModules(modules: Set<ClientModule>) {
+        modules.forEach { module ->
+            if (!ModuleAutoDisable.add(module)) {
+                throw CommandException(t("add.moduleIsPresent", module.name))
+            }
+
             chat(
-                command.result("modulesCleared"),
-                metadata = MessageMetadata(id = "CAutoDisable#global")
+                regular(
+                    t("add.moduleAdded",
+                        variable(module.name)
+                    )
+                ),
+                metadata = MessageMetadata(id = "CAutoDisable#${module.name}")
             )
         }
-        .build()
+    }
 
-    private fun listSubcommand() = CommandBuilder
-        .begin("list")
-        .pagedQuery(
-            pageSize = 8,
-            header = {
-                result("modules").withColor(ChatFormatting.RED).bold(true)
-            },
-            items = {
-                ModuleAutoDisable.modules
-            },
-            eachRow = { _, module ->
-                "\u2B25 ".asText()
-                    .withStyle(ChatFormatting.BLUE)
-                    .append(variable(module.name).copyable())
-                    .append(regular(" ("))
-                    .append(variable(module.bind.keyName).copyable())
-                    .append(regular(")"))
+    private fun CmdI18n.removeModules(modules: Set<ClientModule>) {
+        modules.forEach { module ->
+            if (!ModuleAutoDisable.remove(module)) {
+                throw CommandException(t("remove.moduleNotPresent", module.name))
             }
-        )
 
-    private fun removeSubcommand() = CommandBuilder
-        .begin("remove")
-        .parameter(
-            ParameterBuilder.modules(all = ModuleAutoDisable.modules)
-                .required()
-                .build()
-        )
-        .handler {
-            val modules = args[0] as Set<ClientModule>
-
-            modules.forEach { module ->
-                if (!ModuleAutoDisable.remove(module)) {
-                    throw CommandException(command.result("moduleNotPresent", module.name))
-                }
-
-                chat(
-                    regular(
-                        command.result(
-                            "moduleRemoved",
-                            variable(module.name)
-                        )
-                    ),
-                    command
-                )
-            }
+            chat(
+                regular(
+                    t("remove.moduleRemoved",
+                        variable(module.name)
+                    )
+                ),
+                metadata = MessageMetadata(id = "CAutoDisable#${module.name}")
+            )
         }
-        .build()
-
-    private fun addSubcommand() = CommandBuilder
-        .begin("add")
-        .parameter(
-            ParameterBuilder.modules()
-                .required()
-                .build()
-        )
-        .handler {
-            val modules = args[0] as Set<ClientModule>
-
-            modules.forEach { module ->
-                if (!ModuleAutoDisable.add(module)) {
-                    throw CommandException(command.result("moduleIsPresent", module.name))
-                }
-
-                chat(regular(command.result("moduleAdded", variable(module.name))), command)
-            }
-        }
-        .build()
+    }
 
 }

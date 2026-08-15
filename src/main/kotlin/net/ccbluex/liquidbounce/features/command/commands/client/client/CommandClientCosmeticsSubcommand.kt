@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import kotlinx.coroutines.suspendCancellableCoroutine
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.utils.client.browseUrl
@@ -29,39 +28,40 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import kotlin.coroutines.resume
 
 object CommandClientCosmeticsSubcommand {
-    fun cosmeticsCommand() = CommandBuilder
-        .begin("cosmetics")
-        .hub()
-        .subcommand(refreshSubcommand())
-        .subcommand(manageSubcommand())
-        .build()
-
-    private fun manageSubcommand() = CommandBuilder.begin("manage")
-        .handler {
-            browseUrl("https://user.liquidbounce.net/cosmetics")
-        }
-        .build()
-
-    private fun refreshSubcommand() = CommandBuilder.begin("refresh")
-        .suspendHandler {
-            chat(
-                regular(
-                    "Refreshing cosmetics..."
-                )
-            )
-            CosmeticService.carriersCosmetics.clear()
-            ClientAccountManager.clientAccount.cosmetics = null
-
-            suspendCancellableCoroutine { continuation ->
-                CosmeticService.refreshCarriers(true) {
-                    chat(
-                        regular(
-                            "Cosmetic System has been refreshed."
-                        )
-                    )
-                    continuation.resume(Unit)
+    fun CmdLiteralScope.cosmetics() {
+        literal("cosmetics") {
+            literal("refresh") {
+                execSuspend {
+                    refresh()
+                }
+            }
+            literal("manage") {
+                exec {
+                    browseUrl("https://user.liquidbounce.net/cosmetics")
+                    1
                 }
             }
         }
-        .build()
+    }
+
+    private suspend fun refresh() {
+        chat(
+            regular(
+                "Refreshing cosmetics..."
+            )
+        )
+        CosmeticService.carriersCosmetics.clear()
+        ClientAccountManager.clientAccount.cosmetics = null
+
+        suspendCancellableCoroutine { continuation ->
+            CosmeticService.refreshCarriers(true) {
+                chat(
+                    regular(
+                        "Cosmetic System has been refreshed."
+                    )
+                )
+                continuation.resume(Unit)
+            }
+        }
+    }
 }

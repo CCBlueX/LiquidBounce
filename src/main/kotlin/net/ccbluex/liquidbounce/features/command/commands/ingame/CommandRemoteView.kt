@@ -18,89 +18,84 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.playerName
-import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.PlayerInfoArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.world
 
 /**
  * RemoteView Command
  *
  * Allows you to view from the perspective of another player in the game.
  */
-object CommandRemoteView : Command.Factory, MinecraftShortcuts {
-
+object CommandRemoteView : CommandRegistrar {
     private var pName: String? = null
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("remoteview")
-            .alias("rv")
-            .hub()
-            .requiresIngame()
-            .subcommand(offSubcommand())
-            .subcommand(viewSubcommand())
-            .build()
-    }
+    @Suppress("detekt:LongMethod", "detekt:CognitiveComplexMethod")
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("remoteview", aliases = listOf("rv")) {
+            requires { it.isIngame }
 
-    private fun viewSubcommand() = CommandBuilder
-        .begin("view")
-        .parameter(
-            ParameterBuilder.playerName()
-                .required()
-                .build()
-        )
-        .handler {
-            val name = args[0] as String
-            for (entity in world.players()) {
-                if (name.equals(entity.scoreboardName, true)) {
-                    if (mc.cameraEntity === entity) {
+            literal("view") {
+                argument("name", PlayerInfoArgumentType) { name ->
+                    exec { ctx ->
+                        val playerName = ctx.get(name).profile.name
+                        for (entity in world.players()) {
+                            if (playerName.equals(entity.scoreboardName, true)) {
+                                if (mc.cameraEntity === entity) {
+                                    chat(
+                                        regular(t("view.alreadyViewing", variable(entity.scoreboardName))),
+                                        metadata = MessageMetadata(id = "CRemoteView#info")
+                                    )
+                                    return@exec 1
+                                }
+
+                                mc.cameraEntity = entity
+                                pName = entity.scoreboardName
+                                chat(
+                                    regular(t("view.viewPlayer", variable(entity.scoreboardName))),
+                                    metadata = MessageMetadata(id = "CRemoteView#info")
+                                )
+                                chat(
+                                    regular(t("view.caseOff", variable(entity.scoreboardName))),
+                                    metadata = MessageMetadata(id = "CRemoteView#info", remove = false)
+                                )
+
+                                break
+                            }
+                        }
+                        1
+                    }
+                }
+            }
+            literal("off") {
+                exec {
+                    if (mc.cameraEntity != player) {
+                        mc.cameraEntity = player
                         chat(
-                            regular(command.result("alreadyViewing", variable(entity.scoreboardName))),
+                            regular(t("off.off", variable(pName.toString()))),
                             metadata = MessageMetadata(id = "CRemoteView#info")
                         )
-                        return@handler
+                        pName = null
+                    } else {
+                        chat(
+                            regular(t("off.alreadyOff")),
+                            metadata = MessageMetadata(id = "CRemoteView#info")
+                        )
                     }
-
-                    mc.cameraEntity = entity
-                    pName = entity.scoreboardName
-                    chat(
-                        regular(command.result("viewPlayer", variable(entity.scoreboardName))),
-                        metadata = MessageMetadata(id = "CRemoteView#info")
-                    )
-                    chat(
-                        regular(command.result("caseOff", variable(entity.scoreboardName))),
-                        metadata = MessageMetadata(id = "CRemoteView#info", remove = false)
-                    )
-
-                    break
+                    1
                 }
             }
         }
-        .build()
-
-    private fun offSubcommand() = CommandBuilder
-        .begin("off")
-        .handler {
-            if (mc.cameraEntity != player) {
-                mc.cameraEntity = player
-                chat(
-                    regular(command.result("off", variable(pName.toString()))),
-                    metadata = MessageMetadata(id = "CRemoteView#info")
-                )
-                pName = null
-            } else {
-                chat(
-                    regular(command.result("alreadyOff")),
-                    metadata = MessageMetadata(id = "CRemoteView#info")
-                )
-            }
-        }
-        .build()
+    }
 
 }
