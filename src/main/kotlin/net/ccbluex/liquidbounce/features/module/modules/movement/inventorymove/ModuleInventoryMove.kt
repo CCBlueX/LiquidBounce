@@ -80,7 +80,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     private val passthroughSneak by boolean("PassthroughSneak", false)
 
     // states of movement keys, using mc.options.<key>.isPressed doesn't work for some reason
-    val movementKeys =
+    private val movementKeys =
         referenceBooleanArrayMapOf(
             mc.options.keyUp, false,
             mc.options.keyLeft, false,
@@ -113,7 +113,8 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
 
         when (key) {
             mc.options.keyShift -> passthroughSneak
-            mc.options.keyJump, mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight, mc.options.keySprint -> true
+            mc.options.keyJump, mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight,
+            mc.options.keySprint -> true
             else -> false
         }.also { if (!it) return false }
 
