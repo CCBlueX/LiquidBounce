@@ -103,22 +103,17 @@ public abstract class MixinGui {
         EventManager.INSTANCE.callEvent(new ScreenRenderEvent(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)));
     }
 
-    @Inject(method = "setScreen", at = @At("HEAD"))
-    private void setScreen(Screen screen, CallbackInfo ci, @Share("arg") LocalRef<Screen> argScreen) {
-        argScreen.set(screen);
-    }
-
     @WrapWithCondition(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;releaseAll()V"))
     private boolean cancelSetScreenInventoryMoveUnpressAll() {
         return !ModuleInventoryMove.INSTANCE.getRunning();
     }
 
     @WrapOperation(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V"))
-    private void injectSetScreenInventoryMoveUnpress(Screen instance, int width, int height, Operation<Void> original, @Share("arg") LocalRef<Screen> argScreen) {
+    private void injectSetScreenInventoryMoveUnpress(Screen instance, int width, int height, Operation<Void> original, @Local(name = "screen", argsOnly = true) @Nullable Screen screen) {
         original.call(instance, width, height);
         if (ModuleInventoryMove.INSTANCE.getRunning()) {
             for (KeyMapping km : KeyMapping.ALL.values()) {
-                if (ModuleInventoryMove.shouldHandleInputs(km, argScreen.get())) continue;
+                if (ModuleInventoryMove.shouldHandleInputs(km, screen)) continue;
 
                 km.release();
             }
