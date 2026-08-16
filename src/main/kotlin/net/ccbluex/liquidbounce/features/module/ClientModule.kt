@@ -68,6 +68,12 @@ open class ClientModule(
 
     protected val logger = clientLogger("Module/$name")
 
+    init {
+        category.inclusionGroup?.let { group ->
+            this.inclusionGroup(group)
+        }
+    }
+
     override val debugDisplayName: Component
         get() = this.name.asPlainText(Style.EMPTY + ChatFormatting.GOLD + ChatFormatting.BOLD)
 

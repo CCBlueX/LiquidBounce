@@ -16,22 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.config.OptionalInclusion
-import net.ccbluex.liquidbounce.config.types.list.Tagged
+package net.ccbluex.liquidbounce.config
 
-class ModuleCategory(
-    override val tag: String,
-    val inclusionGroup: OptionalInclusion? = null
-) : Tagged {
-
-    @Deprecated(
-        message = "For script compatibility only. Use choiceName instead",
-        replaceWith = ReplaceWith("choiceName"),
-        level = DeprecationLevel.ERROR
-    )
-    val readableName: String
-        get() = tag
-
+/**
+ * Groups of settings that can be optionally included or excluded during configuration saving.
+ */
+enum class OptionalInclusion {
+    RENDER,
+    FUN
 }

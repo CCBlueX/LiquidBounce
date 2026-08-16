@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.config.types.group
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.ValueType
@@ -95,6 +96,14 @@ class ModeValueGroup<T : Mode>(
 
     override fun restore() {
         this.setAndUpdate(defaultMode)
+    }
+
+    override fun inclusionGroup(group: OptionalInclusion) = apply {
+        super.inclusionGroup(group)
+
+        for (m in modes) {
+            m.inclusionGroup(group)
+        }
     }
 
     @ScriptApiRequired

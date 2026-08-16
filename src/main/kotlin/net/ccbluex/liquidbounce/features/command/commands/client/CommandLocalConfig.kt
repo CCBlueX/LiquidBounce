@@ -22,10 +22,12 @@ import kotlinx.coroutines.async
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
 import net.ccbluex.liquidbounce.config.autoconfig.IncludeConfiguration
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
@@ -113,7 +115,7 @@ object CommandLocalConfig : Command.Factory {
         .parameter(
             ParameterBuilder.begin<String>("include")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedFrom { listOf("binds", "hidden") }
+                .autocompletedFrom { listOf("binds", "hidden", "render", "fun") }
                 .vararg()
                 .optional()
                 .build()
@@ -128,10 +130,14 @@ object CommandLocalConfig : Command.Factory {
             val overwrite = args.getOrNull(1) as Boolean? ?: false
             @Suppress("UNCHECKED_CAST")
             val include = args.getOrNull(2) as Array<*>? ?: emptyArray<String>()
+            val inclusions = enumSetOf<OptionalInclusion>()
+            if (include.contains("render")) inclusions.add(OptionalInclusion.RENDER)
+            if (include.contains("fun")) inclusions.add(OptionalInclusion.FUN)
 
             val includeConfiguration = IncludeConfiguration(
                 includeBinds = include.contains("binds"),
                 includeHidden = include.contains("hidden"),
+                optionalInclusions = inclusions,
             )
 
             val file = ConfigSystem.userConfigsFolder.resolve("$name.json")
