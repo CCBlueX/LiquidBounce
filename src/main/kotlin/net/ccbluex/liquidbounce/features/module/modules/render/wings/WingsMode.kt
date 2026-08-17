@@ -71,14 +71,7 @@ abstract class WingsMode(name: String) : Mode(name) {
 
                 if (!shouldRender) continue
 
-                val modelRot = ModuleRotations.modelRotation?.yRot
                 val partAllowed = ModuleRotations.isPartAllowed(ModuleRotations.BodyPart.BODY)
-
-                val rot = if (isMe && ModuleRotations.running) {
-                    val modelRot = ModuleRotations.modelRotation?.yaw
-                    val prevModelRot = ModuleRotations.prevModelRotation?.yaw
-                    rotLerp(event.partialTicks, prevModelRot ?: entity.yRotO, modelRot ?: entity.yRot)
-                } else { rotLerp(event.partialTicks, entity.yRotO, entity.yRot) }
 
                 val bodyRot = if (isMe && ModuleRotations.running && partAllowed) {
                     val modelRot = ModuleRotations.modelRotation?.yaw
