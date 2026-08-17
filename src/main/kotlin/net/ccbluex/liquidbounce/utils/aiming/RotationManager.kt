@@ -111,6 +111,16 @@ object RotationManager : EventListener {
         get() = if (fakeLagging || freezing) theoreticalServerRotation else actualServerRotation
 
     /**
+     * Yaw used by [net.minecraft.world.entity.Entity.moveRelative] after movement correction.
+     */
+    val movementYaw: Float
+        get() = resolveMovementYaw(
+            playerYaw = player.yRot,
+            managedYaw = currentRotation?.yaw ?: Float.NaN,
+            movementCorrection = activeRotationTarget?.movementCorrection,
+        )
+
+    /**
      * The rotation that was already sent to the server and is currently active.
      * The value is not being written by the packets, but we gather the Rotation from the last yaw and pitch variables
      * from our player instance handled by the sendMovementPackets() function.
@@ -363,4 +373,14 @@ object RotationManager : EventListener {
     override val running: Boolean
         get() = inGame
 
+}
+
+internal fun resolveMovementYaw(
+    playerYaw: Float,
+    managedYaw: Float,
+    movementCorrection: MovementCorrection?,
+): Float = if (managedYaw.isFinite() && movementCorrection != null && movementCorrection != MovementCorrection.OFF) {
+    managedYaw
+} else {
+    playerYaw
 }
