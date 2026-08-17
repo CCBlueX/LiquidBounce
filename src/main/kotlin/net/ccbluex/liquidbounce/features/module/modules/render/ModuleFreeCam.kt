@@ -40,14 +40,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove.shouldHandleInputs
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
@@ -242,8 +240,8 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         val directionalInput = DirectionalInput(mc.options)
         var yAxisMovement = 0.0
 
-        if (shouldHandleInputs(mc.options.keyJump) && mc.options.keyJump.isPressedOnAny) yAxisMovement += 1.0f
-        if (shouldHandleInputs(mc.options.keyShift) && mc.options.keyShift.isPressedOnAny) yAxisMovement -= 1.0f
+        if (mc.options.keyJump.isDown) yAxisMovement += 1.0f
+        if (mc.options.keyShift.isDown) yAxisMovement -= 1.0f
 
         val speed = this.speed.toDouble()
 

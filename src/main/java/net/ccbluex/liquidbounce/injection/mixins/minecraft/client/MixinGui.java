@@ -25,8 +25,10 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ScreenEvent;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -99,5 +101,20 @@ public abstract class MixinGui {
         EventManager.INSTANCE.callEvent(new ScreenRenderEvent(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)));
     }
 
+    @WrapWithCondition(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;releaseAll()V"))
+    private boolean cancelSetScreenInventoryMoveUnpressAll() {
+        return !ModuleInventoryMove.INSTANCE.getRunning();
+    }
+
+    @Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V", shift = At.Shift.AFTER))
+    private void injectSetScreenInventoryMoveUnpress(Screen screen, CallbackInfo ci) {
+        if (ModuleInventoryMove.INSTANCE.getRunning()) {
+            for (KeyMapping km : KeyMapping.ALL.values()) {
+                if (ModuleInventoryMove.shouldHandleInputs(km, screen)) continue;
+
+                km.release();
+            }
+        }
+    }
 
 }
