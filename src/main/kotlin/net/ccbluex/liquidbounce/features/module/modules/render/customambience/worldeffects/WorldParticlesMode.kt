@@ -21,21 +21,17 @@ package net.ccbluex.liquidbounce.features.module.modules.render.customambience.w
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticles.coords
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple.AnimBy
-import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple.Ymotion
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.math.sq
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
-import kotlin.random.Random
 
 abstract class WorldParticlesMode(name: String) : Mode(name) {
 
@@ -49,6 +45,11 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
     protected val spawnTime by int("SpawnTime", 25, 1..200, "ms")
     protected val animCurve by easing("AnimCurve", Easing.QUAD_IN_OUT)
     protected val canBeCovered by boolean("CanBeCovered", true)
+
+    protected object Ymotion : ToggleableValueGroup(WorldParticlesSimple, "YMotion", false) {
+        val motion by float("Motion", 2f, -10f..10f)
+        val animBy by enumChoice("AnimBy", AnimBy.AGE)
+    }
 
     protected var lastSpawnTime = 0L
 

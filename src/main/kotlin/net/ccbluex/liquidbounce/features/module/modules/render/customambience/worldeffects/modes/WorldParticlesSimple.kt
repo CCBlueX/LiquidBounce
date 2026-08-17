@@ -29,9 +29,10 @@ import net.ccbluex.liquidbounce.render.BuiltinParticle
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.math.sq
-import kotlin.math.cos
-import kotlin.math.sin
+import net.ccbluex.liquidbounce.utils.math.times
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
+import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -39,11 +40,6 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
 
     private val color = WorldParticlesColorSettings()
     private val builtinParticles by enumChoice("Particle", BuiltinParticle.SPARK)
-
-    object Ymotion : ToggleableValueGroup(this, "YMotion", false) {
-        val motion by float("Motion", 2f, -10f..10f)
-        val animBy by enumChoice("AnimBy", AnimBy.AGE)
-    }
 
     init {
         tree(Ymotion)
@@ -55,17 +51,16 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
 
         lastSpawnTime = currentTime
 
-        val angle = Random.nextDouble(0.0, 2 * Math.PI)
-        val distance = sqrt(Random.nextDouble(radius.first.toDouble().sq(), radius.last.toDouble().sq()))
+        val u = Random.nextDouble(-1.0, 1.0)
+        val theta = Random.nextDouble(0.0, 2 * Math.PI)
+        val s = sqrt(1.0 - u * u)
 
-        coords.add(
-            player.position().add(
-                distance * cos(angle),
-                Random.nextDouble(0.25, radius.last.toDouble()),
-                distance * sin(angle)
-            ),
-            lifetime.last
-        )
+        val coord = Vec3(s * Mth.cos(theta), u , s * Mth.sin(theta))
+        val rMinCb = radius.first.toDouble().pow(3)
+        val rMaxCb = radius.last.toDouble().pow(3)
+        val distance = Math.cbrt(Random.nextDouble(rMinCb, rMaxCb))
+
+        coords.add(player.position().add(coord * distance), lifetime.last)
     }
 
     override fun WorldRenderEnvironment.drawWorldParticle(progress: Float, age: Float) {
