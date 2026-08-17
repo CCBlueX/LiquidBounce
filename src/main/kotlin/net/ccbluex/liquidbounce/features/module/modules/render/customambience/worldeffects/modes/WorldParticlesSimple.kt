@@ -42,7 +42,7 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
     private val builtinParticles by enumChoice("Particle", BuiltinParticle.SPARK)
 
     init {
-        tree(Ymotion)
+        tree(Ymotion())
         tree(color)
     }
 
@@ -73,14 +73,6 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
                 !canBeCovered
             )
         }
-    }
-
-    @Suppress("unused")
-    enum class AnimBy(
-        override val tag: String,
-    ) : Tagged {
-        PROGRESS("Progress"),
-        AGE("Age");
     }
 
 }
