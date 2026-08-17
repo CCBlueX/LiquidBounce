@@ -27,50 +27,49 @@
       };
       jcef = pkgs.callPackage jcef_src { };
       libs = with pkgs; [
-        temurin-bin-25
-        pciutils
-        nodejs_24
-        libpulseaudio
-        libGL
+        alsa-lib
+        atk
+        at-spi2-atk
+        at-spi2-core
+        cairo
+        cups
+        dbus
+        expat
+        flite
+        git
+        glib
         glfw
+        gtk3
+        libGL
+        libX11
+        libXcomposite
+        libXcursor
+        libXdamage
+        libdrm
+        libXext
+        libXfixes
+        libgbm
+        libpulseaudio
+        libxcb
+        libxkbcommon
+        libxshmfence
+        libXrandr
+    
+        # CEF (chromium) dependencies
+        # libcef
+    
+        nodejs_24
+        nspr
+        nss
         openal
+        pango
+        pciutils
+    
         # Provides libstdc++.so.6 / libgcc_s.so.1 needed by LWJGL's bundled
         # libopenal.so at runtime (without it runClient crashes on startup).
         stdenv.cc.cc.lib
-        git
-        libX11
-        libXcursor
-        flite
-
-        # CEF (chromium) dependencies
-        # libcef
-
-        libgbm
-        glib
-        nss
-        nspr
-        atk
-        at-spi2-atk
-        libdrm
-        expat
-        libxcb
-        libxkbcommon
-        libX11
-        libXcomposite
-        libXdamage
-        libXext
-        libXfixes
-        libXrandr
-        libgbm
-        gtk3
-        pango
-        cairo
-        alsa-lib
-        dbus
-        at-spi2-core
-        cups
-        libxshmfence
-
+    
+        temurin-bin-25
         wayland
       ];
       # Must come BEFORE the JDK on the library path so the JDK's libfontmanager
