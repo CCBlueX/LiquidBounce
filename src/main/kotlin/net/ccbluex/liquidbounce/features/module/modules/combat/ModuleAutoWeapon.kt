@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.onTarget
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
@@ -40,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.WeaponType
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
@@ -66,7 +66,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
      */
     private val preferredWeapon by multiEnumChoice("Preferred", WeaponType.SWORD)
 
-    private val PriorityChoice by enumChoice("Priority", Priorities.DEFAULT)
+    private val priorityChoice by enumChoice("Priority", Priorities.DEFAULT)
 
     private enum class Priorities(override val tag: String) : Tagged {
         DEFAULT("Default"),
@@ -196,8 +196,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         return Slots.Hotbar.stacks
             .filter { !it.isEmpty && preferredWeapon.matchesAny(it) }
             .maxByOrNull { itemStack ->
-                val enchantments = itemStack.enchantments
-                enchantments.entrySet().firstOrNull { it.key.`is`(Enchantments.KNOCKBACK) }?.intValue ?: 0
+                itemStack.getEnchantment(Enchantments.KNOCKBACK)
             }
     }
 
@@ -220,19 +219,19 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
                     requiresShield -> WeaponType.AXE.test(itemStack)
 
                     // All items
-                    PriorityChoice == Priorities.KNOCKBACK -> {
+                    priorityChoice == Priorities.KNOCKBACK -> {
                         val bestKnockbackItem = getBestKnockbackItem()
                         itemStack == bestKnockbackItem
                     }
 
                     // All items
-                    PriorityChoice == Priorities.DAMAGE -> {
+                    priorityChoice == Priorities.DAMAGE -> {
                         val bestDamageItem = getBestDamageItem()
                         itemStack == bestDamageItem
                     }
 
                     // All items
-                    PriorityChoice == Priorities.ATTACK_SPEED -> {
+                    priorityChoice == Priorities.ATTACK_SPEED -> {
                         val bestSpeedItem = getBestAttackSpeedItem()
                         itemStack == bestSpeedItem
                     }
