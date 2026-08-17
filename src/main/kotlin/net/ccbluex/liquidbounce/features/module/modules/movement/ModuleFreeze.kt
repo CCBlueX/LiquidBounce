@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation
 import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
@@ -256,7 +257,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
                         )
                     )
                     sendPacketSilently(
-                        ServerboundUseItemPacket(
+                        UseItemPacketRotation.createExplicit(
                             packet.hand,
                             packet.sequence,
                             yaw + yawOffset,

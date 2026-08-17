@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -134,13 +135,13 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     private val tickHandler = handler<GameTickEvent> {
         val target = currentTarget ?: return@handler
 
-        val rayTraceResult = traceFromPlayer()
+        val rotation = RotationManager.currentRotation ?: player.rotation
+        val rayTraceResult = traceFromPlayer(rotation)
 
-        if (!target.doesCorrespondTo(rayTraceResult)) {
+        if (!target.doesCorrespondTo(rayTraceResult) ||
+            !SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)) {
             return@handler
         }
-
-        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
 
         val successFunction = {
             cooldownTimer.waitForAtLeast((cooldown * 1000.0F).toLong())
@@ -149,8 +150,13 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
             true
         }
 
-        doPlacement(rayTraceResult, hand = target.hotbarItemSlot.useHand,
-            onItemUseSuccess = successFunction, onPlacementSuccess = successFunction)
+        doPlacement(
+            rayTraceResult,
+            rotation,
+            hand = target.hotbarItemSlot.useHand,
+            onItemUseSuccess = successFunction,
+            onPlacementSuccess = successFunction,
+        )
     }
 
     private fun planExtinguishing(): PlacementPlan? {
