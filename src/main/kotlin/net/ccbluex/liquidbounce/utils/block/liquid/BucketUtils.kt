@@ -16,22 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module
+package net.ccbluex.liquidbounce.utils.block.liquid
 
-import net.ccbluex.liquidbounce.config.OptionalInclusion
-import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.minecraft.world.level.block.LiquidBlockContainer
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
 
-class ModuleCategory(
-    override val tag: String,
-    val inclusionGroup: OptionalInclusion? = null
-) : Tagged {
+/** Matches the non-container branch of Minecraft 26.2 BucketItem.emptyContents(). */
+internal fun BlockState.canPlaceStandaloneFluid(fluid: Fluid): Boolean {
+    return block !is LiquidBlockContainer && (isAir || canBeReplaced(fluid))
+}
 
-    @Deprecated(
-        message = "For script compatibility only. Use choiceName instead",
-        replaceWith = ReplaceWith("choiceName"),
-        level = DeprecationLevel.ERROR
-    )
-    val readableName: String
-        get() = tag
-
+/** Water buckets need sneak to skip LiquidBlockContainer.useItemOn and place adjacent water. */
+internal fun BlockState.requiresSneakForAdjacentFluidPlacement(fluid: Fluid): Boolean {
+    return fluid == Fluids.WATER && block is LiquidBlockContainer
 }
