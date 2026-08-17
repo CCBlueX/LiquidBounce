@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.modes
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect.TotemPopSnapshot
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectMode
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawGradientCircle
-import net.minecraft.world.phys.Vec3
 
 internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
 
@@ -35,18 +35,12 @@ internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
         tree(color)
     }
 
-    override fun WorldRenderEnvironment.drawTotemEffect(
-        progress: Float,
-        age: Float,
-        pos: Vec3,
-        event: WorldRenderEvent
-    ) {
+    override fun WorldRenderEnvironment
+        .drawTotemEffect(progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float, event: WorldRenderEvent)
+    {
         val inner = color.innerColor
         val outer = if (color.sync) inner else color.outerColor
-
-        val fadeDiff = (1f - fade).coerceAtLeast(0.001f)
-        val fadeProgress = if (progress >= fade) ((progress - fade) / fadeDiff).coerceIn(0f, 1f) else 0f
-        val alpha = ((1f - fadeProgress).coerceIn(0f, 1f) * 255f).toInt()
+        val alpha = ((1f - fade).coerceIn(0f, 1f) * 255f).toInt()
 
         drawGradientCircle(
             radius.endInclusive * progress,

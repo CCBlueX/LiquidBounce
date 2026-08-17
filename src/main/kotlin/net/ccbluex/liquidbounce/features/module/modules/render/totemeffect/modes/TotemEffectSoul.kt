@@ -22,15 +22,16 @@ package net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.mode
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsHalo.addTorusQuad
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsHalo.getAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsHalo.getNextAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect.TotemPopSnapshot
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.getAngle
+import net.ccbluex.liquidbounce.render.getNextAngle
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
@@ -39,61 +40,54 @@ import net.minecraft.world.phys.Vec3
 internal object TotemEffectSoul : TotemEffectMode("Soul") {
 
     private val colors = TotemEffectColorSettings()
-    private object Ymotion : ToggleableValueGroup(this, "YMotion", true){
-        val soulYmotion by float("SoulYMotion", 0.75f, 0.1f..10f)
+    private val toggleHalo by boolean("Halo", false)
+    private object YMotion : ToggleableValueGroup(this, "YMotion", true) {
+        val soulYMotion by float("SoulYMotion", 0.75f, 0.1f..10f)
         val animBy by enumChoice("AnimBy", AnimBy.AGE)
     }
 
     private val wireframePlayer = WireframePlayer()
 
     init {
-        tree(Ymotion)
+        tree(YMotion)
         tree(colors)
     }
 
-    override fun WorldRenderEnvironment.drawTotemEffect(
-        progress: Float,
-        age: Float,
-        pos: Vec3,
-        event: WorldRenderEvent
-    ) {
-
-        val fadeProgress = if (progress >= fade) (progress - fade) / (1f - fade).coerceAtLeast(0.001f) else 0f
-        val alpha = ((1f - fadeProgress).coerceIn(0f, 1f) * 255f).toInt()
+    override fun WorldRenderEnvironment
+        .drawTotemEffect(progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float, event: WorldRenderEvent)
+    {
+        val alpha = ((1f - fade).coerceIn(0f, 1f) * 255f).toInt()
 
         if (alpha <= 0) return
 
         val inner = colors.innerColor.alpha(alpha)
         val outer = if (colors.sync) inner else colors.outerColor.alpha(alpha)
 
-        val anim = if (Ymotion.enabled) {
-            when (Ymotion.animBy) {
+        val anim = if (YMotion.enabled) {
+            when (YMotion.animBy) {
                 AnimBy.PROGRESS -> progress.toDouble()
                 AnimBy.AGE -> age.toDouble()
             }
-        } else {
-            0.0
-        }
+        } else { 0.0 }
 
-        val targetPos = pos.add(0.0, (anim * Ymotion.soulYmotion), -0.1)
+        val targetPos = entity.pos.add(0.0, (anim * YMotion.soulYMotion), -0.1)
 
         wireframePlayer.pos = targetPos
+        wireframePlayer.xRot = entity.xRot
+        wireframePlayer.yRot = entity.yRot
         wireframePlayer.render(event, color = inner, outlineColor = outer, noDepthTest = !canBeCovered)
 
-        drawHalo(targetPos, event, inner)
+        if (toggleHalo) drawHalo(targetPos, inner)
     }
 
-    private fun drawHalo(targetPos: Vec3, event: WorldRenderEvent, color: Color4b) {
-        event.environment.withPositionRelativeToCamera(targetPos.add(0.0, 2.1, 0.125)) {
-            event.poseStack.withPush {
-
-                // Pasted from HatsHalo.kt
+    private fun WorldRenderEnvironment.drawHalo(targetPos: Vec3, color: Color4b) {
+        withPositionRelativeToCamera(targetPos.add(0.0, 2.1, 0.125)) {
+            poseStack.withPush {
                 drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = !canBeCovered)) { matrix ->
                     val outerSegments = 144
                     val innerSegments = 12
 
                     for (outerI in 0 until outerSegments) {
-
                         val outerCurAngleTorus = getAngle(outerI, outerSegments)
                         val outerNextAngleTorus = getNextAngle(outerI, outerSegments)
 

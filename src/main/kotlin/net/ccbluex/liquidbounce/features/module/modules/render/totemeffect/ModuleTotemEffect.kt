@@ -25,23 +25,24 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
-import net.minecraft.world.phys.Vec3
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.modes.TotemEffectShockwave
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.modes.TotemEffectSoul
 import net.ccbluex.liquidbounce.utils.network.isDeathProtection
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.Vec3
 
 object ModuleTotemEffect : ClientModule("TotemEffect", ModuleCategories.RENDER) {
 
-    val coords = ExpiringList<Vec3>()
+    val entities = ExpiringList<TotemPopSnapshot>()
 
     val modes = choices("Mode", 0) {
         arrayOf(
             TotemEffectShockwave,
             TotemEffectSoul
         )
-    }.apply { tagBy(this); onChanged { coords.clear() } }
+    }.apply { tagBy(this); onChanged { entities.clear() } }
 
-    override fun onDisabled() = coords.clear()
+    override fun onDisabled() { entities.clear() }
 
     @Suppress("unused")
     private val totemHandler = handler<PacketEvent> { event ->
@@ -52,8 +53,22 @@ object ModuleTotemEffect : ClientModule("TotemEffect", ModuleCategories.RENDER) 
             val entity = event.packet.getEntity(world) ?: return@execute
 
             val lifetime = modes.activeMode.lifetime
-            coords.add(entity.position().add(0.0, entity.bbHeight / 2.0, 0.0), lifetime)
+            entities.add(TotemPopSnapshot(entity), lifetime)
         }
+    }
+
+    data class TotemPopSnapshot(
+        val pos: Vec3,
+        val xRot: Float,
+        val yRot: Float,
+        val bbHeight: Float,
+    ) {
+        constructor(entity: Entity) : this(
+            pos = entity.position(),
+            xRot = entity.xRot,
+            yRot = entity.yRot,
+            bbHeight = entity.bbHeight
+        )
     }
 
 }
