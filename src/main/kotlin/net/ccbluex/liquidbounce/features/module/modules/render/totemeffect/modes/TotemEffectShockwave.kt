@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.modes
 
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect.TotemPopSnapshot
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectMode
@@ -36,8 +35,7 @@ internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
     }
 
     override fun WorldRenderEnvironment
-        .drawTotemEffect(progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float, event: WorldRenderEvent)
-    {
+        .drawTotemEffect(progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float) {
         val inner = color.innerColor
         val outer = if (color.sync) inner else color.outerColor
         val alpha = ((1f - fade).coerceIn(0f, 1f) * 255f).toInt()

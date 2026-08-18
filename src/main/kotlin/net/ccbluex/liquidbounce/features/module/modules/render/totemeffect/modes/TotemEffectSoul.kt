@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.mode
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect.TotemPopSnapshot
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectMode
@@ -53,9 +52,9 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
         tree(colors)
     }
 
-    override fun WorldRenderEnvironment
-        .drawTotemEffect(progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float, event: WorldRenderEvent)
-    {
+    override fun WorldRenderEnvironment.drawTotemEffect(
+        progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float
+    ) {
         val alpha = ((1f - fade).coerceIn(0f, 1f) * 255f).toInt()
 
         if (alpha <= 0) return
@@ -75,7 +74,7 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
         wireframePlayer.pos = targetPos
         wireframePlayer.xRot = entity.xRot
         wireframePlayer.yRot = entity.yRot
-        wireframePlayer.render(event, color = inner, outlineColor = outer, noDepthTest = !canBeCovered)
+        wireframePlayer.render(color = inner, outlineColor = outer, noDepthTest = !canBeCovered)
 
         if (toggleHalo) drawHalo(targetPos, inner)
     }
@@ -110,8 +109,7 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
         }
     }
 
-    @Suppress("unused")
-    enum class AnimBy(
+    private enum class AnimBy(
         override val tag: String,
     ) : Tagged {
         PROGRESS("Progress"),

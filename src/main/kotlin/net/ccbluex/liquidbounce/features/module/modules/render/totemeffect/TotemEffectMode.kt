@@ -41,7 +41,7 @@ abstract class TotemEffectMode(name: String) : Mode(name) {
     protected val canBeCovered by boolean("CanBeCovered", false)
 
     protected abstract fun WorldRenderEnvironment
-        .drawTotemEffect(progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float, event: WorldRenderEvent)
+        .drawTotemEffect(progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -57,7 +57,7 @@ abstract class TotemEffectMode(name: String) : Mode(name) {
                     val fade = if (progress >= fade) (progress - fade) / (1f - fade).coerceAtLeast(0.001f) else 0f
 
                     poseStack.withPush {
-                        drawTotemEffect(progress, age, it.value, fade, event)
+                        drawTotemEffect(progress, age, it.value, fade)
                     }
                 }
             }
