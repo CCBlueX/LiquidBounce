@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.minecraft.core.particles.ColorParticleOption
 import net.minecraft.util.ARGB
 import net.minecraft.world.entity.AreaEffectCloud
-import net.minecraft.world.item.alchemy.PotionContents.getColorOptional
 
 object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion", false) {
 
