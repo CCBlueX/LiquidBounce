@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticles.coords
-import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -46,9 +45,15 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
     protected val animCurve by easing("AnimCurve", Easing.QUAD_IN_OUT)
     protected val canBeCovered by boolean("CanBeCovered", true)
 
-    protected class Ymotion : ToggleableValueGroup(WorldParticlesSimple, "YMotion", false) {
+    protected val yMotion = YMotion()
+
+    protected class YMotion : ToggleableValueGroup(null, "YMotion", false) {
         val motion by float("Motion", 2f, -10f..10f)
         val animBy by enumChoice("AnimBy", AnimBy.PROGRESS)
+    }
+
+    init {
+        tree(yMotion)
     }
 
     protected var lastSpawnTime = 0L
@@ -77,12 +82,12 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
                 withPositionRelativeToCamera(it.value) {
                     poseStack.withPush {
 
-                        if (Ymotion().enabled) {
-                            val anim = when (Ymotion().animBy) {
+                        if (yMotion.enabled) {
+                            val anim = when (yMotion.animBy) {
                                 AnimBy.PROGRESS -> progress
                                 AnimBy.AGE -> age
                             }
-                            translate(0F, Ymotion().motion * anim, 0F)
+                            translate(0F, yMotion.motion * anim, 0F)
                         }
 
                         mulPose(rot)

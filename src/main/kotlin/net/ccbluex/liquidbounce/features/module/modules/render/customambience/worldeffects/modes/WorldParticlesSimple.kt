@@ -40,7 +40,6 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
     private val builtinParticles by enumChoice("Particle", BuiltinParticle.SPARK)
 
     init {
-        tree(Ymotion())
         tree(color)
     }
 
