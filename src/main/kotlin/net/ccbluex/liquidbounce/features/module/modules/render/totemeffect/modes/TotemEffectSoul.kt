@@ -81,28 +81,26 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
 
     private fun WorldRenderEnvironment.drawHalo(targetPos: Vec3, color: Color4b) {
         withPositionRelativeToCamera(targetPos.add(0.0, 2.1, 0.125)) {
-            poseStack.withPush {
-                drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = !canBeCovered)) { matrix ->
-                    val outerSegments = 144
-                    val innerSegments = 12
+            drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = !canBeCovered)) { matrix ->
+                val outerSegments = 144
+                val innerSegments = 12
 
-                    for (outerI in 0 until outerSegments) {
-                        val outerCurAngleTorus = getAngle(outerI, outerSegments)
-                        val outerNextAngleTorus = getNextAngle(outerI, outerSegments)
+                for (outerI in 0 until outerSegments) {
+                    val outerCurAngleTorus = getAngle(outerI, outerSegments)
+                    val outerNextAngleTorus = getNextAngle(outerI, outerSegments)
 
-                        for (innerI in 0 until innerSegments) {
-                            addTorusQuad(
-                                matrix,
-                                innerSegments,
-                                outerCurAngleTorus,
-                                outerNextAngleTorus,
-                                0.3f,
-                                0.3f,
-                                0.0375f,
-                                innerI,
-                                color,
-                            )
-                        }
+                    for (innerI in 0 until innerSegments) {
+                        addTorusQuad(
+                            matrix,
+                            innerSegments,
+                            outerCurAngleTorus,
+                            outerNextAngleTorus,
+                            0.3f,
+                            0.3f,
+                            0.0375f,
+                            innerI,
+                            color,
+                        )
                     }
                 }
             }

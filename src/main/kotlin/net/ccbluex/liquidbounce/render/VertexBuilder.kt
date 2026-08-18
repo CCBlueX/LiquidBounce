@@ -273,12 +273,10 @@ fun VertexConsumer.addTorusQuad(
     val p4x = p4Radius * nextMainSin
     val p4z = p4Radius * nextMainCos
 
+    addVertex(pose, p3x, curTubeY, p3z).setColor(color)
     addVertex(pose, p1x, curTubeY, p1z).setColor(color)
     addVertex(pose, p2x, nextTubeY, p2z).setColor(color)
-    addVertex(pose, p3x, curTubeY, p3z).setColor(color)
-    addVertex(pose, p2x, nextTubeY, p2z).setColor(color)
     addVertex(pose, p4x, nextTubeY, p4z).setColor(color)
-    addVertex(pose, p3x, curTubeY, p3z).setColor(color)
 }
 
 /**

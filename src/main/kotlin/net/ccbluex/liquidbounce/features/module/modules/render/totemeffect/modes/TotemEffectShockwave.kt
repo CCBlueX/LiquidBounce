@@ -41,10 +41,10 @@ internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
         val alpha = ((1f - fade).coerceIn(0f, 1f) * 255f).toInt()
 
         drawGradientCircle(
-            radius.endInclusive * progress,
-            radius.start * progress,
-            inner.alpha(alpha),
-            outer.alpha(alpha),
+            outerRadius = radius.endInclusive * progress,
+            innerRadius = radius.start * progress,
+            outerColor = outer.alpha(alpha),
+            innerColor = inner.alpha(alpha),
             noDepthTest = !canBeCovered
         )
     }

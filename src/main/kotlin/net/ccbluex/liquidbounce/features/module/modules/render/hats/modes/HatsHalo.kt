@@ -48,7 +48,7 @@ internal object HatsHalo : HatsMode("Halo") {
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
-        drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { matrix ->
             val outerSegments = 144
             val innerSegments = 12
 
