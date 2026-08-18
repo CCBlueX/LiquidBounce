@@ -76,9 +76,8 @@ object CommandDebug : Command.Factory {
             buffer.clear()
 
             val debugJson = createDebugJson(autoConfigPaste)
-            gson.toJson(debugJson, buffer.outputStream().writer())
-            val content = buffer.readUtf8()
-            val paste = uploadToPaste(content)
+            gson.newJsonWriter(buffer.outputStream().writer()).use { gson.toJson(debugJson, it) }
+            val paste = uploadToPaste(buffer.readUtf8())
             buffer.clear()
 
             chat(
