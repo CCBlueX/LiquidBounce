@@ -20,9 +20,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes
 
 import com.mojang.math.Axis
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.utils.TextureMode
+import net.ccbluex.liquidbounce.event.computedOn
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX
@@ -33,9 +36,12 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.filterTo
 import net.minecraft.core.particles.ColorParticleOption
 import net.minecraft.util.ARGB
 import net.minecraft.world.entity.AreaEffectCloud
+import net.minecraft.world.entity.EntityTypes
 
 object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion", false) {
 
@@ -56,16 +62,14 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
 
             val texture = textureMode.activeMode.texture ?: return@handler
 
-            for (entity in world.entitiesForRendering()) {
-                if (entity !is AreaEffectCloud) continue
-
+            for (entity in cloudEntities) {
+                if (entity.isRemoved) continue
                 withPositionRelativeToCamera(entity.position().add(0.0, 0.01, 0.0))  {
                     poseStack.withPush {
                         val currentRotation = (entity.tickCount + event.partialTicks) * rotationSpeed
 
                         val color = when (val particle = entity.particle) {
                             is ColorParticleOption -> ARGB.color(
-                                255,
                                 (particle.red * 255).toInt(),
                                 (particle.green * 255).toInt(),
                                 (particle.blue * 255).toInt()
@@ -89,4 +93,17 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
             }
         }
     }
+
+    val cloudEntities by computedOn<GameTickEvent, MutableSet<AreaEffectCloud>>(ReferenceOpenHashSet()) { _, set ->
+        set.clear()
+        if (!enabled) return@computedOn set
+        world.entityGetter.filterTo(set, EntityTypes.AREA_EFFECT_CLOUD) { true }
+        set
+    }
+
+    override fun onDisabled() {
+        cloudEntities.clear()
+        super.onDisabled()
+    }
+
 }

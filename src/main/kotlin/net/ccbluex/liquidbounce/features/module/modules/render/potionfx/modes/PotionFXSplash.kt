@@ -36,10 +36,9 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.network.protocol.game.ClientboundLevelEventPacket
-import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ClipContext
-import net.minecraft.world.level.entity.EntityTypeTest
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
@@ -67,23 +66,22 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", fal
         if (event.packet !is ClientboundLevelEventPacket || event.packet.type != 2002) return@handler
 
         val nearestPotion = world.getEntities(
-            EntityTypeTest.forClass(ThrowableItemProjectile::class.java),
+            EntityTypes.SPLASH_POTION,
             AABB(event.packet.pos).inflate(3.0)
-        ) { true }.minByOrNull { it.distanceToSqr(Vec3.atCenterOf(event.packet.pos)) } ?: return@handler
+        ) { !it.item.`is`(Items.LINGERING_POTION) }
+            .minByOrNull { it.distanceToSqr(Vec3.atCenterOf(event.packet.pos)) } ?: return@handler
 
-        if (nearestPotion.item.`is`(Items.LINGERING_POTION)) return@handler
-
-        val packetOrigin = Vec3.atCenterOf(event.packet.pos)
+        val packetPos = Vec3.atCenterOf(event.packet.pos)
 
         val pos = world.clip(
             ClipContext(
-                packetOrigin,
-                packetOrigin.add(0.0, -1.0, 0.0),
+                packetPos,
+                packetPos.add(0.0, -1.0, 0.0),
                 ClipContext.Block.COLLIDER,
                 ClipContext.Fluid.NONE,
                 CollisionContext.empty()
             )
-        ).let { if (it.type == HitResult.Type.BLOCK) it.location else packetOrigin }
+        ).let { if (it.type == HitResult.Type.BLOCK) it.location else packetPos }
 
         splashes.add(SplashData(event.packet.data, pos), lifetime.last)
     }
