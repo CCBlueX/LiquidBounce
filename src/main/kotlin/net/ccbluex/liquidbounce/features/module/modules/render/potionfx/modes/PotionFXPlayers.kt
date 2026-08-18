@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.alchemy.PotionContents.getColorOptional
 
-object PotionFXPlayer : ToggleableValueGroup(ModulePotionFX, "Player", false) {
+object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", false) {
 
     private val radius by float("Radius", 1f, 0.1f..10f)
     private val rotationSpeed by float("RotationSpeed", 4f, -10f..10f)

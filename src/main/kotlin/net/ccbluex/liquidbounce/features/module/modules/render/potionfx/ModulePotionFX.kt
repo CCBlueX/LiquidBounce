@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXLingering
-import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXPlayer
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXPlayers
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXSplash
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.render.readNativeImage
 object ModulePotionFX : ClientModule("PotionFX", ModuleCategories.RENDER) {
 
     init {
-        tree(PotionFXPlayer)
+        tree(PotionFXPlayers)
         tree(PotionFXSplash)
         tree(PotionFXLingering)
     }
