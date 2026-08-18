@@ -29,9 +29,12 @@ import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePo
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.PresetTexture
 import net.ccbluex.liquidbounce.render.AnchorPoint
 import net.ccbluex.liquidbounce.render.drawSquareTexture
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
+import net.minecraft.core.particles.ColorParticleOption
+import net.minecraft.util.ARGB
 import net.minecraft.world.entity.AreaEffectCloud
 import net.minecraft.world.item.alchemy.PotionContents.getColorOptional
 
