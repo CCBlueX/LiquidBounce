@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
-import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.alchemy.PotionContents.getColorOptional
 
 object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", false) {
@@ -52,10 +52,14 @@ object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", false) 
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
 
+            val texture = textureMode.activeMode.texture ?: return@handler
+
             for (entity in world.entitiesForRendering()) {
-                if (entity !is LivingEntity || entity.activeEffects.isEmpty()) continue
-                val color = getColorOptional(entity.activeEffects).asInt
-                val texture = textureMode.activeMode.texture ?: continue
+                if (entity !is Player || entity.activeEffects.isEmpty()) continue
+
+                val color = getColorOptional(entity.activeEffects)
+                if (color.isEmpty) continue
+
                 withPositionRelativeToCamera(entity.getPosition(event.partialTicks).add(0.0, 0.01, 0.0)) {
                     poseStack.withPush {
                         val currentRotation = (entity.tickCount + event.partialTicks) * rotationSpeed
@@ -65,7 +69,7 @@ object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", false) 
                         drawSquareTexture(
                             texture,
                             radius * 2,
-                            color,
+                            color.asInt,
                             AnchorPoint.CENTER,
                             noDepthTest = !canBeCovered
                         )

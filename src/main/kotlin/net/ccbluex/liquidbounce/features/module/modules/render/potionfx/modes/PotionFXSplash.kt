@@ -91,8 +91,11 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", fal
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
+
+            val texture = textureMode.activeMode.texture ?: return@handler
+
             for (splash in splashes) {
-                val texture = textureMode.activeMode.texture ?: continue
+
                 withPositionRelativeToCamera(splash.value.pos.add(0.0, 0.01, 0.0)) {
                     poseStack.withPush {
                         val age = lifetime.last - splashes.timeToDie(splash) + event.partialTicks

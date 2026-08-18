@@ -29,13 +29,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePo
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.PresetTexture
 import net.ccbluex.liquidbounce.render.AnchorPoint
 import net.ccbluex.liquidbounce.render.drawSquareTexture
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
-import net.minecraft.core.particles.ColorParticleOption
-import net.minecraft.util.ARGB
 import net.minecraft.world.entity.AreaEffectCloud
+import net.minecraft.world.item.alchemy.PotionContents.getColorOptional
 
 object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion", false) {
 
@@ -53,9 +51,11 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
+
+            val texture = textureMode.activeMode.texture ?: return@handler
+
             for (entity in world.entitiesForRendering()) {
                 if (entity !is AreaEffectCloud) continue
-                val texture = textureMode.activeMode.texture ?: continue
 
                 withPositionRelativeToCamera(entity.position().add(0.0, 0.01, 0.0))  {
                     poseStack.withPush {
