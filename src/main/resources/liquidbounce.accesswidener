@@ -60,6 +60,9 @@ accessible field net/minecraft/network/protocol/common/ServerboundResourcePackPa
 accessible field net/minecraft/world/item/BucketItem content Lnet/minecraft/world/level/material/Fluid;
 
 accessible field net/minecraft/client/KeyMapping key Lcom/mojang/blaze3d/platform/InputConstants$Key;
+accessible field net/minecraft/client/KeyMapping ALL Ljava/util/Map;
+accessible field net/minecraft/client/KeyMapping MAP Ljava/util/Map;
+accessible method net/minecraft/client/KeyMapping release ()V
 accessible field net/minecraft/world/entity/LivingEntity attackStrengthTicker I
 accessible field net/minecraft/world/entity/LivingEntity jumping Z
 accessible field net/minecraft/world/entity/LivingEntity noJumpDelay I
