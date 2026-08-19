@@ -74,19 +74,24 @@ class WireframePlayer {
 
     private val quaternion = Quaternionf()
 
-    fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b) {
+    fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b, noDepthTest: Boolean = true) {
         event.renderEnvironment {
-            withPositionRelativeToCamera(pos) {
-                poseStack.withPush {
-                    val bodyYaw = -Mth.wrapDegrees(yRot)
-                    poseStack.mulPose(quaternion.identity().rotationY(bodyYaw.toRadians()))
-                    poseStack.scale(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE)
+            render(color, outlineColor, noDepthTest)
+        }
+    }
 
-                    when (pose) {
-                        Pose.CROUCHING -> renderCrouching(color, outlineColor)
-                        Pose.SWIMMING -> renderSwimming(color, outlineColor)
-                        else -> renderStanding(color, outlineColor)
-                    }
+    context(env: WorldRenderEnvironment)
+    fun render(color: Color4b, outlineColor: Color4b, noDepthTest: Boolean = true) {
+        env.withPositionRelativeToCamera(pos) {
+            poseStack.withPush {
+                val bodyYaw = -Mth.wrapDegrees(yRot)
+                poseStack.mulPose(quaternion.identity().rotationY(bodyYaw.toRadians()))
+                poseStack.scale(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE)
+
+                when (pose) {
+                    Pose.CROUCHING -> renderCrouching(color, outlineColor, noDepthTest)
+                    Pose.SWIMMING -> renderSwimming(color, outlineColor, noDepthTest = noDepthTest)
+                    else -> renderStanding(color, outlineColor, noDepthTest)
                 }
             }
         }
@@ -106,33 +111,37 @@ class WireframePlayer {
     private fun WorldRenderEnvironment.renderStanding(
         color: Color4b,
         outlineColor: Color4b,
+        noDepthTest: Boolean = true,
     ) {
-        renderPart(RENDER_LEFT_LEG, color, outlineColor)
-        renderPart(RENDER_RIGHT_LEG, color, outlineColor)
-        renderPart(RENDER_BODY, color, outlineColor)
-        renderPart(RENDER_LEFT_ARM, color, outlineColor)
-        renderPart(RENDER_RIGHT_ARM, color, outlineColor)
+        renderPart(RENDER_LEFT_LEG, color, outlineColor, noDepthTest = noDepthTest)
+        renderPart(RENDER_RIGHT_LEG, color, outlineColor, noDepthTest = noDepthTest)
+        renderPart(RENDER_BODY, color, outlineColor, noDepthTest = noDepthTest)
+        renderPart(RENDER_LEFT_ARM, color, outlineColor, noDepthTest = noDepthTest)
+        renderPart(RENDER_RIGHT_ARM, color, outlineColor, noDepthTest = noDepthTest)
         renderPart(
             box = RENDER_HEAD,
             color = color,
             outlineColor = outlineColor,
             pivot = RENDER_HEAD.bottomCenter,
             xRot = xRot,
+            noDepthTest = noDepthTest,
         )
     }
 
     private fun WorldRenderEnvironment.renderCrouching(
         color: Color4b,
         outlineColor: Color4b,
+        noDepthTest: Boolean = true,
     ) {
-        renderPart(CROUCH_LEFT_LEG, color, outlineColor)
-        renderPart(CROUCH_RIGHT_LEG, color, outlineColor)
+        renderPart(CROUCH_LEFT_LEG, color, outlineColor, noDepthTest = noDepthTest)
+        renderPart(CROUCH_RIGHT_LEG, color, outlineColor, noDepthTest = noDepthTest)
         renderPart(
             box = CROUCH_BODY,
             color = color,
             outlineColor = outlineColor,
             pivot = CROUCH_BODY.bottomCenter,
             xRot = CROUCH_BODY_ROTATION,
+            noDepthTest = noDepthTest,
         )
         renderPart(
             box = CROUCH_LEFT_ARM,
@@ -140,6 +149,7 @@ class WireframePlayer {
             outlineColor = outlineColor,
             pivot = CROUCH_LEFT_ARM.bottomCenter,
             xRot = CROUCH_ARM_ROTATION,
+            noDepthTest = noDepthTest,
         )
         renderPart(
             box = CROUCH_RIGHT_ARM,
@@ -147,6 +157,7 @@ class WireframePlayer {
             outlineColor = outlineColor,
             pivot = CROUCH_RIGHT_ARM.bottomCenter,
             xRot = CROUCH_ARM_ROTATION,
+            noDepthTest = noDepthTest,
         )
         renderPart(
             box = CROUCH_HEAD,
@@ -154,12 +165,14 @@ class WireframePlayer {
             outlineColor = outlineColor,
             pivot = CROUCH_HEAD.bottomCenter,
             xRot = xRot,
+            noDepthTest = noDepthTest,
         )
     }
 
     private fun WorldRenderEnvironment.renderSwimming(
         color: Color4b,
         outlineColor: Color4b,
+        noDepthTest: Boolean = true,
     ) {
         val swimProgress = if (swimAmount > 0f) swimAmount else 1f
         val swimHeadRotation = Mth.lerp(swimProgress, xRot, SWIM_HEAD_TARGET_ROTATION)
@@ -169,13 +182,14 @@ class WireframePlayer {
             poseStack.mulPose(quaternion.identity().rotationX(SWIM_PART_ROTATION.toRadians()))
             poseStack.translate(-RENDER_BODY.center.x, -RENDER_BODY.center.y, -RENDER_BODY.center.z)
 
-            renderPart(RENDER_BODY, color, outlineColor)
+            renderPart(RENDER_BODY, color, outlineColor, noDepthTest = noDepthTest)
             renderPart(
                 box = RENDER_LEFT_ARM,
                 color = color,
                 outlineColor = outlineColor,
                 pivot = RENDER_LEFT_ARM.center,
                 zRot = SWIM_LEFT_ARM_ROLL,
+                noDepthTest = noDepthTest,
             )
             renderPart(
                 box = RENDER_RIGHT_ARM,
@@ -183,6 +197,7 @@ class WireframePlayer {
                 outlineColor = outlineColor,
                 pivot = RENDER_RIGHT_ARM.center,
                 zRot = SWIM_RIGHT_ARM_ROLL,
+                noDepthTest = noDepthTest,
             )
             renderPart(
                 box = RENDER_LEFT_LEG,
@@ -190,6 +205,7 @@ class WireframePlayer {
                 outlineColor = outlineColor,
                 pivot = RENDER_LEFT_LEG.center,
                 zRot = SWIM_LEFT_LEG_ROLL,
+                noDepthTest = noDepthTest,
             )
             renderPart(
                 box = RENDER_RIGHT_LEG,
@@ -197,6 +213,7 @@ class WireframePlayer {
                 outlineColor = outlineColor,
                 pivot = RENDER_RIGHT_LEG.center,
                 zRot = SWIM_RIGHT_LEG_ROLL,
+                noDepthTest = noDepthTest,
             )
             renderPart(
                 box = RENDER_HEAD,
@@ -204,6 +221,7 @@ class WireframePlayer {
                 outlineColor = outlineColor,
                 pivot = RENDER_HEAD.bottomCenter,
                 xRot = swimHeadRotation,
+                noDepthTest = noDepthTest,
             )
         }
     }
@@ -216,6 +234,7 @@ class WireframePlayer {
         xRot: Float = 0f,
         yRot: Float = 0f,
         zRot: Float = 0f,
+        noDepthTest: Boolean = true,
     ) {
         poseStack.withPush {
             if (xRot != 0f || yRot != 0f || zRot != 0f) {
@@ -232,7 +251,7 @@ class WireframePlayer {
                 poseStack.translate(-pivot.x, -pivot.y, -pivot.z)
             }
 
-            drawBox(box, color, outlineColor)
+            drawBox(box, color, outlineColor, noDepthTest = noDepthTest)
         }
     }
 

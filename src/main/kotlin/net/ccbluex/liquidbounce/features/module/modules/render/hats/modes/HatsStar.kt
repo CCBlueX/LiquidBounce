@@ -24,8 +24,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsColorSet
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.segmentAngle
 import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.pow
@@ -53,15 +55,15 @@ internal object HatsStar : HatsMode("Star") {
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         val rotAngle = getRotationAngle(HatStarSettings.spinSpeed)
         withHatRotation(rotAngle) {
-            drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->
+            drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { matrix ->
                 val points = HatStarSettings.pointsCount
                 val outerSegments = points * 32
                 val innerSegments = 12
 
                 for (mainI in 0 until outerSegments) {
 
-                    val outerCurAngleStar = getAngle(mainI, outerSegments)
-                    val outerNextAngleStar = getNextAngle(mainI, outerSegments)
+                    val outerCurAngleStar = segmentAngle(mainI, outerSegments)
+                    val outerNextAngleStar = segmentAngle(mainI + 1, outerSegments)
 
                     val curRadius = getStarRadius(
                         outerCurAngleStar,

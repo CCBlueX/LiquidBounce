@@ -19,8 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
-import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -31,12 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironment
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.math.fastCos
-import net.ccbluex.liquidbounce.utils.math.fastSin
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.minecraft.util.Mth
@@ -45,9 +39,6 @@ import org.joml.Quaternionf
 
 private val ROTATION = Quaternionf()
 
-/**
- * @author minecrrrr
- */
 abstract class HatsMode(name: String) : Mode(name) {
     final override val parent: ModeValueGroup<*>
         get() = modes
@@ -115,57 +106,6 @@ abstract class HatsMode(name: String) : Mode(name) {
         }
     }
 
-    protected fun VertexConsumer.addTorusQuad(
-        pose: PoseStack.Pose,
-        innerSegments: Int,
-        outerCurAngle: Float,
-        outerNextAngle: Float,
-        outerCurRadius: Float,
-        outerNextRadius: Float,
-        innerRadius: Float,
-        innerI: Int,
-        color: Color4b,
-    ) {
-        val innerCurAngle = getAngle(innerI, innerSegments)
-        val innerNextAngle = getNextAngle(innerI, innerSegments)
-
-        val curMainSin = outerCurAngle.fastSin()
-        val curMainCos = outerCurAngle.fastCos()
-        val nextMainSin = outerNextAngle.fastSin()
-        val nextMainCos = outerNextAngle.fastCos()
-
-        val innerCurSin = innerCurAngle.fastSin()
-        val innerCurCos = innerCurAngle.fastCos()
-        val innerNextSin = innerNextAngle.fastSin()
-        val innerNextCos = innerNextAngle.fastCos()
-
-        val curTubeY = innerRadius * innerCurSin
-        val nextTubeY = innerRadius * innerNextSin
-        val curTubeOffset = innerRadius * innerCurCos
-        val nextTubeOffset = innerRadius * innerNextCos
-
-        val p1Radius = outerCurRadius + curTubeOffset
-        val p2Radius = outerCurRadius + nextTubeOffset
-        val p3Radius = outerNextRadius + curTubeOffset
-        val p4Radius = outerNextRadius + nextTubeOffset
-
-        val p1x = p1Radius * curMainSin
-        val p1z = p1Radius * curMainCos
-        val p2x = p2Radius * curMainSin
-        val p2z = p2Radius * curMainCos
-        val p3x = p3Radius * nextMainSin
-        val p3z = p3Radius * nextMainCos
-        val p4x = p4Radius * nextMainSin
-        val p4z = p4Radius * nextMainCos
-
-        addVertex(pose, p1x, curTubeY, p1z).setColor(color)
-        addVertex(pose, p2x, nextTubeY, p2z).setColor(color)
-        addVertex(pose, p3x, curTubeY, p3z).setColor(color)
-        addVertex(pose, p2x, nextTubeY, p2z).setColor(color)
-        addVertex(pose, p4x, nextTubeY, p4z).setColor(color)
-        addVertex(pose, p3x, curTubeY, p3z).setColor(color)
-    }
-
     protected inline fun WorldRenderEnvironment.withHatRotation(
         angle: Float,
         block: WorldRenderEnvironment.() -> Unit,
@@ -176,11 +116,6 @@ abstract class HatsMode(name: String) : Mode(name) {
         }
     }
 
-    // Math functions
-
-    protected fun getAngle(i: Int, segments: Int) = i * Mth.TWO_PI / segments
-    protected fun getNextAngle(i: Int, segments: Int) = (i + 1) * Mth.TWO_PI / segments
-
     protected fun getRotationAngle(speed: Float): Float {
         return if (Mth.equal(speed, 0f)) {
             0f
@@ -188,6 +123,5 @@ abstract class HatsMode(name: String) : Mode(name) {
             (System.currentTimeMillis() % 360000) * 0.001F * speed
         }
     }
-
 
 }
