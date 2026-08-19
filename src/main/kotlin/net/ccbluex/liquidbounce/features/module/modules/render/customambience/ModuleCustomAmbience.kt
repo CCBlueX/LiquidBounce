@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.features.module.modules.render.customambience
 
 import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.config.types.group.Mode
@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticles
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.minecraft.client.renderer.fog.FogData
@@ -148,6 +149,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
         tree(FogValueGroup)
         tree(CustomLightmap)
         tree(SkyColor)
+        tree(WorldParticles)
     }
 
     @JvmStatic

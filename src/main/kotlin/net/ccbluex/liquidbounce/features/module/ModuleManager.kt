@@ -197,7 +197,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleChams
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCrystalView
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDamageParticles
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
