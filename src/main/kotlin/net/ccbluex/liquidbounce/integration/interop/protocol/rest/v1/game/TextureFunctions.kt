@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.integration.interop.internalServerError
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondImage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondResource
 import net.ccbluex.liquidbounce.integration.interop.serviceUnavailable
-import net.ccbluex.liquidbounce.render.gui.AtlasLookup
-import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
+import net.ccbluex.liquidbounce.render.atlas.AtlasLookup
+import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.client.renderer.texture.DynamicTexture
