@@ -37,11 +37,26 @@ object ModulePotionFX : ClientModule("PotionFX", ModuleCategories.RENDER) {
         tree(PotionFXLingering)
     }
 
+    val glow = LiquidBounce.resource("particles/glow.png")
+        .readNativeImage().asTexture { "PotionFX Image glow" }
+
     @Suppress("unused")
     enum class PresetTexture(override val tag: String, val path: String) : TextureMode.Builtin.Preset {
-        SIMPLE("Simple", "potion_fx/simple.png"),
-        RUNES("Runes", "potion_fx/runes.png"),
-        ATLAS("Atlas", "potion_fx/atlas.png");
+        DASHED("Dashed", "potion_fx/main/dashed.png"),
+        SOLID("Solid", "potion_fx/main/solid.png"),
+        RUNES("Runes", "potion_fx/main/runes.png"),
+        ATLAS("Atlas", "potion_fx/main/atlas.png");
+
+        override val texture = LiquidBounce.resource(this.path)
+            .readNativeImage().asTexture { "PotionFX Image $tag" }
+    }
+
+    @Suppress("unused")
+    enum class SecondaryPresetTexture(override val tag: String, val path: String) : TextureMode.Builtin.Preset {
+        CRACKED("Cracked", "potion_fx/secondary/cracked.png"),
+        NEURON("Neuron", "potion_fx/secondary/neuron.png"),
+        HEXAGON("Hexagon", "potion_fx/secondary/hexagon.png"),
+        STARDUST("Stardust", "potion_fx/secondary/stardust.png"),;
 
         override val texture = LiquidBounce.resource(this.path)
             .readNativeImage().asTexture { "PotionFX Image $tag" }

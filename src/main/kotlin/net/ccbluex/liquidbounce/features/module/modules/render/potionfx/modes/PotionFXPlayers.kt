@@ -23,6 +23,7 @@ import com.mojang.math.Axis
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -30,6 +31,12 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.PresetTexture
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.SecondaryPresetTexture
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXPlayers.MainEffect.radius
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXPlayers.MainEffect.rotationSpeed
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXPlayers.MainEffect.textureMode
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXPlayers.SecondEffect.extraRadius
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXPlayers.SecondEffect.secondaryTextureMode
 import net.ccbluex.liquidbounce.render.AnchorPoint
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -41,46 +48,83 @@ import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.alchemy.PotionContents.getColorOptional
 
-object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", false) {
+object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", true) {
 
-    private val radius by float("Radius", 1f, 0.1f..10f)
-    private val rotationSpeed by float("RotationSpeed", 4f, -10f..10f)
-    private val canBeCovered by boolean("CanBeCovered", true)
+    private object MainEffect : ValueGroup("MainEffect") {
+        val radius by float("Radius", 1f, 0.1f..10f)
+        val rotationSpeed by float("RotationSpeed", 4f, -10f..10f)
 
-    private val textureMode = modes(this, "Source", 0) {
-        arrayOf(
-            TextureMode.Builtin(it, PresetTexture.SIMPLE, enumSetAllOf<PresetTexture>()),
-            TextureMode.Custom(it),
-        )
+        val textureMode = modes(this@PotionFXPlayers, "Source", 0) {
+            arrayOf(
+                TextureMode.Builtin(it, PresetTexture.DASHED, enumSetAllOf<PresetTexture>()),
+                TextureMode.Custom(it),
+            )
+        }
     }
+
+    private object SecondEffect : ToggleableValueGroup(this, "SecondEffect", false) {
+        val rotationSpeed by float("RotationSpeed", 4f, -10f..10f)
+        val extraRadius by float("ExtraRadius", 0f, 0f..10f)
+        val secondaryTextureMode = modes(this, "Source", 0) {
+            arrayOf(
+                TextureMode.Builtin(it, SecondaryPresetTexture.CRACKED, enumSetAllOf<SecondaryPresetTexture>()),
+                TextureMode.Custom(it),
+            )
+        }
+    }
+
+    init {
+        tree(MainEffect)
+        tree(SecondEffect)
+    }
+
+    private val canBeCovered by boolean("CanBeCovered", true)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
 
             val texture = textureMode.activeMode.texture ?: return@handler
+            val secondaryTexture = secondaryTextureMode.activeMode.texture ?: return@handler
+            if (players.isEmpty()) return@handler
 
             for (entity in players) {
                 withPositionRelativeToCamera(entity.getPosition(event.partialTicks).add(0.0, 0.01, 0.0)) {
                     poseStack.withPush {
-                        val currentRotation = (entity.tickCount + event.partialTicks) * rotationSpeed
+                        val rotation = (entity.tickCount + event.partialTicks) * rotationSpeed
+                        val secondRotation = (entity.tickCount + event.partialTicks) * SecondEffect.rotationSpeed
 
-                        mulPose(Axis.XP.rotationDegrees(-90f))
-                        mulPose(Axis.ZP.rotationDegrees(currentRotation))
-                        drawSquareTexture(
-                            texture,
-                            radius * 2,
-                            getColorOptional(entity.activeEffects).asInt,
-                            AnchorPoint.CENTER,
-                            noDepthTest = !canBeCovered
-                        )
+                        withPush {
+                            mulPose(Axis.XP.rotationDegrees(-90f))
+                            mulPose(Axis.ZP.rotationDegrees(rotation))
+                            drawSquareTexture(
+                                texture,
+                                radius * 2,
+                                getColorOptional(entity.activeEffects).asInt,
+                                AnchorPoint.CENTER,
+                                noDepthTest = !canBeCovered
+                            )
+                        }
+                        if (SecondEffect.enabled) {
+                            withPush {
+                                mulPose(Axis.XP.rotationDegrees(-90f))
+                                mulPose(Axis.ZP.rotationDegrees(secondRotation))
+                                drawSquareTexture(
+                                    secondaryTexture,
+                                    (radius + extraRadius) * 2,
+                                    getColorOptional(entity.activeEffects).asInt,
+                                    AnchorPoint.CENTER,
+                                    noDepthTest = !canBeCovered
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    val players by computedOn<GameTickEvent, MutableSet<Player>>(ReferenceOpenHashSet()) { _, set ->
+    private val players by computedOn<GameTickEvent, MutableSet<Player>>(ReferenceOpenHashSet()) { _, set ->
         set.clear()
         if (!enabled) return@computedOn set
         world.entityGetter.filterTo(set, EntityTypes.PLAYER) {

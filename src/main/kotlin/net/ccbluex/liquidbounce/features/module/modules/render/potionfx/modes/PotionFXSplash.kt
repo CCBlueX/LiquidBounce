@@ -22,12 +22,21 @@ package net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes
 import com.mojang.math.Axis
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.PresetTexture
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.SecondaryPresetTexture
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.glow
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXSplash.MainEffect.fadeStart
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXSplash.MainEffect.lifetime
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXSplash.MainEffect.radius
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXSplash.SecondEffects.Effect.animAcceleration
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXSplash.SecondEffects.Effect.extraRadius
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXSplash.SecondEffects.Effect.secondaryTextureMode
 import net.ccbluex.liquidbounce.render.AnchorPoint
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -37,27 +46,57 @@ import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.Expiring
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.network.protocol.game.ClientboundLevelEventPacket
 import net.minecraft.world.entity.EntityTypes
-import net.minecraft.world.item.Items
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 
-object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", false) {
+object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", true) {
 
-    private val radius by float("Radius", 2f, 0.1f..10f)
-    private val rotationSpeed by float("RotationSpeed", 0f, -10f..10f)
-    private val lifetime by intRange("lifetime", 10..40, 1..1000)
-    private val fadeStart by float("fadeStart", 0.9f, 0.01f..1f)
-    private val canBeCovered by boolean("CanBeCovered", true)
+    private object MainEffect : ValueGroup("MainEffect") {
+        val lifetime by intRange("lifetime", 20..40, 1..1000)
+        val radius by float("Radius", 3f, 0.1f..10f)
+        val rotationSpeed by float("RotationSpeed", 3f, -10f..10f)
+        val fadeStart by float("fadeStart", 0.9f, 0.01f..1f)
 
-    private val textureMode = modes(this, "Source", 0) {
-        arrayOf(
-            TextureMode.Builtin(it, PresetTexture.SIMPLE, enumSetAllOf<PresetTexture>()),
-            TextureMode.Custom(it),
-        )
+        val textureMode = modes(this@PotionFXSplash, "Source", 0) {
+            arrayOf(
+                TextureMode.Builtin(it, PresetTexture.DASHED, enumSetAllOf<PresetTexture>()),
+                TextureMode.Custom(it),
+            )
+        }
     }
+
+    private object SecondEffects : ValueGroup("SecondEffects") {
+        object Flash : ToggleableValueGroup(this@PotionFXSplash, "Flash", true) {
+            val animTime by int("AnimTime", 4, 1..20)
+            val radius by float("Radius", 2f, 0.1f..10f)
+        }
+
+        val flash = tree(Flash)
+
+        object Effect : ToggleableValueGroup(this@PotionFXSplash, "Effect", false) {
+            val animAcceleration by float("AnimAcceleration", 1.25f, 0.1f..2f)
+            val rotationSpeed by float("RotationSpeed", 3f, -10f..10f)
+            val extraRadius by float("ExtraRadius", 0f, 0f..10f)
+            val secondaryTextureMode = modes(this, "Source", 0) {
+                arrayOf(
+                    TextureMode.Builtin(it, SecondaryPresetTexture.CRACKED, enumSetAllOf<SecondaryPresetTexture>()),
+                    TextureMode.Custom(it),
+                )
+            }
+        }
+
+        val effect = tree(Effect)
+    }
+
+    init {
+        tree(MainEffect)
+        tree(SecondEffects)
+    }
+
+    private val canBeCovered by boolean("CanBeCovered", true)
 
     private val splashes = ExpiringList<SplashData>()
 
@@ -65,10 +104,7 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", fal
     private val splashHandler = handler<PacketEvent> { event ->
         if (event.packet !is ClientboundLevelEventPacket || event.packet.type != 2002) return@handler
 
-        val nearestPotion = world.getEntities(
-            EntityTypes.SPLASH_POTION,
-            AABB(event.packet.pos).inflate(3.0)
-        ) { !it.item.`is`(Items.LINGERING_POTION) }
+        world.getEntities(EntityTypes.SPLASH_POTION, AABB(event.packet.pos).inflate(3.0)) { true }
             .minByOrNull { it.distanceToSqr(Vec3.atCenterOf(event.packet.pos)) } ?: return@handler
 
         val packetPos = Vec3.atCenterOf(event.packet.pos)
@@ -90,41 +126,73 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", fal
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
 
-            val texture = textureMode.activeMode.texture ?: return@handler
+            val texture = MainEffect.textureMode.activeMode.texture ?: return@handler
+            val secondaryTexture = secondaryTextureMode.activeMode.texture ?: return@handler
 
             for (splash in splashes) {
 
+                val timeToDie = splashes.timeToDie(splash)
+
+                val age = lifetime.last - timeToDie + event.partialTicks
+                val progress = Easing.EXPONENTIAL_OUT
+                    .transform(age / lifetime.first)
+                    .coerceIn(0f, 1f)
+                val glowProgress = Easing.QUAD_IN_OUT
+                    .transform(age / SecondEffects.Flash.animTime)
+                    .coerceIn(0f, 1f)
+
+                // fucking mojang
+                val alpha = (splash.value.color ushr 24) and 0xFF
+                val red = (splash.value.color ushr 16) and 0xFF
+                val green = (splash.value.color ushr 8) and 0xFF
+                val blue = splash.value.color and 0xFF
+
+                val fade =
+                    ((timeToDie - event.partialTicks) / (lifetime.last * (1.0f - fadeStart))).coerceIn(0f, 1f)
+
+                val newAlpha = (alpha * fade).toInt().coerceIn(0, 255)
+                val animatedColor = (newAlpha shl 24) or (red shl 16) or (green shl 8) or blue
+
+                withPositionRelativeToCamera(splash.value.pos.add(0.0, 0.011, 0.0)) {
+                    poseStack.withPush {
+                        withPush {
+                            mulPose(Axis.XP.rotationDegrees(-90f))
+                            mulPose(Axis.ZP.rotationDegrees(age * MainEffect.rotationSpeed))
+                            drawSquareTexture(
+                                texture,
+                                radius * 2 * progress,
+                                animatedColor,
+                                AnchorPoint.CENTER,
+                                noDepthTest = !canBeCovered
+                            )
+                        }
+                        if (SecondEffects.flash.enabled) {
+                            withPush {
+                                mulPose(mc.gameRenderer.mainCamera().rotation())
+                                drawSquareTexture(
+                                    glow,
+                                    SecondEffects.flash.radius * 2 * glowProgress,
+                                    splash.value.color,
+                                    AnchorPoint.CENTER,
+                                    noDepthTest = !canBeCovered
+                                )
+                            }
+                        }
+                    }
+                }
                 withPositionRelativeToCamera(splash.value.pos.add(0.0, 0.01, 0.0)) {
                     poseStack.withPush {
-                        val age = lifetime.last - splashes.timeToDie(splash) + event.partialTicks
-                        val progress = Easing.EXPONENTIAL_OUT
-                            .transform(age / lifetime.first)
-                            .coerceIn(0f, 1f)
-
-                        // fucking mojang
-                        val alpha = (splash.value.color ushr 24) and 0xFF
-                        val red = (splash.value.color ushr 16) and 0xFF
-                        val green = (splash.value.color ushr 8) and 0xFF
-                        val blue = splash.value.color and 0xFF
-
-                        val fade = (
-                                (splashes.timeToDie(splash) - event.partialTicks) / (lifetime.last * (1.0f - fadeStart))
-                            ).coerceIn(0f, 1f)
-
-                        val newAlpha = (alpha * fade).toInt().coerceIn(0, 255)
-                        val animatedColor = (newAlpha shl 24) or (red shl 16) or (green shl 8) or blue
-
-                        val currentRotation = age * rotationSpeed
-
-                        mulPose(Axis.XP.rotationDegrees(-90f))
-                        mulPose(Axis.ZP.rotationDegrees(currentRotation))
-                        drawSquareTexture(
-                            texture,
-                            radius * 2 * progress,
-                            animatedColor,
-                            AnchorPoint.CENTER,
-                            noDepthTest = !canBeCovered
-                        )
+                        if (SecondEffects.effect.enabled) {
+                            mulPose(Axis.XP.rotationDegrees(-90f))
+                            mulPose(Axis.ZP.rotationDegrees(age * SecondEffects.effect.rotationSpeed))
+                            drawSquareTexture(
+                                secondaryTexture,
+                                (radius + extraRadius) * 2 * (progress * animAcceleration).coerceIn(0f, 1f),
+                                animatedColor,
+                                AnchorPoint.CENTER,
+                                noDepthTest = !canBeCovered
+                            )
+                        }
                     }
                 }
             }
