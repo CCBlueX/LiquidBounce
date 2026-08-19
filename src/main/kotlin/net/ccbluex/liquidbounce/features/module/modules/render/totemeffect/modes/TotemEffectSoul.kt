@@ -29,8 +29,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.getAngle
-import net.ccbluex.liquidbounce.render.getNextAngle
+import net.ccbluex.liquidbounce.render.segmentAngle
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.world.phys.Vec3
@@ -85,8 +84,8 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
                 val innerSegments = 12
 
                 for (outerI in 0 until outerSegments) {
-                    val outerCurAngleTorus = getAngle(outerI, outerSegments)
-                    val outerNextAngleTorus = getNextAngle(outerI, outerSegments)
+                    val outerCurAngleTorus = segmentAngle(outerI, outerSegments)
+                    val outerNextAngleTorus = segmentAngle(outerI + 1, outerSegments)
 
                     for (innerI in 0 until innerSegments) {
                         addTorusQuad(

@@ -27,8 +27,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.getAngle
-import net.ccbluex.liquidbounce.render.getNextAngle
+import net.ccbluex.liquidbounce.render.segmentAngle
 import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.pow
@@ -63,8 +62,8 @@ internal object HatsStar : HatsMode("Star") {
 
                 for (mainI in 0 until outerSegments) {
 
-                    val outerCurAngleStar = getAngle(mainI, outerSegments)
-                    val outerNextAngleStar = getNextAngle(mainI, outerSegments)
+                    val outerCurAngleStar = segmentAngle(mainI, outerSegments)
+                    val outerNextAngleStar = segmentAngle(mainI + 1, outerSegments)
 
                     val curRadius = getStarRadius(
                         outerCurAngleStar,

@@ -27,8 +27,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.getAngle
-import net.ccbluex.liquidbounce.render.getNextAngle
+import net.ccbluex.liquidbounce.render.segmentAngle
 import net.minecraft.util.Mth
 import kotlin.math.abs
 
@@ -63,8 +62,8 @@ internal object HatsFlower : HatsMode("Flower") {
 
                 for (outerI in 0 until outerSegments) {
                     // Outer
-                    val outerCurAngleFlower = getAngle(outerI, outerSegments)
-                    val outerNextAngleFlower = getNextAngle(outerI, outerSegments)
+                    val outerCurAngleFlower = segmentAngle(outerI, outerSegments)
+                    val outerNextAngleFlower = segmentAngle(outerI + 1, outerSegments)
 
                     val curRadius = getFlowerRadius(
                         outerCurAngleFlower,

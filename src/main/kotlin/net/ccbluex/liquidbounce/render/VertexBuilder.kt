@@ -227,8 +227,7 @@ private fun VertexConsumer.addColoredVertex(
     }
 }
 
-fun getAngle(i: Int, segments: Int) = i * Mth.TWO_PI / segments
-fun getNextAngle(i: Int, segments: Int) = (i + 1) * Mth.TWO_PI / segments
+fun segmentAngle(i: Int, segments: Int) = i * Mth.TWO_PI / segments
 
 fun VertexConsumer.addTorusQuad(
     pose: PoseStack.Pose,
@@ -241,8 +240,8 @@ fun VertexConsumer.addTorusQuad(
     innerI: Int,
     color: Color4b,
 ) {
-    val innerCurAngle = getAngle(innerI, innerSegments)
-    val innerNextAngle = getNextAngle(innerI, innerSegments)
+    val innerCurAngle = segmentAngle(innerI, innerSegments)
+    val innerNextAngle = segmentAngle(innerI + 1, innerSegments)
 
     val curMainSin = outerCurAngle.fastSin()
     val curMainCos = outerCurAngle.fastCos()

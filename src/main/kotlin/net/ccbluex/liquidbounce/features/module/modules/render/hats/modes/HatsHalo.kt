@@ -27,8 +27,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.getAngle
-import net.ccbluex.liquidbounce.render.getNextAngle
+import net.ccbluex.liquidbounce.render.segmentAngle
 
 /**
  * @author minecrrrr
@@ -55,8 +54,8 @@ internal object HatsHalo : HatsMode("Halo") {
             // Main loop for creating the torus (donut) using segments.
             for (outerI in 0 until outerSegments) {
 
-                val outerCurAngleTorus = getAngle(outerI, outerSegments)
-                val outerNextAngleTorus = getNextAngle(outerI, outerSegments)
+                val outerCurAngleTorus = segmentAngle(outerI, outerSegments)
+                val outerNextAngleTorus = segmentAngle(outerI + 1, outerSegments)
 
                 val color = if (!isHurt) {
                     colors
