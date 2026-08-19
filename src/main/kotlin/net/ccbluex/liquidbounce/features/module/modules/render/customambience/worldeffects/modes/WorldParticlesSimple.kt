@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
+import kotlin.math.cbrt
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -55,7 +56,7 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
         val coord = Vec3(s * Mth.cos(theta), u , s * Mth.sin(theta))
         val rMinCb = radius.first.toDouble().pow(3)
         val rMaxCb = radius.last.toDouble().pow(3)
-        val distance = Math.cbrt(Random.nextDouble(rMinCb, rMaxCb))
+        val distance = cbrt(Random.nextDouble(rMinCb, rMaxCb))
 
         coords.add(player.position().add(coord * distance), lifetime.last)
     }

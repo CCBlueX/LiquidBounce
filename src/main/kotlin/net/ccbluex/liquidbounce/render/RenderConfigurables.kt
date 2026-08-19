@@ -158,6 +158,7 @@ enum class BuiltinParticle(
     SNOWFLAKE("Snowflake", "snowflake"),
     SPARK("Spark", "spark");
 
-    val image = LiquidBounce.resource("particles/$fileName.png").readNativeImage()
-    val texture = this.image.asTexture { "Builtin Particle $tag" }
+    val texture by lazy {
+        LiquidBounce.resource("particles/$fileName.png").readNativeImage().asTexture { "Builtin Particle $tag" }
+    }
 }

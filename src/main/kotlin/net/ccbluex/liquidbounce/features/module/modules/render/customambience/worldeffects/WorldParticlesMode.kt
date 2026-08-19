@@ -45,9 +45,9 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
     protected val animCurve by easing("AnimCurve", Easing.QUAD_IN_OUT)
     protected val canBeCovered by boolean("CanBeCovered", true)
 
-    protected val yMotion = YMotion()
+    private val yMotion = YMotion()
 
-    protected class YMotion : ToggleableValueGroup(null, "YMotion", false) {
+    private class YMotion : ToggleableValueGroup(null, "YMotion", false) {
         val motion by float("Motion", 2f, -10f..10f)
         val animBy by enumChoice("AnimBy", AnimBy.PROGRESS)
     }
@@ -69,7 +69,6 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
         if (currentTime - lastSpawnTime >= spawnTime) createParticleCoord(currentTime)
 
         event.renderEnvironment {
-
             val rot = mc.gameRenderer.mainCamera().rotation()
 
             coords.forEach {
@@ -81,7 +80,6 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
 
                 withPositionRelativeToCamera(it.value) {
                     poseStack.withPush {
-
                         if (yMotion.enabled) {
                             val anim = when (yMotion.animBy) {
                                 AnimBy.PROGRESS -> progress
@@ -99,7 +97,7 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
     }
 
     @Suppress("unused")
-    enum class AnimBy(
+    protected enum class AnimBy(
         override val tag: String,
     ) : Tagged {
         PROGRESS("Progress"),
