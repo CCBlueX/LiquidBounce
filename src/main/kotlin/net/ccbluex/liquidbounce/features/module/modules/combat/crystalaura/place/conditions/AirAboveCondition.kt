@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementContext
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.minecraft.core.BlockPos
 
 /**
@@ -33,7 +33,7 @@ import net.minecraft.core.BlockPos
 object AirAboveCondition : PlacementCondition {
 
     override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
-        val state = cache.up.getState()!!
+        val state = cache.up.stateOrEmpty
         return if (SubmoduleCrystalPlacer.oldVersion) {
             state.isAir || state.canBeReplaced()
         } else {
@@ -55,7 +55,7 @@ object AirOldVersionCondition : PlacementCondition {
             return true
         }
 
-        val state = candidate.above(2).getState()!!
+        val state = candidate.above(2).stateOrEmpty
         return state.isAir || state.canBeReplaced()
     }
 

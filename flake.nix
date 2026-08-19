@@ -7,6 +7,18 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+
+      # nixpkgs freetype 2.14.2 compiles the harfbuzz shaper in by default
+      # (FT_CONFIG_OPTION_USE_HARFBUZZ) and dlopens libharfbuzz.so.0 at runtime.
+      # The modern harfbuzz (12/13) pulled in by pango/cairo/gtk3 is ABI-
+      # incompatible with that 2023-era shaper, which segfaults the JVM in
+      # sun.font (FT_Load_Glyph -> af_shaper_get_coverage_hb) while rendering
+      # LiquidBounce's font atlas, crashing runClient. Rebuild freetype with
+      # the harfbuzz shaper disabled so it never touches harfbuzz.
+      freetype = pkgs.freetype.overrideAttrs (o: {
+        configureFlags = (o.configureFlags or [ ]) ++ [ "--without-harfbuzz" ];
+      });
+
       jcef_src = pkgs.fetchFromGitHub {
         owner = "CCBlueX";
         repo = "java-cef";
@@ -15,57 +27,62 @@
       };
       jcef = pkgs.callPackage jcef_src { };
       libs = with pkgs; [
-        temurin-bin-25
-        pciutils
-        nodejs_24
-        libpulseaudio
-        libGL
-        glfw
-        openal
-        # stdenv.cc.cc.lib
-        git
-        libX11
-        libXcursor
-        flite
-
-        # CEF (chromium) dependencies
-        # libcef
-
-        libgbm
-        glib
-        nss
-        nspr
+        alsa-lib
         atk
         at-spi2-atk
-        libdrm
+        at-spi2-core
+        cairo
+        cups
+        dbus
         expat
-        libxcb
-        libxkbcommon
+        flite
+        git
+        glib
+        glfw
+        gtk3
+        libGL
         libX11
         libXcomposite
+        libXcursor
         libXdamage
+        libdrm
         libXext
         libXfixes
-        libXrandr
         libgbm
-        gtk3
-        pango
-        cairo
-        alsa-lib
-        dbus
-        at-spi2-core
-        cups
+        libpulseaudio
+        libxcb
+        libxkbcommon
         libxshmfence
-
+        libXrandr
+    
+        # CEF (chromium) dependencies
+        # libcef
+    
+        nodejs_24
+        nspr
+        nss
+        openal
+        pango
+        pciutils
+    
+        # Provides libstdc++.so.6 / libgcc_s.so.1 needed by LWJGL's bundled
+        # libopenal.so at runtime (without it runClient crashes on startup).
+        stdenv.cc.cc.lib
+    
+        temurin-bin-25
         wayland
       ];
+      # Must come BEFORE the JDK on the library path so the JDK's libfontmanager
+      # resolves libfreetype.so to the harfbuzz-free build above instead of the
+      # bundled/stock one (which crashes on modern harfbuzz).
+      libraryPath = pkgs.lib.makeLibraryPath ([ freetype ] ++ libs);
 
     in {
       devShells.${system}.default = pkgs.mkShell {
-        packages = libs;
+        packages = [ freetype ] ++ libs;
         buildInputs = libs;
 
-        LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libs;
+        LD_LIBRARY_PATH = "${freetype}/lib:${libraryPath}";
         PROVIDED_JCEF_PATH = "${jcef}";
       };
     };

@@ -40,14 +40,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove.shouldHandleInputs
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
@@ -61,7 +59,6 @@ import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
-import org.lwjgl.glfw.GLFW
 import java.util.function.Predicate
 import kotlin.math.abs
 
@@ -223,8 +220,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
     @Suppress("unused")
     private val mouseHandler = handler<MouseButtonEvent> { event ->
-        if (midClickCameraTeleport &&
-            event.action == GLFW.GLFW_PRESS && event.button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+        if (midClickCameraTeleport && event.isMiddleClick) {
             val target = getCameraLookingAt() ?: return@handler
 
             // interpolate to prevent tp into block
@@ -244,8 +240,8 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         val directionalInput = DirectionalInput(mc.options)
         var yAxisMovement = 0.0
 
-        if (shouldHandleInputs(mc.options.keyJump) && mc.options.keyJump.isPressedOnAny) yAxisMovement += 1.0f
-        if (shouldHandleInputs(mc.options.keyShift) && mc.options.keyShift.isPressedOnAny) yAxisMovement -= 1.0f
+        if (mc.options.keyJump.isDown) yAxisMovement += 1.0f
+        if (mc.options.keyShift.isDown) yAxisMovement -= 1.0f
 
         val speed = this.speed.toDouble()
 

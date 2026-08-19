@@ -40,9 +40,9 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockTargetPlan
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -161,11 +161,12 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         // Return if we don't have a target
         val target = currentTarget ?: return@tickHandler
 
+        val rotation = RotationManager.serverRotation
         val rayTraceResult = traceFromPoint(
             range = range.toDouble(),
             start = player.eyePosition,
             // Use the rotation already sent to the server, so we only interact when the server sees the aim
-            direction = RotationManager.serverRotation.directionVector,
+            direction = rotation.directionVector,
             entity = player,
         )
         if (rayTraceResult.type != HitResult.Type.BLOCK) {
@@ -179,7 +180,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             return@tickHandler
         }
 
-        val state = blockPos.getState() ?: return@tickHandler
+        val state = blockPos.state ?: return@tickHandler
         if (blockPos.readyForHarvest(state)) {
             when (state.block.harvestAction) {
                 HarvestAction.BREAK -> {
@@ -187,7 +188,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                     doBreak(rayTraceResult)
                 }
                 HarvestAction.USE -> {
-                    doPlacement(rayTraceResult)
+                    doPlacement(rayTraceResult, rotation)
                 }
                 null -> return@tickHandler
             }
@@ -200,7 +201,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             val boneMealSlot = Slots.OffhandWithHotbar.findClosestSlot { it.item is BoneMealItem } ?: return@tickHandler
 
             SilentHotbar.selectSlotSilently(this, boneMealSlot, AutoUseBoneMeal.swapBackDelay.random())
-            doPlacement(rayTraceResult, hand = boneMealSlot.useHand)
+            doPlacement(rayTraceResult, rotation, hand = boneMealSlot.useHand)
             AutoUseBoneMeal.reset()
             waitTicks(interactDelay.random())
         } else {
@@ -224,7 +225,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                 } ?: return@tickHandler
 
                 SilentHotbar.selectSlotSilently(this, slot, AutoPlaceCrops.swapBackDelay.random())
-                doPlacement(rayTraceResult, hand = slot.useHand)
+                doPlacement(rayTraceResult, rotation, hand = slot.useHand)
 
                 waitTicks(interactDelay.random())
             }

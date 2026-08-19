@@ -204,11 +204,11 @@ fun MultiPlayerGameMode.useItem(
     this.ensureHasSentCarriedItem()
     var interactionResult: InteractionResult = InteractionResult.PASS
     this.startPrediction(world) { sequence ->
-        val playerInteractItemC2SPacket = ServerboundUseItemPacket(hand, sequence, yRot, xRot)
+        val packet = UseItemPacketRotation.createExplicit(hand, sequence, yRot, xRot)
         val itemStack = player.getItemInHand(hand)
         if (player.cooldowns.isOnCooldown(itemStack)) {
             interactionResult = InteractionResult.PASS
-            return@startPrediction playerInteractItemC2SPacket
+            return@startPrediction packet
         }
 
         val previousYRot = player.yRot
@@ -232,7 +232,7 @@ fun MultiPlayerGameMode.useItem(
         }
 
         interactionResult = useResult
-        return@startPrediction playerInteractItemC2SPacket
+        return@startPrediction packet
     }
 
     return interactionResult

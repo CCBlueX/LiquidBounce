@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.block.state.BlockState
@@ -35,7 +35,7 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
 
             else -> {
                 val cache = BlockPos.MutableBlockPos()
-                val stateBelow = cache.setWithOffset(pos, Direction.DOWN).getState() ?: return null
+                val stateBelow = cache.setWithOffset(pos, Direction.DOWN).state ?: return null
                 if (state.isAir) {
                     // If this position is air, check placeable position below
                     when {
@@ -54,7 +54,7 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
                 }
 
                 // Check if air above
-                if (cache.setWithOffset(pos, Direction.UP).getState()?.isAir == true) {
+                if (cache.setWithOffset(pos, Direction.UP).state?.isAir == true) {
                     when {
                         state.supportsCrops -> AutoFarmTrackedState.Plantable.FARMLAND
                         state.supportsNetherWart -> AutoFarmTrackedState.Plantable.SOUL_SAND

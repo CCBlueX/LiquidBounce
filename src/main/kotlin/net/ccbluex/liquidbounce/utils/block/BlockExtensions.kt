@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -41,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.network.useItem
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.TypedInstance
@@ -130,7 +132,8 @@ val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
 
 @Deprecated(
     "Use BlockPos.state or BlockPos.stateOrEmpty instead",
-    replaceWith = ReplaceWith("this.state", imports = ["net.ccbluex.liquidbounce.utils.block.state"])
+    replaceWith = ReplaceWith("this.state", imports = ["net.ccbluex.liquidbounce.utils.block.state"]),
+    level = DeprecationLevel.ERROR,
 )
 @JvmName("getState-deprecated")
 inline fun BlockPos.getState() = state
@@ -212,7 +215,7 @@ inline fun Vec3.searchBlocksInCuboid(
     radius: Float,
     crossinline filter: (BlockPos, BlockState) -> Boolean
 ): Sequence<Pair<BlockPos, BlockState>> =
-    searchBlocksInCuboid(radius).iterator().asSequence().mapNotNull {
+    searchBlocksInCuboid(radius).asSequence().mapNotNull {
         val state = it.state ?: return@mapNotNull null
 
         if (filter(it, state)) {
@@ -514,10 +517,12 @@ val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.
  * such as whether the game mode is destroying a block, the player's hands are busy, or the held item is enabled.
  * Callers should perform the applicable checks before calling this function.
  *
+ * @param rotation rotation used to produce [hitResult]
  * @see net.minecraft.client.Minecraft.startUseItem
  */
 fun doPlacement(
     hitResult: BlockHitResult,
+    rotation: Rotation,
     hand: InteractionHand = InteractionHand.MAIN_HAND,
     onPlacementSuccess: () -> Boolean = { true },
     onItemUseSuccess: () -> Boolean = { true },
@@ -537,7 +542,7 @@ fun doPlacement(
             // Ok, we cannot place on the block, so let's just use the item in the direction
             // without targeting a block (for buckets, etc.)
             if (!stack.isEmpty) {
-                val useItemResult = interaction.useItem(player, hand)
+                val useItemResult = interaction.useItem(player, hand, rotation.yRot, rotation.xRot)
                 if (useItemResult is Success) {
                     if (useItemResult.swingSource == SwingSource.CLIENT && onItemUseSuccess()) {
                         swingMode.swing(hand)
@@ -629,20 +634,17 @@ fun BlockState.isBreakable(pos: BlockPos): Boolean {
     return !isAir && (player.isCreative || getDestroySpeed(world, pos) >= 0f)
 }
 
-fun BlockPos?.fallDamageMultiplier(entity: Entity = player): Float {
-    if (this == null) {
-        return 1f
-    }
+fun BlockPos?.fallDamageMultiplier(entity: Entity): Float =
+    this?.getBlock()?.fallDamageMultiplier(entity) ?: 1f
 
-    val block = getBlock()
-    return when (block) {
+fun Block?.fallDamageMultiplier(entity: Entity): Float =
+    when (this) {
         Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW -> 0f
         Blocks.HAY_BLOCK, Blocks.HONEY_BLOCK -> 0.2f
-        Blocks.SLIME_BLOCK -> if (!entity.isSuppressingBounce && isOlderThan1_21_2) 0f else 1f
+        Blocks.SLIME_BLOCK -> if (entity.isSuppressingBounce && isOlderThan1_21_2) 1f else 0f
         is BedBlock -> 0.5f
         else -> 1f
     }
-}
 
 fun BlockPos.isBlastResistant(): Boolean {
     return getBlock()!!.explosionResistance >= 600f

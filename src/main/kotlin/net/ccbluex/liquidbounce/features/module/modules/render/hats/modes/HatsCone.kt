@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.segmentAngle
 import net.ccbluex.liquidbounce.render.setColor
 import kotlin.math.cos
 import kotlin.math.sin
@@ -55,8 +56,8 @@ internal object HatsCone : HatsMode("Cone") {
         drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->
             val segments = 128
             for (i in 0 until segments) {
-                val angle = getAngle(i, segments)
-                val nextAngle = getNextAngle(i, segments)
+                val angle = segmentAngle(i, segments)
+                val nextAngle = segmentAngle(i + 1, segments)
                 val cosine = cos(angle)
                 val sine = sin(angle)
                 val nextCosine = cos(nextAngle)
