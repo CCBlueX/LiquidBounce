@@ -138,13 +138,19 @@ internal object NoFallMLG : NoFallMode("MLG") {
             }
 
             val currentGoal = this.getCurrentGoal()
-
-            forceSneak = currentGoal?.requiresSneak == true
-            currentTarget = currentGoal?.takeUnless { it.requiresSneak && !player.isShiftKeyDown }
-
-            if (currentGoal == null) {
+            if (currentGoal == null || !shouldPrepareMlgAction(
+                    currentGoal.collisionTick,
+                    rotations.calculateTicks(currentGoal.plan.placementTarget.rotation),
+                    currentGoal.requiresSneak,
+                    player.isShiftKeyDown,
+                )
+            ) {
+                currentTarget = null
                 return@handler
             }
+
+            forceSneak = currentGoal.requiresSneak
+            currentTarget = currentGoal.takeUnless { it.requiresSneak && !player.isShiftKeyDown }
 
             RotationManager.setRotationTarget(
                 currentGoal.plan.placementTarget.rotation,
@@ -281,10 +287,6 @@ internal object NoFallMLG : NoFallMode("MLG") {
                 item === Items.WATER_BUCKET && plan.placementTarget.interactedBlockPos.state
                     ?.requiresSneakForAdjacentFluidPlacement(Fluids.WATER) == true
 
-            if (requiresSneak && !player.isShiftKeyDown) {
-                continue
-            }
-
             if (!plan.canPlaceBlockItemAtTarget()) {
                 continue
             }
@@ -305,7 +307,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             } else {
                 MlgPlacementActionType.MLG
             }
-            return PlacementAction(plan, type, item, requiresSneak)
+            return PlacementAction(plan, type, item, requiresSneak, collision.tick)
         }
 
         return null
@@ -377,6 +379,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
         val type: MlgPlacementActionType,
         val item: Item,
         val requiresSneak: Boolean,
+        val collisionTick: Int? = null,
     )
 }
 
@@ -384,6 +387,24 @@ internal enum class MlgPlacementActionType {
     MLG,
     SCAFFOLDING,
     PICKUP_WATER,
+}
+
+/**
+ * [FallingPlayer.findCollision] reports zero when the next movement tick lands.
+ * Reserve one tick for interaction, plus one for sneak input when it has not reached the player yet.
+ */
+internal fun shouldPrepareMlgAction(
+    collisionTick: Int?,
+    rotationTicks: Int,
+    requiresSneak: Boolean,
+    isSneaking: Boolean,
+): Boolean {
+    if (collisionTick == null) {
+        return true
+    }
+
+    val sneakPreparationTicks = if (requiresSneak && !isSneaking) 1 else 0
+    return collisionTick <= rotationTicks + 1 + sneakPreparationTicks
 }
 
 internal fun wasMlgPlacementApplied(
