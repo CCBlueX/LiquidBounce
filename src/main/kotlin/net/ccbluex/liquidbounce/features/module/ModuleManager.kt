@@ -198,7 +198,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleChams
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCrystalView
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDamageParticles
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
@@ -241,6 +241,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
+import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAirPlace
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
@@ -674,6 +675,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleProtectionZones,
             ModuleCrosshair,
             ModuleWings,
+            ModuleTotemEffect,
 
             // World
             AutoMobHeal,

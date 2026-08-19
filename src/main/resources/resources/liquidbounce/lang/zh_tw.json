@@ -419,6 +419,7 @@
   "liquidbounce.liquidchat.states.loggedIn": "身份驗證成功！",
   "liquidbounce.liquidchat.writeMessage": "發送訊息: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "發送私訊: %s",
+  "liquidbounce.module.totemEffect.description": "當玩家使用圖騰時渲染特效。",
   "liquidbounce.module.wings.description": "在玩家身後渲染翅膀。",
   "liquidbounce.module.packetLogger.description": "輸出所有的網路包以及它們的欄位。",
   "liquidbounce.module.packetLogger.messages.send": "發送",

@@ -256,6 +256,7 @@
   "liquidbounce.liquidchat.states.loggedIn": "Kimlik doğrulandı!",
   "liquidbounce.liquidchat.writeMessage": "Mesaj göndermek için: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "Özel mesaj göndermek için: %s",
+  "liquidbounce.module.totemEffect.description": "Oyuncular totem kullandığında bir efekt oluşturur.",
   "liquidbounce.module.wings.description": "Oyuncunun arkasında kanatlar oluşturur.",
   "liquidbounce.module.packetLogger.description": "Tüm paketleri ve alanlarını yazdırır.",
   "liquidbounce.module.packetLogger.messages.send": "Gönderiliyor",

@@ -240,6 +240,7 @@
 	"liquidbounce.liquidchat.states.loggedIn": "認証済み! ",
 	"liquidbounce.liquidchat.writeMessage": "メッセージを送信するには: %s",
 	"liquidbounce.liquidchat.writePrivateMessage": "プライベート メッセージを送信するには: %s",
+    "liquidbounce.module.totemEffect.description": "プレイヤーがトーテムを使用する際にエフェクトを描画します。",
     "liquidbounce.module.wings.description": "プレイヤーの後ろに羽を描画します。",
 	"liquidbounce.module.ESP.description": "壁越しにターゲットを見ることができます。",
     "liquidbounce.module.autoTpa.description": "テレポートリクエストを自動的に承認します",

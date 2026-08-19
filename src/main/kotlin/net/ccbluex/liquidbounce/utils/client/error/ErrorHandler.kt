@@ -236,7 +236,7 @@ private inline fun Appendable.appendQuickFixInstructionStep(
 ): Appendable = apply {
     steps
         .map {
-            if (!it.endsWith(".")) {
+            if (!it.endsWith('.')) {
                 "$it."
             } else {
                 it
