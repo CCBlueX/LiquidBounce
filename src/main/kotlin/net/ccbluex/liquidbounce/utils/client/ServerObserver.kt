@@ -164,7 +164,7 @@ object ServerObserver : EventListener {
         packet as ClientboundCommandSuggestionsPacket
 
         this.plugins = packet.toSuggestions().list.mapNotNullTo(objectRBTreeSetOf()) { cmd ->
-            val command = cmd.text.split(":")
+            val command = cmd.text.split(':')
 
             if (command.size > 1) {
                 command[0].replace("/", "")
@@ -338,7 +338,7 @@ object ServerObserver : EventListener {
                 && diffs.drop(2).all { it == -1 }
                 -> "Polar"
 
-            transactions.first() < -3000 && transactions.any { it == 0 }
+            transactions.first() < -3000 && transactions.contains(0)
                 -> "Intave"
 
             transactions.take(3) == listOf(-30767, -30766, -25767)

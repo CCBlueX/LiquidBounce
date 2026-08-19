@@ -257,6 +257,7 @@
   "liquidbounce.module.wings.description": "Rendert Flügel hinter dem Spieler.",
   "liquidbounce.liquidchat.writePrivateMessage": "So sendest du eine private Nachricht: %s",
   "liquidbounce.module.potionFX.description": "Rendert visuelle Aura-Effekte um Spieler, Wurftränke und verweilende Tränke.",
+  "liquidbounce.module.totemEffect.description": "Rendert einen Effekt, wenn Spieler ein Totem benutzen.",
   "liquidbounce.module.ESP.description": "Ermöglicht das Sehen von Zielen durch Wände.",
   "liquidbounce.module.abortBreaking.description": "Ermöglicht dir, das Abbauen eines Blocks abzubrechen, ohne den Fortschritt zu verlieren.",
   "liquidbounce.module.aimbot.description": "Schaut automatisch auf Ziele in der Nähe.",

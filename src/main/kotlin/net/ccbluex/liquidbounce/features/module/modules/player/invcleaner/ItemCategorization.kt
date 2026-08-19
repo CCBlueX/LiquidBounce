@@ -61,7 +61,6 @@ import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ArrowItem
-import net.minecraft.world.item.AxeItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.BucketItem
@@ -240,23 +239,10 @@ class ItemCategorization(
             // Everything could be a weapon (i.e. a stick with Knockback II should be considered a weapon)
             add(WeaponItemFacet(slot))
 
-
-
             when (val item = itemStack.item) {
                 is BowItem -> add(BowItemFacet(slot))
                 is CrossbowItem -> add(CrossbowItemFacet(slot))
                 is ArrowItem -> add(ArrowItemFacet(slot))
-                is AxeItem -> {
-                    val sharpnessLevel = itemStack.getEnchantment(Enchantments.SHARPNESS)
-                    if (sharpnessLevel >= 100) {
-                        add(GodAxeFacet(slot))
-                    } else if (sharpnessLevel >= 5) {
-                        add(SharpAxeFacet(slot))
-                    } else {
-                        add(MiningToolItemFacet(slot))
-                    }
-                }
-
                 is FishingRodItem -> add(RodItemFacet(slot))
                 is ShieldItem -> add(ShieldItemFacet(slot))
                 is BlockItem -> {
@@ -306,6 +292,17 @@ class ItemCategorization(
                 is EggItem, is SnowballItem, is WindChargeItem -> add(ThrowableItemFacet(slot))
 
                 else -> when {
+                    itemStack.isAxe -> {
+                        val sharpnessLevel = itemStack.getEnchantment(Enchantments.SHARPNESS)
+                        if (sharpnessLevel >= 100) {
+                            add(GodAxeFacet(slot))
+                        } else if (sharpnessLevel >= 5) {
+                            add(SharpAxeFacet(slot))
+                        } else {
+                            add(MiningToolItemFacet(slot))
+                        }
+                    }
+
                     itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
 
                     itemStack.isSword -> add(SwordItemFacet(slot))

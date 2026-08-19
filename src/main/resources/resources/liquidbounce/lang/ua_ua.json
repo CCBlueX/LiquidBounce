@@ -165,6 +165,7 @@
   "liquidbounce.command.chat.description": "Відправити повідомлення в LiquidChat.",
   "liquidbounce.command.chat.parameter.message.description": "Повідомлення для відправки.",
   "liquidbounce.module.potionFX.description": "Відображає візуальні ефекти аури навколо гравців, вибухових та осідаючих зілля.",
+  "liquidbounce.module.totemEffect.description": "Ефект при використанні тотема гравцями",
   "liquidbounce.module.wings.description": "Відображає крила позаду гравця.",
   "liquidbounce.module.aimbot.description": "Автоматично наводиться на вибрані сутності навколо вас.",
   "liquidbounce.module.autoArmor.description": "Автоматично одягає найкращу броню.",

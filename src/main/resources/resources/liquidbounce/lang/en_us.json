@@ -439,6 +439,7 @@
   "liquidbounce.liquidchat.writeMessage": "To send a message: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "To send a private message: %s",
   "liquidbounce.module.potionFX.description": "Renders visual aura effects around players, splash, and lingering potions.",
+  "liquidbounce.module.totemEffect.description": "Renders an effect when players use a totem of undying.",
   "liquidbounce.module.wings.description": "Render wings behind player",
   "liquidbounce.module.packetLogger.description": "Prints all packets and their fields.",
   "liquidbounce.module.packetLogger.messages.send": "Sending",
