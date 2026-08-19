@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.fastutil.mapToCharArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.render.drawRoundedRect
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.collection.LruCache
+import net.ccbluex.liquidbounce.utils.kotlin.mapString
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -38,7 +38,7 @@ import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.item.enchantment.EnchantmentHelper
 
 private object EnchantmentDisplayHelper {
-    private val enchantmentAbbreviationCache = LruCache<Holder<Enchantment>, String>(128)
+    private val enchantmentAbbreviationCache = LruCache<Holder<Enchantment>, String>(64)
 
     private const val MAX_NAME_LENGTH = 3
 
@@ -57,7 +57,7 @@ private object EnchantmentDisplayHelper {
         enchantment.value().description.string
 
     private fun getInitialsAbbreviation(words: List<String>): String =
-        words.mapToCharArray { it.first() }.concatToString()
+        words.mapString { it.first() }
 
     private fun getCompoundAbbreviation(words: List<String>): String {
         val firstWord = words.first()
