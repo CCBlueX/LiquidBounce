@@ -19,12 +19,16 @@
 
 package net.ccbluex.liquidbounce.render
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.render.asTexture
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.core.BlockPos
 import net.minecraft.util.ToFloatFunction
 import net.minecraft.world.entity.Entity
@@ -120,5 +124,41 @@ class GenericDistanceHSBColorMode<T : Any>(
             GenericDistanceHSBColorMode<Entity>(parent, fixedAlpha) {
                 it.position().cameraDistance().toFloat()
             }
+    }
+}
+
+@Suppress("UNUSED")
+enum class BuiltinParticle(
+    override val tag: String,
+    fileName: String,
+) : Tagged {
+    /**
+     * Original: IDK (first: https://github.com/CCBlueX/LiquidBounce/pull/4976)
+     */
+    ORBIZ("Orbiz", "glow"),
+
+    /**
+     * Original: https://www.svgrepo.com/svg/528677/stars-minimalistic
+     * Modified: @sqlerrorthing
+     */
+    STAR("Star", "star"),
+
+    /**
+     * Original: https://www.svgrepo.com/svg/487288/dollar?edit=true
+     * Modified: @sqlerrorthing
+     */
+    DOLLAR("Dollar", "dollar"),
+
+    CROWN("Crown", "crown"),
+    HEART("Heart", "heart"),
+    LIGHTNING("Lightning", "lightning"),
+    LINE("Line", "line"),
+    POINT("Point", "point"),
+    RHOMBUS("Rhombus", "rhombus"),
+    SNOWFLAKE("Snowflake", "snowflake"),
+    SPARK("Spark", "spark");
+
+    val texture by lazy {
+        LiquidBounce.resource("particles/$fileName.png").readNativeImage().asTexture { "Builtin Particle $tag" }
     }
 }

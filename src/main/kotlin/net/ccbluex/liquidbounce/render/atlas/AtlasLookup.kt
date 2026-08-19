@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.gui
+package net.ccbluex.liquidbounce.render.atlas
 
 sealed interface AtlasLookup {
     data object NotReady : AtlasLookup

@@ -84,7 +84,7 @@ object HumanInputDeserializer {
     val fileDeserializer: StringDeserializer<File> = StringDeserializer(::File)
 
     fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
-        return str.split(",").mapTo(ArrayList(), componentDeserializer::deserializeThrowing)
+        return str.split(',').mapTo(ArrayList(), componentDeserializer::deserializeThrowing)
     }
 
     private inline fun <N, R> parseRange(
