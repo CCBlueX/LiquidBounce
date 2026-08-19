@@ -99,6 +99,7 @@
     "minecraft.item.MixinItemCooldowns",
     "minecraft.item.MixinItemInHandRenderer",
     "minecraft.item.MixinItemStack",
+    "minecraft.item.MixinTridentItem",
     "minecraft.network.MixinAddressCheck",
     "minecraft.network.MixinClientboundRemoveEntitiesPacket",
     "minecraft.network.MixinClientHandshakePacketListenerImplMixin",
