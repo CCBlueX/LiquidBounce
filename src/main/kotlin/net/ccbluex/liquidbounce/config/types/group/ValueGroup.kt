@@ -18,20 +18,14 @@
  */
 package net.ccbluex.liquidbounce.config.types.group
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonNull
 import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachIsInstance
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.OptionalInclusion
-import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.types.BindValue
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.CurveValue
@@ -50,13 +44,10 @@ import net.ccbluex.liquidbounce.config.types.list.MutableListValue
 import net.ccbluex.liquidbounce.config.types.list.RegistryListValue
 import net.ccbluex.liquidbounce.config.types.list.RegistryMutableListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.asTagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
-import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
-import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.core.Vec3i
@@ -491,6 +482,9 @@ open class ValueGroup(
 
     fun <C : SequencedSet<MobEffect>> mobEffects(name: String, default: C) =
         registryList(name, default, ValueType.MOB_EFFECT)
+
+    fun <C : SequencedSet<Identifier>> enchantments(name: String, default: C) =
+        registryList(name, default, ValueType.ENCHANTMENT)
 
     fun <C : SequencedSet<Identifier>> c2sPackets(name: String, default: C) =
         registryList(name, default, ValueType.C2S_PACKET)
