@@ -171,7 +171,7 @@ class ScriptReflectionUtil {
         args: Array<out Any?>,
         methodProvider: (Class<*>) -> Array<Method>
     ): Method {
-        if (args.any { it == null }) {
+        if (args.contains(null)) {
             throw IllegalArgumentException(
                 "Null argument is not support by this api, please use " +
                     "reflection api with EnvironmentRemapper manually"

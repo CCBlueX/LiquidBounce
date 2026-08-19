@@ -52,6 +52,14 @@ fun <T> Iterable<Predicate<T>>.matchesAny(t: T): Boolean =
 fun <T> Iterable<Predicate<T>>.matchesAll(t: T): Boolean =
     all { it.test(t) }
 
+inline fun <T : Any> Array<T?>.getOrSet(index: Int, defaultValue: () -> T): T {
+    val t = get(index)
+    if (t != null) return t
+    val y = defaultValue()
+    set(index, y)
+    return y
+}
+
 operator fun <T : Any> ColorCollection<T>.contains(e: T) =
     e === this.white ||
         e === this.orange ||
