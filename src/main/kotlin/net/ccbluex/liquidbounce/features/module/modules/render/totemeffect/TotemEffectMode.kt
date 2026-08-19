@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.Modul
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect.entities
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironment
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.Easing
 
@@ -35,7 +34,7 @@ abstract class TotemEffectMode(name: String) : Mode(name) {
     final override val parent: ModeValueGroup<*>
         get() = ModuleTotemEffect.modes
 
-    val lifetime by int("lifetime", 20, 1..200)
+    val lifetime by int("lifetime", 20, 1..200).onChanged { entities.clear() }
     protected val fade by float("Fade", 0.7f, 0f..1f)
     protected val animCurve by easing("AnimCurve", Easing.EXPONENTIAL_OUT)
     protected val canBeCovered by boolean("CanBeCovered", false)
@@ -47,18 +46,17 @@ abstract class TotemEffectMode(name: String) : Mode(name) {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
             entities.forEach {
-                withPositionRelativeToCamera(it.value.pos.add(0.0, it.value.bbHeight / 2.0, 0.0)) {
-                    val age = lifetime - entities.timeToDie(it) + event.partialTicks
+                val entity = it.value
+                val age = lifetime - entities.timeToDie(it) + event.partialTicks
 
-                    val progress = animCurve
-                        .transform(age / lifetime)
-                        .coerceIn(0f, 1f)
+                val progress = animCurve
+                    .transform(age / lifetime)
+                    .coerceIn(0f, 1f)
 
-                    val fade = if (progress >= fade) (progress - fade) / (1f - fade).coerceAtLeast(0.001f) else 0f
+                val fade = if (progress >= fade) (progress - fade) / (1f - fade).coerceAtLeast(0.001f) else 0f
 
-                    poseStack.withPush {
-                        drawTotemEffect(progress, age, it.value, fade)
-                    }
+                poseStack.withPush {
+                    drawTotemEffect(progress, age, entity, fade)
                 }
             }
         }

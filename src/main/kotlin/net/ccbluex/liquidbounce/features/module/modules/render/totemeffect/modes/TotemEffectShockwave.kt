@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.Totem
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectMode
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawGradientCircle
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 
 internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
 
@@ -40,13 +41,15 @@ internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
         val outer = if (color.sync) inner else color.outerColor
         val alpha = ((1f - fade).coerceIn(0f, 1f) * 255f).toInt()
 
-        drawGradientCircle(
-            outerRadius = radius.endInclusive * progress,
-            innerRadius = radius.start * progress,
-            outerColor = outer.alpha(alpha),
-            innerColor = inner.alpha(alpha),
-            noDepthTest = !canBeCovered
-        )
+        withPositionRelativeToCamera(entity.pos.add(0.0, entity.bbHeight / 2.0, 0.0)) {
+            drawGradientCircle(
+                outerRadius = radius.endInclusive * progress,
+                innerRadius = radius.start * progress,
+                outerColor = outer.alpha(alpha),
+                innerColor = inner.alpha(alpha),
+                noDepthTest = !canBeCovered
+            )
+        }
     }
 
 }

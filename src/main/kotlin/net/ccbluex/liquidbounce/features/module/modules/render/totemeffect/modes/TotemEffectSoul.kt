@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.getAngle
 import net.ccbluex.liquidbounce.render.getNextAngle
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.world.phys.Vec3
 
