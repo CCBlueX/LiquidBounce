@@ -70,13 +70,17 @@ object CommandDebug : Command.Factory {
 
             val buffer = okio.Buffer()
 
-            serializeAutoConfig(buffer.outputStream().writer())
+            buffer.outputStream().writer().use {
+                serializeAutoConfig(it)
+            }
             val autoConfig = buffer.readUtf8()
             val autoConfigPaste = uploadToPaste(autoConfig)
             buffer.clear()
 
             val debugJson = createDebugJson(autoConfigPaste)
-            gson.newJsonWriter(buffer.outputStream().writer()).use { gson.toJson(debugJson, it) }
+            buffer.outputStream().writer().use {
+                gson.toJson(debugJson, it)
+            }
             val paste = uploadToPaste(buffer.readUtf8())
             buffer.clear()
 
