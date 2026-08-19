@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -37,6 +38,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation
 import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
@@ -61,7 +63,7 @@ import kotlin.random.Random
  */
 object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableOnQuit = true) {
 
-    private val modes = choices("Mode", Stationary, arrayOf(Queue, Cancel, Stationary))
+    private val modes = choices("Mode", Stationary, arrayOf(Queue, Cancel, Stationary, TickMovement))
         .apply { tagBy(this) }
     private val disableOnFlag by boolean("DisableOnFlag", true)
     private val notification by boolean("Notification", false)
@@ -96,7 +98,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
      */
     @Suppress("unused")
     private val moveHandler = handler<PlayerTickEvent> { event ->
-        if (warpInProgress) return@handler
+        if (warpInProgress || modes.activeMode === TickMovement) return@handler
 
         event.cancelEvent()
         missedOutTick++
@@ -110,12 +112,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
 
         // Create a simulated player from the client player, as we cannot use the player simulation cache
         // since we are going to modify the player's yaw and pitch
-        val directionalInput = DirectionalInput(
-            mc.options.keyUp.isPressedOnAny,
-            mc.options.keyDown.isPressedOnAny,
-            mc.options.keyLeft.isPressedOnAny,
-            mc.options.keyRight.isPressedOnAny
-        )
+        val directionalInput = DirectionalInput(mc.options)
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
             SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(
@@ -164,18 +161,18 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     /**
      * Queue network communication - acts as network lag
      */
-    object Queue : Mode("Queue") {
+    private object Queue : Mode("Queue") {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
+        private val origins by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
         @Suppress("unused")
         private val fakeLagHandler = handler<BlinkPacketEvent>(
             priority = EventPriorityConvention.SAFETY_FEATURE
         ) { event ->
-            if (origin.any { origin -> origin == event.origin }) {
+            if (event.origin in origins) {
                 event.action = Action.QUEUE
             }
         }
@@ -185,16 +182,16 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     /**
      * Cancel network communication
      */
-    object Cancel : Mode("Cancel") {
+    private object Cancel : Mode("Cancel") {
 
-        private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
+        private val origins by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
         private val packetHandler = handler<PacketEvent> { event ->
-            if (origin.any { origin -> origin == event.origin }) {
+            if (event.origin in origins) {
                 event.cancelEvent()
             }
         }
@@ -204,7 +201,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     /**
      * Stationary freeze - only cancel movement but keeps network communication intact
      */
-    object Stationary : Mode("Stationary") {
+    private object Stationary : Mode("Stationary") {
         /**
          * Bypasses Grim's BadPacketsR and Matrix7 Timer Check
          */
@@ -256,7 +253,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
                         )
                     )
                     sendPacketSilently(
-                        ServerboundUseItemPacket(
+                        UseItemPacketRotation.createExplicit(
                             packet.hand,
                             packet.sequence,
                             yaw + yawOffset,
@@ -291,6 +288,34 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
                     sendPacketSilently(packet)
                 }
             }
+        }
+
+    }
+
+    private object TickMovement : Mode("TickMovement") {
+
+        private val interval by intRange("Interval", 20..20, 1..200, "ticks")
+        private var ticksUntilMovement = 0
+
+        override val parent: ModeValueGroup<Mode>
+            get() = modes
+
+        override fun enable() {
+            ticksUntilMovement = interval.random()
+        }
+
+        override fun disable() {
+            ticksUntilMovement = 0
+        }
+
+        @Suppress("unused")
+        private val movementTickHandler = handler<PlayerMovementTickEvent> { event ->
+            if (--ticksUntilMovement <= 0) {
+                ticksUntilMovement = interval.random()
+                return@handler
+            }
+
+            event.cancelEvent()
         }
 
     }

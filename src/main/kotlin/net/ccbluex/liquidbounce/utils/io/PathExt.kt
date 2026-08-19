@@ -37,5 +37,5 @@ private fun Path.readAsBase64(output: OutputStream) {
 fun Path.readAsBase64(): String {
     val output = FastByteArrayOutputStream(Math.toIntExact(((this.fileSize() + 2) / 3) * 4))
     this.readAsBase64(output)
-    return output.toString(Charsets.UTF_8)
+    return output.toString(Charsets.US_ASCII)
 }

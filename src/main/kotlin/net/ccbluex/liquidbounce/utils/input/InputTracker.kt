@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.KeyMapping
-import org.lwjgl.glfw.GLFW
 
 /**
  * Singleton object that tracks the state of mouse buttons and key presses.
@@ -37,20 +36,20 @@ object InputTracker : EventListener {
     /**
      * Tracks the state of each mouse button.
      *
-     * [GLFW.GLFW_RELEASE], [GLFW.GLFW_PRESS] or [GLFW.GLFW_REPEAT]
-     * @see GLFW
+     * [InputConstants.RELEASE], [InputConstants.PRESS] or [InputConstants.REPEAT]
+     * @see InputConstants
      */
     private val mouseStates = IntArray(32)
 
     /**
      * Tracks the last time each mouse button was pressed.
-     * Array indices correspond to GLFW mouse button codes.
+     * Array indices correspond to InputConstants mouse button codes.
      */
     private val mouseLastPressed = LongArray(32)
 
     /**
      * Tracks the last time each keyboard key was pressed.
-     * Map key is the GLFW key code, value is the timestamp.
+     * Map key is the InputConstants key code, value is the timestamp.
      */
     private val keyLastPressed = Int2LongOpenHashMap()
 
@@ -116,7 +115,7 @@ object InputTracker : EventListener {
         mouseStates[event.button] = event.action
 
         // Track when the button was pressed
-        if (event.action == GLFW.GLFW_PRESS) {
+        if (event.isPressed) {
             mouseLastPressed[event.button] = System.currentTimeMillis()
         }
     }
@@ -124,15 +123,15 @@ object InputTracker : EventListener {
     /**
      * Checks if the specified mouse button is currently pressed.
      *
-     * @param button The GLFW code of the mouse button.
+     * @param button The InputConstants code of the mouse button.
      * @return True if the mouse button is pressed, false otherwise.
      */
-    fun isMouseButtonPressed(button: Int): Boolean = mouseStates[button] == GLFW.GLFW_PRESS
+    fun isMouseButtonPressed(button: Int): Boolean = mouseStates[button] == InputConstants.PRESS
 
     /**
      * Checks if the specified mouse button was pressed recently.
      *
-     * @param button The GLFW code of the mouse button.
+     * @param button The InputConstants code of the mouse button.
      * @param withinMs The time window in milliseconds to check within.
      * @return True if the mouse button was pressed within the specified time, false otherwise.
      */
@@ -144,7 +143,7 @@ object InputTracker : EventListener {
     /**
      * Gets the time elapsed since the specified mouse button was last pressed.
      *
-     * @param button The GLFW code of the mouse button.
+     * @param button The InputConstants code of the mouse button.
      * @return Milliseconds since last press, or Long.MAX_VALUE if never pressed.
      */
     fun getTimeSinceMousePress(button: Int): Long {
@@ -160,7 +159,7 @@ object InputTracker : EventListener {
      * Checks if the specified keyboard key was pressed recently.
      * Note: This requires manual tracking via updateKeyPress() since we don't have a keyboard event handler.
      *
-     * @param keyCode The GLFW key code.
+     * @param keyCode The InputConstants key code.
      * @param withinMs The time window in milliseconds to check within.
      * @return True if the key was pressed within the specified time, false otherwise.
      */
@@ -172,7 +171,7 @@ object InputTracker : EventListener {
     /**
      * Gets the time elapsed since the specified keyboard key was last pressed.
      *
-     * @param keyCode The GLFW key code.
+     * @param keyCode The InputConstants key code.
      * @return Milliseconds since last press, or Long.MAX_VALUE if never pressed.
      */
     fun getTimeSinceKeyPress(keyCode: Int): Long {

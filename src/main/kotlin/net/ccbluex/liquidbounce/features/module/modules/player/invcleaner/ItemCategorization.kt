@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.item.armor.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
+import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isFood
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
@@ -57,7 +58,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ArrowItem
-import net.minecraft.world.item.AxeItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.CrossbowItem
@@ -212,7 +212,7 @@ class ItemCategorization(
             item is ShieldItem -> arrayOf(ShieldItemFacet(slot))
             slot.itemStack.isSpear -> arrayOf(SpearItemFacet(slot))
             item is MaceItem -> arrayOf(MaceItemFacet(slot))
-            item is AxeItem -> {
+            item.itemStack.isAxe -> {
                 val sharpnessLevel = slot.itemStack.getEnchantment(Enchantments.SHARPNESS)
                 when {
                     sharpnessLevel >= 100 -> arrayOf(GodAxeFacet(slot))

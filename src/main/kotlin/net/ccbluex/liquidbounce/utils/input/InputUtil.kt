@@ -23,7 +23,7 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
- * Translates a key name to an InputUtil.Key using GLFW key codes.
+ * Translates a key name to an InputUtil.Key using InputConstants key codes.
  * If the name is unrecognized, defaults to NONE.
  *
  * The input can be provided in the following formats:

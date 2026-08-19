@@ -17,10 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.gui
+package net.ccbluex.liquidbounce.config
 
-sealed interface AtlasLookup {
-    data object NotReady : AtlasLookup
-    data object Missing : AtlasLookup
-    data class Found(val bytes: ByteArray) : AtlasLookup
+/**
+ * Groups of settings that can be optionally included or excluded during configuration saving.
+ */
+enum class OptionalInclusion {
+    RENDER,
+    FUN
 }

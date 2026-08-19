@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.client;
 
+import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 
 public final class NullableBypass {
@@ -26,7 +27,7 @@ public final class NullableBypass {
     }
 
     public static ServerboundUseItemPacket createWithNullHand(ServerboundUseItemPacket originalPacket) {
-        return new ServerboundUseItemPacket(
+        return UseItemPacketRotation.createExplicit(
             null,
             originalPacket.getSequence(),
             originalPacket.getYRot(),

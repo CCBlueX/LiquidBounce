@@ -19,11 +19,13 @@
 
 package net.ccbluex.liquidbounce.config.autoconfig
 
+import net.ccbluex.liquidbounce.config.OptionalInclusion
+
 @JvmRecord
 data class IncludeConfiguration(
     val includeBinds: Boolean = false,
-    val includeAction: Boolean = false,
     val includeHidden: Boolean = false,
+    val optionalInclusions: Set<OptionalInclusion> = emptySet(),
 ) {
     companion object {
         @JvmField

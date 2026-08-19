@@ -110,7 +110,7 @@ val publicGson: Gson = GsonBuilder()
     .setPrettyPrinting()
     .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeAdapter(ModeValueGroup::class.java, ModeValueGroupSerializer.FILE_SERIALIZER)
+    .registerTypeAdapter(ModeValueGroup::class.java, ModeValueGroupSerializer.PUBLIC_CONFIG_SERIALIZER)
     .registerTypeHierarchyAdapter(ValueGroup::class.java, ValueGroupSerializer.PUBLIC_SERIALIZER)
     .create()
 

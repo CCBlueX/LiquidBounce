@@ -26,13 +26,12 @@ import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.input.isPressed
-import org.lwjgl.glfw.GLFW
 
 /**
  * A configurable for scroll-adjusting values.
  */
 data class ScrollAdjustOptions(
-    val modifierKeyDefault: Int = GLFW.GLFW_KEY_LEFT_ALT,
+    val modifierKeyDefault: Int = InputConstants.KEY_LALT,
     val sensitivityDefault: Float = 0.5f,
     val sensitivityRange: ClosedFloatingPointRange<Float> = 0.1f..1.0f
 )

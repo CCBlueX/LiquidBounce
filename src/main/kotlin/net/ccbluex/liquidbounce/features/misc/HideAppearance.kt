@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.misc
 
+import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.IconSet
 import com.terraformersmc.modmenu.util.mod.Mod
 import kotlinx.coroutines.cancel
@@ -40,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.modmenu.ModMenuCompatibility
 import net.fabricmc.loader.impl.FabricLoaderImpl
 import net.minecraft.SharedConstants
-import org.lwjgl.glfw.GLFW
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 import kotlin.io.path.deleteIfExists
@@ -117,7 +117,7 @@ object HideAppearance : EventListener {
             return@handler
         }
 
-        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT && modifier == GLFW.GLFW_MOD_CONTROL) {
+        if (keyCode == InputConstants.KEY_LSHIFT && modifier == InputConstants.MOD_CONTROL) {
             if (!shiftChronometer.hasElapsed(400L)) {
                 isHidingNow = !isHidingNow
             }
