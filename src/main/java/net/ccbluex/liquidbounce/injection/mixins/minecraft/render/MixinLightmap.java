@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.mojang.blaze3d.textures.GpuTexture;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
 import net.minecraft.client.renderer.Lightmap;
 import net.minecraft.client.renderer.state.LightmapRenderState;
 import org.jspecify.annotations.NullMarked;
