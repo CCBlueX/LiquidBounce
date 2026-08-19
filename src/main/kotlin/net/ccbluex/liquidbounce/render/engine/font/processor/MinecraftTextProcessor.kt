@@ -30,8 +30,6 @@ import kotlin.random.Random
 
 object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingProcessedText>() {
 
-    private val defaultRng = Random(Random.nextLong())
-
     @JvmField
     val TEXT_POOL = Pool(
         initializer = { RecyclingProcessedText(ArrayList(), IntArrayList(), IntArrayList()) }
@@ -77,11 +75,9 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
         val codepointCount = textAsString.codePointCount(0, textAsString.length)
         val start = result.chars.size
         result.chars.ensureCapacity(start + codepointCount)
-        var rng: Random? = null
         textAsString.codePoints().forEach { codepoint ->
             val actualCodepoint = if (obfuscated) {
-                if (rng == null) rng = Random(defaultRng.nextLong())
-                generateObfuscatedChar(rng)
+                generateObfuscatedChar(Random.Default)
             } else {
                 codepoint
             }

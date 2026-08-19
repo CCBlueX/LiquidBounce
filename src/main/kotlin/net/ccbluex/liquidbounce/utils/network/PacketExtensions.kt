@@ -36,6 +36,7 @@ import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
+import net.minecraft.world.entity.EntityEvent
 import net.minecraft.world.phys.Vec3
 
 fun Packet<*>?.isC2SContainerPacket() =
@@ -84,4 +85,4 @@ val Packet<*>.entityIdC2SInteractOrAttack: Int?
  * @see net.minecraft.world.entity.LivingEntity.checkTotemDeathProtection
  */
 val ClientboundEntityEventPacket.isDeathProtection: Boolean
-    get() = this.eventId == 35.toByte()
+    get() = this.eventId == EntityEvent.PROTECTED_FROM_DEATH
