@@ -167,64 +167,11 @@ open class ValueGroup(
     val containedValues: Array<Value<*>>
         get() = this.inner.toTypedArray()
 
-    fun collectValuesRecursively(): Array<Value<*>> {
-        val output = mutableListOf<Value<*>>()
-
-        this.collectValuesRecursivelyInternal(output)
-
-        return output.toTypedArray()
-    }
-
-    protected fun collectValuesRecursivelyInternal(output: MutableList<Value<*>>) {
-        for (currentValue in this.inner) {
-            if (currentValue is ToggleableValueGroup) {
-                output.add(currentValue)
-                currentValue.collectValuesRecursivelyInternal(output)
-            } else {
-                if (currentValue is ValueGroup) {
-                    currentValue.collectValuesRecursivelyInternal(output)
-                } else {
-                    output.add(currentValue)
-                }
-            }
-
-            if (currentValue is ModeValueGroup<*>) {
-                output.add(currentValue)
-
-                currentValue.modes.forEach {
-                    it.collectValuesRecursivelyInternal(output)
-                }
-            }
-        }
-    }
-
-    fun collectValueGroupsRecursively(): Array<ValueGroup> {
-        val output = mutableListOf<ValueGroup>()
-
-        this.collectValueGroupsRecursivelyInternal(output)
-
-        return output.toTypedArray()
-    }
-
-    protected fun collectValueGroupsRecursivelyInternal(output: MutableList<ValueGroup>) {
-        output.add(this)
-        for (currentValue in this.inner) {
-            when (currentValue) {
-                is ModeValueGroup<*> -> {
-                    output.add(currentValue)
-                    currentValue.modes.forEach { it.collectValueGroupsRecursivelyInternal(output) }
-                }
-                is ValueGroup -> currentValue.collectValueGroupsRecursivelyInternal(output)
-            }
-        }
-    }
-
-    fun collectValuesRecursively(prefix: String): Sequence<Value<*>> = sequence {
-        val normalizedPrefix = prefix.lowercase()
+    fun collectValuesRecursively(prefix: String = ""): Sequence<Value<*>> = sequence {
+        val shouldFilterByPrefix = prefix.isNotBlank()
 
         suspend fun SequenceScope<Value<*>>.walk(current: ValueGroup) {
-            val currentKey = current.key?.lowercase()
-            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+            if (shouldFilterByPrefix && !shouldWalkKey(current.key, prefix)) {
                 return
             }
             for (value in current.inner) {
@@ -246,12 +193,11 @@ open class ValueGroup(
         walk(this@ValueGroup)
     }
 
-    fun collectValueGroupsRecursively(prefix: String): Sequence<ValueGroup> = sequence {
-        val normalizedPrefix = prefix.lowercase()
+    fun collectValueGroupsRecursively(prefix: String = ""): Sequence<ValueGroup> = sequence {
+        val shouldFilterByPrefix = prefix.isNotBlank()
 
         suspend fun SequenceScope<ValueGroup>.walk(current: ValueGroup) {
-            val currentKey = current.key?.lowercase()
-            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+            if (shouldFilterByPrefix && !shouldWalkKey(current.key, prefix)) {
                 return
             }
             yield(current)
@@ -270,13 +216,10 @@ open class ValueGroup(
     }
 
     private fun shouldWalkKey(currentKey: String?, prefix: String): Boolean {
-        if (prefix.isBlank()) {
-            return true
-        }
         if (currentKey == null) {
             return false
         }
-        return currentKey.startsWith(prefix) || prefix.startsWith(currentKey)
+        return currentKey.startsWith(prefix, ignoreCase = true) || prefix.startsWith(currentKey, ignoreCase = true)
     }
 
     /**
