@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondImag
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondResource
 import net.ccbluex.liquidbounce.integration.interop.serviceUnavailable
 import net.ccbluex.liquidbounce.render.atlas.AtlasLookup
+import net.ccbluex.liquidbounce.render.atlas.EntityImageAtlas
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
@@ -84,6 +85,23 @@ private fun Route.getEffectTexture() = get("/effectTexture") {
     call.respondResource(resource, ContentType.Image.PNG)
 }
 
+// GET /api/v1/client/resource/entityTexture
+private fun Route.getEntityTexture() = get("/entityTexture") {
+    val identifier = call.queryParameters["id"]
+        ?: call.badRequest("Missing identifier parameter")
+    val minecraftIdentifier = Identifier.tryParse(identifier)
+        ?: call.badRequest("Invalid identifier $identifier")
+
+    when (val result = EntityImageAtlas.getEntityImage(minecraftIdentifier)) {
+        is AtlasLookup.Found -> call.respondBytes(result.bytes, ContentType.Image.PNG)
+        AtlasLookup.Missing -> call.badRequest("Entity image not found")
+        AtlasLookup.NotReady -> {
+            call.response.header(HttpHeaders.RetryAfter, 5)
+            call.serviceUnavailable("Entity atlas not available yet")
+        }
+    }
+}
+
 // GET /api/v1/client/resource/skin
 private fun Route.getSkin() = get("/skin") {
     val uuid = call.queryParameters["uuid"]?.let { UUID.fromString(it) }
@@ -108,5 +126,6 @@ internal fun Route.textureRoutes() = route("/resource") {
     getResource()
     getItemTexture()
     getEffectTexture()
+    getEntityTexture()
     getSkin()
 }

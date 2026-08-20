@@ -848,6 +848,10 @@ export function itemTextureUrl(identifier: string) {
     return `${API_BASE}/client/resource/itemTexture?id=${identifier}`
 }
 
+export function entityTextureUrl(identifier: string) {
+    return `${API_BASE}/client/resource/entityTexture?id=${identifier}`
+}
+
 export function effectTextureUrl(effectId: string) {
     return `${API_BASE}/client/resource/effectTexture?id=${effectId}`
 }

@@ -34,6 +34,7 @@ export interface GroupedModules {
 
 export type ModuleSetting =
     BlocksSetting
+    | EntitySelectorSetting
     | BooleanSetting
     | FloatSetting
     | FloatRangeSetting
@@ -167,6 +168,11 @@ export interface RegistryListSetting extends ListSetting {
 export interface RegistryMutableListSetting extends Setting<string[]> {
     registry: string;
 }
+
+export interface EntitySelectorSetting extends Setting<ModuleSetting[]> {
+}
+
+export type PlayerFilterMode = "AllowAll" | "Whitelist" | "Blacklist" | "FriendsOnly" | "NonFriendsOnly";
 
 export interface ItemListSetting extends ListSetting {
     items: NamedItem[];
