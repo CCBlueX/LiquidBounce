@@ -121,7 +121,7 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
                         }
                         if (SecondEffects.effect.enabled) {
                             withPush {
-                                translate(0.0, 0.01, 0.0)
+                                translate(0.0, -0.005, 0.0)
                                 mulPose(Axis.XP.rotationDegrees(-90f))
                                 mulPose(Axis.ZP.rotationDegrees(secondRotation))
                                 drawSquareTexture(
