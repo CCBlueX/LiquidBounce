@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.Po
 import net.ccbluex.liquidbounce.render.AnchorPoint
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.utils.color4b
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
@@ -47,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.network.protocol.game.ClientboundLevelEventPacket
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.level.ClipContext
+import net.minecraft.world.level.block.LevelEvent.PARTICLES_SPELL_POTION_SPLASH
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
@@ -102,7 +104,8 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
 
     @Suppress("unused")
     private val splashHandler = handler<PacketEvent> { event ->
-        if (event.packet !is ClientboundLevelEventPacket || event.packet.type != 2002) return@handler
+        if (event.packet !is ClientboundLevelEventPacket
+            || event.packet.type != PARTICLES_SPELL_POTION_SPLASH) { return@handler }
 
         world.getEntities(EntityTypes.SPLASH_POTION, AABB(event.packet.pos).inflate(3.0)) { true }
             .minByOrNull { it.distanceToSqr(Vec3.atCenterOf(event.packet.pos)) } ?: return@handler
@@ -141,19 +144,13 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
                     .transform(age / SecondEffects.Flash.animTime)
                     .coerceIn(0f, 1f)
 
-                // fucking mojang
-                val alpha = (splash.value.color ushr 24) and 0xFF
-                val red = (splash.value.color ushr 16) and 0xFF
-                val green = (splash.value.color ushr 8) and 0xFF
-                val blue = splash.value.color and 0xFF
-
                 val fade =
                     ((timeToDie - event.partialTicks) / (lifetime.last * (1.0f - fadeStart))).coerceIn(0f, 1f)
 
-                val newAlpha = (alpha * fade).toInt().coerceIn(0, 255)
-                val animatedColor = (newAlpha shl 24) or (red shl 16) or (green shl 8) or blue
+                val alpha = (splash.value.color.color4b().a * fade).toInt().coerceIn(0, 255)
+                val animatedColor = splash.value.color.color4b().alpha(alpha).argb
 
-                withPositionRelativeToCamera(splash.value.pos.add(0.0, 0.011, 0.0)) {
+                withPositionRelativeToCamera(splash.value.pos.add(0.0, 0.01, 0.0)) {
                     poseStack.withPush {
                         withPush {
                             mulPose(Axis.XP.rotationDegrees(-90f))
@@ -166,6 +163,20 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
                                 noDepthTest = !canBeCovered
                             )
                         }
+                        if (SecondEffects.effect.enabled) {
+                            withPush {
+                                translate(0.0, 0.01, 0.0)
+                                mulPose(Axis.XP.rotationDegrees(-90f))
+                                mulPose(Axis.ZP.rotationDegrees(age * SecondEffects.effect.rotationSpeed))
+                                drawSquareTexture(
+                                    secondaryTexture,
+                                    (radius + extraRadius) * 2 * (progress * animAcceleration).coerceIn(0f, 1f),
+                                    animatedColor,
+                                    AnchorPoint.CENTER,
+                                    noDepthTest = !canBeCovered
+                                )
+                            }
+                        }
                         if (SecondEffects.flash.enabled) {
                             withPush {
                                 mulPose(mc.gameRenderer.mainCamera().rotation())
@@ -177,21 +188,6 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
                                     noDepthTest = !canBeCovered
                                 )
                             }
-                        }
-                    }
-                }
-                withPositionRelativeToCamera(splash.value.pos.add(0.0, 0.01, 0.0)) {
-                    poseStack.withPush {
-                        if (SecondEffects.effect.enabled) {
-                            mulPose(Axis.XP.rotationDegrees(-90f))
-                            mulPose(Axis.ZP.rotationDegrees(age * SecondEffects.effect.rotationSpeed))
-                            drawSquareTexture(
-                                secondaryTexture,
-                                (radius + extraRadius) * 2 * (progress * animAcceleration).coerceIn(0f, 1f),
-                                animatedColor,
-                                AnchorPoint.CENTER,
-                                noDepthTest = !canBeCovered
-                            )
                         }
                     }
                 }

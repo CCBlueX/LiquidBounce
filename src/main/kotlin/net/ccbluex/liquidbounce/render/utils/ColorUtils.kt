@@ -77,3 +77,12 @@ fun interpolateHue(primaryColor: Color4b, otherColor: Color4b, percentageOther: 
         alpha.toInt()
     )
 }
+
+fun Int.color4b(): Color4b {
+    val alpha = (this shr 24) and 0xFF
+    val red = (this shr 16) and 0xFF
+    val green = (this shr 8) and 0xFF
+    val blue = this and 0xFF
+
+    return Color4b(red, green, blue, alpha)
+}

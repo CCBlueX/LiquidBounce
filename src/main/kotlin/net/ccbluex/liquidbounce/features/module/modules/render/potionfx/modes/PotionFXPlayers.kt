@@ -20,13 +20,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes
 
 import com.mojang.math.Axis
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.utils.TextureMode
-import net.ccbluex.liquidbounce.event.computedOn
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX
@@ -42,10 +39,9 @@ import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.EntityLookup.Companion.EntityLookup
 import net.ccbluex.liquidbounce.utils.world.filterTo
 import net.minecraft.world.entity.EntityTypes
-import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.alchemy.PotionContents.getColorOptional
 
 object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", true) {
@@ -124,13 +120,11 @@ object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", true) {
         }
     }
 
-    private val players by computedOn<GameTickEvent, MutableSet<Player>>(ReferenceOpenHashSet()) { _, set ->
-        set.clear()
-        if (!enabled) return@computedOn set
-        world.entityGetter.filterTo(set, EntityTypes.PLAYER) {
-            !it.activeEffects.isEmpty().and(!getColorOptional(it.activeEffects).isEmpty)
-        }
-        set
+    private val players by EntityLookup { set ->
+        filterTo(
+            set,
+            EntityTypes.PLAYER
+        ) { !it.activeEffects.isEmpty() && (!getColorOptional(it.activeEffects).isEmpty) }
     }
 
     override fun onDisabled() {
