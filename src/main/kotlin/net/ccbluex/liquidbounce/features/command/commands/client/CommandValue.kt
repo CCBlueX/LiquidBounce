@@ -115,7 +115,7 @@ object CommandValue : Command.Factory {
             val valueGroup = ConfigSystem.findValueGroupByKey(valueGroupKey)
                 ?: throw CommandException(command.result("valueGroupNotFound", valueGroupKey))
 
-            valueGroup.collectValuesRecursively("")
+            valueGroup.collectValuesRecursively()
                 .filter { !it.name.equals("Bind", true) }
                 .forEach { it.restore() }
             ModuleClickGui.sync()
