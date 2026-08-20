@@ -89,7 +89,7 @@ object ConfigSystem {
         ensureRootKeys()
         val normalizedKey = normalizeKeyInput(key)
         return configs.asSequence()
-            .flatMap { it.collectValuesRecursively().asSequence() }
+            .flatMap { it.collectValuesRecursively(normalizedKey) }
             .firstOrNull { it.key?.equals(normalizedKey, true) == true }
     }
 
@@ -97,7 +97,7 @@ object ConfigSystem {
         ensureRootKeys()
         val normalizedKey = normalizeKeyInput(key)
         return configs.asSequence()
-            .flatMap { it.collectValueGroupsRecursively().asSequence() }
+            .flatMap { it.collectValueGroupsRecursively(normalizedKey) }
             .firstOrNull { it.key?.equals(normalizedKey, true) == true }
     }
 
