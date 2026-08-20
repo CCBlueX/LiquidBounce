@@ -65,7 +65,7 @@ class EntityLookup<T : Entity> private constructor(
     companion object {
         @JvmStatic
         @JvmName("create")
-        fun <T : Entity> EventListener.EntityLookup( collector: Collector<T>): EntityLookup<T> {
+        fun <T : Entity> EventListener.EntityLookup(collector: Collector<T>): EntityLookup<T> {
             return EntityLookup(owner = this, updateCycle = 1, ReferenceOpenHashSet(), collector)
         }
     }
