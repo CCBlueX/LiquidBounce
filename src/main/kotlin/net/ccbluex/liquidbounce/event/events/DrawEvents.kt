@@ -68,6 +68,7 @@ class WorldRenderEvent(
  */
 @Tag("worldFeatureSubmit")
 class WorldFeatureSubmitEvent(
+    val poseStack: PoseStack,
     val camera: Camera,
     val submitNodeStorage: SubmitNodeStorage,
     val modelViewMatrix: Matrix4fc,

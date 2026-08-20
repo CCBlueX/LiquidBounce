@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinMultiPlayerGameModeAccessor
-import net.ccbluex.liquidbounce.render.usePoseStack
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.submitTextAlwaysOnTop
@@ -93,32 +92,30 @@ class BreakingProgressRenderer @JvmOverloads constructor(
 
         val camera = event.camera
         val cameraPos = camera.position()
-        usePoseStack {
-            withPush {
-                translate(
-                    progress.pos.x + 0.5 - cameraPos.x,
-                    progress.pos.y + height.toDouble() - cameraPos.y,
-                    progress.pos.z + 0.5 - cameraPos.z,
-                )
-                mulPose(camera.rotation())
-                scale(
-                    EntityRenderer.NAMETAG_SCALE * scale,
-                    -EntityRenderer.NAMETAG_SCALE * scale,
-                    EntityRenderer.NAMETAG_SCALE * scale,
-                )
-                event.submitNodeStorage.submitTextAlwaysOnTop(
-                    this,
-                    -font.width(text) * 0.5f,
-                    -font.lineHeight * 0.5f,
-                    formattedText,
-                    shadow,
-                    Font.DisplayMode.SEE_THROUGH,
-                    LightCoordsUtil.FULL_BRIGHT,
-                    color.argb,
-                    0,
-                    0,
-                )
-            }
+        event.poseStack.withPush {
+            translate(
+                progress.pos.x + 0.5 - cameraPos.x,
+                progress.pos.y + height.toDouble() - cameraPos.y,
+                progress.pos.z + 0.5 - cameraPos.z,
+            )
+            mulPose(camera.rotation())
+            scale(
+                EntityRenderer.NAMETAG_SCALE * scale,
+                -EntityRenderer.NAMETAG_SCALE * scale,
+                EntityRenderer.NAMETAG_SCALE * scale,
+            )
+            event.submitNodeStorage.submitTextAlwaysOnTop(
+                this,
+                -font.width(text) * 0.5f,
+                -font.lineHeight * 0.5f,
+                formattedText,
+                shadow,
+                Font.DisplayMode.SEE_THROUGH,
+                LightCoordsUtil.FULL_BRIGHT,
+                color.argb,
+                0,
+                0,
+            )
         }
     }
 }
