@@ -262,7 +262,7 @@ private fun buildKeySegmentQuery(begin: String): KeySegmentQuery {
 private data class KeyPrefixParts(val prefix: String, val typed: String)
 
 private fun splitKeyPrefix(input: String): KeyPrefixParts {
-    val endsWithDot = input.endsWith(".")
+    val endsWithDot = input.endsWith('.')
     val lastDot = input.lastIndexOf('.')
     val prefix = if (lastDot >= 0) input.substring(0, lastDot + 1) else ""
     val typed = if (endsWithDot || lastDot < 0) input.substring(prefix.length) else input.substring(lastDot + 1)

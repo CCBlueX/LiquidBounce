@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.segmentAngle
 import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.utils.math.fastCos
 import net.ccbluex.liquidbounce.utils.math.fastSin
@@ -64,7 +65,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
 
             // Loop for rendering each individual orb (orbit).
             for (i in 0 until HatOrbsSettings.count) {
-                val angle = (getAngle(i, HatOrbsSettings.count) + time)
+                val angle = (segmentAngle(i, HatOrbsSettings.count) + time)
 
                 val x = getPointX(angle, HatOrbsSettings.radius)
                 val z = getPointZ(angle, HatOrbsSettings.radius)
