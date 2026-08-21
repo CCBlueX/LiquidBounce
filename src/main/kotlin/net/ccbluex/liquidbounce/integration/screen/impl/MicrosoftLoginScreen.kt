@@ -35,6 +35,11 @@ import net.raphimc.minecraftauth.msa.service.impl.ExternalBrowserMsaAuthService
  * [ExternalBrowserMsaAuthService] lets the login run in the browser the client already has. The screen
  * reports every URL the page navigates to, and the service picks the auth code out of the redirect.
  *
+ * The browser is incognito, so the Microsoft session never reaches the client's cookie store. Without
+ * that, signing in would leave the account logged in for anyone who opens a browser afterwards, and
+ * adding a second account would silently reuse the first one's session instead of asking who to sign
+ * in as.
+ *
  * The screen does not close itself on success - the service's close callback does, once the auth code has
  * been exchanged for a token.
  */
@@ -62,7 +67,9 @@ class MicrosoftLoginScreen(
         }
 
         val backend = BrowserBackendManager.backend ?: return
-        this.browser = backend.createBrowser(url, viewport, priority = 20) { mc.gui.screen() == this }
+        this.browser = backend.createBrowser(url, viewport, priority = 20, incognito = true) {
+            mc.gui.screen() == this
+        }
     }
 
     override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {

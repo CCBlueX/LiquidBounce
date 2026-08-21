@@ -225,7 +225,9 @@ object AccountManager : Config("Accounts"), EventListener {
             return
         }
 
-        if (!BrowserBackendManager.isInitialized) {
+        // The login has to run in a browser we control, both to read the redirect back and to keep the
+        // Microsoft session out of the client's cookie store.
+        if (BrowserBackendManager.backend?.takeIf { it.isInitialized && it.supportsIncognito } == null) {
             microsoftLoginInProgress.set(false)
             EventManager.callEvent(
                 AccountManagerAdditionResultEvent(error = "The browser is not available, use another sign-in method")

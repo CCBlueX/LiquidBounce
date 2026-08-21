@@ -36,6 +36,12 @@ interface BrowserBackend {
     var accelerationFlags: BrowserAccelerationFlags
     val browsers: List<Browser>
 
+    /**
+     * Whether this backend can give a browser cookies and storage of its own. Backends that hand the
+     * page to something they do not control cannot.
+     */
+    val supportsIncognito: Boolean
+
     fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit)
 
     /**
@@ -53,11 +59,17 @@ interface BrowserBackend {
      */
     fun update()
 
+    /**
+     * @param incognito Whether the browser gets cookies and storage of its own that are kept in memory
+     *                  only, instead of sharing the ones the client persists. Not every backend can
+     *                  honour this - check [Browser.isIncognito] when it matters.
+     */
     fun createBrowser(
         url: String,
         position: BrowserViewport = BrowserViewport.FULLSCREEN,
         settings: BrowserSettings = ScreenManager.browserSettings,
         priority: Short = 0,
+        incognito: Boolean = false,
         inputAcceptor: InputAcceptor? = null
     ): Browser
 
