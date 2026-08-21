@@ -107,22 +107,24 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
         if (event.packet !is ClientboundLevelEventPacket
             || event.packet.type != PARTICLES_SPELL_POTION_SPLASH) { return@handler }
 
-        world.getEntities(EntityTypes.SPLASH_POTION, AABB(event.packet.pos).inflate(3.0)) { true }
-            .minByOrNull { it.distanceToSqr(Vec3.atCenterOf(event.packet.pos)) } ?: return@handler
+        mc.execute {
+            val packetPos = Vec3.atCenterOf(event.packet.pos)
 
-        val packetPos = Vec3.atCenterOf(event.packet.pos)
+            world.getEntities(EntityTypes.SPLASH_POTION, AABB(event.packet.pos).inflate(3.0)) { true }
+                .minByOrNull { it.distanceToSqr(packetPos) } ?: return@execute
 
-        val pos = world.clip(
-            ClipContext(
-                packetPos,
-                packetPos.add(0.0, -1.0, 0.0),
-                ClipContext.Block.COLLIDER,
-                ClipContext.Fluid.NONE,
-                CollisionContext.empty()
-            )
-        ).let { if (it.type == HitResult.Type.BLOCK) it.location else packetPos }
+            val pos = world.clip(
+                ClipContext(
+                    packetPos,
+                    packetPos.add(0.0, -1.0, 0.0),
+                    ClipContext.Block.COLLIDER,
+                    ClipContext.Fluid.NONE,
+                    CollisionContext.empty()
+                )
+            ).let { if (it.type == HitResult.Type.BLOCK) it.location else packetPos }
 
-        splashes.add(SplashData(event.packet.data, pos), lifetime.last)
+            splashes.add(SplashData(event.packet.data, pos), lifetime.last)
+        }
     }
 
     @Suppress("unused")
