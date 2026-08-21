@@ -41,11 +41,11 @@ import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory.
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.text.capitalize
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.liquidbounce.utils.text.capitalize
 import net.minecraft.server.packs.resources.ResourceManager
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener
-import okhttp3.Headers.Companion.headersOf
+import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
@@ -60,10 +60,14 @@ import java.util.Locale
 class Theme private constructor(val origin: Origin, url: String) :
     BaseApi(
         url.trimEnd('/'),
-        defaultHeaders = headersOf(
-            HttpHeaderNames.COOKIE.toString(),
-            "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
-        )
+        // DO NOT use headersOf(...) because LunarClient uses an outdated version of
+        // the OkHttp library.
+        defaultHeaders = Headers.Builder()
+            .add(
+                HttpHeaderNames.COOKIE.toString(),
+                "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
+            )
+            .build()
     ), Closeable, ResourceManagerReloadListener {
 
     enum class Origin(override val tag: String, val external: Boolean) : Tagged {
