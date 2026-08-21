@@ -14,8 +14,12 @@ fabric-api = "0.153.0+26.2"
 
 # mcef
 mcef = "3.3.2-26.2-SNAPSHOT"
-# mc-authlib
-mc_authlib = "1.7.1"
+# MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
+minecraftauth = "5.0.3-SNAPSHOT"
+# TheAltening
+thealtening = "4.1.0"
+# https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
+retrofit = "2.11.0"
 # Polyglot
 polyglot = "25.0.3"
 # djl
@@ -74,7 +78,11 @@ netty-handler-proxy = { group = "io.netty", name = "netty-handler-proxy", versio
 lwjgl-egl = { group = "org.lwjgl", name = "lwjgl-egl", version.ref = "lwjgl" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-coroutines = { group = "com.squareup.okhttp3", name = "okhttp-coroutines", version.ref = "okhttp" }
-mcAuthlib = { group = "net.ccbluex", name = "mc-authlib", version.ref = "mc_authlib" }
+minecraftauth = { group = "net.ccbluex", name = "MinecraftAuth", version.ref = "minecraftauth" }
+thealtening = { group = "com.thealtening.api", name = "api", version.ref = "thealtening" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+retrofit-converter-scalars = { group = "com.squareup.retrofit2", name = "converter-scalars", version.ref = "retrofit" }
 mcef = { group = "net.ccbluex", name = "mcef", version.ref = "mcef" }
 semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
 ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
@@ -123,3 +131,4 @@ nodeGradle = { id = "com.github.node-gradle.node", version.ref = "nodeGradle" }
 
 [bundles]
 okhttp = ["okhttp", "okhttp-coroutines"]
+retrofit = ["retrofit", "retrofit-converter-gson", "retrofit-converter-scalars"]

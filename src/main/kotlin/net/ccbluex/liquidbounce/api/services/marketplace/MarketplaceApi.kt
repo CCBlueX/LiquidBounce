@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceReview
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceRevisionDependency
 import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
-import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
+import net.ccbluex.liquidbounce.api.core.toRequestBody
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
