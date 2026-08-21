@@ -173,6 +173,8 @@
     "minecraft.util.MixinStringUtil",
     "minecraft.util.MixinVec3i",
     "minecraft.world.chuck.MixinSkyLightEngine",
+    "realms.MixinRealmsAvailabilityAccessor",
+    "realms.MixinRealmsClientAccessor",
     "sodium.MixinSodiumAbstractBlockRenderContext",
     "sodium.MixinSodiumBlockRenderer",
     "sodium.MixinSodiumLightDataAccess",

@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorMode
-import net.ccbluex.liquidbounce.authlib.utils.array
-import net.ccbluex.liquidbounce.authlib.utils.string
+import net.ccbluex.liquidbounce.config.gson.util.array
+import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
