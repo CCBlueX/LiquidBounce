@@ -31,6 +31,7 @@ import net.raphimc.minecraftauth.msa.model.MsaCredentials
 import net.raphimc.minecraftauth.msa.model.MsaDeviceCode
 import net.raphimc.minecraftauth.msa.service.impl.CredentialsMsaAuthService
 import net.raphimc.minecraftauth.msa.service.impl.DeviceCodeMsaAuthService
+import net.raphimc.minecraftauth.msa.service.impl.ExternalBrowserMsaAuthService
 import java.net.Proxy
 import java.util.function.Consumer
 
@@ -111,6 +112,28 @@ class MicrosoftAccount internal constructor(
             MsaApplicationConfig(MsaConstants.JAVA_TITLE_ID, MsaConstants.SCOPE_TITLE_AUTH)
 
         private const val DEFAULT_TIMEOUT_MS = 300_000
+
+        /**
+         * Signs in through a browser the caller supplies. This is the preferred sign-in method, as it
+         * supports 2FA, passkeys and every other login method Microsoft offers, without any custom
+         * setup.
+         *
+         * [onOpen] is called on the calling thread and has to display
+         * [ExternalBrowserMsaAuthService.getAuthenticationUrl] and report the URLs it navigates to back
+         * to the service; [onClose] is called once the sign-in has finished, failed or timed out.
+         *
+         * @param timeoutMs How long to wait for the user to complete the login before giving up.
+         */
+        fun buildFromWebView(
+            onOpen: (ExternalBrowserMsaAuthService) -> Unit,
+            onClose: (ExternalBrowserMsaAuthService) -> Unit,
+            applicationConfig: MsaApplicationConfig = JAVA_APPLICATION_CONFIG,
+            timeoutMs: Int = DEFAULT_TIMEOUT_MS,
+        ): MicrosoftAccount = build(applicationConfig) {
+            it.login { httpClient, config ->
+                ExternalBrowserMsaAuthService(httpClient, config, onOpen, onClose, timeoutMs)
+            }
+        }
 
         /**
          * Signs in with the Microsoft device code flow. [onDeviceCode] is invoked once with the code

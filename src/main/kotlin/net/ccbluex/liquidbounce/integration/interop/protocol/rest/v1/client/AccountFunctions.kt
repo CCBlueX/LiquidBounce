@@ -80,6 +80,13 @@ private fun Route.postClipboardMicrosoftAccount() = post("/device-code/clipboard
     call.respond(HttpStatusCode.NoContent)
 }
 
+// POST /api/v1/client/accounts/new/microsoft/webview
+private fun Route.postWebViewMicrosoftAccount() = post("/webview") {
+    AccountManager.newMicrosoftAccountViaWebView()
+    EventManager.callEvent(AccountManagerMessageEvent("Opened Microsoft sign-in window"))
+    call.respond(HttpStatusCode.NoContent)
+}
+
 // POST /api/v1/client/accounts/new/microsoft/credentials
 private fun Route.postCredentialsMicrosoftAccount() = post("/credentials") {
     data class AccountForm(val email: String, val password: String)
@@ -238,6 +245,7 @@ internal fun Route.accountRoutes() {
             route("/microsoft") {
                 postNewMicrosoftAccount()
                 postClipboardMicrosoftAccount()
+                postWebViewMicrosoftAccount()
                 postCredentialsMicrosoftAccount()
             }
             postNewCrackedAccount()
