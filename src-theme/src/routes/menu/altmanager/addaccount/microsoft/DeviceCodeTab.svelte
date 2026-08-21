@@ -18,5 +18,5 @@
 
 <Tab>
     <ButtonSetting title="Link Account" on:click={addAccount} {loading}/>
-    <ButtonSetting title="Copy URL" on:click={copyUrl} secondary={true} {loading}/>
+    <ButtonSetting title="Copy URL" on:click={copyUrl} secondary={true} />
 </Tab>
