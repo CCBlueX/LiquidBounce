@@ -19,27 +19,24 @@
 
 package net.ccbluex.liquidbounce.features.account
 
-import net.ccbluex.liquidbounce.authlib.account.AlteningAccount
-import net.ccbluex.liquidbounce.authlib.account.CrackedAccount
-import net.ccbluex.liquidbounce.authlib.account.MicrosoftAccount
-import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
-import net.ccbluex.liquidbounce.authlib.account.SessionAccount
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 
-enum class AccountService(override val tag: String, val canJoinOnline: Boolean) : Tagged {
-    MICROSOFT("Microsoft", true),
-    SESSION("Session", true),
-    THEALTENING("TheAltening", true),
-    CRACKED("Cracked", false);
+enum class AccountService(
+    override val tag: String,
+    val canJoinOnline: Boolean,
+    /**
+     * The simple class name the [MinecraftAccount] subclass used to have, kept so that configs written
+     * by older versions keep loading.
+     */
+    val serialName: String,
+) : Tagged {
+    MICROSOFT("Microsoft", true, "MicrosoftAccount"),
+    SESSION("Session", true, "SessionAccount"),
+    THEALTENING("TheAltening", true, "AlteningAccount"),
+    CRACKED("Cracked", false, "CrackedAccount");
 
     companion object {
-        fun getService(account: MinecraftAccount) = when (account) {
-            is MicrosoftAccount -> MICROSOFT
-            is SessionAccount -> SESSION
-            is AlteningAccount -> THEALTENING
-            is CrackedAccount -> CRACKED
-            else -> throw IllegalArgumentException("Unknown account type: ${account::class.java.name}")
-        }
+        fun bySerialName(serialName: String) = entries.firstOrNull { it.serialName == serialName }
     }
 
 }

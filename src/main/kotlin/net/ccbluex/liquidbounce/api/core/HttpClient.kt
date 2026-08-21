@@ -27,9 +27,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
-import net.ccbluex.liquidbounce.authlib.Authlib
-import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
-import net.ccbluex.liquidbounce.authlib.mojangapi.MojangApiClient
+import net.ccbluex.liquidbounce.api.interceptors.DefaultHeaderInterceptor
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.MojangApiClient
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.MCEF
@@ -143,7 +142,6 @@ object HttpClient {
         .proxy(java.net.Proxy.NO_PROXY)
         .build().also {
             MCEF.INSTANCE.settings.okHttpClient = it
-            Authlib.client = it
         }
 
     /**

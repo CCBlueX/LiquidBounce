@@ -26,6 +26,12 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 interface Browser : AutoCloseable {
 
     val isInitialized: Boolean
+
+    /**
+     * Whether this browser keeps its cookies and storage to itself, in memory.
+     */
+    val isIncognito: Boolean
+
     val state: BrowserState
     var viewport: BrowserViewport
     var visible: Boolean
