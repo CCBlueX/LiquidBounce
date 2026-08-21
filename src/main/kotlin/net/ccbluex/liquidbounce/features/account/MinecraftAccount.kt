@@ -22,11 +22,28 @@ package net.ccbluex.liquidbounce.features.account
 import com.google.gson.JsonObject
 import com.mojang.authlib.GameProfile
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
+import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.util.UndashedUuid
 import net.ccbluex.liquidbounce.config.gson.util.boolean
 import net.ccbluex.liquidbounce.config.gson.util.obj
 import net.ccbluex.liquidbounce.config.gson.util.string
+import java.net.Proxy
 import java.util.Optional
+import java.util.UUID
+
+/**
+ * Client token of every session we create. Randomised per launch, which is what the protocol expects
+ * from a client that does not persist one.
+ */
+val clientIdentifier: String = UUID.randomUUID().toString()
+
+/**
+ * Constructing this fetches the environment's `/publickeys`, so it is shared by every account that
+ * authenticates against Mojang rather than built per login.
+ */
+private val mojangAuthentication by lazy {
+    YggdrasilAuthenticationService(Proxy.NO_PROXY, YggdrasilEnvironment.PROD.environment)
+}
 
 /**
  * An account the client can log into.
@@ -42,41 +59,49 @@ import java.util.Optional
 sealed class MinecraftAccount(val service: AccountService) {
 
     /**
-     * Name of the account. Known as soon as the account exists, unlike [profile], which is only
-     * resolved once [refresh] has succeeded at least once.
+     * Known as soon as the account exists, unlike [profile], which is only resolved once [refresh] has
+     * succeeded at least once.
      */
     var username: String = ""
         protected set
 
-    /**
-     * Resolved game profile, or `null` while the account has never been refreshed.
-     */
     var profile: GameProfile? = null
         protected set
 
-    /**
-     * Whether the account is marked as favorite.
-     */
     var favorite: Boolean = false
-        private set
 
-    var bans: MutableMap<String, Ban> = hashMapOf()
-        internal set
+    val bans = hashMapOf<String, Ban>()
 
-    /**
-     * Re-authenticates the account and updates [username] and [profile].
-     */
+    protected open val authenticationService: YggdrasilAuthenticationService
+        get() = mojangAuthentication
+
     abstract fun refresh()
+
+    protected abstract fun acquireAccessToken(): String
+
+    protected abstract fun toRawJson(json: JsonObject)
+
+    protected abstract fun fromRawJson(json: JsonObject)
 
     /**
      * Authenticates the account and returns the session to hand to the game, along with the
      * authentication service that resolves other players' profiles while it is active.
      */
-    abstract fun login(): Pair<SessionWithService, YggdrasilAuthenticationService>
+    fun login(): Pair<SessionWithService, YggdrasilAuthenticationService> {
+        if (profile == null) {
+            refresh()
+        }
 
-    protected abstract fun toRawJson(json: JsonObject)
+        val profile = checkNotNull(profile) { "Account '$username' has not been refreshed" }
+        val session = SessionWithService(
+            profile.name, profile.id, acquireAccessToken(),
+            Optional.empty(),
+            Optional.of(clientIdentifier),
+            service,
+        )
 
-    protected abstract fun fromRawJson(json: JsonObject)
+        return session to authenticationService
+    }
 
     fun toJson(): JsonObject = JsonObject().apply {
         toRawJson(this)
@@ -87,31 +112,14 @@ sealed class MinecraftAccount(val service: AccountService) {
         })
     }
 
-    /**
-     * Builds the game session for this account. The account must have been refreshed before.
-     */
-    protected fun sessionOf(accessToken: String): SessionWithService {
-        val profile = checkNotNull(profile) { "Account '$username' has not been refreshed" }
-
-        return SessionWithService(
-            profile.name, profile.id, accessToken,
-            Optional.empty(),
-            Optional.of(clientIdentifier),
-            service,
-        )
-    }
-
-    /**
-     * Writes the account name and, when it has been resolved, the profile UUID.
-     */
     protected fun JsonObject.writeProfile() {
         addProperty("name", username)
         profile?.let { addProperty("uuid", it.id.toString()) }
     }
 
     /**
-     * Counterpart of [writeProfile]. Accounts saved before their first successful refresh have no
-     * UUID, in which case [profile] stays `null` until the next [refresh].
+     * Accounts saved before their first successful refresh have no UUID, in which case [profile] stays
+     * `null` until the next [refresh].
      */
     protected fun JsonObject.readProfile() {
         username = string("name") ?: throw IllegalArgumentException("'$this' has no account name")
@@ -119,42 +127,18 @@ sealed class MinecraftAccount(val service: AccountService) {
     }
 
     /**
-     * Marks the account as a favorite.
-     */
-    fun favorite() = apply {
-        favorite = true
-    }
-
-    /**
-     * Marks the account as not a favorite.
-     */
-    fun unfavorite() = apply {
-        favorite = false
-    }
-
-    /**
-     * Tracks a ban, which should be called when the player is banned. The logic for this needs to be
-     * implemented by the client itself.
+     * Tracking bans is up to the caller - this only stores and expires them.
      */
     fun trackBan(ban: Ban) {
         bans[ban.serverName] = ban
     }
 
-    /**
-     * Untracks a ban, which should be called when the player is able to join the server again.
-     */
     fun untrackBan(serverName: String) {
         bans.remove(serverName)
     }
 
-    /**
-     * Checks if the player is banned on the specified server.
-     */
     fun isBanned(serverName: String) = listActiveBans().any { it.serverName == serverName }
 
-    /**
-     * Returns a list of all active bans, dropping the ones that have expired.
-     */
     fun listActiveBans(): List<Ban> {
         bans.values.removeIf { !it.isPermanent && it.bannedUntil < System.currentTimeMillis() }
         return bans.values.toList()
@@ -163,8 +147,6 @@ sealed class MinecraftAccount(val service: AccountService) {
     companion object {
 
         /**
-         * Restores an account from its JSON representation.
-         *
          * @throws IllegalArgumentException if [json] is not a valid account
          */
         @JvmStatic
@@ -186,9 +168,7 @@ sealed class MinecraftAccount(val service: AccountService) {
                 account.bans[serverName] = Ban.fromJson(ban.asJsonObject)
             }
 
-            if (json.boolean("favorite") == true) {
-                account.favorite()
-            }
+            account.favorite = json.boolean("favorite") == true
 
             return account
         }

@@ -21,13 +21,10 @@ package net.ccbluex.liquidbounce.features.account
 
 import com.google.gson.JsonObject
 import com.mojang.authlib.GameProfile
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
-import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.api.thirdparty.lookupUuidByName
 import net.ccbluex.liquidbounce.config.gson.util.boolean
 import net.minecraft.core.UUIDUtil
-import java.net.Proxy
 
 /**
  * A cracked account - has no credentials and cannot join premium servers.
@@ -58,14 +55,7 @@ class CrackedAccount(username: String, private var online: Boolean = false) :
         profile = if (uuid == null) UUIDUtil.createOfflineProfile(username) else GameProfile(uuid, username)
     }
 
-    override fun login(): Pair<SessionWithService, YggdrasilAuthenticationService> {
-        if (profile == null) {
-            refresh()
-        }
-
-        val service = YggdrasilAuthenticationService(Proxy.NO_PROXY, YggdrasilEnvironment.PROD.environment)
-        return sessionOf("-") to service
-    }
+    override fun acquireAccessToken() = "-"
 
     override fun toRawJson(json: JsonObject) = json.run {
         writeProfile()

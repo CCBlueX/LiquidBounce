@@ -21,12 +21,9 @@ package net.ccbluex.liquidbounce.features.account
 
 import com.google.gson.JsonObject
 import com.mojang.authlib.GameProfile
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
-import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import net.ccbluex.liquidbounce.config.gson.util.string
 import net.raphimc.minecraftauth.java.model.MinecraftToken
 import net.raphimc.minecraftauth.java.request.MinecraftProfileRequest
-import java.net.Proxy
 
 /**
  * A premium account represented by nothing but a Minecraft access token.
@@ -51,14 +48,7 @@ class SessionAccount(private var session: String) : MinecraftAccount(AccountServ
         profile = GameProfile(minecraftProfile.id, minecraftProfile.name)
     }
 
-    override fun login(): Pair<SessionWithService, YggdrasilAuthenticationService> {
-        if (profile == null) {
-            refresh()
-        }
-
-        val service = YggdrasilAuthenticationService(Proxy.NO_PROXY, YggdrasilEnvironment.PROD.environment)
-        return sessionOf(session) to service
-    }
+    override fun acquireAccessToken() = session
 
     override fun toRawJson(json: JsonObject) = json.run {
         writeProfile()

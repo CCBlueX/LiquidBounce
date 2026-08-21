@@ -24,8 +24,6 @@ import net.raphimc.minecraftauth.MinecraftAuth
 import net.lenni0451.commons.httpclient.HttpClient as MinecraftAuthHttpClient
 
 /**
- * HTTP client MinecraftAuth uses for the Microsoft/Xbox Live/Minecraft token chain.
- *
  * MinecraftAuth builds its requests on its own HTTP stack rather than OkHttp, so it cannot share
  * [HttpClient.defaultClient]. It does take the user agent, which is passed through here so that
  * account requests are identifiable the same way the rest of the client's traffic is.

@@ -52,42 +52,28 @@ class AlteningAccount(var accountToken: String) : MinecraftAccount(AccountServic
     @Suppress("unused")
     constructor() : this("")
 
-    /**
-     * Token used to authenticate against the session server.
-     */
     var accessToken = ""
         private set
 
-    /**
-     * The current level of the player on Hypixel.
-     */
     var hypixelLevel: Int = 0
         private set
 
-    /**
-     * The rank of the player on Hypixel.
-     */
     var hypixelRank: String = ""
         private set
 
-    private val sessionService = YggdrasilAuthenticationService(Proxy.NO_PROXY, alteningEnvironment)
-    private val userAuthentication = YggdrasilUserAuthentication(ALTENING_AUTH)
+    override val authenticationService: YggdrasilAuthenticationService by lazy {
+        YggdrasilAuthenticationService(Proxy.NO_PROXY, alteningEnvironment)
+    }
 
     override fun refresh() {
-        val session = userAuthentication.authenticate(accountToken, "LiquidBounce")
+        val session = YggdrasilUserAuthentication(ALTENING_AUTH).authenticate(accountToken, "LiquidBounce")
 
         accessToken = session.accessToken
         username = session.profile.name
         profile = session.profile
     }
 
-    override fun login(): Pair<SessionWithService, YggdrasilAuthenticationService> {
-        if (profile == null) {
-            refresh()
-        }
-
-        return sessionOf(accessToken) to sessionService
-    }
+    override fun acquireAccessToken() = accessToken
 
     override fun toRawJson(json: JsonObject) = json.run {
         writeProfile()

@@ -105,7 +105,7 @@ object AccountManager : Config("Accounts"), EventListener {
     }
 
     /**
-     * Cracked account. This can only be used to join cracked servers and not premium servers.
+     * Cannot join premium servers.
      */
     fun newCrackedAccount(username: String, online: Boolean = false) {
         if (username.isEmpty()) {
@@ -118,16 +118,13 @@ object AccountManager : Config("Accounts"), EventListener {
             return
         }
 
-        // Check if account already exists
         if (accounts.any { it.username.equals(username, true) }) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Account already exists!"))
             return
         }
 
-        // Create new cracked account
         accounts += CrackedAccount(username, online).also { it.refresh() }
 
-        // Store configurable
         ConfigSystem.store(this@AccountManager)
 
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = username))
@@ -161,27 +158,21 @@ object AccountManager : Config("Accounts"), EventListener {
     }
 
     /**
-     * Caches the current device code login URL, so re-triggering the flow while a login is already in
-     * progress just re-shows the same URL/code instead of requesting a new one from Microsoft.
+     * Re-triggering the device code flow while one is running re-shows this URL instead of asking
+     * Microsoft for a new code.
      */
     private var activeDeviceCodeUrl: String? = null
 
     /**
-     * Whether a Microsoft WebView or Credentials sign-in is currently in progress. The device code flow
-     * uses [activeDeviceCodeUrl] instead, since re-triggering it should reuse the existing code rather than
-     * being rejected outright.
+     * Guards the WebView and credentials flows only - the device code flow uses [activeDeviceCodeUrl].
      */
     private val microsoftLoginInProgress = AtomicBoolean(false)
 
     /**
-     * Create a new Microsoft account using the device code flow: the user is given a short code and a URL
-     * to open on any device to complete sign-in. [url] receives the direct verification URL (which has the
-     * code pre-filled) as soon as it is available. This blocks the calling thread only until that URL is
-     * known; the account itself is created asynchronously once the user completes the sign-in elsewhere,
-     * surfaced via [AccountManagerAdditionResultEvent].
+     * Blocks only until the verification URL is known and hands it to [url]; the account itself is created
+     * once the user signs in elsewhere, surfaced via [AccountManagerAdditionResultEvent].
      */
     fun newMicrosoftAccountViaDeviceCode(url: (String) -> Unit) {
-        // Prevents you from starting multiple login attempts
         val existingUrl = activeDeviceCodeUrl
         if (existingUrl != null) {
             url(existingUrl)
@@ -214,8 +205,7 @@ object AccountManager : Config("Accounts"), EventListener {
     }
 
     /**
-     * Create a new Microsoft account by signing in on the Microsoft login page, shown in the client's own
-     * browser. Runs asynchronously; the result is surfaced via [AccountManagerAdditionResultEvent].
+     * Runs asynchronously; the result is surfaced via [AccountManagerAdditionResultEvent].
      */
     fun newMicrosoftAccountViaWebView() {
         if (!microsoftLoginInProgress.compareAndSet(false, true)) {
@@ -260,9 +250,8 @@ object AccountManager : Config("Accounts"), EventListener {
     }
 
     /**
-     * Create a new Microsoft account by signing in directly with an email and password. Does not support
-     * accounts with two-factor authentication enabled. Runs asynchronously; the result is surfaced via
-     * [AccountManagerAdditionResultEvent].
+     * Does not support accounts with two-factor authentication enabled. Runs asynchronously; the result is
+     * surfaced via [AccountManagerAdditionResultEvent].
      */
     fun newMicrosoftAccountViaCredentials(email: String, password: String) {
         if (email.isEmpty() || password.isEmpty()) {
@@ -291,10 +280,6 @@ object AccountManager : Config("Accounts"), EventListener {
         }
     }
 
-    /**
-     * Adds or replaces [account] in [accounts] and notifies the frontend. Shared by all Microsoft sign-in
-     * flows.
-     */
     private fun handleNewMicrosoftAccount(account: MicrosoftAccount) {
         val profile = account.profile
         if (profile == null) {
@@ -310,14 +295,11 @@ object AccountManager : Config("Accounts"), EventListener {
         }
 
         if (existingAccount != null) {
-            // Replace existing account
             accounts[accounts.indexOf(existingAccount)] = account
         } else {
-            // Add account to list of accounts
             accounts += account
         }
 
-        // Store configurable
         ConfigSystem.store(this@AccountManager)
 
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.name))
@@ -335,7 +317,6 @@ object AccountManager : Config("Accounts"), EventListener {
             EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.name))
         }
 
-        // Store configurable
         ConfigSystem.store(this@AccountManager)
     }.onFailure {
         logger.error("Failed to login into altening account (for add-process)", it)
@@ -350,7 +331,6 @@ object AccountManager : Config("Accounts"), EventListener {
         val account = AlteningAccount.generateAccount(apiToken)
         accounts += account
 
-        // Store configurable
         ConfigSystem.store(this@AccountManager)
 
         account
@@ -382,13 +362,13 @@ object AccountManager : Config("Accounts"), EventListener {
 
     fun favoriteAccount(id: Int) {
         val account = accounts.getOrNull(id) ?: error("Account not found!")
-        account.favorite()
+        account.favorite = true
         ConfigSystem.store(this@AccountManager)
     }
 
     fun unfavoriteAccount(id: Int) {
         val account = accounts.getOrNull(id) ?: error("Account not found!")
-        account.unfavorite()
+        account.favorite = false
         ConfigSystem.store(this@AccountManager)
     }
 
@@ -425,7 +405,6 @@ object AccountManager : Config("Accounts"), EventListener {
             if (token.startsWith("M.")) {
                 MicrosoftAccount.buildFromRefreshToken(token)
             } else {
-                // Create a new cracked account
                 SessionAccount(token).apply {
                     refresh()
                 }
@@ -442,13 +421,11 @@ object AccountManager : Config("Accounts"), EventListener {
             return
         }
 
-        // Check if an account already exists
         if (accounts.any { it.username.equals(account.username, true) }) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Account already exists!"))
             return
         }
 
-        // Store configurable
         accounts += account
         ConfigSystem.store(this@AccountManager)
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.name))

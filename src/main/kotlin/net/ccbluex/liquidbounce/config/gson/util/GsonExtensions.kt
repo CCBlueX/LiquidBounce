@@ -145,10 +145,8 @@ inline fun <T> Iterable<T>.mapToJsonArray(transform: (T) -> JsonElement?): JsonA
 }
 
 /**
- * Null-safe member accessors.
- *
  * Unlike [JsonObject.get] followed by `asString` and friends, these return `null` for an absent key
- * instead of throwing, which keeps optional fields readable at the call site.
+ * instead of throwing.
  */
 fun JsonObject.string(key: String): String? = if (has(key)) get(key).asString else null
 
@@ -164,9 +162,6 @@ fun JsonObject.obj(key: String): JsonObject? = if (has(key)) get(key).asJsonObje
 
 fun JsonObject.array(key: String): JsonArray? = if (has(key)) get(key).asJsonArray else null
 
-/**
- * The same accessors by index, for arrays whose elements are positional.
- */
 fun JsonArray.string(index: Int): String? = getOrNull(index)?.asString
 
 fun JsonArray.int(index: Int): Int? = getOrNull(index)?.asInt

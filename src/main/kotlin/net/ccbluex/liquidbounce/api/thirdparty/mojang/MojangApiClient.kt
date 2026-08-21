@@ -32,17 +32,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
 /**
- * Unified entry point for all Mojang HTTP APIs.
- *
- * Provides typed, suspend-based access to:
- * - [mojangApi] — api.mojang.com (public profile lookups)
- * - [mcServicesApi] — api.minecraftservices.com (authenticated profile management)
- * - [sessionServerApi] — sessionserver.mojang.com (session verification, textures)
- *
  * The Microsoft/Xbox Live/XSTS token chain is not part of this client - MinecraftAuth implements it,
  * see [net.ccbluex.liquidbounce.features.account.MicrosoftAccount].
  *
- * Create via [MojangApiClient.Builder]:
  * ```kotlin
  * val client = MojangApiClient.Builder().httpClient(HttpClient.defaultClient).build()
  * ```
@@ -68,13 +60,10 @@ class MojangApiClient internal constructor(
 
         private var tokenProvider: () -> String? = { null }
 
-        /** Use a custom [Gson] instance for serialization. */
         fun gson(gson: Gson) = apply { this.gson = gson }
 
-        /** Use a custom base [OkHttpClient]. */
         fun httpClient(client: OkHttpClient) = apply { this.baseHttpClient = client }
 
-        /** Change the token provider after construction. */
         fun tokenProvider(provider: () -> String?) = apply { this.tokenProvider = provider }
 
         fun build(): MojangApiClient {

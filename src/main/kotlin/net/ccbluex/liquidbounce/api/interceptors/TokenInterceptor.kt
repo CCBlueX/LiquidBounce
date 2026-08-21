@@ -23,8 +23,8 @@ import okhttp3.Interceptor
 import okhttp3.Response
 
 /**
- * OkHttp interceptor that injects `Authorization: Bearer <token>` into every request.
- * The token provider is evaluated lazily on each request, so it can be refreshed without recreating the client.
+ * Injects `Authorization: Bearer <token>`. The provider is evaluated per request, so the token can change
+ * without recreating the client.
  */
 internal class TokenInterceptor(
     private val tokenProvider: () -> String?,

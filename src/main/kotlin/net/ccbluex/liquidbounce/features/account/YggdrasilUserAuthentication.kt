@@ -27,25 +27,12 @@ import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.makeRequestBody
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import okhttp3.Request
-import java.util.UUID
 
-/**
- * Client token sent with every Yggdrasil authentication and every session this client creates.
- *
- * Randomised per launch, which is what the protocol expects from a client that does not persist one.
- */
-val clientIdentifier: String = UUID.randomUUID().toString()
-
-/**
- * A successful Yggdrasil authentication.
- */
 data class YggdrasilSession(val profile: GameProfile, val accessToken: String)
 
 /**
- * A Yggdrasil `/authenticate` client.
- *
- * Mojang's own authentication server is long gone; this remains because alt services such as
- * TheAltening still speak the protocol.
+ * A Yggdrasil `/authenticate` client, used for alt services such as TheAltening. Mojang itself is not
+ * authenticated against through here - MinecraftAuth does that.
  *
  * Documentation: https://wiki.vg/Authentication
  */
@@ -72,9 +59,7 @@ class YggdrasilUserAuthentication(val baseUrl: String) {
         val clientToken: String,
         val availableProfiles: Array<Profile>,
         /**
-         * If a user attempts to log into a valid Mojang account with no attached Minecraft license,
-         * the authentication will be successful, but the response will not contain a selectedProfile
-         * field, and the availableProfiles array will be empty.
+         * Absent for a valid account without a Minecraft license - the authentication still succeeds.
          */
         val selectedProfile: Profile?
     ) {
@@ -110,7 +95,7 @@ class YggdrasilUserAuthentication(val baseUrl: String) {
 
     companion object {
         /**
-         * Plain Gson: the request and response shapes are protocol types with no client-side adapters.
+         * Plain Gson: these are protocol types with no client-side adapters.
          */
         private val GSON = Gson()
     }

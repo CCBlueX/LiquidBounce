@@ -29,22 +29,22 @@ import retrofit2.http.*
  */
 interface SessionServerApi {
 
-    /** Query skin and cape textures by UUID. Returns 204 if UUID has no player. */
+    /** Returns 204 if the UUID has no player. */
     @GET("session/minecraft/profile/{uuid}")
     suspend fun fetchProfile(@Path("uuid") uuid: String): Response<SessionProfile>
 
-    /** Query skin and cape with signature verification. */
+    /** As above, with signature verification. */
     @GET("session/minecraft/profile/{uuid}")
     suspend fun fetchProfileSigned(
         @Path("uuid") uuid: String,
         @Query("unsigned") unsigned: Boolean = false,
     ): Response<SessionProfile>
 
-    /** Client-side session verification. Returns 204 on success. */
+    /** Returns 204 on success. */
     @POST("session/minecraft/join")
     suspend fun joinServer(@Body request: JoinServerRequest): Response<Unit>
 
-    /** Server-side session verification. Returns profile on success, 204/empty on failure. */
+    /** Returns the profile on success, 204/empty on failure. */
     @GET("session/minecraft/hasJoined")
     suspend fun hasJoined(
         @Query("username") username: String,
@@ -52,7 +52,7 @@ interface SessionServerApi {
         @Query("ip") ip: String? = null,
     ): Response<SessionProfile>
 
-    /** Get list of SHA-1 hashes of blocked servers, one per line. */
+    /** SHA-1 hashes, one per line. */
     @GET("blockedservers")
     suspend fun getBlockedServers(): String
 }

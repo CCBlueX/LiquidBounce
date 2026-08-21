@@ -31,8 +31,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * The account config format predates the move of this code out of the `mc-authlib` library, so the
- * wire format has to stay byte-compatible with what older versions wrote.
+ * The wire format has to stay compatible with what versions before the `mc-authlib` move wrote.
  */
 class MinecraftAccountSerializationTest {
 

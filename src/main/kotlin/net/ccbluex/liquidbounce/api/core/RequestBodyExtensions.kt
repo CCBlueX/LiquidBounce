@@ -27,8 +27,6 @@ import okio.Buffer
 import okio.BufferedSink
 
 /**
- * Gson instance used to turn objects into request bodies.
- *
  * Deliberately plain: request bodies must not be pretty-printed and must not run through the client's
  * serialization exclusion strategies, so none of the instances in [net.ccbluex.liquidbounce.config.gson]
  * are appropriate here.
@@ -43,9 +41,6 @@ private fun Buffer.asRequestBody(mediaType: MediaType) = object : RequestBody() 
     }
 }
 
-/**
- * Serializes any object into a JSON request body.
- */
 fun Gson.makeRequestBody(data: Any?): RequestBody {
     val buffer = Buffer()
     buffer.outputStream().writer(Charsets.UTF_8).use {
@@ -54,8 +49,5 @@ fun Gson.makeRequestBody(data: Any?): RequestBody {
     return buffer.asRequestBody(HttpClient.MediaTypes.JSON)
 }
 
-/**
- * Serializes an already built JSON tree into a request body.
- */
 @JvmOverloads
 fun JsonElement.toRequestBody(gson: Gson = requestBodyGson): RequestBody = gson.makeRequestBody(this)

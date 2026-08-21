@@ -19,15 +19,36 @@
 
 package net.ccbluex.liquidbounce.api.thirdparty.mojang.service
 
-import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.*
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.ActivateCapeRequest
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.BlockList
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.ChangeSkinRequest
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.FriendsList
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.FriendsUpdateRequest
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.NameAvailability
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.NameChangeInfo
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.PlayerAttributes
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.PlayerAttributesUpdate
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.PlayerProfile
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.PresenceRequest
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.PresenceResponse
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.ProfileIdName
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.PublicKeys
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.Multipart
+import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Part
+import retrofit2.http.Path
 
 /**
- * Endpoints on [api.minecraftservices.com](https://api.minecraftservices.com).
- * Most endpoints require `Authorization: Bearer <token>` header.
+ * Endpoints on [api.minecraftservices.com](https://api.minecraftservices.com). Most of them require an
+ * `Authorization: Bearer <token>` header.
  *
  * The authentication endpoints of this host (`login_with_xbox`, `entitlements/license`,
  * `player/certificates`) are deliberately absent - MinecraftAuth already implements them as

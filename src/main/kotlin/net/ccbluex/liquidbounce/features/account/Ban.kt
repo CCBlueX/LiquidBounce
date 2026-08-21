@@ -24,10 +24,6 @@ import net.ccbluex.liquidbounce.config.gson.util.long
 import net.ccbluex.liquidbounce.config.gson.util.string
 
 /**
- * A ban of an account on a specific server.
- *
- * Tracking bans is up to the client - this only stores and expires them.
- *
  * @param bannedUntil epoch milliseconds the ban expires at, or `-1` if it never does.
  */
 data class Ban(val serverName: String, val reason: String, val bannedUntil: Long = -1L) {

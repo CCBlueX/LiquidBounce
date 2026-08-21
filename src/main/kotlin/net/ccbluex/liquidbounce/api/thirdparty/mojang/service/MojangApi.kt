@@ -30,19 +30,17 @@ import retrofit2.http.Path
  */
 interface MojangApi {
 
-    /** Username → UUID. Returns 404 if no player exists. */
+    /** Returns 404 if no player exists. */
     @GET("users/profiles/minecraft/{username}")
     suspend fun fetchUuidByUsername(@Path("username") username: String): ProfileIdName
 
-    /** Username → UUID (alternative endpoint). */
     @GET("minecraft/profile/lookup/name/{username}")
     suspend fun lookupUuidByName(@Path("username") username: String): ProfileIdName
 
-    /** Batch username → UUID, max 10 names. Missing names are omitted from response. */
+    /** Max 10 names. Missing ones are omitted from the response. */
     @POST("profiles/minecraft")
     suspend fun fetchProfiles(@Body names: List<String>): List<ProfileIdName>
 
-    /** Batch username → UUID (alternative endpoint). */
     @POST("minecraft/profile/lookup/bulk/byname")
     suspend fun lookupProfilesBulk(@Body names: List<String>): List<ProfileIdName>
 }

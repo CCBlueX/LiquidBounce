@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce.features.account
 
 import com.google.gson.JsonObject
 import com.mojang.authlib.GameProfile
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
-import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import net.ccbluex.liquidbounce.config.gson.util.obj
 import net.raphimc.minecraftauth.java.JavaAuthManager
 import net.raphimc.minecraftauth.msa.data.MsaConstants
@@ -32,16 +30,15 @@ import net.raphimc.minecraftauth.msa.model.MsaDeviceCode
 import net.raphimc.minecraftauth.msa.service.impl.CredentialsMsaAuthService
 import net.raphimc.minecraftauth.msa.service.impl.DeviceCodeMsaAuthService
 import net.raphimc.minecraftauth.msa.service.impl.ExternalBrowserMsaAuthService
-import java.net.Proxy
 import java.util.function.Consumer
 
 /**
  * A premium account authenticated through a Microsoft account.
  *
  * Authentication is delegated to [MinecraftAuth](https://github.com/CCBlueX/minecraft-auth-java),
- * which implements the full Microsoft -> Xbox Live -> XSTS -> Minecraft token exchange. Use one of the
- * `buildFrom*` factory functions to sign in; all of them block the calling thread until the sign-in
- * completes, so none of them may be called on the render thread.
+ * which implements the full Microsoft -> Xbox Live -> XSTS -> Minecraft token exchange. Every
+ * `buildFrom*` blocks the calling thread until the sign-in completes, so none of them may be called
+ * on the render thread.
  */
 class MicrosoftAccount internal constructor(
     private var authManager: JavaAuthManager?
@@ -56,9 +53,6 @@ class MicrosoftAccount internal constructor(
     private fun requireAuthManager() =
         checkNotNull(authManager) { "Microsoft account has not been signed in" }
 
-    /**
-     * Refreshes the Microsoft/Xbox/Minecraft token chain and updates the account's [profile].
-     */
     override fun refresh() {
         val manager = requireAuthManager()
 
@@ -69,23 +63,11 @@ class MicrosoftAccount internal constructor(
         profile = GameProfile(minecraftProfile.id, minecraftProfile.name)
     }
 
-    override fun login(): Pair<SessionWithService, YggdrasilAuthenticationService> {
-        val manager = requireAuthManager()
-
-        if (profile == null) {
-            refresh()
-        }
-
-        val token = manager.minecraftToken.getUpToDate()
-        val service = YggdrasilAuthenticationService(Proxy.NO_PROXY, YggdrasilEnvironment.PROD.environment)
-
-        return sessionOf(token.token) to service
-    }
+    override fun acquireAccessToken() = requireAuthManager().minecraftToken.getUpToDate().token
 
     /**
-     * Saves the account data. The full [JavaAuthManager] state (MSA refresh token and all cached
-     * Xbox/Minecraft tokens) is embedded so that the session can be restored without requiring the
-     * user to sign in again.
+     * The full [JavaAuthManager] state (MSA refresh token and all cached Xbox/Minecraft tokens) is
+     * embedded so that the session can be restored without signing in again.
      */
     override fun toRawJson(json: JsonObject) = json.run {
         writeProfile()
@@ -105,8 +87,7 @@ class MicrosoftAccount internal constructor(
     companion object {
 
         /**
-         * The official Minecraft (Java Edition) launcher application, using the client ID and scope
-         * constants provided by the MinecraftAuth library.
+         * The official Minecraft (Java Edition) launcher application.
          */
         val JAVA_APPLICATION_CONFIG: MsaApplicationConfig =
             MsaApplicationConfig(MsaConstants.JAVA_TITLE_ID, MsaConstants.SCOPE_TITLE_AUTH)
@@ -114,15 +95,12 @@ class MicrosoftAccount internal constructor(
         private const val DEFAULT_TIMEOUT_MS = 300_000
 
         /**
-         * Signs in through a browser the caller supplies. This is the preferred sign-in method, as it
-         * supports 2FA, passkeys and every other login method Microsoft offers, without any custom
-         * setup.
+         * Signs in through a browser the caller supplies. Preferred over the other flows, as it supports
+         * 2FA, passkeys and everything else Microsoft offers.
          *
-         * [onOpen] is called on the calling thread and has to display
-         * [ExternalBrowserMsaAuthService.getAuthenticationUrl] and report the URLs it navigates to back
-         * to the service; [onClose] is called once the sign-in has finished, failed or timed out.
-         *
-         * @param timeoutMs How long to wait for the user to complete the login before giving up.
+         * [onOpen] has to display [ExternalBrowserMsaAuthService.getAuthenticationUrl] and report the
+         * URLs it navigates to back to the service; [onClose] runs once the sign-in has finished, failed
+         * or timed out.
          */
         fun buildFromWebView(
             onOpen: (ExternalBrowserMsaAuthService) -> Unit,
@@ -136,9 +114,8 @@ class MicrosoftAccount internal constructor(
         }
 
         /**
-         * Signs in with the Microsoft device code flow. [onDeviceCode] is invoked once with the code
-         * the user needs to enter at the returned verification URL; this call blocks until the user
-         * completes the sign-in, the device code expires, or [timeoutMs] elapses.
+         * [onDeviceCode] is invoked once with the code the user has to enter at the returned verification
+         * URL; this blocks until the user completes the sign-in, the code expires, or [timeoutMs] elapses.
          */
         fun buildFromDeviceCode(
             onDeviceCode: Consumer<MsaDeviceCode>,
@@ -152,9 +129,8 @@ class MicrosoftAccount internal constructor(
         }
 
         /**
-         * Signs in directly with a Microsoft email and password. Does not support accounts with
-         * two-factor authentication enabled; use [buildFromWebView] or [buildFromDeviceCode] instead
-         * in that case.
+         * Does not support accounts with two-factor authentication enabled; use [buildFromWebView] or
+         * [buildFromDeviceCode] for those.
          */
         fun buildFromCredentials(
             email: String,
@@ -168,7 +144,6 @@ class MicrosoftAccount internal constructor(
         }
 
         /**
-         * Restores a session from a previously obtained Microsoft OAuth refresh token. The
          * [applicationConfig] must match the one the refresh token was originally issued for.
          */
         fun buildFromRefreshToken(
