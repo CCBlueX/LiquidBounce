@@ -13,7 +13,7 @@ fabric-loaderMin = "0.18.4"
 fabric-api = "0.153.0+26.2"
 
 # mcef
-mcef = "3.4.0-26.2-SNAPSHOT"
+mcef = "3.4.0-26.2"
 # MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
 minecraftauth = "5.0.3-SNAPSHOT"
 # TheAltening
