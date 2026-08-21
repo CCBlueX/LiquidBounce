@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.MicrosoftLoginScreen
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -377,5 +378,6 @@ object ScreenManager : EventListener {
     fun isClientScreen(screen: Screen?) = screen is CustomSharedMinecraftScreen
         || screen is CustomStandaloneMinecraftScreen
         || screen is InternetExplorerScreen
+        || screen is MicrosoftLoginScreen
 
 }

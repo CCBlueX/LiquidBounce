@@ -219,13 +219,16 @@ class CefBrowserBackend : BrowserBackend, EventListener {
         }
     }
 
+    override val supportsIncognito = true
+
     override fun createBrowser(
         url: String,
         position: BrowserViewport,
         settings: BrowserSettings,
         priority: Short,
+        incognito: Boolean,
         inputAcceptor: InputAcceptor?
-    ) = CefBrowser(this, url, position, settings, priority, inputAcceptor)
+    ) = CefBrowser(this, url, position, settings, priority, incognito, inputAcceptor)
         .apply(::addBrowser)
 
     private fun addBrowser(browser: CefBrowser) {

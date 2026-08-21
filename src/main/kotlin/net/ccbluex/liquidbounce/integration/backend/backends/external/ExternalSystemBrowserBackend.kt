@@ -58,11 +58,14 @@ class ExternalSystemBrowserBackend : BrowserBackend, EventListener {
     @Suppress("EmptyFunctionBlock")
     override fun update() { }
 
+    override val supportsIncognito = false
+
     override fun createBrowser(
         url: String,
         position: BrowserViewport,
         settings: BrowserSettings,
         priority: Short,
+        incognito: Boolean,
         inputAcceptor: InputAcceptor?
     ) = ExternalSystemBrowser(this, url, position, settings, priority)
         .apply(::addBrowser)

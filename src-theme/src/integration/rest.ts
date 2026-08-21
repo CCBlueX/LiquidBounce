@@ -404,15 +404,31 @@ export async function addAlteningAccount(token: string) {
     });
 }
 
-export async function addMicrosoftAccount() {
-    await fetch(`${API_BASE}/client/accounts/new/microsoft`, {
+export async function addMicrosoftAccountWebView() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/webview`, {
         method: "POST",
     });
 }
 
-export async function addMicrosoftAccountCopyUrl() {
-    await fetch(`${API_BASE}/client/accounts/new/microsoft/clipboard`, {
+export async function addMicrosoftAccountDeviceCode() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/device-code`, {
         method: "POST",
+    });
+}
+
+export async function addMicrosoftAccountDeviceCodeCopyUrl() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/device-code/clipboard`, {
+        method: "POST",
+    });
+}
+
+export async function addMicrosoftAccountCredentials(email: string, password: string) {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/credentials`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({email, password})
     });
 }
 
