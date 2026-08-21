@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.injection.mixins.realms.MixinRealmsAvailabilityAccessor
+import net.ccbluex.liquidbounce.injection.mixins.realms.MixinRealmsClientAccessor
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.screen.impl.MicrosoftLoginScreen
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -96,6 +98,7 @@ object AccountManager : Config("Accounts"), EventListener {
             service.createProfileRepository(),
         )
         mc.profileKeyPairManager = profileKeys
+        invalidateRealms()
 
         EventManager.callEvent(SessionEvent(session))
         EventManager.callEvent(AccountManagerLoginResultEvent(username = account.username))
@@ -355,9 +358,20 @@ object AccountManager : Config("Accounts"), EventListener {
             initialSession.sessionService ?: mc.services.sessionService
         )
         mc.profileKeyPairManager = initialSession.profileKeys
+        invalidateRealms()
 
         EventManager.callEvent(SessionEvent(mc.user))
         EventManager.callEvent(AccountManagerLoginResultEvent(username = mc.user.name))
+    }
+
+    /**
+     * Realms builds its client from the session that was active at the time, keeps it in a static field
+     * and never compares it against the current one, and it never retries an availability check that
+     * failed with an authentication error. Both caches have to be dropped by hand.
+     */
+    private fun invalidateRealms() {
+        MixinRealmsClientAccessor.setRealmsClientInstance(null)
+        MixinRealmsAvailabilityAccessor.setFuture(null)
     }
 
     fun favoriteAccount(id: Int) {
