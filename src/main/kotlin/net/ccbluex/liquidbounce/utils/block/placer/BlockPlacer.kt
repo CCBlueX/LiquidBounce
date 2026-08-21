@@ -281,7 +281,7 @@ class BlockPlacer(
                 sneakTimes = sneak.random()
             }
 
-            if (rotationMode.activeMode(entry.booleanValue, pos, placementTarget)) {
+            if (rotationMode.activeMode(entry.booleanValue, pos.immutable(), placementTarget)) {
                 return true
             }
 
@@ -313,32 +313,34 @@ class BlockPlacer(
         return false
     }
 
-    fun doPlacement(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget) {
+    fun doPlacement(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget): Boolean {
         // choose block to place
         val slot = if (isSupport) {
             support.filter.getSlot(support.blocks)
         } else {
             slotFinder(pos)
-        } ?: return
+        } ?: return false
 
         val verificationRotation = rotationMode.activeMode.getVerificationRotation(placementTarget.rotation)
 
         // check if we can still reach the target
         if (!canReach(placementTarget.interactedBlockPos, verificationRotation)) {
-            return
+            return false
         }
 
         // get the block hit result needed for the placement
-        val blockHitResult = raytraceTarget(placementTarget, verificationRotation) ?: return
+        val blockHitResult = raytraceTarget(placementTarget, verificationRotation) ?: return false
 
         if (!SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())) {
-            return
+            return false
         }
 
         if (slot.itemStack.item !is BlockItem || pos.stateOrEmpty.canBeReplaced()) {
+            var result = false
             val onSuccess = {
                 removeFromQueue(pos)
                 placedRenderer.addBlock(pos)
+                result = true
                 true
             }
 
@@ -350,7 +352,11 @@ class BlockPlacer(
                 onItemUseSuccess = onSuccess,
                 swingMode = swingMode,
             )
+
+            return result
         }
+
+        return false
     }
 
     private fun raytraceTarget(placementTarget: BlockPlacementTarget, providedRotation: Rotation): BlockHitResult? {

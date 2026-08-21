@@ -36,6 +36,12 @@ class ExternalSystemBrowser(
 ) : Browser, MinecraftShortcuts {
 
     override val isInitialized = true
+
+    /**
+     * Always false - the page is handed to the system browser, whose profile we have no say over.
+     */
+    override val isIncognito = false
+
     override val state: BrowserState = BrowserState.Stateless
     override var visible = true
 
