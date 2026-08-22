@@ -113,6 +113,10 @@
     listen("accountManagerLogin", (e: AccountManagerLoginEvent) => {
         directLoginModalVisible = false;
     });
+
+    function getAccountRenderKey(account: Account) {
+        return `${account.type}:${account.uuid}`;
+    }
 </script>
 
 <DirectLoginModal bind:visible={directLoginModalVisible}/>
@@ -128,33 +132,31 @@
 
 <MenuList sortable={accounts.length === renderedAccounts.length} elementCount={accounts.length}
           on:sort={handleAccountSort}>
-    {#key accounts}
-        {#each renderedAccounts as account}
-            <MenuListItem
-                    image={account.avatar}
-                    title={account.username}
-                    favorite={account.favorite}
-                    on:dblclick={() => loginToAccount(account.id)}>
-                <svelte:fragment slot="subtitle">
-                    <pre class="uuid">{account.uuid}</pre>
-                </svelte:fragment>
+    {#each renderedAccounts as account (getAccountRenderKey(account))}
+        <MenuListItem
+                image={account.avatar}
+                title={account.username}
+                favorite={account.favorite}
+                on:dblclick={() => loginToAccount(account.id)}>
+            <svelte:fragment slot="subtitle">
+                <pre class="uuid">{account.uuid}</pre>
+            </svelte:fragment>
 
-                <svelte:fragment slot="tag">
-                    <MenuListItemTag text={account.type}/>
-                </svelte:fragment>
+            <svelte:fragment slot="tag">
+                <MenuListItemTag text={account.type}/>
+            </svelte:fragment>
 
-                <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(account.id)}/>
-                    <MenuListItemButton title="Favorite" icon={account.favorite ? "favorite-filled" : "favorite" }
-                                        on:click={() => toggleFavorite(account.id, !account.favorite)}/>
-                </svelte:fragment>
+            <svelte:fragment slot="active-visible">
+                <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(account.id)}/>
+                <MenuListItemButton title="Favorite" icon={account.favorite ? "favorite-filled" : "favorite" }
+                                    on:click={() => toggleFavorite(account.id, !account.favorite)}/>
+            </svelte:fragment>
 
-                <svelte:fragment slot="always-visible">
-                    <MenuListItemButton title="Login" icon="play" on:click={() => loginToAccount(account.id)}/>
-                </svelte:fragment>
-            </MenuListItem>
-        {/each}
-    {/key}
+            <svelte:fragment slot="always-visible">
+                <MenuListItemButton title="Login" icon="play" on:click={() => loginToAccount(account.id)}/>
+            </svelte:fragment>
+        </MenuListItem>
+    {/each}
 </MenuList>
 
 <BottomButtonWrapper>
