@@ -162,6 +162,7 @@
   "liquidbounce.module.autoLeave.description": "Automaticamente sai do servidor quando sua vida esta baixa.",
   "liquidbounce.module.criticals.description": "Automaticamente da criticos nos inimigos.",
   "liquidbounce.module.hitbox.description": "Deixa a hitbox dos inimigos maior.",
+  "liquidbounce.module.autoTpa.description": "Aceita automaticamente pedidos de teleporte",
   "liquidbounce.module.killAura.description": "Automaticamente ataca inimigos.",
   "liquidbounce.module.superKnockback.description": "Da mais knock-back.",
   "liquidbounce.module.trigger.description": "Automaticamente ataca quando olha para alguem.",

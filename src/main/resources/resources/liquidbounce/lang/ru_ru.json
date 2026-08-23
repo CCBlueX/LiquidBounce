@@ -315,6 +315,7 @@
   "liquidbounce.liquidchat.states.loggedIn": "Авторизовано!",
   "liquidbounce.liquidchat.writeMessage": "Отправлено сообщение: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "Отправляет приватное сообщение: %s",
+  "liquidbounce.module.autoTpa.description": "Автоматически принимает запросы на телепортацию",
   "liquidbounce.module.totemEffect.description": "Эффект при использовании тотема игроками",
   "liquidbounce.module.wings.description": "Рендерит крылья сзади игрока",
   "liquidbounce.module.ESP.description": "Позволяет видеть цели через стены.",

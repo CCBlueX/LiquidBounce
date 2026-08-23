@@ -243,6 +243,7 @@
     "liquidbounce.module.totemEffect.description": "プレイヤーがトーテムを使用する際にエフェクトを描画します。",
     "liquidbounce.module.wings.description": "プレイヤーの後ろに羽を描画します。",
 	"liquidbounce.module.ESP.description": "壁越しにターゲットを見ることができます。",
+    "liquidbounce.module.autoTpa.description": "テレポートリクエストを自動的に承認します",
 	"liquidbounce.module.abortBreaking.description": "ブロック破壊の進行状況がリセットされることなくブロック破壊を中断できます。",
 	"liquidbounce.module.aimbot.description": "自動的に近くのターゲットにエイムを合わせます。",
 	"liquidbounce.module.airJump.description": "空中でジャンプできるようになります。",
