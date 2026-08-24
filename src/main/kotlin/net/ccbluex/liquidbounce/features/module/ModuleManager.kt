@@ -138,6 +138,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTargetStrafe
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTridentBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSnapTap
@@ -579,6 +580,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,
+            ModuleTridentBoost,
             ModuleVehicleBoost,
             ModuleVehicleControl,
             ModuleSpider,
