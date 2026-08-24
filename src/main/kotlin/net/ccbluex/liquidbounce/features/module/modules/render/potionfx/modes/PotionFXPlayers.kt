@@ -79,7 +79,6 @@ object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", true) {
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
-
             val texture = textureMode.activeMode.texture ?: return@handler
             val secondaryTexture = secondaryTextureMode.activeMode.texture ?: return@handler
             if (players.isEmpty()) return@handler

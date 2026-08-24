@@ -47,8 +47,10 @@ object ModulePotionFX : ClientModule("PotionFX", ModuleCategories.RENDER) {
         RUNES("Runes", "potion_fx/main/runes.png"),
         ATLAS("Atlas", "potion_fx/main/atlas.png");
 
-        override val texture = LiquidBounce.resource(this.path)
-            .readNativeImage().asTexture { "PotionFX Image $tag" }
+        override val texture by lazy {
+            LiquidBounce.resource(this.path)
+                .readNativeImage().asTexture { "PotionFX Image $tag" }
+        }
     }
 
     @Suppress("unused")
@@ -58,7 +60,9 @@ object ModulePotionFX : ClientModule("PotionFX", ModuleCategories.RENDER) {
         HEXAGON("Hexagon", "potion_fx/secondary/hexagon.png"),
         STARDUST("Stardust", "potion_fx/secondary/stardust.png"),;
 
-        override val texture = LiquidBounce.resource(this.path)
-            .readNativeImage().asTexture { "PotionFX Image $tag" }
+        override val texture by lazy {
+            LiquidBounce.resource(this.path)
+                .readNativeImage().asTexture { "PotionFX Image $tag" }
+        }
     }
 }

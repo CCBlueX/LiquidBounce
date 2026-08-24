@@ -62,8 +62,6 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
             val radius by float("Radius", 2f, 0.1f..10f)
         }
 
-        val flash = tree(Flash)
-
         object Effect : ToggleableValueGroup(this@PotionFXLingering, "Effect", false) {
             val rotationSpeed by float("RotationSpeed", 1f, -10f..10f)
             val extraRadius by float("ExtraRadius", 0f, 0f..10f)
@@ -75,7 +73,10 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
             }
         }
 
-        val effect = tree(Effect)
+        init {
+            tree(Flash)
+            tree(Effect)
+        }
     }
 
     init {
@@ -88,14 +89,12 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
-
             val texture = MainEffect.textureMode.activeMode.texture ?: return@handler
             val secondaryTexture = secondaryTextureMode.activeMode.texture ?: return@handler
             if (cloudEntities.isEmpty()) return@handler
 
             for (entity in cloudEntities) {
-
-                val age = 40 - (40 - entity.tickCount).coerceIn(0, 40) + event.partialTicks
+                val age = minOf(entity.tickCount, 40) + event.partialTicks
                 val glowProgress = Easing.QUAD_IN_OUT
                     .transform(age / SecondEffects.Flash.animTime)
                     .coerceIn(0f, 1f)
@@ -119,26 +118,26 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
                                 noDepthTest = !canBeCovered
                             )
                         }
-                        if (SecondEffects.effect.enabled) {
+                        if (SecondEffects.Effect.enabled) {
                             withPush {
                                 translate(0.0, -0.005, 0.0)
                                 mulPose(Axis.XP.rotationDegrees(-90f))
                                 mulPose(Axis.ZP.rotationDegrees(secondRotation))
                                 drawSquareTexture(
                                     secondaryTexture,
-                                    (entity.radius + SecondEffects.effect.extraRadius + MainEffect.extraRadius) * 2,
+                                    (entity.radius + SecondEffects.Effect.extraRadius + MainEffect.extraRadius) * 2,
                                     color,
                                     AnchorPoint.CENTER,
                                     noDepthTest = !canBeCovered
                                 )
                             }
                         }
-                        if (SecondEffects.flash.enabled) {
+                        if (SecondEffects.Flash.enabled) {
                             withPush {
                                 mulPose(mc.gameRenderer.mainCamera().rotation())
                                 drawSquareTexture(
                                     glow,
-                                    SecondEffects.flash.radius * 2 * glowProgress,
+                                    SecondEffects.Flash.radius * 2 * glowProgress,
                                     color,
                                     AnchorPoint.CENTER,
                                     noDepthTest = !canBeCovered
@@ -152,7 +151,7 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
     }
 
     private val cloudEntities by EntityLookup { set ->
-        filterTo(set, EntityTypes.AREA_EFFECT_CLOUD) { true }
+        filterTo(set, EntityTypes.AREA_EFFECT_CLOUD)
     }
 
     override fun onDisabled() {
