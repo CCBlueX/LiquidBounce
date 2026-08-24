@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -50,8 +51,9 @@ import net.minecraft.world.phys.Vec3
  *
  * Detects gliding players, predicts their trajectory and throws a wind charge at the computed
  * interception point. The explosion's radial knockback (multiplier 1.22, ~2.4 block falloff) breaks
- * the glider's flight path; a direct hit additionally deals 1.0 damage. Creative-flying players are
- * ignored — they are immune to the knockback.
+ * the glider's flight path; a direct hit additionally deals 1.0 damage. Creative/spectator players are
+ * ignored — they are immune to the knockback. Teammates and friends (as configured in Teams/FriendManager)
+ * are also excluded.
  *
  * @see InterceptElytraSolver
  */
@@ -141,7 +143,8 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
             candidate !== player &&
                 candidate.isAlive &&
                 (!requireGliding || candidate.isFallFlying) &&
-                !candidate.abilities.flying && // immune to wind charge knockback
+                !candidate.abilities.instabuild && // creative/spectator players are immune to knockback
+                candidate.shouldBeAttacked() && // respect friend list and team settings
                 hasSpeed
         }
     }
