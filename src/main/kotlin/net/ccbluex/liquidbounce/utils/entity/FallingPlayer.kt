@@ -114,12 +114,11 @@ class FallingPlayer(
      * matching Minecraft 26.2 {@code LivingEntity.updateFallFlyingMovement()}.
      */
     private fun calculateElytraTick(rotationVec: Vec3) {
-        val gravity = effectiveGravity()
-
         val pitchRad: Double = this.player.xRot.toDouble() * Mth.DEG_TO_RAD
 
-        val k = sqrt(rotationVec.x * rotationVec.x + rotationVec.z * rotationVec.z)
-        val l = sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ)
+        val lookHorLength = sqrt(rotationVec.x * rotationVec.x + rotationVec.z * rotationVec.z)
+        val moveHorLength = sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ)
+        val gravity = effectiveGravity()
 
         val m = rotationVec.length()
         var n = Mth.cos(pitchRad)
@@ -129,18 +128,22 @@ class FallingPlayer(
         var vec3d5 = Vec3(this.motionX, this.motionY + gravity * (-1.0 + n.toDouble() * 0.75), this.motionZ)
 
         var q: Double
-        if (vec3d5.y < 0.0 && k > 0.0) {
+        if (vec3d5.y < 0.0 && lookHorLength > 0.0) {
             q = vec3d5.y * -0.1 * n.toDouble()
-            vec3d5 = vec3d5.add(rotationVec.x * q / k, q, rotationVec.z * q / k)
+            vec3d5 = vec3d5.add(rotationVec.x * q / lookHorLength, q, rotationVec.z * q / lookHorLength)
         }
 
-        if (pitchRad < 0.0 && k > 0.0) {
-            q = l * (-Mth.sin(pitchRad)).toDouble() * 0.04
-            vec3d5 = vec3d5.add(-rotationVec.x * q / k, q * 3.2, -rotationVec.z * q / k)
+        if (pitchRad < 0.0 && lookHorLength > 0.0) {
+            q = moveHorLength * (-Mth.sin(pitchRad)).toDouble() * 0.04
+            vec3d5 = vec3d5.add(-rotationVec.x * q / lookHorLength, q * 3.2, -rotationVec.z * q / lookHorLength)
         }
 
-        if (k > 0.0) {
-            vec3d5 = vec3d5.add((rotationVec.x / k * l - vec3d5.x) * 0.1, 0.0, (rotationVec.z / k * l - vec3d5.z) * 0.1)
+        if (lookHorLength > 0.0) {
+            vec3d5 = vec3d5.add(
+                (rotationVec.x / lookHorLength * moveHorLength - vec3d5.x) * 0.1, 
+                0.0,
+                (rotationVec.z / lookHorLength * moveHorLength - vec3d5.z) * 0.1,
+            )
         }
 
         this.motionX = vec3d5.x * LivingEntity.ELYTRA_HORIZONTAL_AIR_DRAG.toDouble()

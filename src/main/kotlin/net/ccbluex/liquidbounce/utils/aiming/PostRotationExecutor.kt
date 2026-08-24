@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
  */
 object PostRotationExecutor : EventListener {
 
-    private class ModuleAction(val module: ClientModule, val action: Runnable) {
+    private class ModuleAction(private val module: ClientModule, private val action: Runnable) {
         fun executeIfRunning() {
             if (module.running) {
                 action.run()

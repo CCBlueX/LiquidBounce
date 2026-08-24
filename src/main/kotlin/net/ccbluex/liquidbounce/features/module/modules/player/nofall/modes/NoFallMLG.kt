@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -163,20 +165,33 @@ internal object NoFallMLG : NoFallMode("MLG") {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val action = currentTarget ?: return@handler
+
+        if (isOlderThan1_21) {
+            currentTarget = null
+            PostRotationExecutor.addTask(ModuleNoFall, postMove = true, priority = true) {
+                executePlacement(action)
+            }
+            return@handler
+        }
+
+        executePlacement(action)
+    }
+
+    private fun executePlacement(action: PlacementAction) {
         val target = action.plan
 
         val rotation = RotationManager.currentRotation ?: player.rotation
         val rayTraceResult = traceFromPlayer(rotation)
 
         if (!target.doesCorrespondTo(rayTraceResult)) {
-            return@handler
+            return
         }
 
-        if (target.hotbarItemSlot.itemStack.item != action.item ||
+        if (target.hotbarItemSlot.itemStack.item !== action.item ||
             !SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
         ) {
             currentTarget = null
-            return@handler
+            return
         }
 
         val targetStateBefore = target.targetPos.state
@@ -370,17 +385,17 @@ internal object NoFallMLG : NoFallMode("MLG") {
         return bucketTarget == targetPos && targetPos.state?.canPlaceStandaloneFluid(Fluids.WATER) == true
     }
 
-    private fun PlacementAction.wasApplied(targetStateBefore: BlockState?): Boolean {
-        return wasMlgPlacementApplied(type, item, targetStateBefore, plan.targetPos.state)
-    }
-
     private data class PlacementAction(
         val plan: PlacementPlan,
         val type: MlgPlacementActionType,
         val item: Item,
         val requiresSneak: Boolean,
         val collisionTick: Int? = null,
-    )
+    ) {
+        fun wasApplied(targetStateBefore: BlockState?): Boolean {
+            return wasMlgPlacementApplied(type, item, targetStateBefore, plan.targetPos.state)
+        }
+    }
 }
 
 internal enum class MlgPlacementActionType {
