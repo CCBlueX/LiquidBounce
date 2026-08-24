@@ -139,7 +139,11 @@ class FallingPlayer(
         }
 
         if (lookHorLength > 0.0) {
-            vec3d5 = vec3d5.add((rotationVec.x / lookHorLength * moveHorLength - vec3d5.x) * 0.1, 0.0, (rotationVec.z / lookHorLength * moveHorLength - vec3d5.z) * 0.1)
+            vec3d5 = vec3d5.add(
+                (rotationVec.x / lookHorLength * moveHorLength - vec3d5.x) * 0.1, 
+                0.0,
+                (rotationVec.z / lookHorLength * moveHorLength - vec3d5.z) * 0.1,
+            )
         }
 
         this.motionX = vec3d5.x * LivingEntity.ELYTRA_HORIZONTAL_AIR_DRAG.toDouble()
