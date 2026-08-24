@@ -367,6 +367,7 @@
     "liquidbounce.module.eagle.description": "Sneakt automatisch op de rand van een blok.",
     "liquidbounce.module.elytraRecast.description": "Heractiveert je elytra terwijl je spatie ingedrukt houdt.",
     "liquidbounce.module.elytraFly.description": "Vergemakkelijkt het besturen van je elytra.",
+    "liquidbounce.module.interceptElytra.description": "Gooit windladingen naar elytra-glijders om hen te onderscheppen en uit de lucht te stoten.",
     "liquidbounce.module.elytraTarget.description": "Volg een doelwit in de lucht terwijl je elytra gebruikt.",
     "liquidbounce.module.targets.description": "Beheer welke entiteiten als doelwitten worden beschouwd.",
     "liquidbounce.module.extendedFirework.description": "Verlengt de vuurwerkboost op je elytra.",

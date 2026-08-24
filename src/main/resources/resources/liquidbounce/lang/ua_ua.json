@@ -247,6 +247,7 @@
   "liquidbounce.module.blockWalk.description": "Дозволяє вам ходити по неповним блокам.",
   "liquidbounce.module.bugUp.description": "Автоматично повертає вас назад при падінні з певної висоти.",
   "liquidbounce.module.elytraFly.description": "Дозволяє вам швидше літати з елітрами.",
+  "liquidbounce.module.interceptElytra.description": "Запускає вітрові заряди у гравців, що планерують на елітрах, щоб збити їх з неба.",
   "liquidbounce.module.inventoryMove.description": "Дозволяє вам ходити з відкритим інвентарем.",
   "liquidbounce.module.liquidWalk.description": "Дозволяє вам ходити по воді.",
   "liquidbounce.module.noJumpDelay.description": "Прибирає затримку між стрибками.",

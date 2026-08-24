@@ -231,6 +231,7 @@
   "liquidbounce.module.blockWalk.description": "Deixa você andar em blocos não-cheios.",
   "liquidbounce.module.bugUp.description": "Automaticamente te traz de volta depois de cair uma certa distancia.",
   "liquidbounce.module.elytraFly.description": "Faz você voar mais rapido na elytra.",
+  "liquidbounce.module.interceptElytra.description": "Lança cargas de vento em jogadores de elytra para interceptá-los e derrubá-los do ar.",
   "liquidbounce.module.inventoryMove.description": "Deixa você andar em quanto tem um inventario aberto.",
   "liquidbounce.module.liquidWalk.description": "Deixa você andar na agua.",
   "liquidbounce.module.noJumpDelay.description": "Remove o tempo entre pulos.",

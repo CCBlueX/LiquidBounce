@@ -330,6 +330,7 @@
   "liquidbounce.module.disabler.messages.grimSpectateEnableMessage": "Aktivier diesen Disabler beim Respawnen – wenn du Fliegen kannst. Du solltest in der Lage sein, herumzufliegen und Blöcke zu zerstören, dabei aber keine anderen Spieler angreifen können. Deaktivier den Disabler es so schnell wie möglich, sonst kommt es zu einer Zeitüberschreitung.",
   "liquidbounce.module.eagle.description": "Schleicht automatisch am Rand eines Blocks.",
   "liquidbounce.module.elytraFly.description": "Erleichtert die Steuerung der Elytra.",
+  "liquidbounce.module.interceptElytra.description": "Wirft Windladungen auf Elytra-Gleiter, um sie abzufangen und aus der Luft zu stoßen.",
   "liquidbounce.module.targets.description": "Ermöglicht dir zu verwalten, welche Entities als Ziel gelten sollen.",
   "liquidbounce.module.esp.description": "Highlightet alle Ziele, sodass du sie durch Wände sehen kannst.",
   "liquidbounce.module.fakeLag.description": "Hält Pakete zurück, um zu verhindern, dass du von einem Feind getroffen wirst.",

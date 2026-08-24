@@ -346,6 +346,7 @@
   "liquidbounce.module.eagle.description": "Bir bloğun kenarında otomatik olarak eğilir.",
   "liquidbounce.module.elytraRecast.description": "Zıplama tuşuna basılı tutarken elytra’yı yeniden fırlatır.",
   "liquidbounce.module.elytraFly.description": "Elytra’yı kontrol etmeyi kolaylaştırır.",
+  "liquidbounce.module.interceptElytra.description": "Elytra ile süzülen oyunculara rüzgar yükü atarak onları havada durdurur.",
   "liquidbounce.module.elytraTarget.description": "Elytra ile hedefi takip eder.",
   "liquidbounce.module.targets.description": "Hangi varlıkların hedef sayılacağını yönetmenizi sağlar.",
   "liquidbounce.module.extendedFirework.description": "Havai fişek roketinin itiş gücünü uzatır.",

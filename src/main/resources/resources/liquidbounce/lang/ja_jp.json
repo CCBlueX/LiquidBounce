@@ -332,6 +332,7 @@
 	"liquidbounce.module.disabler.vulcan.message": "Vulcanの移動チェックを回避するには、オフハンドに激流をエンチャントしたトライデントが必要です。",
 	"liquidbounce.module.eagle.description": "ブロックの端に自動的に潜入します。",
 	"liquidbounce.module.elytraFly.description": "エリトラの飛行をコントロールします。",
+	"liquidbounce.module.interceptElytra.description": "エリトラで滑空する敵にウィンドチャージを撃ち、空中から叩き落とします。",
 	"liquidbounce.module.enemies.description": "どのエンティティを敵とみなすかを管理できます。",
 	"liquidbounce.module.entityControl.description": "鞍なしで乗れるエンティティを操作することができます。",
 	"liquidbounce.module.esp.description": "すべてのターゲットをハイライトし、壁越しに見ることができます。",
