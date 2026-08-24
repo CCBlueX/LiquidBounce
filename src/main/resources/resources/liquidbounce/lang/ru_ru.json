@@ -422,6 +422,7 @@
   "liquidbounce.module.clickTp.messages.success": "Телепортировал вас в %s, %s, %s",
   "liquidbounce.module.clientSpoofer.description": "Подменяет ваш игровой клиент другим.",
   "liquidbounce.module.clip.description": "Позволяет проходить сквозь блоки.",
+  "liquidbounce.module.clutch.description": "Автоматически ставит блок под вами при падении в бездну.",
   "liquidbounce.module.clip.messages.whoosh": "Вжуух!",
   "liquidbounce.module.combineMobs.description": "Если сущности находяться слишком близко, то визуально объединяет их в одного.",
   "liquidbounce.module.consoleSpammer.description": "Спамит консоль сервера ошибками.",

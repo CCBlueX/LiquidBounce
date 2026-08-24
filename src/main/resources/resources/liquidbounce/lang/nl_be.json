@@ -346,6 +346,7 @@
     "liquidbounce.module.clickGUI.description": "Toont een GUI-menu waarin je modules kunt beheren en configureren.",
     "liquidbounce.module.clientSpoofer.description": "Spooft de naam van je gameclient.",
     "liquidbounce.module.clip.description": "Laat je door blokken heen clippen.",
+    "liquidbounce.module.clutch.description": "Plaatst automatisch een blok onder je wanneer je in de leegte valt.",
     "liquidbounce.module.clip.messages.whoosh": "Zoef!",
     "liquidbounce.module.combineMobs.description": "Voegt samenhokkende entiteiten samen.",
     "liquidbounce.module.criticals.description": "Veroorzaakt automatisch critical hits bij elke aanval.",

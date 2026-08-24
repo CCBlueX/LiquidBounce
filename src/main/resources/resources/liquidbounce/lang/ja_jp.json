@@ -314,6 +314,7 @@
 	"liquidbounce.module.clickTp.messages.success": "%s, %s, %sへテレポートしました。",
 	"liquidbounce.module.clientSpoofer.description": "ゲームクライアントを別のものに偽装します。",
 	"liquidbounce.module.clip.description": "ブロックをすり抜けることができます。",
+	"liquidbounce.module.clutch.description": "奈落に落ちるときに自動的に足元へブロックを設置します。",
 	"liquidbounce.module.clip.messages.whoosh": "ウーシュ!",
 	"liquidbounce.module.combineMobs.description": "詰め込まれたエンティティを組み合わせます。",
 	"liquidbounce.module.consoleSpammer.description": "サーバーのコンソールにエラーメッセージでスパムをします。",

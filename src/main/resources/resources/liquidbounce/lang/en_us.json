@@ -509,6 +509,7 @@
   "liquidbounce.module.clickGUI.description": "Shows you an easy to use menu to toggle and configure modules.",
   "liquidbounce.module.clientSpoofer.description": "Spoofs your game client brand to another.",
   "liquidbounce.module.clip.description": "Allows you to clip through blocks.",
+  "liquidbounce.module.clutch.description": "Automatically places a block beneath you when falling into the void.",
   "liquidbounce.module.clip.messages.whoosh": "Whoosh!",
   "liquidbounce.module.combineMobs.description": "Combines cramped entities.",
   "liquidbounce.module.criticals.description": "Automatically deals critical damage every time you attack an entity.",

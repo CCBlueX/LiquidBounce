@@ -184,6 +184,7 @@
   "liquidbounce.module.abortBreaking.description": "Дозволяє припинити ламання, зберігаючи прогрес.",
   "liquidbounce.module.bedWalk.description": "Дозволяє вставати з ліжка під час сну.",
   "liquidbounce.module.clip.description": "Дозволяє проходити крізь блоки.",
+  "liquidbounce.module.clutch.description": "Автоматично ставить блок під вами при падінні в безодню.",
   "liquidbounce.module.damage.description": "Наносить зазначену кількість пошкоджень собі.",
   "liquidbounce.module.disabler.description": "Вимикає певні античити.",
   "liquidbounce.module.forceUnicodeChat.description": "Перекладає всі повідомлення чату, які ви відправляєте, в юнікод.",
