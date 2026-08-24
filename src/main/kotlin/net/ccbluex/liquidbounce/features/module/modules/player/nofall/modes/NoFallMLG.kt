@@ -385,17 +385,17 @@ internal object NoFallMLG : NoFallMode("MLG") {
         return bucketTarget == targetPos && targetPos.state?.canPlaceStandaloneFluid(Fluids.WATER) == true
     }
 
-    private fun PlacementAction.wasApplied(targetStateBefore: BlockState?): Boolean {
-        return wasMlgPlacementApplied(type, item, targetStateBefore, plan.targetPos.state)
-    }
-
     private data class PlacementAction(
         val plan: PlacementPlan,
         val type: MlgPlacementActionType,
         val item: Item,
         val requiresSneak: Boolean,
         val collisionTick: Int? = null,
-    )
+    ) {
+        fun wasApplied(targetStateBefore: BlockState?): Boolean {
+            return wasMlgPlacementApplied(type, item, targetStateBefore, plan.targetPos.state)
+        }
+    }
 }
 
 internal enum class MlgPlacementActionType {
