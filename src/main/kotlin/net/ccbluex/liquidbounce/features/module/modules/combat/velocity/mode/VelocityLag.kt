@@ -81,7 +81,6 @@ internal object VelocityLag : VelocityMode("Lag") {
     private val tickPacketProcessHandler = sequenceHandler<TickPacketProcessEvent> {
         if (shouldLag && lagTicks == 0) {
             shouldLag = false
-            lagTicks = 0
             BlinkManager.flush(TransferOrigin.INCOMING)
             shouldJump = true
             waitTicks(2)
@@ -102,5 +101,4 @@ internal object VelocityLag : VelocityMode("Lag") {
         shouldLag = false
         lagTicks = 0
     }
-
 }
