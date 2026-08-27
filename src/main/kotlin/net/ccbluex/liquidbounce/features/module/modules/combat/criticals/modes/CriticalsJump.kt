@@ -112,6 +112,7 @@ object CriticalsJump : Mode("Jump") {
      * will try to attack the enemy anyway. To maximise damage, this function is used to determine
      * whether it is worth to wait for the fall.
      */
+    @Suppress("CognitiveComplexMethod", "LongMethod")
     fun shouldWaitForCrit(target: Entity, ignoreState: Boolean = false): Boolean {
         if (!isActive() && !ignoreState) {
             return false
@@ -121,17 +122,38 @@ object CriticalsJump : Mode("Jump") {
             return false
         }
 
-        if (!allowsCriticalHit() || player.deltaMovement.y < -0.08) {
+        // If general critical conditions are not met, don't wait.
+        if (!allowsCriticalHit(ignoreOnGround = true)) {
+            return false
+        }
+
+        val onGround = player.onGround()
+        val isJumping = player.input.keyPresses.jump || adjustNextJump
+
+        // If player is on ground and not trying to jump, no need to wait for a crit.
+        if (onGround && !isJumping) {
             return false
         }
 
         val nextPossibleCrit = calculateTicksUntilNextCrit()
+
+        // If player is already falling in the air
+        if (!onGround && player.deltaMovement.y <= 0.0) {
+            // If already capable of landing a critical hit right now, don't wait!
+            if (player.fallDistance > 0.0 && player.getAttackStrengthScale(0.5f) > 0.9f) {
+                return false
+            }
+
+            // If cooldown is not ready yet during fall, check if cooldown will recover before landing
+            val collision = FallingPlayer.fromPlayer(player).findCollision((nextPossibleCrit + 1.0f).toInt())
+            return collision == null || collision.tick >= nextPossibleCrit.toInt()
+        }
+
+        // If player is rising (in jump) or starting a jump on ground
+        val initialMotionY = if (onGround) height.toDouble() else player.deltaMovement.y
         val gravity = 0.08
-        val ticksTillFall = (player.deltaMovement.y / gravity).toFloat()
+        val ticksTillFall = (initialMotionY / gravity).toFloat()
         val ticksTillCrit = nextPossibleCrit.coerceAtLeast(ticksTillFall)
-        val hitProbability = 0.75f
-        val damageOnCrit = 0.5f * hitProbability
-        val damageLostWaiting = getCooldownDamageFactor(player, ticksTillCrit)
 
         val (simulatedPlayerPos, simulatedTargetPos) = if (target is Player) {
             predictPlayerPos(target, ticksTillCrit.toInt())
@@ -143,8 +165,6 @@ object CriticalsJump : Mode("Jump") {
 
         GenericDebugRecorder.recordDebugInfo(ModuleCriticals, "critEstimation", JsonObject().apply {
             addProperty("ticksTillCrit", ticksTillCrit)
-            addProperty("damageOnCrit", damageOnCrit)
-            addProperty("damageLostWaiting", damageLostWaiting)
             add("player", GenericDebugRecorder.debugObject(player))
             add("target", GenericDebugRecorder.debugObject(target))
             addProperty("simulatedPlayerPos", simulatedPlayerPos.toString())
@@ -153,15 +173,29 @@ object CriticalsJump : Mode("Jump") {
 
         GenericDebugRecorder.debugEntityIn(target, ticksTillCrit.toInt())
 
-        if (damageOnCrit <= damageLostWaiting) {
+        // Check whether player will hit the ground before reaching falling critical state
+        val simulatedFallingPlayer = if (onGround) {
+            FallingPlayer(
+                player,
+                player.x,
+                player.y,
+                player.z,
+                player.deltaMovement.x,
+                player.deltaMovement.y + initialMotionY,
+                player.deltaMovement.z,
+                player.yRot
+            )
+        } else {
+            FallingPlayer.fromPlayer(player)
+        }
+
+        val collision = simulatedFallingPlayer.findCollision((ticksTillCrit + 5.0f).toInt())
+        // If player lands before reaching the apex/crit tick, cannot land a crit by waiting
+        if (collision != null && collision.tick < ticksTillFall.toInt()) {
             return false
         }
 
-        if (FallingPlayer.fromPlayer(player).findCollision((ticksTillCrit * 1.3f).toInt()) == null) {
-            return true
-        }
-
-        return false
+        return true
     }
 
     private fun calculateTicksUntilNextCrit(): Float {
@@ -169,12 +203,6 @@ object CriticalsJump : Mode("Jump") {
         val waitedDuration = player.attackStrengthTicker.toFloat()
 
         return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
-    }
-
-    private fun getCooldownDamageFactor(player: Player, tickDelta: Float): Float {
-        val base = ((tickDelta + 0.5f) / player.currentItemAttackStrengthDelay)
-
-        return (0.2f + base * base * 0.8f).coerceAtMost(1.0f)
     }
 
     /**
