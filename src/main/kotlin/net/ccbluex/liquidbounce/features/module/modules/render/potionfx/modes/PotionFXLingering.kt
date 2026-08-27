@@ -30,7 +30,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePo
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.PresetTexture
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.SecondaryPresetTexture
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.glow
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXLingering.MainEffect.extraRadius
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXLingering.SecondEffects.Effect
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXLingering.SecondEffects.Effect.secondaryTextureMode
+import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.modes.PotionFXLingering.SecondEffects.Flash.animTime
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinColorParticleOptionAccessor
 import net.ccbluex.liquidbounce.render.AnchorPoint
 import net.ccbluex.liquidbounce.render.drawSquareTexture
@@ -94,14 +97,14 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
             if (cloudEntities.isEmpty()) return@handler
 
             for (entity in cloudEntities) {
-                val age = minOf(entity.tickCount, 40) + event.partialTicks
+                val age = minOf(entity.tickCount, animTime * 2) + event.partialTicks
                 val glowProgress = Easing.QUAD_IN_OUT
-                    .transform(age / SecondEffects.Flash.animTime)
+                    .transform(age / animTime)
                     .coerceIn(0f, 1f)
 
                 val rotation = (entity.tickCount + event.partialTicks) * MainEffect.rotationSpeed
                 val secondRotation =
-                    (entity.tickCount + event.partialTicks) * SecondEffects.Effect.rotationSpeed
+                    (entity.tickCount + event.partialTicks) * Effect.rotationSpeed
 
                 val color = (entity.particle as MixinColorParticleOptionAccessor).color
 
@@ -112,20 +115,20 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
                             mulPose(Axis.ZP.rotationDegrees(rotation))
                             drawSquareTexture(
                                 texture,
-                                (entity.radius + MainEffect.extraRadius) * 2,
+                                (entity.radius + extraRadius) * 2,
                                 color,
                                 AnchorPoint.CENTER,
                                 noDepthTest = !canBeCovered
                             )
                         }
-                        if (SecondEffects.Effect.enabled) {
+                        if (Effect.enabled) {
                             withPush {
                                 translate(0.0, -0.005, 0.0)
                                 mulPose(Axis.XP.rotationDegrees(-90f))
                                 mulPose(Axis.ZP.rotationDegrees(secondRotation))
                                 drawSquareTexture(
                                     secondaryTexture,
-                                    (entity.radius + SecondEffects.Effect.extraRadius + MainEffect.extraRadius) * 2,
+                                    (entity.radius + Effect.extraRadius + extraRadius) * 2,
                                     color,
                                     AnchorPoint.CENTER,
                                     noDepthTest = !canBeCovered
