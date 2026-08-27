@@ -103,6 +103,11 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
 
     private val splashes = ExpiringList<SplashData>()
 
+    override fun onDisabled() {
+        splashes.clear()
+        super.onDisabled()
+    }
+
     @Suppress("unused")
     private val splashHandler = handler<PacketEvent> { event ->
         if (event.packet !is ClientboundLevelEventPacket
