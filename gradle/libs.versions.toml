@@ -19,13 +19,13 @@ minecraftauth = "5.0.3-SNAPSHOT"
 # TheAltening
 thealtening = "4.1.0"
 # https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
-retrofit = "2.11.0"
+retrofit = "3.0.0"
 # Polyglot
 polyglot = "25.0.3"
 # djl
 djl = "0.36.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-okhttp = "5.4.0"
+okhttp = "5.5.0"
 
 ktor = "3.5.2"
 semver4j = "3.1.0"
@@ -39,7 +39,7 @@ exploit_preventer_api = "1.0.0"
 exploit_preventer_mod = "1.1.0+26.2"
 sodium = "mc26.2-0.9.0-fabric"
 lithium = "mc26.2-0.25.0-fabric"
-viafabricplus = "4.6.1"
+viafabricplus = "4.6.3"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.16.0+26.2-fabric"
 iris = "1.11.1+26.2-fabric"

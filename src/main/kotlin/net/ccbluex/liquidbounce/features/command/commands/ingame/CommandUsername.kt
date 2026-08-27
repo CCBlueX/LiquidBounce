@@ -18,13 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.bypassNameProtection
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.italic
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.underline
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -34,24 +37,26 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Displays the current username.
  */
-object CommandUsername : Command.Factory, MinecraftShortcuts {
-
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("username")
-            .requiresIngame()
-            .handler {
-                val username = player.name.string
+object CommandUsername : CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("username") {
+            requires { it.isIngame }
+            exec {
+                val username = it.source.playerOrNull!!.name.string
                 val formattedUsernameWithEvents = variable(username)
                     .bypassNameProtection()
                     .copyable(copyContent = username)
                     .italic(true)
                     .underline(true)
 
-                chat(regular(command.result("username", formattedUsernameWithEvents)), command)
+                chat(
+                    regular(t("username", formattedUsernameWithEvents)),
+                    metadata = MessageMetadata(id = "Cusername#info")
+                )
                 mc.keyboardHandler.clipboard = username
+                1
             }
-            .build()
+        }
     }
 
 }

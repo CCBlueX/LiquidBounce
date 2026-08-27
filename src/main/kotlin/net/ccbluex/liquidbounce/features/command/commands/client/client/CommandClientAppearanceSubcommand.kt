@@ -18,37 +18,38 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 
 object CommandClientAppearanceSubcommand {
-    fun appearanceCommand() = CommandBuilder.begin("appearance")
-        .hub()
-        .subcommand(hideSubcommand())
-        .subcommand(showSubcommand())
-        .build()
+    fun CmdLiteralScope.appearance() {
+        literal("appearance") {
+            literal("show") {
+                exec {
+                    if (!HideAppearance.isHidingNow) {
+                        chat(regular(t("appearance.show.alreadyShowingAppearance")))
+                        return@exec 1
+                    }
 
-    private fun showSubcommand() = CommandBuilder.begin("show")
-        .handler {
-            if (!HideAppearance.isHidingNow) {
-                chat(regular(command.result("alreadyShowingAppearance")))
-                return@handler
+                    chat(regular(t("appearance.show.showingAppearance")))
+                    HideAppearance.isHidingNow = false
+                    1
+                }
             }
+            literal("hide") {
+                exec {
+                    if (HideAppearance.isHidingNow) {
+                        chat(regular(t("appearance.hide.alreadyHidingAppearance")))
+                        return@exec 1
+                    }
 
-            chat(regular(command.result("showingAppearance")))
-            HideAppearance.isHidingNow = false
-        }.build()
-
-    private fun hideSubcommand() = CommandBuilder.begin("hide")
-        .handler {
-            if (HideAppearance.isHidingNow) {
-                chat(regular(command.result("alreadyHidingAppearance")))
-                return@handler
+                    chat(regular(t("appearance.hide.hidingAppearance")))
+                    HideAppearance.isHidingNow = true
+                    1
+                }
             }
-
-            chat(regular(command.result("hidingAppearance")))
-            HideAppearance.isHidingNow = true
-        }.build()
+        }
+    }
 }

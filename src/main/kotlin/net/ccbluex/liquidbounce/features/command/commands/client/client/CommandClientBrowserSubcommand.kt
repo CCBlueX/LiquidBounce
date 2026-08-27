@@ -18,28 +18,28 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 
 object CommandClientBrowserSubcommand {
-    fun browserCommand() = CommandBuilder.begin("browser")
-        .hub()
-        .subcommand(openSubcommand())
-        .build()
-
-    private fun openSubcommand() = CommandBuilder.begin("open")
-        .parameter(
-            ParameterBuilder.begin<String>("name")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                .build()
-        ).handler {
-            chat(regular("Opening browser..."))
-            mc.schedule {
-                mc.gui.setScreen(InternetExplorerScreen(args[0] as String))
+    fun CmdLiteralScope.browser() {
+        literal("browser") {
+            literal("open") {
+                argument("name", ClientStringArgumentType.word()) { name ->
+                    exec { ctx ->
+                        chat(regular("Opening browser..."))
+                        mc.schedule {
+                            mc.gui.setScreen(InternetExplorerScreen(ctx.get(name)))
+                        }
+                        1
+                    }
+                }
             }
-        }.build()
+        }
+    }
 }

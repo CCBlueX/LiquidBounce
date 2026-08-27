@@ -18,56 +18,57 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
-import net.ccbluex.liquidbounce.features.command.Command
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.arguments.IntegerArgumentType
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
 
-object CommandItemStack : Command.Factory, MinecraftShortcuts {
-
-    private val amountParameter = ParameterBuilder
-        .begin<Int>("amount")
-        .verifiedBy(ParameterBuilder.intRange(1, 64))
-        .autocompletedFrom { listOf("16", "32", "64") }
-        .optional()
-        .build()
-
-
-    @Suppress("detekt:ThrowsCount")
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("stack")
-            .requiresIngame()
-            .parameter(amountParameter)
-            .handler {
-                if (!player.hasInfiniteMaterials()) {
-                    throw CommandException(command.result("mustBeCreative"))
-                }
-
-                val mainHandStack = player.mainHandItem
-                if (mainHandStack.isEmpty) {
-                    throw CommandException(command.result("noItem"))
-                }
-
-                val amount = args.getOrElse(0, defaultValue = { 64 }) as Int
-
-                if (mainHandStack.count == amount) {
-                    chat(regular(command.result("hasAlreadyAmount", variable(amount.toString()))), command)
-                    return@handler
-                }
-
-                mainHandStack.count = amount
-
-                player.setInventoryItemCreative(itemStack = mainHandStack)
-
-                chat(regular(command.result("amountChanged", variable(amount.toString()))), command)
+object CommandItemStack : MinecraftShortcuts, CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("stack") {
+            requires { it.isIngame }
+            exec {
+                stack(64)
             }
-            .build()
+            argument("amount", IntegerArgumentType.integer(1, 64), suggestions("16", "32", "64")) { amount ->
+                exec { ctx ->
+                    stack(ctx.get(amount))
+                }
+            }
+        }
+    }
+
+    private fun CmdI18n.stack(amount: Int): Int {
+        if (!player.hasInfiniteMaterials()) {
+            throw CommandException(t("mustBeCreative"))
+        }
+
+        val mainHandStack = player.mainHandItem
+        if (mainHandStack.isEmpty) {
+            throw CommandException(t("noItem"))
+        }
+
+        if (mainHandStack.count == amount) {
+            chat(regular(t("hasAlreadyAmount", variable(amount.toString()))))
+            return 1
+        }
+
+        mainHandStack.count = amount
+
+        player.setInventoryItemCreative(itemStack = mainHandStack)
+
+        chat(regular(t("amountChanged", variable(amount.toString()))))
+        return 1
     }
 
 }

@@ -18,18 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.features.command.Command
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.tree.LiteralCommandNode
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.text.asPlainText
-import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.buildText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
@@ -41,45 +44,53 @@ import net.minecraft.network.chat.HoverEvent
  *
  * Provides a help page for displaying other commands.
  */
-object CommandHelp : Command.Factory {
-
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("help")
-            .pagedQuery(
-                pageSize = 8,
+object CommandHelp : CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("help") {
+            pagedQuery(
                 header = {
-                    result("help").withColor(ChatFormatting.RED).bold(true)
+                    t("help").withColor(ChatFormatting.RED).bold(true)
                 },
                 items = {
-                    CommandManager.sortedBy { it.name }
+                    CommandManager.mainCommandNodes
                 },
-                eachRow = { _, command ->
-                    val commandStart = CommandManager.GlobalSettings.prefix + command.name
-                    "\u2B25 ".asText()
-                        .withStyle(ChatFormatting.BLUE)
-                        .onHover(
-                            HoverEvent.ShowText(
-                                translation("liquidbounce.command.${command.name}.description")
-                            )
-                        )
-                        .append(
-                            commandStart.asText()
-                                .withStyle(ChatFormatting.GRAY)
-                                .onClick(ClickEvent.SuggestCommand(commandStart))
-                        )
-                        .append(buildAliasesText(command))
+                eachRow = { _, node ->
+                    buildRow(node)
                 }
             )
+        }
     }
 
-    private fun buildAliasesText(cmd: Command): Component = buildText {
-        if (cmd.aliases.isNotEmpty()) {
-            cmd.aliases.forEach { alias ->
-                this += ", ".asPlainText(ChatFormatting.DARK_GRAY)
-                this += regular(alias).withStyle(ChatFormatting.GRAY)
-                    .onClick(ClickEvent.SuggestCommand(CommandManager.GlobalSettings.prefix + alias))
-            }
+    private fun buildRow(node: LiteralCommandNode<ClientCommandSource>): Component {
+        val commandName = node.name
+        val commandStart = CommandManager.GlobalSettings.prefix + commandName
+        return "\u2B25 ".asText()
+            .withStyle(ChatFormatting.BLUE)
+            .onHover(
+                HoverEvent.ShowText(
+                    translation("liquidbounce.command.$commandName.description")
+                )
+            )
+            .append(
+                commandStart.asText()
+                    .withStyle(ChatFormatting.GRAY)
+                    .onClick(ClickEvent.SuggestCommand(commandStart))
+            )
+            .append(buildAliasesText(node))
+    }
+
+    /**
+     * Alias nodes are registered as redirecting literals that share the main node's subtree.
+     */
+    private fun buildAliasesText(mainNode: LiteralCommandNode<ClientCommandSource>): Component = buildText {
+        val aliases = CommandManager.rootCommandNodes
+            .filter { it.redirect === mainNode }
+            .map { it.name }
+
+        aliases.forEach { alias ->
+            this += ", ".asPlainText(ChatFormatting.DARK_GRAY)
+            this += regular(alias).withStyle(ChatFormatting.GRAY)
+                .onClick(ClickEvent.SuggestCommand(CommandManager.GlobalSettings.prefix + alias))
         }
     }
 

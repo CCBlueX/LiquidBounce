@@ -16,18 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.command.brigadier
 
-package net.ccbluex.liquidbounce.features.command
+import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import net.minecraft.core.registries.Registries
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertTrue
 
-import java.util.SortedMap
+class ClientCommandSourceTest {
 
-internal fun SortedMap<String, Command>.putCommand(command: Command) {
-    fun putCommand(name: String, command: Command) {
-        put(name, command)?.let { old ->
-            error("Command name '$name' already used by command '${old.name}'")
-        }
+    @BeforeTest
+    fun bootstrapMinecraft() {
+        MinecraftBootstrap.ensureInitialized()
     }
 
-    putCommand(command.name, command)
-    command.aliases.forEach { putCommand(it, command) }
+    @Test
+    fun `registryAccess is a real RegistryAccess without a world`() {
+        val access = ClientCommandSource.registryAccess()
+        assertTrue(access.lookup(Registries.BLOCK).isPresent)
+    }
 }

@@ -132,6 +132,17 @@ val isOlderThanOrEqual1_12_2: Boolean
     }.getOrDefault(false)
 
 /**
+ * 1.21 added rotation fields to [net.minecraft.network.protocol.game.ServerboundUseItemPacket].
+ * Older protocols need the movement rotation packet to be sent before a use-item interaction.
+ */
+val isOlderThan1_21: Boolean
+    get() = runCatching {
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThan1_21
+    }.onFailure {
+        logger.error("Failed to check if the server is using a pre-1.21 protocol", it)
+    }.getOrDefault(false)
+
+/**
  * Since 1.21.2 falling on slime block while sneaking won't cause damage.
  * (Yes this is a bug, not feature)
  */
