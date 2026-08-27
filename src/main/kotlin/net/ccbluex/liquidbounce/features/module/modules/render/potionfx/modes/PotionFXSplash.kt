@@ -109,7 +109,8 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
             || event.packet.type != PARTICLES_SPELL_POTION_SPLASH) { return@handler }
 
         val world = mc.level ?: return@handler
-        world.getEntities(EntityTypes.SPLASH_POTION, AABB(event.packet.pos).inflate(3.0)) { true }.ifEmpty { return@handler }
+        world.getEntities(EntityTypes.SPLASH_POTION, AABB(event.packet.pos).inflate(3.0)) { true }
+            .ifEmpty { return@handler }
 
         mc.execute {
             val packetPos = Vec3.atCenterOf(event.packet.pos)
