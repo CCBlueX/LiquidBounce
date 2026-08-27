@@ -18,13 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.module.teleport
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.arguments.FloatArgumentType
+import com.mojang.brigadier.arguments.IntegerArgumentType
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
-import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.collisionShape
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.player
@@ -43,61 +48,43 @@ import kotlin.math.abs
  *
  * Module: [ModuleTeleport]
  */
-object CommandVClip : Command.Factory {
+object CommandVClip : CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("vclip") {
+            requires { it.isIngame }
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("vclip")
-            .requiresIngame()
-            .hub()
-            .subcommand(
-                CommandBuilder.begin("by")
-                    .parameter(
-                        ParameterBuilder
-                            .begin<Float>("distance")
-                            .required()
-                            .verifiedBy(ParameterBuilder.FLOAT_VALIDATOR)
-                            .build()
-                    )
-                    .handler {
-                        val dy = args[0] as Float
+            literal("by") {
+                argument("distance", FloatArgumentType.floatArg()) { distance ->
+                    exec { ctx ->
+                        val dy = ctx.get(distance)
 
                         ModuleTeleport.indicateTeleport(getX(), getY() + dy, getZ())
+                        1
                     }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder.begin("smart")
-                    .hub()
-                    .subcommand(buildAutomaticCommand(Direction.UP, "up"))
-                    .subcommand(buildAutomaticCommand(Direction.DOWN, "down"))
-                    .build()
-            )
-            .build()
-    }
-
-    private fun buildAutomaticCommand(direction: Direction, name: String): Command {
-        return CommandBuilder.begin(name)
-            .parameter(
-                ParameterBuilder
-                    .begin<Int>("max")
-                    .optional()
-                    .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                    .build()
-            )
-            .handler {
-                performAutomaticClip(args, command, direction)
+                }
             }
-            .build()
+            literal("smart") {
+                literal("up") {
+                    optional("max", IntegerArgumentType.integer(), default = 10) { max ->
+                        exec { ctx ->
+                            performAutomaticClip(abs(ctx.get(max)), Direction.UP)
+                            1
+                        }
+                    }
+                }
+                literal("down") {
+                    optional("max", IntegerArgumentType.integer(), default = 10) { max ->
+                        exec { ctx ->
+                            performAutomaticClip(abs(ctx.get(max)), Direction.DOWN)
+                            1
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    private fun performAutomaticClip(args: Array<out Any>, command: Command, direction: Direction) {
-        val max = if (args.isNotEmpty()) {
-            abs(args[0] as Int)
-        } else {
-            10
-        }
-
+    private fun CmdI18n.performAutomaticClip(max: Int, direction: Direction) {
         val blockPos = player.vehicle?.blockPosition() ?: player.blockPosition()
         val pos = player.vehicle?.position() ?: player.position()
 
@@ -116,7 +103,6 @@ object CommandVClip : Command.Factory {
 
             // we have to be able to stand on the position
             if (canTpOn(newPos, shape)) {
-
                 // allows clipping on fences, etc.
                 val vOffset = shape.max(Direction.Axis.Y)
 
@@ -133,7 +119,10 @@ object CommandVClip : Command.Factory {
             }
         }
 
-        chat(markAsError(translation("liquidbounce.command.vclip.result.noPositionFound")), command)
+        chat(
+            markAsError(t("noPositionFound")),
+            metadata = MessageMetadata(id = "CVClip#info")
+        )
     }
 
     private fun canTpOn(pos: BlockPos, posCollisionShape: VoxelShape): Boolean {

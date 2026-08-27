@@ -17,17 +17,22 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.command.dsl
+package net.ccbluex.liquidbounce.features.command
 
-import net.ccbluex.liquidbounce.features.command.Parameter
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 
-inline fun <T : Any> CommandBuilder.addParam(
-    block: ParameterBuilder.Companion.() -> ParameterBuilder<T>
-): Parameter<T> = ParameterBuilder.block().build().also { parameter(it) }
+/**
+ * A command that registers itself onto a Brigadier [CommandDispatcher].
+ *
+ * Every inbuilt command is an `object` implementing this interface; the [CommandManager]
+ * registers them through [CommandManager.register]. Scripts register their command nodes
+ * through [CommandManager.registerScriptCommands] instead.
+ */
+fun interface CommandRegistrar {
 
-inline fun <T : Any> CommandBuilder.addParam(
-    name: String,
-    block: ParameterBuilder<T>.() -> ParameterBuilder<T>
-): Parameter<T> = ParameterBuilder.begin<T>(name).block().build().also { parameter(it) }
+    /**
+     * Registers this command onto the [dispatcher].
+     */
+    fun register(dispatcher: CommandDispatcher<ClientCommandSource>)
+}

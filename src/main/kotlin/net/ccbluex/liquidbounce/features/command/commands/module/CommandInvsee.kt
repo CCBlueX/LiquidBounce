@@ -18,14 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.module
 
-import net.ccbluex.liquidbounce.features.command.Command
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.playerName
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.PlayerInfoArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleInventoryTracker
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.ViewedInventoryScreen
 import java.util.UUID
@@ -33,38 +34,36 @@ import java.util.UUID
 /**
  * Command Invsee
  *
- * ???
+ * Lets you view another player's inventory.
  *
  * Module: [ModuleInventoryTracker]
  */
-object CommandInvsee : Command.Factory {
-
+object CommandInvsee : CommandRegistrar {
     var viewedPlayer: UUID? = null
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("invsee")
-            .requiresIngame()
-            .parameter(
-                ParameterBuilder.playerName()
-                    .required()
-                    .build()
-            )
-            .handler {
-                val inputName = args[0] as String
-                val playerID = network.onlinePlayers.find { it.profile.name.equals(inputName, true) }?.profile?.id
-                val player = { playerID?.let(world::getPlayerByUUID) ?: ModuleInventoryTracker.playerMap[playerID] }
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("invsee") {
+            requires { it.isIngame }
+            argument("name", PlayerInfoArgumentType) { name ->
+                exec { ctx ->
+                    val playerInfo = ctx.get(name)
+                    val inputName = playerInfo.profile.name
+                    val playerID = playerInfo.profile.id
+                    val player = { world.getPlayerByUUID(playerID) ?: ModuleInventoryTracker.playerMap[playerID] }
 
-                if (playerID == null || player() == null) {
-                    throw CommandException(command.result("playerNotFound", inputName))
+                    if (player() == null) {
+                        throw CommandException(t("playerNotFound", inputName))
+                    }
+
+                    mc.schedule {
+                        mc.gui.setScreen(ViewedInventoryScreen(player))
+                    }
+
+                    viewedPlayer = playerID
+                    1
                 }
-
-                mc.schedule {
-                    mc.gui.setScreen(ViewedInventoryScreen(player))
-                }
-
-                viewedPlayer = playerID
             }
-            .build()
+        }
     }
+
 }

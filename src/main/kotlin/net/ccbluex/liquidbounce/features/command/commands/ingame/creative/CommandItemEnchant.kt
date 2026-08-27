@@ -18,11 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
-import net.ccbluex.liquidbounce.features.command.Command
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.enchantment
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.EnchantLevel
+import net.ccbluex.liquidbounce.features.command.arguments.EnchantLevelArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.render
+import net.ccbluex.liquidbounce.features.command.arguments.resolve
+import net.ccbluex.liquidbounce.features.command.arguments.resourceArgument
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -32,11 +39,9 @@ import net.ccbluex.liquidbounce.utils.item.removeEnchantment
 import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
 import net.minecraft.core.Holder
 import net.minecraft.core.registries.Registries
-import net.minecraft.resources.Identifier
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
-import kotlin.jvm.optionals.getOrNull
 import kotlin.math.min
 
 /**
@@ -44,162 +49,136 @@ import kotlin.math.min
  *
  * Allows you to add, remove, clear, and enchant all possible enchantments on an item.
  */
-object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
+object CommandItemEnchant : MinecraftShortcuts, CommandRegistrar {
+    @Suppress("detekt:LongMethod")
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("enchant") {
+            requires { it.isIngame }
 
-    private val levelParameter = ParameterBuilder
-        .begin<String>("level")
-        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedFrom { listOf("max", "1", "2", "3", "4", "5") }
-        .required()
+            literal("add") {
+                argument("enchantment", resourceArgument(Registries.ENCHANTMENT)) { enchantment ->
+                    optional("level", EnchantLevelArgumentType) { level ->
+                        exec { ctx ->
+                            runAdd(ctx.get(enchantment), ctx.get(level))
+                            1
+                        }
+                    }
+                }
+            }
+            literal("remove") {
+                argument("enchantment", resourceArgument(Registries.ENCHANTMENT)) { enchantment ->
+                    exec { ctx ->
+                        val enchantmentHolder = ctx.get(enchantment)
 
-    @Suppress("LongMethod")
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("enchant")
-            .requiresIngame()
-            .hub()
-            .subcommand(
-                CommandBuilder
-                    .begin("add")
-                    .parameter(ParameterBuilder.enchantment().required().build())
-                    .parameter(levelParameter.build())
-                    .handler {
-                        val enchantmentName = args[0] as String
-                        val level = getLevel(args[1] as String)
+                        creativeOrThrow()
+                        val itemStack = getItemOrThrow()
 
-                        creativeOrThrow(command)
-                        val itemStack = getItemOrThrow(command)
-
-                        val enchantment = enchantmentByName(enchantmentName, command)
-                        enchantAnyLevel(itemStack, enchantment, level)
+                        itemStack.removeEnchantment(enchantmentHolder)
 
                         sendItemPacket(itemStack)
                         chat(
                             regular(
-                                command.resultWithTree("enchantedItem", enchantment.registeredName, level ?: "max")
+                                t("unenchantedItem",
+                                    enchantmentHolder.registeredName
+                                )
                             ),
                             metadata = MessageMetadata(id = "CItemEnchant#info")
                         )
+                        1
                     }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("remove")
-                    .parameter(ParameterBuilder.enchantment().required().build())
-                    .handler {
-                        val enchantmentName = args[0] as String
+                }
+            }
+            literal("clear") {
+                exec {
+                    creativeOrThrow()
+                    val itemStack = getItemOrThrow()
 
-                        creativeOrThrow(command)
-                        val itemStack = getItemOrThrow(command)
+                    itemStack.clearEnchantments()
 
-                        val enchantment = enchantmentByName(enchantmentName, command)
-                        itemStack.removeEnchantment(enchantment)
-
-                        sendItemPacket(itemStack)
-                        chat(
-                            regular(command.resultWithTree("unenchantedItem", enchantment.registeredName)),
-                            metadata = MessageMetadata(id = "CItemEnchant#info")
-                        )
+                    sendItemPacket(itemStack)
+                    1
+                }
+            }
+            literal("all") {
+                optional("level", EnchantLevelArgumentType) { level ->
+                    exec { ctx ->
+                        runAll(false, ctx.get(level))
+                        1
                     }
-                    .build()
-
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("clear")
-                    .handler {
-                        creativeOrThrow(command)
-                        val itemStack = getItemOrThrow(command)
-
-                        itemStack.clearEnchantments()
-
-                        sendItemPacket(itemStack)
+                }
+            }
+            literal("all_possible") {
+                optional("level", EnchantLevelArgumentType) { level ->
+                    exec { ctx ->
+                        runAll(true, ctx.get(level))
+                        1
                     }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("all")
-                    .parameter(levelParameter.build())
-                    .handler {
-                        creativeOrThrow(command)
-                        val itemStack = getItemOrThrow(command)
-
-                        val level = getLevel(args[0] as String)
-
-                        enchantAll(itemStack, false, level)
-
-                        sendItemPacket(itemStack)
-                        chat(
-                            regular(command.resultWithTree("enchantedItem", "all", level ?: "Max")),
-                            metadata = MessageMetadata(id = "CItemEnchant#info")
-                        )
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("all_possible")
-                    .parameter(levelParameter.build())
-                    .handler {
-                        creativeOrThrow(command)
-                        val itemStack = getItemOrThrow(command)
-
-                        val level = getLevel(args[0] as String)
-                        enchantAll(itemStack, true, level)
-
-                        sendItemPacket(itemStack)
-                        chat(
-                            regular(command.resultWithTree("enchantedItem", "all_possible", level ?: "Max")),
-                            metadata = MessageMetadata(id = "CItemEnchant#info")
-                        )
-                    }
-                    .build()
-            )
-
-
-            .build()
+                }
+            }
+        }
     }
 
-    private fun getLevel(arg: String) =
-        if (arg == "max") {
-            null
-        } else {
-            arg.toInt()
-        }
+    private fun CmdI18n.runAdd(enchantmentHolder: Holder<Enchantment>, level: EnchantLevel?) {
+        creativeOrThrow()
+        val itemStack = getItemOrThrow()
 
+        // An omitted level and the `max` keyword both resolve to the enchantment's maximum
+        enchantAnyLevel(itemStack, enchantmentHolder, level?.resolve { enchantmentHolder.value().maxLevel }
+            ?: enchantmentHolder.value().maxLevel)
+
+        sendItemPacket(itemStack)
+        chat(
+            regular(
+                t("enchantedItem",
+                    enchantmentHolder.registeredName,
+                    level?.render() ?: "max"
+                )
+            ),
+            metadata = MessageMetadata(id = "CItemEnchant#info")
+        )
+    }
+
+    private fun CmdI18n.runAll(onlyAcceptable: Boolean, level: EnchantLevel?) {
+        creativeOrThrow()
+        val itemStack = getItemOrThrow()
+
+        enchantAll(itemStack, onlyAcceptable, level?.resolve { Int.MAX_VALUE })
+
+        sendItemPacket(itemStack)
+        chat(
+            regular(
+                t("enchantedItem",
+                    if (onlyAcceptable) "all_possible" else "all",
+                    level?.render() ?: "Max"
+                )
+            ),
+            metadata = MessageMetadata(id = "CItemEnchant#info")
+        )
+    }
 
     private fun sendItemPacket(itemStack: ItemStack) {
         player.setInventoryItemCreative(itemStack = itemStack, animation = false)
     }
 
-    private fun creativeOrThrow(command: Command) {
+    private fun CmdI18n.creativeOrThrow() {
         if (!player.hasInfiniteMaterials()) {
-            throw CommandException(command.resultWithTree("mustBeCreative"))
+            throw CommandException(t("mustBeCreative"))
         }
     }
 
-    private fun getItemOrThrow(command: Command): ItemStack {
+    private fun CmdI18n.getItemOrThrow(): ItemStack {
         val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
 
         if (itemStack.isEmpty) {
-            throw CommandException(command.resultWithTree("mustHoldItem"))
+            throw CommandException(t("mustHoldItem"))
         }
 
         return itemStack
     }
 
-    private fun enchantmentByName(enchantmentName: String, command: Command): Holder<Enchantment> {
-        val registry = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
-        return Identifier.tryParse(enchantmentName)?.let { identifier ->
-            registry.get(identifier).getOrNull()
-        } ?: throw CommandException(command.resultWithTree("enchantmentNotExists", enchantmentName))
-    }
-
-    private fun enchantAnyLevel(item: ItemStack, enchantment: Holder<Enchantment>, level: Int?) {
-        if (level == null || level <= 255) {
-            item.enchant(enchantment, level ?: enchantment.value().maxLevel)
+    private fun enchantAnyLevel(item: ItemStack, enchantment: Holder<Enchantment>, level: Int) {
+        if (level <= 255) {
+            item.enchant(enchantment, level)
         } else {
             var next = level
 
@@ -210,13 +189,17 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
         }
     }
 
+    /**
+     * Enchants every enchantment: [level] is the resolved explicit level, or `null` to
+     * use each enchantment's own maximum (the legacy behavior of the `max` keyword).
+     */
     private fun enchantAll(item: ItemStack, onlyAcceptable: Boolean, level: Int?) {
         world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).asHolderIdMap().forEach { enchantment ->
             if (!enchantment.value().canEnchant(item) && onlyAcceptable) {
                 return@forEach
             }
 
-            enchantAnyLevel(item, enchantment, level)
+            enchantAnyLevel(item, enchantment, level ?: enchantment.value().maxLevel)
         }
     }
 

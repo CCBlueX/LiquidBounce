@@ -18,12 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
+import com.mojang.brigadier.arguments.IntegerArgumentType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -31,42 +30,39 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * List marketplace item revisions
  */
-object MarketplaceListRevisionsCommand : Command.Factory {
+object MarketplaceListRevisionsCommand {
 
-    override fun createCommand() = CommandBuilder.begin("list")
-        .parameter(
-            ParameterBuilder
-                .begin<Int>("id")
-                .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                .required()
-                .build()
-        )
-        .suspendHandler {
-            val id = args[0] as Int
+    fun CmdLiteralScope.revisionsList() {
+        literal("list") {
+            argument("id", IntegerArgumentType.integer(1)) { id ->
+                execSuspend { ctx ->
+                    val itemId = ctx.get(id)
 
-            val response = MarketplaceApi.getMarketplaceItemRevisions(id)
+                    val response = MarketplaceApi.getMarketplaceItemRevisions(itemId)
 
-            // Filter out pending revisions
-            val activeRevisions = response.items.filter { it.status != MarketplaceItemStatus.PENDING }
+                    // Filter out pending revisions
+                    val activeRevisions = response.items.filter { it.status != MarketplaceItemStatus.PENDING }
 
-            if (activeRevisions.isEmpty()) {
-                chat(regular(command.result("noRevisions")))
-                return@suspendHandler
-            }
+                    if (activeRevisions.isEmpty()) {
+                        chat(regular(t("revisions.list.noRevisions")))
+                        return@execSuspend
+                    }
 
-            chat(regular(command.result("header", variable(id.toString()))))
+                    chat(regular(t("revisions.list.header", variable(itemId.toString()))))
 
-            for (revision in activeRevisions) {
-                chat(
-                    regular(
-                        command.result(
-                            "revision",
-                            variable(revision.version),
-                            variable(revision.createdAt)
+                    for (revision in activeRevisions) {
+                        chat(
+                            regular(
+                                t("revisions.list.revision",
+                                    variable(revision.version),
+                                    variable(revision.createdAt)
+                                )
+                            )
                         )
-                    )
-                )
+                    }
+                }
             }
         }
-        .build()
+    }
+
 }

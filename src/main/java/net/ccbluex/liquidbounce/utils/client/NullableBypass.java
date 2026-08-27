@@ -20,10 +20,19 @@
 package net.ccbluex.liquidbounce.utils.client;
 
 import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import org.jspecify.annotations.Nullable;
 
 public final class NullableBypass {
     private NullableBypass() {
+    }
+
+    /**
+     * @return null if game unstarted (e.g. test env)
+     */
+    public static @Nullable Minecraft mc() {
+        return Minecraft.getInstance();
     }
 
     public static ServerboundUseItemPacket createWithNullHand(ServerboundUseItemPacket originalPacket) {

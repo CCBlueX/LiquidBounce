@@ -16,11 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.command.commands.module
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
 
 /**
@@ -30,31 +31,26 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
  *
  * Module: [ModuleAutoAccount]
  */
-object CommandAutoAccount : Command.Factory {
+object CommandAutoAccount : CommandRegistrar {
 
     @Suppress("SpellCheckingInspection")
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("autoaccount")
-            .requiresIngame()
-            .hub()
-            .subcommand(
-                CommandBuilder
-                    .begin("register")
-                    .handler {
-                        ModuleAutoAccount.register()
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("login")
-                    .handler {
-                        ModuleAutoAccount.login()
-                    }
-                    .build()
-            )
-            .build()
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("autoaccount") {
+            requires { it.isIngame }
+
+            literal("register") {
+                exec {
+                    ModuleAutoAccount.register()
+                    1
+                }
+            }
+            literal("login") {
+                exec {
+                    ModuleAutoAccount.login()
+                    1
+                }
+            }
+        }
     }
 
 }

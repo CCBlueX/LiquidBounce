@@ -22,8 +22,9 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
-import net.ccbluex.liquidbounce.features.command.Command
+import com.mojang.brigadier.tree.LiteralCommandNode
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.translation
@@ -155,7 +156,7 @@ class PolyglotScript(
      * Tracks client modifications made by the script
      */
     private val registeredModules = mutableListOf<ClientModule>()
-    private val registeredCommands = mutableListOf<Command>()
+    private val registeredCommands = mutableListOf<LiteralCommandNode<ClientCommandSource>>()
     private val registeredModes = mutableListOf<Mode>()
 
     /**
@@ -229,8 +230,7 @@ class PolyglotScript(
      */
     @Suppress("unused")
     fun registerCommand(commandObject: Value) {
-        val commandBuilder = ScriptCommandBuilder(commandObject)
-        registeredCommands += commandBuilder.build()
+        registeredCommands += ScriptCommandBuilder(commandObject).build()
     }
 
     /**
@@ -298,7 +298,7 @@ class PolyglotScript(
         callGlobalEvent("enable")
 
         registeredModules.forEach(ModuleManager::addModule)
-        registeredCommands.forEach(CommandManager::addCommand)
+        CommandManager.registerScriptCommands(registeredCommands)
 
         registeredModes.forEach { choice ->
             @Suppress("UNCHECKED_CAST")
@@ -319,7 +319,7 @@ class PolyglotScript(
         callGlobalEvent("disable")
 
         registeredModules.forEach(ModuleManager::removeModule)
-        registeredCommands.forEach(CommandManager::removeCommand)
+        CommandManager.unregisterScriptCommands(registeredCommands.mapTo(hashSetOf()) { it.name })
 
         registeredModes.forEach { it.parent.modes.remove(it) }
 

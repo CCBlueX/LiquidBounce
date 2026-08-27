@@ -26,5 +26,8 @@ class CommandException(
     val text: MutableComponent,
     cause: Throwable? = null,
     val usageInfo: List<Component> = emptyList()
-) :
-    Exception(text.string, cause)
+) : Exception(cause) {
+
+    override val message: String
+        get() = text.string
+}

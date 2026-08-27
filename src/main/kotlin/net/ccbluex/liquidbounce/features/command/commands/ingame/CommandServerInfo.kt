@@ -18,25 +18,34 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.enumChoices
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.MultiTaggedArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.text.hideSensitiveAddress
-import net.ccbluex.liquidbounce.utils.text.joinToText
+import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.warning
+import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
+import net.ccbluex.liquidbounce.utils.text.hideSensitiveAddress
+import net.ccbluex.liquidbounce.utils.text.joinToText
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -61,42 +70,37 @@ import kotlin.time.Duration.Companion.seconds
  *
  * The command supports active detection modes for more thorough analysis.
  */
-object CommandServerInfo : Command.Factory, EventListener {
-
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("serverinfo")
-            .requiresIngame()
-            .parameter(
-                ParameterBuilder.enumChoices<DetectionType>("detect")
-                    .optional()
-                    .build()
-            )
-            .suspendHandler {
-                val detectionTypes = args.getOrNull(0) as? Set<DetectionType>
-
-                if (!detectionTypes.isNullOrEmpty()) {
-                    runActiveDetection(command, detectionTypes)
-                } else {
-                    printInformation(command)
+object CommandServerInfo : EventListener, CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("serverinfo") serverinfo@{
+            requires { it.isIngame }
+            execSuspend {
+                this@serverinfo.printInformation(emptySet())
+            }
+            argument(
+                "detect",
+                MultiTaggedArgumentType("detect", DetectionType.entries, DetectionType::tag),
+            ) { detect ->
+                execSuspend { ctx ->
+                    val detectionTypes = ctx.get<List<DetectionType>>(detect)
+                    this@serverinfo.runActiveDetection(detectionTypes)
                 }
             }
-            .build()
+        }
     }
 
     /**
      * Runs active detection for specified detection types
      *
-     * @param command The command instance
      * @param detectionTypes Collection of detection types to run
      */
-    private suspend fun runActiveDetection(command: Command, detectionTypes: Collection<DetectionType>) {
-        chat(regular(command.result("detecting")))
+    private suspend fun CmdI18n.runActiveDetection(detectionTypes: Collection<DetectionType>) {
+        chat(regular(t("detecting")))
 
         // Run plugin detection if requested
         if (DetectionType.PLUGINS in detectionTypes) {
             if (!ServerObserver.captureCommandSuggestions(10.seconds)) {
-                chat(markAsError(command.result("pluginsDetectionTimeout")))
+                chat(markAsError(t("pluginsDetectionTimeout")))
             }
         }
 
@@ -105,16 +109,15 @@ object CommandServerInfo : Command.Factory, EventListener {
             ServerObserver.requestHostingInformation()
         }
 
-        printInformation(command, detectionTypes)
+        printInformation(detectionTypes)
     }
 
     /**
      * Print all server information to chat
      *
-     * @param command The command instance
      * @param detections Optional list of active detections that were run
      */
-    private fun printInformation(command: Command, detections: Collection<DetectionType> = emptyList()) {
+    private fun CmdI18n.printInformation(detections: Collection<DetectionType> = emptyList()) {
         // Gather basic server information
         val serverInfo = network.serverData
         val resolvedServerAddress = ServerObserver.serverAddress?.toString()
@@ -123,79 +126,123 @@ object CommandServerInfo : Command.Factory, EventListener {
         val advertisedVersion = "${serverInfo?.version?.string} (${serverInfo?.protocol})"
         val detectedServerVersion = ServerObserver.serverVersion ?: "<= 1.20.4"
 
-        chat(warning(command.result("header")))
-        command.printStyledText("address", serverInfo?.ip?.hideSensitiveAddress())
-        command.printStyledText("resolvedAddress", resolvedServerAddress?.hideSensitiveAddress())
-        command.printStyledText("serverId", ServerObserver.serverId)
-        command.printStyledText("serverType", ServerObserver.serverType?.tag)
-        command.printStyledText("brand", network.serverBrand())
-        command.printStyledText("advertisedVersion", advertisedVersion)
-        command.printStyledText(
+        chat(warning(t("header")))
+        printStyledText("address", serverInfo?.ip?.hideSensitiveAddress())
+        printStyledText("resolvedAddress", resolvedServerAddress?.hideSensitiveAddress())
+        printStyledText("serverId", ServerObserver.serverId)
+        printStyledText("serverType", ServerObserver.serverType?.tag)
+        printStyledText("brand", network.serverBrand())
+        printStyledText("advertisedVersion", advertisedVersion)
+        printStyledText(
             "detectedVersion",
             detectedServerVersion,
             hover = HoverEvent.ShowText(
-                command.result("detectedVersion.description", variable(detectedServerVersion))
+                t("detectedVersion.description", variable(detectedServerVersion))
             )
         )
 
         // Performance metrics
-        command.printStyledText(
+        printStyledText(
             "tps",
-            if (tps.isNaN()) command.result("nan").string else tps.roundToDecimalPlaces(2).toString()
+            if (tps.isNaN()) t("nan").string else tps.roundToDecimalPlaces(2).toString()
         )
-        command.printStyledText("ping", ping.toString())
+        printStyledText("ping", ping.toString())
 
         // Server Channels and transactions
         val channelsText = ServerObserver.payloadChannels.map { id ->
             variable(id.toString())
         }.joinToText(regular(", "))
-        command.printStyledComponent("channels", channelsText)
+        printStyledComponent("channels", channelsText)
         val transactionsText = ServerObserver.transactions.map { variable(it.toString()) }.joinToText(regular(", "))
-        command.printStyledComponent("transactions", transactionsText)
+        printStyledComponent("transactions", transactionsText)
 
         val transactionDiffText = ServerObserver.transactions
             .windowed(2) { it[1] - it[0] }
             .map { variable(it.toString()) }
             .joinToText(regular(", "))
-        command.printStyledComponent("transactionDifferences", transactionDiffText)
+        printStyledComponent("transactionDifferences", transactionDiffText)
 
         // Anti-cheat detection
         val guessedAntiCheat = ServerObserver.guessAntiCheat(serverInfo?.ip ?: "")?.let(::variable)
             ?: markAsError("N/A")
-        command.printStyledComponent(
+        printStyledComponent(
             "guessedAntiCheat",
             guessedAntiCheat,
-            hover = HoverEvent.ShowText(command.result("guessedAntiCheat.description"))
+            hover = HoverEvent.ShowText(t("guessedAntiCheat.description"))
         )
 
-        printHostingInformation(command)
-        printPluginInformation(command)
+        printHostingInformation()
+        printPluginInformation()
 
         // Show available detection methods if none were specified
         if (detections.isEmpty()) {
             val detectionList = DetectionType.entries.map { variable(it.tag) }.joinToText(regular(", "))
-            command.printStyledComponent("detectParameter", detectionList, formatting = ::warning)
+            printStyledComponent("detectParameter", detectionList, formatting = ::warning)
         }
     }
 
-    private fun printHostingInformation(command: Command) {
+    private fun CmdI18n.printHostingInformation() {
         val ipData = ServerObserver.hostingInformation ?: return
 
-        command.printStyledText("hostingIp", ipData.ip)
-        command.printStyledText("hostingHostname", ipData.hostname)
-        command.printStyledText("hostingOrganization", ipData.org)
-        command.printStyledText("hostingCountry", ipData.country)
-        command.printStyledText("hostingCity", ipData.city)
-        command.printStyledText("hostingRegion", ipData.region)
+        printStyledText("hostingIp", ipData.ip)
+        printStyledText("hostingHostname", ipData.hostname)
+        printStyledText("hostingOrganization", ipData.org)
+        printStyledText("hostingCountry", ipData.country)
+        printStyledText("hostingCity", ipData.city)
+        printStyledText("hostingRegion", ipData.region)
     }
 
-    private fun printPluginInformation(command: Command) {
+    private fun CmdI18n.printPluginInformation() {
         val plugins = ServerObserver.plugins ?: return
 
         val pluginCount = plugins.size
         val pluginList = ServerObserver.formattedPluginList?.joinToText(regular(", ")) ?: markAsError("N/A")
 
-        chat(regular(command.result("plugins", variable(pluginCount.toString()), pluginList)))
+        chat(regular(t("plugins", variable(pluginCount.toString()), pluginList)))
+    }
+
+    /**
+     * Sends a styled command result with copyable content.
+     *
+     * @param key Translation key suffix (resolved through [CmdI18n.t], e.g. "address")
+     * @param data Optional data to be displayed and copied
+     * @param formatting Function to apply formatting to the text (default: regular)
+     * @param hover Optional hover event (defaults to "Click to copy" tooltip)
+     * @param click Optional click action type (defaults to [ClickEvent.CopyToClipboard])
+     */
+    private fun CmdI18n.printStyledText(
+        key: String,
+        data: String? = null,
+        formatting: (MutableComponent) -> MutableComponent = ::regular,
+        hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy")),
+        click: ClickEvent? = data?.let(ClickEvent::CopyToClipboard),
+    ) {
+        val content = data?.let(::variable) ?: markAsError("N/A")
+        val resultText = formatting(t(key, content))
+
+        chat(resultText.onHover(hover).onClick(click))
+    }
+
+    /**
+     * Sends a styled command result with copyable content and custom text component.
+     *
+     * @param key Translation key suffix (resolved through [CmdI18n.t], e.g. "channels")
+     * @param textComponent Text component to display
+     * @param copyContent Optional content to copy when clicked (defaults to text component's string representation)
+     * @param formatting Function to apply formatting to the text (default: regular)
+     * @param hover Optional hover event (defaults to "Click to copy" tooltip)
+     */
+    private fun CmdI18n.printStyledComponent(
+        key: String,
+        textComponent: Component? = null,
+        copyContent: String? = null,
+        formatting: (MutableComponent) -> MutableComponent = ::regular,
+        hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy"))
+    ) {
+        val displayComponent = textComponent ?: markAsError("N/A")
+        val content = copyContent ?: displayComponent.string
+
+        chat(formatting(t(key, displayComponent)).copyable(copyContent = content, hover = hover))
     }
 
     /**

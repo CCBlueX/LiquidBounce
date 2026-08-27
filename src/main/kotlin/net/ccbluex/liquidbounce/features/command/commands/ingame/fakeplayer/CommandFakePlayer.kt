@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
 import com.mojang.authlib.GameProfile
+import com.mojang.brigadier.CommandDispatcher
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -26,12 +27,16 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer.snapshots
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
+import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer.snapshots
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -40,11 +45,11 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
-import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
+import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
@@ -58,174 +63,153 @@ import java.util.UUID
  *
  * Allows you to spawn a client side player for testing purposes.
  */
-object CommandFakePlayer : Command.Factory, EventListener {
-
+@Suppress("detekt:TooManyFunctions")
+object CommandFakePlayer : EventListener, CommandRegistrar {
     /**
      * Stores all fake players.
      */
     private val fakePlayers = ReferenceOpenHashSet<FakePlayer>()
+    private val suggestions = suggestions<ClientCommandSource> { fakePlayers.map { it.name.string } }
 
     private var recording = false
     private val snapshots = ArrayList<PosPoseSnapshot>()
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("fakeplayer")
-            .requiresIngame()
-            .hub()
-            .subcommand(spawnCommand())
-            .subcommand(removeCommand())
-            .subcommand(clearCommand())
-            .subcommand(startRecordingCommand())
-            .subcommand(endRecordingCommand())
-            .build()
-    }
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("fakeplayer") {
+            requires { it.isIngame }
 
-    private fun spawnCommand(): Command {
-        return CommandBuilder
-            .begin("spawn")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .optional()
-                    .build()
-            )
-            .handler {
-                checkInGame()
-                spawn(args, false)
+            literal("spawn") {
+                optional("name", ClientStringArgumentType.word(), default = "FakePlayer", suggestions) { name ->
+                    exec { ctx ->
+                        spawnCommand(ctx.get(name), false)
+                    }
+                }
             }
-            .build()
+            literal("remove") {
+                optional("name", ClientStringArgumentType.word(), default = "FakePlayer", suggestions) { name ->
+                    exec { ctx ->
+                        removeCommand(ctx.get(name))
+                    }
+                }
+            }
+            literal("clear") {
+                exec {
+                    clearCommand()
+                }
+            }
+            literal("startrecording") {
+                exec {
+                    startRecordingCommand()
+                }
+            }
+            literal("endrecording") {
+                optional("name", ClientStringArgumentType.word(), default = "FakePlayer", suggestions) { name ->
+                    exec { ctx ->
+                        endRecordingCommand(ctx.get(name))
+                    }
+                }
+            }
+        }
     }
 
-    private fun removeCommand(): Command {
-        return CommandBuilder
-            .begin("remove")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .autocompletedFrom {
-                        fakePlayers.map { fakePlayer -> fakePlayer.name.string }
-                    }
-                    .optional()
-                    .build()
-            )
-            .handler {
-                checkInGame()
+    private fun CmdI18n.spawnCommand(name: String, moving: Boolean): Int {
+        checkInGame()
+        spawn(name, moving)
+        return 1
+    }
 
-                if (fakePlayers.isEmpty()) {
-                    throw CommandException(translation("liquidbounce.command.fakeplayer.noFakePlayers"))
-                }
+    private fun CmdI18n.removeCommand(name: String): Int {
+        checkInGame()
 
-                val name = args.getOrNull(0)?.toString() ?: "FakePlayer"
+        if (fakePlayers.isEmpty()) {
+            throw CommandException(t("noFakePlayers"))
+        }
 
-                val playersToRemove = fakePlayers.filterTo(ReferenceOpenHashSet()) {
-                    it.name.string.equals(name, ignoreCase = true)
-                }
+        val playersToRemove = fakePlayers.filterTo(ReferenceOpenHashSet()) {
+            it.name.string.equals(name, ignoreCase = true)
+        }
 
-                if (playersToRemove.isEmpty()) {
-                    mc.gui.hud.chat.removeMessage("CFakePlayer#info")
-                    val data = MessageMetadata(id = "CFakePlayer#info", remove = false)
+        if (playersToRemove.isEmpty()) {
+            mc.gui.hud.chat.removeMessage("CFakePlayer#info")
+            val data = MessageMetadata(id = "CFakePlayer#info", remove = false)
 
-                    chat(warning((command.result("noFakePlayerNamed", name))), metadata = data)
-                    chat(regular(command.result("currentlySpawned")), metadata = data)
-                    fakePlayers.forEach { fakePlayer ->
-                        chat(regular("- " + fakePlayer.name.string), metadata = data)
-                    }
+            chat(warning(t("remove.noFakePlayerNamed", name)), metadata = data)
+            chat(regular(t("remove.currentlySpawned")), metadata = data)
+            fakePlayers.forEach { fakePlayer ->
+                chat(regular("- " + fakePlayer.name.string), metadata = data)
+            }
 
-                    return@handler
-                }
+            return 1
+        }
 
-                playersToRemove.forEach { fakePlayer ->
-                    world.removeEntity(fakePlayer.id, Entity.RemovalReason.KILLED)
-                    chat(
-                        regular(
-                            command.result(
-                                "fakePlayerRemoved",
-                                fakePlayer.x.roundToDecimalPlaces(),
-                                fakePlayer.y.roundToDecimalPlaces(),
-                                fakePlayer.z.roundToDecimalPlaces()
-                            )
-                        ),
-                        metadata = MessageMetadata(id = "CFakePlayer#info")
+        playersToRemove.forEach { fakePlayer ->
+            world.removeEntity(fakePlayer.id, Entity.RemovalReason.KILLED)
+            chat(
+                regular(
+                    t("remove.fakePlayerRemoved",
+                        fakePlayer.x.roundToDecimalPlaces(),
+                        fakePlayer.y.roundToDecimalPlaces(),
+                        fakePlayer.z.roundToDecimalPlaces()
                     )
-                }
-
-                fakePlayers.removeAll(playersToRemove)
-            }
-            .build()
-    }
-
-    private fun clearCommand(): Command {
-        return CommandBuilder
-            .begin("clear")
-            .handler {
-                checkInGame()
-
-                if (fakePlayers.isEmpty()) {
-                    throw CommandException(translation("liquidbounce.command.fakeplayer.noFakePlayers"))
-                }
-
-                fakePlayers.forEach { fakePlayer ->
-                    world.removeEntity(fakePlayer.id, Entity.RemovalReason.DISCARDED)
-                }
-                fakePlayers.clear()
-            }
-            .build()
-    }
-
-    @Suppress("SpellCheckingInspection")
-    private fun startRecordingCommand(): Command {
-        return CommandBuilder
-            .begin("startrecording")
-            .handler {
-                checkInGame()
-
-                if (recording) {
-                    throw CommandException(command.result("alreadyRecording"))
-                }
-
-                recording = true
-                chat(
-                    regular(command.result("startedRecording")),
-                    metadata = MessageMetadata(id = "CFakePlayer#info")
-                )
-                notification(
-                    "FakePlayer",
-                    command.result("startedRecordingNotification"),
-                    NotificationEvent.Severity.INFO
-                )
-            }
-            .build()
-    }
-
-    @Suppress("SpellCheckingInspection")
-    private fun endRecordingCommand(): Command {
-        return CommandBuilder
-            .begin("endrecording")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .optional()
-                    .build()
+                ),
+                metadata = MessageMetadata(id = "CFakePlayer#info")
             )
-            .handler {
-                checkInGame()
+        }
 
-                if (!recording) {
-                    throw CommandException(command.result("notRecording"))
-                }
+        fakePlayers.removeAll(playersToRemove)
+        return 1
+    }
 
-                if (snapshots.isEmpty()) {
-                    throw CommandException(command.result("somethingWentWrong"))
-                }
+    private fun CmdI18n.clearCommand(): Int {
+        checkInGame()
 
-                spawn(args, true)
-                stopRecording()
-            }
-            .build()
+        if (fakePlayers.isEmpty()) {
+            throw CommandException(t("noFakePlayers"))
+        }
+
+        fakePlayers.forEach { fakePlayer ->
+            world.removeEntity(fakePlayer.id, Entity.RemovalReason.DISCARDED)
+        }
+        fakePlayers.clear()
+        return 1
+    }
+
+    @Suppress("SpellCheckingInspection")
+    private fun CmdI18n.startRecordingCommand(): Int {
+        checkInGame()
+
+        if (recording) {
+            throw CommandException(t("startrecording.alreadyRecording"))
+        }
+
+        recording = true
+        chat(
+            regular(t("startrecording.startedRecording")),
+            metadata = MessageMetadata(id = "CFakePlayer#info")
+        )
+        notification(
+            "FakePlayer",
+            t("startrecording.startedRecordingNotification"),
+            NotificationEvent.Severity.INFO
+        )
+        return 1
+    }
+
+    @Suppress("SpellCheckingInspection")
+    private fun CmdI18n.endRecordingCommand(name: String): Int {
+        checkInGame()
+
+        if (!recording) {
+            throw CommandException(t("endrecording.notRecording"))
+        }
+
+        if (snapshots.isEmpty()) {
+            throw CommandException(t("endrecording.somethingWentWrong"))
+        }
+
+        spawn(name, true)
+        stopRecording()
+        return 1
     }
 
     /**
@@ -235,8 +219,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
      *
      * @param moving true if the fake player should play a recording.
      */
-    private fun spawn(args: Array<out Any>, moving: Boolean) {
-        val nameArg = args.getOrNull(0)?.toString() ?: "FakePlayer"
+    private fun CmdI18n.spawn(nameArg: String, moving: Boolean) {
         val fakePlayer: FakePlayer
 
         if (moving) {
@@ -270,8 +253,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
         world.addEntity(fakePlayer)
         chat(
             regular(
-                translation(
-                    "liquidbounce.command.fakeplayer.fakePlayerSpawned",
+                t("fakePlayerSpawned",
                     fakePlayer.x.roundToDecimalPlaces(),
                     fakePlayer.y.roundToDecimalPlaces(),
                     fakePlayer.z.roundToDecimalPlaces()
@@ -284,9 +266,9 @@ object CommandFakePlayer : Command.Factory, EventListener {
     /**
      * Verifies that the user is in a world and the player object exists.
      */
-    private fun checkInGame() {
+    private fun CmdI18n.checkInGame() {
         if (mc.level == null || mc.player == null) {
-            throw CommandException(translation("liquidbounce.command.fakeplayer.mustBeInGame"))
+            throw CommandException(t("mustBeInGame"))
         }
     }
 
