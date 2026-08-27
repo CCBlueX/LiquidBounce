@@ -107,6 +107,7 @@
   "liquidbounce.liquidchat.states.loggedIn": "Wogged in >w<",
   "liquidbounce.liquidchat.writeMessage": "Wwite mwessage: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "Wwite pwivate mwessage: %s",
+  "liquidbounce.module.potionFX.description": "Draws shiny magic rings 'round cap'ns, grog splashes, 'n lingering clouds o' brew!",
   "liquidbounce.module.totemEffect.description": "Wendews an ewfect when scawwywags use a twotem",
   "liquidbounce.module.wings.description": "Render wings behind the cap'n's back.",
   "liquidbounce.module.autoArmor.description": "Autwomaticawwy put on teh best awmwow",

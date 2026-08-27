@@ -69,6 +69,7 @@ internal object JumpEffectImage : JumpEffectMode("Image") {
         }
     }
 
+    @Suppress("unused")
     private enum class PresetTexture(override val tag: String, val path: String) : TextureMode.Builtin.Preset {
         LIQUIDBOUNCE(CLIENT_NAME, "jump_effect/liquidbounce.png"),
         LIQUIDBOUNCE_LOGO(CLIENT_NAME + "WithLogo", "jump_effect/liquidbounce_with_logo.png");

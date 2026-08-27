@@ -68,6 +68,7 @@
     "minecraft.entity.projectile.MixinFireworkRocketEntity",
     "minecraft.entity.projectile.MixinFishingHook",
     "minecraft.entity.projectile.MixinProjectileUtil",
+    "minecraft.entity.MixinColorParticleOptionAccessor",
     "minecraft.fluid.MixinFlowingFluid",
     "minecraft.gui.MixinAbstractContainerScreen",
     "minecraft.gui.MixinBossHealthOverlay",
