@@ -18,12 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item
 
+import com.mojang.brigadier.arguments.IntegerArgumentType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.dsl.addParam
-import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
-import net.ccbluex.liquidbounce.features.command.dsl.cast
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.preset.accountOrException
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -33,18 +31,26 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Delete marketplace item
  */
-fun marketplaceDeleteItemCommand() = buildCommand("delete") {
+object MarketplaceDeleteItemCommand {
 
-    val id = addParam("id") {
-        verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-        required()
+    fun CmdLiteralScope.delete() {
+        literal("delete") {
+            argument("id", IntegerArgumentType.integer(1)) { id ->
+                execSuspend { ctx ->
+                    val clientAccount = ClientAccountManager.accountOrException()
+
+                    val itemId = ctx.get(id)
+                    MarketplaceApi.deleteMarketplaceItem(clientAccount.takeSession(), itemId)
+                    chat(
+                        regular(
+                            t("item.delete.success",
+                                variable(itemId.toString())
+                            )
+                        )
+                    )
+                }
+            }
+        }
     }
 
-    suspendHandler {
-        val clientAccount = ClientAccountManager.accountOrException()
-
-        val id = id.cast()
-        MarketplaceApi.deleteMarketplaceItem(clientAccount.takeSession(), id)
-        chat(regular(command.result("success", variable(id.toString()))))
-    }
 }

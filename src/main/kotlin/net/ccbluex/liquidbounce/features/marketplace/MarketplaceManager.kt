@@ -24,15 +24,24 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.integration.task.type.Task
-import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+import kotlinx.coroutines.CancellationException
 import java.io.File
+
+/**
+ * Outcome of a single [MarketplaceManager.update] call.
+ */
+sealed interface UpdateResult {
+    /** The item was (re-)installed to revision [revisionId]. */
+    data class Updated(val item: SubscribedItem, val revisionId: Int) : UpdateResult
+
+    /** The item is already on its newest revision. */
+    data class NoUpdate(val item: SubscribedItem) : UpdateResult
+
+    /** The update failed with [error]; the item was left untouched on its old revision. */
+    data class Failed(val item: SubscribedItem, val error: Throwable) : UpdateResult
+}
 
 /**
  * Marketplace manager for subscribing and updating items.
@@ -53,48 +62,39 @@ object MarketplaceManager : Config("marketplace"), EventListener {
 
     fun isSubscribed(itemId: Int) = subscribedItems.any { it.id == itemId }
 
-    suspend fun updateAll(task: Task? = null, command: Command? = null) {
-         subscribedItems.toList().forEach { item ->
-             update(item, task, command)
-         }
-    }
-
-    suspend fun update(item: SubscribedItem, task: Task? = null, command: Command? = null) = runCatching {
-        logger.info("Checking for updates for item ${item.id} (${item.type})")
-        val updateRevisionId = item.checkUpdate() ?: run {
-            command?.run { chat(regular(command.result("noUpdate", variable(item.id.toString())))) }
-            return@runCatching
+    /**
+     * Updates every subscribed item; one failing item does not abort the batch. Every
+     * item yields exactly one [UpdateResult] (including [UpdateResult.Failed]), so the
+     * caller can report successes and failures separately.
+     */
+    suspend fun updateAll(task: Task? = null): List<UpdateResult> =
+        subscribedItems.toTypedArray().map { item ->
+            try {
+                update(item, task)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error("Failed to update item ${item.id}", e)
+                UpdateResult.Failed(item, e)
+            }
         }
+
+    /**
+     * Checks and installs the newest revision of [item], returning what happened.
+     *
+     * @throws Exception when checking or installing fails; callers decide how to surface it.
+     */
+    suspend fun update(item: SubscribedItem, task: Task? = null): UpdateResult {
+        logger.info("Checking for updates for item ${item.id} (${item.type})")
+        val updateRevisionId = item.checkUpdate() ?: return UpdateResult.NoUpdate(item)
+
         logger.info("Updating item ${item.id} (${item.type})...")
-        command?.run { chat(regular(command.result("updating", variable(item.id.toString())))) }
         val subTask = task?.getOrCreateFileTask(item.id.toString())
         item.install(updateRevisionId, subTask)
         subTask?.isCompleted = true
         logger.info("Successfully updated item ${item.id} (${item.type})")
-        command?.run {
-            chat(
-                regular(
-                    command.result(
-                        "success",
-                        variable(item.id.toString()),
-                        variable(updateRevisionId.toString())
-                    )
-                )
-            )
-        }
-    }.onFailure { e ->
-        logger.error("Failed to update item ${item.id}", e)
-        if (command != null) {
-            chat(
-                markAsError(
-                    (translation(
-                        "liquidbounce.command.marketplace.error.updateFailed",
-                        item.id,
-                        e.message ?: "Unknown error"
-                    ))
-                )
-            )
-        }
+
+        return UpdateResult.Updated(item, updateRevisionId)
     }
 
     suspend fun subscribe(item: MarketplaceItem) {

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.deeplearn
 
+import com.mojang.brigadier.CommandDispatcher
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -28,11 +29,16 @@ import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
 import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
 import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdChainScope
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatTrainerRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -47,154 +53,137 @@ import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
-object CommandModels : Command.Factory {
-
+object CommandModels : CommandRegistrar {
     private val mutationMutex = Mutex()
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("models")
-            .hub()
-            .subcommand(createModelCommand())
-            .subcommand(improveModelCommand())
-            .subcommand(deleteModelCommand())
-            .subcommand(reloadModelCommand())
-            .subcommand(browseModelCommand())
-            .build()
-    }
-
-    private fun createModelCommand(): Command {
-        return CommandBuilder
-            .begin("create")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .required()
-                    .build()
-            )
-            .suspendHandler {
-                mutationMutex.withLock {
-                    val name = args[0] as String
-
-                    // Check if model exists
-                    if (models.modes.any { model -> model.name.equals(name, true) }) {
-                        throw CommandException(command.result("modelExists", name))
-                    }
-
-                    // Check if the name is a valid name
-                    if (name.contains(Regex("[^a-zA-Z0-9-]"))) {
-                        throw CommandException(command.result("invalidName"))
-                    }
-
-                    chat(command.result("trainingStart", name))
-                    withContext(Dispatchers.Default) {
-                        trainModel(command, name)
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("models") {
+            literal("create") {
+                modelNameArgument { name ->
+                    execSuspend { ctx ->
+                        createModel(ctx.get(name))
                     }
                 }
             }
-            .build()
-    }
-
-    private fun improveModelCommand(): Command {
-        return CommandBuilder
-            .begin("improve")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .required()
-                    .build()
-            )
-            .suspendHandler {
-                mutationMutex.withLock {
-                    val name = args[0] as String
-                    val model = models.modes.find { model -> model.name.equals(name, true) } ?:
-                        throw CommandException(command.result("modelNotFound", name))
-
-                    chat(command.result("trainingStart", name))
-                    withContext(Dispatchers.Default) {
-                        trainModel(command, name, model)
+            literal("improve") {
+                modelNameArgument { name ->
+                    execSuspend { ctx ->
+                        improveModel(ctx.get(name))
                     }
                 }
             }
-            .build()
-    }
-
-    private fun deleteModelCommand(): Command {
-        return CommandBuilder
-            .begin("delete")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .required()
-                    .build()
-            )
-            .suspendHandler {
-                mutationMutex.withLock {
-                    val name = args[0] as String
-                    val model = models.modes.find { model ->
-                        model.name.equals(name, true) && modelsFolder.resolve(model.name).isDirectory
+            literal("delete") {
+                modelNameArgument { name ->
+                    execSuspend { ctx ->
+                        deleteModel(ctx.get(name))
                     }
-
-                    if (model == null) {
-                        chat(markAsError(command.result("modelNotFound", name)))
-                        return@withLock
-                    }
-
-                    val deleted = withContext(Dispatchers.IO) {
-                        runCatching { model.delete() }
-                            .onFailure { error ->
-                                logger.error("Failed to delete model '$name'.", error)
-                                chat(markAsError(command.result("modelDeleteFailed", name, error.localizedMessage)))
-                            }
-                            .isSuccess
-                    }
-                    if (!deleted) {
-                        runCatching {
-                            ModelManager.reload()
-                        }.onFailure { error ->
-                            logger.error("Failed to restore models after deleting '$name' failed.", error)
-                        }
-                        return@withLock
-                    }
-
-                    runCatching {
-                        ModelManager.reload()
-                    }.onFailure { error ->
-                        logger.error("Failed to reload models after deleting '$name'.", error)
-                        chat(markAsError(command.result("modelDeleteFailed", name, error.localizedMessage)))
-                        return@withLock
-                    }
-                    chat(command.result("modelDeleted", name))
                 }
             }
-            .build()
+            literal("reload") {
+                execSuspend {
+                    reloadModel()
+                }
+            }
+            literal("browse") {
+                exec {
+                    browseModel()
+                }
+            }
+        }
     }
 
+    private fun CmdLiteralScope.modelNameArgument(block: CmdChainScope.ArgContinuation<String>) =
+        argument(
+            "name",
+            ClientStringArgumentType.word(),
+            suggestions(strings = { models.modes.map { it.name } }),
+            block,
+        )
 
-    private fun reloadModelCommand(): Command {
-        return CommandBuilder
-            .begin("reload")
-            .suspendHandler {
-                mutationMutex.withLock {
+    private suspend fun CmdI18n.createModel(name: String) {
+        mutationMutex.withLock {
+            // Check if model exists
+            if (models.modes.any { model -> model.name.equals(name, true) }) {
+                throw CommandException(t("create.modelExists", name))
+            }
+
+            // Check if the name is a valid name
+            if (name.contains(Regex("[^a-zA-Z0-9-]"))) {
+                throw CommandException(t("create.invalidName"))
+            }
+
+            chat(t("create.trainingStart", name))
+            withContext(Dispatchers.Default) {
+                trainModel(name)
+            }
+        }
+    }
+
+    private suspend fun CmdI18n.improveModel(name: String) {
+        mutationMutex.withLock {
+            val model = models.modes.find { model -> model.name.equals(name, true) } ?:
+                throw CommandException(t("improve.modelNotFound", name))
+
+            chat(t("improve.trainingStart", name))
+            withContext(Dispatchers.Default) {
+                trainModel(name, model)
+            }
+        }
+    }
+
+    private suspend fun CmdI18n.deleteModel(name: String) {
+        mutationMutex.withLock {
+            val model = models.modes.find { model ->
+                model.name.equals(name, true) && modelsFolder.resolve(model.name).isDirectory
+            }
+
+            if (model == null) {
+                chat(markAsError(t("delete.modelNotFound", name)))
+                return@withLock
+            }
+
+            val deleted = withContext(Dispatchers.IO) {
+                runCatching { model.delete() }
+                    .onFailure { error ->
+                        logger.error("Failed to delete model '$name'.", error)
+                        chat(markAsError(t("delete.modelDeleteFailed", name, error.localizedMessage)))
+                    }
+                    .isSuccess
+            }
+            if (!deleted) {
+                runCatching {
                     ModelManager.reload()
+                }.onFailure { error ->
+                    logger.error("Failed to restore models after deleting '$name' failed.", error)
                 }
-                chat(command.result("modelsReloaded"))
+                return@withLock
             }
-            .build()
+
+            runCatching {
+                ModelManager.reload()
+            }.onFailure { error ->
+                logger.error("Failed to reload models after deleting '$name'.", error)
+                chat(markAsError(t("delete.modelDeleteFailed", name, error.localizedMessage)))
+                return@withLock
+            }
+            chat(t("delete.modelDeleted", name))
+        }
     }
 
-    private fun browseModelCommand(): Command {
-        return CommandBuilder
-            .begin("browse")
-            .handler {
-                Util.getPlatform().openFile(modelsFolder)
-                chat(regular("Location: "), clickablePath(modelsFolder))
-            }
-            .build()
+    private suspend fun CmdI18n.reloadModel() {
+        mutationMutex.withLock {
+            ModelManager.reload()
+        }
+        chat(t("reload.modelsReloaded"))
     }
 
-    private suspend fun trainModel(
-        command: Command,
+    private fun CmdI18n.browseModel(): Int {
+        Util.getPlatform().openFile(modelsFolder)
+        chat(regular("Location: "), clickablePath(modelsFolder))
+        return 1
+    }
+
+    private suspend fun CmdI18n.trainModel(
         name: String,
         model: TwoDimensionalRegressionModel? = null
     ): Unit = try {
@@ -208,11 +197,11 @@ object CommandModels : Command.Factory {
         }
 
         if (samples.isEmpty()) {
-            chat(markAsError(command.result("noSamples")))
+            chat(markAsError(t("create.noSamples")))
             return
         }
 
-        chat(command.result("samplesLoaded", samples.size, sampleTime.toString(DurationUnit.SECONDS, decimals = 2)))
+        chat(t("create.samplesLoaded", samples.size, sampleTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
         class Dataset(val features: FloatArray, val labels: FloatArray)
 
@@ -240,7 +229,7 @@ object CommandModels : Command.Factory {
             Dataset(features, labels)
         }
 
-        chat(command.result("preparedData", datasetTime.toString(DurationUnit.SECONDS, decimals = 2)))
+        chat(t("create.preparedData", datasetTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
         val trainingTime = measureTime {
             TwoDimensionalRegressionModel(name, models).use { candidate ->
@@ -260,11 +249,11 @@ object CommandModels : Command.Factory {
             }
         }
 
-        chat(command.result("trainingEnd", name, trainingTime.toString(DurationUnit.MINUTES, decimals = 2)))
+        chat(t("create.trainingEnd", name, trainingTime.toString(DurationUnit.MINUTES, decimals = 2)))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        chat(markAsError(command.result("trainingFailed", e.localizedMessage)))
+        chat(markAsError(t("create.trainingFailed", e.localizedMessage)))
     }
 
 }

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -36,78 +36,88 @@ import net.minecraft.network.chat.HoverEvent
 import java.net.URI
 
 object CommandClientIntegrationSubcommand {
-    fun integrationCommand() = CommandBuilder.begin("integration")
-        .hub()
-        .subcommand(menuSubcommand())
-        .subcommand(resetSubcommand())
-        .build()
+    fun CmdLiteralScope.integration() {
+        literal("integration") {
+            literal("reset") {
+                exec {
+                    chat(regular("Resetting client JCEF browser..."))
+                    ScreenManager.update()
+                    1
+                }
+            }
+            literal("menu") {
+                exec {
+                    menu()
+                }
+            }
+            // "url" behaves as an alias of "menu"
+            literal("url") {
+                exec {
+                    menu()
+                }
+            }
+        }
+    }
 
-    private fun resetSubcommand() = CommandBuilder.begin("reset")
-        .handler {
-            chat(regular("Resetting client JCEF browser..."))
-            ScreenManager.update()
-        }.build()
+    private fun menu(): Int {
+        chat(variable("Client Integration"))
+        val baseUrl = ThemeManager.getScreenLocation().url
 
-    private fun menuSubcommand() = CommandBuilder.begin("menu")
-        .alias("url")
-        .handler {
-            chat(variable("Client Integration"))
-            val baseUrl = ThemeManager.getScreenLocation().url
+        chat(
+            regular("Base URL: ")
+                .append(
+                    variable(baseUrl)
+                        .underline(true)
+                        .onClick(ClickEvent.OpenUrl(URI(baseUrl)))
+                        .onHover(
+                            HoverEvent.ShowText(
+                                regular("Click to open the integration URL in your browser.")
+                            )
+                        )
+                ),
+            metadata = MessageMetadata(
+                prefix = false
+            )
+        )
+
+        chat(metadata = MessageMetadata(prefix = false))
+        chat(regular("Integration Menu:"))
+        for (screenType in CustomScreenType.entries) {
+            val url = runCatching {
+                ThemeManager.getScreenLocation(screenType, true)
+            }.getOrNull()?.url ?: continue
+            val upperFirstName = screenType.routeName.replaceFirstChar { it.uppercase() }
 
             chat(
-                regular("Base URL: ")
+                regular("-> $upperFirstName (")
                     .append(
-                        variable(baseUrl)
+                        variable("Browser")
                             .underline(true)
-                            .onClick(ClickEvent.OpenUrl(URI(baseUrl)))
+                            .onClick(ClickEvent.OpenUrl(URI(url)))
                             .onHover(
                                 HoverEvent.ShowText(
-                                    regular("Click to open the integration URL in your browser.")
+                                    regular("Click to open the URL in your browser.")
                                 )
                             )
-                    ),
+                    )
+                    .append(regular(", "))
+                    .append(
+                        variable("Clipboard")
+                            .copyable(
+                                copyContent = url, hover = HoverEvent.ShowText(
+                                    regular("Click to copy the URL to your clipboard.")
+                                )
+                            )
+                            .underline(true)
+                    )
+                    .append(regular(")")),
                 metadata = MessageMetadata(
                     prefix = false
                 )
             )
+        }
 
-            chat(metadata = MessageMetadata(prefix = false))
-            chat(regular("Integration Menu:"))
-            for (screenType in CustomScreenType.entries) {
-                val url = runCatching {
-                    ThemeManager.getScreenLocation(screenType, true)
-                }.getOrNull()?.url ?: continue
-                val upperFirstName = screenType.routeName.replaceFirstChar { it.uppercase() }
-
-                chat(
-                    regular("-> $upperFirstName (")
-                        .append(
-                            variable("Browser")
-                                .underline(true)
-                                .onClick(ClickEvent.OpenUrl(URI(url)))
-                                .onHover(
-                                    HoverEvent.ShowText(
-                                        regular("Click to open the URL in your browser.")
-                                    )
-                                )
-                        )
-                        .append(regular(", "))
-                        .append(
-                            variable("Clipboard")
-                                .copyable(
-                                    copyContent = url, hover = HoverEvent.ShowText(
-                                        regular("Click to copy the URL to your clipboard.")
-                                    )
-                                )
-                                .underline(true)
-                        )
-                        .append(regular(")")),
-                    metadata = MessageMetadata(
-                        prefix = false
-                    )
-                )
-            }
-
-            chat(variable("Hint: You can also access the integration from another device.").italic(true))
-        }.build()
+        chat(variable("Hint: You can also access the integration from another device.").italic(true))
+        return 1
+    }
 }

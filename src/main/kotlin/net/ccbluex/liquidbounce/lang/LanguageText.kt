@@ -21,5 +21,7 @@ package net.ccbluex.liquidbounce.lang
 
 import net.minecraft.network.chat.contents.TranslatableContents
 
-class LanguageText(key: String, args: Array<out Any>) :
-    TranslatableContents(key, null, args)
+// Here [args] is NullMarked but actually nullable, safe cast
+@Suppress("UNCHECKED_CAST")
+class LanguageText(key: String, args: Array<out Any?>) :
+    TranslatableContents(key, null, args as Array<out Any>)

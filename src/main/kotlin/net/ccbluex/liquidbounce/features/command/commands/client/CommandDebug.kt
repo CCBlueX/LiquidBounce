@@ -31,18 +31,18 @@ import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.script.ScriptManager
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.plus
 import net.minecraft.ChatFormatting
 import net.minecraft.SharedConstants
 import net.minecraft.network.chat.ClickEvent
@@ -58,38 +58,40 @@ import java.util.EnumSet
  * This command will create a JSON file with all the information
  * and send it to the CCBlueX Paste API.
  */
-object CommandDebug : Command.Factory {
+object CommandDebug : CommandRegistrar {
 
     private val gson = GsonBuilder()
         .setPrettyPrinting()
         .create()
 
-    override fun createCommand() = CommandBuilder.begin("debug")
-        .suspendHandler {
-            chat("§7Collecting debug information...")
+    override fun register(dispatcher: com.mojang.brigadier.CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("debug") {
+            execSuspend {
+                chat("§7Collecting debug information...")
 
-            val buffer = okio.Buffer()
+                val buffer = okio.Buffer()
 
-            buffer.outputStream().writer().use {
-                serializeAutoConfig(it)
+                buffer.outputStream().writer().use {
+                    serializeAutoConfig(it)
+                }
+                val autoConfig = buffer.readUtf8()
+                val autoConfigPaste = uploadToPaste(autoConfig)
+                buffer.clear()
+
+                val debugJson = createDebugJson(autoConfigPaste)
+                buffer.outputStream().writer().use {
+                    gson.toJson(debugJson, it)
+                }
+                val paste = uploadToPaste(buffer.readUtf8())
+                buffer.clear()
+
+                chat(
+                    "Debug information has been uploaded to: ".asPlainText(ChatFormatting.GREEN),
+                    paste.asPlainText(Style.EMPTY + ChatFormatting.YELLOW + ClickEvent.OpenUrl(URI(paste))),
+                )
             }
-            val autoConfig = buffer.readUtf8()
-            val autoConfigPaste = uploadToPaste(autoConfig)
-            buffer.clear()
-
-            val debugJson = createDebugJson(autoConfigPaste)
-            buffer.outputStream().writer().use {
-                gson.toJson(debugJson, it)
-            }
-            val paste = uploadToPaste(buffer.readUtf8())
-            buffer.clear()
-
-            chat(
-                "Debug information has been uploaded to: ".asPlainText(ChatFormatting.GREEN),
-                paste.asPlainText(Style.EMPTY + ChatFormatting.YELLOW + ClickEvent.OpenUrl(URI(paste))),
-            )
         }
-        .build()
+    }
 
     @Suppress("LongMethod")
     private fun createDebugJson(

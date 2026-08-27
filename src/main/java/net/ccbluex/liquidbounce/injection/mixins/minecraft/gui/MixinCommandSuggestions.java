@@ -47,14 +47,15 @@ public abstract class MixinCommandSuggestions {
     @Shadow
     public abstract void showSuggestions(boolean narrateFirstSuggestion);
 
-    @Shadow @Nullable private CommandSuggestions.@Nullable SuggestionsList suggestions;
+    @Shadow
+    private CommandSuggestions.@Nullable SuggestionsList suggestions;
 
     @Inject(method = "updateCommandInfo", at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/StringReader;canRead()Z", remap = false), cancellable = true)
     private void injectAutoCompletionB(CallbackInfo ci) {
         if (this.input.getValue().startsWith(CommandManager.GlobalSettings.INSTANCE.getPrefix())) {
             this.pendingSuggestions = CommandManager.INSTANCE.autoComplete(this.input.getValue(), this.input.getCursorPosition());
             this.pendingSuggestions.thenRun(() -> {
-                if (suggestions == null) {
+                if (this.pendingSuggestions.isDone() && suggestions == null) {
                     this.showSuggestions(false);
                 }
             });
