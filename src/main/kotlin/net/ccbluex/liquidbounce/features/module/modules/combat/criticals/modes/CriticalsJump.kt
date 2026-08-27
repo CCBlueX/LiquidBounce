@@ -112,6 +112,7 @@ object CriticalsJump : Mode("Jump") {
      * will try to attack the enemy anyway. To maximise damage, this function is used to determine
      * whether it is worth to wait for the fall.
      */
+    @Suppress("CognitiveComplexMethod", "LongMethod")
     fun shouldWaitForCrit(target: Entity, ignoreState: Boolean = false): Boolean {
         if (!isActive() && !ignoreState) {
             return false
