@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getBlock
@@ -50,6 +51,7 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.outlineShape
 import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -64,7 +66,6 @@ import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
@@ -73,8 +74,6 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
-import java.util.function.ToDoubleFunction
-import java.util.function.ToIntFunction
 import kotlin.math.max
 
 /**
@@ -232,8 +231,8 @@ object ModuleFucker : ClientModule(
 
         // Use action should be used if the block is the same as the current target and the action is set to use.
         if (destroyerTarget.action == DestroyAction.USE) {
-            if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult) == InteractionResult.SUCCESS) {
-                player.swing(InteractionHand.MAIN_HAND)
+            if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult).shouldSwingHand()) {
+                SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
             }
 
             waitTicks(delay)
@@ -547,10 +546,10 @@ object ModuleFucker : ClientModule(
     }
 
     private val SURROUNDING_INFO_COMPARATOR = Comparator
-        .comparingDouble(ToDoubleFunction<SurroundingInfo> { it.resistance })
-        .thenComparingInt(ToIntFunction { it.blockerCount })
-        .thenComparingDouble(ToDoubleFunction { it.firstBlockDistanceToTarget })
-        .thenComparingDouble(ToDoubleFunction { it.firstBlockDistanceToEyes })
+        .comparingDouble<SurroundingInfo> { it.resistance }
+        .thenComparingInt { it.blockerCount }
+        .thenComparingDouble { it.firstBlockDistanceToTarget }
+        .thenComparingDouble { it.firstBlockDistanceToEyes }
 
     private enum class DestroyAction(override val tag: String) : Tagged {
         DESTROY("Destroy"), USE("Use")
@@ -580,13 +579,13 @@ object ModuleFucker : ClientModule(
         }
 
     private val comparator: Comparator<Pair<BlockPos, BlockState>> = Comparator
-        .comparingDouble(ToDoubleFunction<Pair<BlockPos, BlockState>> { (pos, state) ->
+        .comparingDouble<Pair<BlockPos, BlockState>> { (pos, state) ->
             miningDuration(pos, state)
-        })
-        .thenComparingDouble(ToDoubleFunction { (pos, state) ->
+        }
+        .thenComparingDouble { (pos, state) ->
             state.getShape(world, pos, CollisionContext.of(player))
                 .move(pos)
                 .distanceToSqr(player.eyePosition)
-        })
+        }
 
 }

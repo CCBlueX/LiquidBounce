@@ -64,7 +64,7 @@ fun <T> aStarShortestPath(
     }
     val previous = Object2ObjectOpenHashMap<T, T>()
 
-    val queue = PriorityQueue(Comparator.comparingDouble(ToDoubleFunction(QueueEntry<T>::fScore)))
+    val queue = PriorityQueue(Comparator.comparingDouble<QueueEntry<T>> { it.fScore })
     queue.add(QueueEntry(start, 0.0, heuristic.applyAsDouble(start)))
 
     var iterations = 0
