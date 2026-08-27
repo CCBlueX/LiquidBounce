@@ -154,6 +154,8 @@
   "liquidbounce.command.username.description": "Копіює ваш нікнейм у буфер обміну.",
   "liquidbounce.command.username.username": "Нікнейм: %s",
   "liquidbounce.command.chat.description": "Відправити повідомлення в LiquidChat.",
+  "liquidbounce.command.chat.parameter.message.description": "Повідомлення для відправки.",
+  "liquidbounce.module.potionFX.description": "Відображає візуальні ефекти аури навколо гравців, вибухових та осідаючих зілля.",
   "liquidbounce.command.chat.message.description": "Повідомлення для відправки.",
   "liquidbounce.module.totemEffect.description": "Ефект при використанні тотема гравцями",
   "liquidbounce.module.wings.description": "Відображає крила позаду гравця.",

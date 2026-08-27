@@ -141,6 +141,7 @@
   "liquidbounce.liquidchat.jwtTokenReceived": "Received JWT token! Relogging...",
   "liquidbounce.liquidchat.writeMessage": "Para mandar uma mensagem: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "Para mandar uma mensagem privada: %s",
+  "liquidbounce.module.potionFX.description": "Renderiza efeitos visuais de aura ao redor de jogadores, poções arremessáveis e acumulativas.",
   "liquidbounce.module.totemEffect.description": "Exibe um efeito quando os jogadores usam um totem.",
   "liquidbounce.module.wings.description": "Renderiza asas atrás do jogador.",
   "liquidbounce.module.autoArmor.description": "Automaticamente equipa a melhor armadura.",
