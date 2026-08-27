@@ -46,10 +46,8 @@ import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.Expiring
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.network.protocol.game.ClientboundLevelEventPacket
 import net.minecraft.util.ARGB
-import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.LevelEvent.PARTICLES_SPELL_POTION_SPLASH
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
