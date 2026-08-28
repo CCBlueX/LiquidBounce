@@ -18,12 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
@@ -45,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation
 import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
-import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -57,7 +53,8 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
-import java.util.function.BooleanSupplier
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -70,21 +67,9 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
 
     private val modes = choices("Mode", Stationary, arrayOf(Queue, Cancel, Stationary, TickMovement))
         .apply { tagBy(this) }
-    private val disableOn by multiEnumChoice("DisableOn", enumSetOf(DisableOn.Flag))
+    private val disableOnFlag by boolean("DisableOnFlag", true)
     private val notification by boolean("Notification", false)
     private val balance by boolean("BalanceWarp", false)
-
-    private enum class DisableOn(
-        override val tag: String,
-        val trigger: BooleanSupplier?,
-    ) : Tagged {
-        Flag("Flag", null),
-        OnGround("OnGround", { player.onGround() }),
-        OnMovementInput("OnMovementInput", { player.input.keyPresses.anyHorizontal }),
-        InLiquid("InLiquid", { player.isInLiquid }),
-        Void("Void", { player.y <= player.level().minY }),
-        OnUseItem("OnUseItem", { player.isUsingItem }),
-    }
 
     // todo: use global balance system
     private var missedOutTick = 0
@@ -110,25 +95,6 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         super.onDisabled()
     }
 
-    private fun notifyAndDisable(reason: DisableOn) {
-        if (notification) {
-            notification(
-                this.name,
-                message("disabled", reason.tag),
-                NotificationEvent.Severity.INFO
-            )
-        }
-        enabled = false
-    }
-
-    private val tickHandler = handler<GameTickEvent> {
-        for (reason in disableOn) {
-            if (reason.trigger?.asBoolean ?: continue) {
-                notifyAndDisable(reason)
-            }
-        }
-    }
-
     /**
      * Acts as timer = 0 replacement
      */
@@ -140,7 +106,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         missedOutTick++
     }
 
-    @Suppress("unused")
+    @Suppress("unused", "MagicNumber")
     val renderHandler = handler<WorldRenderEvent> { event ->
         if (!balance || missedOutTick < 0 || warpInProgress) {
             return@handler
@@ -181,8 +147,15 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     private val packetHandler = handler<PacketEvent> { event ->
         if (event.packet is ClientboundPlayerPositionPacket) {
             missedOutTick = 0
-            if (DisableOn.Flag in disableOn) {
-                notifyAndDisable(DisableOn.Flag)
+            if (disableOnFlag) {
+                if (notification) {
+                    notification(
+                        this.name,
+                        message("disabledOnFlag"),
+                        NotificationEvent.Severity.INFO
+                    )
+                }
+                enabled = false
             }
         }
     }
@@ -324,29 +297,111 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     private object TickMovement : Mode("TickMovement") {
 
         private val interval by intRange("Interval", 20..20, 1..200, "ticks")
+        private val groundSpoof by boolean("GroundSpoof", true)
         private var ticksUntilMovement = 0
+
+        // Переменные для имитации падения
+        private var serverY: Double = 0.0
+        private var isFalling = false
+        private var targetGroundY: Double = 0.0
+        private val gravity = 0.08
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
         override fun enable() {
             ticksUntilMovement = interval.random()
+            serverY = player.y
+            isFalling = false
+            targetGroundY = getGroundY(player.x, player.y, player.z)
         }
 
         override fun disable() {
             ticksUntilMovement = 0
+            isFalling = false
         }
 
         @Suppress("unused")
         private val movementTickHandler = handler<PlayerMovementTickEvent> { event ->
             if (--ticksUntilMovement <= 0) {
                 ticksUntilMovement = interval.random()
+                if (isFalling && serverY <= targetGroundY) {
+                    isFalling = false
+                }
                 return@handler
             }
 
             event.cancelEvent()
+
+            if (groundSpoof) {
+                if (!isFalling && !player.onGround()) {
+                    isFalling = true
+                    serverY = player.y
+                    targetGroundY = getGroundY(player.x, player.y, player.z)
+                }
+
+                if (isFalling) {
+                    serverY -= gravity
+                    if (serverY <= targetGroundY) {
+                        serverY = targetGroundY
+                        isFalling = false
+                    }
+
+                    sendPacketSilently(
+                        ServerboundMovePlayerPacket.PosRot(
+                            player.x,
+                            serverY,
+                            player.z,
+                            player.yRot,
+                            player.xRot,
+                            !isFalling,
+                            player.horizontalCollision
+                        )
+                    )
+                } else {
+
+                    sendPacketSilently(
+                        ServerboundMovePlayerPacket.PosRot(
+                            player.x,
+                            serverY,
+                            player.z,
+                            player.yRot,
+                            player.xRot,
+                            true,
+                            player.horizontalCollision
+                        )
+                    )
+                }
+            }
         }
 
+        private fun getGroundY(x: Double, y: Double, z: Double): Double {
+            val blockPos = BlockPos(
+                Math.floor(x).toInt(),
+                Math.floor(y - 0.01).toInt(),
+                Math.floor(z).toInt()
+            )
+            val blockState = player.level().getBlockState(blockPos)
+            if (!blockState.isAir) {
+                return blockPos.y.toDouble() + blockState.getCollisionShape(player.level(), blockPos).max(Direction.Axis.Y)
+            }
+            for (dy in 1..10) {
+                val below = blockPos.below(dy)
+                val state = player.level().getBlockState(below)
+                if (!state.isAir) {
+                    return below.y.toDouble() + state.getCollisionShape(player.level(), below).max(Direction.Axis.Y)
+                }
+            }
+            return y - 10.0
+        }
+
+        private val packetHandler = handler<PacketEvent> { event ->
+            if (event.packet is ClientboundPlayerPositionPacket) {
+                serverY = player.y
+                isFalling = false
+                targetGroundY = getGroundY(player.x, player.y, player.z)
+            }
+        }
     }
 
 }
