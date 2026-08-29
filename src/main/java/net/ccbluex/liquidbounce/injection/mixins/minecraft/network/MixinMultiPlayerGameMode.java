@@ -31,6 +31,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.level.GameType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -47,9 +48,7 @@ public abstract class MixinMultiPlayerGameMode {
     @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
     private void hookAttack(Player player, Entity target, CallbackInfo callbackInfo) {
         var event = EventManager.INSTANCE.callEvent(new AttackEntityEvent(target));
-        if (event.isCancelled()) {
-            callbackInfo.cancel();
-        }
+        if (event.isCancelled()) callbackInfo.cancel();
     }
 
     /**
@@ -57,30 +56,22 @@ public abstract class MixinMultiPlayerGameMode {
      */
     @Inject(method = "continueDestroyBlock", at = @At(value = "HEAD"))
     private void hookBlockBreakingProgress(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
-        final BlockBreakingProgressEvent blockBreakingProgressEvent = new BlockBreakingProgressEvent(pos);
-        EventManager.INSTANCE.callEvent(blockBreakingProgressEvent);
+        EventManager.INSTANCE.callEvent(new BlockBreakingProgressEvent(pos));
     }
 
     /**
      * Hook into cancel block breaking at HEAD and call cancel block breaking event, which is able to cancel the execution.
      */
     @Inject(method = "stopDestroyBlock", at = @At("HEAD"), cancellable = true)
-    private void hookCancelBlockBreaking(CallbackInfo callbackInfo) {
-        final CancelBlockBreakingEvent cancelEvent = new CancelBlockBreakingEvent();
-        EventManager.INSTANCE.callEvent(cancelEvent);
-
-        if (cancelEvent.isCancelled()) {
-            callbackInfo.cancel();
-        }
+    private void hookCancelBlockBreaking(CallbackInfo ci) {
+        final var event = EventManager.INSTANCE.callEvent(new CancelBlockBreakingEvent());
+        if (event.isCancelled()) ci.cancel();
     }
 
     @Inject(method = "startDestroyBlock", at = @At("HEAD"), cancellable = true)
     private void hookAttackBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
-        var attackEvent = new BlockAttackEvent(pos);
-        EventManager.INSTANCE.callEvent(attackEvent);
-        if (attackEvent.isCancelled()) {
-            cir.setReturnValue(false);
-        }
+        final var event =  EventManager.INSTANCE.callEvent(new BlockAttackEvent(pos));
+        if (event.isCancelled()) cir.setReturnValue(false);
     }
 
     /**
@@ -99,11 +90,8 @@ public abstract class MixinMultiPlayerGameMode {
 
     @Inject(method = "useItem", at = @At("HEAD"), cancellable = true)
     private void hookItemInteractAtHead(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        final PlayerInteractItemEvent cancelEvent = new PlayerInteractItemEvent(player, hand);
-        EventManager.INSTANCE.callEvent(cancelEvent);
-        if (cancelEvent.isCancelled()) {
-            cir.setReturnValue(InteractionResult.PASS);
-        }
+        final var event = EventManager.INSTANCE.callEvent(new PlayerInteractItemEvent(player, hand));
+        if (event.isCancelled()) cir.setReturnValue(InteractionResult.PASS);
     }
 
     @Inject(method = "releaseUsingItem", at = @At("HEAD"))
@@ -112,18 +100,24 @@ public abstract class MixinMultiPlayerGameMode {
     }
 
     @Inject(method = "setLocalMode(Lnet/minecraft/world/level/GameType;)V", at = @At("RETURN"))
-    private void setGameMode(GameType gameMode, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new GameModeChangeEvent(gameMode));
+    private void setGameMode(GameType mode, CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new GameModeChangeEvent(mode));
     }
 
     @Inject(method = "setLocalMode(Lnet/minecraft/world/level/GameType;Lnet/minecraft/world/level/GameType;)V", at = @At("RETURN"))
-    private void setGameModes(GameType gameMode, GameType previousGameMode, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new GameModeChangeEvent(gameMode));
+    private void setGameModes(GameType mode, GameType previousMode, CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new GameModeChangeEvent(mode));
     }
 
     @Inject(method = "destroyBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;destroy(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", shift = At.Shift.AFTER))
     private void hookBreakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         ClientBlockBreakTrigger.INSTANCE.clientBreakHandler();
+    }
+
+    @Inject(method = "handleContainerInput", at = @At("HEAD"), cancellable = true)
+    private void hookContainerInput(int containerId, int slotNum, int buttonNum, ContainerInput containerInput, Player player, CallbackInfo ci) {
+        final var event = EventManager.INSTANCE.callEvent(new PlayerContainerInputEvent(containerId, slotNum, buttonNum, containerInput));
+        if (event.isCancelled()) ci.cancel();
     }
 
 }

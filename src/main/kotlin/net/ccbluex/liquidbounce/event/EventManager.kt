@@ -95,6 +95,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
+import net.ccbluex.liquidbounce.event.events.PlayerContainerInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerFluidCollisionCheckEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
@@ -258,6 +259,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     TagEntityEvent::class.java,
     MouseScrollInHotbarEvent::class.java,
     PlayerFluidCollisionCheckEvent::class.java,
+    PlayerContainerInputEvent::class.java,
     PlayerSneakMultiplier::class.java,
     PerspectiveEvent::class.java,
     ItemLoreQueryEvent::class.java,
