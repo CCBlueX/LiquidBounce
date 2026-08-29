@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.resources.Identifier
+import net.minecraft.util.Util
 import java.io.Closeable
 import java.util.Locale
 

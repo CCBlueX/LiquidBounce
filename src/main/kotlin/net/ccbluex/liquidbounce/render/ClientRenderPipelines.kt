@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.minecraft.client.renderer.BindGroupLayouts
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
+import net.minecraft.util.Util
 
 object ClientRenderPipelines {
 
@@ -545,6 +546,9 @@ object ClientRenderPipelines {
         JCEF
         GUI
 
+        renderPipelines.fastIterator().forEach { (_, pipeline) ->
+            gpuDevice.compilePipeline(pipeline, ClientShaders, Util.backgroundExecutor())
+        }
         logger.info("Registered ${renderPipelines.size} Render Pipelines.")
     }
 

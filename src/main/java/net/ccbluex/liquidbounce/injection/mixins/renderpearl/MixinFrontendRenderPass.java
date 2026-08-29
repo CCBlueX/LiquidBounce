@@ -17,9 +17,9 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.blaze3d;
+package net.ccbluex.liquidbounce.injection.mixins.renderpearl;
 
-import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.frontend.FrontendRenderPass;
 import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,10 +27,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(RenderPass.class)
-public abstract class MixinRenderPass {
+@Mixin(FrontendRenderPass.class)
+public abstract class MixinFrontendRenderPass {
 
-    @Inject(method = "close", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/systems/RenderPass;isClosed:Z", opcode = Opcodes.PUTFIELD))
+    @Inject(method = "close", at = @At(value = "FIELD", target = "Lcom/mojang/renderpearl/frontend/FrontendRenderPass;isClosed:Z", opcode = Opcodes.PUTFIELD))
     private void onClose(CallbackInfo callbackInfo) {
         RenderingDebug.increaseRenderPassCount();
     }

@@ -22,20 +22,24 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderSet
 import net.minecraft.client.renderer.rendertype.OutputTarget
 import net.minecraft.client.renderer.rendertype.RenderSetup
 
+// FIXME(26.3)
 fun RenderSetup.withOutputTarget(outputTarget: OutputTarget): RenderSetup {
     @Suppress("CAST_NEVER_SUCCEEDS")
     this as MixinRenderSetupAccessor
 
-    return MixinRenderSetupAccessor.`liquid_bounce$invokeInit`(
-        this.getPipeline(),
-        this.getTextures(),
-        this.getUseLightmap(),
-        this.getUseOverlay(),
-        this.getLayeringTransform(),
-        outputTarget,
-        this.getTextureTransform(),
-        this.getOutlineProperty(),
-        this.getAffectsCrumbling(),
-        this.getSortOnUpload()
-    )
+    return this
+//    return MixinRenderSetupAccessor.`liquid_bounce$invokeInit`(
+//        this.getPipeline(),
+//        this.getOitPipelineSet(),
+//        this.getTextures(),
+//        this.getUseLightmap(),
+//        this.getUseOverlay(),
+//        this.getLayeringTransform(),
+//        this.getTextureTransform(),
+//        this.getOutlineProperty(),
+//        this.getOutlineTextureName(),
+//        this.getAffectsCrumbling(),
+//        this.getSortOnUpload(),
+//        this.getForceSolidModelPhase()
+//    )
 }

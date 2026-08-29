@@ -20,11 +20,13 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import net.minecraft.client.renderer.oit.OitPipelineSet;
 import net.minecraft.client.renderer.rendertype.LayeringTransform;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.TextureTransform;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -39,6 +41,9 @@ public interface MixinRenderSetupAccessor {
     RenderPipeline getPipeline();
 
     @Accessor
+    OitPipelineSet getOitPipelineSet();
+
+    @Accessor
     Map<String, Object> getTextures();
 
     @Accessor
@@ -46,6 +51,9 @@ public interface MixinRenderSetupAccessor {
 
     @Accessor
     RenderSetup.OutlineProperty getOutlineProperty();
+
+    @Accessor
+    @Nullable String getOutlineTextureName();
 
     @Accessor
     boolean getUseLightmap();
@@ -60,20 +68,25 @@ public interface MixinRenderSetupAccessor {
     boolean getSortOnUpload();
 
     @Accessor
+    boolean getForceSolidModelPhase();
+
+    @Accessor
     LayeringTransform getLayeringTransform();
 
     @Invoker("<init>")
     static RenderSetup liquid_bounce$invokeInit(
-        RenderPipeline pipeline,
-        Map<String, Object> textures,
-        boolean useLightmap,
-        boolean useOverlay,
-        LayeringTransform layeringTransform,
-        OutputTarget outputTarget,
-        TextureTransform textureTransform,
-        RenderSetup.OutlineProperty outlineProperty,
-        boolean affectsCrumbling,
-        boolean sortOnUpload
+        final RenderPipeline pipeline,
+        final @Nullable OitPipelineSet oitPipelineSet,
+        final Map<String, Object> textures,
+        final boolean useLightmap,
+        final boolean useOverlay,
+        final LayeringTransform layeringTransform,
+        final TextureTransform textureTransform,
+        final RenderSetup.OutlineProperty outlineProperty,
+        final @Nullable String outlineTextureName,
+        final boolean affectsCrumbling,
+        final boolean sortOnUpload,
+        final boolean forceSolidModelPhase
     ) {
         throw new AssertionError();
     }

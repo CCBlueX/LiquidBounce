@@ -69,7 +69,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
     @Inject(method = "handleLevelChunkWithLight", at = @At("RETURN"))
     private void injectChunkLoadEvent(ClientboundLevelChunkWithLightPacket packet, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new ChunkLoadEvent(packet.getX(), packet.getZ()));
+        EventManager.INSTANCE.callEvent(new ChunkLoadEvent(packet.x(), packet.z()));
     }
 
     @Inject(method = "handleForgetLevelChunk", at = @At("RETURN"))

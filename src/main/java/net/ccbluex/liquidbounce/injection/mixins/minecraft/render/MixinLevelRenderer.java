@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.framegraph.FrameGraphBuilder;
 import com.mojang.blaze3d.framegraph.FramePass;
@@ -38,8 +39,10 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import org.joml.Matrix4fc;
+import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 import org.joml.Vector4fc;
 import org.objectweb.asm.Opcodes;
@@ -76,14 +79,13 @@ public abstract class MixinLevelRenderer {
             target = "Lnet/minecraft/client/renderer/LevelRenderer;submitFeatures(Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/SubmitNodeCollector;Z)V"
         )
     )
-    private void hookWorldFeatureSubmit(CallbackInfo ci, @Local(argsOnly = true, name = "modelViewMatrix") Matrix4fc modelViewMatrix) {
+    private void hookWorldFeatureSubmit(CallbackInfo ci) {
         var poseStack = Pools.MatStack.borrow();
 
         EventManager.INSTANCE.callEvent(new WorldFeatureSubmitEvent(
             poseStack,
             Minecraft.getInstance().gameRenderer.mainCamera(),
-            this.submitNodeStorage,
-            modelViewMatrix
+            this.submitNodeStorage
         ));
 
         Pools.MatStack.recycle(poseStack);
@@ -116,7 +118,7 @@ public abstract class MixinLevelRenderer {
 
     @ModifyArg(
         method = "lambda$render$0",
-        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;clearColorAndDepthTextures(Lcom/mojang/blaze3d/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/blaze3d/textures/GpuTexture;D)V"),
+        at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/CommandEncoder;clearColorAndDepthTextures(Lcom/mojang/renderpearl/api/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/renderpearl/api/textures/GpuTexture;D)V"),
         index = 1
     )
     private Vector4fc customFogClearColor(Vector4fc original) {
@@ -128,7 +130,7 @@ public abstract class MixinLevelRenderer {
 //        OutlineShaderRenderer.INSTANCE.drawBlitIfDirty(Minecraft.getInstance().gameRenderer.mainRenderTarget());
 //    }
 
-    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeOutline()V", shift = At.Shift.BEFORE))
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;executeOutline(Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;)V", shift = At.Shift.AFTER))
     private void onRenderGlow(CallbackInfo ci) {
         var minecraft = Minecraft.getInstance();
         var entityOutlineFb = entityOutlineTarget();
@@ -148,18 +150,20 @@ public abstract class MixinLevelRenderer {
         Pools.MatStack.recycle(matrixStack);
     }
 
-    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeSolid()V", shift = At.Shift.BEFORE))
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;executeSolid(Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;Lcom/mojang/renderpearl/api/commands/RenderPass;)V", shift = At.Shift.BEFORE))
     private void prepareChamsRenderTarget(CallbackInfo ci) {
         ModuleChams.INSTANCE.beginFrameIfNeeded();
     }
 
-    @Inject(method = "addAlwaysOnTopPass", at = @At("HEAD"))
-    private void scheduleChamsComposite(
-        FrameGraphBuilder frame,
-        FeatureRenderDispatcher.PreparedFrame featureFrame,
-        GpuBufferSlice fog,
-        CallbackInfo ci
-    ) {
+    @Inject(
+        method = "render",
+        at = @At(
+            value = "INVOKE",
+            target = "Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;execute(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder$Inspector;)V",
+            shift = At.Shift.BEFORE
+        )
+    )
+    private void scheduleChamsComposite(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci, @Local(name = "frame") FrameGraphBuilder frame) {
         FramePass pass = frame.addPass((LiquidBounce.CLIENT_NAME + ' ' + ModuleChams.INSTANCE.getName()).toLowerCase(Locale.ROOT));
         pass.disableCulling();
         pass.executes(() -> ModuleChams.INSTANCE.compositeIfNeeded(Minecraft.getInstance().gameRenderer.mainRenderTarget()));
@@ -188,8 +192,8 @@ public abstract class MixinLevelRenderer {
         }
     }
 
-    @WrapWithCondition(method = "submitBlockDestroyAnimation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitBreakingBlockModel(Lcom/mojang/blaze3d/vertex/PoseStack;Ljava/util/List;I)V"))
-    private boolean cancelRenderBreakingTexture(SubmitNodeCollector instance, PoseStack poseStack, List<?> list, int i) {
+    @WrapWithCondition(method = "submitBlockDestroyAnimation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitBreakingBlockModel(Lcom/mojang/blaze3d/vertex/PoseStack;Ljava/util/List;IZ)V"))
+    private boolean cancelRenderBreakingTexture(SubmitNodeCollector instance, PoseStack poseStack, List<?> list, int i, boolean b) {
         return ModuleAntiBlind.canRender(DoRender.BLOCK_BREAK_OVERLAY);
     }
 

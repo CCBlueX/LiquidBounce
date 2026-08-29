@@ -26,53 +26,48 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.animations.ModuleAnimations;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar;
 import net.ccbluex.liquidbounce.features.module.modules.render.animations.SwingAnimations;
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
+import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.utils.item.ItemCategorizationsKt;
 import net.ccbluex.liquidbounce.utils.render.FirstPersonShieldTint;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.state.level.FirstPersonHandsAndItemsRenderState;
+import net.minecraft.client.renderer.state.level.PlayerRenderState;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.ShieldItem;
+import org.jspecify.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ItemInHandRenderer.class)
-public abstract class MixinItemInHandRenderer {
-
-    @Final
-    @Shadow
-    private Minecraft minecraft;
-
-    @Shadow
-    private ItemStack offHandItem;
+@Mixin(FirstPersonHandsAndItemsRenderer.class)
+public abstract class MixinFirstPersonHandsAndItems {
 
     @Shadow
     @Final
     private static float ITEM_POS_Y;
 
-    @WrapOperation(method = "renderItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V"))
+    @WrapOperation(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V"))
     private void hookFirstPersonShieldTint(
-        ItemStackRenderState instance, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords,
-        int overlayCoords, int outlineColor, Operation<Void> original, LivingEntity mob, ItemStack itemStack,
-        ItemDisplayContext type
+        ItemStackRenderState instance, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, int overlayCoords, int outlineColor, Operation<Void> original,
+        @Local(argsOnly = true, name = "itemStack") ItemStack itemStack
     ) {
-        if (itemStack.getItem() instanceof ShieldItem && type.firstPerson()) {
+        if (itemStack.getItem() instanceof ShieldItem) {
             FirstPersonShieldTint.render(
                 () -> original.call(instance, poseStack, submitNodeCollector, lightCoords, overlayCoords, outlineColor));
             return;
@@ -87,7 +82,7 @@ public abstract class MixinItemInHandRenderer {
         cancellable = true
     )
     private void cancelVanillaSwing(
-        float attack,
+        float animation,
         PoseStack poseStack,
         int invert,
         HumanoidArm arm,
@@ -102,7 +97,7 @@ public abstract class MixinItemInHandRenderer {
         SwingAnimations.INSTANCE.onRenderItem(
             player,
             InteractionHand.MAIN_HAND,
-            attack,
+            animation,
             poseStack
         );
 
@@ -111,9 +106,9 @@ public abstract class MixinItemInHandRenderer {
 
     @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER))
     private void hookRenderFirstPersonItem(
-        AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+        PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
         if (ModuleAnimations.INSTANCE.getRunning()) {
-            var isInBothHands = InteractionHand.MAIN_HAND == hand && itemStack.has(DataComponents.MAP_ID) && offHandItem.isEmpty();
+            var isInBothHands = InteractionHand.MAIN_HAND == hand && itemStack.has(DataComponents.MAP_ID) && state.offHandItem.isEmpty();
             ModuleAnimations.MainHand mainHand = ModuleAnimations.MainHand.INSTANCE;
             ModuleAnimations.OffHand offHand = ModuleAnimations.OffHand.INSTANCE;
             if (isInBothHands && mainHand.getRunning() && offHand.getRunning()) {
@@ -145,10 +140,10 @@ public abstract class MixinItemInHandRenderer {
 
     @Inject(method = "submitArmWithItem",
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;getUseAnimation()Lnet/minecraft/world/item/ItemUseAnimation;")),
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;applyItemArmTransform(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/entity/HumanoidArm;F)V", ordinal = 0, shift = At.Shift.AFTER))
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;applyItemArmTransform(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/entity/HumanoidArm;F)V", ordinal = 0, shift = At.Shift.AFTER))
     private void transformBlockAnimation(
-        AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
-        if (ItemCategorizationsKt.isSword(itemStack)) {
+        PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+        if (ItemCategorizationsKt.isSword(itemStack) && liquid_bounce$getEntity(playerState) instanceof Player player) {
             var arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getRunning()) {
@@ -162,16 +157,15 @@ public abstract class MixinItemInHandRenderer {
     }
 
     @Inject(method = "submitArmWithItem", at = @At("HEAD"), cancellable = true)
-    private void hideShield(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
-        if (hand == InteractionHand.OFF_HAND && player == Minecraft.getInstance().player &&
-            ModuleSwordBlock.INSTANCE.shouldHideOffhand(itemStack)) {
+    private void hideShield(PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+        if (hand == InteractionHand.OFF_HAND && ModuleSwordBlock.INSTANCE.shouldHideOffhand(itemStack)) {
             ci.cancel();
         }
     }
 
     @ModifyArg(method = "submitArmWithItem", at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;applyItemArmTransform(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/entity/HumanoidArm;F)V",
+            target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;applyItemArmTransform(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/entity/HumanoidArm;F)V",
             ordinal = 3
     ), index = 2)
     private float injectIgnoreBlocking(float equipProgress) {
@@ -180,42 +174,6 @@ public abstract class MixinItemInHandRenderer {
         }
 
         return equipProgress;
-    }
-
-    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getMainHandItem()Lnet/minecraft/world/item/ItemStack;"))
-    private ItemStack injectSilentHotbar(ItemStack original) {
-        if (ModuleSilentHotbar.INSTANCE.getRunning()) {
-            // noinspection DataFlowIssue
-            return minecraft.player.getInventory().getNonEquipmentItems().get(SilentHotbar.INSTANCE.getClientsideSlot());
-        }
-
-        return original;
-    }
-
-    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getItemSwapScale(F)F"))
-    private float injectSilentHotbarNoCooldown(float original) {
-        if (ModuleSilentHotbar.INSTANCE.getRunning() && ModuleSilentHotbar.INSTANCE.getNoCooldownProgress() && SilentHotbar.INSTANCE.isSlotModified()) {
-            return 1f;
-        }
-
-        return original;
-    }
-
-    @Inject(method = "itemUsed", at = @At("HEAD"), cancellable = true)
-    private void injectIgnorePlace(InteractionHand hand, CallbackInfo ci) {
-        if (ModuleAnimations.INSTANCE.getRunning() && ModuleAnimations.EquipOffset.INSTANCE.getIgnorePlace()) {
-            ci.cancel();
-        }
-    }
-
-    @Inject(method = "shouldInstantlyReplaceVisibleItem", at = @At("RETURN"), cancellable = true)
-    private void injectIgnoreAmount(ItemStack currentlyVisibleItem, ItemStack expectedItem, CallbackInfoReturnable<Boolean> cir) {
-        if (ModuleAnimations.INSTANCE.getRunning() && !cir.getReturnValueZ()) {
-            cir.setReturnValue(!ModuleAnimations.EquipOffset.INSTANCE.getRunning()
-                    || (currentlyVisibleItem.getCount() == expectedItem.getCount() || ModuleAnimations.EquipOffset.INSTANCE.getIgnoreAmount())
-                    && ItemStack.isSameItemSameComponents(currentlyVisibleItem, expectedItem)
-            );
-        }
     }
 
     @ModifyArg(method = "applyItemArmTransform", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"), index = 1)
@@ -231,20 +189,27 @@ public abstract class MixinItemInHandRenderer {
         target = "Lnet/minecraft/world/item/ItemStack;getUseAnimation()Lnet/minecraft/world/item/ItemUseAnimation;",
         ordinal = 0
     ))
-    private ItemUseAnimation hookUseAction(ItemUseAnimation original, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack, @Local(argsOnly = true, name = "player") AbstractClientPlayer player) {
-        if (ModuleSwordBlock.shouldAnimateSwordBlock(player, itemStack)) {
+    private ItemUseAnimation hookUseAction(
+        ItemUseAnimation original,
+        @Local(argsOnly = true, name = "itemStack") ItemStack itemStack,
+        @Local(argsOnly = true, name = "playerState") PlayerRenderState playerState
+    ) {
+        var entity = liquid_bounce$getEntity(playerState);
+        if (entity instanceof LivingEntity livingEntity && ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity, itemStack)) {
             return ItemUseAnimation.BLOCK;
         }
         return original;
     }
 
     @ModifyExpressionValue(method = "submitArmWithItem", at = @At(
-        value = "INVOKE",
-        target = "Lnet/minecraft/client/player/AbstractClientPlayer;isUsingItem()Z",
-        ordinal = 1
-    ))
-    private boolean hookIsUseItem(boolean original, @Local(argsOnly = true, name = "player") AbstractClientPlayer player) {
-        if (ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
+        value = "FIELD",
+        target = "Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;isUsingItem:Z",
+        ordinal = 1,
+        opcode = Opcodes.GETFIELD)
+    )
+    private boolean hookIsUseItem(boolean original, @Local(argsOnly = true, name = "playerState") PlayerRenderState playerState) {
+        var entity = liquid_bounce$getEntity(playerState);
+        if (entity instanceof LivingEntity livingEntity && ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity)) {
             return true;
         }
 
@@ -252,12 +217,14 @@ public abstract class MixinItemInHandRenderer {
     }
 
     @ModifyExpressionValue(method = "submitArmWithItem", at = @At(
-        value = "INVOKE",
-        target = "Lnet/minecraft/client/player/AbstractClientPlayer;getUsedItemHand()Lnet/minecraft/world/InteractionHand;",
-        ordinal = 1
-    ))
-    private InteractionHand hookActiveHand(InteractionHand original, @Local(argsOnly = true, name = "player") AbstractClientPlayer player) {
-        if (ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
+        value = "FIELD",
+        target = "Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;useItemHand:Lnet/minecraft/world/InteractionHand;",
+        ordinal = 1,
+        opcode = Opcodes.GETFIELD)
+    )
+    private InteractionHand hookActiveHand(InteractionHand original, @Local(argsOnly = true, name = "playerState") PlayerRenderState playerState) {
+        var entity = liquid_bounce$getEntity(playerState);
+        if (entity instanceof LivingEntity livingEntity && ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity)) {
             return InteractionHand.MAIN_HAND;
         }
 
@@ -265,16 +232,22 @@ public abstract class MixinItemInHandRenderer {
     }
 
     @ModifyExpressionValue(method = "submitArmWithItem", at = @At(
-        value = "INVOKE",
-        target = "Lnet/minecraft/client/player/AbstractClientPlayer;getUseItemRemainingTicks()I",
-        ordinal = 2
-    ))
-    private int hookItemUseItem(int original, @Local(argsOnly = true, name = "player") AbstractClientPlayer player) {
-        if (ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
+        value = "FIELD",
+        target = "Lnet/minecraft/client/renderer/state/level/FirstPersonHandsAndItemsRenderState;useItemRemainingTicks:I",
+        ordinal = 2,
+        opcode = Opcodes.GETFIELD)
+    )
+    private int hookItemUseItem(int original, @Local(argsOnly = true, name = "playerState") PlayerRenderState playerState) {
+        var entity = liquid_bounce$getEntity(playerState);
+        if (entity instanceof LivingEntity livingEntity && ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity)) {
             return 7200;
         }
         return original;
     }
 
+    @Unique
+    private static @Nullable Entity liquid_bounce$getEntity(PlayerRenderState playerState) {
+        return playerState.avatarRenderState instanceof EntityRenderStateAddition entityRenderState ? entityRenderState.liquid_bounce$getEntity() : null;
+    }
 
 }

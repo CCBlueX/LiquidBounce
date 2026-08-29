@@ -16,22 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.interfaces;
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
+import net.minecraft.core.Holder;
+import net.minecraft.world.clock.WorldClock;
 
-import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.EntityFluidInteraction;
-import net.minecraft.world.level.material.Fluid;
-import org.jspecify.annotations.NullMarked;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+/**
+ * Additions to {@link net.minecraft.client.ClientClockManager.ClientClockInstance}.
+ *
+ * <p>Since 26.3 clock instances are queried through
+ * {@code ClockManager#getInstance(Holder)} without carrying their own definition,
+ * so the definition is tagged upon creation to allow overrides for specific clocks.</p>
+ */
+public interface ClientClockInstanceAddition {
 
-@NullMarked
-@Mixin(EntityFluidInteraction.class)
-public interface MixinEntityFluidInteractionAccessor {
-
-    @Accessor("currentAccumulators")
-    Reference2ObjectMap<TagKey<Fluid>, ?> currentAccumulators();
+    /**
+     * Sets the {@link WorldClock} definition this clock instance belongs to.
+     */
+    void liquid_bounce$setDefinition(Holder<WorldClock> definition);
 
 }

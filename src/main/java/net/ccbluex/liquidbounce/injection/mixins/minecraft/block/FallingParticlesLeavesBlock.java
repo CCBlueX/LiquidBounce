@@ -17,21 +17,31 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.renderer;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
-import net.minecraft.client.renderer.ShaderManager;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ShaderManager.class)
-public abstract class MixinShaderManager {
+/**
+ * Disables the falling leaves particles (cherry, pale oak, tinted leaves).
+ *
+ * @see net.minecraft.world.level.block.FallingParticlesLeavesBlock#animateTick
+ */
+@Mixin(net.minecraft.world.level.block.FallingParticlesLeavesBlock.class)
+public abstract class FallingParticlesLeavesBlock {
 
-    @Inject(method = "apply(Lnet/minecraft/client/renderer/ShaderManager$Configs;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At("TAIL"))
-    private void reloadClientPipelines(CallbackInfo info) {
-        ClientRenderPipelines.INSTANCE.precompile();
+    @Inject(method = "makeFallingLeavesParticles", at = @At("HEAD"), cancellable = true)
+    private void hookFallingLeaves(Level level, BlockPos pos, RandomSource random, CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.FALLING_LEAVES)) {
+            ci.cancel();
+        }
     }
 
 }
