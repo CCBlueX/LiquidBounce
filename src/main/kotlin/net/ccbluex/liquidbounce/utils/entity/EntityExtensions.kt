@@ -159,7 +159,7 @@ private fun LivingEntity.getBlockedDamage(source: DamageSource, damageAmount: Fl
     }
 
     val horizontalAngle = source.sourcePosition?.let { sourcePosition ->
-        val viewVector = calculateViewVector(0.0F, yHeadRot)
+        val viewVector = Entity.calculateViewVector(0.0F, yHeadRot)
         val sourceDirection = sourcePosition
             .subtract(position())
             .copy(y = 0.0)

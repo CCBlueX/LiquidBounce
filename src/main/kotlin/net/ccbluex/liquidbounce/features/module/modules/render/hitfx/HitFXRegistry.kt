@@ -89,7 +89,7 @@ enum class HitFXRegistry(
                 )
 
                 registry.putIfAbsent(location, WeighedSoundEvents(location, null).apply { addSound(sound) })
-                cache.putIfAbsent(sound.path, Resource(mc.vanillaPackResources) {
+                cache.putIfAbsent(sound.path, Resource(mc.vanillaPackResources.fullResources()) {
                     LiquidBounce.resource("sounds/$id.ogg")
                 })
             }

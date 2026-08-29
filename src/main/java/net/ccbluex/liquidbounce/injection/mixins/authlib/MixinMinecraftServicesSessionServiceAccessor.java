@@ -19,12 +19,13 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.authlib;
 
-import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
+import com.mojang.authlib.services.MinecraftServicesDiscoveryService;
+import com.mojang.authlib.services.MinecraftServicesSessionService;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(YggdrasilMinecraftSessionService.class)
-public interface MixinYggdrasilMinecraftSessionServiceAccessor {
+@Mixin(MinecraftServicesSessionService.class)
+public interface MixinMinecraftServicesSessionServiceAccessor {
     @Accessor(remap = false)
-    String getBaseUrl();
+    MinecraftServicesDiscoveryService getDiscoveryService();
 }

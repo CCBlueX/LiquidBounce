@@ -18,14 +18,15 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import com.mojang.blaze3d.GpuFormat
-import com.mojang.blaze3d.pipeline.ColorTargetState
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.GpuFormat
+import com.mojang.renderpearl.api.pipeline.ColorTargetState
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.renderpearl.api.textures.FilterMode
+import com.mojang.renderpearl.api.textures.GpuTexture
+import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuadSnippet
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.withUniformBuffer
@@ -33,6 +34,8 @@ import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBlitOnCurrentLayer
 import net.ccbluex.liquidbounce.render.drawTexQuad
+import net.ccbluex.liquidbounce.render.setPipeline
+import net.ccbluex.liquidbounce.injection.mixins.blaze3d.MixinRenderSystemAccessor
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -112,6 +115,10 @@ sealed interface ThemeBackground : Closeable {
         private val fragmentShader: String,
     ) : ThemeBackground {
 
+        private var compileGeneration = 0
+        @Volatile
+        private var compiledPipeline: CompiledRenderPipeline? = null
+
         private val ubo = ClientUniformDefine.THEME_BACKGROUND.createRingBuffer {
             "ThemeShaderBackground UBO - ${metadata.name}"
         }
@@ -141,6 +148,10 @@ sealed interface ThemeBackground : Closeable {
 
             resizeIfNeeded(framebufferWidth, framebufferHeight)
 
+            compiledPipeline?.let {
+                MixinRenderSystemAccessor.getCurrentPipelineCache().insert(pipeline, it)
+            }
+
             backgroundView!!.createRenderPass(
                 { "ThemeShaderBackground Pass - ${metadata.name}" }
             ).use { pass ->
@@ -167,13 +178,22 @@ sealed interface ThemeBackground : Closeable {
         }
 
         override fun onResourceReload() {
-            gpuDevice.precompilePipeline(pipeline) { id, _ ->
+            val generation = ++compileGeneration
+            compiledPipeline = null
+            gpuDevice.compilePipeline(pipeline, { id, _ ->
                 if (id == fshId) {
                     fragmentShader
                 } else {
                     error("Unknown shader id: $id")
                 }
-            }
+            }, Util.backgroundExecutor()).thenAcceptAsync({ pending ->
+                if (generation != compileGeneration) {
+                    return@thenAcceptAsync
+                }
+                val compiled = pending.finishCompile() ?: return@thenAcceptAsync
+                compiledPipeline = compiled
+                MixinRenderSystemAccessor.getCurrentPipelineCache().insert(pipeline, compiled)
+            }, mc)
         }
 
         private fun resizeIfNeeded(
@@ -221,7 +241,6 @@ sealed interface ThemeBackground : Closeable {
                     .withColorTargetState(ColorTargetState.DEFAULT)
                     .withDepthStencilState(optional())
                     .build()
-
                 return Shader(metadata, pipeline, fshId, fragmentShader)
             }
         }

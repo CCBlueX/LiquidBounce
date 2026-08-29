@@ -20,8 +20,7 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.features.addon.AddonApi
-import net.minecraft.client.Minecraft
-import net.minecraft.util.Util
+import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -34,7 +33,7 @@ val logger: Logger = LogManager.getLogger(CLIENT_NAME)
 
 @AddonApi
 val inGame: Boolean
-    get() = Minecraft.getInstance()?.let { mc -> mc.player != null && mc.level != null } == true
+    get() = mc()?.let { mc -> mc.player != null && mc.level != null } == true
 
 inline val clientStartDurationMs: Long
     get() = System.currentTimeMillis() - mc.clientStartTimeMs

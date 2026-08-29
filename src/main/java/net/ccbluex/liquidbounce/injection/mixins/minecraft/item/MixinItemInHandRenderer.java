@@ -138,9 +138,9 @@ public abstract class MixinItemInHandRenderer {
     @Unique
     private static void liquid_bounce$applyTransformations(PoseStack matrices, float translateX, float translateY, float translateZ, float rotateX, float rotateY, float rotateZ) {
         matrices.translate(translateX, translateY, translateZ);
-        matrices.mulPose(Axis.XP.rotationDegrees(rotateX));
-        matrices.mulPose(Axis.YP.rotationDegrees(rotateY));
-        matrices.mulPose(Axis.ZP.rotationDegrees(rotateZ));
+        matrices.rotate(Axis.XP.rotationDegrees(rotateX));
+        matrices.rotate(Axis.YP.rotationDegrees(rotateY));
+        matrices.rotate(Axis.ZP.rotationDegrees(rotateZ));
     }
 
     @Inject(method = "submitArmWithItem",

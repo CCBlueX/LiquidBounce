@@ -26,6 +26,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
@@ -157,9 +158,7 @@ private fun Route.postFileDialog() = post("/fileDialog") {
         call.receive<RequestBody>()
     }.getOrNull() ?: call.badRequest("No dialog mode provided")
 
-    val files = withContext(Dispatchers.IO) {
-        mode.selectFiles(supportedExtensions)
-    }
+    val files = mode.selectFiles(supportedExtensions).await()
 
     call.respond(JsonObject().apply {
         files.firstOrNull()?.let { addProperty("file", it) }

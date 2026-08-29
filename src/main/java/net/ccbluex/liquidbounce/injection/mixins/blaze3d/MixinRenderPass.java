@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.blaze3d;
 
-import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;

@@ -88,7 +88,7 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
                             translate(0F, yMotion.motion * anim, 0F)
                         }
 
-                        mulPose(rot)
+                        rotate(rot)
                         drawWorldParticle(progress, age)
                     }
                 }

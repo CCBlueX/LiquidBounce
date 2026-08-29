@@ -18,14 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.pipeline.BlendFunction
-import com.mojang.blaze3d.pipeline.ColorTargetState
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.BlendFunction
+import com.mojang.renderpearl.api.pipeline.ColorTargetState
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
+import com.mojang.renderpearl.api.textures.FilterMode
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.Mode
@@ -40,6 +39,7 @@ import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.buffers.CachedUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
+import net.ccbluex.liquidbounce.render.setPipeline
 import net.ccbluex.liquidbounce.render.withOutputTarget
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.io.PNG_AND_JPG
@@ -198,7 +198,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
             target.createRenderPass({ "Chams blit pass" }, useDepthAttachment = false).use { pass ->
                 pass.setPipeline(pipelineBlit)
-                pass.bindTexture("InSampler", colorTexture, blitSampler)
+                pass.setUniform("InSampler", colorTexture, blitSampler)
                 pass.draw(3, 1, 0, 0)
             }
         }
@@ -237,10 +237,10 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
             target.createRenderPass({ "Chams image blit pass" }, useDepthAttachment = false).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.ChamsImage)
-                pass.bindTexture("entityColor", colorTexture, blitSampler)
-                pass.bindTexture("entityDepth", chamsDepth, blitSampler)
-                pass.bindTexture("sceneDepth", sceneDepth, blitSampler)
-                pass.bindTexture("image", imageView, sampler)
+                pass.setUniform("entityColor", colorTexture, blitSampler)
+                pass.setUniform("entityDepth", chamsDepth, blitSampler)
+                pass.setUniform("sceneDepth", sceneDepth, blitSampler)
+                pass.setUniform("image", imageView, sampler)
                 pass.setUniform(ClientUniformDefine.CHAMS.uboName, ubo)
                 pass.draw(3, 1, 0, 0)
             }

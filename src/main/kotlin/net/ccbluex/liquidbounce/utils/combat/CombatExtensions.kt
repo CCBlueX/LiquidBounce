@@ -260,7 +260,7 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false):
     // Minecraft introduced piercing weapons that have their own attack method.
     // You HAVE to look at the entity before attacking it.
     if (piercingWeapon != null && !interaction.isSpectator) {
-        interaction.piercingAttack(piercingWeapon)
+        interaction.piercingAttack(itemStack.attackAnimation, piercingWeapon)
         swing.swing(InteractionHand.MAIN_HAND)
         return true
     }

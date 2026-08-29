@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.renderpearl.api.textures.FilterMode
+import com.mojang.renderpearl.api.textures.GpuTexture
+import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.setPipeline
 import net.ccbluex.liquidbounce.utils.render.copyFrom
 import net.ccbluex.liquidbounce.utils.render.copyFully
 import net.ccbluex.liquidbounce.utils.render.putVec4
@@ -97,8 +98,8 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
             textureView.createRenderPass({ "$name Pass" }).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.ItemChams)
 
-                pass.bindTexture("texture0", textureView, sampler)
-                pass.bindTexture("image", textureView, sampler)
+                pass.setUniform("texture0", textureView, sampler)
+                pass.setUniform("image", textureView, sampler)
                 pass.setUniform(ClientUniformDefine.HAND_ITEM_LIGHTMAP.uboName, UBO)
 
                 pass.draw(3, 1, 0, 0)

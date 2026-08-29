@@ -58,7 +58,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
-import org.lwjgl.glfw.GLFW
+import com.mojang.blaze3d.platform.cursor.CursorType
 import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
 
@@ -240,8 +240,8 @@ object ScreenManager : EventListener {
      */
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
-        // Set to default GLFW cursor
-        GLFW.glfwSetCursor(mc.window.handle(), 0)
+        // Set to default cursor
+        mc.window.selectCursor(CursorType.DEFAULT)
 
         if (handleCurrentScreen(event.screen)) {
             event.cancelEvent()
@@ -304,7 +304,7 @@ object ScreenManager : EventListener {
         }
 
         // CTRL + 2x SHIFT to toggle basic mode
-        if (keyCode == InputConstants.KEY_LSHIFT && modifier == InputConstants.MOD_CONTROL) {
+        if (event.scanCode == InputConstants.KEY_LSHIFT && event.mods and InputConstants.MOD_CONTROL != 0) {
             if (!basicModeChronometer.hasElapsed(400L)) {
                 ThemeManager.basicMode = !ThemeManager.basicMode
                 ConfigSystem.store(ThemeManager)

@@ -330,7 +330,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
         } else if (event.isRepeat) {
             for (m in modulesWithOwnBinds()) {
                 if (m.bind.action != InputBind.BindAction.SMART ||
-                    !m.bind.matchesKey(event.keyCode, event.scanCode) ||
+                    !m.bind.matchesKey(event.scanCode) ||
                     m !in smartKeyboardStates
                 ) {
                     continue

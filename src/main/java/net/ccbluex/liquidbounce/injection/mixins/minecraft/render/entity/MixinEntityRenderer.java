@@ -104,7 +104,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
 
         matrices.pushPose();
         matrices.translate(0.0D, f, 0.0D);
-        matrices.mulPose(this.entityRenderDispatcher.camera.rotation());
+        matrices.rotate(this.entityRenderDispatcher.camera.rotation());
         matrices.scale(-0.025F, -0.025F, 0.025F);
 
         var matrix4f = matrices.last().pose();

@@ -367,7 +367,6 @@ internal object NoFallMLG : NoFallMode("MLG") {
         val stack = hotbarItemSlot.itemStack
         val blockItem = stack.item as? BlockItem ?: return true
         val context = BlockPlaceContext(
-            world,
             player,
             hotbarItemSlot.useHand,
             stack,

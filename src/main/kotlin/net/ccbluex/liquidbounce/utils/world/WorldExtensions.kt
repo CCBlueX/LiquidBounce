@@ -21,11 +21,11 @@
 package net.ccbluex.liquidbounce.utils.world
 
 import com.google.common.base.Predicates
-import net.ccbluex.fastutil.asObjectList
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinLevelInvoker
 import net.ccbluex.liquidbounce.utils.math.expandToCube
 import net.minecraft.core.BlockPos
 import net.minecraft.util.AbortableIterationConsumer
+import net.minecraft.util.Continuation
 import net.minecraft.world.attribute.BedRule
 import net.minecraft.world.attribute.EnvironmentAttributes
 import net.minecraft.world.entity.Entity
@@ -59,7 +59,7 @@ val Level.respawnAnchorWorks: Boolean
  * Returns the loaded section slice from section 0 through [ChunkAccess.highestFilledSectionIndex].
  */
 val ChunkAccess.filledSections: List<LevelChunkSection>
-    get() = this.sections.asObjectList(offset = 0, length = this.highestFilledSectionIndex + 1)
+    get() = this.sections.slice(0..this.highestFilledSectionIndex)
 
 /**
  * Iterates all blocks in a specific section index and exposes world-space block positions.
@@ -158,9 +158,9 @@ fun <B : Entity, T : B> LevelEntityGetter<B>.firstOrNull(
     this.get(type) {
         if (predicate.test(it)) {
             ref = it
-            AbortableIterationConsumer.Continuation.ABORT
+            Continuation.ABORT
         } else {
-            AbortableIterationConsumer.Continuation.CONTINUE
+            Continuation.CONTINUE
         }
     }
     return ref

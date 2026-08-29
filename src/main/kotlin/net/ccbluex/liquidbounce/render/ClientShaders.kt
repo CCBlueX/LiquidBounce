@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.shaders.ShaderSource
-import com.mojang.blaze3d.shaders.ShaderType
+import com.mojang.renderpearl.api.pipeline.ShaderSource
+import com.mojang.renderpearl.api.pipeline.ShaderType
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.minecraft.resources.Identifier
@@ -120,15 +120,16 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         return k
     }
 
-    override fun get(identifier: Identifier, type: ShaderType): String? {
+    override fun get(identifier: Identifier, type: ShaderType?): String? {
         if (type != this.type) return null
         return shaders[identifier]
     }
 
     companion object : ShaderSource {
-        override fun get(identifier: Identifier, shaderType: ShaderType): String? = when (shaderType) {
+        override fun get(identifier: Identifier, shaderType: ShaderType?): String? = when (shaderType) {
             ShaderType.VERTEX -> Vertex[identifier, shaderType]
             ShaderType.FRAGMENT -> Fragment[identifier, shaderType]
+            null -> null
         }
     }
 
