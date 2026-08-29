@@ -18,9 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
@@ -42,9 +45,12 @@ import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation
 import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
+import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
@@ -53,8 +59,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
+import java.util.function.BooleanSupplier
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -67,9 +72,21 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
 
     private val modes = choices("Mode", Stationary, arrayOf(Queue, Cancel, Stationary, TickMovement))
         .apply { tagBy(this) }
-    private val disableOnFlag by boolean("DisableOnFlag", true)
+    private val disableOn by multiEnumChoice("DisableOn", enumSetOf(DisableOn.Flag))
     private val notification by boolean("Notification", false)
     private val balance by boolean("BalanceWarp", false)
+
+    private enum class DisableOn(
+        override val tag: String,
+        val trigger: BooleanSupplier?,
+    ) : Tagged {
+        Flag("Flag", null),
+        OnGround("OnGround", { player.onGround() }),
+        OnMovementInput("OnMovementInput", { player.input.keyPresses.anyHorizontal }),
+        InLiquid("InLiquid", { player.isInLiquid }),
+        Void("Void", { player.y <= player.level().minY }),
+        OnUseItem("OnUseItem", { player.isUsingItem }),
+    }
 
     // todo: use global balance system
     private var missedOutTick = 0
@@ -93,6 +110,25 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
 
         missedOutTick = 0
         super.onDisabled()
+    }
+
+    private fun notifyAndDisable(reason: DisableOn) {
+        if (notification) {
+            notification(
+                this.name,
+                message("disabled", reason.tag),
+                NotificationEvent.Severity.INFO
+            )
+        }
+        enabled = false
+    }
+
+    private val tickHandler = handler<GameTickEvent> {
+        for (reason in disableOn) {
+            if (reason.trigger?.asBoolean ?: continue) {
+                notifyAndDisable(reason)
+            }
+        }
     }
 
     /**
@@ -147,15 +183,8 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     private val packetHandler = handler<PacketEvent> { event ->
         if (event.packet is ClientboundPlayerPositionPacket) {
             missedOutTick = 0
-            if (disableOnFlag) {
-                if (notification) {
-                    notification(
-                        this.name,
-                        message("disabledOnFlag"),
-                        NotificationEvent.Severity.INFO
-                    )
-                }
-                enabled = false
+            if (DisableOn.Flag in disableOn) {
+                notifyAndDisable(DisableOn.Flag)
             }
         }
     }
@@ -300,7 +329,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         private val groundSpoof by boolean("GroundSpoof", true)
         private var ticksUntilMovement = 0
 
-        // Переменные для имитации падения
+        // Simulates falling on the server side while movement is frozen
         private var serverY: Double = 0.0
         private var isFalling = false
         private var targetGroundY: Double = 0.0
@@ -359,7 +388,6 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
                         )
                     )
                 } else {
-
                     sendPacketSilently(
                         ServerboundMovePlayerPacket.PosRot(
                             player.x,
