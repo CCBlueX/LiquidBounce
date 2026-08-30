@@ -283,15 +283,14 @@ object ScreenManager : EventListener {
 
     @Suppress("unused")
     private val keyHandler = handler<KeyboardKeyEvent> { event ->
-        val keyCode = event.keyCode
-        val modifier = event.mods
+        val scanCode = event.scanCode
 
         if (inGame) {
             return@handler
         }
 
         // F12 to toggle GPU acceleration
-        if (event.isPressed && keyCode == InputConstants.KEY_F12) {
+        if (event.isPressed && scanCode == InputConstants.KEY_F12) {
             val backend = BrowserBackendManager.backend ?: return@handler
             if (!backend.accelerationFlags.isSupported) {
                 logger.warn("GPU acceleration is not supported by the current browser backend.")
