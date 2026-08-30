@@ -185,7 +185,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         if (original == null) return null;
 
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
-        return ModuleChams.INSTANCE.remapIfNeeded(original, entity);
+        return ModuleChams.INSTANCE.trackIfNeeded(original, entity);
     }
 
     // FreeCam

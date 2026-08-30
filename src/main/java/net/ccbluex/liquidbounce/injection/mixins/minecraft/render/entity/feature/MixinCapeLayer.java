@@ -45,7 +45,7 @@ public abstract class MixinCapeLayer {
         @Local(argsOnly = true, name = "state") AvatarRenderState state
     ) {
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
-        return ModuleChams.INSTANCE.remapIfNeeded(renderType, entity);
+        return ModuleChams.INSTANCE.trackIfNeeded(renderType, entity);
     }
 
 }

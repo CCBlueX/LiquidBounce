@@ -80,6 +80,7 @@ public abstract class MixinLevelRenderer {
         )
     )
     private void hookWorldFeatureSubmit(CallbackInfo ci) {
+        ModuleChams.INSTANCE.beginFrame();
         var poseStack = Pools.MatStack.borrow();
 
         EventManager.INSTANCE.callEvent(new WorldFeatureSubmitEvent(
@@ -89,6 +90,25 @@ public abstract class MixinLevelRenderer {
         ));
 
         Pools.MatStack.recycle(poseStack);
+    }
+
+    /**
+     * Clears the chams entity tracking once all level entity submissions are done.
+     *
+     * The entity context captured by {@code trackIfNeeded} during level entity submission must not
+     * leak into the first-person held item submissions that happen afterwards (they are not chams
+     * targets), otherwise the player's own hand and held item would be removed from the main render target.
+     */
+    @Inject(
+        method = "render",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/LevelRenderer;submitFeatures(Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/SubmitNodeCollector;Z)V",
+            shift = At.Shift.AFTER
+        )
+    )
+    private void clearChamsEntityContext(CallbackInfo ci) {
+        ModuleChams.INSTANCE.clearEntityContext();
     }
 
     // TODO: removed because of vanilla changes
@@ -150,9 +170,13 @@ public abstract class MixinLevelRenderer {
         Pools.MatStack.recycle(matrixStack);
     }
 
-    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;executeSolid(Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;Lcom/mojang/renderpearl/api/commands/RenderPass;)V", shift = At.Shift.BEFORE))
+    @Inject(
+        method = "lambda$addMainPass$0",
+        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Lighting;setupFor(Lcom/mojang/blaze3d/platform/Lighting$Entry;)V", shift = At.Shift.AFTER)
+    )
     private void prepareChamsRenderTarget(CallbackInfo ci) {
-        ModuleChams.INSTANCE.beginFrameIfNeeded();
+        ModuleChams.INSTANCE.prepareFrame();
+        ModuleChams.INSTANCE.renderChams();
     }
 
     @Inject(

@@ -499,6 +499,15 @@ object ClientRenderPipelines {
     }
 
     @JvmField
+    val ChamsBlit: RenderPipeline = newPipeline("chams/blit") {
+        screenQuadSnippet()
+        withFragmentShader("core/blit_screen")
+        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        withDepthStencilState(optional())
+    }
+
+    @JvmField
     val GuiBlurH = newPipeline("blur_h") {
         screenQuadSnippet()
         withFragmentShader(ClientShaders.Fragment.GuiBlurH)
