@@ -144,6 +144,11 @@ object ConfigSystem {
     }
 
     /**
+     * Drops a config again, so an add-on being disabled stops writing its file.
+     */
+    fun remove(config: Config): Boolean = configs.remove(config)
+
+    /**
      * Create a ZIP file backup of configs
      */
     fun backup(fileName: String, groups: Iterable<Config> = this.configs) {
