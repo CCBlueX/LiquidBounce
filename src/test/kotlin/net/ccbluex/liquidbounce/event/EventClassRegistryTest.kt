@@ -26,9 +26,8 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /**
- * [EventManager.registerEventHook] used to reject any class missing from [ALL_EVENT_CLASSES], which
- * caught typos at runtime. Add-ons need to register their own events, so that guard is gone. These
- * tests take its place at build time.
+ * [EventManager.registerEventHook] accepts any event class, so a typo in a built-in one is caught
+ * here at build time rather than at runtime.
  */
 class EventClassRegistryTest {
 

@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.features.addon.AddonManager
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
@@ -390,6 +391,7 @@ object LiquidBounce : EventListener {
             ThemeManager.init()
             // Preload marketplace items
             ConfigSystem.load(MarketplaceManager)
+            AddonInstaller.stageSubscribedAddons()
             ConfigSystem.load(ThemeManager)
             ThemeManager.load()
         }
