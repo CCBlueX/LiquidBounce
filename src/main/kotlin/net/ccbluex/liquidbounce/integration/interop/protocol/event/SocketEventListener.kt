@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import com.google.gson.stream.JsonWriter
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.event.ALL_EVENT_CLASSES
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventHook
 import net.ccbluex.liquidbounce.event.EventListener
@@ -33,9 +32,14 @@ import org.apache.commons.io.output.StringBuilderWriter
 
 internal object SocketEventListener : EventListener {
 
-    private val events = ALL_EVENT_CLASSES
-        .filter { WebSocketEvent::class.java.isAssignableFrom(it) }
-        .associateBy { it.eventName }
+    /**
+     * Computed live rather than cached: add-ons may register further [WebSocketEvent]s after this
+     * object is first touched.
+     */
+    private val events
+        get() = EventManager.knownEventClasses
+            .filter { WebSocketEvent::class.java.isAssignableFrom(it) }
+            .associateBy { it.eventName }
 
     /**
      * Contains all events that are registered in the current context
@@ -68,7 +72,7 @@ internal object SocketEventListener : EventListener {
     fun unregister(name: String) {
         val eventClass = events[name] ?:
             throw IllegalArgumentException("Unknown event: $name")
-        val eventHook = registeredEvents[eventClass] ?:
+        val eventHook = registeredEvents.remove(eventClass) ?:
             throw IllegalArgumentException("No EventHook for event: $eventClass")
 
         EventManager.unregisterEventHook(eventClass, eventHook)
