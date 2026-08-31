@@ -129,8 +129,15 @@ object ConfigSystem {
 
     /**
      * Add an existing config instance
+     *
+     * Names must be unique: [Config.jsonFile] is derived from the name, so two configs sharing one
+     * would write the same file and silently overwrite each other on [storeAll].
      */
     fun root(config: Config): Config {
+        require(configs.none { it.loweredName == config.loweredName }) {
+            "A config named '${config.loweredName}' is already registered"
+        }
+
         config.walkInit()
         configs.add(config)
         return config
