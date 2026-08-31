@@ -31,6 +31,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.nodeGradle)
     alias(libs.plugins.dokka)
+    `maven-publish`
 }
 
 base {
@@ -398,6 +399,71 @@ tasks.jar {
     from("LICENSE") {
         rename {
             "${it}_${archivesBaseName.get()}"
+        }
+    }
+}
+
+// Publishing LiquidBounce as a developer library, so add-ons have something to compile against.
+//
+// Loom 1.17 on this Minecraft version has no remap step - the dev and production namespaces are
+// both Mojang official - so `jar` already is the shipped artifact and is what gets published.
+
+/**
+ * The Minecraft version is part of the coordinate because the API surface is bound to it.
+ * `-Ppublish.version=` overrides it, which CI uses to also push a commit-pinned snapshot.
+ */
+val publishVersion: String = providers.gradleProperty("publish.version").orNull ?: run {
+    val base = "${providers.gradleProperty("mod_version").get()}+${libs.versions.minecraft.get()}"
+    val isRelease = providers.environmentVariable("GITHUB_EVENT_NAME").orNull == "release"
+
+    if (isRelease) base else "$base-SNAPSHOT"
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mod") {
+            groupId = providers.gradleProperty("maven_group").get()
+            artifactId = providers.gradleProperty("archives_base_name").get()
+            version = publishVersion
+
+            artifact(tasks.jar)
+            artifact(tasks.named("sourcesJar")) { classifier = "sources" }
+
+            // Deliberately no dependency list. `from(components["java"])` would emit every `api`
+            // and jar-in-jar dependency into the POM, including `com.mojang:minecraft`, which
+            // resolves from no public repository and would break every consumer. Add-ons declare
+            // Minecraft, Fabric Loader and Fabric Language Kotlin themselves.
+            pom {
+                name = "LiquidBounce"
+                description = "A free mixin-based injection hacked-client for Minecraft " +
+                    "using the Fabric modding toolchain."
+                url = "https://liquidbounce.net/"
+
+                licenses {
+                    license {
+                        name = "GNU General Public License v3.0"
+                        url = "https://www.gnu.org/licenses/gpl-3.0.txt"
+                    }
+                }
+
+                scm {
+                    url = "https://github.com/CCBlueX/LiquidBounce"
+                    connection = "scm:git:https://github.com/CCBlueX/LiquidBounce.git"
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "CCBlueX"
+            val channel = if (publishVersion.endsWith("-SNAPSHOT")) "snapshots" else "releases"
+            url = uri("https://maven.ccbluex.net/$channel")
+
+            credentials {
+                username = providers.environmentVariable("MAVEN_USERNAME").orNull
+                password = providers.environmentVariable("MAVEN_PASSWORD").orNull
+            }
         }
     }
 }
