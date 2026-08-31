@@ -144,11 +144,6 @@ dependencies {
     jij(libs.ktor.server.status.pages)
     jij(libs.ktor.serialization.gson)
 
-    // ScriptAPI
-    jij(libs.polyglot)
-    jij(libs.polyglot.js)
-    jij(libs.polyglot.tools)
-
     // Machine Learning
     jij(libs.djl.api)
     jij(libs.djl.pytorch)
