@@ -29,6 +29,7 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.MoverType
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.phys.Vec3
 
@@ -105,3 +106,11 @@ class PlayerStepSuccessEvent(val movementVec: Vec3, var adjustedVec: Vec3) : Eve
 
 @Tag("playerFluidCollisionCheck")
 class PlayerFluidCollisionCheckEvent(val fluid: TagKey<Fluid>) : CancellableEvent()
+
+@Tag("playerContainerInput")
+class PlayerContainerInputEvent(
+    val containerId: Int,
+    val slot: Int,
+    val button: Int,
+    val input: ContainerInput,
+) : CancellableEvent()
