@@ -37,10 +37,10 @@
   },
   "suggests": {
     "fabric": ">=${fabric_version}",
-    "viafabricplus": ">=${viafabricplus_version}"
+    "viafabricplus": ">=4.6.0"
   },
   "breaks": {
-    "viafabricplus": "<${viafabricplus_version}"
+    "viafabricplus": "<4.6.0"
   },
   "accessWidener": "liquidbounce.accesswidener"
 }

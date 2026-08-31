@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel.SpeedSentinelDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043FastFall
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524GroundTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus.SpeedVerusB3882
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan288
@@ -81,6 +82,7 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
         SpeedSpartanV4043(modeValueGroup),
         SpeedSpartanV4043FastFall(modeValueGroup),
+        SpeedSpartan524GroundTimer(modeValueGroup),
 
         SpeedSentinelDamage(modeValueGroup),
 
