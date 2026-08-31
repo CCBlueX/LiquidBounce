@@ -71,7 +71,6 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
-import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -209,7 +208,7 @@ object LiquidBounce : EventListener {
 
         // Initialize managers and features
         Client
-        initializeManagers(workerDispatcher, renderThreadDispatcher)
+        initializeManagers(renderThreadDispatcher)
         initializeFeatures()
         initializeResources(workerDispatcher)
         prepareGuiStage(renderThreadDispatcher)
@@ -248,16 +247,8 @@ object LiquidBounce : EventListener {
      * Initializes managers for Event Listener registration.
      */
     private suspend fun initializeManagers(
-        workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
     ) = withContext(renderThreadDispatcher) {
-        // Script system
-        val scriptEngineJob = launch(workerDispatcher) {
-            runCatching(ScriptManager::initializeEngine).onFailure { error ->
-                logger.error("[ScriptAPI] Failed to initialize script engine.", error)
-            }
-        }
-
         // Config
         ConfigSystem
 
@@ -292,12 +283,10 @@ object LiquidBounce : EventListener {
         // Instantiates add-on entrypoints and registers their translations. No add-on logic runs
         // here - that is initializeFeatures.
         AddonManager.discover()
-
-        scriptEngineJob.join()
     }
 
     /**
-     * Initializes in-built, add-on and script features.
+     * Initializes in-built and add-on features.
      */
     private fun initializeFeatures() {
         // Register commands and modules
@@ -307,11 +296,6 @@ object LiquidBounce : EventListener {
         // Categories first: constructing an add-on module requires its category to exist.
         AddonManager.registerCategories()
         AddonManager.initializeAddons()
-
-        // Load user scripts
-        runCatching(ScriptManager::loadAll).onFailure { error ->
-            logger.error("ScriptManager was unable to load scripts.", error)
-        }
     }
 
     /**

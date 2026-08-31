@@ -44,7 +44,6 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandHide
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandLocalConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandPanic
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandAddon
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandScript
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
@@ -76,7 +75,7 @@ import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoT
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTranslate
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.joinToText
@@ -164,7 +163,6 @@ object CommandManager : EventListener {
         register(CommandClient)
         register(CommandConfig)
         register(CommandLocalConfig)
-        register(CommandScript)
         register(CommandAddon)
         register(CommandFakePlayer)
         register(CommandItemGive)
@@ -323,7 +321,7 @@ object CommandManager : EventListener {
      *
      * @param cmd The command. If there is no command in it (it is empty or only whitespaces), this method is a no op
      */
-    @ScriptApiRequired
+    @AddonApi
     @JvmName("execute")
     fun execute(cmd: String) {
         val normalized = normalizeCommandSpaces(cmd.trim())

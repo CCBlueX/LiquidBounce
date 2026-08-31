@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.util.function.ToIntFunction
 
 /**
@@ -142,7 +142,7 @@ class ModeValueGroup<T : Mode>(
         }
     }
 
-    @ScriptApiRequired
+    @AddonApi
     fun getModeStrings(): Array<String> = modes.mapToArray { it.name }
 
 }

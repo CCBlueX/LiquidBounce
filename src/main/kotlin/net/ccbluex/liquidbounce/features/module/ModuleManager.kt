@@ -269,7 +269,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -737,21 +737,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     fun clear() {
         modules.clear()
     }
-
-    /**
-     * This is being used by UltralightJS for the implementation of the ClickGUI. DO NOT REMOVE!
-     */
-    @JvmName("getCategories")
-    @ScriptApiRequired
-    fun getCategories() = ModuleCategories.entries.mapToArray { it.tag }
-
-    @JvmName("getModules")
-    @ScriptApiRequired
-    fun getModules(): Collection<ClientModule> = modules
-
-    @JvmName("getModuleByName")
-    @ScriptApiRequired
-    fun getModuleByName(module: String) = find { it.name.equals(module, true) }
 
     operator fun get(moduleName: String) = modules.find { it.name.equals(moduleName, true) }
 

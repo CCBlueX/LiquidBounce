@@ -22,7 +22,6 @@ import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.script.ScriptManager
 
 enum class MarketplaceItemType(
     override val tag: String,
@@ -31,8 +30,13 @@ enum class MarketplaceItemType(
 ) : Tagged {
     @SerializedName("Config")
     CONFIG("Config", false, false),
+    /**
+     * Kept so existing `marketplace.json` entries still deserialize, but no longer listed or
+     * subscribable: scripts moved to the ScriptAPI add-on, which reads already-installed items.
+     */
+    @Deprecated("Scripts moved to the ScriptAPI add-on")
     @SerializedName("Script")
-    SCRIPT("Script", true, true),
+    SCRIPT("Script", false, false),
     @SerializedName("Theme")
     THEME("Theme", true, true),
     @SerializedName("Addon")
@@ -42,7 +46,6 @@ enum class MarketplaceItemType(
 
     suspend fun reload() = when (this) {
         THEME -> ThemeManager.load()
-        SCRIPT -> ScriptManager.reload()
         ADDON -> AddonInstaller.stageSubscribedAddons()
         else -> { }
     }
