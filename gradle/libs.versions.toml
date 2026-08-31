@@ -13,7 +13,7 @@ fabric-loaderMin = "0.18.4"
 fabric-api = "0.158.3+26.3"
 
 # mcef
-mcef = "3.4.0-26.2-SNAPSHOT"
+mcef = "3.4.0-26.3-SNAPSHOT-1"
 # MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
 minecraftauth = "5.0.3-SNAPSHOT"
 # TheAltening
@@ -53,10 +53,10 @@ fabric-kotlin = "1.13.12+kotlin.2.4.0"
 
 # Netty, should be sync with game version
 # https://mvnrepository.com/artifact/io.netty/netty-all
-netty = "4.2.15.Final"
+netty = "4.2.16.Final"
 
 # LWJGL
-lwjgl = "3.4.1"
+lwjgl = "3.4.3"
 
 # Other plugins
 detekt = "2.0.0-alpha.6"
