@@ -91,7 +91,7 @@ abstract class LiquidBounceAddon {
     var state: AddonState = AddonState.DISCOVERED
         internal set
 
-    protected val logger by lazy { clientLogger("Addon/$id") }
+    val logger by lazy { clientLogger("Addon/$id") }
 
     internal val registeredModules = mutableListOf<ClientModule>()
     internal val registeredCommands = mutableListOf<CommandRegistrar>()
@@ -126,14 +126,14 @@ abstract class LiquidBounceAddon {
      */
     open fun onShutdown() {}
 
-    protected fun registerCategory(
+    fun registerCategory(
         name: String,
         inclusionGroup: OptionalInclusion? = null,
     ): ModuleCategory = ModuleCategories.register(ModuleCategory(name, inclusionGroup)).also {
         registeredCategories += it
     }
 
-    protected fun registerModules(vararg modules: ClientModule) {
+    fun registerModules(vararg modules: ClientModule) {
         for (module in modules) {
             ModuleManager.addModule(module)
             // Matches ModuleManager.registerInbuilt: without walkKeyPath the module has no
@@ -144,7 +144,7 @@ abstract class LiquidBounceAddon {
         }
     }
 
-    protected fun registerCommand(registrar: CommandRegistrar) {
+    fun registerCommand(registrar: CommandRegistrar) {
         CommandManager.register(registrar)
         registeredCommands += registrar
     }
@@ -153,7 +153,7 @@ abstract class LiquidBounceAddon {
      * Registers command nodes built at runtime, for add-ons that generate commands rather than
      * writing them against the Brigadier DSL.
      */
-    protected fun registerCommandNodes(nodes: Collection<LiteralCommandNode<ClientCommandSource>>) {
+    fun registerCommandNodes(nodes: Collection<LiteralCommandNode<ClientCommandSource>>) {
         CommandManager.registerNodes(nodes)
         registeredNodes += nodes
     }
@@ -161,7 +161,7 @@ abstract class LiquidBounceAddon {
     /**
      * Adds a mode to an existing [ModeValueGroup], e.g. a new target-sorting mode.
      */
-    protected fun registerMode(parent: ModeValueGroup<*>, mode: Mode) {
+    fun registerMode(parent: ModeValueGroup<*>, mode: Mode) {
         parent.addMode(mode)
         registeredModes += parent to mode
     }
@@ -169,7 +169,7 @@ abstract class LiquidBounceAddon {
     /**
      * Creates the add-on's own config file at `LiquidBounce/<name>.json`, defaulting to its id.
      */
-    protected fun config(
+    fun config(
         name: String = id,
         tree: MutableCollection<out ValueGroup> = mutableListOf(),
     ): Config = ConfigSystem.root(name, tree).also { registeredConfigs += it }
