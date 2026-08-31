@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandHelp
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandHide
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandLocalConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandPanic
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandAddon
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandScript
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
@@ -164,6 +165,7 @@ object CommandManager : EventListener {
         register(CommandConfig)
         register(CommandLocalConfig)
         register(CommandScript)
+        register(CommandAddon)
         register(CommandFakePlayer)
         register(CommandItemGive)
         register(CommandItemSkull)
