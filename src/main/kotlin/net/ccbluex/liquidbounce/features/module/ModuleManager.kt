@@ -389,7 +389,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                     InputBind.BindAction.SMART -> {
                         val state = smartMouseStates.remove(m) ?: continue
 
-                        // Mouse button events do not emit GLFW_REPEAT, so SMART falls back to:
+                        // Mouse button events do not emit SDL repeat, so SMART falls back to:
                         // - hold if the press was long enough
                         // - toggle otherwise
                         val shouldFallbackToHold =
