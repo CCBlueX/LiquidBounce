@@ -30,13 +30,6 @@ enum class MarketplaceItemType(
 ) : Tagged {
     @SerializedName("Config")
     CONFIG("Config", false, false),
-    /**
-     * Kept so existing `marketplace.json` entries still deserialize, but no longer listed or
-     * subscribable: scripts moved to the ScriptAPI add-on, which reads already-installed items.
-     */
-    @Deprecated("Scripts moved to the ScriptAPI add-on")
-    @SerializedName("Script")
-    SCRIPT("Script", false, false),
     @SerializedName("Theme")
     THEME("Theme", true, true),
     @SerializedName("Addon")
