@@ -52,14 +52,25 @@ object ModuleCategories {
     @JvmStatic
     val entries: Collection<ModuleCategory> get() = registry.sequencedValues()
 
+    /**
+     * Registers [category] so modules can be filed under it. Add-ons call this from
+     * `LiquidBounceAddon.onRegisterCategories`, which runs before any add-on registers modules.
+     */
     @JvmStatic
-    private fun register(category: ModuleCategory): ModuleCategory {
+    fun register(category: ModuleCategory): ModuleCategory {
         if (registry.put(category.tag, category) != null) {
             error("A module category with the name '${category.tag}' is already registered!")
         }
 
         return category
     }
+
+    /**
+     * Removes [category] again. Only meaningful for add-on categories being torn down; the modules
+     * filed under it must be removed first.
+     */
+    @JvmStatic
+    fun unregister(category: ModuleCategory): Boolean = registry.remove(category.tag, category)
 
     @JvmStatic
     fun byName(name: String): ModuleCategory? {
