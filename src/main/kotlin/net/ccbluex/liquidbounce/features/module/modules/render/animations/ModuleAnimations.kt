@@ -71,6 +71,10 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
         val OffHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
     }
 
+    /**
+     * Only applies to pre-1.9 combat. On 1.9+ the swing duration comes from the attack cooldown of the
+     * held item and is left untouched.
+     */
     val swingDuration by int("SwingDuration", 6, 1..20)
 
     /**

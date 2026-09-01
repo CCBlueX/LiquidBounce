@@ -63,6 +63,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.isOlderThanOrEqual1_8;
+
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity extends MixinEntity {
 
@@ -359,10 +361,15 @@ public abstract class MixinLivingEntity extends MixinEntity {
         EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, itemStack));
     }
 
+    /**
+     * A fixed swing duration only matches pre-1.9 combat. Since 1.9 the swing length is derived from the
+     * attack cooldown of the held item, so the vanilla duration has to be kept there.
+     */
     @ModifyExpressionValue(method = "getCurrentSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)
     private int hookSwingSpeed(int duration) {
         var animations = ModuleAnimations.INSTANCE;
-        return animations.getRunning() && liquid_bounce$isClientPlayer() ? animations.getSwingDuration() : duration;
+        return animations.getRunning() && isOlderThanOrEqual1_8() && liquid_bounce$isClientPlayer()
+                ? animations.getSwingDuration() : duration;
     }
 
     @ModifyExpressionValue(method = "handleDamageEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getHurtSound(Lnet/minecraft/world/damagesource/DamageSource;)Lnet/minecraft/sounds/SoundEvent;"))
