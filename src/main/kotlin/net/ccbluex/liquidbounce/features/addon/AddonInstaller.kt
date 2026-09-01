@@ -47,10 +47,10 @@ object AddonInstaller {
      */
     private fun managedName(itemId: Int, revisionId: Int) = "$PREFIX$itemId-$revisionId.jar"
 
-    private fun managedJarsFor(itemId: Int): List<File> =
+    private fun managedJarsFor(itemId: Int): Array<File>? =
         modsFolder.listFiles { file: File ->
             file.isFile && file.name.startsWith("$PREFIX$itemId-") && file.name.endsWith(".jar")
-        }?.toList().orEmpty()
+        }
 
     /**
      * Brings the `mods` folder in line with the current add-on subscriptions: stages any newly
@@ -71,8 +71,8 @@ object AddonInstaller {
 
         // Anything managed that is no longer subscribed - or is a superseded revision.
         val stale = modsFolder.listFiles { file: File ->
-            file.isFile && file.name.startsWith(PREFIX) && file.name.endsWith(".jar")
-        }?.filterNot { it.name in expected }.orEmpty()
+            file.isFile && file.name.startsWith(PREFIX) && file.name.endsWith(".jar") && file.name !in expected
+        } ?: return
 
         for (file in stale) {
             remove(file)
@@ -96,7 +96,7 @@ object AddonInstaller {
         check(modsFolder.isDirectory || modsFolder.mkdirs()) { "Could not create the mods folder" }
 
         // Drop older revisions of the same add-on first, so the loader never sees two copies.
-        managedJarsFor(itemId).forEach(::remove)
+        managedJarsFor(itemId)?.forEach(::remove)
 
         jars.single().copyTo(target, overwrite = true)
         AddonManager.markRestartRequired("${item.name} installed")
