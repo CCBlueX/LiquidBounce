@@ -16,24 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.misc
+package net.ccbluex.liquidbounce.features.global
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitSeconds
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 
 /**
- * AutoReconnect module
- *
  * Automatically reconnects to the last server after a configurable delay when
  * the connection is lost.
  */
-object ModuleAutoReconnect : ClientModule(
-    "AutoReconnect",
-    ModuleCategories.MISC
+object GlobalSettingsAutoReconnect : ToggleableValueGroup(
+    name = "AutoReconnect",
+    enabled = true,
 ) {
 
     private val delay by int("Delay", 5, 1..60, "s")

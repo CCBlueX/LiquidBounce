@@ -96,7 +96,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoChatGame
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoConfig
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoPearl
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoReconnect
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBookBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleEasyPearl
@@ -521,7 +520,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
 
             // Misc
             ModuleAutoConfig,
-            ModuleAutoReconnect,
             ModuleGUICloser,
             ModuleBookBot,
             ModuleAntiBot,
