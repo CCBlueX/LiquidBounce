@@ -23,4 +23,15 @@ export const snappingEnabled: Writable<boolean> = writable(true);
 
 export const gridSize: Writable<number> = writable(10);
 
+export interface PanelHandle {
+    category: string;
+    index: number;
+    getSize: () => { width: number; height: number };
+    setPosition: (left: number, top: number) => void;
+}
+
+export const panelHandles: Writable<PanelHandle[]> = writable([]);
+
+export const animatePanels: Writable<boolean> = writable(false);
+
 export const darken = writable(true);
