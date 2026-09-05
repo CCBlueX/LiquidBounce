@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.io.File
 
 /**
@@ -116,8 +118,11 @@ object MarketplaceManager : Config("marketplace"), EventListener {
         subscribedItems.remove(item)
         ConfigSystem.store(this)
 
-        // Reload the item type's manager.
-        item.type.reload()
+        // Reload the item type's manager. Must be on the render thread - this is reachable from a
+        // Ktor worker via the interop server, and install() already does the same.
+        withContext(MinecraftDispatcher) {
+            item.type.reload()
+        }
     }
 
 }

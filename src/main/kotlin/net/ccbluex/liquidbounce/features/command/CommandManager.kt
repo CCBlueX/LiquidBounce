@@ -43,7 +43,7 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandHelp
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandHide
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandLocalConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandPanic
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandScript
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandAddon
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
@@ -75,7 +75,7 @@ import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoT
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTranslate
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.joinToText
@@ -163,7 +163,7 @@ object CommandManager : EventListener {
         register(CommandClient)
         register(CommandConfig)
         register(CommandLocalConfig)
-        register(CommandScript)
+        register(CommandAddon)
         register(CommandFakePlayer)
         register(CommandItemGive)
         register(CommandItemSkull)
@@ -178,7 +178,7 @@ object CommandManager : EventListener {
 
     /**
      * Lazily built Brigadier command tree. Rebuilt whenever a command is registered or
-     * unregistered (see [register] / [registerScriptCommands] / [unregisterScriptCommands]).
+     * unregistered (see [register] / [unregister] / [registerNodes] / [unregisterNodes]).
      */
     @Volatile
     private var brigadierDispatcher: CommandDispatcher<ClientCommandSource>? = null
@@ -190,10 +190,10 @@ object CommandManager : EventListener {
     private val directCommandRegistrars = mutableListOf<CommandRegistrar>()
 
     /**
-     * Script-provided command nodes (main nodes plus alias redirects), keyed by node name.
-     * Replayed whenever the dispatcher is rebuilt; see [registerScriptCommands].
+     * Dynamically provided command nodes (main nodes plus alias redirects), keyed by node name.
+     * Replayed whenever the dispatcher is rebuilt; see [registerNodes].
      */
-    private val scriptCommandNodes =
+    private val dynamicCommandNodes =
         TreeMap<String, LiteralCommandNode<ClientCommandSource>>(String.CASE_INSENSITIVE_ORDER)
 
     /**
@@ -209,36 +209,47 @@ object CommandManager : EventListener {
     }
 
     /**
-     * Registers script-provided command nodes
-     * (see [net.ccbluex.liquidbounce.script.bindings.features.ScriptCommandBuilder]).
+     * Removes a previously registered [CommandRegistrar], used when an add-on is torn down.
+     *
+     * Brigadier cannot remove a node from a built dispatcher, so the cache is dropped and
+     * [getDispatcher] replays the remaining registrars instead.
+     */
+    fun unregister(registrar: CommandRegistrar) {
+        if (directCommandRegistrars.remove(registrar)) {
+            brigadierDispatcher = null
+        }
+    }
+
+    /**
+     * Registers command nodes built at runtime rather than by a [CommandRegistrar].
      *
      * All nodes are replayed whenever the dispatcher is rebuilt. Any node name already
-     * taken on the dispatcher root - by a built-in command or another script - fails
+     * taken on the dispatcher root - by a built-in command or another provider - fails
      * the whole registration, mirroring the previous `addCommand` duplicate-name check.
      * Without this, Brigadier would silently merge the node onto the existing root child,
      * overriding its command or grafting grandchildren into it.
      */
-    fun registerScriptCommands(nodes: Collection<LiteralCommandNode<ClientCommandSource>>) {
+    fun registerNodes(nodes: Collection<LiteralCommandNode<ClientCommandSource>>) {
         // Case-insensitive on purpose: Brigadier merges children by exact name but matches
         // literals case-insensitively, so 'Toggle' must not slip past 'toggle'. Validating
         // everything up front keeps the registry untouched on conflict (no orphans).
         val taken = getDispatcher().root.children.mapTo(hashSetOf()) { it.name.lowercase() }
         val validated = nodes.onEach { node ->
             check(taken.add(node.name.lowercase())) {
-                "Script command '${node.name}' is already registered"
+                "Command '${node.name}' is already registered"
             }
         }
 
-        validated.forEach { scriptCommandNodes[it.name] = it }
+        validated.forEach { dynamicCommandNodes[it.name] = it }
         brigadierDispatcher = null
         getDispatcher()
     }
 
     /**
-     * Unregisters script-provided command nodes by name, rebuilding the dispatcher.
+     * Unregisters dynamically provided command nodes by name, rebuilding the dispatcher.
      */
-    fun unregisterScriptCommands(names: Set<String>) {
-        scriptCommandNodes.keys.removeAll(names)
+    fun unregisterNodes(names: Set<String>) {
+        dynamicCommandNodes.keys.removeAll(names)
         brigadierDispatcher = null
     }
 
@@ -269,7 +280,7 @@ object CommandManager : EventListener {
 
     /**
      * Returns the lazily built [CommandDispatcher], rebuilding it whenever the command
-     * registry changed (see [register] / [registerScriptCommands] / [unregisterScriptCommands]).
+     * registry changed (see [register] / [unregister] / [registerNodes] / [unregisterNodes]).
      */
     private fun getDispatcher(): CommandDispatcher<ClientCommandSource> {
         brigadierDispatcher?.let { return it }
@@ -277,7 +288,7 @@ object CommandManager : EventListener {
         val dispatcher = CommandDispatcher<ClientCommandSource>()
 
         directCommandRegistrars.forEach { it.register(dispatcher) }
-        scriptCommandNodes.values.forEach { dispatcher.root.addChild(it) }
+        dynamicCommandNodes.values.forEach { dispatcher.root.addChild(it) }
 
         brigadierDispatcher = dispatcher
         return dispatcher
@@ -310,7 +321,7 @@ object CommandManager : EventListener {
      *
      * @param cmd The command. If there is no command in it (it is empty or only whitespaces), this method is a no op
      */
-    @ScriptApiRequired
+    @AddonApi
     @JvmName("execute")
     fun execute(cmd: String) {
         val normalized = normalizeCommandSpaces(cmd.trim())

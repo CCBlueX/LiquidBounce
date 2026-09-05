@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
  *
  * Every inbuilt command is an `object` implementing this interface; the [CommandManager]
  * registers them through [CommandManager.register]. Scripts register their command nodes
- * through [CommandManager.registerScriptCommands] instead.
+ * through [CommandManager.registerNodes] instead.
  */
 fun interface CommandRegistrar {
 
