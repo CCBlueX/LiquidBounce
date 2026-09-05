@@ -17,12 +17,17 @@
     let apiSlider: API;
 
     onMount(() => {
+        // The value can sit outside the declared range (e.g. set through the `.value` command),
+        // so widen the slider instead of letting noUiSlider clamp it away.
+        const min = Math.min(cSetting.range.from, cSetting.value.from, cSetting.value.to);
+        const max = Math.max(cSetting.range.to, cSetting.value.from, cSetting.value.to);
+
         apiSlider = noUiSlider.create(slider, {
             start: [cSetting.value.from, cSetting.value.to],
             connect: true,
             range: {
-                min: cSetting.range.from,
-                max: cSetting.range.to,
+                min,
+                max,
             },
             step: 1,
         });
