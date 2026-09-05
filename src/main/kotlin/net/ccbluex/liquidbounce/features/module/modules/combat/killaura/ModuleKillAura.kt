@@ -392,6 +392,23 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      *  @return The best spot to attack the entity
      */
     private fun findRotation(entity: Entity, range: Float, wallsRange: Float): RotationWithVector? {
+        if (rotations.lazyRotation) {
+            val currentRotation = RotationManager.currentRotation ?: player.rotation
+            val currentHit = isLookingAtEntity(
+                fromEntity = player,
+                toEntity = entity,
+                rotation = currentRotation,
+                range = range.toDouble(),
+                throughWallsRange = wallsRange.toDouble(),
+            )
+
+            if (currentHit != null) {
+                debugParameter("Lazy Rotation") { true }
+                return RotationWithVector(currentRotation, currentHit.location)
+            }
+        }
+
+        debugParameter("Lazy Rotation") { false }
         val eyes = player.eyePosition
         val point = pointTracker.findPoint(eyes, entity)
 
