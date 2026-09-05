@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.config.types.FileValue
 import net.ccbluex.liquidbounce.config.types.RangedValue
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.features.inventoryPreset.InventoryPreset
 import net.ccbluex.liquidbounce.config.types.Vec3Value
 import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
 import net.ccbluex.liquidbounce.config.types.list.ItemListValue
@@ -273,6 +274,17 @@ open class ValueGroup(
         valueType: ValueType = ValueType.INVALID,
         aliases: List<String> = emptyList(),
     ) = value(Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType))
+
+    /**
+     * Adds an inventory preset value to this value group.
+     * The preset is represented by a [InventoryPreset] and serialized through the dedicated gson adapters.
+     */
+    @Suppress("unused")
+    fun inventoryPreset(): Value<InventoryPreset> = value(
+        name = "InventoryPreset",
+        defaultValue = InventoryPreset(),
+        valueType = ValueType.INVENTORY_PRESET,
+    )
 
     internal inline fun <T : MutableCollection<E>, reified E> list(
         name: String,

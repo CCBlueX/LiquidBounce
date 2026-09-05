@@ -21,6 +21,7 @@
     import ItemListSetting from "../list/ItemListSetting.svelte";
     import RegistryListSetting from "../list/RegistryListSetting.svelte";
     import CurveSetting from "../CurveSetting.svelte";
+    import InventoryPresetValue from "../inventoryPreset/InventoryPresetValue.svelte";
     import RegistryMutableListSetting from "../list/RegistryMutableListSetting.svelte";
 
     export let setting: ModuleSetting;
@@ -75,6 +76,8 @@
         <KeySetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "CURVE"}
         <CurveSetting {path} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "INVENTORY_PRESET"}
+        <InventoryPresetValue bind:setting={setting} on:change/>
     {:else}
         <div style="color: var(--clickgui-text-color)">Unsupported setting {setting.valueType}</div>
     {/if}

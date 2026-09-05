@@ -1,0 +1,11 @@
+@use "sass:color";
+@use "../../../../../colors.scss" as *;
+
+.item-background {
+  background-color: color-mix(in srgb, var(--clickgui-base-color) 85%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--clickgui-text-color) 15%, black);
+
+  &:hover {
+    outline: 1px solid color-mix(in srgb, var(--clickgui-text-color) 30%, black);
+  }
+}
