@@ -66,7 +66,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         tree(TargetRenderer(this, targetTracker))
     }
     private val pointTracker = tree(PointTracker(this))
-    private val lazyRotation by boolean("LazyRotation", true)
+    private val lazyRotation by boolean("LazyRotation", false)
 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
