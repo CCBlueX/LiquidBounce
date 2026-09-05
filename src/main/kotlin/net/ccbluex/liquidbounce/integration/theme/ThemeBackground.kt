@@ -22,6 +22,8 @@ import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline
+import com.mojang.renderpearl.api.pipeline.ShaderSource
+import com.mojang.renderpearl.api.pipeline.ShaderType
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.textures.FilterMode
@@ -181,20 +183,24 @@ sealed interface ThemeBackground : Closeable {
         override fun onResourceReload() {
             val generation = ++compileGeneration
             compiledPipeline = null
-            gpuDevice.compilePipeline(pipeline, { id, _ ->
-                if (id == fshId) {
-                    fragmentShader
-                } else {
+            val shaderSource = object : ShaderSource {
+                override fun getShader(id: Identifier, type: ShaderType): String? {
+                    if (id == fshId) return fragmentShader
                     error("Unknown shader id: $id")
                 }
-            }, Util.backgroundExecutor()).thenAcceptAsync({ pending ->
-                if (generation != compileGeneration) {
-                    return@thenAcceptAsync
-                }
-                val compiled = pending.finishCompile() ?: return@thenAcceptAsync
-                compiledPipeline = compiled
-                MixinRenderSystemAccessor.getCurrentPipelineCache().insert(pipeline, compiled)
-            }, mc)
+
+                override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
+                override fun close() { }
+            }
+            gpuDevice.compilePipeline(pipeline, shaderSource, Util.backgroundExecutor())
+                .thenAcceptAsync({ pending ->
+                    if (generation != compileGeneration) {
+                        return@thenAcceptAsync
+                    }
+                    val compiled = pending.finishCompile() ?: return@thenAcceptAsync
+                    compiledPipeline = compiled
+                    MixinRenderSystemAccessor.getCurrentPipelineCache().insert(pipeline, compiled)
+                }, mc)
         }
 
         private fun resizeIfNeeded(

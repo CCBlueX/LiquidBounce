@@ -38,12 +38,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.SubmitNodeStorage;
-import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
-import org.joml.Matrix4fc;
 import org.joml.Vector4f;
-import org.jspecify.annotations.Nullable;
 import org.joml.Vector4fc;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
@@ -65,9 +62,9 @@ public abstract class MixinLevelRenderer {
     @Shadow
     private SubmitNodeStorage submitNodeStorage;
 
+    @Final
     @Shadow
-    @Nullable
-    public abstract RenderTarget entityOutlineTarget();
+    private RenderTarget entityOutlineTarget;
 
     @Unique
     private boolean liquid_bounce$hasCustomOutlineMesh = false;
@@ -153,7 +150,7 @@ public abstract class MixinLevelRenderer {
     @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;executeOutline(Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;)V", shift = At.Shift.AFTER))
     private void onRenderGlow(CallbackInfo ci) {
         var minecraft = Minecraft.getInstance();
-        var entityOutlineFb = entityOutlineTarget();
+        var entityOutlineFb = entityOutlineTarget;
         if (entityOutlineFb == null
             || !minecraft.gameRenderer.gameRenderState().levelRenderState.shouldShowEntityOutlines) {
             return;

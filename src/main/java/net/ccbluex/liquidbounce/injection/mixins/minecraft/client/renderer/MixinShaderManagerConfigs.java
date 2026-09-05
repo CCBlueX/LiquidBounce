@@ -33,14 +33,14 @@ import java.util.Locale;
 @Mixin(targets = "net.minecraft.client.renderer.ShaderManager$Configs")
 public abstract class MixinShaderManagerConfigs {
 
-    @Inject(method = "get", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getShader", at = @At("HEAD"), cancellable = true)
     private void getLiquidBounceShader(
         Identifier id,
         ShaderType type,
         CallbackInfoReturnable<String> cir
     ) {
         if (id.getNamespace().equals(LiquidBounce.CLIENT_NAME.toLowerCase(Locale.ROOT))) {
-            cir.setReturnValue(ClientShaders.Companion.get(id, type));
+            cir.setReturnValue(ClientShaders.Companion.getShader(id, type));
         }
     }
 }

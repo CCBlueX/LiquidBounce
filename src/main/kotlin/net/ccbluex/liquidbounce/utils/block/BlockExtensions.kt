@@ -651,7 +651,7 @@ fun doBreak(
 
     if (interaction.continueDestroyBlock(blockPos, direction)) {
         swingMode.swing(InteractionHand.MAIN_HAND)
-        world.addBreakingBlockEffect(blockPos, direction)
+        world.addBreakingBlockEffects(blockPos, direction, false)
     }
 }
 

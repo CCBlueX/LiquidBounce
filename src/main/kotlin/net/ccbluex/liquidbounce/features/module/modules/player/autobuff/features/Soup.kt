@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.util.Prediction
 
 internal object Soup : HealthBasedBuff("Soup") {
 
@@ -54,8 +55,9 @@ internal object Soup : HealthBasedBuff("Soup") {
             waitTicks(wait.random())
 
             if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot != HotbarItemSlot.OFFHAND) {
-                player.drop(true)
-                SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
+                if (player.drop(slot.itemStack, true, Prediction.PREDICTED) != null) {
+                    SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
+                }
             }
         }
     }
