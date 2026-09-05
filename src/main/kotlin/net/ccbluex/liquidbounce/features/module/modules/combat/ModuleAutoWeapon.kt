@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -37,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.item.WeaponType
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.isAxe
@@ -65,6 +67,14 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     private val autoShieldBreak by boolean("AutoShieldBreak", true)
     private val autoMace by boolean("AutoMace", true)
+
+    private object KnockbackStick : ToggleableValueGroup(this, "KnockbackStick", false) {
+        val range by float("Range", 3.0f, 1.0f..6.0f)
+    }
+
+    init {
+        tree(KnockbackStick)
+    }
 
     private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
 
@@ -169,6 +179,23 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     }
 
     private fun determineWeaponSlot(target: LivingEntity?, enforceShield: Boolean = false): HotbarItemSlot? {
+        // Switch to knockback stick when close to the target
+        if (KnockbackStick.enabled && target != null) {
+            val distance = player.distanceTo(target)
+            debugParameter("KnockbackStick Distance") { "%.2f".format(distance) }
+
+            if (distance <= KnockbackStick.range) {
+                val stick = Slots.Hotbar.findClosestSlot { stack ->
+                    WeaponType.KNOCKBACK.test(stack)
+                }
+
+                if (stick != null) {
+                    debugParameter("KnockbackStick") { true }
+                    return stick
+                }
+            }
+        }
+
         val itemCategorization = ItemCategorization(Slots.Hotbar)
         val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
