@@ -274,36 +274,77 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = value(Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType))
 
-    internal inline fun <T : MutableCollection<E>, reified E> list(
+    // The list builders come in pairs: a non-inline overload taking an explicit element [Class] is
+    // the stable contract add-ons compile against, and a `reified` overload is sugar over it. The
+    // inline body is copied into the caller, so a public inline builder would freeze this
+    // implementation into every published add-on jar.
+
+    fun <T : MutableCollection<E>, E> list(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java))
+        innerType: Class<E>,
+    ) = value(ListValue(name, defaultValue, innerValueType = valueType, innerType = innerType))
 
-    internal inline fun <T : MutableCollection<E>, reified E> mutableList(
+    inline fun <T : MutableCollection<E>, reified E> list(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(MutableListValue(name, defaultValue, valueType, E::class.java))
+    ) = list(name, defaultValue, valueType, E::class.java)
 
-    internal inline fun <T : MutableSet<E>, reified E> itemList(
+    fun <T : MutableCollection<E>, E> mutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(MutableListValue(name, defaultValue, valueType, innerType))
+
+    inline fun <T : MutableCollection<E>, reified E> mutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = mutableList(name, defaultValue, valueType, E::class.java)
+
+    fun <T : MutableSet<E>, E> itemList(
         name: String,
         defaultValue: T,
         items: Set<ItemListValue.NamedItem<E>>,
         valueType: ValueType,
-    ) = value(ItemListValue(name, defaultValue, items, valueType, E::class.java))
+        innerType: Class<E>,
+    ) = value(ItemListValue(name, defaultValue, items, valueType, innerType))
 
-    internal inline fun <T : SequencedSet<E>, reified E> registryList(
+    inline fun <T : MutableSet<E>, reified E> itemList(
+        name: String,
+        defaultValue: T,
+        items: Set<ItemListValue.NamedItem<E>>,
+        valueType: ValueType,
+    ) = itemList(name, defaultValue, items, valueType, E::class.java)
+
+    fun <T : SequencedSet<E>, E> registryList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(RegistryListValue(name, defaultValue, valueType, E::class.java))
+        innerType: Class<E>,
+    ) = value(RegistryListValue(name, defaultValue, valueType, innerType))
 
-    internal inline fun <T : MutableList<E>, reified E> registryMutableList(
+    inline fun <T : SequencedSet<E>, reified E> registryList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(RegistryMutableListValue(name, defaultValue, valueType, E::class.java))
+    ) = registryList(name, defaultValue, valueType, E::class.java)
+
+    fun <T : MutableList<E>, E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(RegistryMutableListValue(name, defaultValue, valueType, innerType))
+
+    inline fun <T : MutableList<E>, reified E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = registryMutableList(name, defaultValue, valueType, E::class.java)
 
     private fun <T : Any> rangedValue(
         name: String,

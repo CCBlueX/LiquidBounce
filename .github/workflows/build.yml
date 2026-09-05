@@ -5,6 +5,8 @@ on:
     branches: [ nextgen ]
   pull_request:
     branches: [ nextgen ]
+  release:
+    types: [ published ]
 
 jobs:
   extract-versions:
@@ -101,6 +103,19 @@ jobs:
           CI: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew build -x test -x detekt
+      - name: Publish snapshot to maven.ccbluex.net
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          LB_VERSION: ${{ needs.extract-versions.outputs.lb_version }}
+          MINECRAFT_VERSION: ${{ needs.extract-versions.outputs.minecraft_version }}
+        run: |
+          set -euo pipefail
+
+          # A moving snapshot add-ons can track, plus a commit-pinned one they can lock to.
+          ./gradlew publish -x test -x detekt
+          ./gradlew publish -x test -x detekt \
+            -Ppublish.version="${LB_VERSION}+${MINECRAFT_VERSION}-${GITHUB_SHA::7}-SNAPSHOT"
       - name: Upload artifact
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
@@ -142,10 +157,43 @@ jobs:
             -F "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" \
             https://api.liquidbounce.net/api/v1/version/new
 
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: extract-versions
+    if: github.event_name == 'release'
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Cache npm dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('src-theme/package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+      - name: Setting up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: ${{ needs.extract-versions.outputs.jdk_version }}
+      - name: Grant permissions to src-theme
+        run: sudo chmod -R 777 src-theme
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+      - name: Publish release to maven.ccbluex.net
+        env:
+          CI: true
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        run: ./gradlew publish -x test -x detekt
+
   verify-pr:
     runs-on: ubuntu-latest
     needs: extract-versions
-    if: github.ref != 'refs/heads/nextgen'
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v6

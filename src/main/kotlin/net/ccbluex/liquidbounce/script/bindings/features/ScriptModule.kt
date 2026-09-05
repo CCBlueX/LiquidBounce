@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.script.bindings.features
 
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.event.EVENT_NAME_TO_CLASS
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
@@ -138,7 +137,7 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
      */
     private fun hookHandler(eventName: String) {
         // Get event case-insensitive
-        val clazz = EVENT_NAME_TO_CLASS[eventName] ?: return
+        val clazz = EventManager.eventClassByName(eventName) ?: return
 
         EventManager.registerEventHook(
             clazz,

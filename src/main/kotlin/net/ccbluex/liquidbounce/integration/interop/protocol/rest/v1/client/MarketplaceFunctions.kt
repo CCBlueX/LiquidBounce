@@ -20,9 +20,11 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -54,7 +56,13 @@ private fun Route.getMarketplaceItems() = get {
     val limit = call.queryParameters["limit"]?.toIntOrNull() ?: 12
     val query = call.queryParameters["query"]
     val typeStr = call.queryParameters["type"]
-    val type = typeStr?.let { MarketplaceItemType.valueOf(it.uppercase()) }
+    val type = typeStr?.let { name ->
+        MarketplaceItemType.entries.find { it.tag.equals(name, ignoreCase = true) }
+            ?: return@get call.respondText(
+                "Unknown marketplace item type '$name'",
+                status = HttpStatusCode.BadRequest,
+            )
+    }
     val featured = call.queryParameters["featured"]?.toBoolean() ?: true
 
     val response = MarketplaceApi.getMarketplaceItems(page, limit, query, type, featured)

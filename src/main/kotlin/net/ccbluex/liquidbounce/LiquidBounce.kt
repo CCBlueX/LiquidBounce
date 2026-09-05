@@ -41,6 +41,8 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.addon.AddonManager
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -233,6 +235,7 @@ object LiquidBounce : EventListener {
 
         // Load all configurations
         ConfigSystem.loadAll()
+        AddonManager.notifyConfigsLoaded()
 
         isInitialized = true
         logger.info("$CLIENT_NAME has been successfully initialized.")
@@ -286,16 +289,24 @@ object LiquidBounce : EventListener {
         ServerObserver
         ItemImageAtlas
 
+        // Instantiates add-on entrypoints and registers their translations. No add-on logic runs
+        // here - that is initializeFeatures.
+        AddonManager.discover()
+
         scriptEngineJob.join()
     }
 
     /**
-     * Initializes in-built and script features.
+     * Initializes in-built, add-on and script features.
      */
     private fun initializeFeatures() {
         // Register commands and modules
         CommandManager.registerInbuilt()
         ModuleManager.registerInbuilt()
+
+        // Categories first: constructing an add-on module requires its category to exist.
+        AddonManager.registerCategories()
+        AddonManager.initializeAddons()
 
         // Load user scripts
         runCatching(ScriptManager::loadAll).onFailure { error ->
@@ -380,6 +391,7 @@ object LiquidBounce : EventListener {
             ThemeManager.init()
             // Preload marketplace items
             ConfigSystem.load(MarketplaceManager)
+            AddonInstaller.stageSubscribedAddons()
             ConfigSystem.load(ThemeManager)
             ThemeManager.load()
         }
@@ -447,6 +459,9 @@ object LiquidBounce : EventListener {
         ioScope.launch {
             ClientInteropServer.stop()
         }
+
+        // Let add-ons flush their state before configs are written back to disk
+        AddonManager.shutdown()
 
         // Save all configurations
         ConfigSystem.storeAll()
