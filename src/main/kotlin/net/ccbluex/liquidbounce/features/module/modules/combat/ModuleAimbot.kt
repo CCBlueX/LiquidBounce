@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.Entity
@@ -65,6 +66,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         tree(TargetRenderer(this, targetTracker))
     }
     private val pointTracker = tree(PointTracker(this))
+    private val lazyRotation by boolean("LazyRotation", true)
 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
@@ -170,6 +172,22 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
         for (entity in targetTracker.targets()) {
+            if (lazyRotation) {
+                val currentRotation = player.rotation
+                val currentHit = isLookingAtEntity(
+                    fromEntity = player,
+                    toEntity = entity,
+                    rotation = currentRotation,
+                    range = targetTracker.maxRange.toDouble(),
+                    throughWallsRange = 0.0,
+                )
+
+                if (currentHit != null) {
+                    targetTracker.target = entity
+                    return entity to RotationWithVector(currentRotation, currentHit.location)
+                }
+            }
+
             val eyes = player.eyePosition
             val point = pointTracker.findPoint(eyes, entity)
 

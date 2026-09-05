@@ -62,7 +62,7 @@ internal class PointProcessorLazy(parent: EventListener) : PointProcessor(parent
         this.currentPoint = point
         this.currentThreshold = threshold.random()
 
-        return currentPoint
+        return point
     }
 
 
