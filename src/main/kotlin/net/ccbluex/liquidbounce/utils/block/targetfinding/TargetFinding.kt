@@ -162,10 +162,12 @@ class PlayerLocationOnPlacement(
  * @param interactionDirection the direction the interaction should take place in. If the [blockPosToInteractWith] is
  * not the target pos, this will always point to it
  */
-data class BlockTargetPlan(
+private data class BlockTargetPlan(
     val blockPosToInteractWith: BlockPos,
     val interactionDirection: Direction,
 ) {
+
+    // FIXME: find actual point with raycast
     /**
      * The center on the target block face
      *
@@ -185,9 +187,35 @@ data class BlockTargetPlan(
 
 }
 
-enum class BlockTargetingMode {
-    PLACE_AT_NEIGHBOR,
-    REPLACE_EXISTING_BLOCK
+private enum class BlockTargetingMode {
+    PLACE_AT_NEIGHBOR {
+        override fun getTargetPlan(
+            pos: BlockPos,
+            direction: Direction
+        ): BlockTargetPlan? {
+            val currPos = pos.offset(direction.opposite.unitVec3i)
+            val currState = currPos.getState() ?: return null
+
+            if (currState.canBeReplaced()) {
+                return null
+            }
+
+            return BlockTargetPlan(currPos, direction)
+        }
+    },
+
+    REPLACE_EXISTING_BLOCK {
+        override fun getTargetPlan(
+            pos: BlockPos,
+            direction: Direction
+        ): BlockTargetPlan = BlockTargetPlan(pos, direction)
+    };
+
+    /**
+     * @return null if it is impossible to target the block with the given parameters
+     */
+    abstract fun getTargetPlan(pos: BlockPos, direction: Direction): BlockTargetPlan?
+
 }
 
 private fun findBestTargetPlanForTargetPosition(
@@ -200,9 +228,7 @@ private fun findBestTargetPlanForTargetPosition(
     val playerEyePositionOnPlacement = targetFindingOptions.playerLocationOnPlacement.eyePos
 
     val options = directions.mapNotNull { direction ->
-        val targetPlan =
-            getTargetPlanForPositionAndDirection(posToInvestigate, direction, mode)
-                ?: return@mapNotNull null
+        val targetPlan = mode.getTargetPlan(posToInvestigate, direction) ?: return@mapNotNull null
 
         // Check if the target face is pointing away from the player
         if (!targetFindingOptions.faceHandlingOptions.considerFacingAwayFaces &&

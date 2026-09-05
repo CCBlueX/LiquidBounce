@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
@@ -66,8 +67,15 @@ import kotlin.random.Random
  */
 object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
 
-    private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
-    private val requiresSight by boolean("RequiresSight", false)
+    private val rotationMode by enumChoice("RotationMode", AimMode.STABILIZED)
+    private val visibilityMode by enumChoice("VisibilityMode", VisibilityMode.VISIBLE)
+
+    @Suppress("unused")
+    private enum class VisibilityMode(override val choiceName: String) : NamedChoice {
+        VISIBLE_AND_RAYTRACED("VisibleAndRaytraced"),
+        VISIBLE("Visible"),
+        ALLOW_NOT_VISIBLE("AllowNotVisible")
+    }
 
     init {
         tree(ScaffoldEagleFeature)
@@ -106,7 +114,8 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             ),
             FaceHandlingOptions(
                 facePositionFactory,
-                considerFacingAwayFaces = ScaffoldDownFeature.shouldGoDown
+                considerFacingAwayFaces = visibilityMode == VisibilityMode.ALLOW_NOT_VISIBLE
+                    || ScaffoldDownFeature.shouldGoDown
             ),
             stackToPlaceWith = bestStack,
             PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose),
@@ -126,12 +135,12 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             }
         }
 
-        if (requiresSight) {
+        if (visibilityMode == VisibilityMode.VISIBLE_AND_RAYTRACED) {
             val target = target ?: return null
             val raycast = traceFromPlayer(rotation = target.rotation)
 
-            if (raycast.type == HitResult.Type.BLOCK && raycast.blockPos == target.interactedBlockPos) {
-                return target.rotation
+            if (raycast.type != HitResult.Type.BLOCK || raycast.blockPos != target.interactedBlockPos) {
+                return null
             }
         }
 
@@ -147,7 +156,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         }
 
         // Allow a non-visible hit result
-        if (ScaffoldDownFeature.shouldGoDown) {
+        if (visibilityMode == VisibilityMode.ALLOW_NOT_VISIBLE || ScaffoldDownFeature.shouldGoDown) {
             return target.blockHitResult
         }
 
@@ -161,7 +170,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             randomization,
         )
 
-        return when (aimMode) {
+        return when (rotationMode) {
             AimMode.CENTER -> CenterTargetPositionFactory
             AimMode.RANDOM -> RandomTargetPositionFactory
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, optimalLine)

@@ -37,12 +37,11 @@ object ScaffoldEagleFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Eag
     private var placedBlocks = 0
 
     @Suppress("unused")
-    private val stateUpdateHandler =
-        handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-            if (!it.sneak && shouldEagle(it.directionalInput)) {
-                it.sneak = true
-            }
+    private val stateUpdateHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { event ->
+        if (shouldEagle(event.directionalInput)) {
+            event.sneak = true
         }
+    }
 
     fun shouldEagle(input: DirectionalInput): Boolean {
         if (ScaffoldDownFeature.shouldFallOffBlock()) {
