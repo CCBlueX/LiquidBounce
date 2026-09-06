@@ -39,6 +39,7 @@
     "minecraft.client.MixinMouseHandler",
     "minecraft.client.MixinMouseHandlerAccessor",
     "minecraft.client.MixinOptions",
+    "minecraft.client.MixinScreenshot",
     "minecraft.client.MixinStringSplitter",
     "minecraft.client.network.MixinCommonNetworkHandler",
     "minecraft.client.network.message.MixinChatListener",
