@@ -18,29 +18,49 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-import net.ccbluex.liquidbounce.features.command.Parameter
-import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import org.graalvm.polyglot.Value
 import org.graalvm.polyglot.proxy.ProxyObject
 
+/**
+ * Validation helpers exposed to scripts as `ParameterValidator`.
+ *
+ * Each function returns a `{ accept: boolean, value?: any, error?: string }` object,
+ * mirroring the contract expected by the `validate` field of script command parameters
+ * (see [net.ccbluex.liquidbounce.script.bindings.features.ScriptCommandBuilder]).
+ */
 @Suppress("unused")
 class ScriptParameterValidator(val bindings: Value) {
 
-    private fun map(param: String, validator: Parameter.Verificator<*>): Value {
-        val v = when (val result = validator.verifyAndParse(param)) {
-            is Result.Ok -> mapOf("accept" to true, "value" to result.mappedResult)
-            is Result.Error -> mapOf("accept" to false, "error" to result.errorMessage)
+    private fun map(param: String, parse: (String) -> Pair<Any?, String?>): Value {
+        val (value, error) = parse(param)
+        val v = if (error == null) {
+            mapOf("accept" to true, "value" to value)
+        } else {
+            mapOf("accept" to false, "error" to error)
         }
 
         return bindings.context.asValue(ProxyObject.fromMap(v))
     }
 
-    fun string(param: String) = map(param, ParameterBuilder.STRING_VALIDATOR)
+    fun string(param: String) = map(param) { it to null }
 
-    fun module(param: String) = map(param, ParameterBuilder.MODULE_VALIDATOR)
+    fun module(param: String) = map(param) { sourceText ->
+        val module = ModuleManager.find { it.name.equals(sourceText, true) }
+        if (module == null) null to "Module '$sourceText' not found" else module to null
+    }
 
-    fun integer(param: String) = map(param, ParameterBuilder.INTEGER_VALIDATOR)
+    fun integer(param: String) = map(param) { sourceText ->
+        val integer = sourceText.toIntOrNull()
+        if (integer == null) null to "'$sourceText' is not a valid integer" else integer to null
+    }
 
-    fun positiveInteger(param: String) = map(param, ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
+    fun positiveInteger(param: String) = map(param) { sourceText ->
+        val integer = sourceText.toIntOrNull()
+        when {
+            integer == null -> null to "'$sourceText' is not a valid integer"
+            integer > 0 -> integer to null
+            else -> null to "The integer must be positive"
+        }
+    }
 }

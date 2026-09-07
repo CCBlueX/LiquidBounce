@@ -139,13 +139,17 @@ public abstract class MixinCamera {
         }
     }
 
-    @Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 modifyPositionVehicle(Vec3 instance, Vec3 vec) {
+    @ModifyArg(
+        method = "alignWithEntity",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(Lnet/minecraft/world/phys/Vec3;)V")
+    )
+    private Vec3 modifyPositionVehicle(Vec3 original) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
-            return vec;
+            return original;
         }
 
-        return ModuleSmoothCamera.shouldApplyChanges() ? vec.add(0, 1, 0) : vec;
+        ModuleSmoothCamera.cameraUpdate(original);
+        return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPos() : original;
     }
 
     @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))

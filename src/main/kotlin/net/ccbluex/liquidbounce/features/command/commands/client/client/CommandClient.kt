@@ -19,34 +19,35 @@
 
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 
 /**
  * Client Command
  *
  * Provides subcommands for client management.
  */
-object CommandClient : Command.Factory {
+object CommandClient : CommandRegistrar {
 
     /**
-     * Creates client command with a variety of subcommands.
+     * Registers the client command with a variety of subcommands.
      */
-    override fun createCommand(): Command {
-        return CommandBuilder.begin("client")
-            .hub()
-            .subcommand(CommandClientInfoSubcommand.infoCommand())
-            .subcommand(CommandClientBrowserSubcommand.browserCommand())
-            .subcommand(CommandClientIntegrationSubcommand.integrationCommand())
-            .subcommand(CommandClientLanguageSubcommand.languageCommand())
-            .subcommand(CommandClientThemeSubcommand.themeCommand())
-            .subcommand(CommandClientAppearanceSubcommand.appearanceCommand())
-            .subcommand(CommandClientPrefixSubcommand.prefixCommand())
-            .subcommand(CommandClientDestructSubcommand.destructCommand())
-            .subcommand(CommandClientAccountSubcommand.accountCommand())
-            .subcommand(CommandClientCosmeticsSubcommand.cosmeticsCommand())
-            .subcommand(CommandClientConfigSubcommand.configCommand())
-            .build()
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("client") {
+            with(CommandClientInfoSubcommand) { info() }
+            with(CommandClientBrowserSubcommand) { browser() }
+            with(CommandClientIntegrationSubcommand) { integration() }
+            with(CommandClientLanguageSubcommand) { language() }
+            with(CommandClientThemeSubcommand) { theme() }
+            with(CommandClientAppearanceSubcommand) { appearance() }
+            with(CommandClientPrefixSubcommand) { prefix() }
+            with(CommandClientDestructSubcommand) { destruct() }
+            with(CommandClientAccountSubcommand) { account() }
+            with(CommandClientCosmeticsSubcommand) { cosmetics() }
+            with(CommandClientConfigSubcommand) { config() }
+        }
     }
 
 }

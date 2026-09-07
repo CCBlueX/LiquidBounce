@@ -25,6 +25,8 @@ import com.mojang.blaze3d.platform.InputConstants
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -94,9 +96,8 @@ open class Value<T : Any>(
     fun asStateFlow(): StateFlow<T> = stateFlow
 
     /**
-     * If true, value will not be included in generated public config
-     *
-     * @see
+     * If true, value will not be included in generated public config.
+     * Can be set using [doNotIncludeWhen] or [doNotIncludeAlways].
      */
     @Exclude
     @ProtocolExclude
@@ -104,7 +105,16 @@ open class Value<T : Any>(
         private set
 
     /**
-     * If true, value will not be included in generated RestAPI config
+     * Group for optional inclusion during configuration saving.
+     * Managed by [AutoConfig].
+     */
+    @Exclude
+    @ProtocolExclude
+    var inclusionGroup: OptionalInclusion? = null
+        private set
+
+    /**
+     * If true, value will not be included in generated RestAPI config.
      */
     @Exclude
     @ProtocolExclude
@@ -112,12 +122,27 @@ open class Value<T : Any>(
         private set
 
     /**
-     * If true, value will always keep [inner] equals [defaultValue]
+     * If true, value will always keep [inner] equals [defaultValue].
      */
     @Exclude
     @ProtocolExclude
     var isImmutable = false
         private set
+
+    /**
+     * Checks if this value should be included in the public configuration based on
+     * its [doNotInclude] condition and [inclusionGroup].
+     */
+    fun checkIfInclude(): Boolean {
+        if (doNotInclude.asBoolean) {
+            return false
+        }
+
+        val group = inclusionGroup ?: return true
+        val includeConfiguration = AutoConfig.includeConfiguration
+
+        return group in includeConfiguration.optionalInclusions
+    }
 
     @Exclude
     var key: String? = null
@@ -276,6 +301,10 @@ open class Value<T : Any>(
 
     fun doNotIncludeWhen(condition: BooleanSupplier) = apply {
         doNotInclude = condition
+    }
+
+    open fun inclusionGroup(group: OptionalInclusion) = apply {
+        this.inclusionGroup = group
     }
 
     fun notAnOption() = apply {

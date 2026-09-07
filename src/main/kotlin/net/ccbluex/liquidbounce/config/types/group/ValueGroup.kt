@@ -18,19 +18,14 @@
  */
 package net.ccbluex.liquidbounce.config.types.group
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonNull
 import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachIsInstance
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.types.BindValue
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.CurveValue
@@ -49,13 +44,10 @@ import net.ccbluex.liquidbounce.config.types.list.MutableListValue
 import net.ccbluex.liquidbounce.config.types.list.RegistryListValue
 import net.ccbluex.liquidbounce.config.types.list.RegistryMutableListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.asTagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
-import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
-import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.core.Vec3i
@@ -175,64 +167,11 @@ open class ValueGroup(
     val containedValues: Array<Value<*>>
         get() = this.inner.toTypedArray()
 
-    fun collectValuesRecursively(): Array<Value<*>> {
-        val output = mutableListOf<Value<*>>()
-
-        this.collectValuesRecursivelyInternal(output)
-
-        return output.toTypedArray()
-    }
-
-    protected fun collectValuesRecursivelyInternal(output: MutableList<Value<*>>) {
-        for (currentValue in this.inner) {
-            if (currentValue is ToggleableValueGroup) {
-                output.add(currentValue)
-                currentValue.collectValuesRecursivelyInternal(output)
-            } else {
-                if (currentValue is ValueGroup) {
-                    currentValue.collectValuesRecursivelyInternal(output)
-                } else {
-                    output.add(currentValue)
-                }
-            }
-
-            if (currentValue is ModeValueGroup<*>) {
-                output.add(currentValue)
-
-                currentValue.modes.forEach {
-                    it.collectValuesRecursivelyInternal(output)
-                }
-            }
-        }
-    }
-
-    fun collectValueGroupsRecursively(): Array<ValueGroup> {
-        val output = mutableListOf<ValueGroup>()
-
-        this.collectValueGroupsRecursivelyInternal(output)
-
-        return output.toTypedArray()
-    }
-
-    protected fun collectValueGroupsRecursivelyInternal(output: MutableList<ValueGroup>) {
-        output.add(this)
-        for (currentValue in this.inner) {
-            when (currentValue) {
-                is ModeValueGroup<*> -> {
-                    output.add(currentValue)
-                    currentValue.modes.forEach { it.collectValueGroupsRecursivelyInternal(output) }
-                }
-                is ValueGroup -> currentValue.collectValueGroupsRecursivelyInternal(output)
-            }
-        }
-    }
-
-    fun collectValuesRecursively(prefix: String): Sequence<Value<*>> = sequence {
-        val normalizedPrefix = prefix.lowercase()
+    fun collectValuesRecursively(prefix: String = ""): Sequence<Value<*>> = sequence {
+        val shouldFilterByPrefix = prefix.isNotBlank()
 
         suspend fun SequenceScope<Value<*>>.walk(current: ValueGroup) {
-            val currentKey = current.key?.lowercase()
-            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+            if (shouldFilterByPrefix && !shouldWalkKey(current.key, prefix)) {
                 return
             }
             for (value in current.inner) {
@@ -254,12 +193,11 @@ open class ValueGroup(
         walk(this@ValueGroup)
     }
 
-    fun collectValueGroupsRecursively(prefix: String): Sequence<ValueGroup> = sequence {
-        val normalizedPrefix = prefix.lowercase()
+    fun collectValueGroupsRecursively(prefix: String = ""): Sequence<ValueGroup> = sequence {
+        val shouldFilterByPrefix = prefix.isNotBlank()
 
         suspend fun SequenceScope<ValueGroup>.walk(current: ValueGroup) {
-            val currentKey = current.key?.lowercase()
-            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+            if (shouldFilterByPrefix && !shouldWalkKey(current.key, prefix)) {
                 return
             }
             yield(current)
@@ -278,13 +216,10 @@ open class ValueGroup(
     }
 
     private fun shouldWalkKey(currentKey: String?, prefix: String): Boolean {
-        if (prefix.isBlank()) {
-            return true
-        }
         if (currentKey == null) {
             return false
         }
-        return currentKey.startsWith(prefix) || prefix.startsWith(currentKey)
+        return currentKey.startsWith(prefix, ignoreCase = true) || prefix.startsWith(currentKey, ignoreCase = true)
     }
 
     /**
@@ -292,6 +227,14 @@ open class ValueGroup(
      */
     override fun restore() {
         inner.forEach(Value<*>::restore)
+    }
+
+    override fun inclusionGroup(group: OptionalInclusion) = apply {
+        super.inclusionGroup(group)
+
+        for (v in inner) {
+            v.inclusionGroup(group)
+        }
     }
 
     // Common value types
@@ -305,7 +248,7 @@ open class ValueGroup(
             logger.warn("ValueGroup '${valueGroup.name}' is already added to a parent '${valueGroup.base?.name}'")
         }
 
-        inner.add(valueGroup)
+        value(valueGroup)
         valueGroup.base = this
         return valueGroup
     }
@@ -329,50 +272,38 @@ open class ValueGroup(
         defaultValue: T,
         valueType: ValueType = ValueType.INVALID,
         aliases: List<String> = emptyList(),
-    ) = Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType))
 
     internal inline fun <T : MutableCollection<E>, reified E> list(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java))
 
     internal inline fun <T : MutableCollection<E>, reified E> mutableList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = MutableListValue(name, defaultValue, valueType, E::class.java).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(MutableListValue(name, defaultValue, valueType, E::class.java))
 
     internal inline fun <T : MutableSet<E>, reified E> itemList(
         name: String,
         defaultValue: T,
         items: Set<ItemListValue.NamedItem<E>>,
         valueType: ValueType,
-    ) = ItemListValue(name, defaultValue, items, valueType, E::class.java).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(ItemListValue(name, defaultValue, items, valueType, E::class.java))
 
     internal inline fun <T : SequencedSet<E>, reified E> registryList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = RegistryListValue(name, defaultValue, valueType, E::class.java).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(RegistryListValue(name, defaultValue, valueType, E::class.java))
 
     internal inline fun <T : MutableList<E>, reified E> registryMutableList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = RegistryMutableListValue(name, defaultValue, valueType, E::class.java).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(RegistryMutableListValue(name, defaultValue, valueType, E::class.java))
 
     private fun <T : Any> rangedValue(
         name: String,
@@ -381,16 +312,16 @@ open class ValueGroup(
         suffix: String,
         valueType: ValueType,
         aliases: List<String> = emptyList(),
-    ) = RangedValue(
-        name,
-        aliases = aliases,
-        defaultValue = defaultValue,
-        range = range,
-        suffix = suffix,
-        valueType = valueType,
-    ).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(
+        RangedValue(
+            name,
+            aliases = aliases,
+            defaultValue = defaultValue,
+            range = range,
+            suffix = suffix,
+            valueType = valueType,
+        )
+    )
 
     // Fixed data types
 
@@ -437,9 +368,7 @@ open class ValueGroup(
         InputBind(InputConstants.Type.KEYSYM, default, InputBind.BindAction.TOGGLE)
     )
 
-    fun bind(name: String, default: InputBind) = BindValue(name, defaultValue = default).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    fun bind(name: String, default: InputBind) = value(BindValue(name, defaultValue = default))
 
     fun key(name: String, default: Int) = key(name, InputConstants.Type.KEYSYM.getOrCreate(default))
 
@@ -470,7 +399,7 @@ open class ValueGroup(
         default: Vec3i = Vec3i.ZERO,
         useLocateButton: Boolean = true,
         aliases: List<String> = emptyList(),
-    ): Value<Vec3i> = Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_I).also(inner::add)
+    ): Value<Vec3i> = value(Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_I))
 
     @JvmOverloads
     fun vec3d(
@@ -478,7 +407,7 @@ open class ValueGroup(
         default: Vec3 = Vec3.ZERO,
         useLocateButton: Boolean = true,
         aliases: List<String> = emptyList(),
-    ): Value<Vec3> = Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_D).also(inner::add)
+    ): Value<Vec3> = value(Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_D))
 
     fun <C : SequencedSet<Block>> blocks(name: String, default: C) =
         registryList(name, default, ValueType.BLOCK)
@@ -497,6 +426,9 @@ open class ValueGroup(
     fun <C : SequencedSet<MobEffect>> mobEffects(name: String, default: C) =
         registryList(name, default, ValueType.MOB_EFFECT)
 
+    fun <C : SequencedSet<Identifier>> enchantments(name: String, default: C) =
+        registryList(name, default, ValueType.ENCHANTMENT)
+
     fun <C : SequencedSet<Identifier>> c2sPackets(name: String, default: C) =
         registryList(name, default, ValueType.C2S_PACKET)
 
@@ -513,14 +445,12 @@ open class ValueGroup(
         xAxis: Axis,
         yAxis: Axis,
         tension: Float = CurveValue.DEFAULT_TENSION,
-    ) = CurveValue(name, default, xAxis, yAxis, tension).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(CurveValue(name, default, xAxis, yAxis, tension))
 
     inline fun curve(name: String, block: CurveValue.Builder.() -> Unit): CurveValue {
         val builder = CurveValue.Builder()
         builder.name = name
-        return builder.apply(block).build().also(::value)
+        return value(builder.apply(block).build())
     }
 
     fun file(
@@ -528,9 +458,7 @@ open class ValueGroup(
         default: File? = null,
         dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
         supportedExtensions: Set<String>? = null,
-    ) = FileValue(name, default, dialogMode, supportedExtensions).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(FileValue(name, default, dialogMode, supportedExtensions))
 
     inline fun <reified T> multiEnumChoice(
         name: String,
@@ -568,9 +496,7 @@ open class ValueGroup(
         choices: Set<T>,
         canBeNone: Boolean,
         isOrderSensitive: Boolean,
-    ) = MultiChoiceListValue(name, default, choices, canBeNone, isOrderSensitive).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ) = value(MultiChoiceListValue(name, default, choices, canBeNone, isOrderSensitive))
 
     inline fun <reified T> enumChoice(
         name: String,
@@ -583,9 +509,7 @@ open class ValueGroup(
         default: T,
         choices: Set<T>,
         aliases: List<String> = emptyList(),
-    ): ChoiceListValue<T> = ChoiceListValue(name, defaultValue = default, choices = choices, aliases = aliases).apply {
-        this@ValueGroup.inner.add(this)
-    }
+    ): ChoiceListValue<T> = value(ChoiceListValue(name, defaultValue = default, choices = choices, aliases = aliases))
 
     fun interface ModeBuilder {
         fun ValueGroup.build()
@@ -615,10 +539,9 @@ open class ValueGroup(
         activeCallback: ToIntFunction<List<T>>,
         modesCallback: (ModeValueGroup<T>) -> Array<T>,
     ): ModeValueGroup<T> {
-        return ModeValueGroup(eventListener, name, activeCallback, modesCallback).apply {
-            this@ValueGroup.inner.add(this)
+        return value(ModeValueGroup(eventListener, name, activeCallback, modesCallback).apply {
             this.base = this@ValueGroup
-        }
+        })
     }
 
     protected fun <T : Mode> modes(
@@ -628,6 +551,9 @@ open class ValueGroup(
         choicesCallback: (ModeValueGroup<T>) -> Array<T>,
     ) = modes(eventListener, name, { activeIndex }, choicesCallback)
 
-    fun <V : Value<*>> value(value: V) = value.apply { this@ValueGroup.inner.add(this) }
+    fun <V : Value<*>> value(value: V) = value.apply {
+        this@ValueGroup.inner.add(this)
+        this@ValueGroup.inclusionGroup?.let { this.inclusionGroup(it) }
+    }
 
 }

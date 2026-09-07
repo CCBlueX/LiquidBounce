@@ -90,7 +90,7 @@ object ScriptInteractionUtil {
             return false
         }
 
-        doPlacement(rayTraceResult, hand = hand)
+        doPlacement(rayTraceResult, bestPlacement.rotation, hand = hand)
         return true
     }
 

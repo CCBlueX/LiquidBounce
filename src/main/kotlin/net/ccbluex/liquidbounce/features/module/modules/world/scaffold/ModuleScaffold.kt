@@ -553,7 +553,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             && SimulatePlacementAttempts.clicker.isClickTick
         ) {
             SimulatePlacementAttempts.clicker.click {
-                doPlacement(currentCrosshairTarget!!, suitableHand!!, {
+                doPlacement(currentCrosshairTarget!!, currentRotation, suitableHand!!, {
                     commonPlaceSucceed(currentCrosshairTarget.targetBlockPos)
                     true
                 }, swingMode = swingMode)
@@ -611,7 +611,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         // Take the fall off position before placing the block
         val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
 
-        doPlacement(currentCrosshairTarget, handToInteractWith, {
+        doPlacement(currentCrosshairTarget, currentRotation, handToInteractWith, {
             commonPlaceSucceed(target.placedBlock)
             currentTarget = null
             wasSuccessful = true

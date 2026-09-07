@@ -59,6 +59,7 @@ object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, alia
         DoRender.BOSS_BARS,
         DoRender.EXPLOSION_PARTICLES,
         DoRender.WORLD_BORDER,
+        DoRender.FALLING_LEAVES,
     )
 
     private val fireOpacity by int("FireOpacity", 100, 0..100, suffix = "%")
@@ -103,4 +104,5 @@ enum class DoRender(override val tag: String) : Tagged {
     BOSS_BARS("BossBars"),
     EXPLOSION_PARTICLES("ExplosionParticles"),
     WORLD_BORDER("WorldBorder"),
+    FALLING_LEAVES("FallingLeaves"),
 }

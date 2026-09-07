@@ -208,7 +208,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             };
 
             fun test(string: String): Boolean {
-                return string.chars().allMatch(this)
+                return string.codePoints().allMatch(this)
             }
         }
 
@@ -267,12 +267,8 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
-            is ClientboundMoveEntityPacket -> {
-                if (!packet.hasPosition() || !InvalidGround.enabled) {
-                    return@handler
-                }
-
-                val entity = packet.getEntity(world) ?: return@handler
+            is ClientboundMoveEntityPacket if packet.hasPosition() && InvalidGround.enabled -> mc.execute {
+                val entity = packet.getEntity(world) ?: return@execute
                 val id = entity.id
                 val currentValue = flyingSet.getOrDefault(id, 0)
                 if (entity.onGround() && entity.yo != entity.y) {
@@ -288,26 +284,28 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
                 }
             }
 
-            is ClientboundUpdateAttributesPacket -> {
+            is ClientboundUpdateAttributesPacket -> mc.execute {
                 attributesSet.add(packet.entityId)
             }
 
             is ClientboundAnimatePacket -> {
                 when (packet.action) {
-                    ClientboundAnimatePacket.SWING_MAIN_HAND, ClientboundAnimatePacket.SWING_OFF_HAND -> {
+                    ClientboundAnimatePacket.SWING_MAIN_HAND, ClientboundAnimatePacket.SWING_OFF_HAND -> mc.execute {
                         swungSet.add(packet.id)
                     }
-                    ClientboundAnimatePacket.CRITICAL_HIT, ClientboundAnimatePacket.MAGIC_CRITICAL_HIT -> {
+                    ClientboundAnimatePacket.CRITICAL_HIT, ClientboundAnimatePacket.MAGIC_CRITICAL_HIT -> mc.execute {
                         crittedSet.add(packet.id)
                     }
                 }
             }
 
-            is ClientboundRemoveEntitiesPacket -> {
+            is ClientboundRemoveEntitiesPacket -> mc.execute {
                 packet.entityIds.forEachInt { entityId ->
                     attributesSet.remove(entityId)
                     flyingSet.remove(entityId)
                     hitSet.remove(entityId)
+                    swungSet.remove(entityId)
+                    crittedSet.remove(entityId)
                     notAlwaysInRadiusSet.remove(entityId)
                     armorSet.remove(entityId)
                 }

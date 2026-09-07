@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
@@ -145,7 +146,8 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val action = currentAction ?: return@handler
-        val resolvedHitResult = action.resolveHitResult(traceFromPlayer()) ?: return@handler
+        val rotation = RotationManager.currentRotation ?: player.rotation
+        val resolvedHitResult = action.resolveHitResult(traceFromPlayer(rotation)) ?: return@handler
 
         SilentHotbar.selectSlotSilently(this, action.slot, 1)
         val onSuccess = {
@@ -155,6 +157,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
 
         doPlacement(
             resolvedHitResult,
+            rotation,
             hand = action.slot.useHand,
             onItemUseSuccess = onSuccess,
             onPlacementSuccess = onSuccess,

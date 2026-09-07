@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import org.cef.browser.CefRequestContext
 import net.minecraft.client.input.InputQuirks
 import org.apache.logging.log4j.Logger
 import org.joml.component1
@@ -46,11 +47,22 @@ class CefBrowser(
     viewport: BrowserViewport,
     val settings: BrowserSettings,
     override var priority: Short = 0,
+    override val isIncognito: Boolean = false,
     inputAcceptor: InputAcceptor? = null
 ) : Browser, InputHandler, MinecraftShortcuts {
 
     internal val browserApi: MCEFBrowser
     private val logger: Logger
+
+    /**
+     * Request context of an incognito browser, disposed along with it.
+     *
+     * A context created this way has no cache path, so CEF keeps its cookies, local storage and cache
+     * in memory and throws all of it away with the context. The global context, which every other
+     * browser shares, persists them to disk instead.
+     */
+    private val requestContext: CefRequestContext? =
+        if (isIncognito) CefRequestContext.createContext(null) else null
 
     init {
         require(url.isNotEmpty()) { "URL cannot be empty." }
@@ -64,7 +76,8 @@ class CefBrowser(
             MCEFBrowserSettings(
                 settings.currentFps,
                 GlobalBrowserSettings.accelerated?.get() == true
-            )
+            ),
+            requestContext
         ).apply {
             addOnPaintListener {
                 comparePaintWithViewpoint(it.width, it.height)
@@ -196,6 +209,9 @@ class CefBrowser(
         inputListener?.close()
         backend.removeBrowser(this)
         browserApi.close()
+
+        // Only after the browser is gone, since the context outlives nothing else.
+        requestContext?.dispose()
     }
 
     override fun update(width: Int, height: Int) {
@@ -214,6 +230,7 @@ class CefBrowser(
         "hash='${browserApi.hashCode()}', " +
         "id='${browserApi.identifier}', " +
         "url='$url', " +
+        "incognito=$isIncognito, " +
         "visible=$visible, " +
         "priority=$priority" +
         ")"

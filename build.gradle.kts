@@ -116,8 +116,14 @@ dependencies {
     api(libs.exploitPreventer.api)
     runtimeOnly(libs.exploitPreventer)
 
-    // Minecraft Authlib
-    jij(libs.mcAuthlib)
+    // Minecraft account authentication (Microsoft/Xbox Live/XSTS token chain)
+    jij(libs.minecraftauth)
+
+    // TheAltening alt service
+    jij(libs.thealtening)
+
+    // Mojang REST APIs
+    jij(libs.bundles.retrofit)
 
     // LWJGL EGL
     jij(libs.lwjgl.egl)

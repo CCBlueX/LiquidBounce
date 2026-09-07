@@ -18,15 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.command
 
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.ParseResults
+import com.mojang.brigadier.StringReader
+import com.mojang.brigadier.suggestion.Suggestion
 import com.mojang.brigadier.suggestion.Suggestions
-import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import com.mojang.brigadier.tree.LiteralCommandNode
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntList
-import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
-import it.unimi.dsi.fastutil.objects.ObjectArrays
-import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
-import net.ccbluex.liquidbounce.features.command.CommandManager.getSubCommand
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.deepestExecutableContext
+import net.ccbluex.liquidbounce.features.command.brigadier.offset
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandBind
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandBinds
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandClear
@@ -71,32 +77,28 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+import java.util.Locale
+import java.util.TreeMap
 import java.util.concurrent.CompletableFuture
 import kotlin.math.min
-
-/**
- * Key: Command name or alias
- * Value: Command
- */
-private val rootCommandMap = Object2ObjectRBTreeMap<String, Command>(String.CASE_INSENSITIVE_ORDER)
-
-/**
- * Command set. Sorted with name.
- */
-private val commandSet = ObjectRBTreeSet<Command>(Comparator.comparing({ it.name }, String.CASE_INSENSITIVE_ORDER))
 
 /**
  * Contains routines for handling commands
  * and the command registry
  *
+ * All commands are registered directly against a Brigadier [CommandDispatcher] (see the
+ * `brigadier` package DSL); the legacy meta-model has been removed.
+ *
  * @author superblaubeere27 (@team CCBlueX)
  */
-object CommandManager : Collection<Command> by commandSet {
+@Suppress("detekt:TooManyFunctions")
+object CommandManager : EventListener {
 
     object GlobalSettings : ValueGroup("Commands") {
 
@@ -122,111 +124,185 @@ object CommandManager : Collection<Command> by commandSet {
         CommandExecutor
     }
 
+    /**
+     * Rebuilds the command tree on world join/leave: argument types capture the
+     * registry access / feature flags at construction time (see [invalidate]).
+     */
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        invalidate()
+    }
+
     fun registerInbuilt() {
-        val commands = arrayOf(
-            CommandClient,
-            CommandFriend,
-            CommandToggle,
-            CommandBind,
-            CommandCenter,
-            CommandHelp,
-            CommandBinds,
-            CommandClear,
-            CommandHide,
-            CommandInvsee,
-            CommandPanic,
-            CommandValue,
-            CommandPing,
-            CommandRemoteView,
-            CommandXRay,
-            CommandTargets,
-            CommandConfig,
-            CommandLocalConfig,
-            CommandAutoDisable,
-            CommandScript,
-            CommandSay,
-            CommandFakePlayer,
-            CommandAutoAccount,
-            CommandDebug,
-            CommandItemRename,
-            CommandItemGive,
-            CommandItemSkull,
-            CommandItemStack,
-            CommandItemEnchant,
-            CommandUsername,
-            CommandCoordinates,
-            CommandVClip,
-            CommandTeleport,
-            CommandPlayerTeleport,
-            CommandTps,
-            CommandServerInfo,
-            CommandModels,
-            CommandTranslate,
-            CommandAutoTranslate,
-            CommandMarketplace
-        )
-
-        commands.forEach {
-            addCommand(it.createCommand())
-        }
-    }
-
-    fun addCommand(command: Command) {
-        if (!commandSet.add(command)) {
-            error("Command '${command.name}' already exists")
-        }
-        rootCommandMap.putCommand(command)
-    }
-
-    fun removeCommand(command: Command) {
-        if (!commandSet.remove(command) ||
-            rootCommandMap.remove(command.name) !== command ||
-            command.aliases.any { rootCommandMap.remove(it) !== command }
-        ) {
-            error("Command '${command.name}' does not exist")
-        }
+        register(CommandPing)
+        register(CommandTps)
+        register(CommandUsername)
+        register(CommandClear)
+        register(CommandCoordinates)
+        register(CommandHide)
+        register(CommandPanic)
+        register(CommandSay)
+        register(CommandTranslate)
+        register(CommandAutoTranslate)
+        register(CommandItemRename)
+        register(CommandMarketplace)
+        register(CommandToggle)
+        register(CommandTargets)
+        register(CommandBinds)
+        register(CommandAutoDisable)
+        register(CommandInvsee)
+        register(CommandXRay)
+        register(CommandValue)
+        register(CommandBind)
+        register(CommandAutoAccount)
+        register(CommandCenter)
+        register(CommandHelp)
+        register(CommandRemoteView)
+        register(CommandDebug)
+        register(CommandFriend)
+        register(CommandClient)
+        register(CommandConfig)
+        register(CommandLocalConfig)
+        register(CommandScript)
+        register(CommandFakePlayer)
+        register(CommandItemGive)
+        register(CommandItemSkull)
+        register(CommandItemStack)
+        register(CommandItemEnchant)
+        register(CommandVClip)
+        register(CommandTeleport)
+        register(CommandPlayerTeleport)
+        register(CommandServerInfo)
+        register(CommandModels)
     }
 
     /**
-     * Returns the instance of the subcommand that would be executed by a command
-     * e.g. `getSubCommand(".friend add Player137 &3superblaubeere27")`
-     * would return the instance of `add`
-     *
-     * @return A [Pair] of the subcommand and the index of the tokenized [cmd] it is in, if none was found, null
+     * Lazily built Brigadier command tree. Rebuilt whenever a command is registered or
+     * unregistered (see [register] / [registerScriptCommands] / [unregisterScriptCommands]).
      */
-    private fun getSubCommand(cmd: String): ResolvedSubCommand? {
-        return getSubCommand(tokenizeCommand(cmd).tokens)
+    @Volatile
+    private var brigadierDispatcher: CommandDispatcher<ClientCommandSource>? = null
+
+    /**
+     * Registration functions of commands written directly against the Brigadier tree
+     * (see the [CommandRegistrar] interface); replayed whenever the dispatcher is rebuilt.
+     */
+    private val directCommandRegistrars = mutableListOf<CommandRegistrar>()
+
+    /**
+     * Script-provided command nodes (main nodes plus alias redirects), keyed by node name.
+     * Replayed whenever the dispatcher is rebuilt; see [registerScriptCommands].
+     */
+    private val scriptCommandNodes =
+        TreeMap<String, LiteralCommandNode<ClientCommandSource>>(String.CASE_INSENSITIVE_ORDER)
+
+    /**
+     * Registers a command written directly against the Brigadier tree.
+     *
+     * The registrar is recorded so it is replayed whenever the dispatcher is rebuilt
+     * (see [getDispatcher]). If a dispatcher is already cached, the registrar is applied
+     * to it once; if the cache is empty, the next [getDispatcher] rebuild includes it.
+     */
+    fun register(registrar: CommandRegistrar) {
+        directCommandRegistrars.add(registrar)
+        brigadierDispatcher?.let { registrar.register(it) }
     }
 
     /**
-     * Used for this implementation of [getSubCommand] and other command parsing methods
+     * Registers script-provided command nodes
+     * (see [net.ccbluex.liquidbounce.script.bindings.features.ScriptCommandBuilder]).
      *
-     * @param args The input command split on spaces
-     * @param currentCommand The current command that is being researched
-     * @param idx The current index that is researched only used for implementation
-     *
-     * @return A [Pair] of the subcommand and the index of [args] it is in, if none was found, null
+     * All nodes are replayed whenever the dispatcher is rebuilt. Any node name already
+     * taken on the dispatcher root - by a built-in command or another script - fails
+     * the whole registration, mirroring the previous `addCommand` duplicate-name check.
+     * Without this, Brigadier would silently merge the node onto the existing root child,
+     * overriding its command or grafting grandchildren into it.
      */
-    private fun getSubCommand(
-        args: List<String>,
-        currentCommand: ResolvedSubCommand? = null,
-        idx: Int = 0
-    ): ResolvedSubCommand? {
-        // Return the last command when there are no more arguments
-        if (idx >= args.size) {
-            return currentCommand
+    fun registerScriptCommands(nodes: Collection<LiteralCommandNode<ClientCommandSource>>) {
+        // Case-insensitive on purpose: Brigadier merges children by exact name but matches
+        // literals case-insensitively, so 'Toggle' must not slip past 'toggle'. Validating
+        // everything up front keeps the registry untouched on conflict (no orphans).
+        val taken = getDispatcher().root.children.mapTo(hashSetOf()) { it.name.lowercase() }
+        val validated = nodes.onEach { node ->
+            check(taken.add(node.name.lowercase())) {
+                "Script command '${node.name}' is already registered"
+            }
         }
 
-        // If currentCommand is null, idx must be 0, so search in all commands
-        val commandMap = currentCommand?.command?.subcommandMap ?: rootCommandMap
+        validated.forEach { scriptCommandNodes[it.name] = it }
+        brigadierDispatcher = null
+        getDispatcher()
+    }
 
-        // Look if something matches the current index, if it does, look if there are further matches
-        commandMap[args[idx]]?.let {
-            return getSubCommand(args, ResolvedSubCommand(it, idx), idx + 1)
+    /**
+     * Unregisters script-provided command nodes by name, rebuilding the dispatcher.
+     */
+    fun unregisterScriptCommands(names: Set<String>) {
+        scriptCommandNodes.keys.removeAll(names)
+        brigadierDispatcher = null
+    }
+
+    /**
+     * Drops the cached dispatcher so it is rebuilt with fresh argument state on next use.
+     *
+     * Called on world join/leave ([net.ccbluex.liquidbounce.event.events.WorldChangeEvent]):
+     * argument types capture the registry access / feature flags at construction time
+     * (e.g. `itemArgument()`, `resourceArgument()`), so a world change invalidates them.
+     */
+    fun invalidate() {
+        brigadierDispatcher = null
+    }
+
+    /**
+     * The literal nodes registered on the root of the current dispatcher, exposing the
+     * command names (and aliases as redirecting literals) to consumers such as the help command.
+     */
+    internal val rootCommandNodes: Collection<LiteralCommandNode<ClientCommandSource>>
+        get() = getDispatcher().root.children.filterIsInstance<LiteralCommandNode<ClientCommandSource>>()
+
+    /**
+     * Root literals that are real commands (not redirecting aliases), sorted by name.
+     * Used by `.help` and unknown-command hints.
+     */
+    internal val mainCommandNodes: List<LiteralCommandNode<ClientCommandSource>>
+        get() = rootCommandNodes.filter { it.redirect == null }.sortedBy { it.name }
+
+    /**
+     * Returns the lazily built [CommandDispatcher], rebuilding it whenever the command
+     * registry changed (see [register] / [registerScriptCommands] / [unregisterScriptCommands]).
+     */
+    private fun getDispatcher(): CommandDispatcher<ClientCommandSource> {
+        brigadierDispatcher?.let { return it }
+
+        val dispatcher = CommandDispatcher<ClientCommandSource>()
+
+        directCommandRegistrars.forEach { it.register(dispatcher) }
+        scriptCommandNodes.values.forEach { dispatcher.root.addChild(it) }
+
+        brigadierDispatcher = dispatcher
+        return dispatcher
+    }
+
+    /**
+     * Counts how many leading tokens of [tokens] form the command path (root command name
+     * plus subcommand names), by walking the literal children of the current node
+     * case-insensitively. The first token that does not match any literal child starts
+     * the argument part.
+     */
+    private fun resolvePathTokenCount(tokens: List<String>): Int {
+        var node: com.mojang.brigadier.tree.CommandNode<ClientCommandSource> = getDispatcher().root
+        var pathTokenCount = 0
+
+        for (token in tokens) {
+            val child = node.children.firstOrNull {
+                it is LiteralCommandNode && it.name.equals(token, ignoreCase = true)
+            } ?: break
+
+            node = child
+            pathTokenCount++
         }
 
-        // If no match was found, currentCommand is the subcommand that we searched for
-        return currentCommand
+        return pathTokenCount
     }
 
     /**
@@ -237,155 +313,92 @@ object CommandManager : Collection<Command> by commandSet {
     @ScriptApiRequired
     @JvmName("execute")
     fun execute(cmd: String) {
-        val args = tokenizeCommand(cmd).tokens
+        val normalized = normalizeCommandSpaces(cmd.trim())
+        val tokens = tokenizeCommand(normalized).tokens
 
         // Prevent bugs
-        if (args.isEmpty()) {
+        if (tokens.isEmpty()) {
             return
         }
 
-        // getSubcommands will only return null if it returns on the first index.
-        // since the first index must contain a valid command, it is reported as
-        // unknown
-        val pair = getSubCommand(args) ?: throw CommandException(
-            translation(
-                "liquidbounce.commandManager.unknownCommand",
-                args[0]
-            ),
-            usageInfo = if (rootCommandMap.isEmpty() || GlobalSettings.hintCount == 0) {
-                emptyList()
-            } else {
-                commandSet.sortedBy { command ->
-                    var distance = levenshtein(args[0], command.name)
-                    if (command.aliases.isNotEmpty()) {
-                        distance = min(
-                            distance,
-                            command.aliases.minOf { levenshtein(args[0], it) }
-                        )
-                    }
-                    distance
-                }.take(GlobalSettings.hintCount).map { command ->
-                    if (command.aliases.isEmpty()) {
-                        command.nameAsText()
-                    } else {
-                        textOf(
-                            command.nameAsText(),
-                            " (".asPlainText(ChatFormatting.DARK_GRAY),
-                            command.aliases.joinToText(", ".asPlainText(ChatFormatting.DARK_GRAY)),
-                            ")".asPlainText(ChatFormatting.DARK_GRAY),
-                        )
-                    }
-                }
-            }
-        )
-        val command = pair.command
+        // Lower-case only the command path (root command and subcommand names) to preserve
+        // the case-insensitive behaviour of command paths; argument values stay untouched.
+        val pathTokenCount = resolvePathTokenCount(tokens)
+        val lowered = lowercaseCommandPath(normalized, pathTokenCount)
+        val parse = getDispatcher().parse(StringReader(lowered), ClientCommandSource)
 
-        // If the command is not executable, don't allow it to be executed
-        if (!command.executable) {
-            throw CommandException(
-                translation("liquidbounce.commandManager.invalidUsage", args[0]),
-                usageInfo = command.usage()
+        if (parse.reader.canRead()) {
+            throw mapParseFailure(
+                parse,
+                tokens.first(),
+                usage = buildUsage(parse.context.build(lowered)),
+                unknownHints = unknownCommandHints(tokens.first()),
             )
         }
 
-        // The index the command is in
-        val idx = pair.index
-        val remainingArgsCount = args.size - idx - 1
+        val context = parse.context.build(lowered)
+        val executorContext = context.deepestExecutableContext()
+        val executor = executorContext?.command
 
-        // If there are more arguments for a command that takes no parameters
-        if (command.parameters.isEmpty() && idx != args.size - 1) {
+        if (executorContext == null || executor == null) {
+            // The path resolved to a command that is not executable (a hub command) and
+            // there is no matching subcommand to delegate to.
             throw CommandException(
-                translation("liquidbounce.commandManager.commandTakesNoParameters"),
-                usageInfo = command.usage()
+                translation("liquidbounce.commandManager.invalidUsage", tokens.first()),
+                usageInfo = buildUsage(context)
             )
         }
 
-        // If there is a required parameter after the supply of arguments ends, it is absent
-        if (remainingArgsCount < command.parameters.size && command.parameters[remainingArgsCount].required) {
-            throw CommandException(
-                translation(
-                    "liquidbounce.commandManager.parameterRequired",
-                    command.parameters[remainingArgsCount].name
-                ),
-                usageInfo = command.usage()
-            )
-        }
-
-        // The values of the parameters. One for each parameter
-        val parsedParameters = arrayOfNulls<Any>(remainingArgsCount)
-
-        // If the last parameter is a vararg, there might be no argument for it.
-        // In this case, its value might be null, which is against the specification.
-        // To fix this, if the last parameter is a vararg, initialize it with an empty array
-        if (command.parameters.lastOrNull()?.vararg == true && command.parameters.size == remainingArgsCount) {
-            parsedParameters[remainingArgsCount - 1] = ObjectArrays.EMPTY_ARRAY
-        }
-
-        for (i in (idx + 1) until args.size) {
-            val paramIndex = i - idx - 1
-
-            // Check if there is a parameter for this index
-            if (paramIndex >= command.parameters.size) {
-                throw CommandException(
-                    translation("liquidbounce.commandManager.unknownParameter", args[i]),
-                    usageInfo = command.usage()
-                )
-            }
-
-            val parameter = command.parameters[paramIndex]
-
-            // Special treatment for varargs
-            val parameterValue = if (parameter.vararg) {
-                val outputArray = arrayOfNulls<Any>(args.size - i)
-
-                for (j in i until args.size) {
-                    outputArray[j - i] = parseParameter(command, args[j], parameter)
-                }
-
-                outputArray
-            } else {
-                parseParameter(command, args[i], parameter)
-            }
-
-            // Store the parsed value in the parameter array
-            parsedParameters[paramIndex] = parameterValue
-
-            // Varargs can only occur at the end and the following args shouldn't be treated
-            // as parameters, so we can end
-            if (parameter.vararg) {
-                break
-            }
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        val ctx = Command.Handler.Context(command, parsedParameters as Array<out Any>)
-        with(command.handler!!) { ctx() }
+        executor.run(executorContext)
     }
 
     /**
-     * The routine that handles the parsing of a single parameter
+     * Builds the list of "did you mean" hints for unknown commands, sorted by
+     * Levenshtein distance to the typed command name.
      */
-    private fun parseParameter(command: Command, argument: String, parameter: Parameter<*>): Any {
-        if (parameter.verifier == null) {
-            return argument
+    private fun unknownCommandHints(argument: String): List<Component> {
+        val mainNodes = mainCommandNodes
+
+        if (mainNodes.isEmpty() || GlobalSettings.hintCount == 0) {
+            return emptyList()
         }
 
-        when (val validationResult = parameter.verifier.verifyAndParse(argument)) {
-            is Parameter.Verificator.Result.Ok -> {
-                return validationResult.mappedResult
+        return mainNodes.sortedBy { node ->
+            var distance = levenshtein(argument, node.name)
+            val aliases = rootCommandNodes.filter { it.redirect === node }
+            if (aliases.isNotEmpty()) {
+                distance = min(
+                    distance,
+                    aliases.minOf { levenshtein(argument, it.name) }
+                )
             }
-            is Parameter.Verificator.Result.Error -> {
-                throw CommandException(
-                    translation(
-                        "liquidbounce.commandManager.invalidParameterValue",
-                        parameter.name,
-                        argument,
-                        validationResult.errorMessage
-                    ),
-                    usageInfo = command.usage()
+            distance
+        }.take(GlobalSettings.hintCount).map { node ->
+            val aliases = rootCommandNodes.filter { it.redirect === node }.map { it.name }
+            if (aliases.isEmpty()) {
+                node.name.asPlainText()
+            } else {
+                net.ccbluex.liquidbounce.utils.text.textOf(
+                    node.name.asPlainText(),
+                    " (".asPlainText(ChatFormatting.DARK_GRAY),
+                    aliases.joinToText(", ".asPlainText(ChatFormatting.DARK_GRAY)),
+                    ")".asPlainText(ChatFormatting.DARK_GRAY),
                 )
             }
         }
+    }
+
+    /**
+     * Builds the usage lines for a command context, based on the Brigadier tree
+     * ([CommandDispatcher.getSmartUsage]).
+     */
+    private fun buildUsage(context: com.mojang.brigadier.context.CommandContext<ClientCommandSource>): List<Component> {
+        val lastNode = context.nodes.lastOrNull()?.node ?: return emptyList()
+        val commandPath = context.nodes.joinToString(" ") { it.node.name }
+
+        return getDispatcher().getSmartUsage(lastNode, ClientCommandSource)
+            .values
+            .map { usage -> "$commandPath $usage".asPlainText() }
     }
 
     /**
@@ -445,8 +458,6 @@ object CommandManager : Collection<Command> by commandSet {
         return TokenizationResult(output, outputIndices)
     }
 
-    private data class ResolvedSubCommand(val command: Command, val index: Int)
-
     data class TokenizationResult(val tokens: List<String>, val tokenStartIndices: IntList)
 
     private fun stripOuterQuotes(token: CharSequence): String {
@@ -466,48 +477,16 @@ object CommandManager : Collection<Command> by commandSet {
         }
 
         try {
-            val cmd = origCmd.substring(GlobalSettings.prefix.length, start)
-            val tokenized = tokenizeCommand(cmd)
-            var args = tokenized.tokens
+            val body = origCmd.substring(GlobalSettings.prefix.length, start)
+            val tokens = tokenizeCommand(body).tokens
+            val pathTokenCount = resolvePathTokenCount(tokens)
 
-            if (args.isEmpty()) {
-                args = listOf("")
-            }
+            val lowered = lowercaseCommandPath(body, pathTokenCount)
+            val dispatcher = getDispatcher()
+            val parse = dispatcher.parse(StringReader(lowered), ClientCommandSource)
 
-            val nextParameter = !args.last().endsWith(' ') && cmd.endsWith(' ')
-            var currentArgStart = tokenized.tokenStartIndices.lastOrNull() ?: 0
-
-            if (nextParameter) {
-                currentArgStart = cmd.length
-            }
-
-            val builder = SuggestionsBuilder(origCmd, currentArgStart + GlobalSettings.prefix.length)
-
-            // getSubcommands will only return null if it returns on the first index.
-            // since the first index must contain a valid command, it is reported as
-            // unknown
-            val pair = getSubCommand(args)
-
-            if (args.size == 1 && (pair == null || !nextParameter)) {
-                val arg = args[0]
-                // get all commands that start with the argument
-                rootCommandMap.subMap(
-                    arg,
-                    arg + Char.MAX_VALUE,
-                ).values.forEach { command ->
-                    builder.suggest(command.name)
-                }
-
-                return builder.buildFuture()
-            }
-
-            if (pair == null) {
-                return Suggestions.empty()
-            }
-
-            pair.command.autoComplete(builder, tokenized, pair.index, nextParameter)
-
-            return builder.buildFuture()
+            return dispatcher.getCompletionSuggestions(parse, lowered.length)
+                .thenApply { suggestions -> shiftSuggestionRanges(suggestions, GlobalSettings.prefix.length) }
         } catch (e: Exception) {
             logger.error("Failed to supply autocompletion suggestions for '$origCmd'", e)
 
@@ -515,5 +494,156 @@ object CommandManager : Collection<Command> by commandSet {
         }
     }
 
+    /**
+     * Translates suggestion ranges from the command body (without prefix) back into
+     * the full input string (with prefix), which is what the Minecraft GUI expects.
+     */
+    private fun shiftSuggestionRanges(suggestions: Suggestions, offset: Int): Suggestions {
+        if (offset == 0) {
+            return suggestions
+        }
 
+        val shifted = suggestions.list.map { suggestion ->
+            Suggestion(
+                suggestion.range.offset(offset),
+                suggestion.text
+            )
+        }
+
+        return Suggestions(
+            suggestions.range.offset(offset),
+            shifted
+        )
+    }
+
+
+}
+
+/**
+ * Lower-cases only the leading [tokenCount] space-separated tokens of [cmd] (the command
+ * path: root command name and subcommand names), leaving all argument values untouched.
+ *
+ * This preserves the previous case-insensitive behaviour of command paths while keeping
+ * parameter values (e.g. `.rename MyItem`) intact.
+ */
+internal fun lowercaseCommandPath(cmd: String, tokenCount: Int): String {
+    if (tokenCount <= 0) {
+        return cmd
+    }
+
+    val builder = StringBuilder(cmd.length)
+    var tokenIndex = 0
+    var index = 0
+
+    while (index < cmd.length && tokenIndex < tokenCount) {
+        if (cmd[index] == ' ') {
+            builder.append(cmd[index])
+            index++
+            continue
+        }
+
+        val start = index
+        while (index < cmd.length && cmd[index] != ' ') {
+            index++
+        }
+
+        builder.append(cmd.substring(start, index).lowercase(Locale.ROOT))
+        tokenIndex++
+    }
+
+    builder.append(cmd.substring(index))
+
+    return builder.toString()
+}
+
+/**
+ * Collapses runs of whitespace outside of quoted strings into a single space, mirroring
+ * the previous tokenizer behaviour that ignored repeated spaces (`.cmd a   b` was parsed
+ * as two tokens). Content inside quotes is preserved verbatim.
+ */
+internal fun normalizeCommandSpaces(input: String): String {
+    val builder = StringBuilder(input.length)
+    var inQuote = false
+    var escaped = false
+    var lastWasSpace = false
+
+    for (c in input) {
+        if (escaped) {
+            builder.append(c)
+            escaped = false
+            lastWasSpace = false
+            continue
+        }
+
+        when {
+            c == '\\' -> {
+                builder.append(c)
+                escaped = true
+                lastWasSpace = false
+            }
+            c == '"' -> {
+                inQuote = !inQuote
+                builder.append(c)
+                lastWasSpace = false
+            }
+            c == ' ' && !inQuote -> {
+                if (!lastWasSpace) {
+                    builder.append(c)
+                }
+                lastWasSpace = true
+            }
+            else -> {
+                builder.append(c)
+                lastWasSpace = false
+            }
+        }
+    }
+
+    return builder.toString()
+}
+
+/**
+ * Maps leftover parse input to a [CommandException], mirroring vanilla
+ * [CommandDispatcher.execute]: a single parse exception is surfaced, an empty
+ * context range is an unknown command, and leftover tokens after a matched
+ * command are invalid usage.
+ *
+ * Built-in Brigadier argument failures keep their raw message (a translatable
+ * component is preserved as-is, so vanilla errors localize through the client
+ * language system). When the failing exception carries cursor information (from `createWithContext`),
+ * the Brigadier context string (`...input<--[HERE]`) is appended as a dim line,
+ * mirroring vanilla's error rendering. Usage is attached here because argument
+ * types do not see the command tree at parse time.
+ */
+internal fun mapParseFailure(
+    parse: ParseResults<ClientCommandSource>,
+    commandName: String,
+    usage: List<Component>,
+    unknownHints: List<Component> = emptyList(),
+): CommandException {
+    val single = parse.exceptions.values.singleOrNull()
+    return when {
+        single != null -> {
+            val message = single.rawMessage.let { it as? Component }?.copy()
+                ?: (single.message ?: single.rawMessage.string).asText()
+            val context = single.context
+            val usageWithErrorContext = if (context != null) {
+                usage + translation("liquidbounce.commandManager.errorContext", context)
+                    .withStyle(ChatFormatting.DARK_GRAY)
+            } else {
+                usage
+            }
+            CommandException(message, usageInfo = usageWithErrorContext)
+        }
+        parse.context.range.isEmpty ->
+            CommandException(
+                translation("liquidbounce.commandManager.unknownCommand", commandName),
+                usageInfo = unknownHints,
+            )
+        else ->
+            CommandException(
+                translation("liquidbounce.commandManager.invalidUsage", commandName),
+                usageInfo = usage,
+            )
+    }
 }

@@ -19,9 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -29,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.BuiltinParticle
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -44,8 +43,6 @@ import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
-import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
@@ -133,41 +130,6 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
                 particle.render(event.partialTicks)
             }
         }
-    }
-
-    @Suppress("UNUSED")
-    private enum class BuiltinParticle(
-        override val tag: String,
-        fileName: String,
-    ) : Tagged {
-        /**
-         * Original: IDK (first: https://github.com/CCBlueX/LiquidBounce/pull/4976)
-         */
-        ORBIZ("Orbiz", "glow"),
-
-        /**
-         * Original: https://www.svgrepo.com/svg/528677/stars-minimalistic
-         * Modified: @sqlerrorthing
-         */
-        STAR("Star", "star"),
-
-        /**
-         * Original: https://www.svgrepo.com/svg/487288/dollar?edit=true
-         * Modified: @sqlerrorthing
-         */
-        DOLLAR("Dollar", "dollar"),
-
-        CROWN("Crown", "crown"),
-        HEART("Heart", "heart"),
-        LIGHTNING("Lightning", "lightning"),
-        LINE("Line", "line"),
-        POINT("Point", "point"),
-        RHOMBUS("Rhombus", "rhombus"),
-        SNOWFLAKE("Snowflake", "snowflake"),
-        SPARK("Spark", "spark");
-
-        val image = LiquidBounce.resource("particles/$fileName.png").readNativeImage()
-        val texture = this.image.asTexture { "Builtin Particle $tag" }
     }
 
     private class Particle(var pos: Vec3, val builtinParticle: BuiltinParticle) {

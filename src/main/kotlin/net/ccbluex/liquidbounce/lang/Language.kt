@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
+import net.ccbluex.liquidbounce.utils.client.NullableBypass
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.locale.Language
 import net.minecraft.network.chat.FormattedText
 import net.minecraft.network.chat.MutableComponent
@@ -40,7 +40,7 @@ import net.minecraft.util.StringDecomposer
 import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 
-fun translation(key: String, vararg args: Any): MutableComponent =
+fun translation(key: String, vararg args: Any?): MutableComponent =
     MutableComponent.create(LanguageText(key, args))
 
 object LanguageManager : ValueGroup("Language") {
@@ -53,7 +53,9 @@ object LanguageManager : ValueGroup("Language") {
 
     private val COMMON_UNDERSTOOD_LANGUAGE = ClientLanguage.EN_US
     val MINECRAFT_LANGUAGE: ClientLanguage?
-        get() = languageChoiceFromCode(mc.options.languageCode)
+        get() = NullableBypass.mc()?.let { mc ->
+            languageChoiceFromCode(mc.options.languageCode)
+        }
 
     enum class ClientLanguage(override val tag: String, val code: String? = null) : Tagged {
         AUTO("Auto"),

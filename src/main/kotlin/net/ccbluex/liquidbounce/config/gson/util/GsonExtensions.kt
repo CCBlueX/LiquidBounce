@@ -143,3 +143,35 @@ inline fun <T> Iterable<T>.mapToJsonArray(transform: (T) -> JsonElement?): JsonA
     forEach { a.add(transform(it)) }
     return a
 }
+
+/**
+ * Unlike [JsonObject.get] followed by `asString` and friends, these return `null` for an absent key
+ * instead of throwing.
+ */
+fun JsonObject.string(key: String): String? = if (has(key)) get(key).asString else null
+
+fun JsonObject.int(key: String): Int? = if (has(key)) get(key).asInt else null
+
+fun JsonObject.long(key: String): Long? = if (has(key)) get(key).asLong else null
+
+fun JsonObject.double(key: String): Double? = if (has(key)) get(key).asDouble else null
+
+fun JsonObject.boolean(key: String): Boolean? = if (has(key)) get(key).asBoolean else null
+
+fun JsonObject.obj(key: String): JsonObject? = if (has(key)) get(key).asJsonObject else null
+
+fun JsonObject.array(key: String): JsonArray? = if (has(key)) get(key).asJsonArray else null
+
+fun JsonArray.string(index: Int): String? = getOrNull(index)?.asString
+
+fun JsonArray.int(index: Int): Int? = getOrNull(index)?.asInt
+
+fun JsonArray.long(index: Int): Long? = getOrNull(index)?.asLong
+
+fun JsonArray.double(index: Int): Double? = getOrNull(index)?.asDouble
+
+fun JsonArray.boolean(index: Int): Boolean? = getOrNull(index)?.asBoolean
+
+fun JsonArray.obj(index: Int): JsonObject? = getOrNull(index)?.asJsonObject
+
+fun JsonArray.array(index: Int): JsonArray? = getOrNull(index)?.asJsonArray

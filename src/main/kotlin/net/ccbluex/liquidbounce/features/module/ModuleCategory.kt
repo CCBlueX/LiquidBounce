@@ -18,9 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 
-class ModuleCategory(override val tag: String) : Tagged {
+class ModuleCategory(
+    override val tag: String,
+    val inclusionGroup: OptionalInclusion? = null
+) : Tagged {
 
     @Deprecated(
         message = "For script compatibility only. Use choiceName instead",

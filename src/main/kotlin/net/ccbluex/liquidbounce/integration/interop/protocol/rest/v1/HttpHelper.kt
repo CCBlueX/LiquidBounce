@@ -27,9 +27,7 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respondOutputStream
 import io.ktor.server.response.respondTextWriter
 import net.minecraft.server.packs.resources.Resource
-import java.awt.image.BufferedImage
 import java.nio.channels.Channels
-import javax.imageio.ImageIO
 
 suspend fun ApplicationCall.respondResource(
     resource: Resource,
@@ -47,14 +45,6 @@ suspend fun ApplicationCall.respondImage(
     status: HttpStatusCode? = null,
 ) = respondOutputStream(contentType, status) {
     image.writeToChannel(Channels.newChannel(this))
-}
-
-suspend fun ApplicationCall.respondImage(
-    image: BufferedImage,
-    contentType: ContentType? = ContentType.Image.PNG,
-    status: HttpStatusCode? = null,
-) = respondOutputStream(contentType, status) {
-    ImageIO.write(image, "PNG", this)
 }
 
 suspend fun ApplicationCall.respondJsonWriter(
