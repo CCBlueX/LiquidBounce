@@ -22,7 +22,9 @@ package net.ccbluex.liquidbounce.utils.world
 
 import com.google.common.base.Predicates
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinLevelInvoker
+import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.math.expandToCube
+import net.ccbluex.liquidbounce.utils.math.floorToInt
 import net.minecraft.core.BlockPos
 import net.minecraft.util.AbortableIterationConsumer
 import net.minecraft.util.Continuation
@@ -31,7 +33,9 @@ import net.minecraft.world.attribute.EnvironmentAttributes
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.EntityGetter
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.LevelReader
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.blockscan.BlockMatcher
 import net.minecraft.world.level.chunk.ChunkAccess
 import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.level.chunk.LevelChunkSection
@@ -40,6 +44,7 @@ import net.minecraft.world.level.entity.LevelEntityGetter
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.function.BiPredicate
 import java.util.function.Consumer
 import java.util.function.Predicate
 
@@ -104,6 +109,29 @@ inline fun LevelChunkSection.forEachBlock(action: (localX: Int, localY: Int, loc
  * `index == (y >> 4) - (bottomY >> 4)`
  */
 fun ChunkAccess.sectionBottomY(index: Int): Int = (index + (this.minY shr 4)) shl 4
+
+/**
+ * [LevelReader.findBlocksIn] applies [BlockPos.containing] to both [AABB.getMinPosition] and [AABB.getMaxPosition].
+ * This function uses [floorToInt] of min position and [ceilToInt] of max position.
+ */
+fun LevelReader.findBlocksIntersects(box: AABB): BlockMatcher =
+    this.findBlocksIn(
+        BlockPos(box.minX.floorToInt(), box.minY.floorToInt(), box.minZ.floorToInt()),
+        BlockPos(box.maxX.ceilToInt(), box.maxY.ceilToInt(), box.maxZ.ceilToInt()),
+    )
+
+fun BlockMatcher.anyMatched(predicate: BiPredicate<BlockPos, BlockState>): Boolean {
+    var flag = false
+    this.forEachUntil { pos, state ->
+        if (predicate.test(pos, state)) {
+            flag = true
+            Continuation.ABORT
+        } else {
+            Continuation.CONTINUE
+        }
+    }
+    return flag
+}
 
 inline fun <reified T : Entity> EntityGetter.getEntitiesInCube(
     midPos: Vec3,

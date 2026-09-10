@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.boundsOrNull
 import net.ccbluex.liquidbounce.utils.math.distanceToSqr
+import net.ccbluex.liquidbounce.utils.math.intersects
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -113,6 +114,8 @@ import net.minecraft.world.level.block.RepeaterBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
 import net.minecraft.world.level.block.ShelfMushroomBlock
 import net.minecraft.world.level.block.ShulkerBoxBlock
+import net.minecraft.world.level.block.SlabBlock
+import net.minecraft.world.level.block.StairBlock
 import net.minecraft.world.level.block.StonecutterBlock
 import net.minecraft.world.level.block.SupportType
 import net.minecraft.world.level.block.SweetBerryBushBlock
@@ -200,32 +203,36 @@ fun BlockState.outlineBox(blockPos: BlockPos): AABB {
     return outlineShape.boundsOrNull() ?: FULL_BOX
 }
 
-fun Vec3.searchBlocksInCuboid(radius: Float): Iterable<BlockPos> =
-    BlockPos.betweenClosed(
-        floor(x - radius).toInt(),
-        floor(y - radius).toInt(),
-        floor(z - radius).toInt(),
-        ceil(x + radius).toInt(),
-        ceil(y + radius).toInt(),
-        ceil(z + radius).toInt(),
-    )
-
 /**
  * Scan blocks around the position in a cuboid with filtering.
+ *
+ * Uses [net.minecraft.world.level.LevelReader.findBlocksIn] internally, which
+ * skips whole chunk sections through the palette check and only scans loaded
+ * sections within the world height.
  */
 fun Vec3.searchBlocksInCuboid(
     radius: Float,
     filter: BiPredicate<BlockPos, BlockState>,
-): Sequence<Pair<BlockPos, BlockState>> =
-    searchBlocksInCuboid(radius).asSequence().mapNotNull {
-        val state = it.state ?: return@mapNotNull null
+): List<Pair<BlockPos, BlockState>> {
+    val from = BlockPos(
+        floor(this.x - radius).toInt(),
+        floor(this.y - radius).toInt(),
+        floor(this.z - radius).toInt(),
+    )
+    val to = BlockPos(
+        ceil(this.x + radius).toInt(),
+        ceil(this.y + radius).toInt(),
+        ceil(this.z + radius).toInt(),
+    )
 
-        if (filter.test(it, state)) {
-            it.immutable() to state
-        } else {
-            null
+    return buildList {
+        world.findBlocksIn(from, to).forEach { pos, state ->
+            if (filter.test(pos, state)) {
+                this.add(pos.immutable to state)
+            }
         }
     }
+}
 
 /**
  * Scan blocks around the position in a cuboid, filtered and sorted by shape distance from this [Vec3].
@@ -456,7 +463,7 @@ inline fun AABB.collideBlockIntersects(
             continue
         }
 
-        if (intersects(shape.bounds())) {
+        if (shape intersects this) {
             return true
         }
     }

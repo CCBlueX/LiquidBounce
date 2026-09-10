@@ -31,9 +31,11 @@ import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
-import net.ccbluex.liquidbounce.utils.math.iterateBlockPos
+import net.ccbluex.liquidbounce.utils.math.intersects
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.world.anyMatched
+import net.ccbluex.liquidbounce.utils.world.findBlocksIntersects
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.BasePressurePlateBlock
@@ -177,8 +179,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
             return true
         }
 
-        return boundingBox.iterateBlockPos().any { pos ->
-            val blockState = pos.state ?: return@any false
+        return world.findBlocksIntersects(boundingBox).anyMatched { pos, blockState ->
             val fluidState = blockState.fluidState
             val block = blockState.block
 
@@ -190,7 +191,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
                             false
                         } else {
                             val fluidShape = fluidState.getShape(level, pos)
-                            !fluidShape.isEmpty && boundingBox.intersects(fluidShape.bounds().move(pos))
+                            !fluidShape.isEmpty && fluidShape.move(pos) intersects boundingBox
                         }
                     }
                     Avoid.CACTI -> {
@@ -208,7 +209,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
                             false
                         } else {
                             val shape = blockState.getShape(level, pos)
-                            !shape.isEmpty && boundingBox.intersects(shape.bounds().move(pos))
+                            !shape.isEmpty && shape.move(pos) intersects boundingBox
                         }
                     }
                 }
