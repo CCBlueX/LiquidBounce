@@ -58,6 +58,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.ambient.Bat
 import net.minecraft.world.entity.animal.allay.Allay
 import net.minecraft.world.entity.animal.fish.WaterAnimal
+import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.monster.Monster
@@ -99,6 +100,7 @@ enum class Targets(override val tag: String) : Tagged {
     ANGERABLE("Angerable"),
     WATER_CREATURE("WaterCreature"),
     PASSIVE("Passive"),
+    ARMOR_STAND("ArmorStand"),
     INVISIBLE("Invisible"),
     DEAD("Dead"),
     SLEEPING("Sleeping"),
@@ -160,6 +162,7 @@ private fun Set<Targets>.isInteresting(suspect: Entity, info: EntityTargetingInf
         }
         is WaterAnimal -> Targets.WATER_CREATURE in this
         is AgeableMob, is Bat, is Allay -> Targets.PASSIVE in this
+        is ArmorStand -> Targets.ARMOR_STAND in this
         is Monster, is Enemy -> Targets.HOSTILE in this
         is NeutralMob -> Targets.ANGERABLE in this
 
