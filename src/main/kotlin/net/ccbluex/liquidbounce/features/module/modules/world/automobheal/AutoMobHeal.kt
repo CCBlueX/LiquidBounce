@@ -49,7 +49,6 @@ import net.minecraft.world.entity.animal.wolf.Wolf
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
-import java.util.function.ToIntFunction
 import kotlin.math.abs
 
 /**
@@ -177,7 +176,7 @@ object AutoMobHeal : ClientModule(
             }
 
             private fun foodCandidateComparator(missingHealth: Float): Comparator<FoodCandidate> {
-                return Comparator.comparingInt(ToIntFunction(::bucketPenalty))
+                return Comparator.comparingInt(::bucketPenalty)
                     .thenComparing { wouldWasteHealing(it, missingHealth) }
                     .thenComparingDouble { healingDelta(it, missingHealth).toDouble() }
                     .thenComparing({ it.slot }, HotbarItemSlot.PREFER_NEARBY)

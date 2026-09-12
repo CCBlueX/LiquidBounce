@@ -48,10 +48,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
-import java.util.function.ToDoubleFunction
-
-private inline fun <T> compareBy(keyExtractor: ToDoubleFunction<T>): Comparator<T> =
-    Comparator.comparingDouble(keyExtractor)
+import java.util.Comparator.comparingDouble
 
 enum class AimMode(override val tag: String) : Tagged {
     CENTER("Center"),
@@ -76,7 +73,7 @@ class BlockPlacementTargetFindingOptions(
     companion object {
         @JvmStatic
         fun leastBlockDistanceToLine(line: Line): Comparator<BlockPos> =
-            compareBy { blockPos ->
+            comparingDouble { blockPos ->
                 val shape = blockPos.outlineShape.move(blockPos)
                 if (shape.isEmpty) {
                     -line.distanceToSqr(blockPos.center)
@@ -87,7 +84,7 @@ class BlockPlacementTargetFindingOptions(
 
         @JvmStatic
         fun leastBlockDistanceToPos(pos: Vec3): Comparator<BlockPos> =
-            compareBy { blockPos ->
+            comparingDouble { blockPos ->
                 val shape = blockPos.outlineShape.move(blockPos)
                 if (shape.isEmpty) {
                     -blockPos.distToCenterSqr(pos)
@@ -113,7 +110,7 @@ class BlockOffsetOptions(
         @JvmField
         val Default = BlockOffsetOptions(
             BlockPosOffsets.NO_OFFSET.offsets,
-            compareBy { blockPos ->
+            comparingDouble { blockPos ->
                 val pos = player.position()
                 val shape = blockPos.outlineShape.move(blockPos)
                 if (shape.isEmpty) {

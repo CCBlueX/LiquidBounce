@@ -90,6 +90,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             Items.HAY_BLOCK,
             Items.SLIME_BLOCK,
             Items.HONEY_BLOCK,
+            Items.LADDER,
             // nether
             Items.TWISTING_VINES,
         )
@@ -443,6 +444,7 @@ internal fun wasMlgPlacementApplied(
                     after.block === Blocks.WATER && after.fluidState.isSourceOfType(Fluids.WATER)
             }
             Items.POWDER_SNOW_BUCKET -> before.block !== Blocks.POWDER_SNOW && after.block === Blocks.POWDER_SNOW
+            Items.LADDER -> before.block !== Blocks.LADDER && after.block === Blocks.LADDER
             is BlockItem -> before.block !== item.block && after.block === item.block
             else -> false
         }
