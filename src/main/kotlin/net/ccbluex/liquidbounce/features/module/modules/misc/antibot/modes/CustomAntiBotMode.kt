@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
+import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket
@@ -113,7 +114,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             ),
 
             // Chestplate only
-            ELYTRA("Elytra", Items.ELYTRA),
+            ELYTRA("Elytra", { it.isGlider }),
 
             // Helmet only
             TURTLE_SCUTE("TurtleScute", Items.TURTLE_HELMET),

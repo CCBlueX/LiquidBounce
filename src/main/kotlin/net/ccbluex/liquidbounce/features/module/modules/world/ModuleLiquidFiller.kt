@@ -111,7 +111,7 @@ object ModuleLiquidFiller : ClientModule("LiquidFiller", ModuleCategories.WORLD)
         placeOrder.sort(positions, eyePos)
 
         return positions.mapNotNull { target ->
-            if (useSponge && isWaterTarget(target)) {
+            if (useSponge && world.isWaterAt(target)) {
                 findSpongePlacement(target, scanRange)
             } else {
                 target
@@ -147,12 +147,10 @@ object ModuleLiquidFiller : ClientModule("LiquidFiller", ModuleCategories.WORLD)
         }
 
         return when {
-            useSponge && isWaterTarget(pos) -> spongeSlot
+            useSponge && world.isWaterAt(pos) -> spongeSlot
             else -> normalFillSlot
         }
     }
-
-    private fun isWaterTarget(pos: BlockPos) = world.getBlockState(pos).fluidState.`is`(FluidTags.WATER)
 
     private fun findSpongePlacement(waterPos: BlockPos, scanRange: Double): BlockPos? {
         return waterPos.center.searchBlocksInCuboid(SpongeBlock.MAX_DEPTH.toFloat()) { pos, state ->

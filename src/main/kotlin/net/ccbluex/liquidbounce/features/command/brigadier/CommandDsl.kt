@@ -192,15 +192,14 @@ class CmdLiteralScope internal constructor(
         aliases: List<String> = emptyList(),
         block: CmdLiteralScope.() -> Unit,
     ) {
-        val names = buildList {
-            add(name.lowercase())
-            aliases.forEach { alias ->
-                check(alias.isNotEmpty()) { "Literal '$name' cannot have an empty alias" }
-                add(alias.lowercase())
+        if (aliases.isNotEmpty()) {
+            buildSet(aliases.size + 1) {
+                add(name.lowercase())
+                aliases.forEach { alias ->
+                    check(alias.isNotEmpty()) { "Literal '$name' cannot have an empty alias" }
+                    check(add(alias.lowercase())) { "Literal '$name' has a duplicate alias '$alias'" }
+                }
             }
-        }
-        check(names.size == names.toSet().size) {
-            "Literal '$name' has a duplicate name or alias"
         }
         children.add(CmdLiteralNode(name, "$path.$name", aliases, block))
     }

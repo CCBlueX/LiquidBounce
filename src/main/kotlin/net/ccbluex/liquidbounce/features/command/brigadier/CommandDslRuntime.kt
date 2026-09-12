@@ -141,7 +141,7 @@ internal sealed interface ChainElement
 internal class CmdLiteralNode(
     private val name: String,
     private val path: String,
-    private val aliases: List<String>,
+    private val aliases: Collection<String>,
     private val block: CmdLiteralScope.() -> Unit,
 ) : CmdNode {
 

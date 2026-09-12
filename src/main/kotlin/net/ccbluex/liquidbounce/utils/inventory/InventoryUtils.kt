@@ -40,7 +40,6 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import java.util.SortedSet
 import java.util.function.BiPredicate
-import java.util.function.ToDoubleFunction
 
 fun hasInventorySpace() = player.inventory.nonEquipmentItems.any { it.isEmpty }
 
@@ -119,9 +118,9 @@ fun <T : ItemSlot> Iterable<T>.findBestToolToMineBlock(
 
     if (candidates.size > 1) {
         return candidates.maxWith(
-            Comparator.comparingDouble<T>(ToDoubleFunction {
+            Comparator.comparingDouble<T> {
                 it.itemStack.getDestroySpeedWithEnchantment(blockState).toDouble()
-            }).thenDescending(ItemSlot.PREFER_NEARBY)
+            }.thenDescending(ItemSlot.PREFER_NEARBY)
         )
     }
 

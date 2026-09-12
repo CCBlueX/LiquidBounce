@@ -230,6 +230,9 @@ fun notification(title: Component, message: String, severity: NotificationEvent.
 fun notification(title: String, message: Component, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message.string, severity))
 
+fun notification(title: Component, message: Component, severity: NotificationEvent.Severity) =
+    EventManager.callEvent(NotificationEvent(title.string, message.string, severity))
+
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message, severity))
 

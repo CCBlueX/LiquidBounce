@@ -27,21 +27,34 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.io.File
 
-data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceItemType, var installedRevisionId: Int?) {
+data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceItemType) {
 
-    constructor(item: MarketplaceItem) : this(item.name, item.id, item.type, null) {
+    constructor(item: MarketplaceItem) : this(item.name, item.id, item.type) {
         require(item.type.isSubscribable) { "Type ${item.type} is not subscribable" }
     }
 
     val itemDir
         get() = MarketplaceManager.marketplaceRoot.resolve("items/$id")
+
+    /**
+     * The revision currently unpacked in [itemDir], or `null` when nothing is installed.
+     */
+    private val installedRevisionId: Int?
+        get() = installedRevisionFile?.name?.toInt()
+
+    /**
+     * The revision file currently unpacked in [itemDir], or `null` when nothing is installed.
+     */
+    private val installedRevisionFile: File?
+        get() = itemDir.listFiles(File::isDirectory)
+            ?.filter { it.name.toIntOrNull() != null }
+            ?.maxByOrNull { it.name.toInt() }
 
     /**
      * Get the installation folder of the item.
@@ -53,11 +66,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
      * This ensures instead of e.g., /marketplace/items/265/1713, it returns /marketplace/items/265/1713/dist
      */
     fun getInstallationFolder(): File? {
-        val installedRevisionId = installedRevisionId ?: return null
-        val folder = itemDir.resolve(installedRevisionId.toString())
-        if (!folder.exists() || !folder.isDirectory) {
-            return null
-        }
+        val folder = installedRevisionFile ?: return null
 
         fun File.containsFile(): Boolean {
             return this.isDirectory && !this.listFiles(File::isFile).isNullOrEmpty()
@@ -130,7 +139,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
         }
 
         val revisionDir = itemDir.resolve(revisionId.toString())
-        val previousRevisionDir = installedRevisionId?.let { itemDir.resolve(it.toString()) }
+        val previousRevisionDir = installedRevisionFile
 
         try {
             val taskProgressUpdater = subTask?.let { subTask ->
@@ -144,9 +153,6 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
                 // TODO: Check checksum
                 extractZip(revisionArchiveFile, revisionDir)
             }
-
-            installedRevisionId = revisionId
-            ConfigSystem.store(MarketplaceManager)
         } catch (exception: Exception) {
             if (revisionDir.exists()) {
                 revisionDir.deleteRecursively()
@@ -168,6 +174,5 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             type.reload()
         }
     }
-
 
 }
