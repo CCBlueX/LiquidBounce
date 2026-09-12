@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArraySet
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
@@ -40,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.util.Mth
 import kotlin.random.Random
 
@@ -50,8 +54,12 @@ import kotlin.random.Random
  */
 object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOnQuit = true) {
 
+    private val compareByY = Comparator.comparingInt<BlockPos>(BlockPos::getY)
+
     private val blockPlacer = tree(BlockPlacer("Placer", this, Priority.NORMAL, ::slotFinder))
     private val disableOn by multiEnumChoice("DisableOn", enumSetAllOf<DisableOn>())
+    private val avoidBrokenBlocks by boolean("AvoidBrokenBlocks", true)
+    private val brokenBlockWindow by int("BrokenBlockWindow", 1000, 0..10000, "ms")
     private val placeOrder by enumChoice("PlaceOrder", Order.Normal)
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val blocks by blocks("Blocks", blockSortedSetOf())
@@ -60,8 +68,6 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
         FINISH("Finish"),
         MOVE("Move"),
     }
-
-    private val compareByY = Comparator.comparingInt<BlockPos>(BlockPos::getY)
 
     private enum class Order(override val tag: String) : Tagged {
 
@@ -114,11 +120,13 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     private var rotateClockwise = false
     private var blockList = emptyList<BlockPos>()
     private var moved = false
+    private val recentlyBrokenBlocks = Long2LongOpenHashMap()
 
     override fun onDisabled() {
         startPos.set(BlockPos.ZERO)
         blockList = emptyList()
         moved = false
+        recentlyBrokenBlocks.clear()
         blockPlacer.disable()
     }
 
@@ -142,8 +150,28 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     }
 
     private fun getPositions() {
-        blockList = placeOrder.positions().filter { it.stateOrEmpty.canBeReplaced() }
+        val now = System.currentTimeMillis()
+        recentlyBrokenBlocks.long2LongEntrySet().removeIf { it.longValue + brokenBlockWindow <= now }
+        blockList = placeOrder.positions().filter {
+            it.stateOrEmpty.canBeReplaced() &&
+                (!avoidBrokenBlocks || !recentlyBrokenBlocks.containsKey(it.asLong()))
+        }
         debugParameter("Place Count") { blockList.size }
+    }
+
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> {
+        if (!avoidBrokenBlocks || it.origin != TransferOrigin.OUTGOING) {
+            return@handler
+        }
+
+        val packet = it.packet
+        if (packet is ServerboundPlayerActionPacket &&
+            packet.action == ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK
+        ) {
+            val pos = packet.pos.asLong()
+            mc.execute { recentlyBrokenBlocks.put(pos, System.currentTimeMillis()) }
+        }
     }
 
     @Suppress("unused")
