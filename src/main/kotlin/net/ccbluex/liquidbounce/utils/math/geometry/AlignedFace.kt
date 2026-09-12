@@ -26,6 +26,7 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.LazyThreadSafetyMode.NONE
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -33,6 +34,7 @@ import kotlin.random.Random
 /**
  * A face. Axis aligned
  */
+@Suppress("TooManyFunctions")
 class AlignedFace(from: Vec3, to: Vec3) {
     val from: Vec3 = Vec3(
         min(from.x, to.x),
@@ -45,6 +47,8 @@ class AlignedFace(from: Vec3, to: Vec3) {
         max(from.z, to.z),
     )
 
+    fun asBox(): AABB = AABB(from, to)
+
     val area: Double
         get() {
             val dims = dimensions
@@ -54,12 +58,13 @@ class AlignedFace(from: Vec3, to: Vec3) {
     val center: Vec3
         get() = from.lerp(to, 0.5)
 
-    val dimensions: Vec3
-        get() = Vec3(
+    val dimensions: Vec3 by lazy(NONE) {
+        Vec3(
             to.x - from.x,
             to.y - from.y,
             to.z - from.z,
         )
+    }
 
     fun requireNonEmpty(): AlignedFace? =
         takeUnless { Mth.equal(area, 0.0) }
@@ -82,6 +87,24 @@ class AlignedFace(from: Vec3, to: Vec3) {
             if (from.y == to.y) from.y else Random.nextDouble(from.y, to.y),
             if (from.z == to.z) from.z else Random.nextDouble(from.z, to.z),
         )
+    }
+
+    /**
+     * Samples a point on the face by spreading [a] and [b] over its two variable axes.
+     *
+     * The first variable axis (in x, y, z order) is scaled by [a], the second by [b].
+     * Constant (zero width) axes stay pinned to their `from` coordinate.
+     */
+    fun samplePointOnFace(a: Double, b: Double): Vec3 {
+        val dims = dimensions
+        // An axis-aligned face has exactly one constant axis; spread the two sample proportions over
+        // the two variable axes.
+        return when {
+            Mth.equal(dims.x, 0.0) -> Vec3(from.x, from.y + dims.y * a, from.z + dims.z * b)
+            Mth.equal(dims.y, 0.0) -> Vec3(from.x + dims.x * a, from.y, from.z + dims.z * b)
+            Mth.equal(dims.z, 0.0) -> Vec3(from.x + dims.x * a, from.y + dims.y * b, from.z)
+            else -> error("Face must be axis aligned for this function to work. dimensions=$dims")
+        }
     }
 
     fun coerceInFace(line: LinearGeometry3): LineSegment? {

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.block
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import java.util.PriorityQueue
+import java.util.function.Function
 import java.util.function.Predicate
 import java.util.function.ToDoubleFunction
 
@@ -51,7 +52,7 @@ private data class QueueEntry<T>(
 fun <T> aStarShortestPath(
     start: T,
     isGoal: Predicate<T>,
-    neighbors: (T) -> Iterable<WeightedEdge<T>>,
+    neighbors: Function<T, Iterable<WeightedEdge<T>>>,
     heuristic: ToDoubleFunction<T>,
     maxIterations: Int = Int.MAX_VALUE,
     maxCost: Double = Double.POSITIVE_INFINITY,
@@ -84,7 +85,7 @@ fun <T> aStarShortestPath(
             return ShortestPath(reconstructPath(start, current.node, previous), current.gScore)
         }
 
-        for ((node, cost) in neighbors(current.node)) {
+        for ((node, cost) in neighbors.apply(current.node)) {
             require(cost >= 0.0) { "Path search edge costs must be non-negative." }
 
             val candidateG = current.gScore + cost

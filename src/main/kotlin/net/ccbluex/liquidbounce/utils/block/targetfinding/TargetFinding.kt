@@ -64,7 +64,7 @@ enum class AimMode(override val tag: String) : Tagged {
 /**
  * Parameters used when generating a targeting plan for a block placement.
  */
-class BlockPlacementTargetFindingOptions(
+data class BlockPlacementTargetFindingOptions(
     val offsetOptions: BlockOffsetOptions,
     val faceHandlingOptions: FaceHandlingOptions,
     val stackToPlaceWith: ItemStack,
@@ -102,7 +102,7 @@ class BlockPlacementTargetFindingOptions(
  * Prioritized with [priorityComparator]
  * @param priorityComparator compares two offsets by their priority. An offset which ranks higher is prioritized.
  */
-class BlockOffsetOptions(
+data class BlockOffsetOptions(
     val offsetsToInvestigate: List<Vec3i>,
     val priorityComparator: Comparator<BlockPos>,
 ) {
@@ -132,7 +132,7 @@ class BlockOffsetOptions(
  * The expand-scaffold, for example, needs them to be considered to
  * work.
  */
-class FaceHandlingOptions(
+data class FaceHandlingOptions(
     val facePositionFactory: FaceTargetPositionFactory,
     val considerFacingAwayFaces: Boolean = false,
 )
@@ -143,8 +143,8 @@ class FaceHandlingOptions(
  * @param position the player's position (on placement)
  * @param pose the player's pose (on placement)
  */
-class PlayerLocationOnPlacement(
-    val position: Vec3,
+data class PlayerLocationOnPlacement(
+    val position: Vec3 = player.position(),
     val pose: Pose = player.pose
 ) {
     val eyeHeight: Float get() = player.getEyeHeight(pose)
@@ -229,7 +229,7 @@ private fun getTargetPlanForPositionAndDirection(
 ): BlockTargetPlan? {
     when (mode) {
         BlockTargetingMode.PLACE_AT_NEIGHBOR -> {
-            val currPos = pos.offset(direction.opposite.unitVec3i)
+            val currPos = pos.relative(direction.opposite)
             val currState = currPos.state ?: return null
 
             if (currState.canBeReplaced()) {
@@ -244,7 +244,7 @@ private fun getTargetPlanForPositionAndDirection(
     }
 }
 
-private class PointOnFace(
+private data class PointOnFace(
     val face: AlignedFace,
     val side: Direction,
     val point: Vec3,

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
 import net.ccbluex.liquidbounce.utils.block.dijkstraShortestPath
 import net.ccbluex.liquidbounce.utils.block.hasAnySolidPlacementNeighbor
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.kotlin.toOrderedSet
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
@@ -57,10 +58,11 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
     /**
      * Finds the shortest support path to make [targetPos] placeable via Dijkstra search.
      */
+    @Suppress("ComplexCondition")
     fun findSupport(targetPos: BlockPos): Set<BlockPos>? {
         val shortestPath = dijkstraShortestPath(
             start = targetPos,
-            isGoal = ::canPlace,
+            isGoal = { pos -> pos.hasAnySolidPlacementNeighbor() && (pos == targetPos || placer.canClickPlace(pos)) },
             neighbors = { current ->
                 val rangeSq = placer.range.sq()
                 val queuedBlocks = placer.blocks.keys
@@ -72,7 +74,8 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
                         if (
                             // don't place helping blocks where the structure will be
                             blockedPositions.contains(neighbor) ||
-
+                            // skip positions that already hold a non-replaceable block
+                            !neighbor.stateOrEmpty.canBeReplaced() ||
                             // exclude blocks where the structure is...
                             // this useless because we already search the shortest path under all structure blocks?
                             queuedBlocks.contains(neighbor.asLong()) ||
@@ -90,10 +93,6 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
         ) ?: return null
 
         return shortestPath.nodes.toOrderedSet()
-    }
-
-    private fun canPlace(pos: BlockPos): Boolean {
-        return pos.hasAnySolidPlacementNeighbor()
     }
 
 }

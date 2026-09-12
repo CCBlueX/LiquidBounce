@@ -267,7 +267,7 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
         exposedOnly -> Pools.MutableBlockPos.use { pos ->
             Direction.entries.any {
-                pos.set(blockPos).move(it.unitVec3i).state?.isRedstoneConductor(world, pos) == false
+                pos.set(blockPos).move(it).state?.isRedstoneConductor(world, pos) == false
             }
         }
 
