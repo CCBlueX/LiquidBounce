@@ -40,7 +40,7 @@ public abstract class MixinShaderManagerConfigs {
         CallbackInfoReturnable<String> cir
     ) {
         if (id.getNamespace().equals(LiquidBounce.CLIENT_NAME.toLowerCase(Locale.ROOT))) {
-            cir.setReturnValue(ClientShaders.Companion.getShader(id, type));
+            cir.setReturnValue(ClientShaders.Source.getShader(id, type));
         }
     }
 }

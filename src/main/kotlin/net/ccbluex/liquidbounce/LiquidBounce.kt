@@ -480,8 +480,8 @@ object LiquidBounce : EventListener {
                 initializeClient(
                     workerDispatcher = Dispatchers.Default,
                     renderThreadDispatcher = Dispatchers.Minecraft,
-                ).thenRun {
-                    ThemeManager.reloader.onResourceManagerReload(resourceManager)
+                ).thenCompose {
+                    ThemeManager.reloader.reload()
                 }
             }
         }.onFailure {

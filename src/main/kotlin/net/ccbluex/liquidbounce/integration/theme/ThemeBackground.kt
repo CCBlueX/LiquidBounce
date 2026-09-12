@@ -23,7 +23,6 @@ import com.mojang.renderpearl.api.pipeline.ColorTargetState
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline
 import com.mojang.renderpearl.api.pipeline.ShaderSource
-import com.mojang.renderpearl.api.pipeline.ShaderType
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.textures.FilterMode
@@ -36,11 +35,11 @@ import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBlitOnCurrentLayer
 import net.ccbluex.liquidbounce.render.drawTexQuad
-import net.ccbluex.liquidbounce.render.setPipeline
-import net.ccbluex.liquidbounce.injection.mixins.blaze3d.MixinRenderSystemAccessor
+import net.ccbluex.liquidbounce.render.utils.LiteralShaderSource
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.asTextureSetup
@@ -49,12 +48,11 @@ import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.TextureSetup
-import net.minecraft.resources.Identifier
-import net.minecraft.util.Util
-import java.io.Closeable
 import java.util.Locale
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 
-sealed interface ThemeBackground : Closeable {
+sealed interface ThemeBackground : AutoCloseable, SimpleReloadListener {
 
     /**
      * Returns false to let Minecraft render its default wallpaper.
@@ -114,8 +112,7 @@ sealed interface ThemeBackground : Closeable {
     class Shader private constructor(
         private val metadata: ThemeMetadata,
         private val pipeline: RenderPipeline,
-        private val fshId: Identifier,
-        private val fragmentShader: String,
+        private val shaderSource: ShaderSource,
     ) : ThemeBackground {
 
         private var compileGeneration = 0
@@ -138,6 +135,8 @@ sealed interface ThemeBackground : Closeable {
             mouseY: Int,
             delta: Float
         ): Boolean {
+            val prepared = compiledPipeline ?: return false
+
             val framebufferWidth = mc.window.width
             val framebufferHeight = mc.window.height
 
@@ -151,14 +150,10 @@ sealed interface ThemeBackground : Closeable {
 
             resizeIfNeeded(framebufferWidth, framebufferHeight)
 
-            compiledPipeline?.let {
-                MixinRenderSystemAccessor.getCurrentPipelineCache().insert(pipeline, it)
-            }
-
             backgroundView!!.createRenderPass(
                 { "ThemeShaderBackground Pass - ${metadata.name}" }
             ).use { pass ->
-                pass.setPipeline(pipeline)
+                pass.setPipeline(prepared)
                 pass.setUniform(ClientUniformDefine.THEME_BACKGROUND.uboName, uboSlice)
                 pass.draw(3, 1, 0, 0)
             }
@@ -180,27 +175,16 @@ sealed interface ThemeBackground : Closeable {
             background?.close()
         }
 
-        override fun onResourceReload() {
+        override fun reload(taskExecutor: Executor, reloadExecutor: Executor): CompletableFuture<Void> {
             val generation = ++compileGeneration
             compiledPipeline = null
-            val shaderSource = object : ShaderSource {
-                override fun getShader(id: Identifier, type: ShaderType): String? {
-                    if (id == fshId) return fragmentShader
-                    error("Unknown shader id: $id")
-                }
-
-                override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
-                override fun close() { }
-            }
-            gpuDevice.compilePipeline(pipeline, shaderSource, Util.backgroundExecutor())
+            return gpuDevice.compilePipeline(pipeline, shaderSource, taskExecutor)
                 .thenAcceptAsync({ pending ->
                     if (generation != compileGeneration) {
                         return@thenAcceptAsync
                     }
-                    val compiled = pending.finishCompile() ?: return@thenAcceptAsync
-                    compiledPipeline = compiled
-                    MixinRenderSystemAccessor.getCurrentPipelineCache().insert(pipeline, compiled)
-                }, mc)
+                    compiledPipeline = pending.finishCompile() ?: return@thenAcceptAsync
+                }, reloadExecutor)
         }
 
         private fun resizeIfNeeded(
@@ -248,7 +232,8 @@ sealed interface ThemeBackground : Closeable {
                     .withColorTargetState(ColorTargetState.DEFAULT)
                     .withDepthStencilState(optional())
                     .build()
-                return Shader(metadata, pipeline, fshId, fragmentShader)
+
+                return Shader(metadata, pipeline, LiteralShaderSource(mapOf(fshId to fragmentShader)))
             }
         }
     }
@@ -276,5 +261,6 @@ sealed interface ThemeBackground : Closeable {
     /**
      * Called when resources are reloaded.
      */
-    fun onResourceReload() {}
+    override fun reload(taskExecutor: Executor, reloadExecutor: Executor): CompletableFuture<Void> =
+        CompletableFuture.completedFuture(null)
 }
