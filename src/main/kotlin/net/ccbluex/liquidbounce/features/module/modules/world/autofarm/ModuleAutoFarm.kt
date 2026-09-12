@@ -153,7 +153,6 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         // Disable the module and return if the inventory is full, and the setting for disabling the module is enabled
         if (disableOnFullInventory && !hasInventorySpace()) {
             notification("Inventory is Full", "AutoFarm has been disabled", NotificationEvent.Severity.ERROR)
-            onDisabled()
             enabled = false
             return@tickHandler
         }

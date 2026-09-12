@@ -127,6 +127,7 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
         val invHasSpace = hasInventorySpace()
         if (!invHasSpace && invHadSpace && ToItems.enabled) {
             notification("Inventory is Full", "AutoFarm will no longer ", NotificationEvent.Severity.ERROR)
+            invHadSpace = false
             return null
         }
         invHadSpace = invHasSpace
