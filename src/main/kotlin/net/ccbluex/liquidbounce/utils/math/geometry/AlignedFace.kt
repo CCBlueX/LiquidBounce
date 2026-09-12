@@ -60,9 +60,9 @@ class AlignedFace(from: Vec3, to: Vec3) {
 
     val dimensions: Vec3 by lazy(NONE) {
         Vec3(
-            to.x - from.x,
-            to.y - from.y,
-            to.z - from.z,
+            this.to.x - this.from.x,
+            this.to.y - this.from.y,
+            this.to.z - this.from.z,
         )
     }
 

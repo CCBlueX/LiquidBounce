@@ -55,50 +55,49 @@ data class PositionFactoryConfiguration(
 
 private object PositionFactoryDebug : DebuggedOwner
 
-sealed class FaceTargetPositionFactory {
+/**
+ * Trims a face to be only as wide as the config allows it to be
+ *
+ * @param scale fraction of the face's width removed on each side
+ */
+fun trimFace(face: AlignedFace, scale: Double = 0.15): AlignedFace {
+    val offsets = face.dimensions.scale(scale)
 
+    var rangeX = face.from.x + offsets.x..face.to.x - offsets.x
+    var rangeY = face.from.y + offsets.y..face.to.y - offsets.y
+    var rangeZ = face.from.z + offsets.z..face.to.z - offsets.z
+
+    if (rangeX.isEmpty()) {
+        rangeX = face.center.x..face.center.x
+    }
+    if (rangeY.isEmpty()) {
+        rangeY = face.center.y..face.center.y
+    }
+    if (rangeZ.isEmpty()) {
+        rangeZ = face.center.z..face.center.z
+    }
+
+    return AlignedFace(
+        Vec3(
+            face.from.x.coerceIn(rangeX),
+            face.from.y.coerceIn(rangeY),
+            face.from.z.coerceIn(rangeZ),
+        ),
+        Vec3(
+            face.to.x.coerceIn(rangeX),
+            face.to.y.coerceIn(rangeY),
+            face.to.z.coerceIn(rangeZ),
+        )
+    )
+}
+
+sealed class FaceTargetPositionFactory {
 
     /**
      * Samples a position (relative to [targetPos]).
      * @param face is relative to origin.
      */
     abstract fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3?
-
-    /**
-     * Trims a face to be only as wide as the config allows it to be
-     */
-    protected fun trimFace(face: AlignedFace): AlignedFace {
-        val offsets = face.dimensions.scale(0.15)
-
-        var rangeX = face.from.x + offsets.x..face.to.x - offsets.x
-        var rangeY = face.from.y + offsets.y..face.to.y - offsets.y
-        var rangeZ = face.from.z + offsets.z..face.to.z - offsets.z
-
-        if (rangeX.isEmpty()) {
-            rangeX = face.center.x..face.center.x
-        }
-        if (rangeY.isEmpty()) {
-            rangeY = face.center.y..face.center.y
-        }
-        if (rangeZ.isEmpty()) {
-            rangeZ = face.center.z..face.center.z
-        }
-
-        val trimmedFace = AlignedFace(
-            Vec3(
-                face.from.x.coerceIn(rangeX),
-                face.from.y.coerceIn(rangeY),
-                face.from.z.coerceIn(rangeZ),
-            ),
-            Vec3(
-                face.to.x.coerceIn(rangeX),
-                face.to.y.coerceIn(rangeY),
-                face.to.z.coerceIn(rangeZ),
-            )
-        )
-
-        return trimmedFace
-    }
 
 }
 
