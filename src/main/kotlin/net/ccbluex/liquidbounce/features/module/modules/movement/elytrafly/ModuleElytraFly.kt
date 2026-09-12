@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.item.Items
 
 /**
  * ElytraFly module
