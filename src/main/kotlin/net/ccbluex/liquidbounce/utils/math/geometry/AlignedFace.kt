@@ -34,6 +34,7 @@ import kotlin.random.Random
 /**
  * A face. Axis aligned
  */
+@Suppress("TooManyFunctions")
 class AlignedFace(from: Vec3, to: Vec3) {
     val from: Vec3 = Vec3(
         min(from.x, to.x),

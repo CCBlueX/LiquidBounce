@@ -58,6 +58,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
     /**
      * Finds the shortest support path to make [targetPos] placeable via Dijkstra search.
      */
+    @Suppress("ComplexCondition")
     fun findSupport(targetPos: BlockPos): Set<BlockPos>? {
         val shortestPath = dijkstraShortestPath(
             start = targetPos,
