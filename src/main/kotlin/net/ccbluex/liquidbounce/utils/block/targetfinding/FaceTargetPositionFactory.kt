@@ -236,7 +236,7 @@ object ClickableCenterTargetPositionFactory : FaceTargetPositionFactory() {
         }
     }
 
-    private val FACE_SAMPLE_PROPORTIONS = doubleArrayOf(0.1, 0.3, 0.5, 0.7, 0.9)
+    private val FACE_SAMPLE_PROPORTIONS = doubleArrayOf(0.05, 0.1, 0.175, 0.3, 0.5, 0.7, 0.825, 0.9, 0.95)
 
     private fun findVisiblePointOnFace(face: AlignedFace, targetPos: BlockPos): Vec3? {
         val eyePos = player.eyePosition
