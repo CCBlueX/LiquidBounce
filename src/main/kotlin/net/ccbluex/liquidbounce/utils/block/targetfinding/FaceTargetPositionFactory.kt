@@ -126,11 +126,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
         val pointOnFace = face.nearestPointTo(rotationLine)
 
         PositionFactoryDebug.debugGeometry("targetFace") {
-            ModuleDebug.DebuggedBox(
-                AABB(
-                face.from,
-                face.to
-            ).move(targetPos), Color4b.RED)
+            ModuleDebug.DebuggedBox(face.asBox().move(targetPos), Color4b.RED)
         }
 
         PositionFactoryDebug.debugGeometry("targetPoint") {
@@ -377,19 +373,14 @@ class EdgePointTargetPositionFactory(
         targetPos: BlockPos,
         face: AlignedFace
     ): Vec3? {
-        val box = AABB(face.from, face.to)
+        val box = face.asBox()
         val playerPositionRelativeToTarget = player.position() - targetPos
         val edge = box.vertices.maxByOrNull { edge ->
             edge.distanceToSqr(playerPositionRelativeToTarget)
         } ?: return null
 
         PositionFactoryDebug.debugGeometry("Face") {
-            ModuleDebug.DebuggedBox(
-                AABB(
-                    face.from,
-                    face.to
-                ).move(targetPos), Color4b.RED
-            )
+            ModuleDebug.DebuggedBox(box.move(targetPos), Color4b.RED)
         }
 
         PositionFactoryDebug.debugGeometry("Edge") {

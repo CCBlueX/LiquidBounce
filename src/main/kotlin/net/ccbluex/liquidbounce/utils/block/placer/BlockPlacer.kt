@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -143,11 +144,14 @@ class BlockPlacer(
 
     private val inaccessible = LongOpenHashSet()
     var ticksToWait = 0
+        private set
     var ranAction = false
     private var sneakTimes = 0
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent>(priority = -20) {
+        debugParameter("Blocks") { blocks }
+
         if (ticksToWait > 0) {
             ticksToWait--
         } else if (ranAction) {
