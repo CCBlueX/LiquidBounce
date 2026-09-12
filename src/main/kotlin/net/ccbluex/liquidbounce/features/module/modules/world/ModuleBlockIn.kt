@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet
+import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
@@ -50,10 +51,17 @@ import kotlin.random.Random
 object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOnQuit = true) {
 
     private val blockPlacer = tree(BlockPlacer("Placer", this, Priority.NORMAL, ::slotFinder))
-    private val autoDisable by boolean("AutoDisable", true)
+    private val disableOn by multiEnumChoice("DisableOn", enumSetAllOf<DisableOn>())
     private val placeOrder by enumChoice("PlaceOrder", Order.Normal)
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val blocks by blocks("Blocks", blockSortedSetOf())
+
+    private enum class DisableOn(override val tag: String) : Tagged {
+        FINISH("Finish"),
+        MOVE("Move"),
+    }
+
+    private val compareByY = Comparator.comparingInt<BlockPos>(BlockPos::getY)
 
     private enum class Order(override val tag: String) : Tagged {
 
@@ -85,15 +93,16 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
         BottomTop("BottomTop") {
             override fun positions(): Array<BlockPos> {
                 val array = Normal.positions()
-                array.sortBy { it.y }
+                array.sortWith(compareByY)
                 return array
             }
         },
 
         TopBottom("TopBottom") {
+            private val comparator = compareByY.reversed()
             override fun positions(): Array<BlockPos> {
                 val array = Normal.positions()
-                array.sortByDescending { it.y }
+                array.sortWith(comparator)
                 return array
             }
         };
@@ -104,10 +113,12 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     private val startPos = BlockPos.MutableBlockPos()
     private var rotateClockwise = false
     private var blockList = emptyList<BlockPos>()
+    private var moved = false
 
     override fun onDisabled() {
         startPos.set(BlockPos.ZERO)
         blockList = emptyList()
+        moved = false
         blockPlacer.disable()
     }
 
@@ -138,9 +149,9 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     @Suppress("unused")
     private val tickHandler = tickHandler {
         blockPlacer.update(blockList)
-        tickUntil { blockPlacer.isDone() }
+        tickUntil { blockPlacer.isDone() || moved }
 
-        if (autoDisable) {
+        if (disableOn.contains(DisableOn.FINISH)) {
             notification(name, message("filled"), NotificationEvent.Severity.SUCCESS)
             enabled = false
         }
@@ -152,8 +163,12 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
         val currentPos = player.blockPosition()
 
         if (currentPos != startPos && currentPos != startPos.above()) {
-            notification(name, message("positionChanged"), NotificationEvent.Severity.ERROR)
-            enabled = false
+            if (disableOn.contains(DisableOn.MOVE)) {
+                notification(name, message("positionChanged"), NotificationEvent.Severity.ERROR)
+                enabled = false
+            } else {
+                moved = true
+            }
         }
     }
 
