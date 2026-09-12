@@ -274,7 +274,6 @@
   "liquidbounce.command.rename.name.description": "New name for the item.",
   "liquidbounce.command.rename.nameReset": "The name of the item has been reset.",
   "liquidbounce.command.rename.renamedItem": "Renamed item from \"%s\" to \"%s\".",
-  "liquidbounce.command.script.browse.description": "Opens the scripts directory.",
   "liquidbounce.command.script.browse.browse": "Location: %s",
   "liquidbounce.command.script.browse.description": "Opens the scripts directory.",
   "liquidbounce.command.script.debug.alreadyLoaded": "Script named %s is already loaded",
