@@ -55,57 +55,46 @@ data class PositionFactoryConfiguration(
 
 private object PositionFactoryDebug : DebuggedOwner
 
-sealed class FaceTargetPositionFactory {
+/**
+ * Trims a face to be only as wide as the config allows it to be
+ *
+ * @param scale fraction of the face's width removed on each side
+ */
+fun trimFace(face: AlignedFace, scale: Double = 0.15): AlignedFace {
+    val offsets = face.dimensions.scale(scale)
 
+    val lowX = face.from.x + offsets.x
+    val highX = face.to.x - offsets.x
+    val lowY = face.from.y + offsets.y
+    val highY = face.to.y - offsets.y
+    val lowZ = face.from.z + offsets.z
+    val highZ = face.to.z - offsets.z
+
+    // Collapse to the center when the interval inverts (scale >= 0.5 or a zero-width axis)
+    val fromX = if (lowX > highX) face.center.x else lowX
+    val toX = if (lowX > highX) face.center.x else highX
+    val fromY = if (lowY > highY) face.center.y else lowY
+    val toY = if (lowY > highY) face.center.y else highY
+    val fromZ = if (lowZ > highZ) face.center.z else lowZ
+    val toZ = if (lowZ > highZ) face.center.z else highZ
+
+    return AlignedFace(Vec3(fromX, fromY, fromZ), Vec3(toX, toY, toZ))
+}
+
+sealed interface FaceTargetPositionFactory {
 
     /**
      * Samples a position (relative to [targetPos]).
      * @param face is relative to origin.
      */
-    abstract fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3?
-
-    /**
-     * Trims a face to be only as wide as the config allows it to be
-     */
-    protected fun trimFace(face: AlignedFace): AlignedFace {
-        val offsets = face.dimensions.scale(0.15)
-
-        var rangeX = face.from.x + offsets.x..face.to.x - offsets.x
-        var rangeY = face.from.y + offsets.y..face.to.y - offsets.y
-        var rangeZ = face.from.z + offsets.z..face.to.z - offsets.z
-
-        if (rangeX.isEmpty()) {
-            rangeX = face.center.x..face.center.x
-        }
-        if (rangeY.isEmpty()) {
-            rangeY = face.center.y..face.center.y
-        }
-        if (rangeZ.isEmpty()) {
-            rangeZ = face.center.z..face.center.z
-        }
-
-        val trimmedFace = AlignedFace(
-            Vec3(
-                face.from.x.coerceIn(rangeX),
-                face.from.y.coerceIn(rangeY),
-                face.from.z.coerceIn(rangeZ),
-            ),
-            Vec3(
-                face.to.x.coerceIn(rangeX),
-                face.to.y.coerceIn(rangeY),
-                face.to.z.coerceIn(rangeZ),
-            )
-        )
-
-        return trimmedFace
-    }
+    fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3?
 
 }
 
 /**
  * Always targets the point with the nearest rotation angle to the current rotation angle
  */
-class NearestRotationTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory() {
+class NearestRotationTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory {
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         val trimmedFace = trimFace(face)
 
@@ -158,7 +147,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 class StabilizedRotationTargetPositionFactory(
     val config: PositionFactoryConfiguration,
     private val optimalLine: Line?
-) : FaceTargetPositionFactory() {
+) : FaceTargetPositionFactory {
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         val trimmedFace = trimFace(face).offset(targetPos)
 
@@ -204,7 +193,7 @@ class StabilizedRotationTargetPositionFactory(
     }
 }
 
-object RandomTargetPositionFactory : FaceTargetPositionFactory() {
+object RandomTargetPositionFactory : FaceTargetPositionFactory {
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         val trimmedFace = trimFace(face)
 
@@ -212,7 +201,7 @@ object RandomTargetPositionFactory : FaceTargetPositionFactory() {
     }
 }
 
-object CenterTargetPositionFactory : FaceTargetPositionFactory() {
+object CenterTargetPositionFactory : FaceTargetPositionFactory {
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         return face.center
     }
@@ -226,7 +215,7 @@ object CenterTargetPositionFactory : FaceTargetPositionFactory() {
  * would be wrong, so fall back to sampling the face for the first visible point. If nothing is
  * visible, the center is kept so wall-range placements keep working.
  */
-object ClickableCenterTargetPositionFactory : FaceTargetPositionFactory() {
+object ClickableCenterTargetPositionFactory : FaceTargetPositionFactory {
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         val center = face.center
         return if (VisibilityPredicate.Outline.isVisible(player.eyePosition, center + targetPos)) {
@@ -256,7 +245,7 @@ object ClickableCenterTargetPositionFactory : FaceTargetPositionFactory() {
 abstract class BaseYawTargetPositionFactory(
     protected val config: PositionFactoryConfiguration,
     private val yawTolerance: Float = 5f
-) : FaceTargetPositionFactory() {
+) : FaceTargetPositionFactory {
 
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         ModuleDebug.debugParameter(PositionFactoryDebug, "TargetPos", targetPos)
@@ -386,7 +375,7 @@ class AngleYawTargetPositionFactory(config: PositionFactoryConfiguration) : Base
 
 class EdgePointTargetPositionFactory(
     val config: PositionFactoryConfiguration,
-) : FaceTargetPositionFactory() {
+) : FaceTargetPositionFactory {
 
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         val trimmedFace = trimFace(face)
