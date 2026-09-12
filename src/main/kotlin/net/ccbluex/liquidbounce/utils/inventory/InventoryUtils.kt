@@ -55,11 +55,17 @@ fun findNonEmptySlotsInInventory(): List<ItemSlot> {
     return Slots.All.filter { !it.itemStack.isEmpty }
 }
 
+/**
+ * Exact total capacity of this iterable to store [itemStack] (empty slots count as [ItemStack.maxStackSize], mergeable
+ * slots as their remaining space). Contract: the slot currently holding [itemStack] must NOT be part of this iterable,
+ * otherwise its own remaining capacity would be double-counted and the result overestimated.
+ */
+@JvmOverloads
 fun Iterable<ItemSlot>.mergeableCapacityFor(itemStack: ItemStack, blacklist: Collection<ItemSlot>? = null): Int =
     sumOf {
         val targetStack = it.itemStack
         when {
-            blacklist != null && it in blacklist -> 0
+            !blacklist.isNullOrEmpty() && it in blacklist -> 0
             targetStack.isEmpty -> itemStack.maxStackSize
             targetStack.isMergeable(itemStack) -> targetStack.maxStackSize - targetStack.count
             else -> 0
