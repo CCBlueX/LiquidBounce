@@ -33,7 +33,8 @@ internal object Head : HealthBasedBuff("Head") {
     private val chronometer = Chronometer()
 
     override val passesRequirements: Boolean
-        get() = passesHealthRequirements
+        get() = super.passesRequirements
+            && passesHealthRequirements
             && chronometer.hasElapsed((cooldown * 1000).toLong())
             && player.absorptionAmount <= maxAbsorption
 

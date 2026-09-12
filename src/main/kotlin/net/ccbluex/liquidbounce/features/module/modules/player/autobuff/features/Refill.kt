@@ -33,7 +33,7 @@ object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
 
     fun execute(event: ScheduleInventoryActionEvent) {
         // Check if we have space in the hotbar
-        if (!findEmptyHotbarSlot()) {
+        if (!findEmptyHotbarOrOffhandSlot()) {
             return
         }
 
@@ -50,7 +50,6 @@ object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
             return
         }
 
-        // Sort the items by the order of the features
         for (slot in validItems) {
             event.schedule(
                 inventoryConstraints, InventoryAction.Click.performQuickMove(slot = slot),
@@ -59,7 +58,7 @@ object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
         }
     }
 
-    private fun findEmptyHotbarSlot(): Boolean {
+    private fun findEmptyHotbarOrOffhandSlot(): Boolean {
         return Slots.OffhandWithHotbar.findSlot { it.isEmpty } != null
     }
 

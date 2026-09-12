@@ -36,9 +36,13 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.math.yaw
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.ccbluex.liquidbounce.utils.world.any
 import net.ccbluex.liquidbounce.utils.world.entityGetter
 import net.minecraft.world.effect.MobEffects
@@ -49,19 +53,26 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.LingeringPotionItem
 import net.minecraft.world.item.SplashPotionItem
 import net.minecraft.world.level.entity.EntityTypeTest
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.Vec3
+import java.util.concurrent.ThreadLocalRandom
 
 internal object Pot : StatusEffectBasedBuff("Pot") {
 
-    private const val BENEFICIAL_SQUARE_RANGE = 16.0
+    private const val BENEFICIAL_SQUARED_RANGE = 16.0
 
     override val passesRequirements: Boolean
         get() {
+            if (InventoryManager.isInventoryOpen) {
+                return false
+            }
+
             if (doNotBenefitOthers) {
                 // Check if there is any entity that we care about that can benefit from the potion
                 // This means we will only care about entities that are our enemies and are close enough to us
                 // That means we will still throw the potion if there is a friendly friend or team member nearby
                 val benefits = world.entitiesForRendering().any {
-                    it is LivingEntity && it.shouldBeAttacked() && hasBenefit(it)
+                    it is LivingEntity && it.shouldBeAttacked() && isAffectedByPotionInRange(it)
                 }
 
                 if (benefits) {
@@ -86,9 +97,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
     private val allowLingering by boolean("AllowLingering", false)
 
     override suspend fun execute(slot: HotbarItemSlot) {
-        // TODO: Use movement prediction to splash against walls and away from the player
-        //   See https://github.com/CCBlueX/LiquidBounce/issues/2051
-        var rotation = Rotation(player.yRot, (85f..90f).random())
+        var rotation = calculateSplashRotation()
 
         when (ModuleAutoBuff.Rotations.rotationTiming) {
             NORMAL -> {
@@ -100,7 +109,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                 )
 
                 tickUntil {
-                    !inGame || (currentRotation ?: player.rotation).pitch > 85
+                    !inGame || (currentRotation ?: player.rotation).pitch >= rotation.pitch - 1
                 }
 
                 rotation = rotation.normalize()
@@ -142,18 +151,60 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
         waitTicks(1)
     }
 
+    /**
+     * Calculates a rotation that lands the splash potion near the player's predicted position.
+     *
+     * The potion inherits the player's velocity, so while moving the landing point drifts. We simulate the
+     * exact potion trajectory and iteratively adjust the yaw towards the predicted landing spot.
+     *
+     * ponytail: pitch stays near vertical and relies on the splash's large radius to cover the player;
+     *   precise landing control / throwing against walls (see #2051) is deferred.
+     */
+    private fun calculateSplashRotation(): Rotation {
+        var rotation = Rotation(player.yRot, ThreadLocalRandom.current().nextFloat(85f, 90f))
+
+        repeat(4) { _ ->
+            val sim = TrajectoryInfoRenderer.getHypotheticalTrajectory(
+                simulationOwner = player,
+                trajectoryInfo = TrajectoryInfo.POTION,
+                trajectoryType = TrajectoryType.Potion,
+                rotation = rotation,
+            ).runSimulation(300)
+
+            val hitPos = (sim.hitResult as? BlockHitResult)?.location ?: return rotation
+            val flightTicks = sim.positions.size.toDouble()
+            // Predict where the player will be by the time the potion lands (the potion inherits velocity)
+            val predictedPos = player.position().add(
+                player.deltaMovement.x * flightTicks,
+                0.0,
+                player.deltaMovement.z * flightTicks,
+            )
+            val target = Vec3(predictedPos.x, player.eyeY - 0.1, predictedPos.z)
+            val diff = target.subtract(hitPos)
+
+            // Good enough: the splash radius (4 blocks) covers the player
+            if (diff.horizontalDistanceSqr() < 3.0 * 3.0) {
+                return rotation
+            }
+
+            rotation = Rotation(diff.yaw, rotation.pitch)
+        }
+
+        return rotation
+    }
+
     override fun isValidPotion(stack: ItemStack) =
         stack.item is SplashPotionItem || stack.item is LingeringPotionItem && allowLingering
 
-    private fun hasBenefit(entity: LivingEntity): Boolean {
+    private fun isAffectedByPotionInRange(entity: LivingEntity): Boolean {
         if (!entity.isAffectedByPotions) {
             return false
         }
 
-        // If we look down about 90 degrees, the closet position of the potion is at the player foot
+        // If we look down about 90 degrees, the closest position of the potion is at the player foot
         val squareRange = entity.distanceToSqr(player)
 
-        if (squareRange > BENEFICIAL_SQUARE_RANGE) {
+        if (squareRange > BENEFICIAL_SQUARED_RANGE) {
             return false
         }
 
@@ -166,7 +217,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
      */
     private fun isStandingInsideLingering() =
         world.entityGetter.any(EntityTypes.AREA_EFFECT_CLOUD) {
-            it.distanceToSqr(player) <= BENEFICIAL_SQUARE_RANGE &&
+            it.distanceToSqr(player) <= BENEFICIAL_SQUARED_RANGE &&
                 it.potionContents.allEffects.any { effect ->
                     effect.effect == MobEffects.REGENERATION || effect.effect == MobEffects.INSTANT_HEALTH
                         || effect.effect == MobEffects.STRENGTH
@@ -178,7 +229,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
      */
     private fun isSplashNearby() =
         world.entityGetter.any(EntityTypeTest.forClass(AbstractThrownPotion::class.java)) {
-            it.distanceToSqr(player) <= BENEFICIAL_SQUARE_RANGE
+            it.distanceToSqr(player) <= BENEFICIAL_SQUARED_RANGE
         }
 
 }

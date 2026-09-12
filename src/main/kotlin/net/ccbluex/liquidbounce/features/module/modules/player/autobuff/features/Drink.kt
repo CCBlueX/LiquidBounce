@@ -19,9 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.minecraft.world.item.ItemStack
@@ -30,24 +27,8 @@ import net.minecraft.world.item.SplashPotionItem
 
 internal object Drink : StatusEffectBasedBuff("Drink") {
 
-    private var forceUseKey = false
-
     override suspend fun execute(slot: HotbarItemSlot) {
-        forceUseKey = true
-        tickUntil { !passesRequirements }
-        forceUseKey = false
-    }
-
-    @Suppress("unused")
-    private val keyBindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
-        if (event.keyBinding == mc.options.keyUse && forceUseKey) {
-            event.isPressed = true
-        }
-    }
-
-    override fun onDisabled() {
-        forceUseKey = false
-        super.onDisabled()
+        holdUse(slot)
     }
 
     override fun isValidPotion(stack: ItemStack) =
