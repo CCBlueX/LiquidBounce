@@ -269,7 +269,8 @@ class BlockPlacer(
 
             // Check if we can reach the target
             if (!canReach(placementTarget.interactedBlockPos, placementTarget.rotation)) {
-                inaccessible.add(posAsLong)
+                // The target may become reachable after adding support blocks. Keep it eligible for
+                // support search instead of treating a temporary reach failure as a blocked position.
                 continue
             }
 
@@ -307,7 +308,6 @@ class BlockPlacer(
         }
 
         if (blockedResult.keyBoolean()) {
-            inaccessible.add(posAsLong)
             return true
         }
 

@@ -62,7 +62,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
     fun findSupport(targetPos: BlockPos): Set<BlockPos>? {
         val shortestPath = dijkstraShortestPath(
             start = targetPos,
-            isGoal = ::canPlace,
+            isGoal = { pos -> pos.hasAnySolidPlacementNeighbor() && (pos == targetPos || placer.canClickPlace(pos)) },
             neighbors = { current ->
                 val rangeSq = placer.range.sq()
                 val queuedBlocks = placer.blocks.keys
@@ -93,11 +93,6 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
         ) ?: return null
 
         return shortestPath.nodes.toOrderedSet()
-    }
-
-    private fun canPlace(pos: BlockPos): Boolean {
-        return pos.hasAnySolidPlacementNeighbor() &&
-            placer.canClickPlace(pos)
     }
 
 }
