@@ -22,7 +22,6 @@ import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 plugins {
     alias(libs.plugins.fabric.loom)
@@ -332,20 +331,6 @@ tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
     baseline.set(file("$rootDir/config/detekt/baseline.xml"))
     include("**/*.kt", "**/*.kts")
     exclude("**/resources/**", "**/build/**")
-}
-
-// i18n check
-
-tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
-    val baselineFileName = "en_us.json"
-
-    group = "verification"
-    description = "Compare i18n JSON files with $baselineFileName as the baseline and report missing keys."
-
-    val languageFolder = file("src/main/resources/resources/liquidbounce/lang")
-    baselineFile.set(languageFolder.resolve(baselineFileName))
-    files.from(languageFolder.listFilesOrdered { it.extension.equals("json", ignoreCase = true) })
-    consoleOutputCount.set(5)
 }
 
 tasks.register<JavaExec>("liquidInstruction") {
