@@ -54,7 +54,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
     private val installedRevisionFile: File?
         get() = itemDir.listFiles(File::isDirectory)
             ?.filter { it.name.toIntOrNull() != null }
-            ?.maxByOrNull { it.lastModified() }
+            ?.maxByOrNull { it.name.toInt() }
 
     /**
      * Get the installation folder of the item.
