@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeVanilla
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
+import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EquipmentSlot
@@ -136,6 +137,9 @@ object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
         }
     }
 
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.canGlideUsing
+     */
     fun shouldNotOperate(): Boolean {
         if (player.vehicle != null) {
             return true
@@ -149,7 +153,7 @@ object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
         val chestSlot = player.getItemBySlot(EquipmentSlot.CHEST)
 
         // If the player doesn't have an elytra in the chest slot or is in fluids
-        return chestSlot.item != Items.ELYTRA || chestSlot.nextDamageWillBreak()
+        return !chestSlot.isGlider || chestSlot.nextDamageWillBreak()
     }
 
     private enum class Instant(
