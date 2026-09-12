@@ -75,6 +75,10 @@ data class InputBind(
     /**
      * Retrieves the name of the key in uppercase format, excluding the category prefixes.
      *
+     * Since the category is dropped, the result no longer says which device the key belongs to
+     * and must not be passed back to [inputByName], which assumes the keyboard for names without
+     * a category - use [boundKey] when the key itself is needed.
+     *
      * @return A formatted string representing the bound key's name, or "None" if unbound.
      */
     val keyName: String
@@ -317,10 +321,8 @@ fun Value<InputBind>.unbind() = set(InputBind.UNBOUND)
 
 fun InputBind.renderText(): Component = buildText {
     add(
-        inputByName(keyName).let { key ->
-            variable(key.displayName.copy()).bold(true)
-                .copyable(copyContent = key.name)
-        }
+        variable(boundKey.displayName.copy()).bold(true)
+            .copyable(copyContent = boundKey.name)
     )
 
     val divider = regular(" + ")
