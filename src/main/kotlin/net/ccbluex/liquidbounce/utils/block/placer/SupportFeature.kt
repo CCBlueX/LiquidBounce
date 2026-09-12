@@ -95,7 +95,8 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
     }
 
     private fun canPlace(pos: BlockPos): Boolean {
-        return pos.hasAnySolidPlacementNeighbor()
+        return pos.hasAnySolidPlacementNeighbor() &&
+            placer.canClickPlace(pos)
     }
 
 }

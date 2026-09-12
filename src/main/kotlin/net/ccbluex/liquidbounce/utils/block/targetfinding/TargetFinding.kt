@@ -244,7 +244,7 @@ private fun getTargetPlanForPositionAndDirection(
     }
 }
 
-private class PointOnFace(
+private data class PointOnFace(
     val face: AlignedFace,
     val side: Direction,
     val point: Vec3,

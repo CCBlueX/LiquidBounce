@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -130,7 +131,7 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     }
 
     private fun getPositions() {
-        blockList = placeOrder.positions().asList()
+        blockList = placeOrder.positions().filter { it.stateOrEmpty.canBeReplaced() }
         debugParameter("Place Count") { blockList.size }
     }
 

@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.utils.VisibilityPredicate
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.math.toRadians
@@ -215,6 +216,41 @@ object CenterTargetPositionFactory : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         return face.center
     }
+}
+
+/**
+ * Like [CenterTargetPositionFactory], but prefers an unobstructed point on the face.
+ *
+ * The face center can be occluded by the block itself when only a small part of the face is visible
+ * from the player's eyes. In that case the click point (and therefore the rotation / reach checks)
+ * would be wrong, so fall back to sampling the face for the first visible point. If nothing is
+ * visible, the center is kept so wall-range placements keep working.
+ */
+object ClickableCenterTargetPositionFactory : FaceTargetPositionFactory() {
+    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
+        val center = face.center
+        return if (VisibilityPredicate.Outline.isVisible(player.eyePosition, center + targetPos)) {
+            center
+        } else {
+            findVisiblePointOnFace(face, targetPos) ?: center
+        }
+    }
+
+    private val FACE_SAMPLE_PROPORTIONS = doubleArrayOf(0.1, 0.3, 0.5, 0.7, 0.9)
+
+    private fun findVisiblePointOnFace(face: AlignedFace, targetPos: BlockPos): Vec3? {
+        val eyePos = player.eyePosition
+        for (a in FACE_SAMPLE_PROPORTIONS) {
+            for (b in FACE_SAMPLE_PROPORTIONS) {
+                val point = face.samplePointOnFace(a, b)
+                if (VisibilityPredicate.Outline.isVisible(eyePos, point + targetPos)) {
+                    return point
+                }
+            }
+        }
+        return null
+    }
+
 }
 
 abstract class BaseYawTargetPositionFactory(
