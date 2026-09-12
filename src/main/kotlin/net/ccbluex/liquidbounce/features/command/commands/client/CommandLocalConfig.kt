@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import com.mojang.blaze3d.Blaze3D
 import com.mojang.brigadier.CommandDispatcher
 import kotlinx.coroutines.async
 import net.ccbluex.fastutil.enumSetOf
@@ -218,7 +219,7 @@ object CommandLocalConfig : CommandRegistrar {
     }
 
     private fun CmdI18n.browseConfigs(): Int {
-        Util.getPlatform().openFile(ConfigSystem.userConfigsFolder)
+        Blaze3D.openPath(ConfigSystem.userConfigsFolder.toPath())
         chat(regular(t("browse.browse", clickablePath(ConfigSystem.userConfigsFolder))))
         return 1
     }

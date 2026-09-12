@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import com.mojang.blaze3d.Blaze3D
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import java.net.URI
 
 /**
  * Get a [Logger] with client name prefix
@@ -41,7 +43,7 @@ inline val clientStartDurationMs: Long
 /**
  * Open uri in browser
  */
-fun browseUrl(url: String) = Util.getPlatform().openUri(url)
+fun browseUrl(url: String) = Blaze3D.openUri(URI(url))
 
 /**
  * Get environment variable or system property.

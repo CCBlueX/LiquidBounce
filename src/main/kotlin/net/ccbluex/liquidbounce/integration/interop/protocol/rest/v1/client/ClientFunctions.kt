@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.Blaze3D
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -122,7 +123,7 @@ private fun Route.postBrowse() = post("/browse") {
 
     val url = POSSIBLE_URL_TARGETS[target] ?: call.forbidden("Unknown target")
 
-    Util.getPlatform().openUri(url)
+    Blaze3D.openUri(url)
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
@@ -147,7 +148,7 @@ private fun Route.postBrowsePath() = post("/browsePath") {
         else -> call.forbidden("Invalid file type")
     }
 
-    Util.getPlatform().openFile(directoryToOpen)
+    Blaze3D.openPath(directoryToOpen.toPath())
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
