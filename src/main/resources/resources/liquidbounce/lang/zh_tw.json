@@ -790,5 +790,9 @@
   "liquidbounce.commandManager.noSuchPlayer": "Player \"%s\" was not found.",
   "liquidbounce.commandManager.notAFriend": "\"%s\" is not on your friend list.",
   "liquidbounce.commandManager.notIngame": "This command can only be used in-game.",
-  "liquidbounce.commandManager.scriptValidationFailed": "%s"
+  "liquidbounce.commandManager.scriptValidationFailed": "%s",
+  "liquidbounce.module.droneControl.description": "開啟一個控制面板，用弓箭瞄準並射擊目標。",
+  "liquidbounce.module.projectileAimbot.description": "使用弓等投射物武器自動瞄準目標。",
+  "liquidbounce.module.spearKill.description": "使用蓄力的三叉戟自動攻擊敵人。",
+  "liquidbounce.module.tridentBoost.description": "增強三叉戟的激流衝刺，並允許在陸地上使用。"
 }

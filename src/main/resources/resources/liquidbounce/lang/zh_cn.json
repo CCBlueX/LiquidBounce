@@ -423,6 +423,7 @@
   "liquidbounce.module.tntTimer.description": "突出显示点燃的TNT，并显示爆炸剩余时间。",
   "liquidbounce.module.abortBreaking.description": "允许你在停止破坏方块的时候不会丢失破坏进度。",
   "liquidbounce.module.aimbot.description": "自动瞄准附近的目标。",
+  "liquidbounce.module.projectileAimbot.description": "使用弓等弹射物武器自动瞄准目标。",
   "liquidbounce.module.airJump.description": "允许你在空中跳跃。",
   "liquidbounce.module.animations.description": "允许你修改游戏中的许多动画。",
   "liquidbounce.module.antiAFK.description": "防止你因为挂机而被踢出服务器。",
@@ -491,6 +492,7 @@
   "liquidbounce.module.dankBobbing.description": "增加视角摇晃效果的幅度。",
   "liquidbounce.module.debug.description": "只有开发者会感兴趣。",
   "liquidbounce.module.debugRecorder.description": "只有开发者会感兴趣。",
+  "liquidbounce.module.droneControl.description": "打开一个控制面板，用弓箭瞄准并射击目标。",
   "liquidbounce.module.smartEat.description": "饥饿值低时自动进食。",
   "liquidbounce.module.derp.description": "让你在其他玩家眼中看起来像是在瞎折腾。",
   "liquidbounce.module.twerk.description": "自动潜行并取消潜行。",
@@ -788,5 +790,6 @@
   "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect 将尝试在你下次加入任何服务器/游戏时，通过监测 ping 参数来检测服务器的反作弊系统。请注意，结果可能不准确，特别是当服务器上有多个反作弊系统时。",
   "liquidbounce.command.enchant.unenchantedItem": "Enchantment %s has been removed from the held item.",
   "liquidbounce.command.marketplace.update.updatedAllWithFailures": "Finished updating %s of %s items - see above for the failures.",
-  "liquidbounce.commandManager.notIngame": "This command can only be used in-game."
+  "liquidbounce.commandManager.notIngame": "This command can only be used in-game.",
+  "liquidbounce.module.spearKill.description": "使用蓄力的三叉戟自动攻击敌人。"
 }
