@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -31,15 +30,17 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.entity.armorItems
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ArmorStandItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.FireworkRocketItem
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
 import net.minecraft.world.item.SpawnEggItem
 import net.minecraft.world.phys.BlockHitResult
 
@@ -88,7 +89,7 @@ object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
         return when (val i = item) {
             is BlockItem -> i.block.defaultBlockState().canSurvive(world, hit.blockPos)
             is SpawnEggItem, is ArmorStandItem -> true
-            is FireworkRocketItem -> !player.armorItems[2].`is`(Items.ELYTRA)
+            is FireworkRocketItem -> !ArmorItemSlot.CHEST.itemStack.isGlider
             else -> false
         }
     }
@@ -152,7 +153,9 @@ object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
         val hitResult = getValidHitResult() ?: return@handler
 
         val actionResult = interaction.useItemOn(player, event.hand, hitResult)
-        if (actionResult.shouldSwingHand()) player.swing(event.hand)
+        if (actionResult.shouldSwingHand()) {
+            SwingMode.DO_NOT_HIDE.swing(event.hand)
+        }
         event.cancelEvent()
     }
 }
