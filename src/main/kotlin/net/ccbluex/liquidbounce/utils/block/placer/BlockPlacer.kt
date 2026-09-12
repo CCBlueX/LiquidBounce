@@ -66,6 +66,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
+import java.util.function.Function
 import java.util.function.LongPredicate
 import kotlin.math.max
 
@@ -74,7 +75,7 @@ class BlockPlacer(
     name: String,
     val module: ClientModule,
     val priority: Priority,
-    val slotFinder: (BlockPos?) -> HotbarItemSlot?,
+    val slotFinder: Function<BlockPos?, HotbarItemSlot?>,
     allowSupportPlacements: Boolean = true
 ) : ValueGroup(name), EventListener {
 
@@ -171,7 +172,7 @@ class BlockPlacer(
         }
 
         // return if no blocks are available
-        val slot = slotFinder(null) ?: return@handler
+        val slot = slotFinder.apply(null) ?: return@handler
 
         val itemStack = slot.itemStack
 
@@ -318,7 +319,7 @@ class BlockPlacer(
         val slot = if (isSupport) {
             support.filter.getSlot(support.blocks)
         } else {
-            slotFinder(pos)
+            slotFinder.apply(pos)
         } ?: return false
 
         val verificationRotation = rotationMode.activeMode.getVerificationRotation(placementTarget.rotation)
