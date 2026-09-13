@@ -379,6 +379,16 @@ val Entity.rotation: Rotation
 val LocalPlayer.lastRotation: Rotation
     get() = Rotation(this.yRotLast, this.xRotLast, true)
 
+/**
+ * Check if the entity is inside the world border.
+ *
+ * Mirrors the server-side attack/interact border check.
+ *
+ * @see net.minecraft.server.network.ServerGamePacketListenerImpl.handleAttack
+ */
+val Entity.isWithinWorldBorder: Boolean
+    get() = level().worldBorder.isWithinBounds(blockPosition())
+
 val Entity.box: AABB
     get() = boundingBox.inflate(pickRadius.toDouble())
 
