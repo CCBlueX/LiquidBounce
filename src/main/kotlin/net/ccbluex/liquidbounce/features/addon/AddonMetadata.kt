@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.addon
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.loader.api.ModContainer
+import net.fabricmc.loader.api.metadata.CustomValue
+import net.fabricmc.loader.api.metadata.ModOrigin
 import java.nio.file.Path
 
 /**
@@ -48,10 +50,10 @@ class AddonMetadata(private val container: ModContainer) {
      */
     val color: Color4b? by lazy {
         val raw = meta.getCustomValue(CUSTOM_NAMESPACE)
-            ?.takeIf { it.type == net.fabricmc.loader.api.metadata.CustomValue.CvType.OBJECT }
+            ?.takeIf { it.type == CustomValue.CvType.OBJECT }
             ?.asObject
             ?.get(CUSTOM_COLOR)
-            ?.takeIf { it.type == net.fabricmc.loader.api.metadata.CustomValue.CvType.STRING }
+            ?.takeIf { it.type == CustomValue.CvType.STRING }
             ?.asString
             ?: return@lazy null
 
@@ -61,9 +63,11 @@ class AddonMetadata(private val container: ModContainer) {
     }
 
     /**
-     * The jar (or directory, in a dev environment) the add-on was loaded from.
+     * The jar (or directory, in a dev environment) the add-on was loaded from. Empty for a
+     * jar-in-jar add-on, whose origin has no path of its own.
      */
-    val origin: List<Path> get() = container.origin.paths
+    val origin: List<Path>
+        get() = container.origin.takeIf { it.kind == ModOrigin.Kind.PATH }?.paths.orEmpty()
 
     fun findPath(path: String): Path? = container.findPath(path).orElse(null)
 

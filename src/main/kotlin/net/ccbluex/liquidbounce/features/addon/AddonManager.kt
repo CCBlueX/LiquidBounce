@@ -20,9 +20,12 @@ package net.ccbluex.liquidbounce.features.addon
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.readJson
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.fabricmc.loader.api.FabricLoader
@@ -133,14 +136,22 @@ object AddonManager {
 
     fun notifyConfigsLoaded() = forEachEnabled("config load callback") { it.onConfigsLoaded() }
 
-    fun shutdown() = forEachEnabled("shutdown") { it.onShutdown() }
+    /**
+     * No rollback on failure: the client is exiting and writes its configs right after, so
+     * withdrawing the add-on's configs here would lose the user's settings.
+     */
+    fun shutdown() = forEachEnabled("shutdown", rollbackOnFailure = false) { it.onShutdown() }
 
     fun markRestartRequired(reason: String) {
         pendingRestart = true
         pendingRestartReasons += reason
     }
 
-    private inline fun forEachEnabled(phase: String, action: (LiquidBounceAddon) -> Unit) {
+    private inline fun forEachEnabled(
+        phase: String,
+        rollbackOnFailure: Boolean = true,
+        action: (LiquidBounceAddon) -> Unit,
+    ) {
         for (addon in loadedAddons) {
             if (addon.state == AddonState.DISABLED || addon.state == AddonState.ERRORED) {
                 continue
@@ -151,7 +162,9 @@ object AddonManager {
                 // an add-on must never be allowed to throw past here.
                 logger.error("Add-on '${addon.id}' failed during $phase", error)
                 addon.state = AddonState.ERRORED
-                rollback(addon)
+                if (rollbackOnFailure) {
+                    rollback(addon)
+                }
             }
         }
     }
@@ -165,6 +178,11 @@ object AddonManager {
     private fun rollback(addon: LiquidBounceAddon) {
         fun step(what: String, block: () -> Unit) = runCatching(block)
             .onFailure { logger.error("Failed to withdraw $what of add-on '${addon.id}'", it) }
+
+        addon.registeredListeners.forEach { listener ->
+            step("listener ${listener.javaClass.simpleName}") { listener.unregister() }
+        }
+        addon.registeredListeners.clear()
 
         addon.registeredNodes.takeIf { it.isNotEmpty() }?.let { nodes ->
             step("command nodes") {
@@ -184,7 +202,12 @@ object AddonManager {
         addon.registeredModules.clear()
 
         addon.registeredCategories.forEach { category ->
-            step("category ${category.tag}") { ModuleCategories.unregister(category) }
+            // Another add-on may file modules under it; removing it would orphan them.
+            if (ModuleManager.any { it.category === category }) {
+                logger.info("Keeping category '${category.tag}' of add-on '${addon.id}', other modules use it")
+            } else {
+                step("category ${category.tag}") { ModuleCategories.unregister(category) }
+            }
         }
         addon.registeredCategories.clear()
 
@@ -192,6 +215,11 @@ object AddonManager {
             step("config ${config.name}") { ConfigSystem.remove(config) }
         }
         addon.registeredConfigs.clear()
+
+        step("event hooks") { addon.unregister() }
+
+        EventManager.callEvent(RefreshArrayListEvent)
+        ModuleClickGui.sync()
     }
 
 }

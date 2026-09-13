@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
@@ -69,7 +70,8 @@ enum class AddonState {
  * directly. They record what the add-on contributed so [AddonManager] can withdraw it again when
  * a lifecycle hook throws.
  */
-abstract class LiquidBounceAddon {
+@Suppress("TooManyFunctions")
+abstract class LiquidBounceAddon : EventListener {
 
     /**
      * Set by [AddonManager] right after Fabric instantiates the entrypoint.
@@ -92,8 +94,15 @@ abstract class LiquidBounceAddon {
     var state: AddonState = AddonState.DISCOVERED
         internal set
 
+    /**
+     * Handlers declared in the add-on body only fire while the add-on is loaded.
+     */
+    override val running: Boolean
+        get() = super.running && state == AddonState.LOADED
+
     val logger by lazy { clientLogger("Addon/$id") }
 
+    internal val registeredListeners = mutableListOf<EventListener>()
     internal val registeredModules = mutableListOf<ClientModule>()
     internal val registeredNodes = mutableListOf<LiteralCommandNode<ClientCommandSource>>()
     internal val registeredCategories = mutableListOf<ModuleCategory>()
@@ -125,6 +134,15 @@ abstract class LiquidBounceAddon {
      * Runs on client shutdown, before configs are written back to disk.
      */
     open fun onShutdown() {}
+
+    /**
+     * Tracks standalone [EventListener]s so their hooks are withdrawn with the add-on. Modules and
+     * modes are covered by [registerModules] and [registerMode]; a listener can also declare the
+     * add-on as its [EventListener.parent] to be gated by [running] instead.
+     */
+    fun registerListeners(vararg listeners: EventListener) {
+        registeredListeners += listeners
+    }
 
     fun registerCategory(
         name: String,
