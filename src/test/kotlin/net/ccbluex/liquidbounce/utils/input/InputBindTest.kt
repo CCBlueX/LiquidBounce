@@ -52,7 +52,7 @@ class InputBindTest {
         assertRendersKey(InputConstants.Type.MOUSE, InputConstants.MOUSE_BUTTON_MIDDLE)
 
         // The remaining mouse buttons are named after their number and used to render as digit keys
-        for (button in 3..7) {
+        for (button in InputConstants.MOUSE_BUTTON_4..InputConstants.MOUSE_BUTTON_8) {
             assertRendersKey(InputConstants.Type.MOUSE, button)
         }
     }
