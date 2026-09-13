@@ -49,7 +49,7 @@ enum class AddonState {
     /** A lifecycle hook threw; the add-on's contributions were rolled back. */
     ERRORED,
 
-    /** Withdrawn via `.addon disable`, or skipped by `-Dliquidbounce.disableAddons`. */
+    /** Skipped by `-Dliquidbounce.disableAddons`. */
     DISABLED,
 }
 
@@ -67,7 +67,7 @@ enum class AddonState {
  *
  * Register features through the `register*` helpers rather than calling [ModuleManager] and friends
  * directly. They record what the add-on contributed so [AddonManager] can withdraw it again when
- * the add-on is disabled or a lifecycle hook throws.
+ * a lifecycle hook throws.
  */
 abstract class LiquidBounceAddon {
 

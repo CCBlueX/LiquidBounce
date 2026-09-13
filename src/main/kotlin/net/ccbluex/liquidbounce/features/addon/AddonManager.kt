@@ -135,15 +135,6 @@ object AddonManager {
 
     fun shutdown() = forEachEnabled("shutdown") { it.onShutdown() }
 
-    /**
-     * Withdraws everything [addon] registered. Its classes stay loaded, since a Fabric mod cannot
-     * be unloaded, but none of its features remain active.
-     */
-    fun disable(addon: LiquidBounceAddon) {
-        rollback(addon)
-        addon.state = AddonState.DISABLED
-    }
-
     fun markRestartRequired(reason: String) {
         pendingRestart = true
         pendingRestartReasons += reason
