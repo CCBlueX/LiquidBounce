@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.world.getEntitiesInCube
 import net.minecraft.client.CameraType
@@ -170,7 +171,7 @@ fun Entity?.shouldBeShown(enemyConf: Set<Targets> = GlobalSettingsTarget.visual)
 
 @JvmOverloads
 fun Entity?.shouldBeAttacked(enemyConf: Set<Targets> = GlobalSettingsTarget.combat) =
-    this is Attackable && enemyConf.shouldAttack(this)
+    this is Attackable && enemyConf.shouldAttack(this) && this.isWithinWorldBorder
 
 /**
  * Mirrors the vanilla server-side invalid attack disconnect checks
@@ -239,9 +240,10 @@ inline fun ClientLevel.getEntitiesBoxInRange(
 
 /**
  * @see net.minecraft.client.Minecraft.startAttack
+ * @return attacked or pierced
  */
 @Suppress("CognitiveComplexMethod")
-fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) {
+fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false): Boolean {
     val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
     val piercingWeapon = itemStack.get(DataComponents.PIERCING_WEAPON)
 
@@ -250,12 +252,12 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) 
     if (piercingWeapon != null && !interaction.isSpectator) {
         interaction.piercingAttack(piercingWeapon)
         swing.swing(InteractionHand.MAIN_HAND)
-        return
+        return true
     }
 
     if (!entity.canBeAttackedWithVanillaPacket()
         || EventManager.callEvent(AttackEntityEvent(entity)).isCancelled) {
-        return
+        return false
     }
 
     with(player) {
@@ -309,4 +311,6 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) 
             swing.swing(InteractionHand.MAIN_HAND)
         }
     }
+
+    return true
 }
