@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.utils.block.immutable
-import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
+import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.block.isInteractable
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
@@ -52,7 +52,7 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
     val irrelevantPacket = !state.canBeReplaced() || pos.asLong() !in blocks
 
     val rotationMode = rotationMode.activeMode
-    if (irrelevantPacket || rotationMode !is NoRotationMode || pos.isBlockedByEntities()) {
+    if (irrelevantPacket || rotationMode !is NoRotationMode || !pos.isUnobstructed()) {
         return
     }
 

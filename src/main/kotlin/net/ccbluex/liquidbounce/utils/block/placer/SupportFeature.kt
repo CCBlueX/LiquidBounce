@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
+import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -81,7 +81,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
                             queuedBlocks.contains(neighbor.asLong()) ||
                             neighbor.distManhattan(targetPos) > depth ||
                             neighbor.distToCenterSqr(player.eyePosition) > rangeSq ||
-                            neighbor.isBlockedByEntities()
+                            !neighbor.isUnobstructed()
                         ) {
                             continue
                         }
