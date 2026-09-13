@@ -56,15 +56,14 @@ object AddonManager {
     val addons: List<LiquidBounceAddon> get() = loadedAddons
 
     /**
-     * Set when a marketplace add-on was installed or removed, since neither takes effect until the
-     * game is restarted.
+     * Marketplace changes that only take effect after a restart, keyed by item id so staging and
+     * unstaging the same add-on within one session leaves no stale reason behind.
      */
-    var pendingRestart = false
-        private set
+    private val pendingRestarts = LinkedHashMap<Int, String>()
 
-    private val pendingRestartReasons = mutableListOf<String>()
+    val pendingRestart: Boolean get() = pendingRestarts.isNotEmpty()
 
-    val restartReasons: List<String> get() = pendingRestartReasons
+    val restartReasons: Collection<String> get() = pendingRestarts.values
 
     operator fun get(id: String): LiquidBounceAddon? = loadedAddons.find { it.id.equals(id, true) }
 
@@ -142,9 +141,12 @@ object AddonManager {
      */
     fun shutdown() = forEachEnabled("shutdown", rollbackOnFailure = false) { it.onShutdown() }
 
-    fun markRestartRequired(reason: String) {
-        pendingRestart = true
-        pendingRestartReasons += reason
+    fun markRestartRequired(itemId: Int, reason: String) {
+        pendingRestarts[itemId] = reason
+    }
+
+    fun clearRestartRequired(itemId: Int) {
+        pendingRestarts.remove(itemId)
     }
 
     private inline fun forEachEnabled(
