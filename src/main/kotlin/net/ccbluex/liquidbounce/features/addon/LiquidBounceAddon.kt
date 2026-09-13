@@ -161,7 +161,7 @@ abstract class LiquidBounceAddon {
     /**
      * Adds a mode to an existing [ModeValueGroup], e.g. a new target-sorting mode.
      */
-    fun registerMode(parent: ModeValueGroup<*>, mode: Mode) {
+    fun <T : Mode> registerMode(parent: ModeValueGroup<T>, mode: T) {
         parent.addMode(mode)
         registeredModes += parent to mode
     }

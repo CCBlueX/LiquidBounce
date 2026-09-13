@@ -157,7 +157,7 @@ class PolyglotScript(
      */
     private val registeredModules = mutableListOf<ClientModule>()
     private val registeredCommands = mutableListOf<LiteralCommandNode<ClientCommandSource>>()
-    private val registeredModes = mutableListOf<Mode>()
+    private val registeredModes = mutableListOf<ScriptMode>()
 
     /**
      * Initialization of scripts

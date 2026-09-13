@@ -108,21 +108,16 @@ class ModeValueGroup<T : Mode>(
 
     /**
      * Attaches a mode contributed at runtime, e.g. by an add-on extending an existing group.
-     *
-     * Takes a plain [Mode] rather than [T] because callers reach a group through [Mode.parent],
-     * which is star-projected. The resulting unchecked cast is kept here, in one place, instead
-     * of being repeated at every call site. Only [Mode] members are ever used on the stored
-     * elements, so a foreign mode behaves correctly at runtime.
      */
-    @Suppress("UNCHECKED_CAST")
-    fun addMode(mode: Mode) {
+    fun addMode(mode: T) {
         require(modes.none { it.name.equals(mode.name, ignoreCase = true) }) {
             "ModeValueGroup '$name' already has a mode named '${mode.name}'"
         }
 
         mode.base = this
-        modes.add(mode as T)
-        walkKeyPath(key)
+        modes.add(mode)
+        // A group that has not been walked yet keys its modes once its owner is.
+        key?.let { mode.walkKeyPath(it) }
     }
 
     /**
