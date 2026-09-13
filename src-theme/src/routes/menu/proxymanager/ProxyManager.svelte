@@ -57,6 +57,7 @@
     let proxies: Proxy[] = [];
     let renderedProxies = proxies;
     let isConnectedToProxy = false;
+    let countryFilterInitialized = false;
 
     let currentEditProxy: Proxy | null = null;
 
@@ -80,12 +81,16 @@
     async function refreshProxies() {
         proxies = await getProxies();
 
-        const c = new Set<string>();
-        for (const p of proxies) {
-            c.add(convertCountryCode(p.ipInfo?.country));
-        }
-        allCountries = Array.from(c);
-        countries = allCountries;
+        const previousCountries = allCountries;
+        allCountries = [...new Set(proxies.map(p => convertCountryCode(p.ipInfo?.country)))];
+
+        // Every refresh - favoriting, removing or checking a proxy - used to select all countries
+        // again, throwing away the filter the user set. Keep their selection instead, and select
+        // countries that only just appeared so a newly added proxy is never hidden by it.
+        countries = countryFilterInitialized
+            ? allCountries.filter(c => countries.includes(c) || !previousCountries.includes(c))
+            : allCountries;
+        countryFilterInitialized = true;
     }
 
     function handleSearch(e: CustomEvent<{ query: string }>) {
