@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
-import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
+import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -207,7 +207,7 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
             pos.y in layers &&
             pos.getCenterDistanceSquared() + 1.0 < max(placer.range, placer.wallRange).sq() &&
             state.canBeReplaced() &&
-            !pos.isBlockedByEntities() &&
+            pos.isUnobstructed() &&
             playerWillNotRunIn(pos) &&
             willNotTrap(pos)
     }

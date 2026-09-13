@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.getBlockingEntities
-import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
+import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -69,7 +69,7 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
             when {
                 blockState.block == Blocks.OBSIDIAN -> score += 3
 
-                !blockState.canBeReplaced() || !canDestroyCrystals && it.isBlockedByEntities() -> {
+                !blockState.canBeReplaced() || !canDestroyCrystals && !it.isUnobstructed() -> {
                     // a block that is not obsidian and not replaceable, making the portal invalid
                     score = -1
                     return
@@ -91,7 +91,7 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
         edgeBlocks.forEach {
            if (!world.isEmptyBlock(it)) {
                 score += 4
-           } else if (it.isBlockedByEntities()) {
+           } else if (!it.isUnobstructed()) {
                score -= 1
            }
         }

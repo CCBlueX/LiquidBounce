@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.hasAnySolidPlacementNeighbor
-import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
+import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.state
@@ -157,7 +157,7 @@ object ModuleLiquidFiller : ClientModule("LiquidFiller", ModuleCategories.WORLD)
             pos.distToCenterSqr(player.eyePosition) <= scanRange.sq() &&
                 state.canBeReplaced() &&
                 pos.hasAnySolidPlacementNeighbor() &&
-                !pos.isBlockedByEntities() &&
+                pos.isUnobstructed() &&
                 canAbsorbWaterFrom(pos, waterPos)
         }.minByOrNull { (pos, _) -> pos.distToCenterSqr(player.eyePosition) }?.first
     }

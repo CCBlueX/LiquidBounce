@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.utils.block
 import com.google.common.base.Predicates
 import net.ccbluex.fastutil.weightedFilterSortedByAtMost
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
+import it.unimi.dsi.fastutil.ints.IntCollection
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.event.EventManager
@@ -670,14 +671,24 @@ fun BlockPos.hasAnySolidPlacementNeighbor(): Boolean {
     }
 }
 
-fun BlockPos.isBlockedByEntities(
+private val PREDICATE_UNOBSTRUCTED: Predicate<Entity> =
+    EntitySelector.NO_SPECTATORS.and { entity ->
+        !entity.isRemoved && entity.blocksBuilding
+    }
+
+/**
+ * Checks whether the position is unobstructed for placing a block.
+ *
+ * @see net.minecraft.world.level.EntityGetter.isUnobstructed
+ */
+fun BlockPos.isUnobstructed(
     except: Entity? = null,
     box: AABB = FULL_BOX,
     predicate: Predicate<Entity> = Predicates.alwaysTrue(),
 ): Boolean {
     val posBox = box + this
-    return world.getEntities(except, posBox, EntitySelector.NO_SPECTATORS.and(predicate))
-        .isNotEmpty() // TODO: optimize this
+    return world.getEntities(except, posBox, PREDICATE_UNOBSTRUCTED.and(predicate))
+        .isEmpty()
 }
 
 fun BlockPos.getBlockingEntities(
@@ -686,23 +697,30 @@ fun BlockPos.getBlockingEntities(
     predicate: Predicate<Entity> = Predicates.alwaysTrue(),
 ): List<Entity> {
     val posBox = box + this
-    return world.getEntities(except, posBox, EntitySelector.NO_SPECTATORS.and(predicate))
+    return world.getEntities(except, posBox, PREDICATE_UNOBSTRUCTED.and(predicate))
 }
 
 /**
- * Like [isBlockedByEntities] but it returns a blocking end crystal if present.
+ * Checks whether the position is blocked for placing a block and returns a blocking end crystal if present.
+ *
+ * @param buildingOnly when `true` (default) only entities that block building (`Entity.blocksBuilding`)
+ *   count, matching vanilla block placement; when `false` every entity counts, matching vanilla
+ *   end crystal placement.
+ * @return `[blocked, crystal?]`
  */
 fun BlockPos.isBlockedByEntitiesReturnCrystal(
     except: Entity? = null,
     box: AABB = FULL_BOX,
-    excludeIds: IntArray? = null
+    excludeIds: IntCollection? = null,
+    buildingOnly: Boolean = true
 ): BooleanObjectPair<EndCrystal?> {
     var blocked = false
 
     val posBox = box + this
-    val selector = Predicate<Entity> {
-        EntitySelector.NO_SPECTATORS.test(it) && (excludeIds == null || it.id !in excludeIds)
-    }
+
+    val baseFilter = if (buildingOnly) PREDICATE_UNOBSTRUCTED else EntitySelector.NO_SPECTATORS
+    val selector = if (excludeIds.isNullOrEmpty()) baseFilter else baseFilter.and { it.id !in excludeIds }
+
     world.getEntities(except, posBox, selector).forEach {
         if (it is EndCrystal) {
             return BooleanObjectPair.of(true, it)
