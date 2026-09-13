@@ -118,7 +118,7 @@ object CommandAddon : CommandRegistrar {
 
     private fun featureSummary(addon: LiquidBounceAddon) = buildString {
         append(addon.registeredModules.size).append(" modules, ")
-        append(addon.registeredCommands.size + addon.registeredNodes.size).append(" commands, ")
+        append(addon.registeredNodes.count { it.redirect == null }).append(" commands, ")
         append(addon.registeredCategories.size).append(" categories")
     }
 

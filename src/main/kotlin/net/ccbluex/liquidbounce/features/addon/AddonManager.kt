@@ -182,11 +182,6 @@ object AddonManager {
         }
         addon.registeredNodes.clear()
 
-        addon.registeredCommands.forEach { registrar ->
-            step("command ${registrar.javaClass.simpleName}") { CommandManager.unregister(registrar) }
-        }
-        addon.registeredCommands.clear()
-
         addon.registeredModes.forEach { (parent, mode) ->
             step("mode ${mode.name}") { parent.removeMode(mode) }
         }

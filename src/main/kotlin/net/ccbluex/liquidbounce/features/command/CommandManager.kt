@@ -180,7 +180,7 @@ object CommandManager : EventListener {
 
     /**
      * Lazily built Brigadier command tree. Rebuilt whenever a command is registered or
-     * unregistered (see [register] / [unregister] / [registerNodes] / [unregisterNodes]).
+     * unregistered (see [register] / [registerNodes] / [unregisterNodes]).
      */
     @Volatile
     private var brigadierDispatcher: CommandDispatcher<ClientCommandSource>? = null
@@ -211,18 +211,6 @@ object CommandManager : EventListener {
     }
 
     /**
-     * Removes a previously registered [CommandRegistrar], used when an add-on is torn down.
-     *
-     * Brigadier cannot remove a node from a built dispatcher, so the cache is dropped and
-     * [getDispatcher] replays the remaining registrars instead.
-     */
-    fun unregister(registrar: CommandRegistrar) {
-        if (directCommandRegistrars.remove(registrar)) {
-            brigadierDispatcher = null
-        }
-    }
-
-    /**
      * Registers command nodes built at runtime rather than by a [CommandRegistrar].
      *
      * All nodes are replayed whenever the dispatcher is rebuilt. Any node name already
@@ -244,14 +232,13 @@ object CommandManager : EventListener {
 
         validated.forEach { dynamicCommandNodes[it.name] = it }
         brigadierDispatcher = null
-        getDispatcher()
     }
 
     /**
      * Unregisters dynamically provided command nodes by name, rebuilding the dispatcher.
      */
     fun unregisterNodes(names: Set<String>) {
-        dynamicCommandNodes.keys.removeAll(names)
+        names.forEach { dynamicCommandNodes.remove(it) }
         brigadierDispatcher = null
     }
 
@@ -282,7 +269,7 @@ object CommandManager : EventListener {
 
     /**
      * Returns the lazily built [CommandDispatcher], rebuilding it whenever the command
-     * registry changed (see [register] / [unregister] / [registerNodes] / [unregisterNodes]).
+     * registry changed (see [register] / [registerNodes] / [unregisterNodes]).
      */
     private fun getDispatcher(): CommandDispatcher<ClientCommandSource> {
         brigadierDispatcher?.let { return it }

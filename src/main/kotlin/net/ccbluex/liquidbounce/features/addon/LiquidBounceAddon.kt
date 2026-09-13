@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.addon
 
+import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.tree.LiteralCommandNode
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.OptionalInclusion
@@ -94,7 +95,6 @@ abstract class LiquidBounceAddon {
     val logger by lazy { clientLogger("Addon/$id") }
 
     internal val registeredModules = mutableListOf<ClientModule>()
-    internal val registeredCommands = mutableListOf<CommandRegistrar>()
     internal val registeredNodes = mutableListOf<LiteralCommandNode<ClientCommandSource>>()
     internal val registeredCategories = mutableListOf<ModuleCategory>()
     internal val registeredModes = mutableListOf<Pair<ModeValueGroup<*>, Mode>>()
@@ -144,14 +144,23 @@ abstract class LiquidBounceAddon {
         }
     }
 
+    /**
+     * Registers a command written against the Brigadier DSL.
+     *
+     * The registrar runs once against a scratch dispatcher and its root literals go through
+     * [registerCommandNodes], so an add-on command is validated against the existing root the
+     * same way a script command is. Brigadier would otherwise merge a same-named root literal
+     * silently, letting an add-on hijack a built-in command.
+     */
     fun registerCommand(registrar: CommandRegistrar) {
-        CommandManager.register(registrar)
-        registeredCommands += registrar
+        val scratch = CommandDispatcher<ClientCommandSource>()
+        registrar.register(scratch)
+        registerCommandNodes(scratch.root.children.filterIsInstance<LiteralCommandNode<ClientCommandSource>>())
     }
 
     /**
-     * Registers command nodes built at runtime, for add-ons that generate commands rather than
-     * writing them against the Brigadier DSL.
+     * Registers prebuilt command nodes, for add-ons that generate commands rather than writing
+     * them against the Brigadier DSL.
      */
     fun registerCommandNodes(nodes: Collection<LiteralCommandNode<ClientCommandSource>>) {
         CommandManager.registerNodes(nodes)
