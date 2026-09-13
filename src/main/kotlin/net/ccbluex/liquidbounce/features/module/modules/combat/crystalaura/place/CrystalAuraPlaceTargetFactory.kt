@@ -115,7 +115,8 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
 
             val cache = CandidateCache(pos)
             if (conditionChain.all { condition -> condition.isValid(context, cache, pos) }) {
-                val blocked = cache.up.isBlockedByEntitiesReturnCrystal(box = expectedCrystal, excludeIds = excludeIds, buildingOnly = false)
+                val blocked = cache.up.isBlockedByEntitiesReturnCrystal(
+                    box = expectedCrystal, excludeIds = excludeIds, buildingOnly = false)
                 val crystal = blocked.value() != null
                 if (!blocked.keyBoolean() || crystal) {
                     positions.add(PlacementPositionCandidate(pos.immutable(), !crystal, !cache.canPlace))
