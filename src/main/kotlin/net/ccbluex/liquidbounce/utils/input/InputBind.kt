@@ -73,25 +73,6 @@ data class InputBind(
         this(inputByName(name), BindAction.TOGGLE, emptySet())
 
     /**
-     * Retrieves the name of the key in uppercase format, excluding the category prefixes.
-     *
-     * Since the category is dropped, the result no longer says which device the key belongs to
-     * and must not be passed back to [inputByName], which assumes the keyboard for names without
-     * a category - use [boundKey] when the key itself is needed.
-     *
-     * @return A formatted string representing the bound key's name, or "None" if unbound.
-     */
-    val keyName: String
-        get() = when {
-            isUnbound -> "None"
-            else -> this.boundKey.name
-                .split('.')
-                .drop(2) // Drops the "key.keyboard" or "key.mouse" part
-                .joinToString(separator = "_") // Joins the remaining parts with underscores
-                .uppercase() // Converts the key name to uppercase
-        }
-
-    /**
      * Checks if the key is unbound (i.e., set to UNKNOWN_KEY).
      *
      * @return True if the key is unbound, false otherwise.
