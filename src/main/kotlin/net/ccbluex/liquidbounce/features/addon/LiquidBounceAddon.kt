@@ -136,11 +136,11 @@ abstract class LiquidBounceAddon {
     fun registerModules(vararg modules: ClientModule) {
         for (module in modules) {
             ModuleManager.addModule(module)
+            registeredModules += module
             // Matches ModuleManager.registerInbuilt: without walkKeyPath the module has no
             // translation key and the ClickGUI falls back to raw names.
             module.walkKeyPath()
             module.verifyFallbackDescription()
-            registeredModules += module
         }
     }
 
