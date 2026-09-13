@@ -45,7 +45,7 @@ fun inputByName(name: String): InputConstants.Key {
                 formattedName.startsWith("key.keyboard.", ignoreCase = true) -> formattedName.lowercase()
 
             formattedName.startsWith("mouse.", ignoreCase = true) ||
-                formattedName.startsWith("keyboard.", ignoreCase = true) -> "key.$formattedName"
+                formattedName.startsWith("keyboard.", ignoreCase = true) -> "key.${formattedName.lowercase()}"
 
             else -> "key.keyboard.${formattedName.lowercase()}"
         }

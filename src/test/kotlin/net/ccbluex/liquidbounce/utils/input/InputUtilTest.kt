@@ -47,7 +47,11 @@ class InputUtilTest {
     @Test
     fun `inputByName is case insensitive`() {
         assertResolves("key.keyboard.a", "A")
+        assertResolves("key.keyboard.a", "KEYBOARD.A")
+        assertResolves("key.keyboard.left.shift", "Left_Shift")
         assertResolves("key.mouse.left", "KEY.MOUSE.LEFT")
+        assertResolves("key.mouse.left", "MOUSE.LEFT")
+        assertResolves("key.mouse.left", "Mouse.Left")
         assertEquals(InputConstants.UNKNOWN, inputByName("NoNe"))
     }
 
