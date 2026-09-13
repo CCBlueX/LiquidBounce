@@ -58,7 +58,7 @@ object ModuleCategories {
      */
     @JvmStatic
     fun register(category: ModuleCategory): ModuleCategory {
-        if (registry.put(category.tag, category) != null) {
+        if (registry.putIfAbsent(category.tag, category) != null) {
             error("A module category with the name '${category.tag}' is already registered!")
         }
 
