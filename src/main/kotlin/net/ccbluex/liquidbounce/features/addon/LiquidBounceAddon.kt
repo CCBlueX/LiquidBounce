@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
@@ -33,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.fabricmc.loader.api.ModContainer
 
@@ -112,6 +115,15 @@ abstract class LiquidBounceAddon : EventListener {
         registeredListeners += listeners
     }
 
+    /**
+     * For categories that are only known once the add-on runs. Declare the rest in [categories].
+     */
+    fun registerCategory(category: ModuleCategory): ModuleCategory {
+        ModuleCategories.register(category)
+        registeredCategories += category
+        return category
+    }
+
     fun registerModules(vararg modules: ClientModule) {
         for (module in modules) {
             check(ModuleCategories.byName(module.category.tag) === module.category) {
@@ -124,6 +136,21 @@ abstract class LiquidBounceAddon : EventListener {
             module.walkKeyPath()
             module.verifyFallbackDescription()
         }
+        refreshModuleList()
+    }
+
+    fun unregisterModules(vararg modules: ClientModule) {
+        for (module in modules) {
+            if (registeredModules.remove(module)) {
+                ModuleManager.removeModule(module)
+            }
+        }
+        refreshModuleList()
+    }
+
+    private fun refreshModuleList() {
+        EventManager.callEvent(RefreshArrayListEvent)
+        ModuleClickGui.sync()
     }
 
     fun registerCommand(registrar: CommandRegistrar) {
