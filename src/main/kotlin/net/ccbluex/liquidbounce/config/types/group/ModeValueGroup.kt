@@ -106,6 +106,28 @@ class ModeValueGroup<T : Mode>(
         }
     }
 
+    fun addMode(mode: T) {
+        require(modes.none { it.name.equals(mode.name, ignoreCase = true) }) {
+            "ModeValueGroup '$name' already has a mode named '${mode.name}'"
+        }
+
+        mode.base = this
+        modes.add(mode)
+        // Unwalked groups key their modes once the owner is walked.
+        key?.let { mode.walkKeyPath(it) }
+    }
+
+    fun removeMode(mode: Mode) {
+        if (activeMode === mode) {
+            restore()
+        }
+
+        if (modes.remove(mode)) {
+            mode.base = null
+            mode.unregister()
+        }
+    }
+
     @ScriptApiRequired
     fun getModeStrings(): Array<String> = modes.mapToArray { it.name }
 

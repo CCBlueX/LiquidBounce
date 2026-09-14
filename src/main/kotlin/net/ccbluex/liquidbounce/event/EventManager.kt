@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import it.unimi.dsi.fastutil.objects.Object2ReferenceRBTreeMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -142,6 +143,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
 import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -282,26 +284,88 @@ inline fun <reified E : Event> eventFlow(): SharedFlow<E> =
     EventManager.eventFlow(E::class.java)
 
 /**
+ * Swapped as one object, so readers never see the tables disagree.
+ */
+private class EventTables(@JvmField val classes: Set<Class<out Event>>, previous: EventTables?) {
+
+    @JvmField
+    val registry: Map<Class<out Event>, EventHookRegistry<in Event>> = classes.associateWithTo(
+        Reference2ObjectOpenHashMap(classes.size)
+    ) { previous?.registry?.get(it) ?: EventHookRegistry() }
+
+    @JvmField
+    val flows: Map<Class<out Event>, MutableSharedFlow<Event>> = classes.associateWithTo(
+        Reference2ObjectOpenHashMap(classes.size)
+    ) { previous?.flows?.get(it) ?: MutableSharedFlow(replay = 0, extraBufferCapacity = 0) }
+
+    @JvmField
+    val classToName: Map<Class<out Event>, String> =
+        Reference2ObjectOpenHashMap<Class<out Event>, String>(classes.size).apply {
+            classes.forEach { eventClass ->
+                eventClass.getAnnotation(Tag::class.java)?.let { put(eventClass, it.name) }
+            }
+        }
+
+    @JvmField
+    val nameToClass: Map<String, Class<out Event>> =
+        Object2ReferenceRBTreeMap<String, Class<out Event>>(String.CASE_INSENSITIVE_ORDER).apply {
+            classToName.forEach { (eventClass, name) -> put(name, eventClass) }
+        }
+
+}
+
+/**
  * A modern and fast event handler using lambda handlers
  */
 object EventManager {
 
-    private val registry: Map<Class<out Event>, EventHookRegistry<in Event>> =
-        ALL_EVENT_CLASSES.associateWithTo(
-            Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
-        ) { EventHookRegistry() }
+    @Volatile
+    private var tables = EventTables(ALL_EVENT_CLASSES.toCollection(LinkedHashSet()), previous = null)
 
-    private val flows: Map<Class<out Event>, MutableSharedFlow<Event>> =
-        ALL_EVENT_CLASSES.associateWithTo(
-            Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
-        ) { MutableSharedFlow(replay = 0, extraBufferCapacity = 0) }
+    val knownEventClasses: Set<Class<out Event>>
+        get() = tables.classes
+
+    /**
+     * Looks up by [Tag] name, ignoring case.
+     */
+    fun eventClassByName(name: String): Class<out Event>? = tables.nameToClass[name]
+
+    internal fun eventNameOrNull(eventClass: Class<out Event>): String? = tables.classToName[eventClass]
+
+    @Synchronized
+    fun registerEventClass(eventClass: Class<out Event>): Boolean {
+        val current = tables
+        if (eventClass in current.classes) {
+            return false
+        }
+
+        eventClass.getAnnotation(Tag::class.java)?.let { tag ->
+            val owner = current.nameToClass[tag.name]
+            require(owner == null) {
+                "Event name '${tag.name}' is already taken by ${owner!!.name}, " +
+                    "cannot register ${eventClass.name}"
+            }
+        }
+
+        tables = EventTables(LinkedHashSet(current.classes).apply { add(eventClass) }, current)
+        return true
+    }
+
+    private fun tablesContaining(eventClass: Class<out Event>): EventTables {
+        val current = tables
+        if (eventClass in current.classes) {
+            return current
+        }
+
+        registerEventClass(eventClass)
+        return tables
+    }
 
     /**
      * Used by handler methods
      */
     fun <T : Event> registerEventHook(eventClass: Class<out Event>, eventHook: EventHook<T>): EventHook<T> {
-        val handlers = registry[eventClass]
-            ?: error("The event '${eventClass.name}' is not registered in Events.kt::ALL_EVENT_CLASSES.")
+        val handlers = tablesContaining(eventClass).registry.getValue(eventClass)
 
         @Suppress("UNCHECKED_CAST")
         val hook = eventHook as EventHook<in Event>
@@ -316,17 +380,17 @@ object EventManager {
      */
     fun <T : Event> unregisterEventHook(eventClass: Class<out Event>, eventHook: EventHook<T>) {
         @Suppress("UNCHECKED_CAST")
-        registry[eventClass]?.remove(eventHook as EventHook<in Event>)
+        tables.registry[eventClass]?.remove(eventHook as EventHook<in Event>)
     }
 
     fun unregisterEventHandler(eventListener: EventListener) {
-        registry.values.forEach {
+        tables.registry.values.forEach {
             it.remove(eventListener)
         }
     }
 
     fun unregisterAll() {
-        registry.values.forEach {
+        tables.registry.values.forEach {
             it.clear()
         }
     }
@@ -342,7 +406,8 @@ object EventManager {
         }
 
         val eventType = event.javaClass
-        val target = registry[eventType] ?: return event
+        val snapshot = tables
+        val target = snapshot.registry[eventType] ?: return event
 
         event.isCompleted = false
         for (eventHook in target.snapshot) {
@@ -372,7 +437,7 @@ object EventManager {
         event.isCompleted = true
 
         @Suppress("UNCHECKED_CAST")
-        (flows[event.javaClass] as MutableSharedFlow<T>).tryEmit(event)
+        (snapshot.flows.getValue(eventType) as MutableSharedFlow<T>).tryEmit(event)
 
         return event
     }
@@ -384,6 +449,6 @@ object EventManager {
      */
     fun <T : Event> eventFlow(eventClass: Class<T>): SharedFlow<T> {
         @Suppress("UNCHECKED_CAST")
-        return flows[eventClass] as SharedFlow<T>
+        return tablesContaining(eventClass).flows.getValue(eventClass) as SharedFlow<T>
     }
 }

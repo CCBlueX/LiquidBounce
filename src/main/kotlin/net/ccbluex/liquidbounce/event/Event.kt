@@ -18,9 +18,6 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import it.unimi.dsi.fastutil.objects.Object2ReferenceRBTreeMap
-import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 
 /**
@@ -63,21 +60,8 @@ enum class EventState(val stateName: String) {
 }
 
 /**
- * Retrieves the name that the event is supposed to be associated with in JavaScript.
+ * The event's name on the interop protocol, or the simple class name for an untagged add-on event.
  */
 val Class<out Event>.eventName: String
-    get() = EVENT_CLASS_TO_NAME[this]!!
-
-private val EVENT_CLASS_TO_NAME: Map<Class<out Event>, String> = ALL_EVENT_CLASSES.associateWithTo(
-    Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
-) {
-    it.getAnnotation(Tag::class.java)!!.name
-}
-
-@JvmField
-internal val EVENT_NAME_TO_CLASS: Map<String, Class<out Event>> = ALL_EVENT_CLASSES.associateByTo(
-    Object2ReferenceRBTreeMap(String.CASE_INSENSITIVE_ORDER)
-) {
-    it.getAnnotation(Tag::class.java)!!.name
-}
+    get() = EventManager.eventNameOrNull(this) ?: simpleName
 

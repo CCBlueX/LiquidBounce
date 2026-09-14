@@ -30,6 +30,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.nodeGradle)
     alias(libs.plugins.dokka)
+    `maven-publish`
 }
 
 base {
@@ -383,6 +384,61 @@ tasks.jar {
     from("LICENSE") {
         rename {
             "${it}_${archivesBaseName.get()}"
+        }
+    }
+}
+
+val publishVersion: String = providers.gradleProperty("publish.version").orNull ?: run {
+    val base = "${providers.gradleProperty("mod_version").get()}+${libs.versions.minecraft.get()}"
+    val isRelease = providers.environmentVariable("GITHUB_EVENT_NAME").orNull == "release"
+
+    if (isRelease) base else "$base-SNAPSHOT"
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mod") {
+            groupId = providers.gradleProperty("maven_group").get()
+            artifactId = providers.gradleProperty("archives_base_name").get()
+            version = publishVersion
+
+            // Dev and production are both Mojang names here, so there is no remapJar to publish.
+            artifact(tasks.jar)
+            artifact(tasks.named("sourcesJar")) { classifier = "sources" }
+
+            // No from(components["java"]): the POM would list com.mojang:minecraft, which no
+            // public repository serves.
+            pom {
+                name = "LiquidBounce"
+                description = "A free mixin-based injection hacked-client for Minecraft " +
+                    "using the Fabric modding toolchain."
+                url = "https://liquidbounce.net/"
+
+                licenses {
+                    license {
+                        name = "GNU General Public License v3.0"
+                        url = "https://www.gnu.org/licenses/gpl-3.0.txt"
+                    }
+                }
+
+                scm {
+                    url = "https://github.com/CCBlueX/LiquidBounce"
+                    connection = "scm:git:https://github.com/CCBlueX/LiquidBounce.git"
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "CCBlueX"
+            val channel = if (publishVersion.endsWith("-SNAPSHOT")) "snapshots" else "releases"
+            url = uri("https://maven.ccbluex.net/$channel")
+
+            credentials {
+                username = providers.environmentVariable("MAVEN_USERNAME").orNull
+                password = providers.environmentVariable("MAVEN_PASSWORD").orNull
+            }
         }
     }
 }

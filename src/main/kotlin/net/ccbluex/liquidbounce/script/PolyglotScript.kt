@@ -157,7 +157,7 @@ class PolyglotScript(
      */
     private val registeredModules = mutableListOf<ClientModule>()
     private val registeredCommands = mutableListOf<LiteralCommandNode<ClientCommandSource>>()
-    private val registeredModes = mutableListOf<Mode>()
+    private val registeredModes = mutableListOf<ScriptMode>()
 
     /**
      * Initialization of scripts
@@ -298,12 +298,9 @@ class PolyglotScript(
         callGlobalEvent("enable")
 
         registeredModules.forEach(ModuleManager::addModule)
-        CommandManager.registerScriptCommands(registeredCommands)
+        CommandManager.registerNodes(registeredCommands)
 
-        registeredModes.forEach { choice ->
-            @Suppress("UNCHECKED_CAST")
-            (choice.parent.modes as MutableList<Any>).add(choice)
-        }
+        registeredModes.forEach { mode -> mode.parent.addMode(mode) }
         scriptEnabled = true
     }
 
@@ -319,9 +316,9 @@ class PolyglotScript(
         callGlobalEvent("disable")
 
         registeredModules.forEach(ModuleManager::removeModule)
-        CommandManager.unregisterScriptCommands(registeredCommands.mapTo(hashSetOf()) { it.name })
+        CommandManager.unregisterNodes(registeredCommands.mapTo(hashSetOf()) { it.name })
 
-        registeredModes.forEach { it.parent.modes.remove(it) }
+        registeredModes.forEach { mode -> mode.parent.removeMode(mode) }
 
         EventManager.callEvent(RefreshArrayListEvent)
 

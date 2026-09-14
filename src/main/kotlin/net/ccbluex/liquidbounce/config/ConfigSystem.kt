@@ -131,10 +131,16 @@ object ConfigSystem {
      * Add an existing config instance
      */
     fun root(config: Config): Config {
+        require(configs.none { it.loweredName == config.loweredName }) {
+            "A config named '${config.loweredName}' is already registered"
+        }
+
         config.walkInit()
         configs.add(config)
         return config
     }
+
+    fun remove(config: Config): Boolean = configs.remove(config)
 
     /**
      * Create a ZIP file backup of configs

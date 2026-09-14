@@ -24,6 +24,8 @@ import com.terraformersmc.modmenu.util.mod.Mod
 import kotlinx.coroutines.cancel
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.addon.AddonManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
@@ -168,9 +170,14 @@ object HideAppearance : EventListener {
             ConfigSystem.rootFolder.deleteRecursively()
         }
 
-        FabricLoaderImpl.INSTANCE.allMods.find {
-            it.metadata.id == "liquidbounce"
-        }?.let { mod ->
+        val idsToWipe = buildSet {
+            add("liquidbounce")
+            AddonManager.addons.forEach { add(it.id) }
+        }
+
+        FabricLoaderImpl.INSTANCE.allMods.filter {
+            it.metadata.id in idsToWipe
+        }.forEach { mod ->
             // Delete JAR file
             runCatching {
                 val origin = mod.origin
@@ -187,6 +194,9 @@ object HideAppearance : EventListener {
                 FabricLoaderImpl.INSTANCE.modsInternal.remove(mod)
             }
         }
+
+        // Jars staged this session belong to no mod container yet.
+        AddonInstaller.wipeManagedJars()
 
         // History clear
         mc.gui.hud.chat.clearMessages(true)
