@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
@@ -34,7 +34,7 @@ public abstract class MixinLevelLoadingScreen extends MixinScreen {
     protected void init(CallbackInfo ci) {
         super.init(ci);
 
-        if (HideAppearance.INSTANCE.isHidingNow()) {
+        if (SelfDestruct.INSTANCE.isDestructed()) {
             return;
         }
 

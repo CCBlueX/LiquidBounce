@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.screen
 
 import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
@@ -33,7 +34,6 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
-import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
@@ -49,6 +49,7 @@ import net.ccbluex.liquidbounce.integration.screen.impl.MicrosoftLoginScreen
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.QuickFix
@@ -123,6 +124,11 @@ object ScreenManager : EventListener {
             is BrowserState.Success -> {
                 this.mainBrowser = browser
                 logger.info("Integration Browser $browser is ready.")
+
+                // Screens opened while the browser was loading could not move it to their theme.
+                if (theme != null && theme != ThemeManager.theme) {
+                    update()
+                }
             }
             // Try ONCE MORE.
             is BrowserState.Failure if (allowTryOnceMore) -> {
@@ -196,7 +202,8 @@ object ScreenManager : EventListener {
             // That means we are likely still in the process of starting up.
             val mainBrowser = this.mainBrowser ?: return
             mainBrowser.close()
-            this.mainBrowser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
+            this.mainBrowser = ThemeManager.openInputAwareImmediate(screen?.type, settings = browserSettings)
+            theme = ThemeManager.getScreenLocation(screen?.type).theme
         } catch (e: Exception) {
             logger.error("Failed to restart browser backend for screen integration.", e)
         }
@@ -216,11 +223,10 @@ object ScreenManager : EventListener {
 
     fun update() {
         val browser = mainBrowser ?: return
-        logger.info(
-            "Reloading integration browser ${browser.javaClass.simpleName} " +
-                "to ${ThemeManager.getScreenLocation()}"
-        )
-        ThemeManager.updateImmediate(browser, screen?.type)
+        val location = ThemeManager.getScreenLocation(screen?.type)
+        logger.info("Reloading integration browser ${browser.javaClass.simpleName} to $location")
+        theme = location.theme
+        browser.url = location.url
     }
 
     fun restoreOriginalScreen() {
@@ -273,6 +279,8 @@ object ScreenManager : EventListener {
         event.fps = min(event.fps, browserSettings.currentFps)
     }
 
+    private val basicModeChronometer = Chronometer()
+
     @Suppress("unused")
     private val keyHandler = handler<KeyboardKeyEvent> { event ->
         val keyCode = event.keyCode
@@ -294,6 +302,16 @@ object ScreenManager : EventListener {
             accelerated.set(!accelerated.get())
             logger.info("GPU acceleration is now ${if (accelerated.get()) "enabled" else "disabled"}.")
         }
+
+        // CTRL + 2x SHIFT to toggle basic mode
+        if (keyCode == InputConstants.KEY_LSHIFT && modifier == InputConstants.MOD_CONTROL) {
+            if (!basicModeChronometer.hasElapsed(400L)) {
+                ThemeManager.basicMode = !ThemeManager.basicMode
+                ConfigSystem.store(ThemeManager)
+            }
+
+            basicModeChronometer.reset()
+        }
     }
 
     private fun handleCurrentScreen(screen: Screen?): Boolean {
@@ -302,7 +320,7 @@ object ScreenManager : EventListener {
             return false
         }
 
-        if (HideAppearance.isHidingNow || ClientInteropServer.isSkipping) {
+        if (ClientInteropServer.isSkipping) {
             return if (screen is CustomSharedMinecraftScreen) {
                 val original = screen.originalScreen
                 if (original is CustomSharedMinecraftScreen) {
@@ -318,6 +336,12 @@ object ScreenManager : EventListener {
         }
 
         if (screen is CustomSharedMinecraftScreen) {
+            val original = screen.originalScreen
+            if (ThemeManager.isBasicMode && original != null && original !is CustomSharedMinecraftScreen) {
+                mc.gui.setScreen(original)
+                return true
+            }
+
             return false
         }
 
@@ -334,7 +358,9 @@ object ScreenManager : EventListener {
      * @return should cancel the minecraft screen
      */
     private fun handleCurrentMinecraftScreen(minecraftScreen: Screen): Boolean {
+        val basicMode = ThemeManager.isBasicMode
         val customScreenType = CustomScreenType.recognize(minecraftScreen)
+            ?.let { if (basicMode && it.hasBasicMenu) CustomScreenType.BASIC_MENU else it }
         if (customScreenType == null) {
             closeScreen()
             return false
@@ -354,7 +380,7 @@ object ScreenManager : EventListener {
 
         return when {
             // When we want to fully replace a screen.
-            theme.isScreenSupported(name) -> {
+            !basicMode && theme.isScreenSupported(name) -> {
                 mc.gui.setScreen(CustomSharedMinecraftScreen(customScreenType, theme, originalScreen = minecraftScreen))
                 true
             }

@@ -758,6 +758,12 @@ export async function toggleBackgroundShaderEnabled() {
     });
 }
 
+export async function toggleBasicMode() {
+    await fetch(`${API_BASE}/client/basic-mode`, {
+        method: "POST",
+    });
+}
+
 export async function getBrowser(): Promise<Browser> {
     const response = await fetch(`${API_BASE}/client/browser`);
     const data: Browser = await response.json();

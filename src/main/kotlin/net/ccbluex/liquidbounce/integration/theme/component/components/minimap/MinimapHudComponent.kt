@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
 import net.ccbluex.liquidbounce.render.getBounds
@@ -181,10 +180,6 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     }
 
     val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
-        if (HideAppearance.isHidingNow) {
-            return@handler
-        }
-
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)
         val playerRotation = player.interpolateCurrentRotation(event.tickDelta)
 

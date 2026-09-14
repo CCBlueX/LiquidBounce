@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.command.commands.client.client
 import net.ccbluex.liquidbounce.features.command.arguments.BooleanArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.destructClient
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.wipeClient
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct.destructClient
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct.wipeClient
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
