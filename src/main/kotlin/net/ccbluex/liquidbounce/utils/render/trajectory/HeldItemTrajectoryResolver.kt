@@ -63,11 +63,8 @@ object HeldItemTrajectoryResolver {
     ): List<TrajectoryShotDescriptor>? {
         return when (stack.item) {
             is BowItem -> {
-                val useTime = if (alwaysShowBow && player.ticksUsingItem < 1) {
-                    40
-                } else {
-                    player.ticksUsingItem
-                }
+                val drawing = player.activeItem === stack
+                val useTime = bowUsageDuration(alwaysShowBow, drawing, player.ticksUsingItem) ?: return null
 
                 val trajectoryInfo = TrajectoryInfo.bowWithUsageDuration(useTime) ?: return null
                 singleShot(
@@ -128,6 +125,12 @@ object HeldItemTrajectoryResolver {
 
     private fun isCrossbowFirework(chargedProjectiles: ChargedProjectiles?): Boolean {
         return chargedProjectiles != null && chargedProjectiles.contains(Items.FIREWORK_ROCKET)
+    }
+
+    private fun bowUsageDuration(alwaysShowBow: Boolean, drawing: Boolean, ticksUsingItem: Int): Int? = when {
+        !alwaysShowBow && !drawing -> null
+        alwaysShowBow && !drawing -> 40
+        else -> ticksUsingItem
     }
 
     private fun singleShot(
