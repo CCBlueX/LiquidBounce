@@ -19,8 +19,13 @@
 
 package net.ccbluex.liquidbounce.utils.text
 
-import kotlin.test.assertEquals
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.contents.PlainTextContents
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertSame
 
 class TextExtensionsKtTest {
     @Test
@@ -53,5 +58,23 @@ class TextExtensionsKtTest {
         assertEquals("", "".hideSensitiveAddress())
         assertEquals(":12345", ":12345".hideSensitiveAddress())
         assertEquals("<redacted>.liquidbounce.net:", "test.liquidbounce.net:".hideSensitiveAddress())
+    }
+
+    @Test
+    fun `mapComponent rewrites contents and styles recursively`() {
+        val text = Component.literal("a").withStyle(Style.EMPTY.withObfuscated(true))
+            .append(Component.literal("b"))
+        val mapped = text.mapComponent(
+            contentMapper = { PlainTextContents.create("X") },
+            styleMapper = { if (it.isObfuscated) it.withObfuscated(false) else it },
+        )
+        assertEquals("XX", mapped.string)
+        assertFalse(mapped.style.isObfuscated)
+    }
+
+    @Test
+    fun `mapComponent returns the receiver when nothing changes`() {
+        val text = Component.literal("hello")
+        assertSame(text, text.mapComponent())
     }
 }
