@@ -146,9 +146,13 @@
         selectedProtocol = await getSelectedProtocol();
     }
 
-    async function handleServerSort(e: CustomEvent<{ newOrder: number[] }>) {
-        await orderServers(e.detail.newOrder);
-        await refreshServers();
+    async function handleServerSort(e: CustomEvent<{ newOrder: number[]; complete: () => void }>) {
+        try {
+            await orderServers(e.detail.newOrder);
+            await refreshServers();
+        } finally {
+            e.detail.complete();
+        }
     }
 
     function handleSearch(e: CustomEvent<{ query: string }>) {
@@ -158,10 +162,6 @@
     function editServer(server: Server) {
         currentEditServer = server;
         editServerModalVisible = true;
-    }
-
-    function getServerRenderKey(server: Server) {
-        return `${server.lan ? "lan" : "saved"}:${server.address}`;
     }
 
     async function updateSpooferSettings() {
@@ -208,7 +208,7 @@
 
 <MenuList sortable={renderedServers.length === servers.length && lanServers.length === 0} elementCount={servers.length}
           on:sort={handleServerSort}>
-    {#each renderedServers as server (getServerRenderKey(server))}
+    {#each renderedServers as server}
         <MenuListItem imageText={server.ping > 0 ? `${server.ping}ms` : null}
                       imageTextBackgroundColor={getPingColor(server.ping)}
                       image={server.ping < 0 || !server.icon
