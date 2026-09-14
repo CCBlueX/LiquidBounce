@@ -82,6 +82,7 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardCharEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.ModuleActivationEvent
+import net.ccbluex.liquidbounce.event.events.FriendChangeEvent
 import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.MouseCursorEvent
@@ -222,6 +223,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ValueChangedEvent::class.java,
     ModuleActivationEvent::class.java,
     ModuleToggleEvent::class.java,
+    FriendChangeEvent::class.java,
     NotificationEvent::class.java,
     ClientChatStateChange::class.java,
     ClientChatMessageEvent::class.java,

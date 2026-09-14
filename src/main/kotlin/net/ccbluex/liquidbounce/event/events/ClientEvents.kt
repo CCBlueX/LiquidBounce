@@ -83,6 +83,9 @@ class ModuleToggleEvent(val moduleName: String, val hidden: Boolean, val enabled
 @Tag("refreshArrayList")
 object RefreshArrayListEvent : Event(), WebSocketEvent
 
+@Tag("friendChange")
+class FriendChangeEvent(val name: String, val added: Boolean) : Event()
+
 @Tag("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event(), WebSocketEvent {
     enum class Severity {
