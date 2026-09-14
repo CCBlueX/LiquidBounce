@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.addon.AddonManager
-import net.ccbluex.liquidbounce.features.addon.AddonState
 import net.ccbluex.liquidbounce.features.addon.LiquidBounceAddon
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
@@ -35,12 +34,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Inspects installed add-ons.
- *
- * There is deliberately no `reload`: add-ons are Fabric mods, so installing or removing one only
- * takes effect after a restart.
- */
 object CommandAddon : CommandRegistrar {
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
@@ -54,20 +47,6 @@ object CommandAddon : CommandRegistrar {
                 addonNameArgument { name ->
                     exec { ctx ->
                         addonInfo(ctx.get(name))
-                    }
-                }
-            }
-            literal("enable") {
-                addonNameArgument { name ->
-                    exec { ctx ->
-                        setEnabled(ctx.get(name), enabled = true)
-                    }
-                }
-            }
-            literal("disable") {
-                addonNameArgument { name ->
-                    exec { ctx ->
-                        setEnabled(ctx.get(name), enabled = false)
                     }
                 }
             }
@@ -118,31 +97,8 @@ object CommandAddon : CommandRegistrar {
 
     private fun featureSummary(addon: LiquidBounceAddon) = buildString {
         append(addon.registeredModules.size).append(" modules, ")
-        append(addon.registeredCommands.size + addon.registeredNodes.size).append(" commands, ")
+        append(addon.registeredNodes.count { it.redirect == null }).append(" commands, ")
         append(addon.registeredCategories.size).append(" categories")
-    }
-
-    private fun CmdI18n.setEnabled(id: String, enabled: Boolean): Int {
-        val addon = AddonManager[id] ?: run {
-            chat(regular(t("info.notFound", variable(id))))
-            return 1
-        }
-
-        if (enabled) {
-            // An add-on's classes stay loaded, but its onInitialize cannot safely be replayed:
-            // settings were restored at startup and would be lost. A restart is the honest answer.
-            chat(regular(t("enable.restartRequired", variable(addon.id))))
-            return 1
-        }
-
-        if (addon.state == AddonState.DISABLED) {
-            chat(regular(t("disable.alreadyDisabled", variable(addon.id))))
-            return 1
-        }
-
-        AddonManager.disable(addon)
-        chat(regular(t("disable.disabled", variable(addon.id))))
-        return 1
     }
 
     private fun CmdI18n.reportPendingRestart() {

@@ -18,13 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.addon
 
+import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.tree.LiteralCommandNode
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
@@ -35,44 +36,28 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.fabricmc.loader.api.ModContainer
 
-/**
- * Where an add-on is in its lifecycle. Reported by `.addon list`.
- */
 enum class AddonState {
-    /** Discovered by Fabric, not initialized yet. */
     DISCOVERED,
-
-    /** [LiquidBounceAddon.onInitialize] completed; the add-on's features are registered. */
     LOADED,
-
-    /** A lifecycle hook threw; the add-on's contributions were rolled back. */
     ERRORED,
 
-    /** Withdrawn via `.addon disable`, or skipped by `-Dliquidbounce.disableAddons`. */
+    /** Skipped by `-Dliquidbounce.disableAddons`. */
     DISABLED,
 }
 
 /**
- * Base class for a LiquidBounce add-on.
- *
- * An add-on is an ordinary Fabric mod that names its implementation under the `liquidbounce`
- * entrypoint in its `fabric.mod.json`:
+ * Declared under the `liquidbounce` entrypoint in `fabric.mod.json`:
  *
  * ```json
  * "entrypoints": { "liquidbounce": ["com.example.addon.ExampleAddon"] }
  * ```
  *
- * Identity is read from the providing mod's metadata rather than declared twice in code.
- *
- * Register features through the `register*` helpers rather than calling [ModuleManager] and friends
- * directly. They record what the add-on contributed so [AddonManager] can withdraw it again when
- * the add-on is disabled or a lifecycle hook throws.
+ * Register through the `register*` helpers, not [ModuleManager] directly, so a failing add-on can
+ * be rolled back.
  */
-abstract class LiquidBounceAddon {
+@Suppress("TooManyFunctions")
+abstract class LiquidBounceAddon : EventListener {
 
-    /**
-     * Set by [AddonManager] right after Fabric instantiates the entrypoint.
-     */
     internal lateinit var container: ModContainer
 
     val metadata: AddonMetadata by lazy { AddonMetadata(container) }
@@ -83,92 +68,81 @@ abstract class LiquidBounceAddon {
     val description: String get() = metadata.description
     val color get() = metadata.color
 
-    /**
-     * Defaults to the mod's name; override to present something else in `.addon list`.
-     */
     open val displayName: String get() = metadata.name
 
     var state: AddonState = AddonState.DISCOVERED
         internal set
 
+    override val running: Boolean
+        get() = super.running && state == AddonState.LOADED
+
     val logger by lazy { clientLogger("Addon/$id") }
 
+    internal val registeredListeners = mutableListOf<EventListener>()
     internal val registeredModules = mutableListOf<ClientModule>()
-    internal val registeredCommands = mutableListOf<CommandRegistrar>()
     internal val registeredNodes = mutableListOf<LiteralCommandNode<ClientCommandSource>>()
     internal val registeredCategories = mutableListOf<ModuleCategory>()
     internal val registeredModes = mutableListOf<Pair<ModeValueGroup<*>, Mode>>()
     internal val registeredConfigs = mutableListOf<Config>()
 
     /**
-     * Registers module categories.
-     *
-     * Runs for every add-on before any add-on's [onInitialize], because constructing a
-     * [ClientModule] requires its [ModuleCategory] to already exist.
+     * Registered for all add-ons before any [onInitialize] runs.
      */
-    open fun onRegisterCategories() {}
+    open val categories: List<ModuleCategory> get() = emptyList()
 
     /**
-     * Registers the add-on's modules, commands, configs and event listeners.
-     *
-     * Runs before [ConfigSystem.loadAll], so anything registered here has its persisted settings
-     * restored; anything registered later does not.
+     * Runs before configs are loaded, so only what is registered here gets its settings restored.
      */
     abstract fun onInitialize()
 
     /**
-     * Runs once every config has been read from disk, so settings hold their stored values.
+     * Runs once configs are loaded.
      */
-    open fun onConfigsLoaded() {}
+    open fun onStarted() {}
 
     /**
-     * Runs on client shutdown, before configs are written back to disk.
+     * Runs before configs are written back to disk.
      */
-    open fun onShutdown() {}
+    open fun onStopping() {}
 
-    fun registerCategory(
-        name: String,
-        inclusionGroup: OptionalInclusion? = null,
-    ): ModuleCategory = ModuleCategories.register(ModuleCategory(name, inclusionGroup)).also {
-        registeredCategories += it
+    /**
+     * Only tracks [listeners] for rollback; modules and modes are tracked already.
+     */
+    fun registerListeners(vararg listeners: EventListener) {
+        registeredListeners += listeners
     }
 
     fun registerModules(vararg modules: ClientModule) {
         for (module in modules) {
+            check(ModuleCategories.byName(module.category.tag) === module.category) {
+                "Category '${module.category.tag}' of module '${module.name}' is not registered, " +
+                    "declare it in categories"
+            }
             ModuleManager.addModule(module)
-            // Matches ModuleManager.registerInbuilt: without walkKeyPath the module has no
-            // translation key and the ClickGUI falls back to raw names.
+            registeredModules += module
+            // As in registerInbuilt; without it the module has no translation key.
             module.walkKeyPath()
             module.verifyFallbackDescription()
-            registeredModules += module
         }
     }
 
     fun registerCommand(registrar: CommandRegistrar) {
-        CommandManager.register(registrar)
-        registeredCommands += registrar
+        // Not CommandManager.register: Brigadier would silently merge a clashing root literal.
+        val scratch = CommandDispatcher<ClientCommandSource>()
+        registrar.register(scratch)
+        registerCommandNodes(scratch.root.children.filterIsInstance<LiteralCommandNode<ClientCommandSource>>())
     }
 
-    /**
-     * Registers command nodes built at runtime, for add-ons that generate commands rather than
-     * writing them against the Brigadier DSL.
-     */
     fun registerCommandNodes(nodes: Collection<LiteralCommandNode<ClientCommandSource>>) {
         CommandManager.registerNodes(nodes)
         registeredNodes += nodes
     }
 
-    /**
-     * Adds a mode to an existing [ModeValueGroup], e.g. a new target-sorting mode.
-     */
-    fun registerMode(parent: ModeValueGroup<*>, mode: Mode) {
+    fun <T : Mode> registerMode(parent: ModeValueGroup<T>, mode: T) {
         parent.addMode(mode)
         registeredModes += parent to mode
     }
 
-    /**
-     * Creates the add-on's own config file at `LiquidBounce/<name>.json`, defaulting to its id.
-     */
     fun config(
         name: String = id,
         tree: MutableCollection<out ValueGroup> = mutableListOf(),

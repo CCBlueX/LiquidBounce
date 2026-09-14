@@ -32,10 +32,7 @@ import org.apache.commons.io.output.StringBuilderWriter
 
 internal object SocketEventListener : EventListener {
 
-    /**
-     * Computed live rather than cached: add-ons may register further [WebSocketEvent]s after this
-     * object is first touched.
-     */
+    // Not cached: add-ons can register events later.
     private val events
         get() = EventManager.knownEventClasses
             .filter { WebSocketEvent::class.java.isAssignableFrom(it) }

@@ -25,10 +25,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-/**
- * [EventManager.registerEventHook] accepts any event class, so a typo in a built-in one is caught
- * here at build time rather than at runtime.
- */
 class EventClassRegistryTest {
 
     @Test
@@ -78,7 +74,6 @@ class EventClassRegistryTest {
         assertSame(AddonEvent::class.java, EventManager.eventClassByName("eventclassregistrytestaddonevent"))
         assertNotNull(EventManager.eventFlow(AddonEvent::class.java))
 
-        // Registering a second class rebuilds the tables; the first one's hook must survive it.
         EventManager.registerEventHook(UntaggedAddonEvent::class.java, EventHook(listener) { })
 
         var received = 0

@@ -80,9 +80,6 @@ object LanguageManager : ValueGroup("Language") {
 
     private val languageRegistry = ConcurrentHashMap<ClientLanguage, net.ccbluex.liquidbounce.lang.ClientLanguage>()
 
-    /**
-     * Supplies translations for one language code, or null if this source has none for it.
-     */
     fun interface TranslationSource {
         fun load(code: String): Map<String, String>?
     }
@@ -95,11 +92,7 @@ object LanguageManager : ValueGroup("Language") {
     private val sources = CopyOnWriteArrayList(listOf(clientTranslations))
 
     /**
-     * Registers an additional [TranslationSource], used by add-ons to ship their own translations.
-     *
-     * Already loaded languages are dropped so the new keys are picked up on next access. Keys
-     * already provided by the client - or by an earlier source - win, so an add-on cannot silently
-     * redefine a built-in string.
+     * Earlier sources win, so an add-on cannot override a built-in key.
      */
     fun registerSource(source: TranslationSource) {
         sources += source

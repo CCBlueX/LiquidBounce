@@ -121,8 +121,26 @@
     function toggleExpanded() {
         panelConfig.expanded = !panelConfig.expanded;
 
-        fixPosition();
         savePanelConfig();
+    }
+
+    /**
+     * The panel only reaches its new height once the `max-height` transition of the module
+     * list has finished, so the position can only be clamped here. Doing it right after the
+     * toggle would measure the height the panel had *before* it was expanded or collapsed.
+     */
+    function handleModulesTransitionEnd(e: TransitionEvent) {
+        if (e.target !== modulesElement || e.propertyName !== "max-height") {
+            return;
+        }
+
+        const {left, top} = panelConfig;
+
+        fixPosition();
+
+        if (panelConfig.left !== left || panelConfig.top !== top) {
+            savePanelConfig();
+        }
     }
 
     function handleModulesScroll() {
@@ -213,6 +231,7 @@
             class="modules"
             class:expanded={panelConfig.expanded}
             on:scroll={handleModulesScroll}
+            on:transitionend={handleModulesTransitionEnd}
             bind:this={modulesElement}
     >
         {#each modules as {name, enabled, description, aliases} (name)}

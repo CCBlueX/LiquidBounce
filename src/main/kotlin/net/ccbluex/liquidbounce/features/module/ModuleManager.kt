@@ -720,14 +720,20 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
         if (!modules.add(module)) {
             error("Module '${module.name}' is already registered.")
         }
-        module.walkInit()
-        module.onRegistration()
+
+        runCatching {
+            module.walkInit()
+            module.onRegistration()
+        }.onFailure {
+            modules.remove(module)
+        }.getOrThrow()
     }
 
     fun removeModule(module: ClientModule) {
-        if (!modules.remove(module)) {
-            error("Module '${module.name}' is not registered.")
-        }
+        // The set compares by name, so check identity.
+        check(any { it === module }) { "Module '${module.name}' is not registered." }
+        modules.remove(module)
+
         if (module.enabled) {
             module.enabled = false
         }

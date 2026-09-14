@@ -177,8 +177,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
             double fixedZ = Mth.clamp(vec.z, -10.0, 10.0);
 
             if (fixedX != vec.x || fixedY != vec.y || fixedZ != vec.z) {
-                ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too strong explosion",
-                        true);
+                ModuleAntiExploit.INSTANCE.notify(Limit.EXPLOSION_STRENGTH, "Limited too strong explosion", true);
                 return Optional.of(new Vec3(fixedX, fixedY, fixedZ));
             }
         }
@@ -189,7 +188,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
     @ModifyExpressionValue(method = "handleParticleEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ClientboundLevelParticlesPacket;getCount()I", ordinal = 1))
     private int onParticleAmount(int original) {
         if (ModuleAntiExploit.canLimit(Limit.PARTICLES_AMOUNT) && 500 <= original) {
-            ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too many particles", true);
+            ModuleAntiExploit.INSTANCE.notify(Limit.PARTICLES_AMOUNT, "Limited too many particles", true);
             return 100;
         }
         return original;
@@ -198,7 +197,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
     @ModifyExpressionValue(method = "handleParticleEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ClientboundLevelParticlesPacket;getMaxSpeed()F"))
     private float onParticleSpeed(float original) {
         if (ModuleAntiExploit.canLimit(Limit.PARTICLES_SPEED) && 10.0f <= original) {
-            ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too fast particles speed", true);
+            ModuleAntiExploit.INSTANCE.notify(Limit.PARTICLES_SPEED, "Limited too fast particles speed", true);
             return 10.0f;
         }
         return original;
@@ -207,7 +206,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
     @ModifyExpressionValue(method = "handleGameEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ClientboundGameEventPacket;getEvent()Lnet/minecraft/network/protocol/game/ClientboundGameEventPacket$Type;"))
     private ClientboundGameEventPacket.Type onGameStateChange(ClientboundGameEventPacket.Type original) {
         if (ModuleAntiExploit.INSTANCE.getRunning() && original == ClientboundGameEventPacket.DEMO_EVENT && ModuleAntiExploit.INSTANCE.getCancelDemo()) {
-            ModuleAntiExploit.INSTANCE.notifyAboutExploit("Cancelled demo GUI (just annoying thing)", false);
+            ModuleAntiExploit.INSTANCE.notify(null, "Cancelled demo GUI (just annoying thing)", false);
             return null;
         }
 

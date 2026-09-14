@@ -22,7 +22,6 @@ import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 plugins {
     alias(libs.plugins.fabric.loom)
@@ -330,20 +329,6 @@ tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
     exclude("**/resources/**", "**/build/**")
 }
 
-// i18n check
-
-tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
-    val baselineFileName = "en_us.json"
-
-    group = "verification"
-    description = "Compare i18n JSON files with $baselineFileName as the baseline and report missing keys."
-
-    val languageFolder = file("src/main/resources/resources/liquidbounce/lang")
-    baselineFile.set(languageFolder.resolve(baselineFileName))
-    files.from(languageFolder.listFilesOrdered { it.extension.equals("json", ignoreCase = true) })
-    consoleOutputCount.set(5)
-}
-
 tasks.register<JavaExec>("liquidInstruction") {
     group = "other"
     description = "Run LiquidInstruction class."
@@ -398,15 +383,6 @@ tasks.jar {
     }
 }
 
-// Publishing LiquidBounce as a developer library, so add-ons have something to compile against.
-//
-// Loom 1.17 on this Minecraft version has no remap step - the dev and production namespaces are
-// both Mojang official - so `jar` already is the shipped artifact and is what gets published.
-
-/**
- * The Minecraft version is part of the coordinate because the API surface is bound to it.
- * `-Ppublish.version=` overrides it, which CI uses to also push a commit-pinned snapshot.
- */
 val publishVersion: String = providers.gradleProperty("publish.version").orNull ?: run {
     val base = "${providers.gradleProperty("mod_version").get()}+${libs.versions.minecraft.get()}"
     val isRelease = providers.environmentVariable("GITHUB_EVENT_NAME").orNull == "release"
@@ -421,13 +397,12 @@ publishing {
             artifactId = providers.gradleProperty("archives_base_name").get()
             version = publishVersion
 
+            // Dev and production are both Mojang names here, so there is no remapJar to publish.
             artifact(tasks.jar)
             artifact(tasks.named("sourcesJar")) { classifier = "sources" }
 
-            // Deliberately no dependency list. `from(components["java"])` would emit every `api`
-            // and jar-in-jar dependency into the POM, including `com.mojang:minecraft`, which
-            // resolves from no public repository and would break every consumer. Add-ons declare
-            // Minecraft, Fabric Loader and Fabric Language Kotlin themselves.
+            // No from(components["java"]): the POM would list com.mojang:minecraft, which no
+            // public repository serves.
             pom {
                 name = "LiquidBounce"
                 description = "A free mixin-based injection hacked-client for Minecraft " +

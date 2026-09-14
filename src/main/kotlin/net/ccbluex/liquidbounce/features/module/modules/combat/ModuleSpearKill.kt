@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
 import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
@@ -85,7 +86,7 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
         for (entity in world.getEntitiesOfClass(
             LivingEntity::class.java,
             player.boundingBox.expandTowards(lookEnd.subtract(eye)).inflate(1.0)
-        ) { it !== player && it.isAlive && it.boundingBox.clip(eye, lookEnd).isPresent }) {
+        ) { it !== player && it.isAlive && it.isWithinWorldBorder && it.boundingBox.clip(eye, lookEnd).isPresent }) {
 
             val distSq = player.distanceToSqr(entity)
             if (distSq >= bestDist) continue

@@ -17,6 +17,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
@@ -96,25 +97,26 @@ object CommandBind : CommandRegistrar {
             return 1
         }
 
-        runCatching {
-            module.bindValue.bind(inputByName(keyName), resolvedAction, resolvedModifiers)
-            ModuleClickGui.sync()
-        }.onSuccess {
-            chat(
-                regular(
-                    t("moduleBound",
-                        variable(module.name),
-                        module.bind.renderText()
-                    )
-                ),
-                metadata = MessageMetadata(id = "Bind#${module.name}")
-            )
-        }.onFailure {
+        val boundKey = inputByName(keyName)
+        if (boundKey == InputConstants.UNKNOWN) {
             chat(
                 regular(t("keyNotFound", variable(keyName))),
                 metadata = MessageMetadata(id = "Bind#${module.name}")
             )
+            return 1
         }
+
+        module.bindValue.bind(boundKey, resolvedAction, resolvedModifiers)
+        ModuleClickGui.sync()
+        chat(
+            regular(
+                t("moduleBound",
+                    variable(module.name),
+                    module.bind.renderText()
+                )
+            ),
+            metadata = MessageMetadata(id = "Bind#${module.name}")
+        )
 
         return 1
     }

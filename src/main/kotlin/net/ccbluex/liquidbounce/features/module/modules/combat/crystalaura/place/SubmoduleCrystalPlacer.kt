@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 
+import it.unimi.dsi.fastutil.ints.IntCollection
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
@@ -92,7 +93,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     private var previousRotations = ArrayDeque<Pair<Rotation, Rotation>>(2)
 
     @Suppress("LongMethod", "CognitiveComplexMethod")
-    fun tick(excludeIds: IntArray? = null) {
+    fun tick(excludeIds: IntCollection? = null) {
         if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {
             return
         }

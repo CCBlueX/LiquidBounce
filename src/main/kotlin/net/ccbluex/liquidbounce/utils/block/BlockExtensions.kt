@@ -24,9 +24,9 @@ package net.ccbluex.liquidbounce.utils.block
 import com.google.common.base.Predicates
 import net.ccbluex.fastutil.weightedFilterSortedByAtMost
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
+import it.unimi.dsi.fastutil.ints.IntCollection
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.boundsOrNull
@@ -48,7 +47,6 @@ import net.minecraft.core.Direction
 import net.minecraft.core.TypedInstance
 import net.minecraft.core.Vec3i
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import net.minecraft.tags.BlockTags
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
@@ -105,8 +103,6 @@ import net.minecraft.world.level.block.RedStoneWireBlock
 import net.minecraft.world.level.block.RepeaterBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
 import net.minecraft.world.level.block.ShulkerBoxBlock
-import net.minecraft.world.level.block.SlabBlock
-import net.minecraft.world.level.block.StairBlock
 import net.minecraft.world.level.block.StonecutterBlock
 import net.minecraft.world.level.block.SupportType
 import net.minecraft.world.level.block.SweetBerryBushBlock
@@ -121,7 +117,6 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
-import java.util.function.Consumer
 import java.util.function.Predicate
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -188,15 +183,6 @@ fun BlockState.outlineBox(blockPos: BlockPos): AABB {
 
     return outlineShape.boundsOrNull() ?: FULL_BOX
 }
-
-
-/**
- * Some blocks like slabs or stairs must be placed on upper side in order to be placed correctly.
- */
-val Block.mustBePlacedOnUpperSide: Boolean
-    get() {
-        return this is SlabBlock || this is StairBlock
-    }
 
 fun Vec3.searchBlocksInCuboid(radius: Float): Iterable<BlockPos> =
     BlockPos.betweenClosed(
@@ -485,29 +471,6 @@ fun BlockState.canBeReplacedWith(
     )
 }
 
-@Suppress("unused")
-enum class SwingMode(
-    override val tag: String,
-    val serverSwing: Boolean,
-) : Tagged, Consumer<InteractionHand> {
-
-    DO_NOT_HIDE("DoNotHide", true),
-    HIDE_BOTH("HideForBoth", false),
-    HIDE_CLIENT("HideForClient", true),
-    HIDE_SERVER("HideForServer", false);
-
-    fun swing(hand: InteractionHand) = accept(hand)
-
-    override fun accept(hand: InteractionHand) {
-        when (this) {
-            DO_NOT_HIDE -> player.swing(hand)
-            HIDE_BOTH -> {}
-            HIDE_CLIENT -> network.send(ServerboundSwingPacket(hand))
-            HIDE_SERVER -> player.swing(hand, false)
-        }
-    }
-}
-
 val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.direction)
 
 /**
@@ -708,14 +671,24 @@ fun BlockPos.hasAnySolidPlacementNeighbor(): Boolean {
     }
 }
 
-fun BlockPos.isBlockedByEntities(
+private val PREDICATE_UNOBSTRUCTED: Predicate<Entity> =
+    EntitySelector.NO_SPECTATORS.and { entity ->
+        !entity.isRemoved && entity.blocksBuilding
+    }
+
+/**
+ * Checks whether the position is unobstructed for placing a block.
+ *
+ * @see net.minecraft.world.level.EntityGetter.isUnobstructed
+ */
+fun BlockPos.isUnobstructed(
     except: Entity? = null,
     box: AABB = FULL_BOX,
     predicate: Predicate<Entity> = Predicates.alwaysTrue(),
 ): Boolean {
     val posBox = box + this
-    return world.getEntities(except, posBox, EntitySelector.NO_SPECTATORS.and(predicate))
-        .isNotEmpty() // TODO: optimize this
+    return world.getEntities(except, posBox, PREDICATE_UNOBSTRUCTED.and(predicate))
+        .isEmpty()
 }
 
 fun BlockPos.getBlockingEntities(
@@ -724,23 +697,30 @@ fun BlockPos.getBlockingEntities(
     predicate: Predicate<Entity> = Predicates.alwaysTrue(),
 ): List<Entity> {
     val posBox = box + this
-    return world.getEntities(except, posBox, EntitySelector.NO_SPECTATORS.and(predicate))
+    return world.getEntities(except, posBox, PREDICATE_UNOBSTRUCTED.and(predicate))
 }
 
 /**
- * Like [isBlockedByEntities] but it returns a blocking end crystal if present.
+ * Checks whether the position is blocked for placing a block and returns a blocking end crystal if present.
+ *
+ * @param buildingOnly when `true` (default) only entities that block building (`Entity.blocksBuilding`)
+ *   count, matching vanilla block placement; when `false` every entity counts, matching vanilla
+ *   end crystal placement.
+ * @return `[blocked, crystal?]`
  */
 fun BlockPos.isBlockedByEntitiesReturnCrystal(
     except: Entity? = null,
     box: AABB = FULL_BOX,
-    excludeIds: IntArray? = null
+    excludeIds: IntCollection? = null,
+    buildingOnly: Boolean = true
 ): BooleanObjectPair<EndCrystal?> {
     var blocked = false
 
     val posBox = box + this
-    val selector = Predicate<Entity> {
-        EntitySelector.NO_SPECTATORS.test(it) && (excludeIds == null || it.id !in excludeIds)
-    }
+
+    val baseFilter = if (buildingOnly) PREDICATE_UNOBSTRUCTED else EntitySelector.NO_SPECTATORS
+    val selector = if (excludeIds.isNullOrEmpty()) baseFilter else baseFilter.and { it.id !in excludeIds }
+
     world.getEntities(except, posBox, selector).forEach {
         if (it is EndCrystal) {
             return BooleanObjectPair.of(true, it)

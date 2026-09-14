@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeI
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.IntentTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
 import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -120,7 +121,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
             return false
         }
 
-        val actualPos = raycast.blockPos.offset(raycast.direction.unitVec3i)
+        val actualPos = raycast.targetBlockPos
 
         if (!AABB(actualPos).intersects(plan.planningInfo.targetBB)) {
             return false
