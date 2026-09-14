@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Router, {location, push} from "svelte-spa-router";
+    import Router, {location} from "svelte-spa-router";
     import Hud from "./routes/hud/Hud.svelte";
     import {getMetadata, getTheme, getVirtualScreen} from "./integration/rest";
     import {cleanupListeners, listenAlways} from "./integration/ws";
@@ -21,6 +21,7 @@
     import type {ThemeColorChangeEvent} from "./integration/events";
     import Menu from "./routes/menu/common/Menu.svelte";
     import MenuContent from "./routes/menu/common/MenuContent.svelte";
+    import {push} from "./integration/router";
 
     const menuRoutes = {
         "/title": Title,
