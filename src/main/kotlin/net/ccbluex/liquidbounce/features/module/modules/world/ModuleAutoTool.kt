@@ -166,6 +166,12 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
 
     private val swapBackDelay by int("SwapBackDelay", 20, 1..100, "ticks", aliases = listOf("SwapPreviousDelay"))
 
+    private val switchDelay by int("SwitchDelay", 0, 0..100, "ticks")
+
+    // Tracks the current block breaking session so the switch is delayed only once per block
+    private var breakingPos: BlockPos? = null
+    private var breakingStartedTick = 0
+
     private val requireSneaking by boolean("RequireSneaking", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)
 
@@ -209,6 +215,17 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
+        if (switchDelay > 0) {
+            // A new block starts a new breaking session and re-arms the delay
+            if (breakingPos != pos) {
+                breakingPos = pos
+                breakingStartedTick = player.tickCount
+            }
+            if (player.tickCount - breakingStartedTick < switchDelay) {
+                return
+            }
+        }
+
         val cancelDueToCombat = notDuringCombat && CombatManager.isInCombat
         val cancelDueToNotSneaking = requireSneaking && !player.isShiftKeyDown
         if (cancelDueToCombat
@@ -228,6 +245,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
 
     override fun onDisabled() {
         SilentHotbar.resetSlot(this)
+        breakingPos = null
     }
 
 
