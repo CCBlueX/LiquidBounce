@@ -22,6 +22,7 @@ import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 plugins {
     alias(libs.plugins.fabric.loom)
@@ -356,6 +357,17 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(libs.versions.jdk.get().toInt())
+    }
+
+    // Add-ons are compiled against these; `./gradlew updateKotlinAbi` records a deliberate change.
+    @OptIn(ExperimentalAbiValidation::class)
+    abiValidation {
+        filters {
+            include {
+                byNames.add("net.ccbluex.liquidbounce.addon.**")
+                annotatedWith.add("net.ccbluex.liquidbounce.features.addon.AddonApi")
+            }
+        }
     }
 }
 

@@ -53,6 +53,7 @@ import net.minecraft.network.chat.Style
  * A module also called 'hack' can be enabled and handle events
  */
 @Suppress("LongParameterList", "detekt:TooManyFunctions")
+@AddonApi
 open class ClientModule(
     name: String, // name parameter in configurable
     @Exclude val category: ModuleCategory, // module category

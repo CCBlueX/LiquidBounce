@@ -59,6 +59,7 @@ val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIV
  * Value based on generics and support for readable names and descriptions.
  */
 @Suppress("TooManyFunctions")
+@AddonApi
 open class Value<T : Any>(
     @SerializedName("name") val name: String,
     @Exclude @ProtocolExclude val aliases: List<String> = emptyList(),

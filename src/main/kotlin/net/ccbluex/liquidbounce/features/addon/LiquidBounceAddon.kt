@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.fabricmc.loader.api.ModContainer
 
+@AddonApi
 enum class AddonState {
     DISCOVERED,
     LOADED,
@@ -58,6 +59,7 @@ enum class AddonState {
  * Register through the `register*` helpers, not [ModuleManager] directly, so a failing add-on can
  * be rolled back.
  */
+@AddonApi
 @Suppress("TooManyFunctions")
 abstract class LiquidBounceAddon : EventListener {
 

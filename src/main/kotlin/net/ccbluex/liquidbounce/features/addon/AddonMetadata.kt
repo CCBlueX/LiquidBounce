@@ -25,6 +25,7 @@ import net.fabricmc.loader.api.metadata.CustomValue
 import net.fabricmc.loader.api.metadata.ModOrigin
 import java.nio.file.Path
 
+@AddonApi
 class AddonMetadata(private val container: ModContainer) {
 
     private val meta get() = container.metadata

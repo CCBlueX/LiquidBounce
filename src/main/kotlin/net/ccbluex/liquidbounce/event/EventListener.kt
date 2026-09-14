@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -36,6 +37,7 @@ class EventHook<T : Event>(
     val handler: Consumer<T>,
 )
 
+@AddonApi
 interface EventListener : DebuggedOwner {
 
     /**

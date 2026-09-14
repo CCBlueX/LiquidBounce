@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
  * to register event handlers that are only active when the state is on,
  * it also features [onEnabled] and [onDisabled] which are called when the state is toggled.
  */
+@AddonApi
 abstract class ToggleableValueGroup(
     @Exclude @ProtocolExclude val parent: EventListener? = null,
     name: String,

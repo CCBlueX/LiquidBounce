@@ -1,0 +1,397 @@
+public final class net/ccbluex/liquidbounce/addon/Chat {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Chat;
+	public static final fun error (Ljava/lang/String;)V
+	public static final fun info (Ljava/lang/String;)V
+	public static final fun notify (Ljava/lang/String;Ljava/lang/String;Lnet/ccbluex/liquidbounce/addon/Chat$Severity;)V
+	public static final fun print (Lnet/minecraft/network/chat/Component;)V
+	public static final fun warning (Ljava/lang/String;)V
+}
+
+public final class net/ccbluex/liquidbounce/addon/Chat$Severity : java/lang/Enum {
+	public static final field ERROR Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
+	public static final field INFO Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
+	public static final field SUCCESS Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
+}
+
+public final class net/ccbluex/liquidbounce/addon/ClickGui {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/ClickGui;
+	public static final fun isBoundToKey (II)Z
+	public static final fun isBoundToMouse (I)Z
+	public static final fun refresh ()V
+}
+
+public final class net/ccbluex/liquidbounce/addon/Commands {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Commands;
+	public static final fun execute (Ljava/lang/String;)V
+	public static final fun getPrefix ()Ljava/lang/String;
+	public static final fun isRootTaken (Ljava/lang/String;)Z
+}
+
+public final class net/ccbluex/liquidbounce/addon/Events {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Events;
+	public static final fun post (Lnet/ccbluex/liquidbounce/event/Event;)Lnet/ccbluex/liquidbounce/event/Event;
+	public static final fun subscribe (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public static final fun subscribe (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public static synthetic fun subscribe$default (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/Class;SLjava/util/function/Consumer;ILjava/lang/Object;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/addon/Friends {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Friends;
+	public static final fun add (Ljava/lang/String;)Z
+	public static final fun add (Ljava/lang/String;Ljava/lang/String;)Z
+	public static synthetic fun add$default (Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Z
+	public static final fun isFriend (Ljava/lang/String;)Z
+	public static final fun isFriend (Lnet/minecraft/world/entity/Entity;)Z
+	public static final fun names ()Ljava/util/List;
+	public static final fun onChange (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/addon/Friends$Listener;)Ljava/lang/AutoCloseable;
+	public static final fun remove (Ljava/lang/String;)Z
+}
+
+public abstract interface class net/ccbluex/liquidbounce/addon/Friends$Listener {
+	public abstract fun onChange (Ljava/lang/String;Z)V
+}
+
+public final class net/ccbluex/liquidbounce/addon/Rotations {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Rotations;
+	public static final field PRIORITY_COMBAT I
+	public static final field PRIORITY_NORMAL I
+	public static final field PRIORITY_PLACEMENT I
+	public static final fun getServerPitch ()F
+	public static final fun getServerYaw ()F
+	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FF)V
+	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFI)V
+	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFII)V
+	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFIILjava/lang/Runnable;)V
+	public static synthetic fun request$default (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFIILjava/lang/Runnable;ILjava/lang/Object;)V
+}
+
+public class net/ccbluex/liquidbounce/config/types/Value {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/Object;Lnet/ccbluex/liquidbounce/config/types/ValueType;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/Object;Lnet/ccbluex/liquidbounce/config/types/ValueType;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun asStateFlow ()Lkotlinx/coroutines/flow/StateFlow;
+	public final fun checkIfInclude ()Z
+	public fun deserializeFrom (Lcom/google/gson/Gson;Lcom/google/gson/JsonElement;)V
+	public final fun doNotIncludeAlways ()Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun doNotIncludeWhen (Ljava/util/function/BooleanSupplier;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun get ()Ljava/lang/Object;
+	public final fun getAliases ()Ljava/util/List;
+	public fun getDescription ()Ljava/util/function/Supplier;
+	public final fun getDescriptionKey ()Ljava/lang/String;
+	public final fun getDoNotInclude ()Ljava/util/function/BooleanSupplier;
+	public final fun getHasLiteralDescription ()Z
+	public final fun getInclusionGroup ()Lnet/ccbluex/liquidbounce/config/OptionalInclusion;
+	public final fun getIndependentDescription ()Z
+	public final fun getKey ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getNotAnOption ()Z
+	public final fun getTagValue ()Ljava/lang/Object;
+	public final fun getValue ()Ljava/lang/Object;
+	public final fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
+	public final fun getValueType ()Lnet/ccbluex/liquidbounce/config/types/ValueType;
+	public final fun getVisibleCondition ()Ljava/util/function/BooleanSupplier;
+	public final fun immutable ()Lnet/ccbluex/liquidbounce/config/types/Value;
+	public fun inclusionGroup (Lnet/ccbluex/liquidbounce/config/OptionalInclusion;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun independentDescription ()Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun isImmutable ()Z
+	public final fun isPersistent ()Z
+	public final fun literalDescription (Ljava/util/function/Supplier;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun notAnOption ()Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun notPersistent ()Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun onChange (Ljava/util/function/UnaryOperator;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun onChanged (Ljava/util/function/Consumer;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public fun restore ()V
+	public final fun set (Ljava/lang/Object;)V
+	public final fun set (Ljava/lang/Object;Ljava/util/function/Consumer;)V
+	public fun setByString (Ljava/lang/String;)V
+	public fun setDescription (Ljava/util/function/Supplier;)V
+	public final fun setDescriptionKey (Ljava/lang/String;)V
+	public final fun setIndependentDescription (Z)V
+	public final fun setKey (Ljava/lang/String;)V
+	public final fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
+	public fun toString ()Ljava/lang/String;
+	public final fun type ()Lnet/ccbluex/liquidbounce/config/types/ValueType;
+	public final fun visibleWhen (Ljava/util/function/BooleanSupplier;)Lnet/ccbluex/liquidbounce/config/types/Value;
+}
+
+public final class net/ccbluex/liquidbounce/config/types/group/ModeValueGroup : net/ccbluex/liquidbounce/config/types/group/ValueGroup {
+	public final fun getModeStrings ()[Ljava/lang/String;
+}
+
+public abstract class net/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup : net/ccbluex/liquidbounce/config/types/group/ValueGroup, net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/features/misc/Toggleable, net/ccbluex/liquidbounce/features/module/MinecraftShortcuts {
+	public fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;ZLjava/util/List;)V
+	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;ZLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun children ()Ljava/util/List;
+	protected final fun choices (Ljava/lang/String;ILkotlin/jvm/functions/Function1;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
+	protected final fun choices (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/types/group/Mode;[Lnet/ccbluex/liquidbounce/config/types/group/Mode;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
+	public static synthetic fun choices$default (Lnet/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup;Ljava/lang/String;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
+	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugOwnerId ()Ljava/lang/String;
+	public fun getEnabled ()Z
+	public final fun getEnabledValue ()Lnet/ccbluex/liquidbounce/config/types/Value;
+	public fun getGpuDevice ()Lcom/mojang/blaze3d/systems/GpuDevice;
+	public fun getInteraction ()Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;
+	public fun getMc ()Lnet/minecraft/client/Minecraft;
+	public fun getNetwork ()Lnet/minecraft/client/multiplayer/ClientPacketListener;
+	public final fun getParent ()Lnet/ccbluex/liquidbounce/event/EventListener;
+	public fun getPlayer ()Lnet/minecraft/client/player/LocalPlayer;
+	public fun getRunning ()Z
+	public fun getWorld ()Lnet/minecraft/client/multiplayer/ClientLevel;
+	public fun onDisabled ()V
+	public fun onEnabled ()V
+	public fun onEnabledValueRegistration (Lnet/ccbluex/liquidbounce/config/types/Value;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public fun onToggled (Z)Z
+	public final fun onToggled (ZZ)Z
+	public final fun parent ()Lnet/ccbluex/liquidbounce/event/EventListener;
+	public fun setEnabled (Z)V
+	public fun unregister ()V
+}
+
+public class net/ccbluex/liquidbounce/config/types/group/ValueGroup : net/ccbluex/liquidbounce/config/types/Value {
+	public fun <init> (Ljava/lang/String;Ljava/util/Collection;Lnet/ccbluex/liquidbounce/config/types/ValueType;ZLjava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Collection;Lnet/ccbluex/liquidbounce/config/types/ValueType;ZLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun bind (Ljava/lang/String;I)Lnet/ccbluex/liquidbounce/config/types/BindValue;
+	public final fun bind (Ljava/lang/String;Lnet/ccbluex/liquidbounce/utils/input/InputBind;)Lnet/ccbluex/liquidbounce/config/types/BindValue;
+	public static synthetic fun bind$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;IILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/BindValue;
+	public final fun block (Ljava/lang/String;Lnet/minecraft/world/level/block/Block;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun blocks (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	public final fun boolean (Ljava/lang/String;ZLjava/util/List;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public static synthetic fun boolean$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ZLjava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun c2sPackets (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	public final fun collectValueGroupsRecursively (Ljava/lang/String;)Lkotlin/sequences/Sequence;
+	public static synthetic fun collectValueGroupsRecursively$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ILjava/lang/Object;)Lkotlin/sequences/Sequence;
+	public final fun collectValuesRecursively (Ljava/lang/String;)Lkotlin/sequences/Sequence;
+	public static synthetic fun collectValuesRecursively$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ILjava/lang/Object;)Lkotlin/sequences/Sequence;
+	public final fun color (Ljava/lang/String;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun curve (Ljava/lang/String;Ljava/util/List;Lnet/ccbluex/liquidbounce/config/types/CurveValue$Axis;Lnet/ccbluex/liquidbounce/config/types/CurveValue$Axis;F)Lnet/ccbluex/liquidbounce/config/types/CurveValue;
+	public final fun curve (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lnet/ccbluex/liquidbounce/config/types/CurveValue;
+	public static synthetic fun curve$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Ljava/util/List;Lnet/ccbluex/liquidbounce/config/types/CurveValue$Axis;Lnet/ccbluex/liquidbounce/config/types/CurveValue$Axis;FILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/CurveValue;
+	public final fun drop (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;)Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;
+	public final fun easing (Ljava/lang/String;Lnet/ccbluex/liquidbounce/utils/math/Easing;)Lnet/ccbluex/liquidbounce/config/types/list/ChoiceListValue;
+	public final fun enchantments (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	public final fun entityTypes (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	public final fun enumChoice (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/types/list/Tagged;Ljava/util/Set;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/list/ChoiceListValue;
+	public static synthetic fun enumChoice$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/types/list/Tagged;Ljava/util/Set;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/list/ChoiceListValue;
+	public final fun file (Ljava/lang/String;Ljava/io/File;Lnet/ccbluex/liquidbounce/config/types/FileDialogMode;Ljava/util/Set;)Lnet/ccbluex/liquidbounce/config/types/FileValue;
+	public static synthetic fun file$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Ljava/io/File;Lnet/ccbluex/liquidbounce/config/types/FileDialogMode;Ljava/util/Set;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/FileValue;
+	public final fun float (Ljava/lang/String;FLkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public static synthetic fun float$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;FLkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun floatRange (Ljava/lang/String;Lkotlin/ranges/ClosedFloatingPointRange;Lkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public static synthetic fun floatRange$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Lkotlin/ranges/ClosedFloatingPointRange;Lkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun getBase ()Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;
+	public fun getBaseKey ()Ljava/lang/String;
+	public final fun getContainedValues ()[Lnet/ccbluex/liquidbounce/config/types/Value;
+	public synthetic fun inclusionGroup (Lnet/ccbluex/liquidbounce/config/OptionalInclusion;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public fun inclusionGroup (Lnet/ccbluex/liquidbounce/config/OptionalInclusion;)Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;
+	public final fun int (Ljava/lang/String;ILkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public static synthetic fun int$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ILkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun intRange (Ljava/lang/String;Lkotlin/ranges/IntRange;Lkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public static synthetic fun intRange$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Lkotlin/ranges/IntRange;Lkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun item (Ljava/lang/String;Lnet/minecraft/world/item/Item;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun itemList (Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryMutableListValue;
+	public final fun itemList (Ljava/lang/String;Ljava/util/Set;Ljava/util/Set;Lnet/ccbluex/liquidbounce/config/types/ValueType;Ljava/lang/Class;)Lnet/ccbluex/liquidbounce/config/types/list/ItemListValue;
+	public final fun items (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	public final fun key (Ljava/lang/String;I)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun key (Ljava/lang/String;Lcom/mojang/blaze3d/platform/InputConstants$Key;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public static synthetic fun key$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Lcom/mojang/blaze3d/platform/InputConstants$Key;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun list (Ljava/lang/String;Ljava/util/Collection;Lnet/ccbluex/liquidbounce/config/types/ValueType;Ljava/lang/Class;)Lnet/ccbluex/liquidbounce/config/types/list/ListValue;
+	public final fun mobEffects (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	protected final fun modes (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;ILkotlin/jvm/functions/Function1;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
+	public final fun modes (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;Ljava/util/function/ToIntFunction;Lkotlin/jvm/functions/Function1;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
+	protected final fun modes (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/types/group/Mode;[Lnet/ccbluex/liquidbounce/config/types/group/Mode;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
+	public static synthetic fun modes$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
+	public final fun multiEnumChoice (Ljava/lang/String;Ljava/util/Set;Ljava/util/Set;ZZ)Lnet/ccbluex/liquidbounce/config/types/list/MultiChoiceListValue;
+	public final fun mutableList (Ljava/lang/String;Ljava/util/Collection;Lnet/ccbluex/liquidbounce/config/types/ValueType;Ljava/lang/Class;)Lnet/ccbluex/liquidbounce/config/types/list/MutableListValue;
+	public fun prepareDeserialize (Lcom/google/gson/JsonObject;)V
+	public final fun regex (Ljava/lang/String;Lkotlin/text/Regex;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun regexList (Ljava/lang/String;Ljava/util/Collection;)Lnet/ccbluex/liquidbounce/config/types/list/MutableListValue;
+	public final fun registryList (Ljava/lang/String;Ljava/util/SequencedSet;Lnet/ccbluex/liquidbounce/config/types/ValueType;Ljava/lang/Class;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	public final fun registryMutableList (Ljava/lang/String;Ljava/util/List;Lnet/ccbluex/liquidbounce/config/types/ValueType;Ljava/lang/Class;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryMutableListValue;
+	public fun restore ()V
+	public final fun s2cPackets (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	public final fun setBase (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;)V
+	public final fun sounds (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	public final fun text (Ljava/lang/String;Ljava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun textList (Ljava/lang/String;Ljava/util/Collection;)Lnet/ccbluex/liquidbounce/config/types/list/MutableListValue;
+	public final fun tree (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;)Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;
+	public final fun treeAll ([Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;)V
+	public final fun value (Ljava/lang/String;Ljava/lang/Object;Lnet/ccbluex/liquidbounce/config/types/ValueType;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun value (Lnet/ccbluex/liquidbounce/config/types/Value;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public static synthetic fun value$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Ljava/lang/Object;Lnet/ccbluex/liquidbounce/config/types/ValueType;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun vec2f (Ljava/lang/String;Lorg/joml/Vector2fc;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun vec3d (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun vec3d (Ljava/lang/String;Lnet/minecraft/world/phys/Vec3;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun vec3d (Ljava/lang/String;Lnet/minecraft/world/phys/Vec3;Z)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun vec3d (Ljava/lang/String;Lnet/minecraft/world/phys/Vec3;ZLjava/util/List;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public static synthetic fun vec3d$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Lnet/minecraft/world/phys/Vec3;ZLjava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun vec3i (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun vec3i (Ljava/lang/String;Lnet/minecraft/core/Vec3i;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun vec3i (Ljava/lang/String;Lnet/minecraft/core/Vec3i;Z)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun vec3i (Ljava/lang/String;Lnet/minecraft/core/Vec3i;ZLjava/util/List;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public static synthetic fun vec3i$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Lnet/minecraft/core/Vec3i;ZLjava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public fun walkInit ()V
+	public final fun walkKeyPath (Ljava/lang/String;)V
+	public static synthetic fun walkKeyPath$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class net/ccbluex/liquidbounce/config/types/list/ChoiceListValue : net/ccbluex/liquidbounce/config/types/Value {
+	public final fun getChoicesStrings ()[Ljava/lang/String;
+}
+
+public abstract class net/ccbluex/liquidbounce/event/CancellableEvent : net/ccbluex/liquidbounce/event/Event {
+	public fun <init> ()V
+	public final fun cancelEvent ()V
+	public final fun isCancelled ()Z
+}
+
+public abstract class net/ccbluex/liquidbounce/event/Event {
+	public fun <init> ()V
+	public final fun isCompleted ()Z
+}
+
+public abstract interface class net/ccbluex/liquidbounce/event/EventListener : net/ccbluex/liquidbounce/features/misc/DebuggedOwner {
+	public fun children ()Ljava/util/List;
+	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugOwnerId ()Ljava/lang/String;
+	public fun getRunning ()Z
+	public fun parent ()Lnet/ccbluex/liquidbounce/event/EventListener;
+	public fun unregister ()V
+}
+
+public final class net/ccbluex/liquidbounce/event/EventListener$DefaultImpls {
+	public static fun children (Lnet/ccbluex/liquidbounce/event/EventListener;)Ljava/util/List;
+	public static fun getDebugDisplayName (Lnet/ccbluex/liquidbounce/event/EventListener;)Lnet/minecraft/network/chat/Component;
+	public static fun getDebugOwnerId (Lnet/ccbluex/liquidbounce/event/EventListener;)Ljava/lang/String;
+	public static fun getRunning (Lnet/ccbluex/liquidbounce/event/EventListener;)Z
+	public static fun parent (Lnet/ccbluex/liquidbounce/event/EventListener;)Lnet/ccbluex/liquidbounce/event/EventListener;
+	public static fun unregister (Lnet/ccbluex/liquidbounce/event/EventListener;)V
+}
+
+public final class net/ccbluex/liquidbounce/features/addon/AddonMetadata {
+	public fun <init> (Lnet/fabricmc/loader/api/ModContainer;)V
+	public final fun findPath (Ljava/lang/String;)Ljava/nio/file/Path;
+	public final fun getAuthors ()Ljava/util/List;
+	public final fun getColor ()Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getHomepage ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getIssues ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getOrigin ()Ljava/util/List;
+	public final fun getSources ()Ljava/lang/String;
+	public final fun getVersion ()Ljava/lang/String;
+}
+
+public final class net/ccbluex/liquidbounce/features/addon/AddonState : java/lang/Enum {
+	public static final field DISABLED Lnet/ccbluex/liquidbounce/features/addon/AddonState;
+	public static final field DISCOVERED Lnet/ccbluex/liquidbounce/features/addon/AddonState;
+	public static final field ERRORED Lnet/ccbluex/liquidbounce/features/addon/AddonState;
+	public static final field LOADED Lnet/ccbluex/liquidbounce/features/addon/AddonState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/features/addon/AddonState;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/features/addon/AddonState;
+}
+
+public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon : net/ccbluex/liquidbounce/event/EventListener {
+	public fun <init> ()V
+	public fun children ()Ljava/util/List;
+	public final fun config (Ljava/lang/String;Ljava/util/Collection;)Lnet/ccbluex/liquidbounce/config/types/Config;
+	public static synthetic fun config$default (Lnet/ccbluex/liquidbounce/features/addon/LiquidBounceAddon;Ljava/lang/String;Ljava/util/Collection;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/Config;
+	public final fun getAuthors ()Ljava/util/List;
+	public fun getCategories ()Ljava/util/List;
+	public final fun getColor ()Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
+	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugOwnerId ()Ljava/lang/String;
+	public final fun getDescription ()Ljava/lang/String;
+	public fun getDisplayName ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLogger ()Lorg/apache/logging/log4j/Logger;
+	public final fun getMetadata ()Lnet/ccbluex/liquidbounce/features/addon/AddonMetadata;
+	public fun getRunning ()Z
+	public final fun getState ()Lnet/ccbluex/liquidbounce/features/addon/AddonState;
+	public final fun getVersion ()Ljava/lang/String;
+	public abstract fun onInitialize ()V
+	public fun onStarted ()V
+	public fun onStopping ()V
+	public fun parent ()Lnet/ccbluex/liquidbounce/event/EventListener;
+	public final fun registerCategory (Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;)Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public final fun registerCommand (Lnet/ccbluex/liquidbounce/features/command/CommandRegistrar;)V
+	public final fun registerCommandNodes (Ljava/util/Collection;)V
+	public final fun registerListeners ([Lnet/ccbluex/liquidbounce/event/EventListener;)V
+	public final fun registerMode (Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;Lnet/ccbluex/liquidbounce/config/types/group/Mode;)V
+	public final fun registerModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
+	public fun toString ()Ljava/lang/String;
+	public fun unregister ()V
+	public final fun unregisterModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
+}
+
+public final class net/ccbluex/liquidbounce/features/command/CommandManager : net/ccbluex/liquidbounce/event/EventListener {
+	public final fun execute (Ljava/lang/String;)V
+}
+
+public abstract interface class net/ccbluex/liquidbounce/features/command/CommandRegistrar {
+	public abstract fun register (Lcom/mojang/brigadier/CommandDispatcher;)V
+}
+
+public final class net/ccbluex/liquidbounce/features/misc/FriendManager : net/ccbluex/liquidbounce/config/types/Config, net/ccbluex/liquidbounce/event/EventListener {
+	public final fun add (Lnet/ccbluex/liquidbounce/features/misc/FriendManager$Friend;)Z
+	public final fun clear ()V
+	public final fun remove (Ljava/lang/String;)Z
+}
+
+public class net/ccbluex/liquidbounce/features/module/ClientModule : net/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup, net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/features/module/MinecraftShortcuts {
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;ILnet/ccbluex/liquidbounce/utils/input/InputBind$BindAction;ZZZZLjava/util/List;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;ILnet/ccbluex/liquidbounce/utils/input/InputBind$BindAction;ZZZZLjava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun enabledEffect (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getBaseKey ()Ljava/lang/String;
+	public final fun getBind ()Lnet/ccbluex/liquidbounce/utils/input/InputBind;
+	public final fun getBindValue ()Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun getCategory ()Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugOwnerId ()Ljava/lang/String;
+	public final fun getDisableActivation ()Z
+	public final fun getDisableOnQuit ()Z
+	public fun getExternalBind ()Z
+	public final fun getHidden ()Z
+	protected final fun getLogger ()Lorg/apache/logging/log4j/Logger;
+	public final fun getNotActivatable ()Z
+	public fun getRunning ()Z
+	public fun getSettings ()Ljava/util/Map;
+	public fun getTag ()Ljava/lang/String;
+	public final fun message (Ljava/lang/String;[Ljava/lang/Object;)Lnet/minecraft/network/chat/MutableComponent;
+	public final fun onEnabledValueRegistration (Lnet/ccbluex/liquidbounce/config/types/Value;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public fun onRegistration ()V
+	public final fun onToggled (Z)Z
+	public final fun setHidden (Z)V
+	public final fun tagBy (Lnet/ccbluex/liquidbounce/config/types/Value;)V
+	public fun toString ()Ljava/lang/String;
+	public final fun verifyFallbackDescription ()V
+}
+
+public final class net/ccbluex/liquidbounce/features/module/ModuleCategories {
+	public static final field COMBAT Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public static final field EXPLOIT Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public static final field FUN Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/features/module/ModuleCategories;
+	public static final field MISC Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public static final field MOVEMENT Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public static final field PLAYER Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public static final field RENDER Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public static final field WORLD Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public static final fun byName (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public static final fun getEntries ()Ljava/util/Collection;
+	public static final fun register (Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;)Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public static final fun unregister (Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;)Z
+}
+
+public final class net/ccbluex/liquidbounce/features/module/ModuleCategory : net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/OptionalInclusion;)V
+	public synthetic fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/OptionalInclusion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getInclusionGroup ()Lnet/ccbluex/liquidbounce/config/OptionalInclusion;
+	public final fun getReadableName ()Ljava/lang/String;
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+}
+

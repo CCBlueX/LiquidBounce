@@ -22,7 +22,8 @@ package net.ccbluex.liquidbounce.features.addon
  * Marks a member that exists for add-ons rather than for the client itself.
  *
  * It will look unused from inside this repository. Removing it breaks published add-ons, so treat
- * it as public API and change it deliberately.
+ * it as public API and change it deliberately. `checkKotlinAbi` compares it, together with the
+ * `net.ccbluex.liquidbounce.addon` package, against `api/LiquidBounce.api`.
  */
 @Target(
     AnnotationTarget.FUNCTION,
@@ -30,5 +31,5 @@ package net.ccbluex.liquidbounce.features.addon
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.CLASS,
 )
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 annotation class AddonApi

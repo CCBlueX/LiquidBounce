@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 
+@AddonApi
 class ModuleCategory(
     override val tag: String,
     val inclusionGroup: OptionalInclusion? = null
