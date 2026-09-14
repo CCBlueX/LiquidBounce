@@ -100,7 +100,7 @@ object AutoConfig {
     }
 
     suspend fun loadAutoConfig(autoConfig: AutoSettings) = withLoading {
-        ClientApi.requestSettingsScript(autoConfig.settingId).use(::loadAutoConfig)
+        ClientApi.requestSettings(autoConfig.settingId).use(::loadAutoConfig)
     }
 
     /**

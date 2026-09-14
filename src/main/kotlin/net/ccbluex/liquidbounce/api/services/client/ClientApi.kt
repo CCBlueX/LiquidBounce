@@ -37,7 +37,7 @@ object ClientApi : BaseApi(config.apiEndpointV1) {
     suspend fun requestSettingsList(branch: String = API_BRANCH) =
         get<Array<AutoSettings>>("/client/$branch/settings")
 
-    suspend fun requestSettingsScript(settingId: String, branch: String = API_BRANCH) =
+    suspend fun requestSettings(settingId: String, branch: String = API_BRANCH) =
         get<Reader>("/client/$branch/settings/$settingId")
 
 }

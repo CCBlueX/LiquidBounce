@@ -179,10 +179,6 @@
     "sodium.MixinSodiumAbstractBlockRenderContext",
     "sodium.MixinSodiumBlockRenderer",
     "sodium.MixinSodiumLightDataAccess",
-    "truffle.MixinCallerSensitiveDetection",
-    "truffle.MixinCommonJSRequireBuiltin",
-    "truffle.MixinNpmCompatibleESModuleLoader",
-    "truffle.MixinTruffleLanguage",
     "viaversion.MixinPacketWrapper"
   ],
   "server": [],

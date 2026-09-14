@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.removeEventListenerScope
 import net.ccbluex.liquidbounce.features.misc.Toggleable
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 
@@ -44,13 +44,13 @@ abstract class ToggleableValueGroup(
 ) : ValueGroup(name, valueType = ValueType.TOGGLEABLE, aliases = aliases), EventListener, Toggleable,
     MinecraftShortcuts {
 
-    @ScriptApiRequired
+    @AddonApi
     @get:JvmName("getEnabledValue")
     val enabledValue: Value<Boolean> = boolean("Enabled", enabled)
         .also(::onEnabledValueRegistration)
         .onChange(::onToggled)
 
-    @ScriptApiRequired
+    @AddonApi
     override var enabled by enabledValue
 
     open fun onEnabledValueRegistration(value: Value<Boolean>): Value<Boolean> {
