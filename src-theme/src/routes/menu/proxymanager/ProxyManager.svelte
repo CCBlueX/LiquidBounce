@@ -85,9 +85,6 @@
 
         allCountries = [...new Set(proxies.map(p => convertCountryCode(p.ipInfo?.country)))];
 
-        // Every refresh - favoriting, removing or checking a proxy - used to select all countries
-        // again, throwing away the filter the user set. Keep their selection instead, and select
-        // countries that are seen for the first time so a newly added proxy is never hidden by it.
         const unseenCountries = allCountries.filter(c => !knownCountries.has(c));
         countries = allCountries.filter(c => countries.includes(c) || unseenCountries.includes(c));
 
