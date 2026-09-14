@@ -126,6 +126,28 @@ open class Value<T : Any>(
         private set
 
     /**
+     * If false, the value is neither written to nor read from config files, but still reaches the GUI.
+     * For values whose state lives elsewhere, such as another client's modules.
+     */
+    @Exclude
+    @ProtocolExclude
+    var isPersistent = true
+        private set
+
+    /**
+     * Hides the value from the GUI while false. Configs keep it either way.
+     */
+    @Exclude
+    @ProtocolExclude
+    var visibleCondition = BooleanSupplier { true }
+        private set
+
+    @Exclude
+    @ProtocolExclude
+    var hasLiteralDescription = false
+        private set
+
+    /**
      * Checks if this value should be included in the public configuration based on
      * its [doNotInclude] condition and [inclusionGroup].
      */
@@ -266,6 +288,25 @@ open class Value<T : Any>(
 
     fun notAnOption() = apply {
         notAnOption = true
+    }
+
+    @AddonApi
+    fun notPersistent() = apply {
+        isPersistent = false
+    }
+
+    @AddonApi
+    fun visibleWhen(condition: BooleanSupplier) = apply {
+        visibleCondition = condition
+    }
+
+    /**
+     * Uses [text] instead of a translation key, for descriptions that come from outside LiquidBounce.
+     */
+    @AddonApi
+    fun literalDescription(text: Supplier<String?>) = apply {
+        description = text
+        hasLiteralDescription = true
     }
 
     fun independentDescription() = apply {
