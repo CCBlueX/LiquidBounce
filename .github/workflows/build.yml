@@ -112,7 +112,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # A moving snapshot add-ons can track, plus a commit-pinned one they can lock to.
           ./gradlew publish -x test -x detekt
           ./gradlew publish -x test -x detekt \
             -Ppublish.version="${LB_VERSION}+${MINECRAFT_VERSION}-${GITHUB_SHA::7}-SNAPSHOT"

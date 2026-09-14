@@ -274,10 +274,7 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = value(Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType))
 
-    // The list builders come in pairs: a non-inline overload taking an explicit element [Class] is
-    // the stable contract add-ons compile against, and a `reified` overload is sugar over it. The
-    // inline body is copied into the caller, so a public inline builder would freeze this
-    // implementation into every published add-on jar.
+    // Inline bodies are compiled into add-on jars, so the reified builders only forward to these.
 
     fun <T : MutableCollection<E>, E> list(
         name: String,

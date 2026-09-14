@@ -34,12 +34,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Inspects installed add-ons.
- *
- * There is deliberately no `reload`: add-ons are Fabric mods, so installing or removing one only
- * takes effect after a restart.
- */
 object CommandAddon : CommandRegistrar {
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {

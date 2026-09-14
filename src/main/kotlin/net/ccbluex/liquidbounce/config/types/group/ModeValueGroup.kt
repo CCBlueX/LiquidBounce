@@ -106,9 +106,6 @@ class ModeValueGroup<T : Mode>(
         }
     }
 
-    /**
-     * Attaches a mode contributed at runtime, e.g. by an add-on extending an existing group.
-     */
     fun addMode(mode: T) {
         require(modes.none { it.name.equals(mode.name, ignoreCase = true) }) {
             "ModeValueGroup '$name' already has a mode named '${mode.name}'"
@@ -116,16 +113,10 @@ class ModeValueGroup<T : Mode>(
 
         mode.base = this
         modes.add(mode)
-        // A group that has not been walked yet keys its modes once its owner is.
+        // Unwalked groups key their modes once the owner is walked.
         key?.let { mode.walkKeyPath(it) }
     }
 
-    /**
-     * Detaches a mode added by [addMode] and unregisters its event hooks.
-     *
-     * Dropping it from [modes] alone would leave the hooks registered forever; they would never
-     * fire (an unlisted mode can never be active) but they would accumulate on every reload.
-     */
     fun removeMode(mode: Mode) {
         if (activeMode === mode) {
             restore()

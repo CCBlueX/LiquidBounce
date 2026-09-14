@@ -25,12 +25,6 @@ import net.fabricmc.loader.api.metadata.CustomValue
 import net.fabricmc.loader.api.metadata.ModOrigin
 import java.nio.file.Path
 
-/**
- * An add-on's identity, read from the providing mod's `fabric.mod.json`.
- *
- * Nothing here is declared in add-on code. Fabric already requires this metadata, so duplicating
- * it would only let the two drift apart.
- */
 class AddonMetadata(private val container: ModContainer) {
 
     private val meta get() = container.metadata
@@ -46,7 +40,7 @@ class AddonMetadata(private val container: ModContainer) {
     val issues: String? get() = contact("issues")
 
     /**
-     * Accent colour from `custom.liquidbounce.color`, used to tint the add-on in listings.
+     * Hex string at `custom.liquidbounce.color` in `fabric.mod.json`.
      */
     val color: Color4b? by lazy {
         val raw = meta.getCustomValue(CUSTOM_NAMESPACE)
@@ -63,8 +57,7 @@ class AddonMetadata(private val container: ModContainer) {
     }
 
     /**
-     * The jar (or directory, in a dev environment) the add-on was loaded from. Empty for a
-     * jar-in-jar add-on, whose origin has no path of its own.
+     * Empty for a jar-in-jar add-on, which has no path of its own.
      */
     val origin: List<Path>
         get() = container.origin.takeIf { it.kind == ModOrigin.Kind.PATH }?.paths.orEmpty()

@@ -284,12 +284,7 @@ inline fun <reified E : Event> eventFlow(): SharedFlow<E> =
     EventManager.eventFlow(E::class.java)
 
 /**
- * An immutable snapshot of every lookup table the event system needs.
- *
- * All four tables are rebuilt and swapped as a single object, so a reader can never observe a state
- * where one table knows about an event and another does not. Hook registries and flows are carried
- * over from [previous] by reference. Rebuilding them would silently drop every registered hook and
- * every active flow collector.
+ * Swapped as one object, so readers never see the tables disagree.
  */
 private class EventTables(@JvmField val classes: Set<Class<out Event>>, previous: EventTables?) {
 
@@ -303,9 +298,6 @@ private class EventTables(@JvmField val classes: Set<Class<out Event>>, previous
         Reference2ObjectOpenHashMap(classes.size)
     ) { previous?.flows?.get(it) ?: MutableSharedFlow(replay = 0, extraBufferCapacity = 0) }
 
-    /**
-     * Only holds classes carrying a [Tag]; an add-on event without one simply has no protocol name.
-     */
     @JvmField
     val classToName: Map<Class<out Event>, String> =
         Reference2ObjectOpenHashMap<Class<out Event>, String>(classes.size).apply {
@@ -330,24 +322,16 @@ object EventManager {
     @Volatile
     private var tables = EventTables(ALL_EVENT_CLASSES.toCollection(LinkedHashSet()), previous = null)
 
-    /**
-     * Every event class the manager knows about, in registration order.
-     */
     val knownEventClasses: Set<Class<out Event>>
         get() = tables.classes
 
     /**
-     * Resolves an event class from the name given by its [Tag] annotation, case-insensitively.
+     * Looks up by [Tag] name, ignoring case.
      */
     fun eventClassByName(name: String): Class<out Event>? = tables.nameToClass[name]
 
     internal fun eventNameOrNull(eventClass: Class<out Event>): String? = tables.classToName[eventClass]
 
-    /**
-     * Makes [eventClass] known to the event system, so add-ons can define their own events.
-     *
-     * @return false if it was already registered.
-     */
     @Synchronized
     fun registerEventClass(eventClass: Class<out Event>): Boolean {
         val current = tables

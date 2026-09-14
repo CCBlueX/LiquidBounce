@@ -730,7 +730,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     }
 
     fun removeModule(module: ClientModule) {
-        // The set compares by name, so a foreign instance must not be able to evict a built-in.
+        // The set compares by name, so check identity.
         check(any { it === module }) { "Module '${module.name}' is not registered." }
         modules.remove(module)
 

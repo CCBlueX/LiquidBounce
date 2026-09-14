@@ -31,11 +31,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 /**
- * Moves marketplace add-ons into the `mods` folder, where Fabric will find them next launch.
- *
- * Add-ons are Fabric mods, so unlike themes they cannot be activated in a running game: the loader
- * resolves entrypoints during startup. Everything here therefore stages files and asks for a
- * restart rather than reloading anything.
+ * Fabric discovers mods only at launch, so nothing staged here takes effect before a restart.
  */
 object AddonInstaller {
 
@@ -43,19 +39,13 @@ object AddonInstaller {
 
     private const val PREFIX = "liquidbounce-addon-"
 
-    /**
-     * Fabric only picks up `.jar` files, so a copy in progress is invisible to it.
-     */
     private const val PART_SUFFIX = ".part"
 
     private val modsFolder: File
         get() = File(mc.gameDirectory, "mods")
 
-    /**
-     * A managed filename derived from the item id alone, so an add-on can be located without its
-     * marketplace directory. That matters because `MarketplaceManager.unsubscribe` deletes the item
-     * directory *before* asking the type to reload.
-     */
+    // Named by item id, since unsubscribe deletes the item directory before the reload that
+    // unstages the jar.
     private fun managedName(itemId: Int, revisionId: Int) = "$PREFIX$itemId-$revisionId.jar"
 
     private fun managedFiles(filter: (File) -> Boolean = { true }): List<File> =
@@ -67,10 +57,6 @@ object AddonInstaller {
 
     private fun itemIdOf(file: File): Int? = file.name.removePrefix(PREFIX).substringBefore('-').toIntOrNull()
 
-    /**
-     * Brings the `mods` folder in line with the current add-on subscriptions: stages any newly
-     * installed revision and removes files for add-ons that are gone.
-     */
     fun stageSubscribedAddons() {
         val subscribed = MarketplaceManager.getSubscribedItemsOfType(MarketplaceItemType.ADDON)
         val expected = HashSet<String>(subscribed.size)
@@ -83,13 +69,12 @@ object AddonInstaller {
                 .onSuccess { expected += target.name }
                 .onFailure { error ->
                     logger.error("Failed to stage add-on '${item.name}' (${item.id})", error)
-                    // A broken update must not take the working revision with it.
+                    // Keep the working revision when an update fails.
                     managedJarsFor(item.id).mapTo(expected) { it.name }
                 }
         }
 
-        // Anything managed that is no longer subscribed, is a superseded revision, or is a copy
-        // that never completed.
+        // Unsubscribed, superseded, or a leftover .part.
         for (file in managedFiles { it.name !in expected }) {
             remove(file)
         }
@@ -110,12 +95,11 @@ object AddonInstaller {
 
         check(modsFolder.isDirectory || modsFolder.mkdirs()) { "Could not create the mods folder" }
 
-        // Written under a name the loader ignores and renamed in one step, so a crash mid-copy
-        // never leaves a truncated jar behind for the next launch.
+        // Fabric ignores non-jars, so a crash mid-copy leaves no truncated jar behind.
         val part = File(modsFolder, target.name + PART_SUFFIX)
         jars.single().copyTo(part, overwrite = true)
 
-        // Older revisions go only now that the new bytes are safely on disk.
+        // Old revisions go only once the copy succeeded.
         managedJarsFor(item.id).forEach(::remove)
 
         try {
@@ -128,15 +112,8 @@ object AddonInstaller {
     }
 
     /**
-     * Best-effort deletion.
-     *
-     * A jar the running JVM has loaded cannot be deleted on Windows, and a `preLaunch` entrypoint
-     * would not help, because Fabric runs those *after* mod discovery, so the file is already
-     * open by then. [File.deleteOnExit] catches the common case, and the next startup retries
-     * whatever is left.
-     *
-     * Elsewhere the delete succeeds, but the mod's classes stay in memory either way, so a loaded
-     * jar asks for a restart no matter how the delete went.
+     * Windows locks loaded jars, so a failed delete falls back to [File.deleteOnExit] and the next
+     * startup retries. A loaded jar needs a restart either way.
      */
     private fun remove(file: File) {
         val loaded = isLoaded(file)
@@ -160,11 +137,8 @@ object AddonInstaller {
         }
     }
 
-    /**
-     * Whether Fabric loaded a mod from [file] at startup. Fabric records real paths, so a symlinked
-     * `mods` folder has to be resolved the same way before comparing.
-     */
     private fun isLoaded(file: File): Boolean {
+        // Fabric records real paths.
         val path = file.toPath().let { path ->
             runCatching { path.toRealPath() }.getOrDefault(path.toAbsolutePath().normalize())
         }
@@ -174,10 +148,6 @@ object AddonInstaller {
         }
     }
 
-    /**
-     * Deletes every managed file, including jars staged this session that no mod container knows
-     * about yet. Part of the client wipe.
-     */
     fun wipeManagedJars() {
         for (file in managedFiles()) {
             if (!file.delete()) {

@@ -32,20 +32,12 @@ import net.fabricmc.loader.api.FabricLoader
 import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
 
-/**
- * Discovers and drives the lifecycle of LiquidBounce add-ons.
- *
- * Add-ons are ordinary Fabric mods declaring a [ENTRYPOINT] entrypoint, so they are resolved by the
- * loader before the client starts. That also means they cannot be added or removed while the game
- * is running. A marketplace install stages a jar and asks for a restart.
- */
 object AddonManager {
 
     private const val ENTRYPOINT = "liquidbounce"
 
     /**
-     * Comma-separated add-on ids to skip, or `all`. An escape hatch so a broken add-on cannot leave
-     * a user unable to start the client.
+     * Comma-separated add-on ids to skip, or `all`.
      */
     private const val DISABLE_PROPERTY = "liquidbounce.disableAddons"
 
@@ -55,10 +47,6 @@ object AddonManager {
 
     val addons: List<LiquidBounceAddon> get() = loadedAddons
 
-    /**
-     * Marketplace changes that only take effect after a restart, keyed by item id so staging and
-     * unstaging the same add-on within one session leaves no stale reason behind.
-     */
     private val pendingRestarts = LinkedHashMap<Int, String>()
 
     val pendingRestart: Boolean get() = pendingRestarts.isNotEmpty()
@@ -67,12 +55,6 @@ object AddonManager {
 
     operator fun get(id: String): LiquidBounceAddon? = loadedAddons.find { it.id.equals(id, true) }
 
-    /**
-     * Instantiates every add-on entrypoint and registers its translations.
-     *
-     * Only constructors run here, no add-on logic, so this is safe to call while the client's own
-     * managers are still initializing.
-     */
     fun discover() {
         if (loadedAddons.isNotEmpty()) {
             return
@@ -112,7 +94,7 @@ object AddonManager {
             loadedAddons += addon
         }
 
-        // Deterministic order, so a duplicate name or category always fails on the same add-on.
+        // Stable order, so a name clash always fails the same add-on.
         loadedAddons.sortBy { it.id }
 
         if (loadedAddons.isNotEmpty()) {
@@ -120,12 +102,6 @@ object AddonManager {
         }
     }
 
-    /**
-     * Runs [LiquidBounceAddon.onRegisterCategories] for every add-on.
-     *
-     * Separate from [initializeAddons] because constructing a module requires its category to
-     * already exist, and an add-on may file modules under another add-on's category.
-     */
     fun registerCategories() = forEachEnabled("category registration") { it.onRegisterCategories() }
 
     fun initializeAddons() = forEachEnabled("initialization") { addon ->
@@ -135,10 +111,7 @@ object AddonManager {
 
     fun notifyConfigsLoaded() = forEachEnabled("config load callback") { it.onConfigsLoaded() }
 
-    /**
-     * No rollback on failure: the client is exiting and writes its configs right after, so
-     * withdrawing the add-on's configs here would lose the user's settings.
-     */
+    // No rollback: configs are stored right after, and withdrawing them would lose the settings.
     fun shutdown() = forEachEnabled("shutdown", rollbackOnFailure = false) { it.onShutdown() }
 
     fun markRestartRequired(itemId: Int, reason: String) {
@@ -160,8 +133,6 @@ object AddonManager {
             }
 
             runCatching { action(addon) }.onFailure { error ->
-                // The client's initializer routes any escaping throwable to ErrorHandler.fatal, so
-                // an add-on must never be allowed to throw past here.
                 logger.error("Add-on '${addon.id}' failed during $phase", error)
                 addon.state = AddonState.ERRORED
                 if (rollbackOnFailure) {
@@ -171,12 +142,6 @@ object AddonManager {
         }
     }
 
-    /**
-     * Reverses an add-on's contributions, in the opposite order they are registered.
-     *
-     * Each step is guarded on its own: a half-initialized add-on may hold entries that were never
-     * fully registered, and one failure must not strand the rest.
-     */
     private fun rollback(addon: LiquidBounceAddon) {
         fun step(what: String, block: () -> Unit) = runCatching(block)
             .onFailure { logger.error("Failed to withdraw $what of add-on '${addon.id}'", it) }
@@ -204,7 +169,6 @@ object AddonManager {
         addon.registeredModules.clear()
 
         addon.registeredCategories.forEach { category ->
-            // Another add-on may file modules under it; removing it would orphan them.
             if (ModuleManager.any { it.category === category }) {
                 logger.info("Keeping category '${category.tag}' of add-on '${addon.id}', other modules use it")
             } else {

@@ -37,17 +37,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.fabricmc.loader.api.ModContainer
 
-/**
- * Where an add-on is in its lifecycle. Reported by `.addon list`.
- */
 enum class AddonState {
-    /** Discovered by Fabric, not initialized yet. */
     DISCOVERED,
-
-    /** [LiquidBounceAddon.onInitialize] completed; the add-on's features are registered. */
     LOADED,
-
-    /** A lifecycle hook threw; the add-on's contributions were rolled back. */
     ERRORED,
 
     /** Skipped by `-Dliquidbounce.disableAddons`. */
@@ -55,27 +47,18 @@ enum class AddonState {
 }
 
 /**
- * Base class for a LiquidBounce add-on.
- *
- * An add-on is an ordinary Fabric mod that names its implementation under the `liquidbounce`
- * entrypoint in its `fabric.mod.json`:
+ * Declared under the `liquidbounce` entrypoint in `fabric.mod.json`:
  *
  * ```json
  * "entrypoints": { "liquidbounce": ["com.example.addon.ExampleAddon"] }
  * ```
  *
- * Identity is read from the providing mod's metadata rather than declared twice in code.
- *
- * Register features through the `register*` helpers rather than calling [ModuleManager] and friends
- * directly. They record what the add-on contributed so [AddonManager] can withdraw it again when
- * a lifecycle hook throws.
+ * Register through the `register*` helpers, not [ModuleManager] directly, so a failing add-on can
+ * be rolled back.
  */
 @Suppress("TooManyFunctions")
 abstract class LiquidBounceAddon : EventListener {
 
-    /**
-     * Set by [AddonManager] right after Fabric instantiates the entrypoint.
-     */
     internal lateinit var container: ModContainer
 
     val metadata: AddonMetadata by lazy { AddonMetadata(container) }
@@ -86,17 +69,11 @@ abstract class LiquidBounceAddon : EventListener {
     val description: String get() = metadata.description
     val color get() = metadata.color
 
-    /**
-     * Defaults to the mod's name; override to present something else in `.addon list`.
-     */
     open val displayName: String get() = metadata.name
 
     var state: AddonState = AddonState.DISCOVERED
         internal set
 
-    /**
-     * Handlers declared in the add-on body only fire while the add-on is loaded.
-     */
     override val running: Boolean
         get() = super.running && state == AddonState.LOADED
 
@@ -110,35 +87,24 @@ abstract class LiquidBounceAddon : EventListener {
     internal val registeredConfigs = mutableListOf<Config>()
 
     /**
-     * Registers module categories.
-     *
-     * Runs for every add-on before any add-on's [onInitialize], because constructing a
-     * [ClientModule] requires its [ModuleCategory] to already exist.
+     * Runs for every add-on before any [onInitialize]; a [ClientModule] needs its category first.
      */
     open fun onRegisterCategories() {}
 
     /**
-     * Registers the add-on's modules, commands, configs and event listeners.
-     *
-     * Runs before [ConfigSystem.loadAll], so anything registered here has its persisted settings
-     * restored; anything registered later does not.
+     * Runs before configs are loaded, so only what is registered here gets its settings restored.
      */
     abstract fun onInitialize()
 
-    /**
-     * Runs once every config has been read from disk, so settings hold their stored values.
-     */
     open fun onConfigsLoaded() {}
 
     /**
-     * Runs on client shutdown, before configs are written back to disk.
+     * Runs before configs are written back to disk.
      */
     open fun onShutdown() {}
 
     /**
-     * Tracks standalone [EventListener]s so their hooks are withdrawn with the add-on. Modules and
-     * modes are covered by [registerModules] and [registerMode]; a listener can also declare the
-     * add-on as its [EventListener.parent] to be gated by [running] instead.
+     * Only tracks [listeners] for rollback; modules and modes are tracked already.
      */
     fun registerListeners(vararg listeners: EventListener) {
         registeredListeners += listeners
@@ -155,47 +121,29 @@ abstract class LiquidBounceAddon : EventListener {
         for (module in modules) {
             ModuleManager.addModule(module)
             registeredModules += module
-            // Matches ModuleManager.registerInbuilt: without walkKeyPath the module has no
-            // translation key and the ClickGUI falls back to raw names.
+            // As in registerInbuilt; without it the module has no translation key.
             module.walkKeyPath()
             module.verifyFallbackDescription()
         }
     }
 
-    /**
-     * Registers a command written against the Brigadier DSL.
-     *
-     * The registrar runs once against a scratch dispatcher and its root literals go through
-     * [registerCommandNodes], so an add-on command is validated against the existing root the
-     * same way a script command is. Brigadier would otherwise merge a same-named root literal
-     * silently, letting an add-on hijack a built-in command.
-     */
     fun registerCommand(registrar: CommandRegistrar) {
+        // Not CommandManager.register: Brigadier would silently merge a clashing root literal.
         val scratch = CommandDispatcher<ClientCommandSource>()
         registrar.register(scratch)
         registerCommandNodes(scratch.root.children.filterIsInstance<LiteralCommandNode<ClientCommandSource>>())
     }
 
-    /**
-     * Registers prebuilt command nodes, for add-ons that generate commands rather than writing
-     * them against the Brigadier DSL.
-     */
     fun registerCommandNodes(nodes: Collection<LiteralCommandNode<ClientCommandSource>>) {
         CommandManager.registerNodes(nodes)
         registeredNodes += nodes
     }
 
-    /**
-     * Adds a mode to an existing [ModeValueGroup], e.g. a new target-sorting mode.
-     */
     fun <T : Mode> registerMode(parent: ModeValueGroup<T>, mode: T) {
         parent.addMode(mode)
         registeredModes += parent to mode
     }
 
-    /**
-     * Creates the add-on's own config file at `LiquidBounce/<name>.json`, defaulting to its id.
-     */
     fun config(
         name: String = id,
         tree: MutableCollection<out ValueGroup> = mutableListOf(),

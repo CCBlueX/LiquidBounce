@@ -289,8 +289,6 @@ object LiquidBounce : EventListener {
         ServerObserver
         ItemImageAtlas
 
-        // Instantiates add-on entrypoints and registers their translations. No add-on logic runs
-        // here - that is initializeFeatures.
         AddonManager.discover()
 
         scriptEngineJob.join()
@@ -304,7 +302,6 @@ object LiquidBounce : EventListener {
         CommandManager.registerInbuilt()
         ModuleManager.registerInbuilt()
 
-        // Categories first: constructing an add-on module requires its category to exist.
         AddonManager.registerCategories()
         AddonManager.initializeAddons()
 
@@ -460,7 +457,6 @@ object LiquidBounce : EventListener {
             ClientInteropServer.stop()
         }
 
-        // Let add-ons flush their state before configs are written back to disk
         AddonManager.shutdown()
 
         // Save all configurations

@@ -170,7 +170,6 @@ object HideAppearance : EventListener {
             ConfigSystem.rootFolder.deleteRecursively()
         }
 
-        // Add-on jars are as incriminating as the client itself, so they go too.
         val idsToWipe = buildSet {
             add("liquidbounce")
             AddonManager.addons.forEach { add(it.id) }

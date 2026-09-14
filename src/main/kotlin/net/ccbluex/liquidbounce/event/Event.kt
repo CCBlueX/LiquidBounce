@@ -60,10 +60,7 @@ enum class EventState(val stateName: String) {
 }
 
 /**
- * The name the event is associated with on the interop protocol, taken from its `@Tag`.
- *
- * Falls back to the simple class name for add-on events that carry no `@Tag`. Those never reach
- * the protocol, so the name is only ever used for logging.
+ * The event's name on the interop protocol, or the simple class name for an untagged add-on event.
  */
 val Class<out Event>.eventName: String
     get() = EventManager.eventNameOrNull(this) ?: simpleName

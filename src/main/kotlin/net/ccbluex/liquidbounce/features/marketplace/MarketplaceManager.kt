@@ -118,8 +118,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
         subscribedItems.remove(item)
         ConfigSystem.store(this)
 
-        // Reload the item type's manager. Must be on the render thread - this is reachable from a
-        // Ktor worker via the interop server, and install() already does the same.
+        // Reload the item type's manager. Also reached from Ktor workers, hence the render thread.
         withContext(MinecraftDispatcher) {
             item.type.reload()
         }
