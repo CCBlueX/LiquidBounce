@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
-import net.ccbluex.liquidbounce.script.ScriptManager
+import net.ccbluex.liquidbounce.features.addon.AddonManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
@@ -155,13 +155,15 @@ object CommandDebug : CommandRegistrar {
             }
         })
 
-        add("scripts", JsonArray().apply {
-            ScriptManager.scripts.forEach { script ->
+        add("addons", JsonArray().apply {
+            AddonManager.addons.forEach { addon ->
                 add(JsonObject().apply {
-                    addProperty("name", script.scriptName)
-                    addProperty("version", script.scriptVersion)
-                    addProperty("author", script.scriptAuthors.joinToString(", "))
-                    addProperty("path", script.file.path)
+                    addProperty("id", addon.id)
+                    addProperty("name", addon.displayName)
+                    addProperty("version", addon.version)
+                    addProperty("authors", addon.authors.joinToString(", "))
+                    addProperty("state", addon.state.name)
+                    addProperty("modules", addon.registeredModules.size)
                 })
             }
         })

@@ -45,7 +45,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
     /**
      * The revision currently unpacked in [itemDir], or `null` when nothing is installed.
      */
-    private val installedRevisionId: Int?
+    val installedRevisionId: Int?
         get() = installedRevisionFile?.name?.toInt()
 
     /**

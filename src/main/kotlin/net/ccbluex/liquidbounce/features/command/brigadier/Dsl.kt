@@ -55,7 +55,7 @@ inline fun <reified T> CommandContext<ClientCommandSource>.arg(name: String): T 
  * still executes. Brigadier then hangs that command on the **outer** context and puts
  * any remaining parse (arguments, subcommands) on a **child**. [CommandContext.getArgument]
  * does not look at children, so stopping at the first `command != null` would run the
- * alias layer with empty arguments — or the parent handler instead of a subcommand.
+ * alias layer with empty arguments, or the parent handler instead of a subcommand.
  *
  * The deepest context that actually has a command matches the consumed input. A bare
  * alias has no child and lands on the copied command.
@@ -91,7 +91,7 @@ internal fun CommandDispatcher<ClientCommandSource>.registerAliases(
  * A sibling literal that redirects to [mainNode], copying `requires` and a no-argument
  * `command` so gating is not bypassed and a bare alias still executes.
  */
-internal fun redirectingAlias(
+fun redirectingAlias(
     mainNode: LiteralCommandNode<ClientCommandSource>,
     alias: String,
 ): LiteralCommandNode<ClientCommandSource> {
