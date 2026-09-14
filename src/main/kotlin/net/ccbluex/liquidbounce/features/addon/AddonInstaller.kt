@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.metadata.ModOrigin
 import java.io.File
+import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
@@ -117,7 +118,11 @@ object AddonInstaller {
         // Older revisions go only now that the new bytes are safely on disk.
         managedJarsFor(item.id).forEach(::remove)
 
-        Files.move(part.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
+        try {
+            Files.move(part.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
+        } catch (_: AtomicMoveNotSupportedException) {
+            Files.move(part.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        }
         AddonManager.markRestartRequired(item.id, "${item.name} installed")
         logger.info("Staged add-on '${item.name}' as ${target.name}; restart required")
     }
