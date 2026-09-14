@@ -73,10 +73,14 @@
         searchQuery = e.detail.query;
     }
 
-    async function handleAccountSort(e: CustomEvent<{ newOrder: number[] }>) {
-        await orderAccounts(e.detail.newOrder);
-        await refreshAccounts();
-        renderedAccounts = accounts;
+    async function handleAccountSort(e: CustomEvent<{ newOrder: number[]; complete: () => void }>) {
+        try {
+            await orderAccounts(e.detail.newOrder);
+            await refreshAccounts();
+            renderedAccounts = accounts;
+        } finally {
+            e.detail.complete();
+        }
     }
 
     async function removeAccount(id: number) {
@@ -114,9 +118,6 @@
         directLoginModalVisible = false;
     });
 
-    function getAccountRenderKey(account: Account) {
-        return `${account.type}:${account.uuid}`;
-    }
 </script>
 
 <DirectLoginModal bind:visible={directLoginModalVisible}/>
@@ -132,7 +133,7 @@
 
 <MenuList sortable={accounts.length === renderedAccounts.length} elementCount={accounts.length}
           on:sort={handleAccountSort}>
-    {#each renderedAccounts as account (getAccountRenderKey(account))}
+    {#each renderedAccounts as account}
         <MenuListItem
                 image={account.avatar}
                 title={account.username}
