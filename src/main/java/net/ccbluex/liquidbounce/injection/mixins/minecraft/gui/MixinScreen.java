@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.additions.ScreenAddition;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
@@ -99,12 +99,12 @@ public abstract class MixinScreen implements ScreenAddition {
 
     @Inject(method = "extractBackground", at = @At("HEAD"), cancellable = true)
     private void renderBackgroundTexture(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (this.minecraft != null && this.minecraft.level == null && !HideAppearance.INSTANCE.isHidingNow()) {
+        if (this.minecraft != null && this.minecraft.level == null && !SelfDestruct.INSTANCE.isDestructed()) {
             if (!LiquidBounce.INSTANCE.isInitialized()) {
                 return;
             }
 
-            if (ThemeManager.INSTANCE.getBasicMode() && !ScreenManager.isClientScreen((Screen) (Object) this)) {
+            if (ThemeManager.INSTANCE.isBasicMode() && !ScreenManager.isClientScreen((Screen) (Object) this)) {
                 return;
             }
 

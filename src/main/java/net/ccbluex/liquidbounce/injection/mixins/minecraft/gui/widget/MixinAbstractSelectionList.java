@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.widget;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -41,8 +41,8 @@ public abstract class MixinAbstractSelectionList {
     @WrapWithCondition(method = "extractWidgetRenderState",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;extractListSeparators(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"))
     private boolean renderBackground(AbstractSelectionList<?> instance, GuiGraphicsExtractor graphics) {
-        return this.minecraft.level != null || HideAppearance.INSTANCE.isHidingNow()
-            || LiquidBounce.INSTANCE.isInitialized() && ThemeManager.INSTANCE.getBasicMode();
+        return this.minecraft.level != null || SelfDestruct.INSTANCE.isDestructed()
+            || LiquidBounce.INSTANCE.isInitialized() && ThemeManager.INSTANCE.isBasicMode();
     }
 
 }

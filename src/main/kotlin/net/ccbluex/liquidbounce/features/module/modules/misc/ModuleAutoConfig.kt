@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.text.dropPort
@@ -147,6 +147,6 @@ object ModuleAutoConfig : ClientModule(
      * Overwrites the condition requirement for being in-game
      */
     override val running
-        get() = !HideAppearance.isDestructed && enabled
+        get() = !SelfDestruct.isDestructed && enabled
 
 }
