@@ -105,8 +105,8 @@ jobs:
         run: ./gradlew build -x test -x detekt
       - name: Publish snapshot to maven.ccbluex.net
         env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_TOKEN_NAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_TOKEN_SECRET }}
           LB_VERSION: ${{ needs.extract-versions.outputs.lb_version }}
           MINECRAFT_VERSION: ${{ needs.extract-versions.outputs.minecraft_version }}
         run: |
@@ -185,8 +185,8 @@ jobs:
       - name: Publish release to maven.ccbluex.net
         env:
           CI: true
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_TOKEN_NAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_TOKEN_SECRET }}
         run: ./gradlew publish -x test -x detekt
 
   verify-pr:
