@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.addon
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.tree.LiteralCommandNode
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -87,21 +86,24 @@ abstract class LiquidBounceAddon : EventListener {
     internal val registeredConfigs = mutableListOf<Config>()
 
     /**
-     * Runs for every add-on before any [onInitialize]; a [ClientModule] needs its category first.
+     * Registered for all add-ons before any [onInitialize] runs.
      */
-    open fun onRegisterCategories() {}
+    open val categories: List<ModuleCategory> get() = emptyList()
 
     /**
      * Runs before configs are loaded, so only what is registered here gets its settings restored.
      */
     abstract fun onInitialize()
 
-    open fun onConfigsLoaded() {}
+    /**
+     * Runs once configs are loaded.
+     */
+    open fun onStarted() {}
 
     /**
      * Runs before configs are written back to disk.
      */
-    open fun onShutdown() {}
+    open fun onStopping() {}
 
     /**
      * Only tracks [listeners] for rollback; modules and modes are tracked already.
@@ -110,15 +112,12 @@ abstract class LiquidBounceAddon : EventListener {
         registeredListeners += listeners
     }
 
-    fun registerCategory(
-        name: String,
-        inclusionGroup: OptionalInclusion? = null,
-    ): ModuleCategory = ModuleCategories.register(ModuleCategory(name, inclusionGroup)).also {
-        registeredCategories += it
-    }
-
     fun registerModules(vararg modules: ClientModule) {
         for (module in modules) {
+            check(ModuleCategories.byName(module.category.tag) === module.category) {
+                "Category '${module.category.tag}' of module '${module.name}' is not registered, " +
+                    "declare it in categories"
+            }
             ModuleManager.addModule(module)
             registeredModules += module
             // As in registerInbuilt; without it the module has no translation key.

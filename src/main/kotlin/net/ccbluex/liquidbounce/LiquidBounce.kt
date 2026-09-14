@@ -235,7 +235,7 @@ object LiquidBounce : EventListener {
 
         // Load all configurations
         ConfigSystem.loadAll()
-        AddonManager.notifyConfigsLoaded()
+        AddonManager.notifyStarted()
 
         isInitialized = true
         logger.info("$CLIENT_NAME has been successfully initialized.")
@@ -457,7 +457,7 @@ object LiquidBounce : EventListener {
             ClientInteropServer.stop()
         }
 
-        AddonManager.shutdown()
+        AddonManager.notifyStopping()
 
         // Save all configurations
         ConfigSystem.storeAll()

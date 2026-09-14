@@ -102,17 +102,23 @@ object AddonManager {
         }
     }
 
-    fun registerCategories() = forEachEnabled("category registration") { it.onRegisterCategories() }
+    fun registerCategories() = forEachEnabled("category registration") { addon ->
+        for (category in addon.categories) {
+            addon.registeredCategories += ModuleCategories.register(category)
+        }
+    }
 
     fun initializeAddons() = forEachEnabled("initialization") { addon ->
         addon.onInitialize()
         addon.state = AddonState.LOADED
     }
 
-    fun notifyConfigsLoaded() = forEachEnabled("config load callback") { it.onConfigsLoaded() }
+    fun notifyStarted() = forEachEnabled("startup") { it.onStarted() }
 
     // No rollback: configs are stored right after, and withdrawing them would lose the settings.
-    fun shutdown() = forEachEnabled("shutdown", rollbackOnFailure = false) { it.onShutdown() }
+    fun notifyStopping() = forEachEnabled("shutdown", rollbackOnFailure = false) {
+        it.onStopping()
+    }
 
     fun markRestartRequired(itemId: Int, reason: String) {
         pendingRestarts[itemId] = reason
