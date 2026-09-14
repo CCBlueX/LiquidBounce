@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.command.brigadier
 
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.StringReader
+import net.ccbluex.liquidbounce.features.command.arguments.resourceArgument
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.minecraft.core.registries.Registries
 import kotlin.test.BeforeTest
@@ -35,5 +38,18 @@ class ClientCommandSourceTest {
     fun `registryAccess is a real RegistryAccess without a world`() {
         val access = ClientCommandSource.registryAccess()
         assertTrue(access.lookup(Registries.BLOCK).isPresent)
+    }
+
+    @Test
+    fun `resource argument suggestions do not stack overflow`() {
+        val dispatcher = CommandDispatcher<ClientCommandSource>()
+        dispatcher.register("test_resource") {
+            argument("block", resourceArgument(Registries.BLOCK)) {
+                exec { 0 }
+            }
+        }
+        val parse = dispatcher.parse(StringReader("test_resource "), ClientCommandSource)
+        val suggestions = dispatcher.getCompletionSuggestions(parse).get()
+        assertTrue(suggestions.list.isNotEmpty())
     }
 }

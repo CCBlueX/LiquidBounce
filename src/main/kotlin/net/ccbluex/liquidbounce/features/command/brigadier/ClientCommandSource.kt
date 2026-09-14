@@ -128,7 +128,9 @@ object ClientCommandSource : SharedSuggestionProvider {
      *
      * Replicated from vanilla `ClientSuggestionProvider.suggestRegistryElements`, which
      * serves the request from the registries synced with the current server connection;
-     * we resolve the same key against [registryAccess] instead.
+     * we resolve the same key against [registryAccess] instead. Client commands never
+     * reach the server, so a missing key falls back to the static vanilla lookup instead
+     * of issuing a [customSuggestion] request.
      */
     override fun suggestRegistryElements(
         key: ResourceKey<out Registry<*>>,
@@ -136,18 +138,11 @@ object ClientCommandSource : SharedSuggestionProvider {
         builder: SuggestionsBuilder,
         context: CommandContext<*>,
     ): CompletableFuture<Suggestions> {
-        return SharedSuggestionProvider.listSuggestions(context, builder, key, elements)
-            .thenApply { built ->
-                // Vanilla falls back to static entries when the synced registry is empty;
-                // our lookup already reflects either world or vanilla state.
-                if (built.isEmpty) {
-                    val holder = commandBuildContext().lookup(key).orElse(null)
-                    if (holder != null) {
-                        suggestRegistryElements(holder as HolderLookup<*>, elements, builder)
-                        return@thenApply builder.build()
-                    }
-                }
-                built
-            }
+        val holder = registryAccess().lookup(key).orElse(null)
+            ?: commandBuildContext().lookup(key).orElse(null)
+        if (holder != null) {
+            suggestRegistryElements(holder as HolderLookup<*>, elements, builder)
+        }
+        return builder.buildFuture()
     }
 }
