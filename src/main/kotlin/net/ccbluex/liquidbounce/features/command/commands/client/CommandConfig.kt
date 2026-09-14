@@ -122,7 +122,7 @@ object CommandConfig : CommandRegistrar {
             PlainText.NEW_LINE,
             AsyncLoadingText(
                 ioScope.async {
-                    ClientApi.requestSettingsScript(settingName).use { r ->
+                    ClientApi.requestSettings(settingName).use { r ->
                         publicGson.fromJson(r, AutoConfigMetadata::class.java)
                     }.asText()
                 }
@@ -199,7 +199,7 @@ object CommandConfig : CommandRegistrar {
                     HttpClient.request(name, HttpMethod.GET).parse<String>()
                 } else {
                     // Get online config from API
-                    ClientApi.requestSettingsScript(name).use { it.readText() }
+                    ClientApi.requestSettings(name).use { it.readText() }
                 }
             }
         }.onSuccess { source ->

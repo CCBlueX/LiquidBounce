@@ -20,8 +20,6 @@ minecraftauth = "5.0.3-SNAPSHOT"
 thealtening = "4.1.0"
 # https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
 retrofit = "3.0.0"
-# Polyglot
-polyglot = "25.0.3"
 # djl
 djl = "0.36.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
@@ -89,10 +87,6 @@ ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "
 fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }
 fastutil4k-moreCollections = { group = "net.ccbluex", name = "fastutil4k-more-collections", version.ref = "fastutil4k" }
 discord-ipc = { group = "com.github.CCBlueX", name = "discord-ipc", version.ref = "discord-ipc" }
-
-polyglot = { group = "org.graalvm.polyglot", name = "polyglot", version.ref = "polyglot" }
-polyglot-tools = { group = "org.graalvm.polyglot", name = "tools-community", version.ref = "polyglot" }
-polyglot-js = { group = "org.graalvm.polyglot", name = "js-community", version.ref = "polyglot" }
 
 djl-api = { group = "ai.djl", name = "api", version.ref = "djl" }
 djl-pytorch = { group = "ai.djl.pytorch", name = "pytorch-engine", version.ref = "djl" }

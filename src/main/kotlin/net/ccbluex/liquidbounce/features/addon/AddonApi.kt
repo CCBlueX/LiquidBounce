@@ -16,15 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.script.bindings.api
+package net.ccbluex.liquidbounce.features.addon
 
-import kotlin.concurrent.thread
-
-@Suppress("unused")
-object ScriptUnsafeThread {
-
-    @JvmName("run")
-    fun run(callback: () -> Unit) = thread {
-        callback()
-    }
-}
+/**
+ * Marks a member that exists for add-ons rather than for the client itself.
+ *
+ * It will look unused from inside this repository. Removing it breaks published add-ons, so treat
+ * it as public API and change it deliberately.
+ */
+@Target(
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY,
+    AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.CLASS,
+)
+@Retention(AnnotationRetention.SOURCE)
+annotation class AddonApi

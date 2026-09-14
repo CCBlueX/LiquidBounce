@@ -36,10 +36,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
-import net.ccbluex.liquidbounce.script.asArray
-import net.ccbluex.liquidbounce.script.asDoubleArray
-import net.ccbluex.liquidbounce.script.asIntArray
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.inputByName
@@ -48,7 +45,6 @@ import java.util.function.Consumer
 import java.util.function.Supplier
 import java.util.function.UnaryOperator
 import kotlin.reflect.KProperty
-import org.graalvm.polyglot.Value as PolyglotValue
 
 typealias ValueListener<T> = UnaryOperator<T>
 typealias ValueChangedListener<T> = Consumer<T>
@@ -191,7 +187,7 @@ open class Value<T : Any>(
         else -> getValue()
     }
 
-    @ScriptApiRequired
+    @AddonApi
     @JvmName("getValue")
     fun getValue(): Any = when (this) {
         is ModeValueGroup<*> -> activeMode.name
@@ -203,45 +199,6 @@ open class Value<T : Any>(
         }
     }
 
-    @ScriptApiRequired
-    @JvmName("setValue")
-    @Suppress("UNCHECKED_CAST")
-    fun setValue(t: PolyglotValue) = runCatching {
-        if (this is ChoiceListValue<*>) {
-            setByString(t.asString())
-            return@runCatching
-        }
-
-        set(
-            when (inner) {
-                is ClosedFloatingPointRange<*> -> {
-                    val a = t.asDoubleArray()
-                    require(a.size == 2)
-                    (a.first().toFloat()..a.last().toFloat()) as T
-                }
-
-                is InputConstants.Key -> {
-                    inputByName(t.asString()) as T
-                }
-
-                is IntRange -> {
-                    val a = t.asIntArray()
-                    require(a.size == 2)
-                    (a.first()..a.last()) as T
-                }
-
-                is Float -> t.asDouble().toFloat() as T
-                is Int -> t.asInt() as T
-                is String -> t.asString() as T
-                is MutableList<*> -> t.asArray<String>().toMutableList() as T
-                is LinkedHashSet<*> -> t.asArray<String>().toMutableSet() as T
-                is Boolean -> t.asBoolean() as T
-                else -> error("Unsupported value type $inner")
-            }
-        )
-    }.onFailure {
-        logger.error("Could not set value, old value: ${this.inner}, throwable: $it")
-    }
 
     fun get() = inner
 

@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -121,7 +121,7 @@ open class ClientModule(
     /**
      * Allows the user to access values by typing module.settings.<valuename>
      */
-    @ScriptApiRequired
+    @AddonApi
     open val settings by lazy { inner.associateBy { it.name } }
 
     /**
