@@ -240,6 +240,9 @@ object CommandManager : EventListener {
         brigadierDispatcher = null
     }
 
+    fun isRootTaken(name: String): Boolean =
+        getDispatcher().root.children.any { it.name.equals(name, ignoreCase = true) }
+
     /**
      * Drops the cached dispatcher so it is rebuilt with fresh argument state on next use.
      *

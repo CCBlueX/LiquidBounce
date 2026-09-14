@@ -184,7 +184,10 @@ object RotationManager : EventListener {
         ), priority, provider)
     }
 
-    fun setRotationTarget(plan: RotationTarget, priority: Priority, provider: ClientModule) {
+    fun setRotationTarget(plan: RotationTarget, priority: Priority, provider: ClientModule) =
+        setRotationTarget(plan, priority.priority, provider)
+
+    fun setRotationTarget(plan: RotationTarget, priority: Int, provider: ClientModule) {
         if (!allowedToUpdate()) {
             return
         }
@@ -192,7 +195,7 @@ object RotationManager : EventListener {
         rotationTargetHandler.request(
             RequestHandler.Request(
                 if (plan.movementCorrection == MovementCorrection.CHANGE_LOOK) 1 else plan.ticksUntilReset,
-                priority.priority,
+                priority,
                 provider,
                 plan
             )
