@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import java.util.function.IntSupplier
 
 /**
  * Reusable anchored hotbar swap state machine:
@@ -33,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 class AnchoredHotbarSwapController(
     private val owner: EventListener,
     private val inventoryConstraints: InventoryConstraints,
-    private val swapDelayProvider: () -> Int,
+    private val swapDelayProvider: IntSupplier,
     private val anchorHotbarSlotResolver: () -> HotbarItemSlot = {
         Slots.Hotbar.findSlot { it.isEmpty } ?: Slots.Hotbar[SilentHotbar.serversideSlot]
     },
@@ -136,7 +137,7 @@ class AnchoredHotbarSwapController(
         if (!pendingRestore || restoreDue) return@handler
 
         waitingTicks++
-        if (waitingTicks <= swapDelayProvider()) return@handler
+        if (waitingTicks <= swapDelayProvider.asInt) return@handler
 
         restoreDue = true
     }
