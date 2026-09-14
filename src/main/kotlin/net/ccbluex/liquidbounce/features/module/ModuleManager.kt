@@ -295,6 +295,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val smartKeyboardStates = Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>()
     private val smartMouseStates = Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>()
 
+    private fun modulesWithOwnBinds() = modules.filterNot(ClientModule::externalBind)
+
     /**
      * Handles keystrokes for module binds.
      * This also runs in GUIs, so that if a GUI is opened while a key is pressed,
@@ -306,7 +308,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             if (mc.gui.screen() == null) {
                 // Usually nobody actually wants a module to activate when they press the Minecraft debug key combo.
                 if (mc.options.keyDebugModifier.isDown) return@handler
-                for (m in modules) {
+                for (m in modulesWithOwnBinds()) {
                     if (!m.bind.matchesKeyPress(event)) {
                         continue
                     }
@@ -326,7 +328,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                 }
             }
         } else if (event.isRepeat) {
-            for (m in modules) {
+            for (m in modulesWithOwnBinds()) {
                 if (m.bind.action != InputBind.BindAction.SMART ||
                     !m.bind.matchesKey(event.keyCode, event.scanCode) ||
                     m !in smartKeyboardStates
@@ -337,7 +339,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                 smartKeyboardStates[m] = SmartBindKeyboardState.HOLDING
             }
         } else if (event.isReleased) {
-            for (m in modules) {
+            for (m in modulesWithOwnBinds()) {
                 if (!m.bind.matchesKeyRelease(event)) {
                     continue
                 }
@@ -360,7 +362,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
         if (event.isPressed) {
             if (mc.gui.screen() == null) {
-                for (m in modules) {
+                for (m in modulesWithOwnBinds()) {
                     if (!m.bind.matchesMousePress(event)) {
                         continue
                     }
@@ -376,7 +378,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
                 }
             }
         } else if (event.isReleased) {
-            for (m in modules) {
+            for (m in modulesWithOwnBinds()) {
                 if (!m.bind.matchesMouseRelease(event)) {
                     continue
                 }
