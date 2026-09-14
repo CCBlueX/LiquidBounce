@@ -121,7 +121,7 @@
             <div class="selected-items">
                 {#key sortableRenderKey}
                     <SortableList class="" forceFallback={true} fallbackOnBody={true} animation={150} onEnd={handleSort}>
-                        {#each selectedItems as item, index (item.value)}
+                        {#each selectedItems as item, index}
                             <DraggableItem>
                                 <RemovableItem on:remove={() => handleRemove(index)}>
                                     <ListItem value={item.value} name={item.name} icon={item.icon} enabled={false}
@@ -178,4 +178,3 @@
     margin-top: 10px;
   }
 </style>
-
