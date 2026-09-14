@@ -81,8 +81,8 @@
         <div class="additional-buttons" transition:fly|global={{duration: 700, y: 100}}>
             <ButtonContainer>
                 <IconTextButton icon="icon-exit.svg" title="Exit" on:click={exitClient}/>
+                <IconTextButton icon="icon-eye.svg" title="Basic Mode" on:click={toggleBasicMode}/>
                 <IconButton icon="change-background" title="Toggle Shader" on:click={toggleBackgroundShaderEnabled}/>
-                <IconButton icon="eye" title="Basic Mode" on:click={toggleBasicMode}/>
             </ButtonContainer>
         </div>
 
