@@ -42,7 +42,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.text.asPlainText

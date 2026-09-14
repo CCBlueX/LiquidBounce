@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.ChatScreen
@@ -102,6 +103,15 @@ object ThemeManager : Config("theme") {
 
             return@onChange enabled
         }
+
+    private val BASIC_MODE_OVERRIDE = env("LB_BASIC_MODE", "net.ccbluex.liquidbounce.ui.basicMode")?.toBoolean()
+        ?: env("LB_UI_HIDE", "net.ccbluex.liquidbounce.ui.hide")?.toBoolean()?.also {
+            logger.warn("LB_UI_HIDE is deprecated, use LB_BASIC_MODE instead.")
+        }
+
+    var basicMode by boolean("BasicMode", false)
+
+    val isBasicMode get() = BASIC_MODE_OVERRIDE ?: basicMode
 
     internal val reloader = ResourceManagerReloadListener { resourceManager ->
         themes.forEach { it.onResourceManagerReload(resourceManager) }

@@ -73,7 +73,7 @@ import net.ccbluex.liquidbounce.features.command.commands.module.teleport.Comman
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandVClip
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoTranslate
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTranslate
-import net.ccbluex.liquidbounce.features.misc.HideAppearance
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -466,7 +466,7 @@ object CommandManager : EventListener {
     }
 
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
-        if (HideAppearance.isDestructed) {
+        if (SelfDestruct.isDestructed) {
             return Suggestions.empty()
         }
 

@@ -41,7 +41,6 @@ object CommandClient : CommandRegistrar {
             with(CommandClientIntegrationSubcommand) { integration() }
             with(CommandClientLanguageSubcommand) { language() }
             with(CommandClientThemeSubcommand) { theme() }
-            with(CommandClientAppearanceSubcommand) { appearance() }
             with(CommandClientPrefixSubcommand) { prefix() }
             with(CommandClientDestructSubcommand) { destruct() }
             with(CommandClientAccountSubcommand) { account() }

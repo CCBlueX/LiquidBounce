@@ -144,7 +144,7 @@ import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
 import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.annotations.Tag
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.ReportedException
