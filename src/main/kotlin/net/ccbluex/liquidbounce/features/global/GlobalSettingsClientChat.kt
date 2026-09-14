@@ -105,6 +105,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
 
+    private val filteredNames = hashSetOf<String>()
+
     private fun registerChatWriteCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("chat") {
             argument("message", StringArgumentType.greedyString()) { message ->
@@ -166,6 +168,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     override fun onDisabled() {
         chatClient.disconnect()
+        filteredNames.clear()
     }
 
     @Suppress("unused")
@@ -191,7 +194,9 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     @Suppress("unused")
     private val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
         if (!FilterConf.shouldShow(event.user.name)) {
-            logger.info("[Chat] Message from ${event.user.name} has been filtered.")
+            if (filteredNames.add(event.user.name)) {
+                logger.info("[Chat] Message from ${event.user.name} has been filtered.")
+            }
             return@suspendHandler
         }
 
