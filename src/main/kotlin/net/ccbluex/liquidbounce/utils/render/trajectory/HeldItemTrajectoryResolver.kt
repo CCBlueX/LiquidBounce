@@ -40,6 +40,8 @@ import net.minecraft.world.item.component.ChargedProjectiles
 import net.minecraft.world.item.enchantment.Enchantments
 
 object HeldItemTrajectoryResolver {
+    private const val MAX_PREVIEWED_SHOTS = 16
+
     @JvmStatic
     /**
      * Resolves one or more rendered trajectory shots for held items.
@@ -137,11 +139,7 @@ object HeldItemTrajectoryResolver {
     }
 
     /**
-     * Yaw offset model for multi-shot trajectory preview.
-     *
-     * Mirrors vanilla projectile spread generation: for a Multishot level L crossbow the spread
-     * covers `+/-10*L` degrees in `10` degree steps, alternating around the center shot.
-     * @see net.minecraft.world.item.ProjectileWeaponItem.shoot
+     * Mirrors vanilla spread generation in [net.minecraft.world.item.ProjectileWeaponItem.shoot].
      * @see net.minecraft.world.item.enchantment.EnchantmentHelper.processProjectileSpread
      */
     private fun getShotYawOffsets(shotCount: Int, multishotLevel: Int): FloatArray {
@@ -151,11 +149,12 @@ object HeldItemTrajectoryResolver {
 
         val maxAngle = 10f * multishotLevel
         val step = 2f * maxAngle / (shotCount - 1).toFloat()
-        val offsets = FloatArray(shotCount)
+        val angleOffset = (shotCount - 1) % 2 * step / 2f
+        val offsets = FloatArray(minOf(shotCount, MAX_PREVIEWED_SHOTS))
         var direction = 1f
 
-        for (i in 0 until shotCount) {
-            offsets[i] = direction * ((i + 1) / 2) * step
+        for (i in offsets.indices) {
+            offsets[i] = angleOffset + direction * ((i + 1) / 2) * step
             direction = -direction
         }
 
