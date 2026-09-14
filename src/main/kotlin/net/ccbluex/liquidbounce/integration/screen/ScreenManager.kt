@@ -123,6 +123,11 @@ object ScreenManager : EventListener {
             is BrowserState.Success -> {
                 this.mainBrowser = browser
                 logger.info("Integration Browser $browser is ready.")
+
+                // Screens opened while the browser was loading could not move it to their theme.
+                if (theme != null && theme != ThemeManager.theme) {
+                    update()
+                }
             }
             // Try ONCE MORE.
             is BrowserState.Failure if (allowTryOnceMore) -> {
@@ -196,7 +201,8 @@ object ScreenManager : EventListener {
             // That means we are likely still in the process of starting up.
             val mainBrowser = this.mainBrowser ?: return
             mainBrowser.close()
-            this.mainBrowser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
+            this.mainBrowser = ThemeManager.openInputAwareImmediate(screen?.type, settings = browserSettings)
+            theme = ThemeManager.getScreenLocation(screen?.type).theme
         } catch (e: Exception) {
             logger.error("Failed to restart browser backend for screen integration.", e)
         }
@@ -216,11 +222,10 @@ object ScreenManager : EventListener {
 
     fun update() {
         val browser = mainBrowser ?: return
-        logger.info(
-            "Reloading integration browser ${browser.javaClass.simpleName} " +
-                "to ${ThemeManager.getScreenLocation()}"
-        )
-        ThemeManager.updateImmediate(browser, screen?.type)
+        val location = ThemeManager.getScreenLocation(screen?.type)
+        logger.info("Reloading integration browser ${browser.javaClass.simpleName} to $location")
+        theme = location.theme
+        browser.url = location.url
     }
 
     fun restoreOriginalScreen() {
