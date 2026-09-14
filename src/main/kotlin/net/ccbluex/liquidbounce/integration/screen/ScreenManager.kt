@@ -323,6 +323,12 @@ object ScreenManager : EventListener {
         }
 
         if (screen is CustomSharedMinecraftScreen) {
+            val original = screen.originalScreen
+            if (ThemeManager.basicMode && original != null && original !is CustomSharedMinecraftScreen) {
+                mc.gui.setScreen(original)
+                return true
+            }
+
             return false
         }
 
@@ -339,7 +345,9 @@ object ScreenManager : EventListener {
      * @return should cancel the minecraft screen
      */
     private fun handleCurrentMinecraftScreen(minecraftScreen: Screen): Boolean {
+        val basicMode = ThemeManager.basicMode
         val customScreenType = CustomScreenType.recognize(minecraftScreen)
+            ?.let { if (basicMode && it.hasBasicMenu) CustomScreenType.BASIC_MENU else it }
         if (customScreenType == null) {
             closeScreen()
             return false
@@ -359,7 +367,7 @@ object ScreenManager : EventListener {
 
         return when {
             // When we want to fully replace a screen.
-            theme.isScreenSupported(name) -> {
+            !basicMode && theme.isScreenSupported(name) -> {
                 mc.gui.setScreen(CustomSharedMinecraftScreen(customScreenType, theme, originalScreen = minecraftScreen))
                 true
             }

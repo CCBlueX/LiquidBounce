@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager;
 import net.ccbluex.liquidbounce.utils.text.RunnableClickEvent;
 import net.minecraft.client.Minecraft;
@@ -100,6 +101,10 @@ public abstract class MixinScreen implements ScreenAddition {
     private void renderBackgroundTexture(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (this.minecraft != null && this.minecraft.level == null && !HideAppearance.INSTANCE.isHidingNow()) {
             if (!LiquidBounce.INSTANCE.isInitialized()) {
+                return;
+            }
+
+            if (ThemeManager.INSTANCE.getBasicMode() && !ScreenManager.isClientScreen((Screen) (Object) this)) {
                 return;
             }
 

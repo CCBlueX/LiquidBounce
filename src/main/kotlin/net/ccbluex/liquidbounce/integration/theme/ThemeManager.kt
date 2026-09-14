@@ -103,6 +103,8 @@ object ThemeManager : Config("theme") {
             return@onChange enabled
         }
 
+    var basicMode by boolean("BasicMode", false)
+
     internal val reloader = ResourceManagerReloadListener { resourceManager ->
         themes.forEach { it.onResourceManagerReload(resourceManager) }
         logger.info("Reloaded ${themes.size} themes.")
