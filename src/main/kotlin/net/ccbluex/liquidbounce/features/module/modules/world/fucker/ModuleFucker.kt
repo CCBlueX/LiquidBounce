@@ -51,6 +51,7 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.outlineShape
 import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
@@ -118,6 +119,7 @@ object ModuleFucker : ClientModule(
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val ignoreUsingItem by boolean("IgnoreUsingItem", true)
+    private val notDuringCombat by boolean("NotDuringCombat", false)
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
     private val chestAsFullBlock by boolean("ChestAsFullBlock", false)
@@ -175,7 +177,7 @@ object ModuleFucker : ClientModule(
             return@handler
         }
 
-        if (!ignoreUsingItem && player.isUsingItem) {
+        if (!ignoreUsingItem && player.isUsingItem || notDuringCombat && CombatManager.isInCombat) {
             return@handler
         }
 
