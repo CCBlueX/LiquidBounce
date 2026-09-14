@@ -54,6 +54,11 @@ public abstract interface class net/ccbluex/liquidbounce/addon/Friends$Listener 
 	public abstract fun onChange (Ljava/lang/String;Z)V
 }
 
+public final class net/ccbluex/liquidbounce/addon/Hud {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Hud;
+	public static final fun refreshModuleList ()V
+}
+
 public final class net/ccbluex/liquidbounce/addon/Rotations {
 	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Rotations;
 	public static final field PRIORITY_COMBAT I
