@@ -77,11 +77,11 @@ object HeldItemTrajectoryResolver {
             is CrossbowItem -> {
                 val chargedProjectiles = stack[DataComponents.CHARGED_PROJECTILES]
                 val chargedProjectileCount = chargedProjectiles?.items?.size ?: 0
-                val isMultiShot = stack.getEnchantment(Enchantments.MULTISHOT) > 0
+                val multishotLevel = stack.getEnchantment(Enchantments.MULTISHOT)
                 val shotCount = when {
                     !includeMultiShot -> 1
                     chargedProjectileCount > 0 -> chargedProjectileCount
-                    isMultiShot -> 3
+                    multishotLevel > 0 -> 2 * multishotLevel + 1
                     else -> 1
                 }.coerceAtLeast(1)
                 val chargedProjectile: DataComponentGetter = chargedProjectiles?.items?.firstOrNull() ?: ItemStack.EMPTY
@@ -92,7 +92,7 @@ object HeldItemTrajectoryResolver {
                     TrajectoryDescriptor.CROSSBOW_ARROW
                 }
 
-                getShotYawOffsets(shotCount).map { yawOffsetDegrees ->
+                getShotYawOffsets(shotCount, multishotLevel).map { yawOffsetDegrees ->
                     trajectoryDescriptor.toShotDescriptor(
                         yawOffsetDegrees = yawOffsetDegrees,
                         icon = stack,
@@ -139,20 +139,26 @@ object HeldItemTrajectoryResolver {
     /**
      * Yaw offset model for multi-shot trajectory preview.
      *
-     * The `[-10, 0, +10]` branch mirrors vanilla triple-shot spread behavior.
+     * Mirrors vanilla projectile spread generation: for a Multishot level L crossbow the spread
+     * covers `+/-10*L` degrees in `10` degree steps, alternating around the center shot.
      * @see net.minecraft.world.item.ProjectileWeaponItem.shoot
+     * @see net.minecraft.world.item.enchantment.EnchantmentHelper.processProjectileSpread
      */
-    private fun getShotYawOffsets(shotCount: Int): FloatArray {
-        return when (shotCount) {
-            1 -> floatArrayOf(0f)
-            3 -> floatArrayOf(-10f, 0f, 10f)
-            else -> {
-                val spread = 20f
-                val step = spread / (shotCount - 1).toFloat()
-                FloatArray(shotCount) { index ->
-                    -spread * 0.5f + step * index.toFloat()
-                }
-            }
+    private fun getShotYawOffsets(shotCount: Int, multishotLevel: Int): FloatArray {
+        if (shotCount <= 1) {
+            return floatArrayOf(0f)
         }
+
+        val maxAngle = 10f * multishotLevel
+        val step = 2f * maxAngle / (shotCount - 1).toFloat()
+        val offsets = FloatArray(shotCount)
+        var direction = 1f
+
+        for (i in 0 until shotCount) {
+            offsets[i] = direction * ((i + 1) / 2) * step
+            direction = -direction
+        }
+
+        return offsets
     }
 }
