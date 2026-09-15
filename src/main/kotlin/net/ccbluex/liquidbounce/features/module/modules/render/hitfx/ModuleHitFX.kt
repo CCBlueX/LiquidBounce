@@ -33,10 +33,6 @@ import net.minecraft.world.level.block.Blocks
 
 object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
 
-    init {
-        HitFXRegistry.registerAll()
-    }
-
     enum class Particle(override val tag: String) : Tagged {
         BLOOD("Blood"),
         FIRE("Fire"),

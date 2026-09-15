@@ -20,18 +20,22 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.hitfx
 
 import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.client.clientIdentifier
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.core.Registry
-import net.minecraft.core.registries.BuiltInRegistries
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.resources.sounds.Sound
+import net.minecraft.client.sounds.WeighedSoundEvents
+import net.minecraft.resources.Identifier
+import net.minecraft.server.packs.resources.Resource
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
+import net.minecraft.util.valueproviders.ConstantFloat
 
 @Suppress("unused")
 enum class HitFXRegistry(
     override val tag: String,
-    private val vanillaSounds: Array<SoundEvent> = emptyArray(),
+    vanillaSounds: Array<SoundEvent> = emptyArray(),
     private val customSoundIds: Array<String> = emptyArray()
 ) : Tagged {
     HIT("Hit", vanillaSounds = arrayOf(SoundEvents.ARROW_HIT)),
@@ -68,36 +72,27 @@ enum class HitFXRegistry(
     TF2CRIT("TF2 Crit", customSoundIds = arrayOf("tf2-crit")),
     UWU("UWU", customSoundIds = arrayOf("uwu"));
 
-    var sounds: Array<SoundEvent> = vanillaSounds
-        private set
+    val sounds = vanillaSounds + customSoundIds.mapToArray {
+        SoundEvent.createVariableRangeEvent(clientIdentifier(it))
+    }
 
     companion object {
-        private val customSounds = mutableListOf<SoundEvent>()
-
-        private var registered = false
-
         @JvmStatic
-        fun registerAll() {
-            if (registered) {
-                return
+        fun registerSounds(
+            registry: MutableMap<Identifier, WeighedSoundEvents>,
+            cache: MutableMap<Identifier, Resource>
+        ) {
+            for (id in entries.flatMap { it.customSoundIds.asList() }) {
+                val location = clientIdentifier(id)
+                val sound = Sound(
+                    location, ConstantFloat.of(1F), ConstantFloat.of(1F), 1, Sound.Type.FILE, false, false, 16
+                )
+
+                registry.putIfAbsent(location, WeighedSoundEvents(location, null).apply { addSound(sound) })
+                cache.putIfAbsent(sound.path, Resource(mc.vanillaPackResources) {
+                    LiquidBounce.resource("sounds/$id.ogg")
+                })
             }
-
-            for (type in entries) {
-                type.sounds = registerCustom(type.customSoundIds.ifEmpty { continue })
-            }
-
-            registered = true
-            logger.info("HitFXRegistry initialized ${customSounds.size} custom sounds.")
-        }
-
-        private fun registerCustom(ids: Array<out String>): Array<SoundEvent> = ids.mapToArray { id ->
-            val soundId = clientIdentifier(id)
-
-            Registry.register(
-                BuiltInRegistries.SOUND_EVENT,
-                soundId,
-                SoundEvent.createVariableRangeEvent(soundId)
-            ).also(customSounds::add)
         }
     }
 }
