@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -61,7 +62,7 @@ enum class AddonState {
  */
 @AddonApi
 @Suppress("TooManyFunctions")
-abstract class LiquidBounceAddon : EventListener {
+abstract class LiquidBounceAddon : EventListener, MinecraftShortcuts {
 
     internal lateinit var container: ModContainer
 

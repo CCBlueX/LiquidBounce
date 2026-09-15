@@ -168,10 +168,12 @@ private fun Set<Targets>.isInteresting(suspect: Entity, info: EntityTargetingInf
 }
 
 // Extensions
+@AddonApi
 @JvmOverloads
 fun Entity?.shouldBeShown(enemyConf: Set<Targets> = GlobalSettingsTarget.visual) =
     this?.let { enemyConf.shouldShow(it) } ?: false
 
+@AddonApi
 @JvmOverloads
 fun Entity?.shouldBeAttacked(enemyConf: Set<Targets> = GlobalSettingsTarget.combat) =
     this is Attackable && enemyConf.shouldAttack(this) && this.isWithinWorldBorder
@@ -190,6 +192,7 @@ private fun Entity.canBeAttackedWithVanillaPacket() =
 /**
  * Find the best enemy in the current world in a specific range.
  */
+@AddonApi
 @JvmOverloads
 fun ClientLevel.findEnemy(
     range: ClosedFloatingPointRange<Float>,
@@ -199,6 +202,7 @@ fun ClientLevel.findEnemy(
 /**
  * Find the best enemy in the current world in a specific range.
  */
+@AddonApi
 @JvmOverloads
 fun ClientLevel.findEnemy(
     minRange: Float,
@@ -207,6 +211,7 @@ fun ClientLevel.findEnemy(
 ) = findEnemies(minRange, maxRange, enemyConf)
     .minByOrNull { (_, distSqr) -> distSqr }?.key()
 
+@AddonApi
 @JvmOverloads
 fun ClientLevel.findEnemies(
     minRange: Float,
@@ -245,7 +250,9 @@ inline fun ClientLevel.getEntitiesBoxInRange(
  * @see net.minecraft.client.Minecraft.startAttack
  * @return attacked or pierced
  */
+@AddonApi
 @Suppress("CognitiveComplexMethod")
+@JvmOverloads
 fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false): Boolean {
     val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
     val piercingWeapon = itemStack.get(DataComponents.PIERCING_WEAPON)

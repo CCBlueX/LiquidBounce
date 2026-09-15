@@ -6,188 +6,31 @@ public final class net/ccbluex/liquidbounce/LiquidBounce : net/ccbluex/liquidbou
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/addon/Aiming {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Aiming;
-	public static final field PRIORITY_COMBAT I
-	public static final field PRIORITY_NORMAL I
-	public static final field PRIORITY_PLACEMENT I
-	public static final fun getServerPitch ()F
-	public static final fun getServerYaw ()F
-	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FF)V
-	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFI)V
-	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFII)V
-	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFIILjava/lang/Runnable;)V
-	public static synthetic fun request$default (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFIILjava/lang/Runnable;ILjava/lang/Object;)V
-}
-
-public final class net/ccbluex/liquidbounce/addon/Chat {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Chat;
-	public static final fun error (Ljava/lang/String;)V
-	public static final fun info (Ljava/lang/String;)V
-	public static final fun notify (Ljava/lang/String;Ljava/lang/String;Lnet/ccbluex/liquidbounce/addon/Chat$Severity;)V
-	public static final fun print (Lnet/minecraft/network/chat/Component;)V
-	public static final fun warning (Ljava/lang/String;)V
-}
-
-public final class net/ccbluex/liquidbounce/addon/Chat$Severity : java/lang/Enum {
-	public static final field ERROR Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
-	public static final field INFO Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
-	public static final field SUCCESS Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
-	public static fun values ()[Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
-}
-
-public final class net/ccbluex/liquidbounce/addon/ClientCommands {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/ClientCommands;
-	public static final fun argument (Ljava/lang/String;Lcom/mojang/brigadier/arguments/ArgumentType;)Lcom/mojang/brigadier/builder/RequiredArgumentBuilder;
-	public static final fun execute (Ljava/lang/String;)V
-	public static final fun getPrefix ()Ljava/lang/String;
-	public static final fun isRootTaken (Ljava/lang/String;)Z
-	public static final fun literal (Ljava/lang/String;)Lcom/mojang/brigadier/builder/LiteralArgumentBuilder;
-}
-
-public final class net/ccbluex/liquidbounce/addon/Combat {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Combat;
-	public static final fun attack (Lnet/minecraft/world/entity/Entity;)Z
-	public static final fun attack (Lnet/minecraft/world/entity/Entity;Z)Z
-	public static final fun attack (Lnet/minecraft/world/entity/Entity;ZZ)Z
-	public static synthetic fun attack$default (Lnet/minecraft/world/entity/Entity;ZZILjava/lang/Object;)Z
-	public static final fun findEnemy (F)Lnet/minecraft/world/entity/Entity;
-	public static final fun isInCombat ()Z
-	public static final fun pauseCombat (I)V
-	public static final fun pauseRotations (I)V
-	public static final fun shouldBeAttacked (Lnet/minecraft/world/entity/Entity;)Z
-	public static final fun shouldBeShown (Lnet/minecraft/world/entity/Entity;)Z
-}
-
-public final class net/ccbluex/liquidbounce/addon/Events {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Events;
-	public static final field PRIORITY_FIRST S
-	public static final field PRIORITY_LAST S
-	public static final fun post (Lnet/ccbluex/liquidbounce/event/Event;)Lnet/ccbluex/liquidbounce/event/Event;
-}
-
-public final class net/ccbluex/liquidbounce/addon/Friends {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Friends;
-	public static final fun add (Ljava/lang/String;)Z
-	public static final fun add (Ljava/lang/String;Ljava/lang/String;)Z
-	public static synthetic fun add$default (Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Z
-	public static final fun isFriend (Ljava/lang/String;)Z
-	public static final fun isFriend (Lnet/minecraft/world/entity/Entity;)Z
-	public static final fun names ()Ljava/util/List;
-	public static final fun remove (Ljava/lang/String;)Z
-}
-
-public final class net/ccbluex/liquidbounce/addon/Game {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Game;
-	public static final fun getConnection ()Lnet/minecraft/client/multiplayer/ClientPacketListener;
-	public static final fun getInteraction ()Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;
-	public static final fun getMinecraft ()Lnet/minecraft/client/Minecraft;
-	public static final fun getPlayer ()Lnet/minecraft/client/player/LocalPlayer;
-	public static final fun getWorld ()Lnet/minecraft/client/multiplayer/ClientLevel;
-	public static final fun isInGame ()Z
-	public static final fun onClientThread (Ljava/lang/Runnable;)V
-}
-
-public final class net/ccbluex/liquidbounce/addon/Modules {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Modules;
-	public static final fun get (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/features/module/ClientModule;
-	public static final fun getAll ()Ljava/util/Collection;
-	public static final fun isEnabled (Ljava/lang/String;)Z
-	public static final fun setEnabled (Ljava/lang/String;Z)Z
-}
-
-public final class net/ccbluex/liquidbounce/addon/Movement {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Movement;
-	public static final fun getHorizontalSpeed ()D
-	public static final fun getTimerSpeed ()F
-	public static final fun isMoving ()Z
-	public static final fun requestTimerSpeed (Lnet/ccbluex/liquidbounce/features/module/ClientModule;F)V
-	public static final fun requestTimerSpeed (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FI)V
-	public static synthetic fun requestTimerSpeed$default (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FIILjava/lang/Object;)V
-	public static final fun stopHorizontal ()V
-	public static final fun strafe ()V
-	public static final fun strafe (D)V
-	public static final fun strafe (DD)V
-	public static synthetic fun strafe$default (DDILjava/lang/Object;)V
-}
-
-public final class net/ccbluex/liquidbounce/addon/Network {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Network;
-	public static final fun send (Lnet/minecraft/network/protocol/Packet;)V
-	public static final fun sendChat (Ljava/lang/String;)V
-	public static final fun sendCommand (Ljava/lang/String;)V
-	public static final fun sendSilently (Lnet/minecraft/network/protocol/Packet;)V
-}
-
 public final class net/ccbluex/liquidbounce/addon/Render {
 	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Render;
+	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;)V
+	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
 	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
-	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Z)V
-	public static synthetic fun blockBox$default (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZILjava/lang/Object;)V
+	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;I)V
+	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;II)V
+	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;IIZ)V
+	public static synthetic fun blockBox$default (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;IIZILjava/lang/Object;)V
+	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;)V
+	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
 	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
-	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Z)V
-	public static synthetic fun box$default (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZILjava/lang/Object;)V
-	public static final fun line (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
-	public static final fun rect (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;FFFFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
-	public static final fun rect (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;FFFFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
-	public static synthetic fun rect$default (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;FFFFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;ILjava/lang/Object;)V
+	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;I)V
+	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;II)V
+	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;IIZ)V
+	public static synthetic fun box$default (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;IIZILjava/lang/Object;)V
+	public static final fun line (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;I)V
 	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FF)F
 	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;)F
 	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;Z)F
 	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZF)F
-	public static synthetic fun text$default (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFILjava/lang/Object;)F
+	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;)F
+	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;)F
+	public static synthetic fun text$default (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;ILjava/lang/Object;)F
 	public static final fun textWidth (Lnet/minecraft/network/chat/Component;)F
-}
-
-public final class net/ccbluex/liquidbounce/addon/Slots {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Slots;
-	public static final fun findHotbarSlot (Ljava/util/function/Predicate;)Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;
-	public static final fun findHotbarSlot (Lnet/minecraft/world/item/Item;)Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;
-	public static final fun findSlot (Ljava/util/function/Predicate;)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
-	public static final fun findSlot (Lnet/minecraft/world/item/Item;)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
-	public static final fun getServerSideSlot ()I
-	public static final fun isInventoryOpen ()Z
-	public static final fun isScreenOpen ()Z
-	public static final fun resetSilentSlot (Ljava/lang/Object;)V
-	public static final fun selectSilently (Ljava/lang/Object;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;)Z
-	public static final fun selectSilently (Ljava/lang/Object;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;I)Z
-	public static synthetic fun selectSilently$default (Ljava/lang/Object;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;IILjava/lang/Object;)Z
-	public static final fun useSlot (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;)Lnet/minecraft/world/InteractionResult;
-	public static final fun useSlot (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;I)Lnet/minecraft/world/InteractionResult;
-	public static synthetic fun useSlot$default (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;IILjava/lang/Object;)Lnet/minecraft/world/InteractionResult;
-}
-
-public final class net/ccbluex/liquidbounce/addon/Text {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Text;
-	public static final fun error (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
-	public static final fun highlight (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
-	public static final fun regular (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
-	public static final fun translate (Ljava/lang/String;[Ljava/lang/Object;)Lnet/minecraft/network/chat/MutableComponent;
-	public static final fun variable (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
-	public static final fun warning (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
-}
-
-public final class net/ccbluex/liquidbounce/addon/Ui {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Ui;
-	public static final fun isBoundToKey (II)Z
-	public static final fun isBoundToMouse (I)Z
-	public static final fun refresh ()V
-}
-
-public final class net/ccbluex/liquidbounce/addon/World {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/World;
-	public static final fun block (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/Block;
-	public static final fun breakBlock (Lnet/minecraft/core/BlockPos;)Z
-	public static final fun breakBlock (Lnet/minecraft/core/BlockPos;Z)Z
-	public static synthetic fun breakBlock$default (Lnet/minecraft/core/BlockPos;ZILjava/lang/Object;)Z
-	public static final fun isInteractable (Lnet/minecraft/world/level/block/state/BlockState;)Z
-	public static final fun outlineBox (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/AABB;
-	public static final fun place (Lnet/minecraft/core/BlockPos;)Z
-	public static final fun place (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/InteractionHand;)Z
-	public static synthetic fun place$default (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/InteractionHand;ILjava/lang/Object;)Z
-	public static final fun state (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;
 }
 
 public final class net/ccbluex/liquidbounce/api/services/auth/OAuthClient : net/ccbluex/liquidbounce/event/EventListener {
@@ -284,6 +127,7 @@ public abstract class net/ccbluex/liquidbounce/config/types/group/ToggleableValu
 	public fun getEnabled ()Z
 	public final fun getEnabledValue ()Lnet/ccbluex/liquidbounce/config/types/Value;
 	public fun getGpuDevice ()Lcom/mojang/blaze3d/systems/GpuDevice;
+	public fun getInGame ()Z
 	public fun getInteraction ()Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;
 	public fun getMc ()Lnet/minecraft/client/Minecraft;
 	public fun getNetwork ()Lnet/minecraft/client/multiplayer/ClientPacketListener;
@@ -468,6 +312,19 @@ public final class net/ccbluex/liquidbounce/event/EventListener$DefaultImpls {
 	public static fun unregister (Lnet/ccbluex/liquidbounce/event/EventListener;)V
 }
 
+public final class net/ccbluex/liquidbounce/event/EventManager {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/event/EventManager;
+	public final fun callEvent (Lnet/ccbluex/liquidbounce/event/Event;)Lnet/ccbluex/liquidbounce/event/Event;
+	public final fun eventClassByName (Ljava/lang/String;)Ljava/lang/Class;
+	public final fun eventFlow (Ljava/lang/Class;)Lkotlinx/coroutines/flow/SharedFlow;
+	public final fun getKnownEventClasses ()Ljava/util/Set;
+	public final fun registerEventClass (Ljava/lang/Class;)Z
+	public final fun registerEventHook (Ljava/lang/Class;Lnet/ccbluex/liquidbounce/event/EventHook;)Lnet/ccbluex/liquidbounce/event/EventHook;
+	public final fun unregisterAll ()V
+	public final fun unregisterEventHandler (Lnet/ccbluex/liquidbounce/event/EventListener;)V
+	public final fun unregisterEventHook (Ljava/lang/Class;Lnet/ccbluex/liquidbounce/event/EventHook;)V
+}
+
 public final class net/ccbluex/liquidbounce/event/EventState : java/lang/Enum {
 	public static final field POST Lnet/ccbluex/liquidbounce/event/EventState;
 	public static final field PRE Lnet/ccbluex/liquidbounce/event/EventState;
@@ -514,6 +371,12 @@ public final class net/ccbluex/liquidbounce/event/events/ChatSendEvent : net/ccb
 	public final fun getMessage ()Ljava/lang/String;
 	public fun getSerializeAsync ()Z
 	public fun getSerializer ()Lcom/google/gson/Gson;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/ChunkLoadEvent : net/ccbluex/liquidbounce/event/Event {
+	public fun <init> (II)V
+	public final fun getX ()I
+	public final fun getZ ()I
 }
 
 public final class net/ccbluex/liquidbounce/event/events/DisconnectEvent : net/ccbluex/liquidbounce/event/Event, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
@@ -577,6 +440,16 @@ public final class net/ccbluex/liquidbounce/event/events/MouseButtonEvent : net/
 	public final fun isRightClick ()Z
 }
 
+public final class net/ccbluex/liquidbounce/event/events/MovementInputEvent : net/ccbluex/liquidbounce/event/Event {
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;ZZ)V
+	public final fun getDirectionalInput ()Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public final fun getJump ()Z
+	public final fun getSneak ()Z
+	public final fun setDirectionalInput (Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;)V
+	public final fun setJump (Z)V
+	public final fun setSneak (Z)V
+}
+
 public final class net/ccbluex/liquidbounce/event/events/NotificationEvent : net/ccbluex/liquidbounce/event/Event, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;)V
 	public final fun getMessage ()Ljava/lang/String;
@@ -584,6 +457,17 @@ public final class net/ccbluex/liquidbounce/event/events/NotificationEvent : net
 	public fun getSerializer ()Lcom/google/gson/Gson;
 	public final fun getSeverity ()Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;
 	public final fun getTitle ()Ljava/lang/String;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/NotificationEvent$Severity : java/lang/Enum {
+	public static final field DISABLED Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;
+	public static final field ENABLED Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;
+	public static final field ERROR Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;
+	public static final field INFO Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;
+	public static final field SUCCESS Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;
 }
 
 public final class net/ccbluex/liquidbounce/event/events/OverlayRenderEvent : net/ccbluex/liquidbounce/event/Event {
@@ -636,6 +520,12 @@ public final class net/ccbluex/liquidbounce/event/events/PlayerTickEvent : net/c
 	public fun <init> ()V
 }
 
+public final class net/ccbluex/liquidbounce/event/events/RefreshArrayListEvent : net/ccbluex/liquidbounce/event/Event, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/event/events/RefreshArrayListEvent;
+	public fun getSerializeAsync ()Z
+	public fun getSerializer ()Lcom/google/gson/Gson;
+}
+
 public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
 	public fun <init> (Lnet/minecraft/client/gui/screens/Screen;)V
 	public final fun getScreen ()Lnet/minecraft/client/gui/screens/Screen;
@@ -666,6 +556,12 @@ public final class net/ccbluex/liquidbounce/event/events/TransferOrigin : java/l
 public final class net/ccbluex/liquidbounce/event/events/WorldChangeEvent : net/ccbluex/liquidbounce/event/Event {
 	public fun <init> (Lnet/minecraft/client/multiplayer/ClientLevel;)V
 	public final fun getWorld ()Lnet/minecraft/client/multiplayer/ClientLevel;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/WorldEntityRemoveEvent : net/ccbluex/liquidbounce/event/Event {
+	public fun <init> (Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity$RemovalReason;)V
+	public final fun getEntity ()Lnet/minecraft/world/entity/Entity;
+	public final fun getReason ()Lnet/minecraft/world/entity/Entity$RemovalReason;
 }
 
 public final class net/ccbluex/liquidbounce/event/events/WorldRenderEvent : net/ccbluex/liquidbounce/event/Event, java/lang/AutoCloseable {
@@ -712,7 +608,7 @@ public final class net/ccbluex/liquidbounce/features/addon/AddonState : java/lan
 	public static fun values ()[Lnet/ccbluex/liquidbounce/features/addon/AddonState;
 }
 
-public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon : net/ccbluex/liquidbounce/event/EventListener {
+public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon : net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/features/module/MinecraftShortcuts {
 	public fun <init> ()V
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun children ()Ljava/util/List;
@@ -728,12 +624,19 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public final fun getDescription ()Ljava/lang/String;
 	public fun getDisplayName ()Ljava/lang/String;
+	public fun getGpuDevice ()Lcom/mojang/blaze3d/systems/GpuDevice;
 	public final fun getId ()Ljava/lang/String;
+	public fun getInGame ()Z
+	public fun getInteraction ()Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;
 	public final fun getLogger ()Lorg/apache/logging/log4j/Logger;
+	public fun getMc ()Lnet/minecraft/client/Minecraft;
 	public final fun getMetadata ()Lnet/ccbluex/liquidbounce/features/addon/AddonMetadata;
+	public fun getNetwork ()Lnet/minecraft/client/multiplayer/ClientPacketListener;
+	public fun getPlayer ()Lnet/minecraft/client/player/LocalPlayer;
 	public fun getRunning ()Z
 	public final fun getState ()Lnet/ccbluex/liquidbounce/features/addon/AddonState;
 	public final fun getVersion ()Ljava/lang/String;
+	public fun getWorld ()Lnet/minecraft/client/multiplayer/ClientLevel;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public abstract fun onInitialize ()V
@@ -772,9 +675,17 @@ public final class net/ccbluex/liquidbounce/features/command/CommandManager : ne
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public final fun execute (Ljava/lang/String;)V
+	public final fun isRootTaken (Ljava/lang/String;)Z
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/command/CommandManager$GlobalSettings : net/ccbluex/liquidbounce/config/types/group/ValueGroup {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/features/command/CommandManager$GlobalSettings;
+	public final fun getHintCount ()I
+	public final fun getPrefix ()Ljava/lang/String;
+	public final fun setPrefix (Ljava/lang/String;)V
 }
 
 public abstract interface class net/ccbluex/liquidbounce/features/command/CommandRegistrar {
@@ -909,6 +820,26 @@ public class net/ccbluex/liquidbounce/features/module/ClientModule : net/ccbluex
 	public final fun verifyFallbackDescription ()V
 }
 
+public abstract interface class net/ccbluex/liquidbounce/features/module/MinecraftShortcuts {
+	public fun getGpuDevice ()Lcom/mojang/blaze3d/systems/GpuDevice;
+	public fun getInGame ()Z
+	public fun getInteraction ()Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;
+	public fun getMc ()Lnet/minecraft/client/Minecraft;
+	public fun getNetwork ()Lnet/minecraft/client/multiplayer/ClientPacketListener;
+	public fun getPlayer ()Lnet/minecraft/client/player/LocalPlayer;
+	public fun getWorld ()Lnet/minecraft/client/multiplayer/ClientLevel;
+}
+
+public final class net/ccbluex/liquidbounce/features/module/MinecraftShortcuts$DefaultImpls {
+	public static fun getGpuDevice (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Lcom/mojang/blaze3d/systems/GpuDevice;
+	public static fun getInGame (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Z
+	public static fun getInteraction (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;
+	public static fun getMc (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Lnet/minecraft/client/Minecraft;
+	public static fun getNetwork (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Lnet/minecraft/client/multiplayer/ClientPacketListener;
+	public static fun getPlayer (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Lnet/minecraft/client/player/LocalPlayer;
+	public static fun getWorld (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Lnet/minecraft/client/multiplayer/ClientLevel;
+}
+
 public final class net/ccbluex/liquidbounce/features/module/ModuleCategories {
 	public static final field COMBAT Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
 	public static final field EXPLOIT Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
@@ -938,6 +869,7 @@ public final class net/ccbluex/liquidbounce/features/module/ModuleCategory : net
 public final class net/ccbluex/liquidbounce/features/module/ModuleManager : java/util/Collection, kotlin/jvm/internal/markers/KMappedMarker, net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun get (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/features/module/ClientModule;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
@@ -973,6 +905,16 @@ public final class net/ccbluex/liquidbounce/features/module/modules/player/autos
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/module/modules/render/ModuleClickGui : net/ccbluex/liquidbounce/features/module/ClientModule {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/features/module/modules/render/ModuleClickGui;
+	public fun getRunning ()Z
+	public final fun invalidate ()V
+	public final fun isInSearchBar ()Z
+	public fun onEnabled ()V
+	public final fun sync ()V
+	public final fun updateStandaloneScreen ()Z
 }
 
 public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendManager : net/ccbluex/liquidbounce/event/EventListener {
@@ -1037,6 +979,17 @@ public final class net/ccbluex/liquidbounce/integration/screen/ScreenManager : n
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/lang/LanguageKt {
+	public static final fun translation (Ljava/lang/String;[Ljava/lang/Object;)Lnet/minecraft/network/chat/MutableComponent;
+}
+
+public final class net/ccbluex/liquidbounce/render/Render2DKt {
+	public static final fun drawQuad (Lnet/minecraft/client/gui/GuiGraphicsExtractor;FFFF)V
+	public static final fun drawQuad (Lnet/minecraft/client/gui/GuiGraphicsExtractor;FFFFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
+	public static final fun drawQuad (Lnet/minecraft/client/gui/GuiGraphicsExtractor;FFFFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
+	public static synthetic fun drawQuad$default (Lnet/minecraft/client/gui/GuiGraphicsExtractor;FFFFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;ILjava/lang/Object;)V
 }
 
 public final class net/ccbluex/liquidbounce/render/atlas/ItemImageAtlas : net/ccbluex/liquidbounce/event/EventListener {
@@ -1144,9 +1097,98 @@ public final class net/ccbluex/liquidbounce/utils/aiming/PostRotationExecutor : 
 public final class net/ccbluex/liquidbounce/utils/aiming/RotationManager : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun getCurrentRotation ()Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public final fun getServerRotation ()Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;ILnet/ccbluex/liquidbounce/features/module/ClientModule;)V
+	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
+	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ZLnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;)V
+	public static synthetic fun setRotationTarget$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationManager;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ZLnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;ILjava/lang/Object;)V
+}
+
+public final class net/ccbluex/liquidbounce/utils/aiming/RotationTarget {
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Ljava/util/List;)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Ljava/util/List;I)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Ljava/util/List;IF)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Ljava/util/List;IFZ)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Ljava/util/List;IFZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Ljava/util/List;IFZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;)V
+	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Ljava/util/List;IFZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getConsiderInventory ()Z
+	public final fun getEntity ()Lnet/minecraft/world/entity/Entity;
+	public final fun getMovementCorrection ()Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;
+	public final fun getProcessors ()Ljava/util/List;
+	public final fun getResetThreshold ()F
+	public final fun getRotation ()Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public final fun getTicksUntilReset ()I
+	public final fun getWhenReached ()Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;
+	public final fun setEntity (Lnet/minecraft/world/entity/Entity;)V
+	public final fun towards (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Z)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+}
+
+public class net/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup : net/ccbluex/liquidbounce/config/types/group/ValueGroup {
+	public fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Z)V
+	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun calculateTicks (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)I
+	public final fun toRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
+	public static synthetic fun toRotationTarget$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
+}
+
+public final class net/ccbluex/liquidbounce/utils/aiming/data/Rotation : java/lang/Record {
+	public static final field Companion Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation$Companion;
+	public static final field ZERO Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public fun <init> (FF)V
+	public fun <init> (FFZ)V
+	public synthetic fun <init> (FFZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun add (FF)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public final fun component1 ()F
+	public final fun component2 ()F
+	public final fun component3 ()Z
+	public final fun copy (FFZ)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public static synthetic fun copy$default (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FFZILjava/lang/Object;)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public final fun directionAngleTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)F
+	public final fun directionVector ()Lnet/minecraft/world/phys/Vec3;
+	public fun equals (Ljava/lang/Object;)Z
+	public static final fun fromRotationVec (DDD)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public static final fun fromRotationVec (Lnet/minecraft/world/phys/Vec3;)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public fun hashCode ()I
+	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;F)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public final fun isDirectionCloseTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)Z
+	public final fun isDirectionCloseTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;F)Z
+	public static synthetic fun isDirectionCloseTo$default (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FILjava/lang/Object;)Z
+	public final fun isNormalized ()Z
+	public final fun isRotationDeltaCloseTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)Z
+	public final fun isRotationDeltaCloseTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;F)Z
+	public static synthetic fun isRotationDeltaCloseTo$default (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FILjava/lang/Object;)Z
+	public static final fun lookingAt (Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public final fun normalize ()Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public final fun pitch ()F
+	public final fun rotationDeltaLengthTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)F
+	public final fun rotationDeltaTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)Lnet/ccbluex/liquidbounce/utils/aiming/data/RotationDelta;
+	public final fun toQuaternion ()Lorg/joml/Quaternionf;
+	public final fun toQuaternion (Lorg/joml/Quaternionf;)Lorg/joml/Quaternionf;
+	public static synthetic fun toQuaternion$default (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lorg/joml/Quaternionf;ILjava/lang/Object;)Lorg/joml/Quaternionf;
+	public fun toString ()Ljava/lang/String;
+	public final fun towardsLinear (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FF)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public final fun xRot ()F
+	public final fun yRot ()F
+	public final fun yaw ()F
+}
+
+public final class net/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field CHANGE_LOOK Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;
+	public static final field OFF Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;
+	public static final field SILENT Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;
+	public static final field STRICT Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;
 }
 
 public final class net/ccbluex/liquidbounce/utils/aiming/point/PointTracker : net/ccbluex/liquidbounce/config/types/group/ValueGroup, net/ccbluex/liquidbounce/event/EventListener {
@@ -1155,6 +1197,32 @@ public final class net/ccbluex/liquidbounce/utils/aiming/point/PointTracker : ne
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/block/BlockExtensionsKt {
+	public static final fun doBreak (Lnet/minecraft/core/BlockPos;)Z
+	public static final fun doBreak (Lnet/minecraft/core/BlockPos;Z)Z
+	public static final fun doBreak (Lnet/minecraft/core/BlockPos;ZLnet/ccbluex/liquidbounce/utils/block/SwingMode;)Z
+	public static final fun doBreak (Lnet/minecraft/world/phys/BlockHitResult;)V
+	public static final fun doBreak (Lnet/minecraft/world/phys/BlockHitResult;Z)V
+	public static final fun doBreak (Lnet/minecraft/world/phys/BlockHitResult;ZLnet/ccbluex/liquidbounce/utils/block/SwingMode;)V
+	public static synthetic fun doBreak$default (Lnet/minecraft/core/BlockPos;ZLnet/ccbluex/liquidbounce/utils/block/SwingMode;ILjava/lang/Object;)Z
+	public static synthetic fun doBreak$default (Lnet/minecraft/world/phys/BlockHitResult;ZLnet/ccbluex/liquidbounce/utils/block/SwingMode;ILjava/lang/Object;)V
+	public static final fun doPlacement (Lnet/minecraft/core/BlockPos;)Z
+	public static final fun doPlacement (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/InteractionHand;)Z
+	public static final fun doPlacement (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/InteractionHand;Lnet/ccbluex/liquidbounce/utils/block/SwingMode;)Z
+	public static final fun doPlacement (Lnet/minecraft/world/phys/BlockHitResult;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)V
+	public static final fun doPlacement (Lnet/minecraft/world/phys/BlockHitResult;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/InteractionHand;)V
+	public static final fun doPlacement (Lnet/minecraft/world/phys/BlockHitResult;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/InteractionHand;Lkotlin/jvm/functions/Function0;)V
+	public static final fun doPlacement (Lnet/minecraft/world/phys/BlockHitResult;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/InteractionHand;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;)V
+	public static final fun doPlacement (Lnet/minecraft/world/phys/BlockHitResult;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/InteractionHand;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lnet/ccbluex/liquidbounce/utils/block/SwingMode;)V
+	public static synthetic fun doPlacement$default (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/InteractionHand;Lnet/ccbluex/liquidbounce/utils/block/SwingMode;ILjava/lang/Object;)Z
+	public static synthetic fun doPlacement$default (Lnet/minecraft/world/phys/BlockHitResult;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/InteractionHand;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lnet/ccbluex/liquidbounce/utils/block/SwingMode;ILjava/lang/Object;)V
+	public static final fun getBlock (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/Block;
+	public static final fun getOutlineBox (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/AABB;
+	public static final fun getState (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;
+	public static final fun getStateOrEmpty (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;
+	public static final fun isInteractable (Lnet/minecraft/world/level/block/state/BlockState;)Z
 }
 
 public final class net/ccbluex/liquidbounce/utils/block/ChunkScanner : net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/features/module/MinecraftShortcuts {
@@ -1224,12 +1292,62 @@ public final class net/ccbluex/liquidbounce/utils/client/Chronometer {
 	public final fun waitForAtLeast (J)V
 }
 
+public final class net/ccbluex/liquidbounce/utils/client/ClientChat {
+	public static final fun chat (Ljava/lang/String;)V
+	public static final fun chat (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
+	public static final fun chat (Lnet/minecraft/network/chat/Component;)V
+	public static final fun chat (Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
+	public static final fun chat (Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/utils/client/MessageMetadata;)V
+	public static final fun chat ([Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/utils/client/MessageMetadata;)V
+	public static synthetic fun chat$default (Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/utils/client/MessageMetadata;ILjava/lang/Object;)V
+	public static synthetic fun chat$default ([Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/utils/client/MessageMetadata;ILjava/lang/Object;)V
+	public static final fun highlight (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
+	public static final fun highlight (Lnet/minecraft/network/chat/MutableComponent;)Lnet/minecraft/network/chat/MutableComponent;
+	public static final fun markAsError (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
+	public static final fun markAsError (Lnet/minecraft/network/chat/MutableComponent;)Lnet/minecraft/network/chat/MutableComponent;
+	public static final fun notification (Ljava/lang/String;Ljava/lang/String;Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;)Lnet/ccbluex/liquidbounce/event/events/NotificationEvent;
+	public static final fun notification (Ljava/lang/String;Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;)Lnet/ccbluex/liquidbounce/event/events/NotificationEvent;
+	public static final fun notification (Lnet/minecraft/network/chat/Component;Ljava/lang/String;Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;)Lnet/ccbluex/liquidbounce/event/events/NotificationEvent;
+	public static final fun notification (Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/event/events/NotificationEvent$Severity;)Lnet/ccbluex/liquidbounce/event/events/NotificationEvent;
+	public static final fun regular (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
+	public static final fun regular (Lnet/minecraft/network/chat/MutableComponent;)Lnet/minecraft/network/chat/MutableComponent;
+	public static final fun variable (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
+	public static final fun variable (Lnet/minecraft/network/chat/MutableComponent;)Lnet/minecraft/network/chat/MutableComponent;
+	public static final fun warning (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
+	public static final fun warning (Lnet/minecraft/network/chat/MutableComponent;)Lnet/minecraft/network/chat/MutableComponent;
+}
+
+public final class net/ccbluex/liquidbounce/utils/client/ClientUtilsKt {
+	public static final fun getInGame ()Z
+}
+
 public final class net/ccbluex/liquidbounce/utils/client/InteractionTracker : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/client/MessageMetadata : java/lang/Record {
+	public static final field Companion Lnet/ccbluex/liquidbounce/utils/client/MessageMetadata$Companion;
+	public fun <init> ()V
+	public fun <init> (ZLjava/lang/String;ZI)V
+	public synthetic fun <init> (ZLjava/lang/String;ZIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun byModule (Lnet/ccbluex/liquidbounce/features/module/ClientModule;)Lnet/ccbluex/liquidbounce/utils/client/MessageMetadata;
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()I
+	public final fun copy (ZLjava/lang/String;ZI)Lnet/ccbluex/liquidbounce/utils/client/MessageMetadata;
+	public static synthetic fun copy$default (Lnet/ccbluex/liquidbounce/utils/client/MessageMetadata;ZLjava/lang/String;ZIILjava/lang/Object;)Lnet/ccbluex/liquidbounce/utils/client/MessageMetadata;
+	public final fun count ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun id ()Ljava/lang/String;
+	public final fun prefix ()Z
+	public final fun remove ()Z
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class net/ccbluex/liquidbounce/utils/client/ServerObserver : net/ccbluex/liquidbounce/event/EventListener {
@@ -1241,27 +1359,76 @@ public final class net/ccbluex/liquidbounce/utils/client/ServerObserver : net/cc
 }
 
 public final class net/ccbluex/liquidbounce/utils/client/SilentHotbar : net/ccbluex/liquidbounce/event/EventListener {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/utils/client/SilentHotbar;
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun children ()Ljava/util/List;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun getClientsideSlot ()I
+	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugOwnerId ()Ljava/lang/String;
+	public fun getRunning ()Z
+	public final fun getServersideSlot ()I
+	public final fun isSlotModified ()Z
+	public final fun isSlotModifiedBy (Ljava/lang/Object;)Z
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun parent ()Lnet/ccbluex/liquidbounce/event/EventListener;
+	public final fun resetSlot (Ljava/lang/Object;)V
+	public final fun selectSlotSilently (Ljava/lang/Object;II)Z
+	public final fun selectSlotSilently (Ljava/lang/Object;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;I)Z
+	public fun unregister ()V
 }
 
 public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liquidbounce/event/EventListener {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/utils/client/Timer;
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun children ()Ljava/util/List;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugOwnerId ()Ljava/lang/String;
+	public fun getRunning ()Z
+	public final fun getTimerSpeed ()F
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun parent ()Lnet/ccbluex/liquidbounce/event/EventListener;
+	public final fun requestTimerSpeed (FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
+	public final fun requestTimerSpeed (FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;I)V
+	public static synthetic fun requestTimerSpeed$default (Lnet/ccbluex/liquidbounce/utils/client/Timer;FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;IILjava/lang/Object;)V
+	public fun unregister ()V
+}
+
+public final class net/ccbluex/liquidbounce/utils/combat/CombatExtensionsKt {
+	public static final fun attackEntity (Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/block/SwingMode;)Z
+	public static final fun attackEntity (Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/block/SwingMode;Z)Z
+	public static synthetic fun attackEntity$default (Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/block/SwingMode;ZILjava/lang/Object;)Z
+	public static final fun findEnemies (Lnet/minecraft/client/multiplayer/ClientLevel;FF)Ljava/util/List;
+	public static final fun findEnemies (Lnet/minecraft/client/multiplayer/ClientLevel;FFLjava/util/Set;)Ljava/util/List;
+	public static synthetic fun findEnemies$default (Lnet/minecraft/client/multiplayer/ClientLevel;FFLjava/util/Set;ILjava/lang/Object;)Ljava/util/List;
+	public static final fun findEnemy (Lnet/minecraft/client/multiplayer/ClientLevel;FF)Lnet/minecraft/world/entity/Entity;
+	public static final fun findEnemy (Lnet/minecraft/client/multiplayer/ClientLevel;FFLjava/util/Set;)Lnet/minecraft/world/entity/Entity;
+	public static final fun findEnemy (Lnet/minecraft/client/multiplayer/ClientLevel;Lkotlin/ranges/ClosedFloatingPointRange;)Lnet/minecraft/world/entity/Entity;
+	public static final fun findEnemy (Lnet/minecraft/client/multiplayer/ClientLevel;Lkotlin/ranges/ClosedFloatingPointRange;Ljava/util/Set;)Lnet/minecraft/world/entity/Entity;
+	public static synthetic fun findEnemy$default (Lnet/minecraft/client/multiplayer/ClientLevel;FFLjava/util/Set;ILjava/lang/Object;)Lnet/minecraft/world/entity/Entity;
+	public static synthetic fun findEnemy$default (Lnet/minecraft/client/multiplayer/ClientLevel;Lkotlin/ranges/ClosedFloatingPointRange;Ljava/util/Set;ILjava/lang/Object;)Lnet/minecraft/world/entity/Entity;
+	public static final fun shouldBeAttacked (Lnet/minecraft/world/entity/Entity;)Z
+	public static final fun shouldBeAttacked (Lnet/minecraft/world/entity/Entity;Ljava/util/Set;)Z
+	public static synthetic fun shouldBeAttacked$default (Lnet/minecraft/world/entity/Entity;Ljava/util/Set;ILjava/lang/Object;)Z
+	public static final fun shouldBeShown (Lnet/minecraft/world/entity/Entity;)Z
+	public static final fun shouldBeShown (Lnet/minecraft/world/entity/Entity;Ljava/util/Set;)Z
+	public static synthetic fun shouldBeShown$default (Lnet/minecraft/world/entity/Entity;Ljava/util/Set;ILjava/lang/Object;)Z
 }
 
 public final class net/ccbluex/liquidbounce/utils/combat/CombatManager : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun isInCombat ()Z
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun pauseCombatForAtLeast (I)V
+	public final fun pauseRotationForAtLeast (I)V
 }
 
 public final class net/ccbluex/liquidbounce/utils/combat/EntityTaggingManager : net/ccbluex/liquidbounce/event/EventListener {
@@ -1294,6 +1461,17 @@ public final class net/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo {
 	public fun hashCode ()I
 	public final fun isFriend ()Z
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class net/ccbluex/liquidbounce/utils/entity/EntityExtensionsKt {
+	public static final fun getHorizontalSpeed (Lnet/minecraft/world/entity/Entity;)D
+	public static final fun getMoving (Lnet/minecraft/client/player/LocalPlayer;)Z
+	public static final fun withStrafe (Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;
+	public static final fun withStrafe (Lnet/minecraft/world/phys/Vec3;D)Lnet/minecraft/world/phys/Vec3;
+	public static final fun withStrafe (Lnet/minecraft/world/phys/Vec3;DD)Lnet/minecraft/world/phys/Vec3;
+	public static final fun withStrafe (Lnet/minecraft/world/phys/Vec3;DDLnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;)Lnet/minecraft/world/phys/Vec3;
+	public static final fun withStrafe (Lnet/minecraft/world/phys/Vec3;DDLnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;F)Lnet/minecraft/world/phys/Vec3;
+	public static synthetic fun withStrafe$default (Lnet/minecraft/world/phys/Vec3;DDLnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;FILjava/lang/Object;)Lnet/minecraft/world/phys/Vec3;
 }
 
 public final class net/ccbluex/liquidbounce/utils/entity/PlayerSimulationCache : net/ccbluex/liquidbounce/event/EventListener {
@@ -1397,9 +1575,20 @@ public final class net/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot : jav
 public final class net/ccbluex/liquidbounce/utils/inventory/InventoryManager : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun isHandledScreenOpen ()Z
+	public final fun isInventoryOpen ()Z
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/inventory/InventoryUtilsKt {
+	public static final fun useHotbarSlotOrOffhand (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;)Lnet/minecraft/world/InteractionResult;
+	public static final fun useHotbarSlotOrOffhand (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;I)Lnet/minecraft/world/InteractionResult;
+	public static final fun useHotbarSlotOrOffhand (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;IF)Lnet/minecraft/world/InteractionResult;
+	public static final fun useHotbarSlotOrOffhand (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;IFF)Lnet/minecraft/world/InteractionResult;
+	public static final fun useHotbarSlotOrOffhand (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;IFFLnet/ccbluex/liquidbounce/utils/block/SwingMode;)Lnet/minecraft/world/InteractionResult;
+	public static synthetic fun useHotbarSlotOrOffhand$default (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;IFFLnet/ccbluex/liquidbounce/utils/block/SwingMode;ILjava/lang/Object;)Lnet/minecraft/world/InteractionResult;
 }
 
 public abstract interface class net/ccbluex/liquidbounce/utils/inventory/ItemSlot : net/ccbluex/liquidbounce/utils/item/ItemStackHolder {
@@ -1417,5 +1606,131 @@ public abstract interface class net/ccbluex/liquidbounce/utils/inventory/ItemSlo
 
 public final class net/ccbluex/liquidbounce/utils/inventory/ItemSlot$DefaultImpls {
 	public static fun getIdForServerWithCurrentScreen (Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;)Ljava/lang/Integer;
+}
+
+public final class net/ccbluex/liquidbounce/utils/inventory/Slots : java/util/List, kotlin/jvm/internal/markers/KMappedMarker {
+	public static final field All Lnet/ccbluex/liquidbounce/utils/inventory/Slots;
+	public static final field Armor Lnet/ccbluex/liquidbounce/utils/inventory/Slots;
+	public static final field Companion Lnet/ccbluex/liquidbounce/utils/inventory/Slots$Companion;
+	public static final field Hotbar Lnet/ccbluex/liquidbounce/utils/inventory/Slots;
+	public static final field HotbarAndInventory Lnet/ccbluex/liquidbounce/utils/inventory/Slots;
+	public static final field Inventory Lnet/ccbluex/liquidbounce/utils/inventory/Slots;
+	public static final field OffhandWithHotbar Lnet/ccbluex/liquidbounce/utils/inventory/Slots;
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun add (ILjava/lang/Object;)V
+	public fun add (ILnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;)V
+	public synthetic fun add (Ljava/lang/Object;)Z
+	public fun add (Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;)Z
+	public fun addAll (ILjava/util/Collection;)Z
+	public fun addAll (Ljava/util/Collection;)Z
+	public synthetic fun addFirst (Ljava/lang/Object;)V
+	public fun addFirst (Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;)V
+	public synthetic fun addLast (Ljava/lang/Object;)V
+	public fun addLast (Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;)V
+	public fun clear ()V
+	public final fun contains (Ljava/lang/Object;)Z
+	public fun contains (Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;)Z
+	public fun containsAll (Ljava/util/Collection;)Z
+	public final fun findSlot (Ljava/util/function/Predicate;)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
+	public final synthetic fun findSlot (Lkotlin/jvm/functions/Function1;)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
+	public final fun findSlot (Lnet/minecraft/world/item/Item;)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
+	public synthetic fun get (I)Ljava/lang/Object;
+	public fun get (I)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
+	public final fun getItems ()[Lnet/minecraft/world/item/Item;
+	public fun getSize ()I
+	public final fun getStacks ()[Lnet/minecraft/world/item/ItemStack;
+	public final fun indexOf (Ljava/lang/Object;)I
+	public fun indexOf (Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;)I
+	public fun isEmpty ()Z
+	public fun iterator ()Ljava/util/Iterator;
+	public final fun lastIndexOf (Ljava/lang/Object;)I
+	public fun lastIndexOf (Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;)I
+	public fun listIterator ()Ljava/util/ListIterator;
+	public fun listIterator (I)Ljava/util/ListIterator;
+	public final fun plus (Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;)Lnet/ccbluex/liquidbounce/utils/inventory/Slots;
+	public final fun plus (Lnet/ccbluex/liquidbounce/utils/inventory/Slots;)Lnet/ccbluex/liquidbounce/utils/inventory/Slots;
+	public synthetic fun remove (I)Ljava/lang/Object;
+	public fun remove (I)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
+	public fun remove (Ljava/lang/Object;)Z
+	public fun removeAll (Ljava/util/Collection;)Z
+	public synthetic fun removeFirst ()Ljava/lang/Object;
+	public fun removeFirst ()Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
+	public synthetic fun removeLast ()Ljava/lang/Object;
+	public fun removeLast ()Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
+	public fun replaceAll (Ljava/util/function/UnaryOperator;)V
+	public fun retainAll (Ljava/util/Collection;)Z
+	public synthetic fun set (ILjava/lang/Object;)Ljava/lang/Object;
+	public fun set (ILnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
+	public final fun size ()I
+	public fun sort (Ljava/util/Comparator;)V
+	public fun subList (II)Ljava/util/List;
+	public fun toArray ()[Ljava/lang/Object;
+	public fun toArray ([Ljava/lang/Object;)[Ljava/lang/Object;
+}
+
+public final class net/ccbluex/liquidbounce/utils/kotlin/EventPriorityConvention {
+	public static final field CRITICAL_MODIFICATION S
+	public static final field FINAL_DECISION S
+	public static final field FIRST_PRIORITY S
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/utils/kotlin/EventPriorityConvention;
+	public static final field MODEL_STATE S
+	public static final field OBJECTION_AGAINST_EVERYTHING S
+	public static final field READ_FINAL_STATE S
+	public static final field SAFETY_FEATURE S
+}
+
+public final class net/ccbluex/liquidbounce/utils/kotlin/Priority : java/lang/Enum {
+	public static final field IMPORTANT_FOR_PLAYER_LIFE Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;
+	public static final field IMPORTANT_FOR_USAGE_1 Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;
+	public static final field IMPORTANT_FOR_USAGE_2 Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;
+	public static final field IMPORTANT_FOR_USAGE_3 Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;
+	public static final field IMPORTANT_FOR_USER_SAFETY Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;
+	public static final field NORMAL Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;
+	public static final field NOT_IMPORTANT Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getPriority ()I
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;
+}
+
+public final class net/ccbluex/liquidbounce/utils/movement/DirectionalInput {
+	public static final field BACKWARDS Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public static final field BACKWARDS_LEFT Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public static final field BACKWARDS_RIGHT Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public static final field Companion Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput$Companion;
+	public static final field FORWARDS Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public static final field FORWARDS_LEFT Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public static final field FORWARDS_RIGHT Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public static final field LEFT Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public static final field NONE Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public static final field RIGHT Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public fun <init> (FF)V
+	public fun <init> (Lnet/minecraft/client/Options;)V
+	public fun <init> (Lnet/minecraft/client/player/ClientInput;)V
+	public fun <init> (Lnet/minecraft/world/entity/player/Input;)V
+	public fun <init> (ZZZZ)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun copy (ZZZZ)Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public static synthetic fun copy$default (Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;ZZZZILjava/lang/Object;)Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackwards ()Z
+	public final fun getForwards ()Z
+	public final fun getLeft ()Z
+	public final fun getRight ()Z
+	public fun hashCode ()I
+	public final fun invert ()Lnet/ccbluex/liquidbounce/utils/movement/DirectionalInput;
+	public final fun isMoving ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class net/ccbluex/liquidbounce/utils/movement/MovementUtilsKt {
+	public static final fun stopXZVelocity (Lnet/minecraft/client/player/LocalPlayer;)V
+}
+
+public final class net/ccbluex/liquidbounce/utils/network/NetworkUtilsKt {
+	public static final fun sendPacketSilently (Lnet/minecraft/network/protocol/Packet;)V
 }
 

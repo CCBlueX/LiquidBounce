@@ -68,6 +68,7 @@ class KeyEvent(
 @Tag("inputHandle")
 object InputHandleEvent : Event()
 
+@AddonApi
 @Tag("movementInput")
 class MovementInputEvent(
     var directionalInput: DirectionalInput,

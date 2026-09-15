@@ -746,6 +746,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
         modules.clear()
     }
 
+    @AddonApi
     operator fun get(moduleName: String) = modules.find { it.name.equals(moduleName, true) }
 
 }

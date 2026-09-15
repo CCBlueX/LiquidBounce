@@ -82,6 +82,7 @@ class ModuleActivationEvent(val moduleName: String) : Event(), WebSocketEvent
 @Tag("moduleToggle")
 class ModuleToggleEvent(val moduleName: String, val hidden: Boolean, val enabled: Boolean) : Event(), WebSocketEvent
 
+@AddonApi
 @Tag("refreshArrayList")
 object RefreshArrayListEvent : Event(), WebSocketEvent
 
@@ -92,6 +93,7 @@ class FriendChangeEvent(val name: String, val added: Boolean) : Event()
 @AddonApi
 @Tag("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event(), WebSocketEvent {
+    @AddonApi
     enum class Severity {
         INFO, SUCCESS, ERROR, ENABLED, DISABLED
     }

@@ -145,6 +145,7 @@ import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
 import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -319,6 +320,7 @@ private class EventTables(@JvmField val classes: Set<Class<out Event>>, previous
 /**
  * A modern and fast event handler using lambda handlers
  */
+@AddonApi
 object EventManager {
 
     @Volatile

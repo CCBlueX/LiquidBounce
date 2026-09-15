@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
@@ -84,6 +85,7 @@ object RotationManager : EventListener {
     /**
      * The rotation we want to aim at. This DOES NOT mean that the server already received this rotation.
      */
+    @AddonApi
     var currentRotation: Rotation? = null
         private set(value) {
             previousRotation = if (value == null) {
@@ -107,6 +109,7 @@ object RotationManager : EventListener {
     private val freezing
         get() = ModuleFreeze.running
 
+    @AddonApi
     val serverRotation: Rotation
         get() = if (fakeLagging || freezing) theoreticalServerRotation else actualServerRotation
 
@@ -170,6 +173,7 @@ object RotationManager : EventListener {
         isNormalized = true
     )
 
+    @AddonApi
     @Suppress("LongParameterList")
     fun setRotationTarget(
         rotation: Rotation,
@@ -184,9 +188,11 @@ object RotationManager : EventListener {
         ), priority, provider)
     }
 
+    @AddonApi
     fun setRotationTarget(plan: RotationTarget, priority: Priority, provider: ClientModule) =
         setRotationTarget(plan, priority.priority, provider)
 
+    @AddonApi
     fun setRotationTarget(plan: RotationTarget, priority: Int, provider: ClientModule) {
         if (!allowedToUpdate()) {
             return

@@ -42,6 +42,7 @@ class WorldChangeEvent(val world: ClientLevel?) : Event()
 @Tag("chunkUnload")
 class ChunkUnloadEvent(val pos: ChunkPos) : Event()
 
+@AddonApi
 @Tag("chunkLoad")
 class ChunkLoadEvent(val x: Int, val z: Int) : Event()
 
@@ -75,5 +76,6 @@ class EntityEquipmentChangeEvent(
 @Tag("fluidPush")
 class FluidPushEvent : CancellableEvent()
 
+@AddonApi
 @Tag("worldEntityRemove")
 class WorldEntityRemoveEvent(val entity: Entity, val reason: Entity.RemovalReason) : Event()

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module
 
 import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.multiplayer.ClientPacketListener
@@ -34,6 +35,7 @@ import net.minecraft.client.player.LocalPlayer
  * we are sure that the client is in-game, if not
  * fiddling with the handler code.
  */
+@AddonApi
 interface MinecraftShortcuts {
     val mc: Minecraft
         get() = net.ccbluex.liquidbounce.utils.client.mc
@@ -47,4 +49,7 @@ interface MinecraftShortcuts {
         get() = requireNotNull(mc.gameMode) { "mc.gameMode is null" }
     val gpuDevice: GpuDevice
         get() = RenderSystem.getDevice()
+
+    val inGame: Boolean
+        get() = net.ccbluex.liquidbounce.utils.client.inGame
 }
